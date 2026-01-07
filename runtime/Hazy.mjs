@@ -2,7 +2,7 @@ export const placeholder =
 {
     a: 0,
     b() {
-        throw "Place holder";
+        throw new Error("placeholder");
     }
 }
 
