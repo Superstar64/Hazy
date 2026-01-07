@@ -2,10 +2,12 @@ module Stage5.Generate.Mangle where
 
 import Data.List.NonEmpty (NonEmpty (..))
 import qualified Data.List.NonEmpty as NonEmpty
+import qualified Data.Set as Set
 import Data.Text (Text, pack, unpack)
 import qualified Data.Text.Lazy as Text.Lazy
 import Data.Text.Lazy.Builder (Builder, fromString, fromText)
 import qualified Data.Text.Lazy.Builder as Builder
+import Javascript.Keywords (keywords)
 import Stage1.Lexer
   ( FullQualifiers (..),
     Qualifiers (..),
@@ -85,13 +87,17 @@ value = pack "b"
 
 -- todo merge into field
 supers :: [Text]
-supers = [pack ("$_" ++ show i) | i <- [0 ..]]
+supers = [pack ("$" ++ show i) | i <- [0 ..]]
 
 fields :: [Text]
-fields = [pack ("$" ++ show i) | i <- [0 ..]]
+fields = unique
 
 unique :: [Text]
-unique = fields
+unique = filter (`Set.notMember` keywords) $ map pack $ go [[]]
+  where
+    go base =
+      let prefix = base >>= (\base -> [letter : base | letter <- ['a' .. 'z']])
+       in prefix ++ go prefix
 
 path :: FullQualifiers -> FilePath
 path = (++ ".mjs") . foldr1 (</>) . fmap unpack . path'

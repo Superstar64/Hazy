@@ -34,6 +34,7 @@ executable hazy
     Data.Trifunctor
     Data.Tritraversable
     Error
+    Javascript.Keywords
     Javascript.Printer
     Javascript.Printer.Lexer
     Javascript.Printer.Tree.AdditiveExpression
