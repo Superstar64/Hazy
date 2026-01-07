@@ -112,7 +112,7 @@ depth (path :. _ :.. root) = depth (path :.. root) <> pack "../"
 
 mjs = pack ".mjs"
 
-runtime = pack "Hazy/Runtime.mjs"
+runtime = pack "Hazy.mjs"
 
 numInt = pack "numInt"
 

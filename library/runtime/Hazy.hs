@@ -1,5 +1,7 @@
-{-# LANGUAGE NoStableImports #-}
-module Hazy (module Hazy.Builtin, module Hazy.Runtime) where
+{-# LANGUAGE_HAZY NoStableImports #-}
+module Hazy (module Hazy.Builtin, module Hazy) where
 
 import Hazy.Builtin
-import Hazy.Runtime
+
+placeholder :: a
+placeholder = placeholder
