@@ -1,0 +1,167 @@
+module Stage3.Simple.SchemeOver where
+
+import Control.Monad (guard, zipWithM)
+import Control.Monad.ST (ST)
+import Data.Foldable (toList)
+import qualified Data.Kind
+import qualified Data.Map as Map
+import Data.Text (pack)
+import Data.Traversable (for)
+import qualified Data.Vector as Vector
+import qualified Data.Vector.Strict as Strict
+import qualified Data.Vector.Strict as Strict.Vector
+import Error (nonUniqueConstraints)
+import Stage1.Lexer (variableIdentifier)
+import Stage1.Position (Position)
+import Stage1.Variable (VariableIdentifier)
+import qualified Stage2.Index.Table.Local as Local
+import qualified Stage2.Index.Table.Term as Term
+import qualified Stage2.Index.Table.Type as Type (Table (..), (!))
+import qualified Stage2.Label.Binding.Local as Label
+import Stage2.Scope (Environment ((:+)), Local)
+import qualified Stage2.Scope as Scope
+import Stage2.Shift (Shift, shift, shiftDefault)
+import qualified Stage2.Shift as Shift
+import Stage3.Check.Context (Context (..))
+import qualified Stage3.Check.LocalBinding as LocalBinding
+import qualified Stage3.Check.TypeBinding as TypeBinding
+import qualified Stage3.Index.Evidence as Evidence (assumed)
+import {-# SOURCE #-} qualified Stage3.Simple.Builtin as Builtin
+import {-# SOURCE #-} qualified Stage3.Simple.Class as Class (Class (..))
+import Stage3.Simple.Constraint (Constraint (..))
+import qualified Stage3.Simple.Constraint as Constraint
+import qualified Stage3.Simple.Evidence as Evidence (Evidence (..))
+import Stage3.Simple.Type (Type)
+import qualified Stage3.Simple.Type as Type (lift)
+import {-# SOURCE #-} Stage3.Simple.TypeDeclaration (assumeClass)
+import {-# SOURCE #-} qualified Stage3.Unify as Unify
+import Unique (unique)
+import Prelude hiding (head)
+
+data SchemeOver typex scope = SchemeOver
+  { parameters :: !(Strict.Vector (Type scope)),
+    constraints :: !(Strict.Vector (Constraint scope)),
+    result :: !(typex (Local ':+ scope))
+  }
+
+instance (Scope.Show typex) => Show (SchemeOver typex scope) where
+  showsPrec _ SchemeOver {parameters, constraints, result} =
+    foldr
+      (.)
+      id
+      [ showString "SchemeOver { parameters = ",
+        shows parameters,
+        showString ", constraints = ",
+        shows constraints,
+        showString ", result = ",
+        Scope.shows result,
+        showString " }"
+      ]
+
+instance (Shift.Functor typex) => Shift (SchemeOver typex) where
+  shift = shiftDefault
+
+instance (Shift.Functor typex) => Shift.Functor (SchemeOver typex) where
+  map category SchemeOver {parameters, constraints, result} =
+    SchemeOver
+      { parameters = fmap (Shift.map category) parameters,
+        constraints = fmap (Shift.map category) constraints,
+        result = Shift.map (Shift.Over category) result
+      }
+
+mono :: (Shift typex) => typex scope -> SchemeOver typex scope
+mono result =
+  SchemeOver
+    { parameters = Strict.Vector.empty,
+      constraints = Strict.Vector.empty,
+      result = shift result
+    }
+
+type Lift ::
+  (Environment -> Data.Kind.Type) ->
+  (Data.Kind.Type -> Environment -> Data.Kind.Type) ->
+  Data.Kind.Type ->
+  Data.Kind.Type
+newtype Lift typex typex' s = Lift (forall scope. typex scope -> typex' s scope)
+
+lift :: Lift typex typex' s -> SchemeOver typex scope -> Unify.SchemeOver typex' s scope
+lift (Lift liftResult) SchemeOver {parameters, constraints, result} =
+  Unify.schemeOver
+    (fmap Type.lift parameters)
+    (fmap Constraint.lift constraints)
+    (liftResult result)
+
+augmentNamed ::
+  (Int -> VariableIdentifier) ->
+  Position ->
+  Strict.Vector (Type scope) ->
+  Strict.Vector (Constraint scope) ->
+  Context s scope ->
+  ST s (Context s (Local ':+ scope))
+augmentNamed name position parameters constraints Context {termEnvironment, localEnvironment, typeEnvironment} = do
+  let valid = Vector.generate (length parameters) $ \i ->
+        if unique $ do
+          Constraint {classx, head} <- toList constraints
+          guard $ i == head
+          pure classx
+          then ()
+          else nonUniqueConstraints position
+      constraint variable = fmap concat $ for (zip [0 ..] $ toList constraints) $ \case
+        (index, Constraint {classx, head, arguments})
+          | variable == head ->
+              let check = valid Vector.! head
+                  evidence =
+                    Evidence.Proof
+                      { Evidence.proof = Evidence.assumed index,
+                        Evidence.arguments = Strict.Vector.empty
+                      }
+                  go classx arguments evidence@base = do
+                    let argument =
+                          LocalBinding.Constraint
+                            { LocalBinding.arguments,
+                              LocalBinding.evidence
+                            }
+                    Class.Class {Class.constraints} <- do
+                      let get index = assumeClass <$> TypeBinding.content (typeEnvironment Type.! index)
+                      Builtin.index pure get classx
+                    constraints <- for (zip [0 ..] $ toList constraints) $
+                      \(index, Constraint {classx, arguments = arguments'}) ->
+                        go classx (arguments <> arguments') Evidence.Super {Evidence.base, Evidence.index}
+                    pure $ (shift classx, seq check argument) : concat constraints
+               in go classx arguments evidence
+          | otherwise -> pure []
+      go argument index = (,) argument . Map.fromList <$> constraint index
+  constrainted <- zipWithM go (toList parameters) [0 ..]
+  let rigid (typex, constraints) index =
+        LocalBinding.Rigid
+          { LocalBinding.label = Label.LocalBinding {Label.name = name index},
+            LocalBinding.rigid = shift typex,
+            LocalBinding.constraints
+          }
+  pure
+    Context
+      { termEnvironment = Term.Local termEnvironment,
+        localEnvironment = Local.Local (Vector.fromList $ zipWith rigid constrainted [0 ..]) localEnvironment,
+        typeEnvironment = Type.Local typeEnvironment
+      }
+
+augment ::
+  Position ->
+  Strict.Vector.Vector (Type scope) ->
+  Strict.Vector.Vector (Constraint scope) ->
+  Context s scope ->
+  ST s (Context s (Local ':+ scope))
+augment = augmentNamed name
+  where
+    name i = variableIdentifier $ pack $ "__rigid_" ++ show i
+
+augment' ::
+  Position ->
+  SchemeOver typex scope ->
+  Context s scope ->
+  ST s (Context s (Local ':+ scope))
+augment' position SchemeOver {parameters, constraints} =
+  augment position parameters constraints
+
+constraintCount :: SchemeOver typex scope -> Int
+constraintCount SchemeOver {constraints} = length constraints

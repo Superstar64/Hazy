@@ -1,0 +1,89 @@
+#!/bin/bash
+
+set -e
+
+ORMOLU_VERSION=0.8.0.2
+CABAL_GILD_VERSION='1.6.0.2'
+
+UNSTAGED_FILES=$(git diff --name-only)
+if [ -n "$UNSTAGED_FILES" ]; then
+    echo Unstaged Files: $UNSTAGED_FILES
+    exit 1
+fi
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACMR)
+HASKELL_FILES=$(echo "$STAGED_FILES" | grep -E '\.(hs|hs-boot)$' || true)
+CABAL_FILES=$(echo "$STAGED_FILES" | grep -E '\.cabal$' || true)
+
+if [ -n "$HASKELL_FILES" ]; then
+    if ! command -v ormolu &> /dev/null; then
+        echo "Error: 'ormolu' is not installed or not in your PATH."
+        exit 1
+    fi
+
+    if [ $(ormolu --version | head -n 1 | cut -f 2 -d ' ') != $ORMOLU_VERSION ]; then
+        echo "Wrong 'ormolu' version is installed."
+        exit 1
+    fi
+fi
+
+if [ -n "$CABAL_FILES" ]; then
+    if ! command -v cabal-gild &> /dev/null; then
+        echo "Error: 'cabal-gild' is not installed or not in your PATH."
+        exit 1
+    fi
+
+    if [ $(cabal-gild --version) != $CABAL_GILD_VERSION ]; then
+        echo "Wrong 'cabal-gild' version is installed."
+        exit 1
+    fi
+fi
+
+if [ -n "$CABAL_FILES" ]; then
+    echo "=== Formatting Cabal ==="
+    for FILE in $CABAL_FILES; do
+        cabal-gild --io="$FILE" || echo "Error: Failed to format $FILE"
+        git add "$FILE"
+    done
+fi
+
+if [ -n "$HASKELL_FILES" ]; then
+    echo "=== Formatting ==="
+    if ! ormolu -i $HASKELL_FILES; then
+        echo "Formatting failed. Falling back to one by one formatting."
+        for FILE in $HASKELL_FILES; do
+            echo "Formatting $FILE"
+            ormolu -i "$FILE" || echo "Error: Failed to format $FILE"
+        done
+    fi
+
+    echo "=== Checking Lines ==="
+    if grep '.\{121\}' -n $HASKELL_FILES; then
+        echo "Line length too long"
+        exit 1
+    fi
+
+    echo "=== Building Compiler ==="
+
+    if ! cabal build hazy --verbose=0; then
+        echo "Complication failed"
+        exit 1
+    fi
+
+    echo "=== Checking Self Resolution ==="
+
+    if ! cabal run hazy --verbose=0 -- --resolve compiler -I library/runtime -I library/base; then
+        echo "Self resolution failed"
+        exit 1
+    fi
+
+    echo "=== Running tests ==="
+
+    if ! cabal test hazy-test --verbose=0 --test-show-details=direct; then
+        echo "Error: tests failed"
+        exit 1
+    fi
+
+    git add $HASKELL_FILES
+fi
+
+exit 0
