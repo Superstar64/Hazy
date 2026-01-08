@@ -1,3 +1,6 @@
+{-# LANGUAGE Haskell2010 #-}
+
+{-# LANGUAGE_HAZY StableImports #-}
 module Data.Bifunctor (Bifunctor (..)) where
 
 class Bifunctor p where

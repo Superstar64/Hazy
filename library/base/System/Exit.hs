@@ -1,3 +1,6 @@
+{-# LANGUAGE Haskell2010 #-}
+
+{-# LANGUAGE_HAZY StableImports #-}
 module System.Exit where
 
 data ExitCode

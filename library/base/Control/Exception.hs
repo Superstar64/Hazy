@@ -1,3 +1,6 @@
+{-# LANGUAGE Haskell2010 #-}
+
+{-# LANGUAGE_HAZY StableImports #-}
 module Control.Exception where
 
 -- Keep this absolutely minimal until I figure out how to deal with exceptions

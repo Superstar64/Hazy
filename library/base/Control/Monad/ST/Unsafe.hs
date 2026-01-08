@@ -1,3 +1,6 @@
+{-# LANGUAGE Haskell2010 #-}
+
+{-# LANGUAGE_HAZY StableImports #-}
 module Control.Monad.ST.Unsafe where
 
 import Control.Monad.ST (ST)

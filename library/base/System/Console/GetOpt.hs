@@ -1,3 +1,6 @@
+{-# LANGUAGE Haskell2010 #-}
+
+{-# LANGUAGE_HAZY StableImports #-}
 module System.Console.GetOpt where
 
 getOpt :: ArgOrder a -> [OptDescr a] -> [String] -> ([a], [String], [String])

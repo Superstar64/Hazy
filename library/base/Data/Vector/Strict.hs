@@ -1,3 +1,6 @@
+{-# LANGUAGE Haskell2010 #-}
+
+{-# LANGUAGE_HAZY StableImports #-}
 module Data.Vector.Strict where
 
 import qualified Data.Vector as Lazy
