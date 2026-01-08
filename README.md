@@ -20,7 +20,7 @@ cp -R runtime output
 cabal run -w ghc-9.12 hazy -- -I library/runtime library/base -o output
 
 # Build the hello world example
-cabal run -w ghc-9.12 hazy -- -I library/runtime -I library/base test/run/Hello/source -o output
+cabal run -w ghc-9.12 hazy -- -I library/runtime -I library/base test/run/hello/source -o output
 
 # Optionally, Format the generated Javascript
 prettier -w output
