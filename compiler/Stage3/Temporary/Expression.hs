@@ -14,7 +14,6 @@ import Error
     unsupportedFeatureExpressionAnnotation,
     unsupportedFeatureFloatingPointLiterals,
     unsupportedFeatureLambdaCase,
-    unsupportedFeatureLambdas,
     unsupportedFeatureListComprehension,
     unsupportedFeatureRecordUpdate,
     unsupportedFeatureRightSection,
@@ -50,6 +49,10 @@ import Stage3.Temporary.Declarations (Declarations)
 import qualified Stage3.Temporary.Declarations as Declarations
 import Stage3.Temporary.ExpressionField (Field)
 import qualified Stage3.Temporary.ExpressionField as Field
+import Stage3.Temporary.Lambda (Lambda)
+import qualified Stage3.Temporary.Lambda as Lambda
+import Stage3.Temporary.Pattern (Pattern)
+import qualified Stage3.Temporary.Pattern as Pattern
 import Stage3.Temporary.RightHandSide (RightHandSide)
 import qualified Stage3.Temporary.RightHandSide as RightHandSide
 import qualified Stage3.Tree.Expression as Solved
@@ -103,6 +106,10 @@ data Expression s scope
       { conditionx :: !(Expression s scope),
         thenx :: !(Expression s scope),
         elsex :: !(Expression s scope)
+      }
+  | Lambda
+      { parameter :: !(Pattern s scope),
+        body :: !(Lambda s (Scope.Pattern ':+ scope))
       }
   | MultiwayIf
       { branches :: !(Strict.Vector1 (RightHandSide s scope))
@@ -243,8 +250,13 @@ check _ _ Stage2.Case {startPosition} =
   unsupportedFeatureCaseExpressions startPosition
 check _ _ Stage2.Do {startPosition} =
   unsupportedFeatureDoNotation startPosition
-check _ _ Stage2.Lambda {startPosition} =
-  unsupportedFeatureLambdas startPosition
+check context typex Stage2.Lambda {startPosition, parameter, body} = do
+  parameterType <- Unify.fresh Unify.typex
+  parameter <- Pattern.check context parameterType parameter
+  resultType <- Unify.fresh Unify.typex
+  body <- Lambda.check (Pattern.augment parameter context) (shift resultType) body
+  Unify.unify context startPosition typex (Unify.function parameterType resultType)
+  pure Lambda {parameter, body}
 check _ _ Stage2.LambdaCase {startPosition} =
   unsupportedFeatureLambdaCase startPosition
 check _ _ Stage2.RightSectionVariable {operatorPosition} =
@@ -301,6 +313,10 @@ solve = \case
     true <- solve true
     false <- solve false
     pure $ Solved.If condition true false
+  Lambda {parameter, body} -> do
+    parameter <- Pattern.solve parameter
+    body <- Lambda.solve body
+    pure $ Solved.Lambda {parameter, body}
   MultiwayIf branches -> do
     branches <- traverse RightHandSide.solve branches
     pure $ Solved.MultiwayIf branches

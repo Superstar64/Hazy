@@ -23,6 +23,10 @@ import qualified Stage3.Tree.ExpressionField as Stage3.Field
 import qualified Stage4.Index.Term as Real.Term
 import {-# SOURCE #-} Stage4.Temporary.Declarations (Declarations)
 import {-# SOURCE #-} qualified Stage4.Temporary.Declarations as Declarations
+import {-# SOURCE #-} Stage4.Temporary.Definition (Definition (Definition))
+import {-# SOURCE #-} qualified Stage4.Temporary.Definition as Definition
+import Stage4.Temporary.Function (Function (..))
+import qualified Stage4.Temporary.Function as Function
 import qualified Stage4.Temporary.Pattern as Pattern
 import qualified Stage4.Temporary.RightHandSide as RightHandSide
 import Stage4.Temporary.Statements (Statements)
@@ -286,6 +290,13 @@ simplifyWith expression [] = case expression of
           )
       )
       (simplify elsex)
+  Stage3.Lambda {parameter, body} ->
+    let definition =
+          Bound
+            { patternx = Pattern.simplify parameter,
+              body = Function.simplify body
+            }
+     in Definition.desugar Definition {definition}
   Stage3.MultiwayIf {branches} ->
     Join
       { statements =

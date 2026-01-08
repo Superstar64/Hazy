@@ -43,7 +43,6 @@ node output/index.mjs
 - List Comprehensions
 - Case Expressions
 - Do notation
-- Lambdas
 - Lambda Case
 - Record Updates
 - Right Sections

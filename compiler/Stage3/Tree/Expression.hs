@@ -15,6 +15,8 @@ import qualified Stage3.Simple.Evidence as Simple (Evidence)
 import qualified Stage3.Simple.Instanciation as Simple (Instanciation)
 import Stage3.Tree.Declarations (Declarations)
 import Stage3.Tree.ExpressionField (Field)
+import Stage3.Tree.Lambda (Lambda)
+import Stage3.Tree.Pattern (Pattern)
 import Stage3.Tree.RightHandSide (RightHandSide)
 import Prelude hiding (Bool (False, True))
 
@@ -59,6 +61,10 @@ data Expression scope
       { condition :: !(Expression scope),
         thenx :: !(Expression scope),
         elsex :: !(Expression scope)
+      }
+  | Lambda
+      { parameter :: !(Pattern scope),
+        body :: !(Lambda (Scope.Pattern ':+ scope))
       }
   | MultiwayIf
       { branches :: !(Strict.Vector1 (RightHandSide scope))

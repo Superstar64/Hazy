@@ -320,6 +320,7 @@ executable hazy
     Stage3.Tree.Field
     Stage3.Tree.Function
     Stage3.Tree.Instance
+    Stage3.Tree.Lambda
     Stage3.Tree.Method
     Stage3.Tree.Module
     Stage3.Tree.Pattern

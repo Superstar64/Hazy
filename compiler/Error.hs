@@ -88,7 +88,6 @@ module Error
     unsupportedFeatureRunST,
     unsupportedFeatureRightSection,
     unsupportedFeatureDoNotation,
-    unsupportedFeatureLambdas,
     unsupportedFeatureLambdaCase,
     unsupportedFeatureCaseExpressions,
     unsupportedFeatureRecordUpdate,
@@ -562,8 +561,6 @@ caseExpressions = fromString "case expressions"
 
 doNotation = fromString "do notation"
 
-lambdas = fromString "lambdas"
-
 lambdaCase = fromString "lambda case"
 
 rightSection = fromString "right section"
@@ -590,10 +587,6 @@ unsupportedFeatureRightSection =
 unsupportedFeatureDoNotation :: Position -> a
 unsupportedFeatureDoNotation =
   unsupportedFeature doNotation
-
-unsupportedFeatureLambdas :: Position -> a
-unsupportedFeatureLambdas =
-  unsupportedFeature lambdas
 
 unsupportedFeatureLambdaCase :: Position -> a
 unsupportedFeatureLambdaCase =

@@ -5,6 +5,7 @@ module Stage2.Tree.Lambda where
 import Stage1.Position (Position)
 import qualified Stage1.Tree.Expression as Stage1 (Expression (..))
 import qualified Stage1.Tree.Pattern as Stage1 (Pattern (..))
+import qualified Stage1.Tree.Pattern as Stage1.Pattern
 import Stage2.Resolve.Context (Context (..))
 import Stage2.Scope (Environment ((:+)))
 import qualified Stage2.Scope as Scope (Pattern)
@@ -16,8 +17,14 @@ import Stage2.Tree.Pattern (Pattern)
 import qualified Stage2.Tree.Pattern as Pattern (augment, resolve)
 
 data Lambda scope
-  = Plain !(Expression scope)
-  | Bound !(Pattern scope) (Lambda (Scope.Pattern ':+ scope))
+  = Plain
+      { plain :: !(Expression scope)
+      }
+  | Bound
+      { boundPosition :: !Position,
+        parameter :: !(Pattern scope),
+        body :: !(Lambda (Scope.Pattern ':+ scope))
+      }
   deriving (Show)
 
 instance Shift Lambda where
@@ -25,20 +32,22 @@ instance Shift Lambda where
 
 instance Shift.Functor Lambda where
   map category = \case
-    Plain expression -> Plain (Shift.map category expression)
-    Bound patternx lambda ->
+    Plain {plain} -> Plain {plain = Shift.map category plain}
+    Bound {boundPosition, parameter, body} ->
       Bound
-        (Shift.map category patternx)
-        (Shift.map (Shift.Over category) lambda)
-
-newtype Resolve = Resolve
-  { patterns :: [Stage1.Pattern Position]
-  }
+        { boundPosition,
+          parameter = Shift.map category parameter,
+          body = Shift.map (Shift.Over category) body
+        }
 
 -- todo complain when lambda variables shadow other lambda variables
-resolve :: Context scope -> Resolve -> Stage1.Expression Position -> Lambda scope
-resolve context Resolve {patterns} expression1 = case patterns of
-  [] -> Plain (Expression.resolve context expression1)
-  (pattern1 : patterns) -> Bound pattern' (resolve (Pattern.augment pattern' context) Resolve {patterns} expression1)
-    where
-      pattern' = Pattern.resolve context pattern1
+resolve :: Context scope -> [Stage1.Pattern Position] -> Stage1.Expression Position -> Lambda scope
+resolve context patterns expression = case patterns of
+  [] -> Plain {plain = Expression.resolve context expression}
+  (patternx : patterns)
+    | parameter <- Pattern.resolve context patternx ->
+        Bound
+          { boundPosition = Stage1.Pattern.startPosition patternx,
+            parameter,
+            body = resolve (Pattern.augment parameter context) patterns expression
+          }

@@ -5,8 +5,10 @@ import Stage2.Scope (Environment ((:+)))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Category (Rotate), Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import qualified Stage3.Tree.Function as Stage3
-import qualified Stage4.Temporary.Expression as Expression
+import qualified Stage3.Tree.Function as Stage3 (Function (..))
+import qualified Stage3.Tree.Lambda as Stage3 (Lambda)
+import qualified Stage3.Tree.Lambda as Stage3.Lambda
+import {-# SOURCE #-} qualified Stage4.Temporary.Expression as Expression
 import Stage4.Temporary.Pattern (Pattern)
 import qualified Stage4.Temporary.Pattern as Pattern
 import Stage4.Temporary.RightHandSide (RightHandSide)
@@ -51,14 +53,26 @@ instance Term.Functor Function where
           thenx = Term.map (Term.over category) thenx
         }
 
-simplify :: Stage3.Function scope -> Function scope
-simplify = \case
-  Stage3.Plain {plain} -> Plain {plain = RightHandSide.simplify plain}
-  Stage3.Bound {patternx, body} ->
-    Bound
-      { patternx = Pattern.simplify patternx,
-        body = simplify body
-      }
+class Simplify source where
+  simplify :: source scope -> Function scope
+
+instance Simplify Stage3.Function where
+  simplify = \case
+    Stage3.Plain {plain} -> Plain {plain = RightHandSide.simplify plain}
+    Stage3.Bound {patternx, body} ->
+      Bound
+        { patternx = Pattern.simplify patternx,
+          body = simplify body
+        }
+
+instance Simplify Stage3.Lambda where
+  simplify = \case
+    Stage3.Lambda.Plain {plain} -> Plain {plain = RightHandSide.simplify plain}
+    Stage3.Lambda.Bound {parameter, body} ->
+      Bound
+        { patternx = Pattern.simplify parameter,
+          body = simplify body
+        }
 
 etaExpandable :: Function scope -> Bool
 etaExpandable Plain {} = False

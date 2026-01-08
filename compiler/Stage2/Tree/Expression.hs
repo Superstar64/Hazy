@@ -47,7 +47,7 @@ import {-# SOURCE #-} qualified Stage2.Tree.Declarations as Declarations
 import Stage2.Tree.ExpressionField (Field)
 import qualified Stage2.Tree.ExpressionField as Field (resolve)
 import Stage2.Tree.Lambda (Lambda (..))
-import qualified Stage2.Tree.Lambda as Lambda (Resolve (..), resolve)
+import qualified Stage2.Tree.Lambda as Lambda (resolve)
 import Stage2.Tree.Pattern (Pattern)
 import qualified Stage2.Tree.Pattern as Pattern (augment, resolve)
 import Stage2.Tree.RightHandSide (RightHandSide)
@@ -484,7 +484,7 @@ resolveWith context expression [] = case expression of
         Lambda
           { startPosition,
             parameter,
-            body = Lambda.resolve (Pattern.augment parameter context) Lambda.Resolve {patterns} body
+            body = Lambda.resolve (Pattern.augment parameter context) patterns body
           }
   Stage1.LambdaCase {startPosition, cases} ->
     LambdaCase
