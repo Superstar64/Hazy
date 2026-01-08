@@ -76,8 +76,8 @@ run = do
         "-o",
         ".build/" ++ run
       ]
-    callCommandVerbose $ "node .build/" ++ run ++ "/index.mjs > .build/" ++ run ++ "/result.txt"
-    callProcessVerbose "diff" ["test/run/" ++ run ++ "/result.txt", ".build/" ++ run ++ "/result.txt"]
+    callCommandVerbose $ "node .build/" ++ run ++ "/index.mjs > .build/" ++ run ++ "/result"
+    callProcessVerbose "diff" ["test/run/" ++ run ++ "/result", ".build/" ++ run ++ "/result"]
 
 main = do
   parse
