@@ -100,11 +100,12 @@ import Data.Char (Char)
 import Data.Int (Int)
 import Data.Maybe (Maybe)
 import Data.String (String)
+import Data.Text (pack)
+import qualified Data.Text.IO as Text
 import Foreign.Ptr (Ptr)
+import Hazy (IO)
 import Text.Show (Show)
 import Prelude (Integer, Read, error)
-
-data IO a
 
 type FilePath = String
 
@@ -264,7 +265,7 @@ putStr :: String -> IO ()
 putStr = error "todo"
 
 putStrLn :: String -> IO ()
-putStrLn = error "todo"
+putStrLn string = Text.putStrLn (pack string)
 
 print :: (Show a) => a -> IO ()
 print = error "todo"

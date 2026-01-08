@@ -15,7 +15,9 @@ module Data.Text.IO
 where
 
 import Data.Text (Text)
+import Hazy (putStrLn)
 import System.IO (Handle)
+import Prelude (FilePath, IO, error)
 
 readFile :: FilePath -> IO Text
 readFile = error "todo"
@@ -49,6 +51,3 @@ getLine = error "todo"
 
 putStr :: Text -> IO ()
 putStr = error "todo"
-
-putStrLn :: Text -> IO ()
-putStrLn = error "todo"

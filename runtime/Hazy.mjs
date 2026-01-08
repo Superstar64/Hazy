@@ -1,3 +1,7 @@
+function force(thunk) {
+  return thunk.a ? thunk.b() : thunk.b;
+}
+
 export const placeholder = {
   a: 0,
   b() {
@@ -29,3 +33,24 @@ export const enumInt = {
 };
 
 export const enumInteger = enumInt;
+
+// todo perform replacement on invalid scalar values
+export const pack = {
+  a: 0,
+  b: (list) => {
+    let buffer = "";
+    let current = force(list);
+    while (current.a) {
+      buffer += force(current.b);
+      current = force(current.c);
+    }
+    return buffer;
+  },
+};
+
+export const putStrLn = {
+  a: 0,
+  b: (thunk) => () => {
+    console.log(force(thunk));
+  },
+};

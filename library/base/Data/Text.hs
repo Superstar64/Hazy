@@ -103,10 +103,7 @@ module Data.Text
   )
 where
 
-data Text
-
-pack :: String -> Text
-pack = error "todo"
+import Hazy (Text, pack)
 
 unpack :: Text -> String
 unpack = error "todo"

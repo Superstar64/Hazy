@@ -3,13 +3,13 @@
 module Main where
 
 import Control.Exception (IOException, catch)
-import Control.Monad (unless)
+import Control.Monad (unless, when)
 import Data.Foldable (for_)
 import Data.Traversable (for)
 import System.Directory (doesDirectoryExist, listDirectory)
 import System.Exit (exitFailure)
 import System.FilePath (splitExtension, (-<.>), (</>))
-import System.Process (callProcess)
+import System.Process (callCommand, callProcess)
 
 find :: String -> IO [String]
 find path = do
@@ -25,6 +25,11 @@ callProcessVerbose :: String -> [String] -> IO ()
 callProcessVerbose process arguments = do
   putStrLn $ process ++ " " ++ unwords arguments
   callProcess process arguments
+
+callCommandVerbose :: String -> IO ()
+callCommandVerbose command = do
+  putStrLn command
+  callCommand command
 
 parse = do
   bad <- find "test/bad/parse"
@@ -52,9 +57,32 @@ good = do
   for_ good $ \good ->
     callProcessVerbose "hazy" ["--simplify", good, "-I", "library/runtime", "-I", "library/base"]
 
+run = do
+  dirty <- doesDirectoryExist ".build/base"
+  when dirty $ callProcessVerbose "rm" ["-r", ".build/base"]
+  unless dirty $ callProcessVerbose "mkdir" ["-p", ".build"]
+  callProcessVerbose "cp" ["-R", "runtime", ".build/base"]
+  callProcessVerbose "hazy" ["-I", "library/runtime", "library/base", "-o", ".build/base"]
+  run <- listDirectory "test/run"
+  for_ run $ \run -> do
+    callProcessVerbose "cp" ["-R", ".build/base", ".build/" ++ run]
+    callProcessVerbose
+      "hazy"
+      [ "-I",
+        "library/runtime",
+        "-I",
+        "library/base",
+        "test/run/" ++ run ++ "/source",
+        "-o",
+        ".build/" ++ run
+      ]
+    callCommandVerbose $ "node .build/" ++ run ++ "/index.mjs > .build/" ++ run ++ "/result.txt"
+    callProcessVerbose "diff" ["test/run/" ++ run ++ "/result.txt", ".build/" ++ run ++ "/result.txt"]
+
 main = do
   parse
   resolve
   library
   check
   good
+  run
