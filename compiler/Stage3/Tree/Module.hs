@@ -18,8 +18,7 @@ import Stage3.Check.Context (globalBindings)
 import qualified Stage3.Check.InstanceAnnotation as InstanceAnnotation
 import qualified Stage3.Check.KindAnnotation as KindAnnotation
 import qualified Stage3.Check.TypeAnnotation as TypeAnnotation
-import qualified Stage3.Functor.Annotated as Functor (Annotated (Annotated))
-import qualified Stage3.Functor.Annotated as Funtor
+import qualified Stage3.Functor.Annotated as Functor (Annotated (Annotated, meta))
 import qualified Stage3.Functor.Declarations as Functor (Declarations (..))
 import qualified Stage3.Functor.Instance.Key as Instance.Key
 import Stage3.Functor.Module (fromStage2)
@@ -82,7 +81,7 @@ check modules =
                 \moduleSet@(Functor.ModuleSet modules) -> do
                   let Functor.Module {declarations} = modules Vector.! global
                       Functor.Declarations {terms} = declarations
-                      Funtor.Annotated {meta} = terms Vector.! local
+                      Functor.Annotated {meta} = terms Vector.! local
                   annotation <- meta
                   let context = globalBindings moduleSet
                   -- todo, augment context with self to allow basic recursive inference
@@ -99,7 +98,7 @@ check modules =
                 \moduleSet@(Functor.ModuleSet modules) -> do
                   let Functor.Module {declarations} = modules Vector.! global
                       Functor.Declarations {types} = declarations
-                      Funtor.Annotated {meta} = types Vector.! local
+                      Functor.Annotated {meta} = types Vector.! local
                   annotation <- meta
                   let context = globalBindings moduleSet
                   -- todo, augment context with self to allow basic recursive inference
