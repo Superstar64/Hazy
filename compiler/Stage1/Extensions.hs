@@ -25,5 +25,5 @@ hazy =
     { implicitPrelude = True,
       stableImports = True,
       unorderedRecords = False,
-      constructorFields = False
+      constructorFields = True
     }

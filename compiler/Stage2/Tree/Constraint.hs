@@ -45,7 +45,7 @@ anonymize Constraint {classx, head, arguments} =
     }
 
 resolve :: Context (Local ':+ scope) -> Stage1.Constraint Position -> Constraint Position scope
-resolve context Stage1.Constraint {Stage1.startPosition, Stage1.classVariable, Stage1.typeVariable, Stage1.arguments}
+resolve context Stage1.Constraint {startPosition, classVariable, typeVariable, arguments}
   | Local head <- context !$ typeVariable =
       case context !=.* classVariable of
         Type3.Index classx ->

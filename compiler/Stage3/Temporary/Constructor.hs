@@ -22,17 +22,17 @@ data Constructor s scope
 
 check :: Context s scope -> Stage2.Constructor scope -> ST s (Constructor s scope)
 check context constructor = case constructor of
-  Stage2.Constructor {Stage2.Constructor.entries} -> do
+  Stage2.Constructor {entries} -> do
     entries <- traverse (Entry.check context) entries
     pure Constructor {entries}
-  Stage2.Record {Stage2.fields} -> do
+  Stage2.Record {fields} -> do
     fields <- traverse (Field.check context) fields
     pure Record {fields}
 
 solve :: Synonym.Context s scope -> Constructor s scope -> ST s (Solved.Constructor scope)
 solve context Constructor {entries} = do
   entries <- traverse (Entry.solve context) entries
-  pure Solved.Constructor {Solved.entries}
+  pure Solved.Constructor {entries}
 solve context Record {fields} = do
   fields <- traverse (Field.solve context) fields
-  pure $ Solved.Record {Solved.fields}
+  pure $ Solved.Record {fields}

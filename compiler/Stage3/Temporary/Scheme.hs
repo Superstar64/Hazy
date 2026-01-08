@@ -33,11 +33,11 @@ data Scheme s scope = Scheme
   }
 
 check :: Context s scope -> Stage2.Scheme Position scope -> ST s (Scheme s scope)
-check context (Stage2.Scheme {Stage2.parameters, Stage2.constraints, Stage2.result}) = do
-  let fresh Stage2.TypePattern {Stage2.position, Stage2.name} = do
+check context (Stage2.Scheme {parameters, constraints, result}) = do
+  let fresh Stage2.TypePattern {position, name} = do
         level <- Unify.fresh Unify.universe
         typex <- Unify.fresh (Unify.typeWith level)
-        pure TypePattern {TypePattern.position, TypePattern.name, TypePattern.typex}
+        pure TypePattern {position, name, typex}
   parameters <- traverse fresh parameters
   constraints <- traverse (Constraint.check (augment parameters context)) constraints
   result <- Type.check (augment parameters context) Unify.typex result
@@ -48,7 +48,7 @@ solve context Scheme {parameters, constraints, result} = do
   parameters <- traverse TypePattern.solve parameters
   constraints <- traverse (Constraint.solve (Synonym.local context)) constraints
   result <- Type.solve (Synonym.local context) result
-  pure $ Solved.Scheme {Solved.parameters, Solved.constraints, Solved.result}
+  pure $ Solved.Scheme {parameters, constraints, result}
 
 augment :: Strict.Vector (TypePattern s scope) -> Context s scope -> Context s (Local ':+ scope)
 augment scheme Context {termEnvironment, localEnvironment, typeEnvironment}
@@ -60,6 +60,6 @@ augment scheme Context {termEnvironment, localEnvironment, typeEnvironment}
         }
   where
     wobbly
-      TypePattern {TypePattern.name, TypePattern.typex = wobbly}
+      TypePattern {name, typex = wobbly}
         | wobbly <- shift wobbly =
-            Wobbly {label = Label.LocalBinding {Label.name}, wobbly}
+            Wobbly {label = Label.LocalBinding {name}, wobbly}

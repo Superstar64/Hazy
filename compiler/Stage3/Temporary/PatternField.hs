@@ -20,7 +20,7 @@ augmentField :: Field s scopes -> Term.Bound (TermBinding s) (scope ':+ scopes)
 augmentField Field {patternx} = Pattern.augmentPattern patternx
 
 check :: Context s scope -> (Int -> Unify.Type s scope) -> Stage2.Field scope -> ST s (Field s scope)
-check context lookup Stage2.Field {Stage2.index, Stage2.patternx} = do
+check context lookup Stage2.Field {index, patternx} = do
   patternx <- Pattern.check context (lookup index) patternx
   pure
     Field

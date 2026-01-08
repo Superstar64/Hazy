@@ -19,7 +19,7 @@ check ::
   (Int -> Unify.Type s scope) ->
   Stage2.Field scope ->
   ST s (Field s scope)
-check context lookup Stage2.Field {Stage2.index, Stage2.expression} = do
+check context lookup Stage2.Field {index, expression} = do
   expression <- Expression.check context (lookup index) expression
   pure
     Field
@@ -30,4 +30,4 @@ check context lookup Stage2.Field {Stage2.index, Stage2.expression} = do
 solve :: Field s scope -> ST s (Solved.Field scope)
 solve Field {index, expression} = do
   expression <- Expression.solve expression
-  pure $ Solved.Field {Solved.index, Solved.expression}
+  pure $ Solved.Field {index, expression}

@@ -109,7 +109,7 @@ instance Shift.Functor TypeDeclaration where
         }
 
 labelBinding :: Qualifiers -> TypeDeclaration scope -> Label.TypeBinding scope'
-labelBinding path declaration = Label.TypeBinding {Label.name = path :=. name declaration, Label.constructorNames}
+labelBinding path declaration = Label.TypeBinding {name = path :=. name declaration, constructorNames}
   where
     constructorNames = case declaration of
       ADT {constructors} -> (:=) path . Constructor.name <$> constructors

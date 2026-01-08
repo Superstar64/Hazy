@@ -32,22 +32,22 @@ resolve ::
   Stage1.RightHandSide Position ->
   Definition scope
 resolve failure context leftHandSide rightHandSide = case leftHandSide of
-  Stage1.Pattern Stage1.Variable {Stage1.Pattern.variable = position :@ variable}
-    | let resolve = Function.Resolve {Function.patterns = []} ->
+  Stage1.Pattern Stage1.Variable {variable = position :@ variable}
+    | let resolve = Function.Resolve {patterns = []} ->
         Definition position variable $ Function.resolve context resolve rightHandSide
-  Stage1.Prefix {Stage1.variable = position :@ variable, Stage1.parameters'}
+  Stage1.Prefix {variable = position :@ variable, parameters'}
     | patterns <- toList parameters',
-      let resolve = Function.Resolve {Function.patterns} ->
+      let resolve = Function.Resolve {patterns} ->
         Definition position variable $ Function.resolve context resolve rightHandSide
   Stage1.Binary
-    { Stage1.leftHandSide = patternx,
-      Stage1.operator = position :@ operator,
-      Stage1.rightHandSide = patternx',
-      Stage1.parameters = patterns
+    { leftHandSide = patternx,
+      operator = position :@ operator,
+      rightHandSide = patternx',
+      parameters = patterns
     }
       | functionPosition <- Stage1.Infix.startPosition patternx,
         functionPosition' <- Stage1.Infix.startPosition patternx',
-        ~Term.Binding {Term.fixity = Fixity associativity precedence} <-
+        ~Term.Binding {fixity = Fixity associativity precedence} <-
           context !- (position :@ Local :- operator),
         patternx <- case associativity of
           Left -> Pattern.Infix.fixWith (Just Left) precedence $ Pattern.Infix.resolve context patternx
@@ -57,7 +57,7 @@ resolve failure context leftHandSide rightHandSide = case leftHandSide of
           Right -> Pattern.Infix.fixWith (Just Right) precedence $ Pattern.Infix.resolve context patternx'
           _ -> Pattern.Infix.fixWith Nothing (precedence + 1) $ Pattern.Infix.resolve context patternx',
         context <- Pattern.augment patternx' context,
-        let resolve = Function.Resolve {Function.patterns = toList patterns} ->
+        let resolve = Function.Resolve {patterns = toList patterns} ->
           Definition position operator $
             Bound
               { functionPosition,

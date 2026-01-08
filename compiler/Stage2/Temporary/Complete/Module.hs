@@ -49,18 +49,18 @@ resolve modules = mfix $ \main ->
         where
           context index =
             Import.Module
-              { Import.modulePosition,
-                Import.extensions,
-                Import.imports,
-                Import.exports,
-                Import.base = bindings Vector.! index
+              { modulePosition,
+                extensions,
+                imports,
+                exports,
+                base = bindings Vector.! index
               }
             where
               Stage1.Module
-                { Stage1.modulePosition,
-                  Stage1.extensions,
-                  Stage1.exports,
-                  Stage1.declarations = Stage1.Declarations declarations
+                { modulePosition,
+                  extensions,
+                  exports,
+                  declarations = Stage1.Declarations declarations
                 } =
                   modules Vector.! index
               imports = mapMaybe Stage1.toImport (toList declarations)
@@ -68,10 +68,10 @@ resolve modules = mfix $ \main ->
       resolve
         index
         Stage1.Module
-          { Stage1.extensions,
-            Stage1.modulePosition,
-            Stage1.name,
-            Stage1.declarations = ~(Stage1.Declarations declarations)
+          { extensions,
+            modulePosition,
+            name,
+            declarations = ~(Stage1.Declarations declarations)
           } = make <$> resolved
           where
             imports = mapMaybe Stage1.toImport (toList declarations)
@@ -87,12 +87,12 @@ resolve modules = mfix $ \main ->
             Extensions {implicitPrelude, stableImports} = extensions
             prelude
               | implicitPrelude = pickPrelude modulePosition (toList imports) canonical
-              | otherwise = Core {Core.globals = Map.empty, Core.locals = mempty}
+              | otherwise = Core {globals = Map.empty, locals = mempty}
             binding = Bindings.updateStability (Stable [modulePosition]) $ bindings Vector.! index
             shadow =
               Core
-                { Core.globals = Map.singleton name binding,
-                  Core.locals = binding
+                { globals = Map.singleton name binding,
+                  locals = binding
                 }
    in sequence $ Vector.imap resolve modules
   where
@@ -101,13 +101,13 @@ resolve modules = mfix $ \main ->
     indexes = Map.fromListWith duplicate $ zip (toList names) [0 ..]
       where
         duplicate left right
-          | Stage1.Module {Stage1.modulePosition = left} <- modules Vector.! left,
-            Stage1.Module {Stage1.modulePosition = right} <- modules Vector.! right =
+          | Stage1.Module {modulePosition = left} <- modules Vector.! left,
+            Stage1.Module {modulePosition = right} <- modules Vector.! right =
               duplicateModuleEntries [left, right]
 
 shrink :: Module -> Real.Module
 shrink Module {name, declarations} =
   Real.Module
-    { Real.name,
-      Real.declarations = Declarations.shrink declarations
+    { name,
+      declarations = Declarations.shrink declarations
     }

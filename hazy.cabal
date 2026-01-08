@@ -383,6 +383,7 @@ executable hazy
 
   default-extensions:
     DataKinds
+    DisambiguateRecordFields
     GADTs
     LambdaCase
     MonoLocalBinds

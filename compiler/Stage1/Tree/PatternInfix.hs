@@ -45,18 +45,18 @@ toPattern = \case
   Pattern {patternx} -> patternx
   Infix {startPosition, left, operator, operatorPosition, right} ->
     Pattern.Infix
-      { Pattern.startPosition,
-        Pattern.left,
-        Pattern.operator,
-        Pattern.operatorPosition,
-        Pattern.right
+      { startPosition,
+        left,
+        operator,
+        operatorPosition,
+        right
       }
   InfixCons {startPosition, left, operatorPosition, right} ->
     Pattern.InfixCons
-      { Pattern.startPosition,
-        Pattern.left,
-        Pattern.operatorPosition,
-        Pattern.right
+      { startPosition,
+        left,
+        operatorPosition,
+        right
       }
 
 instance TermBindingVariables Infix where

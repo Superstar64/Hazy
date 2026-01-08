@@ -68,16 +68,16 @@ merge ~Extensions {unorderedRecords, constructorFields} entries@(entry :| _) =
       fixities -> duplicateFixityEntries (map fst fixities)
       where
         fixity = \case
-          Source.Fixity {Source.position, Source.fixity} -> Just (position, fixity)
+          Source.Fixity {position, fixity} -> Just (position, fixity)
           _ -> Nothing
-    More.Constructor {More.typeIndex, More.constructorIndex, More.selections, More.fields} =
+    More.Constructor {typeIndex, constructorIndex, selections, fields} =
       case mapMaybe index (toList entries) of
         [] -> missingConstructorDeclaration position
         [(_, constructor)] -> constructor
         indexes -> duplicateConstructorEntries (map fst indexes)
       where
         index = \case
-          Source.Declaration {Source.position, Source.constructor} ->
+          Source.Declaration {position, constructor} ->
             Just (position, constructor)
           _ -> Nothing
     unordered = case mapMaybe unordered (toList entries) of
@@ -86,7 +86,7 @@ merge ~Extensions {unorderedRecords, constructorFields} entries@(entry :| _) =
       unordereds -> duplicateUnorderedEntries unordereds
       where
         unordered = \case
-          Source.Unordered {Source.position} -> Just position
+          Source.Unordered {position} -> Just position
           _ -> Nothing
     fielded = case mapMaybe fielded (toList entries) of
       [] -> constructorFields
@@ -94,7 +94,7 @@ merge ~Extensions {unorderedRecords, constructorFields} entries@(entry :| _) =
       unordereds -> duplicateUnorderedEntries unordereds
       where
         fielded = \case
-          Source.Fields {Source.position} -> Just position
+          Source.Fields {position} -> Just position
           _ -> Nothing
 
 bindings ::
@@ -105,13 +105,13 @@ bindings index constructors = Map.map constructorIndex (indexes constructors)
   where
     constructorIndex vectorIndex =
       Constructor.Binding
-        { Constructor.position,
-          Constructor.index = Constructor.Index (Type2.Index $ index typeIndex) constructorIndex,
-          Constructor.fixity,
-          Constructor.fields,
-          Constructor.selections,
-          Constructor.unordered,
-          Constructor.fielded
+        { position,
+          index = Constructor.Index (Type2.Index $ index typeIndex) constructorIndex,
+          fixity,
+          fields,
+          selections,
+          unordered,
+          fielded
         }
       where
         Constructor

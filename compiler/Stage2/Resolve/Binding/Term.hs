@@ -39,12 +39,12 @@ instance Shift.Functor Binding where
 fromFunctor :: Functor.Binding (Detail.Binding scope) -> Binding scope
 fromFunctor
   Functor.Binding
-    { Functor.position,
-      Functor.value =
+    { position,
+      value =
         Detail.Binding
-          { Detail.index,
-            Detail.fixity,
-            Detail.selector
+          { index,
+            fixity,
+            selector
           }
     } =
     Binding
@@ -63,11 +63,11 @@ toFunctor
       selector
     } =
     Functor.Binding
-      { Functor.position,
-        Functor.value =
+      { position,
+        value =
           Detail.Binding
-            { Detail.index,
-              Detail.fixity,
-              Detail.selector
+            { index,
+              fixity,
+              selector
             }
       }

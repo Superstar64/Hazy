@@ -31,7 +31,7 @@ shrink = constructor
 
 resolve :: Context scope -> Strict.Vector Variable -> Stage1.Constructor Position -> Constructor scope
 resolve context selectorNames constructor = case constructor of
-  Stage1.Constructor {Stage1.constructor = position :@ name, Stage1.entries} ->
+  Stage1.Constructor {constructor = position :@ name, entries} ->
     Constructor
       { position,
         name,
@@ -39,12 +39,12 @@ resolve context selectorNames constructor = case constructor of
         selections = Strict.Vector.empty,
         constructor =
           Real.Constructor
-            { Real.position,
-              Real.name,
-              Real.entries = Strict.Vector.fromList (Entry.resolve context <$> toList entries)
+            { position,
+              name,
+              entries = Strict.Vector.fromList (Entry.resolve context <$> toList entries)
             }
       }
-  Stage1.Infix {Stage1.left, Stage1.constructor = position :@ name, Stage1.right} ->
+  Stage1.Infix {left, constructor = position :@ name, right} ->
     Constructor
       { position,
         name,
@@ -52,12 +52,12 @@ resolve context selectorNames constructor = case constructor of
         selections = Strict.Vector.empty,
         constructor =
           Real.Constructor
-            { Real.position,
-              Real.name,
-              Real.entries = Strict.Vector.fromList (Entry.resolve context <$> [left, right])
+            { position,
+              name,
+              entries = Strict.Vector.fromList (Entry.resolve context <$> [left, right])
             }
       }
-  Stage1.Record {Stage1.constructor = position :@ name, Stage1.fields = fields'} ->
+  Stage1.Record {constructor = position :@ name, fields = fields'} ->
     Constructor
       { position,
         name,
@@ -65,9 +65,9 @@ resolve context selectorNames constructor = case constructor of
         selections,
         constructor =
           Real.Record
-            { Real.position,
-              Real.name,
-              Real.fields = fmap Field.shrink fields
+            { position,
+              name,
+              fields = fmap Field.shrink fields
             }
       }
     where

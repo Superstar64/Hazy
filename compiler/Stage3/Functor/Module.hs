@@ -52,7 +52,7 @@ fromStage2 ::
     (Stage2.TypeDeclaration Global)
     (Stage2.Instance Global)
     (Stage2.Instance Global)
-fromStage2 Stage2.Module {Stage2.name = name@(path :.. base), Stage2.declarations}
+fromStage2 Stage2.Module {name = name@(path :.. base), declarations}
   | let root = path :. base =
       Module
         { name,

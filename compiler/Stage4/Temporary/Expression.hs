@@ -78,7 +78,7 @@ instance Shift.Functor Expression where
   map = Term.mapDefault
 
 instance Term.Functor Expression where
-  map category@Term.Category {Term.general} = \case
+  map category@Term.Category {general} = \case
     Variable {variable, instanciation} ->
       Variable
         { variable = Term.map category variable,
@@ -144,8 +144,8 @@ guard :: Statements scope -> Expression scope -> Expression scope
 guard left done =
   Join
     Statements.Branch
-      { Statements.left,
-        Statements.right = Statements.Done {Statements.done}
+      { left,
+        right = Statements.Done {done}
       }
 
 simplify :: Stage3.Expression scope -> Expression scope
@@ -181,16 +181,16 @@ simplifySelector ::
   Expression scope
 simplifySelector selector@(Selector.Index typeIndex _) uniform argument = case uniform of
   Selector.Uniform {} -> Selector {selector, argument}
-  Selector.Disjoint {Selector.indexes} -> Join {statements = mconcat statements}
+  Selector.Disjoint {indexes} -> Join {statements = mconcat statements}
     where
       generate index select =
         Statements.bind
           ( Pattern.Match
-              { Pattern.irrefutable = False,
-                Pattern.match =
+              { irrefutable = False,
+                match =
                   Pattern.Constructor
-                    { Pattern.constructor = Constructor.Index typeIndex index,
-                      Pattern.patterns = Strict.Vector.replicate (length indexes) Pattern.Wildcard
+                    { constructor = Constructor.Index typeIndex index,
+                      patterns = Strict.Vector.replicate (length indexes) Pattern.Wildcard
                     }
               }
           )
@@ -198,7 +198,7 @@ simplifySelector selector@(Selector.Index typeIndex _) uniform argument = case u
           ( case select of
               Strict.Just select ->
                 Statements.Done
-                  { Statements.done = monoVariable $ Term.Pattern (Term.Select select Term.At)
+                  { done = monoVariable $ Term.Pattern (Term.Select select Term.At)
                   }
               Strict.Nothing -> Statements.Bottom
           )
@@ -208,36 +208,36 @@ simplifyWith ::
   Stage3.Expression scope ->
   [Expression scope] ->
   Expression scope
-simplifyWith Stage3.Call {Stage3.function, Stage3.argument} arguments =
+simplifyWith Stage3.Call {function, argument} arguments =
   simplifyWith function (simplify argument : arguments)
-simplifyWith Stage3.Constructor {Stage3.constructor, Stage3.parameters} arguments =
+simplifyWith Stage3.Constructor {constructor, parameters} arguments =
   simplifyConstructor constructor parameters (length arguments) (Reverse.fromList arguments)
 simplifyWith expression arguments@(_ : _) =
   foldl Call (simplify expression) arguments
 simplifyWith expression [] = case expression of
-  Stage3.Variable {Stage3.variable, Stage3.instanciation} ->
+  Stage3.Variable {variable, instanciation} ->
     Variable
       { variable,
         instanciation
       }
-  Stage3.Selector {Stage3.selector, Stage3.uniform} ->
+  Stage3.Selector {selector, uniform} ->
     Lambda
       { body = simplifySelector (shift selector) uniform lambdaVariable
       }
-  Stage3.Method {Stage3.method, Stage3.evidence, Stage3.instanciation} ->
+  Stage3.Method {method, evidence, instanciation} ->
     Method
       { method,
         evidence,
         instanciation
       }
-  Stage3.Record {Stage3.constructor, Stage3.parameters, Stage3.fields} ->
+  Stage3.Record {constructor, parameters, fields} ->
     Constructor
       { constructor,
         arguments = Strict.Vector.generate parameters $ \index' ->
           case [ expression
                | Stage3.Field
-                   { Stage3.Field.index,
-                     Stage3.Field.expression
+                   { index,
+                     expression
                    } <-
                    toList fields,
                  index == index'
@@ -245,7 +245,7 @@ simplifyWith expression [] = case expression of
             [] -> Join {statements = Statements.Bottom}
             fields -> simplify $ last fields
       }
-  Stage3.Integer {Stage3.integer, Stage3.evidence} ->
+  Stage3.Integer {integer, evidence} ->
     Call
       { function =
           Method
@@ -255,47 +255,47 @@ simplifyWith expression [] = case expression of
             },
         argument = Integer {integer}
       }
-  Stage3.Tuple {Stage3.elements} ->
+  Stage3.Tuple {elements} ->
     Constructor
       { constructor = Constructor.tuple (length elements),
         arguments = simplify <$> Strict.Vector2.toVector elements
       }
-  Stage3.List {Stage3.items} ->
+  Stage3.List {items} ->
     foldr (cons . simplify) nil items
-  Stage3.Let {Stage3.declarations, Stage3.letBody} ->
+  Stage3.Let {declarations, letBody} ->
     Let
       { declarations = Declarations.simplify declarations,
         letBody = simplify letBody
       }
-  Stage3.If {Stage3.condition, Stage3.thenx, Stage3.elsex} ->
+  Stage3.If {condition, thenx, elsex} ->
     guard
       ( Statements.bind
           ( Pattern.Match
-              { Pattern.match =
+              { match =
                   Pattern.Constructor
-                    { Pattern.constructor = Constructor.true,
-                      Pattern.patterns = Strict.Vector.empty
+                    { constructor = Constructor.true,
+                      patterns = Strict.Vector.empty
                     },
-                Pattern.irrefutable = False
+                irrefutable = False
               }
           )
           (simplify condition)
           ( Statements.Done
-              { Statements.done = shift $ simplify thenx
+              { done = shift $ simplify thenx
               }
           )
       )
       (simplify elsex)
-  Stage3.MultiwayIf {Stage3.branches} ->
+  Stage3.MultiwayIf {branches} ->
     Join
       { statements =
           foldr1
             Statements.Branch
             (RightHandSide.desugar . RightHandSide.simplify <$> branches)
       }
-  Stage3.Character {Stage3.character} ->
+  Stage3.Character {character} ->
     Character {character}
-  Stage3.String {Stage3.string} ->
+  Stage3.String {string} ->
     foldr (cons . Character) nil (unpack string)
   where
     cons head tail =
@@ -313,38 +313,38 @@ finish :: Expression scope -> Real.Expression scope
 finish = \case
   Variable {variable, instanciation} ->
     Real.Variable
-      { Real.variable = Real.Term.finish variable,
-        Real.instanciation
+      { variable = Real.Term.finish variable,
+        instanciation
       }
   Constructor {constructor, arguments} ->
     Real.Constructor
-      { Real.constructor,
-        Real.arguments = finish <$> arguments
+      { constructor,
+        arguments = finish <$> arguments
       }
   Selector {selector, argument} ->
     Real.Selector
-      { Real.selector,
-        Real.argument = finish argument
+      { selector,
+        argument = finish argument
       }
   Method {method, evidence, instanciation} ->
-    Real.Method {Real.method, Real.evidence, Real.instanciation}
-  Integer {integer} -> Real.Integer {Real.integer}
-  Character {character} -> Real.Character {Real.character}
+    Real.Method {method, evidence, instanciation}
+  Integer {integer} -> Real.Integer {integer}
+  Character {character} -> Real.Character {character}
   Let {declarations, letBody} ->
     Real.Let
-      { Real.declarations = Declarations.finish declarations,
-        Real.letBody = finish letBody
+      { declarations = Declarations.finish declarations,
+        letBody = finish letBody
       }
   Lambda {body} ->
     Real.Lambda
-      { Real.body = finish body
+      { body = finish body
       }
   Call {function, argument} ->
     Real.Call
-      { Real.function = finish function,
-        Real.argument = finish argument
+      { function = finish function,
+        argument = finish argument
       }
   Join {statements} ->
     Real.Join
-      { Real.statements = Statements.finish statements
+      { statements = Statements.finish statements
       }

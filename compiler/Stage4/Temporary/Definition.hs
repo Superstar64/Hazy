@@ -50,11 +50,11 @@ instance Semigroup (Definition scope) where
 
 simplify :: Stage3.Definition scope -> Definition scope
 simplify = \case
-  Stage3.Definition {Stage3.definition} ->
+  Stage3.Definition {definition} ->
     Definition
       { definition = Function.simplify definition
       }
-  Stage3.Alternative {Stage3.definition, Stage3.alternative} ->
+  Stage3.Alternative {definition, alternative} ->
     Alternative
       { definition = Function.simplify definition,
         alternative = simplify alternative
@@ -79,17 +79,16 @@ desugar :: Definition scope -> Expression scope
 desugar cases
   | etaExpandable cases =
       Expression.Lambda
-        { Expression.body =
-            desugar $ etaExpand cases
+        { body = desugar $ etaExpand cases
         }
   | otherwise =
       Expression.Join
-        { Expression.statements = go cases
+        { statements = go cases
         }
   where
     go Definition {definition} = Function.desugarUnitary definition
     go Alternative {definition, alternative} =
       Statements.Branch
-        { Statements.left = Function.desugarUnitary definition,
-          Statements.right = go alternative
+        { left = Function.desugarUnitary definition,
+          right = go alternative
         }

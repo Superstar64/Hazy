@@ -109,7 +109,7 @@ data Expression s scope
       }
 
 check :: Context s scope -> Unify.Type s scope -> Stage2.Expression scope -> ST s (Expression s scope)
-check context@Context {termEnvironment} typex Stage2.Variable {Stage2.variablePosition, Stage2.variable} = do
+check context@Context {termEnvironment} typex Stage2.Variable {variablePosition, variable} = do
   let TermBinding binding = termEnvironment Term.! variable
   binding >>= \case
     Wobbly scheme -> do
@@ -120,17 +120,17 @@ check context@Context {termEnvironment} typex Stage2.Variable {Stage2.variablePo
       (typex', instanciation) <- instanciate context variablePosition scheme
       Unify.unify context variablePosition typex typex'
       pure Variable {variable, instanciation}
-check context@Context {typeEnvironment} typex Stage2.Constructor {Stage2.constructorPosition, Stage2.constructor} =
+check context@Context {typeEnvironment} typex Stage2.Constructor {constructorPosition, constructor} =
   do
     let Constructor.Index typeIndex constructorIndex = constructor
     datax <- do
       let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
       Builtin.index pure get typeIndex
-    DataInstance {DataInstance.types, DataInstance.constructors} <-
+    DataInstance {types, constructors} <-
       Simple.Data.instanciate datax
     let root = Unify.constructor typeIndex
         base = foldl Unify.call root types
-        ConstructorInstance {ConstructorInstance.entries} =
+        ConstructorInstance {entries} =
           constructors Strict.Vector.! constructorIndex
         typex' = foldr Unify.function base entries
     Unify.unify context constructorPosition typex typex'
@@ -139,20 +139,20 @@ check
   context@Context {typeEnvironment}
   typex
   Stage2.Record
-    { Stage2.constructorPosition,
-      Stage2.constructor,
-      Stage2.fields
+    { constructorPosition,
+      constructor,
+      fields
     } =
     do
       let Constructor.Index typeIndex constructorIndex = constructor
       datax <- do
         let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
         Builtin.index pure get typeIndex
-      DataInstance {DataInstance.types, DataInstance.constructors} <-
+      DataInstance {types, constructors} <-
         Simple.Data.instanciate datax
       let root = Unify.constructor typeIndex
           base = foldl Unify.call root types
-          ConstructorInstance {ConstructorInstance.entries} =
+          ConstructorInstance {entries} =
             constructors Strict.Vector.! constructorIndex
           lookup index = entries Strict.Vector.! index
       Unify.unify context constructorPosition typex base
@@ -161,18 +161,18 @@ check
 check
   context@Context {typeEnvironment}
   typex
-  Stage2.Selector {Stage2.selectorPosition, Stage2.selector} = do
+  Stage2.Selector {selectorPosition, selector} = do
     let Selector.Index typeIndex selectorIndex = selector
     datax <- do
       let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
       Builtin.index pure get typeIndex
-    DataInstance {DataInstance.types, DataInstance.constructors, DataInstance.selectors} <-
+    DataInstance {types, constructors, selectors} <-
       Simple.Data.instanciate datax
     let root = Unify.constructor typeIndex
         base = foldl Unify.call root types
-        Redirect.Selector {Redirect.first, Redirect.index, Redirect.uniform} =
+        Redirect.Selector {first, index, uniform} =
           selectors Strict.Vector.! selectorIndex
-        ConstructorInstance {ConstructorInstance.entries} =
+        ConstructorInstance {entries} =
           constructors Strict.Vector.! first
         entry = entries Strict.Vector.! index
         typex' = Unify.function base entry
@@ -181,50 +181,50 @@ check
 check
   context@Context {typeEnvironment}
   typex
-  Stage2.Method {Stage2.methodPosition, Stage2.method} = do
+  Stage2.Method {methodPosition, method} = do
     case method of
       Method.Index typeIndex methodIndex -> do
         classx <- do
           let get index = assumeClass <$> TypeBinding.content (typeEnvironment Type.! index)
           Builtin.index pure get typeIndex
-        ClassInstance {ClassInstance.methods, ClassInstance.evidence} <-
+        ClassInstance {methods, evidence} <-
           Simple.Class.instanciate context methodPosition typeIndex classx
         let method' = methods Strict.Vector.! methodIndex
         (typex', instanciation) <- Unify.instanciate context methodPosition method'
         Unify.unify context methodPosition typex typex'
         pure Method {method, evidence, instanciation}
-check context typex Stage2.List {Stage2.startPosition, Stage2.items} = do
+check context typex Stage2.List {startPosition, items} = do
   inner <- Unify.fresh Unify.typex
   Unify.unify context startPosition typex (Unify.listWith inner)
   items <- traverse (check context inner) items
   pure (List items)
-check context resultType Stage2.Call {Stage2.function, Stage2.argument} = do
+check context resultType Stage2.Call {function, argument} = do
   argumentType <- Unify.fresh Unify.typex
   function1 <- check context (Unify.function argumentType resultType) function
   argument <- check context argumentType argument
   pure (Call function1 argument)
-check context typex Stage2.Let {Stage2.declarations, Stage2.letBody} = do
+check context typex Stage2.Let {declarations, letBody} = do
   (context, declarations) <- Declarations.check context declarations
   letBody <- check context (shift typex) letBody
   pure (Let declarations letBody)
-check context typex Stage2.If {Stage2.condition, Stage2.thenx, Stage2.elsex} = do
+check context typex Stage2.If {condition, thenx, elsex} = do
   condition <- check context Unify.bool condition
   thenx <- check context typex thenx
   elsex <- check context typex elsex
   pure (If condition thenx elsex)
-check context typex Stage2.MultiwayIf {Stage2.branches} = do
+check context typex Stage2.MultiwayIf {branches} = do
   branches <- traverse (RightHandSide.check context typex) branches
   pure (MultiwayIf branches)
-check context typex Stage2.Integer {Stage2.startPosition, Stage2.integer} = do
+check context typex Stage2.Integer {startPosition, integer} = do
   evidence <- Unify.constrain context startPosition Type2.Num typex
   pure $ Integer {integer, evidence}
-check context typex Stage2.String {Stage2.startPosition, Stage2.string} = do
+check context typex Stage2.String {startPosition, string} = do
   Unify.unify context startPosition typex (Unify.listWith Unify.char)
   pure $ String string
-check context typex Stage2.Character {Stage2.startPosition, Stage2.character} = do
+check context typex Stage2.Character {startPosition, character} = do
   Unify.unify context startPosition typex Unify.char
   pure $ Character {character}
-check context typex Stage2.Tuple {Stage2.startPosition, Stage2.elements} = do
+check context typex Stage2.Tuple {startPosition, elements} = do
   items <- for elements $ \element -> do
     typex <- Unify.fresh Unify.typex
     element <- check context typex element
@@ -233,33 +233,33 @@ check context typex Stage2.Tuple {Stage2.startPosition, Stage2.elements} = do
   let target = foldl Unify.call (Unify.tuple $ length elements) types
   Unify.unify context startPosition typex target
   pure $ Tuple {elements}
-check _ _ Stage2.Float {Stage2.startPosition} =
+check _ _ Stage2.Float {startPosition} =
   unsupportedFeatureFloatingPointLiterals startPosition
-check _ _ Stage2.Comprehension {Stage2.startPosition} =
+check _ _ Stage2.Comprehension {startPosition} =
   unsupportedFeatureListComprehension startPosition
-check _ _ Stage2.Update {Stage2.updatePosition} =
+check _ _ Stage2.Update {updatePosition} =
   unsupportedFeatureRecordUpdate updatePosition
-check _ _ Stage2.Case {Stage2.startPosition} =
+check _ _ Stage2.Case {startPosition} =
   unsupportedFeatureCaseExpressions startPosition
-check _ _ Stage2.Do {Stage2.startPosition} =
+check _ _ Stage2.Do {startPosition} =
   unsupportedFeatureDoNotation startPosition
-check _ _ Stage2.Lambda {Stage2.startPosition} =
+check _ _ Stage2.Lambda {startPosition} =
   unsupportedFeatureLambdas startPosition
-check _ _ Stage2.LambdaCase {Stage2.startPosition} =
+check _ _ Stage2.LambdaCase {startPosition} =
   unsupportedFeatureLambdaCase startPosition
-check _ _ Stage2.RightSectionVariable {Stage2.operatorPosition} =
+check _ _ Stage2.RightSectionVariable {operatorPosition} =
   unsupportedFeatureRightSection operatorPosition
-check _ _ Stage2.RightSectionMethod {Stage2.operatorPosition} =
+check _ _ Stage2.RightSectionMethod {operatorPosition} =
   unsupportedFeatureRightSection operatorPosition
-check _ _ Stage2.RightSectionSelector {Stage2.operatorPosition} =
+check _ _ Stage2.RightSectionSelector {operatorPosition} =
   unsupportedFeatureRightSection operatorPosition
-check _ _ Stage2.RightSectionConstructor {Stage2.operatorPosition} =
+check _ _ Stage2.RightSectionConstructor {operatorPosition} =
   unsupportedFeatureRightSection operatorPosition
-check _ _ Stage2.RightSectionCons {Stage2.operatorPosition} =
+check _ _ Stage2.RightSectionCons {operatorPosition} =
   unsupportedFeatureRightSection operatorPosition
-check _ _ Stage2.Annotation {Stage2.operatorPosition} =
+check _ _ Stage2.Annotation {operatorPosition} =
   unsupportedFeatureExpressionAnnotation operatorPosition
-check _ _ Stage2.RunST {Stage2.startPosition} =
+check _ _ Stage2.RunST {startPosition} =
   unsupportedFeatureRunST startPosition
 
 solve :: Expression s scope -> ST s (Solved.Expression scope)
@@ -268,23 +268,23 @@ solve = \case
     instanciation <- Unify.solveInstanciation instanciation
     pure
       Solved.Variable
-        { Solved.variable,
-          Solved.instanciation
+        { variable,
+          instanciation
         }
-  Constructor {constructor, parameters} -> pure $ Solved.Constructor {Solved.constructor, Solved.parameters}
-  Selector {selector, uniform} -> pure $ Solved.Selector {Solved.selector, Solved.uniform}
+  Constructor {constructor, parameters} -> pure $ Solved.Constructor {constructor, parameters}
+  Selector {selector, uniform} -> pure $ Solved.Selector {selector, uniform}
   Method {method, evidence, instanciation} -> do
     evidence <- Unify.solveEvidence evidence
     instanciation <- Unify.solveInstanciation instanciation
     pure $
       Solved.Method
-        { Solved.method,
-          Solved.evidence,
-          Solved.instanciation
+        { method,
+          evidence,
+          instanciation
         }
   Record {constructor, parameters, fields} -> do
     fields <- traverse Field.solve fields
-    pure Solved.Record {Solved.constructor, Solved.parameters, Solved.fields}
+    pure Solved.Record {constructor, parameters, fields}
   List items -> do
     items <- traverse solve items
     pure $ Solved.List items
@@ -306,9 +306,9 @@ solve = \case
     pure $ Solved.MultiwayIf branches
   Integer {integer, evidence} -> do
     evidence <- Unify.solveEvidence evidence
-    pure Solved.Integer {Solved.integer, Solved.evidence}
-  String {string} -> pure $ Solved.String {Solved.string}
-  Character {character} -> pure $ Solved.Character {Solved.character}
+    pure Solved.Integer {integer, evidence}
+  String {string} -> pure $ Solved.String {string}
+  Character {character} -> pure $ Solved.Character {character}
   Tuple {elements} -> do
     elements <- traverse solve elements
-    pure $ Solved.Tuple {Solved.elements}
+    pure $ Solved.Tuple {elements}

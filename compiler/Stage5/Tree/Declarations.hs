@@ -29,10 +29,10 @@ generate context Declarations {terms, classInstances, dataInstances} = do
   dataVariables <- traverse (traverse $ const $ Context.fresh context) dataInstances
   let instances = Vector.zipWith localType classVariables dataVariables
       localType classInstances dataInstances =
-        LocalType {LocalType.classInstances, LocalType.dataInstances}
+        LocalType {classInstances, dataInstances}
   context <- pure $ Context.localBindings variables instances context
   statements <- for (zip (toList variables) (toList terms)) $
-    \(name, Definition {TermDeclaration.definition, TermDeclaration.typex}) -> do
+    \(name, Definition {definition, typex}) -> do
       let count = Scheme.constraintCount typex
       thunk <- Expression.declaration context count definition
       pure $ Javascript.Const name thunk

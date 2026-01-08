@@ -50,18 +50,18 @@ check
   classx
   head
   InstanceAnnotation
-    { InstanceAnnotation.parameters,
-      InstanceAnnotation.prerequisites
+    { parameters,
+      prerequisites
     }
   Stage2.Instance
-    { Stage2.startPosition,
-      Stage2.members
+    { startPosition,
+      members
     } = do
     let prerequisitesCount = length prerequisites
     classx <- do
       let get index = assumeClass <$> TypeBinding.content (typeEnvironment Table.Type.! index)
       Builtin.index pure get classx
-    let Simple.Class.Class {Simple.Class.constraints, Simple.Class.methods} = classx
+    let Simple.Class.Class {constraints, methods} = classx
         base = foldl Simple.Type.Call (shift $ Simple.Type.Constructor head) variables
           where
             variables = [Simple.Type.Variable $ Local.Local i | i <- [0 .. length parameters - 1]]
@@ -75,13 +75,13 @@ check
     -}
 
     evidence <- for constraints $
-      \Simple.Constraint {Simple.Constraint.classx, Simple.Constraint.arguments} -> do
+      \Simple.Constraint {classx, arguments} -> do
         let parameter = foldl Simple.Type.Call base arguments
         evidence <- Unify.constrain context startPosition (shift classx) (Simple.Type.lift parameter)
         Unify.solveEvidence evidence
     let check scheme member = for member $ \member -> do
           context <- Simple.Scheme.augment' startPosition scheme context
-          let Simple.Scheme Simple.SchemeOver {Simple.result} = scheme
+          let Simple.Scheme Simple.SchemeOver {result} = scheme
               replace = \case
                 Local.Shift (Local.Local index)
                   | 0 <- index -> shift base

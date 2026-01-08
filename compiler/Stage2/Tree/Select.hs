@@ -26,8 +26,8 @@ instance Shift.Functor Select where
 
 resolve :: Type2.Index scope -> Context scope -> Stage1.Field Position -> Select scope
 resolve typex context = \case
-  Stage1.Field {Stage1.variable, Stage1.field} -> make variable (Expression.resolve context field)
-  Stage1.Pun {Stage1.variable = variable@(position :@ _ :- localName)} ->
+  Stage1.Field {variable, field} -> make variable (Expression.resolve context field)
+  Stage1.Pun {variable = variable@(position :@ _ :- localName)} ->
     let index = context !-* position :@ Local :- localName
      in make variable (variablex position index)
   where

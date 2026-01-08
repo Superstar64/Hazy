@@ -41,18 +41,18 @@ check ::
   TypeAnnotation (Unify.Type s scope) scope ->
   Stage2.TermDeclaration scope ->
   ST s (TermDeclaration s scope)
-check context annotation Stage2.Auto {Stage2.position, Stage2.definitionAuto, Stage2.name}
+check context annotation Stage2.Auto {position, definitionAuto, name}
   | TypeAnnotation.Inferred typeAuto <- annotation = do
       definitionAuto <- Definition.check context typeAuto definitionAuto
       pure Auto {position, name, definitionAuto, typeAuto}
   | otherwise = error "bad type annotation"
-check context annotation Stage2.Manual {Stage2.position, Stage2.definition, Stage2.name}
+check context annotation Stage2.Manual {position, definition, name}
   | TypeAnnotation.Annotation
-      { TypeAnnotation.annotation =
+      { annotation =
           annotation@Solved.Scheme
-            { Solved.parameters,
-              Solved.constraints,
-              Solved.result
+            { parameters,
+              constraints,
+              result
             }
       } <-
       annotation =
@@ -63,13 +63,13 @@ check context annotation Stage2.Manual {Stage2.position, Stage2.definition, Stag
         let typex = Simple.Scheme.simplify annotation
         pure Manual {position, name, definition, annotation, typex}
   | otherwise = error "bad type annotation"
-check _ _ Stage2.Share {Stage2.position} = unsupportedFeaturePatternLetBinds position
+check _ _ Stage2.Share {position} = unsupportedFeaturePatternLetBinds position
 
 solve :: TermDeclaration s scope -> ST s (Solved.TermDeclaration scope)
 solve Manual {name, definition, annotation, typex} = do
   definition <- Definition.solve definition
-  pure Solved.Manual {Solved.name, Solved.definition, Solved.annotation, Solved.typex}
+  pure Solved.Manual {name, definition, annotation, typex}
 solve Auto {position, name, definitionAuto, typeAuto} = do
   definitionAuto <- Definition.solve definitionAuto
   typeAuto <- Unify.solve position typeAuto
-  pure Solved.Auto {Solved.name, Solved.definitionAuto, Solved.typeAuto}
+  pure Solved.Auto {name, definitionAuto, typeAuto}

@@ -26,14 +26,14 @@ check ::
   Context s scope ->
   Stage2.TermDeclaration scope ->
   ST s (TypeAnnotation inferred scope)
-check _ _ context Stage2.Manual {Stage2.annotation} = do
+check _ _ context Stage2.Manual {annotation} = do
   annotation <- Scheme.check context annotation
   let simplify = Synonym.fromProper context
   annotation <- Scheme.solve simplify annotation
   let annotation' = Simple.simplify annotation
   pure $ Annotation {annotation, annotation'}
 check _ auto _ Stage2.Auto {} = pure $ Inferred auto
-check _ _ _ Stage2.Share {Stage2.position} = unsupportedFeaturePatternLetBinds position
+check _ _ _ Stage2.Share {position} = unsupportedFeaturePatternLetBinds position
 
 instanciate :: TypeAnnotation () scope -> ST s (TypeAnnotation (Unify.Type s scope) scope)
 instanciate = \case

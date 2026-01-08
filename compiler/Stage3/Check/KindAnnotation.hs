@@ -34,7 +34,7 @@ data KindAnnotation scope
       }
 
 check :: Context s scope -> Stage2.TypeDeclaration scope -> ST s (KindAnnotation scope)
-check context Stage2.Synonym {Stage2.position, Stage2.synonym, Stage2.parameters, Stage2.annotation} =
+check context Stage2.Synonym {position, synonym, parameters, annotation} =
   do
     target <- Unify.fresh (Unify.typeWith Unify.large)
     annotation <- case annotation of

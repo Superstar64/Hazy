@@ -28,10 +28,10 @@ instance Shift (TermBinding s) where
 rigid ::
   Functor.Annotated name (ST s (TypeAnnotation () scope)) (ST s (TermDeclaration scope)) ->
   TermBinding s scope
-rigid Functor.Annotated {Functor.meta, Functor.content} = TermBinding $ do
+rigid Functor.Annotated {meta, content} = TermBinding $ do
   annotation <- meta
   Rigid <$> case annotation of
-    Annotation {Annotation.annotation'} -> pure annotation'
+    Annotation {annotation'} -> pure annotation'
     Inferred () -> TermDeclaration.simple <$> content
 
 wobbly ::
@@ -40,9 +40,9 @@ wobbly ::
     (ST s (TypeAnnotation (Unify.Type s scope) scope))
     b ->
   TermBinding s scope
-wobbly Functor.Annotated {Functor.meta} = TermBinding $ do
+wobbly Functor.Annotated {meta} = TermBinding $ do
   annotation <- meta
   case annotation of
-    Annotation {Annotation.annotation'} -> do
+    Annotation {annotation'} -> do
       pure (Rigid annotation')
     Inferred typex -> pure $ Wobbly typex

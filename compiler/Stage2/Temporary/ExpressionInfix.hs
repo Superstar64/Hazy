@@ -35,7 +35,7 @@ data Index scope
 resolve :: Context scope -> Stage1.Infix Position -> Infix (Index scope) (Expression scope)
 resolve context = \case
   Stage1.Expression expression1 -> Single (Expression.resolve context expression1)
-  Stage1.Infix {Stage1.left, Stage1.operator, Stage1.right} ->
+  Stage1.Infix {left, operator, right} ->
     Infix (Expression.resolve context left) (lookup operator) (resolve context right)
     where
       lookup = \case
@@ -43,7 +43,7 @@ resolve context = \case
           Term operatorPosition (context !- (operatorPosition :@ operator))
         operatorPosition :@ QualifiedConstructor operator ->
           Constructor operatorPosition (context !=~ operatorPosition :@ operator)
-  Stage1.InfixCons {Stage1.head, Stage1.operatorPosition, Stage1.tail} ->
+  Stage1.InfixCons {head, operatorPosition, tail} ->
     Infix (Expression.resolve context head) (Cons operatorPosition) (resolve context tail)
 
 fix :: Infix (Index scope) (Expression scope) -> Expression scope
@@ -57,14 +57,14 @@ fixWith = Infix.fixWith position fixity operator
       Constructor position _ -> position
       Cons position -> position
     fixity = \case
-      Term _ Term.Binding {Term.fixity} -> fixity
-      Constructor _ Constructor.Binding {Constructor.fixity} -> fixity
+      Term _ Term.Binding {fixity} -> fixity
+      Constructor _ Constructor.Binding {fixity} -> fixity
       Cons _ -> Fixity Right 5
     operator :: Expression scope -> Index scope -> Expression scope -> Expression scope
     operator left index right = case index of
-      Term _ Term.Binding {Term.index, Term.position} ->
+      Term _ Term.Binding {index, position} ->
         Expression.resolveTerm2 position index (Nil :> left :> right)
-      Constructor _ Constructor.Binding {Constructor.index, Constructor.position} ->
+      Constructor _ Constructor.Binding {index, position} ->
         Expression.resolveConstructor2 position index (Nil :> left :> right)
       Cons position ->
         Expression.resolveConstructor2 position Constructor.cons (Nil :> left :> right)

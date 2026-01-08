@@ -26,15 +26,15 @@ data InstanceAnnotation scope = InstanceAnnotation
 prerequisites'_ = prerequisites'
 
 check :: Context s scope -> Stage2.Instance scope -> ST s (InstanceAnnotation scope)
-check context Stage2.Instance {Stage2.parameters, Stage2.prerequisites} = do
-  let fresh Stage2.TypePattern {Stage2.TypePattern.name, Stage2.TypePattern.position} = do
+check context Stage2.Instance {parameters, prerequisites} = do
+  let fresh Stage2.TypePattern {name, position} = do
         level <- Unify.fresh Unify.universe
         typex <- Unify.fresh (Unify.typeWith level)
         pure
           Unsolved.TypePattern
-            { Unsolved.TypePattern.name,
-              Unsolved.TypePattern.typex,
-              Unsolved.TypePattern.position
+            { name,
+              typex,
+              position
             }
   parameters <- traverse fresh parameters
   context <- pure $ Unsolved.Scheme.augment parameters context

@@ -35,15 +35,15 @@ toExpression = \case
   Expression e -> e
   Infix {left, operator, right} ->
     Expression.Infix
-      { Expression.left,
-        Expression.operator,
-        Expression.right
+      { left,
+        operator,
+        right
       }
   InfixCons {head, operatorPosition, tail} ->
     Expression.InfixCons
-      { Expression.head,
-        Expression.operatorPosition,
-        Expression.tail
+      { head,
+        operatorPosition,
+        tail
       }
 
 parse :: Parser (Infix Position)
@@ -75,13 +75,13 @@ parseLeftSection = parseLeftSection <$> some ((,) <$> Expression.parse2 <*> oper
     parseLeftSection expressions = case snd $ NonEmpty.last expressions of
       Left operator ->
         Expression.LeftSection
-          { Expression.leftSection = infixed expressions,
-            Expression.operator
+          { leftSection = infixed expressions,
+            operator
           }
       Right operatorPosition ->
         Expression.LeftSectionCons
-          { Expression.leftSection = infixed expressions,
-            Expression.operatorPosition
+          { leftSection = infixed expressions,
+            operatorPosition
           }
     infixed ((expression, _) :| []) = Expression expression
     infixed ((left, Left operator) :| expression : expressions) =

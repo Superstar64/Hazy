@@ -28,8 +28,8 @@ resolve context (Stage1.GADTConstructor names scheme) = do
         name,
         constructor =
           Real.GADTConstructor
-            { Real.position,
-              Real.name,
-              Real.typex = Scheme.resolve context scheme
+            { position,
+              name,
+              typex = Scheme.resolve context scheme
             }
       }

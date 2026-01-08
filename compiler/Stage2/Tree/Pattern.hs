@@ -153,10 +153,10 @@ bindings patternx =
   where
     termIndex (position :@ x) =
       Term.Binding
-        { Term.position,
-          Term.index = Term2.index $ Term.Pattern x,
-          Term.fixity = Fixity Left 9,
-          Term.selector = Term.Normal
+        { position,
+          index = Term2.index $ Term.Pattern x,
+          fixity = Fixity Left 9,
+          selector = Term.Normal
         }
 
 selections :: Pattern scope -> Map Variable (Marked Term.Bound Position)
@@ -191,34 +191,34 @@ selections patternx = Map.map single (selections patternx)
 
 resolve :: Context scope -> Stage1.Pattern Position -> Pattern scope
 resolve context = \case
-  Stage1.Variable {Stage1.variable = position :@ name} -> variable position name
-  Stage1.At {Stage1.variable = position :@ variable, Stage1.patternx} ->
+  Stage1.Variable {variable = position :@ name} -> variable position name
+  Stage1.At {variable = position :@ variable, patternx} ->
     At {names = Map.insert variable position names, match}
     where
       At {names, match} = resolve context patternx
   Stage1.Wildcard {} -> At {names = Map.empty, match = Wildcard}
-  Stage1.Infix {Stage1.startPosition, Stage1.left, Stage1.operator, Stage1.operatorPosition, Stage1.right} ->
+  Stage1.Infix {startPosition, left, operator, operatorPosition, right} ->
     Infix.fix $
       Infix.resolve
         context
         Stage1.Infix.Infix
-          { Stage1.Infix.startPosition,
-            Stage1.Infix.left,
-            Stage1.Infix.operator,
-            Stage1.Infix.operatorPosition,
-            Stage1.Infix.right
+          { startPosition,
+            left,
+            operator,
+            operatorPosition,
+            right
           }
-  Stage1.InfixCons {Stage1.startPosition, Stage1.left, Stage1.operatorPosition, Stage1.right} ->
+  Stage1.InfixCons {startPosition, left, operatorPosition, right} ->
     Infix.fix $
       Infix.resolve
         context
         Stage1.Infix.InfixCons
-          { Stage1.Infix.startPosition,
-            Stage1.Infix.left,
-            Stage1.Infix.operatorPosition,
-            Stage1.Infix.right
+          { startPosition,
+            left,
+            operatorPosition,
+            right
           }
-  Stage1.Irrefutable {Stage1.patternx} ->
+  Stage1.Irrefutable {patternx} ->
     let At {names, match} = resolve context patternx
      in At
           { names,
@@ -229,7 +229,7 @@ resolve context = \case
   pattern1 -> At {names = Map.empty, match}
     where
       match = Match $ case pattern1 of
-        Stage1.Constructor {Stage1.startPosition, Stage1.constructor, Stage1.patterns} ->
+        Stage1.Constructor {startPosition, constructor, patterns} ->
           case context !=*~ startPosition :@ constructor of
             constructor ->
               Constructor
@@ -237,45 +237,45 @@ resolve context = \case
                   constructor,
                   patterns = fmap (resolve context) patterns
                 }
-        Stage1.Record {Stage1.startPosition, Stage1.constructor, Stage1.fields} ->
+        Stage1.Record {startPosition, constructor, fields} ->
           case context != startPosition :@ constructor of
             binding@Constructor.Binding
-              { Constructor.index = constructor
+              { index = constructor
               } ->
                 Record
                   { constructorPosition = startPosition,
                     constructor,
                     fields = fmap (Field.resolve context binding) fields
                   }
-        Stage1.Integer {Stage1.startPosition, Stage1.integer} ->
+        Stage1.Integer {startPosition, integer} ->
           Integer
             { startPosition,
               integer
             }
-        Stage1.Float {Stage1.startPosition, Stage1.float} ->
+        Stage1.Float {startPosition, float} ->
           Float
             { startPosition,
               float
             }
-        Stage1.Character {Stage1.startPosition, Stage1.character} -> Character {startPosition, character}
-        Stage1.String {Stage1.startPosition, Stage1.string} ->
+        Stage1.Character {startPosition, character} -> Character {startPosition, character}
+        Stage1.String {startPosition, string} ->
           String
             { startPosition,
               string
             }
-        Stage1.Unit {Stage1.startPosition} ->
+        Stage1.Unit {startPosition} ->
           Constructor
             { constructorPosition = startPosition,
               constructor = Constructor.tuple 0,
               patterns = Strict.Vector.empty
             }
-        Stage1.Tuple {Stage1.startPosition, Stage1.elements} ->
+        Stage1.Tuple {startPosition, elements} ->
           Constructor
             { constructorPosition = startPosition,
               constructor = Constructor.tuple (length elements),
               patterns = resolve context <$> Strict.Vector2.toVector elements
             }
-        Stage1.List {Stage1.startPosition, Stage1.items}
+        Stage1.List {startPosition, items}
           | null items ->
               Constructor
                 { constructorPosition = startPosition,
@@ -287,7 +287,7 @@ resolve context = \case
                 { startPosition,
                   items = fmap (resolve context) (Strict.Vector1.fromVector items)
                 }
-        Stage1.Cons {Stage1.startPosition, Stage1.head, Stage1.tail} ->
+        Stage1.Cons {startPosition, head, tail} ->
           Constructor
             { constructorPosition = startPosition,
               constructor = Constructor.cons,

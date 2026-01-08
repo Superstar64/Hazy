@@ -58,11 +58,11 @@ globalBindings (Functor.ModuleSet modules) =
       typeEnvironment = Type.Global $ kinds <$> modules
     }
   where
-    types Functor.Module {Functor.declarations} = termBindings declarations
-    kinds Functor.Module {Functor.declarations} = typeBindings declarations
-    termBindings Functor.Declarations {Functor.terms} =
+    types Functor.Module {declarations} = termBindings declarations
+    kinds Functor.Module {declarations} = typeBindings declarations
+    termBindings Functor.Declarations {terms} =
       TermBinding.rigid <$> terms
-    typeBindings Functor.Declarations {Functor.types, Functor.classInstances, Functor.dataInstances} =
+    typeBindings Functor.Declarations {types, classInstances, dataInstances} =
       Vector.zipWith3 TypeBinding.rigid types dataInstances classInstances
 
 localBindings ::
@@ -77,7 +77,7 @@ localBindings ::
   Context s scope ->
   Context s (Declaration ':+ scope)
 localBindings
-  Functor.Declarations {Functor.terms, Functor.types, Functor.classInstances, Functor.dataInstances}
+  Functor.Declarations {terms, types, classInstances, dataInstances}
   Context {termEnvironment, localEnvironment, typeEnvironment} =
     Context
       { termEnvironment = Term.Declaration termBindings termEnvironment,
@@ -91,7 +91,7 @@ localBindings
 label :: Context s scope -> Label.Context scope
 label Context {termEnvironment, localEnvironment, typeEnvironment} =
   Label.Context
-    { Label.terms = Term.map (error "term names are used in errors") termEnvironment,
-      Label.locals = Local.map (Local.Map LocalBinding.label) localEnvironment,
-      Label.types = Type.map (Type.Map TypeBinding.label) typeEnvironment
+    { terms = Term.map (error "term names are used in errors") termEnvironment,
+      locals = Local.map (Local.Map LocalBinding.label) localEnvironment,
+      types = Type.map (Type.Map TypeBinding.label) typeEnvironment
     }

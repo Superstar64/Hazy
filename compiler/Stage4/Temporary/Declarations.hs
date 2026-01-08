@@ -31,7 +31,7 @@ instance Shift.Functor Declarations where
 
 instance Term.Functor Declarations where
   map
-    category@Term.Category {Term.general}
+    category@Term.Category {general}
     Declarations {terms, types, classInstances, dataInstances} =
       Declarations
         { terms = Term.map category <$> terms,
@@ -45,10 +45,10 @@ instance Term.Functor Declarations where
 simplify :: Stage3.Declarations scope -> Declarations scope
 simplify
   Stage3.Declarations
-    { Stage3.terms,
-      Stage3.types,
-      Stage3.classInstances,
-      Stage3.dataInstances
+    { terms,
+      types,
+      classInstances,
+      dataInstances
     } =
     Declarations
       { terms = TermDeclaration.simplify <$> terms,
@@ -60,8 +60,8 @@ simplify
 finish :: Declarations scope -> Real.Declarations scope
 finish Declarations {terms, types, classInstances, dataInstances} =
   Real.Declarations
-    { Real.terms = TermDeclaration.finish <$> terms,
-      Real.types,
-      Real.classInstances = fmap Instance.finish <$> classInstances,
-      Real.dataInstances = fmap Instance.finish <$> dataInstances
+    { terms = TermDeclaration.finish <$> terms,
+      types,
+      classInstances = fmap Instance.finish <$> classInstances,
+      dataInstances = fmap Instance.finish <$> dataInstances
     }

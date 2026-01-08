@@ -26,4 +26,4 @@ instance Shift.Functor Pattern where
     Character {character} -> Character {character}
 
 instance Term.Functor Pattern where
-  map Term.Category {Term.general} = Shift.map general
+  map Term.Category {general} = Shift.map general

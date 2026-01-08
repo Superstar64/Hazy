@@ -47,17 +47,17 @@ toType = \case
   Type typex -> typex
   Infix {startPosition, left, operator, right} ->
     Type.Infix
-      { Type.startPosition,
-        Type.left,
-        Type.operator,
-        Type.right
+      { startPosition,
+        left,
+        operator,
+        right
       }
   InfixCons {startPosition, head, operatorPosition, tail} ->
     Type.InfixCons
-      { Type.startPosition,
-        Type.head,
-        Type.operatorPosition,
-        Type.tail
+      { startPosition,
+        head,
+        operatorPosition,
+        tail
       }
 
 instance FreeTypeVariables Infix where

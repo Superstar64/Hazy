@@ -167,27 +167,27 @@ typeBindingVariables = \case
 fromClass :: ClassDeclaration position -> Declaration position
 fromClass = \case
   ClassDeclaration.Annotation
-    { ClassDeclaration.termNames,
-      ClassDeclaration.annotation
+    { termNames,
+      annotation
     } -> Annotation {termNames, annotation}
   ClassDeclaration.Definition
-    { ClassDeclaration.startPosition,
-      ClassDeclaration.leftHandSide,
-      ClassDeclaration.rightHandSide
+    { startPosition,
+      leftHandSide,
+      rightHandSide
     } -> Definition {startPosition, leftHandSide, rightHandSide}
   ClassDeclaration.Infix
-    { ClassDeclaration.fixity,
-      ClassDeclaration.termNames'
+    { fixity,
+      termNames'
     } -> Infix {fixity, termNames'}
 
 fromImport :: Import position -> Declaration position
 fromImport
   Import.Import
-    { Import.qualification,
-      Import.targetPosition,
-      Import.target,
-      Import.alias,
-      Import.symbols
+    { qualification,
+      targetPosition,
+      target,
+      alias,
+      symbols
     } =
     Import
       { qualification,
@@ -208,11 +208,11 @@ toImport
     } =
     Just
       Import.Import
-        { Import.qualification,
-          Import.targetPosition,
-          Import.target,
-          Import.alias,
-          Import.symbols
+        { qualification,
+          targetPosition,
+          target,
+          alias,
+          symbols
         }
 toImport _ = Nothing
 

@@ -65,9 +65,9 @@ data Context scope = Context
   }
 
 core :: Context scope -> Core scope
-core Context {globals, locals} = Core {Core.globals, Core.locals}
+core Context {globals, locals} = Core {globals, locals}
 
-updateCore Core {Core.globals, Core.locals} context = context {globals, locals}
+updateCore Core {globals, locals} context = context {globals, locals}
 
 instance Shift Context where
   shift = shiftDefault
@@ -144,4 +144,4 @@ left </> right =
       locals
     }
   where
-    Core {Core.globals, Core.locals} = left Core.</> core right
+    Core {globals, locals} = left Core.</> core right

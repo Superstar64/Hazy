@@ -82,10 +82,10 @@ fromMap core = Core {locals, globals}
     locals = Map.findWithDefault unbound Local core
     unbound =
       Bindings
-        { Bindings.terms = Map.empty,
-          Bindings.constructors = Map.empty,
-          Bindings.types = Map.empty,
-          Bindings.stability = Ignore
+        { terms = Map.empty,
+          constructors = Map.empty,
+          types = Map.empty,
+          stability = Ignore
         }
     globals = Map.mapKeysMonotonic full $ Map.delete Local core
       where

@@ -48,26 +48,26 @@ check ::
 check
   context@Context {localEnvironment, typeEnvironment}
   Stage2.Constraint
-    { Stage2.startPosition,
-      Stage2.classx,
-      Stage2.head,
-      Stage2.arguments
+    { startPosition,
+      classx,
+      head,
+      arguments
     } = do
     target <- Unify.fresh Unify.kind
     let indexType constructor
-          | TypeBinding {TypeBinding.kind = kind'} <- typeEnvironment Type.Table.! constructor =
+          | TypeBinding {kind = kind'} <- typeEnvironment Type.Table.! constructor =
               do
                 lift <$> kind'
         indexConstructor constructor = do
-          let Constructor.Index {Constructor.typeIndex, Constructor.constructorIndex} = constructor
+          let Constructor.Index {typeIndex, constructorIndex} = constructor
           datax <- do
             let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.Table.! index)
             Builtin.index pure get typeIndex
-          DataInstance {DataInstance.types, DataInstance.constructors} <-
+          DataInstance {types, constructors} <-
             Simple.Data.instanciate datax
           let root = Unify.constructor typeIndex
               base = foldl Unify.call root types
-              ConstructorInstance {ConstructorInstance.entries} =
+              ConstructorInstance {entries} =
                 constructors Strict.Vector.! constructorIndex
           pure $ foldr Unify.function base entries
     real <- Builtin.kind (pure . lift) indexType indexConstructor (shift classx)
@@ -80,10 +80,10 @@ check
           argument <- Type.check context parameterType argument
           pure (arguments :> argument)
         check context kind Nil = case localEnvironment Table.Local.! Local head of
-          LocalBinding.Wobbly {LocalBinding.wobbly} -> do
+          LocalBinding.Wobbly {wobbly} -> do
             Unify.unify context startPosition kind wobbly
             pure Nil
-          LocalBinding.Rigid {LocalBinding.rigid} -> do
+          LocalBinding.Rigid {rigid} -> do
             Unify.unify context startPosition kind (Simple.lift rigid)
             pure Nil
 
@@ -97,8 +97,8 @@ solve context Constraint {classx, head, arguments} = do
   let arguments' = fmap Simple.simplify arguments
   pure
     Solved.Constraint
-      { Solved.classx,
-        Solved.head,
-        Solved.arguments,
-        Solved.arguments'
+      { classx,
+        head,
+        arguments,
+        arguments'
       }

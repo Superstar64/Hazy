@@ -85,10 +85,7 @@ resolve context extensions declarations = do
     pure $ fmap (fmap unique) ordered
   dataInstances <- do
     let instances = foldMap (DataInstance.resolve context resolve) declarations
-        resolve =
-          DataInstance.Resolve
-            { DataInstance.typeIndexes
-            }
+        resolve = DataInstance.Resolve {typeIndexes}
         ordered = orderWithInt (Map.unionWith (<>)) Map.empty (length types) (DataInstance.prepare <$> instances)
         unique (instancex :| []) = DataInstance.shrink instancex
         unique instances = overlappingInstances (DataInstance.classPosition <$> toList instances)
@@ -127,18 +124,18 @@ bindings
       types
     } =
     Bindings
-      { Bindings.terms = Term.bindings termIndex typeIndex terms,
-        Bindings.constructors = ConstructorDeclaration.bindings typeIndex constructors,
-        Bindings.types = Type.bindings typeIndex types,
-        Bindings.stability = mempty
+      { terms = Term.bindings termIndex typeIndex terms,
+        constructors = ConstructorDeclaration.bindings typeIndex constructors,
+        types = Type.bindings typeIndex types,
+        stability = mempty
       }
 
 shrink :: Declarations scope -> Real.Declarations scope
 shrink Declarations {terms, types, shared, dataInstances, classInstances} =
   Real.Declarations
-    { Real.terms = Vector.catMaybes $ Term.shrink <$> Strict.Vector.toLazy terms,
-      Real.types = Type.shrink <$> Strict.Vector.toLazy types,
-      Real.shared = Shared.shrink <$> Strict.Vector.toLazy shared,
-      Real.dataInstances,
-      Real.classInstances
+    { terms = Vector.catMaybes $ Term.shrink <$> Strict.Vector.toLazy terms,
+      types = Type.shrink <$> Strict.Vector.toLazy types,
+      shared = Shared.shrink <$> Strict.Vector.toLazy shared,
+      dataInstances,
+      classInstances
     }

@@ -65,9 +65,9 @@ instance Builtin Class where
 bool :: Data scope
 bool =
   Data
-    { Data.parameters = Strict.Vector.empty,
-      Data.constructors = Strict.Vector.fromList set,
-      Data.selectors = Strict.Vector.empty
+    { parameters = Strict.Vector.empty,
+      constructors = Strict.Vector.fromList set,
+      selectors = Strict.Vector.empty
     }
   where
     set = map go [minBound .. maxBound]
@@ -78,9 +78,9 @@ bool =
 list :: Data scope
 list =
   Data
-    { Data.parameters = Strict.Vector.singleton Type.smallType,
-      Data.constructors = Strict.Vector.fromList $ toList set,
-      Data.selectors = Strict.Vector.empty
+    { parameters = Strict.Vector.singleton Type.smallType,
+      constructors = Strict.Vector.fromList $ toList set,
+      selectors = Strict.Vector.empty
     }
   where
     set = map go [minBound .. maxBound]
@@ -94,9 +94,9 @@ list =
 tuple :: Int -> Data scope
 tuple n =
   Data
-    { Data.parameters = Strict.Vector.replicate n Type.smallType,
-      Data.constructors = Strict.Vector.fromList $ toList set,
-      Data.selectors = Strict.Vector.empty
+    { parameters = Strict.Vector.replicate n Type.smallType,
+      constructors = Strict.Vector.fromList $ toList set,
+      selectors = Strict.Vector.empty
     }
   where
     set = map go [minBound .. maxBound]
@@ -108,9 +108,9 @@ tuple n =
 num :: Class scope
 num =
   Class
-    { Class.parameter = Type.smallType,
-      Class.constraints = Strict.Vector.empty,
-      Class.methods = Strict.Vector.fromList set
+    { parameter = Type.smallType,
+      constraints = Strict.Vector.empty,
+      methods = Strict.Vector.fromList set
     }
   where
     set = map go [minBound .. maxBound]
@@ -127,9 +127,9 @@ num =
 enum :: Class scope
 enum =
   Class
-    { Class.parameter = Type.smallType,
-      Class.constraints = Strict.Vector.empty,
-      Class.methods = Strict.Vector.fromList set
+    { parameter = Type.smallType,
+      constraints = Strict.Vector.empty,
+      methods = Strict.Vector.fromList set
     }
   where
     set = map go [minBound .. maxBound]

@@ -70,4 +70,4 @@ instance Shift.Functor TermDeclaration where
         }
 
 labelBinding :: Qualifiers -> TermDeclaration scope -> Label.TermBinding scope'
-labelBinding path declaration = Label.TermBinding {Label.name = path :- name declaration}
+labelBinding path declaration = Label.TermBinding {name = path :- name declaration}

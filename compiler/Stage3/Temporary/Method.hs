@@ -14,7 +14,7 @@ data Method s scope = Method
   }
 
 check :: Context s scope -> Stage2.Method scope -> ST s (Method s scope)
-check context Stage2.Method {Stage2.annotation} = do
+check context Stage2.Method {annotation} = do
   annotation <- Scheme.check context annotation
   pure Method {annotation}
 
@@ -22,4 +22,4 @@ solve :: Synonym.Context s scope -> Method s scope -> ST s (Solved.Method scope)
 solve context Method {annotation} = do
   annotation <- Scheme.solve context annotation
   let annotation' = Simple.Scheme.simplify annotation
-  pure $ Solved.Method {Solved.annotation, Solved.annotation'}
+  pure $ Solved.Method {annotation, annotation'}

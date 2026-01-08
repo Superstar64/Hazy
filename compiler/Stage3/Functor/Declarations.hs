@@ -87,10 +87,10 @@ fromStage2 ::
 fromStage2
   path
   Stage2.Declarations
-    { Stage2.terms,
-      Stage2.types,
-      Stage2.dataInstances,
-      Stage2.classInstances
+    { terms,
+      types,
+      dataInstances,
+      classInstances
     } =
     let termDeclaration term@meta@content =
           Annotated

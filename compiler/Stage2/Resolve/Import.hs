@@ -242,8 +242,8 @@ pickTerm ::
 pickTerm position name =
   let term =
         Functor.Term.Binding
-          { Functor.Term.position,
-            Functor.Term.value
+          { position,
+            value
           }
         where
           value = (cyclicalImports position, algebra)
@@ -268,32 +268,32 @@ pickData position name AllFields request = do
   Bindings {terms, constructors, types} <- request
   let term name =
         Functor.Term.Binding
-          { Functor.Term.position = Functor.Term.position (terms Map.! name),
-            Functor.Term.value
+          { position = Functor.Term.position (terms Map.! name),
+            value
           }
         where
           value = (cyclicalImports position, algebra)
           algebra = Algebra3A $ \bindings -> Functor.Term.value $ bindings !- position :@ name
       constructor name =
         Functor.Constructor.Binding
-          { Functor.Constructor.position = Functor.Constructor.position (constructors Map.! name),
-            Functor.Constructor.value
+          { position = Functor.Constructor.position (constructors Map.! name),
+            value
           }
         where
           value = (cyclicalImports position, algebra)
           algebra = Algebra3B $ \bindings -> Functor.Constructor.value $ bindings != position :@ name
       typex =
         Functor.Type.Binding
-          { Functor.Type.position,
-            Functor.Type.value,
-            Functor.Type.fields = Functor.Type.fields $ types Map.! name,
-            Functor.Type.constructors = Functor.Type.constructors $ types Map.! name
+          { position,
+            value,
+            fields = Functor.Type.fields $ types Map.! name,
+            constructors = Functor.Type.constructors $ types Map.! name
           }
         where
           value = (cyclicalImports position, algebra)
           algebra = Algebra3C $ \bindings -> Functor.Type.value $ bindings !=. position :@ name
   case Map.lookup name types of
-    Just Functor.Type.Binding {Functor.Type.fields, Functor.Type.constructors} -> do
+    Just Functor.Type.Binding {fields, constructors} -> do
       pure $
         Dependency $
           Bindings
@@ -316,8 +316,8 @@ pickData position name (Fields picks) _ = pure $ Dependency acyclic
 
     term name position =
       Functor.Term.Binding
-        { Functor.Term.position,
-          Functor.Term.value
+        { position,
+          value
         }
       where
         value = (cyclicalImports position, algebra)
@@ -326,8 +326,8 @@ pickData position name (Fields picks) _ = pure $ Dependency acyclic
             Functor.Term.value $ bindings !- position :@ name
     constructor name position =
       Functor.Constructor.Binding
-        { Functor.Constructor.position,
-          Functor.Constructor.value
+        { position,
+          value
         }
       where
         value = (cyclicalImports position, algebra)
@@ -338,10 +338,10 @@ pickData position name (Fields picks) _ = pure $ Dependency acyclic
       where
         typex =
           Functor.Type.Binding
-            { Functor.Type.position,
-              Functor.Type.value,
-              Functor.Type.constructors = Map.keysSet constructors,
-              Functor.Type.fields = Map.keysSet fields
+            { position,
+              value,
+              constructors = Map.keysSet constructors,
+              fields = Map.keysSet fields
             }
           where
             value = (cyclicalImports position, algebra)
@@ -353,9 +353,9 @@ pickData position name (Fields picks) _ = pure $ Dependency acyclic
                     | Set.member name realConstructors = ()
                     | otherwise = constructorNotInScope position name
                   Functor.Type.Binding
-                    { Functor.Type.value,
-                      Functor.Type.fields = realSelectors,
-                      Functor.Type.constructors = realConstructors
+                    { value,
+                      fields = realSelectors,
+                      constructors = realConstructors
                     } = bindings !=. position :@ name
                in if
                     | () <- Map.foldrWithKey checkSelector () fields,
@@ -374,12 +374,12 @@ pickSymbol ::
   Stage1.Import.Symbol ->
   m (Bindings stability () () ()) ->
   m (Dependency () (Bindings ()) scope)
-pickSymbol Stage1.Import.Definition {Stage1.Import.variable = startPosition :@ variable} _ =
+pickSymbol Stage1.Import.Definition {variable = startPosition :@ variable} _ =
   pickTerm startPosition variable
 pickSymbol
   Stage1.Import.Data
-    { Stage1.Import.typeVariable = startPosition :@ typeVariable,
-      Stage1.Import.fields
+    { typeVariable = startPosition :@ typeVariable,
+      fields
     }
   request =
     pickData startPosition typeVariable fields request
@@ -464,13 +464,13 @@ pickPrelude' position declarations request = case not $ any isPrelude declaratio
   True
     | Just request <- Map.lookup prelude request ->
         let binding = do
-              Bindings {Bindings.terms, Bindings.constructors, Bindings.types} <- request
+              Bindings {terms, constructors, types} <- request
               let bindings =
                     Bindings
-                      { Bindings.terms = Map.mapWithKey (reselectTerm position) terms,
-                        Bindings.constructors = Map.mapWithKey (reselectConstructor position) constructors,
-                        Bindings.types = Map.mapWithKey (reselectType position) types,
-                        Bindings.stability = Stable [position]
+                      { terms = Map.mapWithKey (reselectTerm position) terms,
+                        constructors = Map.mapWithKey (reselectConstructor position) constructors,
+                        types = Map.mapWithKey (reselectType position) types,
+                        stability = Stable [position]
                       }
               pure $ contramap (Contramap (! position :@ prelude)) $ Dependency $ bindings
          in Map.fromList [(Local, binding), (prelude', binding)]
@@ -478,7 +478,7 @@ pickPrelude' position declarations request = case not $ any isPrelude declaratio
   False -> Map.empty
   where
     isPrelude :: Stage1.Import Position -> Bool
-    isPrelude (Stage1.Import {Stage1.target})
+    isPrelude (Stage1.Import {target})
       | target == prelude = True
     isPrelude _ = False
 
@@ -499,11 +499,11 @@ pickImports' ::
   Map Qualifiers (m (Dependency Stability Canonical scope))
 pickImports' (StableImports stableImports) declarations request = Map.fromListWith (liftM2 (<>)) $ do
   Stage1.Import
-    { Stage1.qualification,
-      Stage1.targetPosition = position,
-      Stage1.target = name,
-      Stage1.alias,
-      Stage1.symbols
+    { qualification,
+      targetPosition = position,
+      target = name,
+      alias,
+      symbols
     } <-
     declarations
   let qualifiedName = case alias of
@@ -546,25 +546,25 @@ pickImports' (StableImports stableImports) declarations request = Map.fromListWi
               termDeletions = do
                 symbol <- toList symbols
                 case symbol of
-                  Stage1.Import.Definition {Stage1.Import.variable = _ :@ variable} -> [variable]
-                  Stage1.Import.Data {Stage1.Import.typeVariable, Stage1.Import.fields} ->
+                  Stage1.Import.Definition {variable = _ :@ variable} -> [variable]
+                  Stage1.Import.Data {typeVariable, fields} ->
                     case fields of
                       Stage1.AllFields -> case base !=. typeVariable of
-                        Functor.Type.Binding {Functor.Type.fields} -> toList fields
+                        Functor.Type.Binding {fields} -> toList fields
                       Stage1.Fields picks -> do
                         _ :@ Variable name <- toList picks
                         pure name
               constructorDeletions = do
-                Stage1.Import.Data {Stage1.Import.typeVariable, Stage1.Import.fields} <-
+                Stage1.Import.Data {typeVariable, fields} <-
                   toList symbols
                 case fields of
                   Stage1.AllFields -> case base !=. typeVariable of
-                    Functor.Type.Binding {Functor.Type.constructors} -> toList constructors
+                    Functor.Type.Binding {constructors} -> toList constructors
                   Stage1.Fields picks -> do
                     _ :@ Constructor name <- toList picks
                     pure name
               typeDeletions = do
-                Stage1.Import.Data {Stage1.Import.typeVariable = _ :@ typeVariable} <- toList symbols
+                Stage1.Import.Data {typeVariable = _ :@ typeVariable} <- toList symbols
                 pure typeVariable
           pure $ contramap (Contramap (! position :@ name)) $ Dependency $ bindings
 
@@ -580,7 +580,7 @@ pickExports ::
   m (Dependency () (Core ()) scope)
 pickExports _ (Stage1.Exports exports) request = do
   let pick export = case export of
-        Stage1.Export.Module {Stage1.Export.modulex = position :@ root :.. name} ->
+        Stage1.Export.Module {modulex = position :@ root :.. name} ->
           case Map.lookup (root :. name) request of
             Just request -> do
               Bindings {terms, constructors, types, stability} <- request
@@ -593,10 +593,10 @@ pickExports _ (Stage1.Exports exports) request = do
                       }
               pure $ contramap (Contramap (Core.! position :@ root :. name)) $ Dependency $ bindings
             Nothing -> moduleNotInScope position
-        Stage1.Export.Definition {Stage1.Export.variable = position :@ root :- name} -> do
+        Stage1.Export.Definition {variable = position :@ root :- name} -> do
           bindings <- pickTerm position name
           pure $ contramap (Contramap (Core.! position :@ root)) $ updateStability (Stable [position]) bindings
-        Stage1.Export.Data {Stage1.Export.typeVariable = position :@ root :=. name, Stage1.Export.fields} -> do
+        Stage1.Export.Data {typeVariable = position :@ root :=. name, fields} -> do
           let base = case Map.lookup root request of
                 Just base -> base
                 Nothing -> moduleNotInScope position

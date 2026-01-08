@@ -29,11 +29,11 @@ instance Shift.Functor Constructor where
 
 simplify :: Solved.Constructor scope -> Constructor scope
 simplify = \case
-  Solved.Constructor {Solved.entries} ->
+  Solved.Constructor {entries} ->
     Constructor
       { entries = Solved.Entry.entry' <$> entries
       }
-  Solved.Record {Solved.fields} ->
+  Solved.Record {fields} ->
     Constructor
       { entries = Solved.Entry.entry' . Solved.Field.entry <$> fields
       }
@@ -41,5 +41,5 @@ simplify = \case
 instanciate :: Strict.Vector (Unify.Type s scope) -> Constructor (Local ':+ scope) -> ConstructorInstance s scope
 instanciate fresh Constructor {entries} =
   ConstructorInstance
-    { ConstructorInstance.entries = Type.instanciate fresh <$> entries
+    { entries = Type.instanciate fresh <$> entries
     }

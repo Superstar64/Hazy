@@ -15,11 +15,11 @@ data Field s scope = Field
   }
 
 check :: Context s scope -> Stage2.Field scope -> ST s (Field s scope)
-check context Stage2.Field {Stage2.name, Stage2.entry} = do
+check context Stage2.Field {name, entry} = do
   entry <- Entry.check context entry
   pure Field {name, entry}
 
 solve :: Synonym.Context s scope -> Field s scope -> ST s (Solved.Field scope)
 solve context Field {name, entry} = do
   entry <- Entry.solve context entry
-  pure Solved.Field {Solved.name, Solved.entry}
+  pure Solved.Field {name, entry}

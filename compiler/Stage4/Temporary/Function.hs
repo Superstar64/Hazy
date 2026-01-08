@@ -53,8 +53,8 @@ instance Term.Functor Function where
 
 simplify :: Stage3.Function scope -> Function scope
 simplify = \case
-  Stage3.Plain {Stage3.plain} -> Plain {plain = RightHandSide.simplify plain}
-  Stage3.Bound {Stage3.patternx, Stage3.body} ->
+  Stage3.Plain {plain} -> Plain {plain = RightHandSide.simplify plain}
+  Stage3.Bound {patternx, body} ->
     Bound
       { patternx = Pattern.simplify patternx,
         body = simplify body
@@ -71,8 +71,8 @@ etaExpand = \case
     Plain
       { plain =
           RightHandSide.Call
-            { RightHandSide.function = shift plain,
-              RightHandSide.argument = Term.Declaration 0
+            { function = shift plain,
+              argument = Term.Declaration 0
             }
       }
   Bound {patternx, body} ->

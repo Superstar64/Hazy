@@ -54,7 +54,7 @@ mangleInstance run brand name target = Text.Lazy.toStrict $ Builder.toLazyText b
     owner = fromText $ runConstructorIdentifier name
     for target = case target of
       Type2.Index index -> qualify (run index)
-      Type2.Lifted Constructor.Index {Constructor.typeIndex, Constructor.constructorIndex} ->
+      Type2.Lifted Constructor.Index {typeIndex, constructorIndex} ->
         -- mention constructor name in instance mangling
         for typeIndex <> fromString "." <> fromString (show constructorIndex)
       Type2.Bool -> fromString "Hazy.Bool"

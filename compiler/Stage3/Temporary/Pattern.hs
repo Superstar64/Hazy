@@ -69,7 +69,7 @@ augment patternx Context {termEnvironment, localEnvironment, typeEnvironment} =
     }
 
 augmentPattern :: Pattern s scopes -> Term.Bound (TermBinding s) (scope ':+ scopes)
-augmentPattern (At match typex) = Term.Bound {Term.at, Term.select}
+augmentPattern (At match typex) = Term.Bound {at, select}
   where
     at = TermBinding $ pure $ Wobbly (shift typex)
     select = augmentMatch match
@@ -85,7 +85,7 @@ augmentMatch match = case match of
     String {} -> Strict.Vector.empty
 
 check :: Context s scope -> Unify.Type s scope -> Stage2.Pattern scope -> ST s (Pattern s scope)
-check context@Context {typeEnvironment} typex (Stage2.At {Stage2.match}) =
+check context@Context {typeEnvironment} typex (Stage2.At {match}) =
   flip At typex <$> case match of
     Stage2.Wildcard -> do
       pure Wildcard
@@ -98,54 +98,54 @@ check context@Context {typeEnvironment} typex (Stage2.At {Stage2.match}) =
   where
     go match = case match of
       Stage2.Constructor
-        { Stage2.constructorPosition,
-          Stage2.constructor,
-          Stage2.patterns
+        { constructorPosition,
+          constructor,
+          patterns
         } ->
           do
             let Constructor.Index typeIndex constructorIndex = constructor
             datax <- do
               let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
               Builtin.index pure get typeIndex
-            DataInstance {DataInstance.types, DataInstance.constructors} <-
+            DataInstance {types, constructors} <-
               Simple.Data.instanciate datax
             let root = Unify.constructor typeIndex
                 base = foldl Unify.call root types
-                ConstructorInstance {ConstructorInstance.entries} =
+                ConstructorInstance {entries} =
                   constructors Strict.Vector.! constructorIndex
             Unify.unify context constructorPosition typex base
             when (length entries /= length patterns) $ mismatchedConstructorArguments constructorPosition
             patterns <- sequence $ Strict.Vector.zipWith (check context) entries patterns
             pure $ Constructor {constructor, patterns}
-      Stage2.Record {Stage2.constructorPosition, Stage2.constructor, Stage2.fields} -> do
+      Stage2.Record {constructorPosition, constructor, fields} -> do
         let Constructor.Index typeIndex constructorIndex = constructor
         datax <- do
           let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
           Builtin.index pure get typeIndex
-        DataInstance {DataInstance.types, DataInstance.constructors} <-
+        DataInstance {types, constructors} <-
           Simple.Data.instanciate datax
         let root = Unify.constructor typeIndex
             base = foldl Unify.call root types
-            ConstructorInstance {ConstructorInstance.entries} =
+            ConstructorInstance {entries} =
               constructors Strict.Vector.! constructorIndex
             lookup index = entries Strict.Vector.! index
         Unify.unify context constructorPosition typex base
         fields <- traverse (Field.check context lookup) fields
         pure $ Record {constructor, fields, fieldCount = length entries}
-      Stage2.List {Stage2.startPosition, Stage2.items} -> do
+      Stage2.List {startPosition, items} -> do
         element <- Unify.fresh Unify.typex
         items <- traverse (check context element) items
         Unify.unify context startPosition typex (Unify.listWith element)
         pure $ List items
-      Stage2.Character {Stage2.startPosition, Stage2.character} -> do
+      Stage2.Character {startPosition, character} -> do
         Unify.unify context startPosition typex Unify.char
         pure $ Character {character}
-      Stage2.String {Stage2.startPosition, Stage2.string} -> do
+      Stage2.String {startPosition, string} -> do
         Unify.unify context startPosition typex (Unify.listWith Unify.char)
         pure $ String string
-      Stage2.Integer {Stage2.startPosition} ->
+      Stage2.Integer {startPosition} ->
         unsupportedFeatureIntegerLiteralPatterns startPosition
-      Stage2.Float {Stage2.startPosition} ->
+      Stage2.Float {startPosition} ->
         unsupportedFeatureFloatingPointLiterals startPosition
 
 solve :: Pattern s scope -> ST s (Solved.Pattern scope)
@@ -160,8 +160,8 @@ solveMatch Match {match, irrefutable} = do
     Constructor {constructor, patterns} -> Solved.Constructor constructor <$> traverse solve patterns
     Record {constructor, fields, fieldCount} -> do
       fields <- traverse Field.solve fields
-      pure Solved.Record {Solved.constructor, Solved.fields, Solved.fieldCount}
+      pure Solved.Record {constructor, fields, fieldCount}
     List items -> Solved.List <$> traverse solve items
-    Character {character} -> pure $ Solved.Character {Solved.character}
+    Character {character} -> pure $ Solved.Character {character}
     String string -> pure $ Solved.String string
-  pure Solved.Match {Solved.match, Solved.irrefutable}
+  pure Solved.Match {match, irrefutable}

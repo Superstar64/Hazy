@@ -37,16 +37,16 @@ newtype Resolve = Resolve
 resolve :: Context scope -> Resolve -> Stage1.Declaration Position -> [DataInstance scope]
 resolve context Resolve {typeIndexes} = \case
   Stage1.Instance
-    { Stage1.startPosition,
-      Stage1.prerequisites,
-      Stage1.classPosition,
-      Stage1.className,
-      Stage1.instanceHead = Head {InstanceHead.typeName = Local :=. datax, InstanceHead.parameters},
-      Stage1.instanceDefinition
+    { startPosition,
+      prerequisites,
+      classPosition,
+      className,
+      instanceHead = Head {typeName = Local :=. datax, parameters},
+      instanceDefinition
     }
       | Just dataIndex <- Map.lookup datax typeIndexes,
         valid ->
-          let Type.Binding {Type.index, Type.methods} = context !=. classPosition :@ className
+          let Type.Binding {index, methods} = context !=. classPosition :@ className
               classIndex = Type3.toType2 (illegalInstanceClass classPosition) index
               entry =
                 DataInstance

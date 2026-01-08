@@ -50,7 +50,7 @@ instance Shift.Functor Constraint where
       }
 
 simplify :: Solved.Constraint scope -> Constraint scope
-simplify Solved.Constraint {Solved.classx, Solved.head, Solved.arguments'} = do
+simplify Solved.Constraint {classx, head, arguments'} = do
   Constraint
     { classx,
       head,

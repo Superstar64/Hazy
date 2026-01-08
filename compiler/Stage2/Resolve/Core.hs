@@ -52,13 +52,13 @@ core !=. position :@ qualifiers :=. name = core ! position :@ qualifiers Binding
 infixl 3 !-%, !-*, !=~, !=*~, !=.*
 
 core !-% index
-  | Term.Binding {Term.selector = Term.Selector select} <- core !- index = select
+  | Term.Binding {selector = Term.Selector select} <- core !- index = select
 _ !-% (position :@ _) = fieldNotInScope position
 
 (!-*) = (Term.index .) . (!-)
 
 core !=~ index
-  | binding@Constructor.Binding {Constructor.unordered = False} <- core != index = binding
+  | binding@Constructor.Binding {unordered = False} <- core != index = binding
 _ !=~ (position :@ _) = orderDependentUsage position
 
 (!=*) = (Constructor.index .) . (!=)
@@ -82,7 +82,7 @@ fromFunctor ::
     (Detail.Constructor.Binding scope)
     (Detail.Type.Binding scope) ->
   Core scope
-fromFunctor Functor.Core {Functor.globals, Functor.locals} =
+fromFunctor Functor.Core {globals, locals} =
   Core
     { globals = fmap Bindings.fromFunctor globals,
       locals = Bindings.fromFunctor locals

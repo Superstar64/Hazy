@@ -17,12 +17,12 @@ import qualified Stage5.Generate.Mangle as Mangle
 generate :: Context s scope -> Evidence scope -> ST s Javascript.Expression
 generate
   ~context@Context
-    { Context.builtin =
+    { builtin =
         Context.Builtin
-          { Context.numInt,
-            Context.numInteger,
-            Context.enumInt,
-            Context.enumInteger
+          { numInt,
+            numInteger,
+            enumInt,
+            enumInteger
           }
     } = \case
     Proof {proof, arguments} ->
@@ -34,37 +34,37 @@ generate
           arguments <- traverse (generate context) (toList arguments)
           pure $
             Javacript.Call
-              { Javascript.function,
-                Javascript.arguments
+              { function,
+                arguments
               }
       where
         base = case proof of
           Evidence.Direct Type2.Num Type2.Int ->
-            pure Javascript.Variable {Javascript.name = numInt}
+            pure Javascript.Variable {name = numInt}
           Evidence.Direct Type2.Num Type2.Integer ->
-            pure Javascript.Variable {Javascript.name = numInteger}
+            pure Javascript.Variable {name = numInteger}
           Evidence.Direct Type2.Enum Type2.Int ->
-            pure Javascript.Variable {Javascript.name = enumInt}
+            pure Javascript.Variable {name = enumInt}
           Evidence.Direct Type2.Enum Type2.Integer ->
-            pure Javascript.Variable {Javascript.name = enumInteger}
+            pure Javascript.Variable {name = enumInteger}
           Evidence.Direct (Type2.Index index) target
-            | Type.Binding {Type.classInstances} <- context !=. index,
+            | Type.Binding {classInstances} <- context !=. index,
               Just binding <- Map.lookup target classInstances -> do
                 name <- Context.symbol context binding
-                pure Javascript.Variable {Javascript.name}
+                pure Javascript.Variable {name}
           Evidence.Direct target (Type2.Index index)
-            | Type.Binding {Type.dataInstances} <- context !=. index,
+            | Type.Binding {dataInstances} <- context !=. index,
               Just binding <- Map.lookup target dataInstances -> do
                 name <- Context.symbol context binding
-                pure Javascript.Variable {Javascript.name}
+                pure Javascript.Variable {name}
           Evidence.Index index
             | Evidence.Binding name <- context Context.!~ index ->
-                pure Javascript.Variable {Javascript.name}
+                pure Javascript.Variable {name}
           _ -> error "bad evidence"
     Super {base, index} -> do
       base <- generate context base
       pure
         Javascript.Member
-          { Javascript.object = base,
-            Javascript.field = Mangle.supers !! index
+          { object = base,
+            field = Mangle.supers !! index
           }

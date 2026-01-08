@@ -20,7 +20,7 @@ data Shared scope = Shared
 shrink :: Shared scope -> Real.Shared scope
 shrink = share
 
-resolve context (Stage1.Definition {Stage1.leftHandSide = Stage1.Pattern pattern1, Stage1.rightHandSide} : declarations)
+resolve context (Stage1.Definition {leftHandSide = Stage1.Pattern pattern1, rightHandSide} : declarations)
   | Stage1.Variable {} <- pattern1 = resolve context declarations
   | otherwise = shared : resolve context declarations
   where
@@ -29,8 +29,8 @@ resolve context (Stage1.Definition {Stage1.leftHandSide = Stage1.Pattern pattern
         { bindings,
           share =
             Real.Shared
-              { Real.patternx,
-                Real.definition
+              { patternx,
+                definition
               }
         }
     bindings = Strict.Vector.fromList $ termBindingVariables pattern1

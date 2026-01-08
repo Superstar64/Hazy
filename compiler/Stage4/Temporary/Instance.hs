@@ -38,7 +38,7 @@ instance Term.Functor Instance where
       }
 
 simplify :: Stage3.Instance scope -> Instance scope
-simplify Stage3.Instance {Stage3.evidence, Stage3.prerequisitesCount, Stage3.memberConstraintCounts, Stage3.members} =
+simplify Stage3.Instance {evidence, prerequisitesCount, memberConstraintCounts, members} =
   Instance
     { evidence,
       prerequisitesCount,
@@ -48,13 +48,13 @@ simplify Stage3.Instance {Stage3.evidence, Stage3.prerequisitesCount, Stage3.mem
   where
     go = \case
       Strict.Just expression -> Definition.desugar $ Definition.simplify expression
-      Strict.Nothing -> Expression.Join {Expression.statements = Statements.Bottom}
+      Strict.Nothing -> Expression.Join {statements = Statements.Bottom}
 
 finish :: Instance scope -> Real.Instance scope
 finish Instance {evidence, prerequisitesCount, memberConstraintCounts, members} =
   Real.Instance
-    { Real.evidence,
-      Real.prerequisitesCount,
-      Real.memberConstraintCounts,
-      Real.members = Expression.finish <$> members
+    { evidence,
+      prerequisitesCount,
+      memberConstraintCounts,
+      members = Expression.finish <$> members
     }

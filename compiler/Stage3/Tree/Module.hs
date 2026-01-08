@@ -18,7 +18,7 @@ import Stage3.Check.Context (globalBindings)
 import qualified Stage3.Check.InstanceAnnotation as InstanceAnnotation
 import qualified Stage3.Check.KindAnnotation as KindAnnotation
 import qualified Stage3.Check.TypeAnnotation as TypeAnnotation
-import qualified Stage3.Functor.Annotated as Functor (Annotated (Annotated, meta))
+import qualified Stage3.Functor.Annotated as Functor (Annotated (Annotated))
 import qualified Stage3.Functor.Annotated as Funtor
 import qualified Stage3.Functor.Declarations as Functor (Declarations (..))
 import qualified Stage3.Functor.Instance.Key as Instance.Key
@@ -50,7 +50,7 @@ fromFunctor ::
     e
     (Instance Global) ->
   Module
-fromFunctor (Functor.Module {Functor.name, Functor.declarations}) =
+fromFunctor (Functor.Module {name, declarations}) =
   Module
     { name,
       declarations = Declarations.fromFunctor declarations
@@ -80,9 +80,9 @@ check modules =
             go2 global local declaration =
               ( cyclicalTypeChecking $ Stage2.TermDeclaration.position declaration,
                 \moduleSet@(Functor.ModuleSet modules) -> do
-                  let Functor.Module {Functor.declarations} = modules Vector.! global
-                      Functor.Declarations {Functor.terms} = declarations
-                      Funtor.Annotated {Functor.meta} = terms Vector.! local
+                  let Functor.Module {declarations} = modules Vector.! global
+                      Functor.Declarations {terms} = declarations
+                      Funtor.Annotated {meta} = terms Vector.! local
                   annotation <- meta
                   let context = globalBindings moduleSet
                   -- todo, augment context with self to allow basic recursive inference
@@ -97,9 +97,9 @@ check modules =
             go4 global local declaration =
               ( cyclicalTypeChecking $ Stage2.TypeDeclaration.position declaration,
                 \moduleSet@(Functor.ModuleSet modules) -> do
-                  let Functor.Module {Functor.declarations} = modules Vector.! global
-                      Functor.Declarations {Functor.types} = declarations
-                      Funtor.Annotated {Functor.meta} = types Vector.! local
+                  let Functor.Module {declarations} = modules Vector.! global
+                      Functor.Declarations {types} = declarations
+                      Funtor.Annotated {meta} = types Vector.! local
                   annotation <- meta
                   let context = globalBindings moduleSet
                   -- todo, augment context with self to allow basic recursive inference
@@ -112,16 +112,16 @@ check modules =
             go6 global key declaration =
               ( cyclicalTypeChecking $ Stage2.Instance.startPosition declaration,
                 \moduleSet@(Functor.ModuleSet modules) -> do
-                  let Functor.Module {Functor.declarations} = modules Vector.! global
-                      Functor.Declarations {Functor.dataInstances, Functor.classInstances} = declarations
+                  let Functor.Module {declarations} = modules Vector.! global
+                      Functor.Declarations {dataInstances, classInstances} = declarations
                   case key of
-                    Instance.Key.Data {Instance.Key.index, Instance.Key.classKey} -> do
-                      let Functor.Annotated {Functor.meta} = dataInstances Vector.! index Map.! classKey
+                    Instance.Key.Data {index, classKey} -> do
+                      let Functor.Annotated {meta} = dataInstances Vector.! index Map.! classKey
                           dataKey = Type2.Index $ Type.Global global index
                       annotation <- meta
                       Instance.check (globalBindings moduleSet) classKey dataKey annotation declaration
-                    Instance.Key.Class {Instance.Key.index, Instance.Key.dataKey} -> do
-                      let Functor.Annotated {Functor.meta} = classInstances Vector.! index Map.! dataKey
+                    Instance.Key.Class {index, dataKey} -> do
+                      let Functor.Annotated {meta} = classInstances Vector.! index Map.! dataKey
                           classKey = Type2.Index $ Type.Global global index
                       annotation <- meta
                       Instance.check (globalBindings moduleSet) classKey dataKey annotation declaration

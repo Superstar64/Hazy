@@ -36,13 +36,13 @@ instance Term.Functor TermDeclaration where
       }
 
 simplify :: Stage3.TermDeclaration scope -> TermDeclaration scope
-simplify Stage3.Manual {Stage3.name, Stage3.definition, Stage3.typex} =
+simplify Stage3.Manual {name, definition, typex} =
   Definition
     { name,
       definition = Definition.desugar $ Definition.simplify definition,
       typex
     }
-simplify Stage3.Auto {Stage3.name, Stage3.definitionAuto, Stage3.typeAuto} =
+simplify Stage3.Auto {name, definitionAuto, typeAuto} =
   Definition
     { name,
       definition = shift $ Definition.desugar $ Definition.simplify definitionAuto,
@@ -52,7 +52,7 @@ simplify Stage3.Auto {Stage3.name, Stage3.definitionAuto, Stage3.typeAuto} =
 finish :: TermDeclaration scope -> Real.TermDeclaration scope
 finish Definition {name, definition, typex} =
   Real.Definition
-    { Real.name,
-      Real.definition = Expression.finish definition,
-      Real.typex
+    { name,
+      definition = Expression.finish definition,
+      typex
     }

@@ -52,7 +52,7 @@ fromFunctor ::
     e
     (Instance scope) ->
   Declarations s scope
-fromFunctor Functor.Declarations {Functor.terms, Functor.types, Functor.classInstances, Functor.dataInstances} =
+fromFunctor Functor.Declarations {terms, types, classInstances, dataInstances} =
   Declarations
     { terms = Functor.content <$> terms,
       types = Functor.content <$> types,
@@ -81,9 +81,9 @@ check context declarations = do
             )
           go2 index declaration =
             ( cyclicalTypeChecking $ Stage2.TermDeclaration.position declaration,
-              \declarations@Functor.Declarations {Functor.terms} -> do
+              \declarations@Functor.Declarations {terms} -> do
                 context <- pure $ localBindings declarations context
-                let Functor.Annotated {Functor.meta} = terms Vector.! index
+                let Functor.Annotated {meta} = terms Vector.! index
                 annotation <- meta
                 TermDeclaration.check context annotation declaration
             )
@@ -95,9 +95,9 @@ check context declarations = do
             )
           go4 index declaration =
             ( cyclicalTypeChecking $ Stage2.TypeDeclaration.position declaration,
-              \declarations@Functor.Declarations {Functor.types} -> do
+              \declarations@Functor.Declarations {types} -> do
                 context <- pure $ localBindings declarations context
-                let Functor.Annotated {Functor.meta} = types Vector.! index
+                let Functor.Annotated {meta} = types Vector.! index
                 annotation <- meta
                 TypeDeclaration.check context annotation declaration
             )
@@ -108,15 +108,15 @@ check context declarations = do
           go6 key declaration =
             ( cyclicalTypeChecking $ Stage2.Instance.startPosition declaration,
               \declarations -> do
-                let Functor.Declarations {Functor.dataInstances, Functor.classInstances} = declarations
+                let Functor.Declarations {dataInstances, classInstances} = declarations
                 case key of
-                  Instance.Key.Data {Instance.Key.index, Instance.Key.classKey} -> do
-                    let Functor.Annotated {Functor.meta} = dataInstances Vector.! index Map.! classKey
+                  Instance.Key.Data {index, classKey} -> do
+                    let Functor.Annotated {meta} = dataInstances Vector.! index Map.! classKey
                         dataKey = Type2.Index $ Type.Declaration index
                     annotation <- meta
                     Instance.check (localBindings declarations context) classKey dataKey annotation declaration
-                  Instance.Key.Class {Instance.Key.index, Instance.Key.dataKey} -> do
-                    let Functor.Annotated {Functor.meta} = classInstances Vector.! index Map.! dataKey
+                  Instance.Key.Class {index, dataKey} -> do
+                    let Functor.Annotated {meta} = classInstances Vector.! index Map.! dataKey
                         classKey = Type2.Index $ Type.Declaration index
                     annotation <- meta
                     Instance.check (localBindings declarations context) classKey dataKey annotation declaration
@@ -129,8 +129,8 @@ solve Declarations {terms, types, dataInstances, classInstances} = do
   terms <- traverse TermDeclaration.solve terms
   pure
     Solved.Declarations
-      { Solved.terms,
-        Solved.types,
-        Solved.dataInstances,
-        Solved.classInstances
+      { terms,
+        types,
+        dataInstances,
+        classInstances
       }

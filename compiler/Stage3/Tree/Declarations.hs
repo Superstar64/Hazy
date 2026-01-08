@@ -27,7 +27,7 @@ fromFunctor ::
     e
     (Instance scope) ->
   Declarations scope
-fromFunctor (Functor.Declarations {Functor.terms, Functor.types, Functor.dataInstances, Functor.classInstances}) =
+fromFunctor (Functor.Declarations {terms, types, dataInstances, classInstances}) =
   Declarations
     { terms = Functor.content <$> terms,
       types = Functor.content <$> types,

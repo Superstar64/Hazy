@@ -28,13 +28,13 @@ generate context Instance {evidence, prerequisitesCount, memberConstraintCounts,
   let fields = Javascript.Literal <$> members
   let object =
         Javascript.Object
-          { Javascript.fields = zip Mangle.supers supers <> zip Mangle.fields fields
+          { fields = zip Mangle.supers supers <> zip Mangle.fields fields
           }
   if
     | 0 <- prerequisitesCount -> pure object
     | otherwise ->
         pure
           Javascript.Arrow
-            { Javascript.parameters = toList fresh,
-              Javascript.body = [Javascript.Return object]
+            { parameters = toList fresh,
+              body = [Javascript.Return object]
             }

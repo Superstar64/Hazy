@@ -24,13 +24,13 @@ data Index scope
 
 resolve :: Context scope -> Stage1.Infix Position -> Infix (Index scope) (Pattern scope)
 resolve context = \case
-  Stage1.Pattern {Stage1.patternx} -> Single (Pattern.resolve context patternx)
-  Stage1.Infix {Stage1.left, Stage1.operator, Stage1.operatorPosition, Stage1.right} ->
+  Stage1.Pattern {patternx} -> Single (Pattern.resolve context patternx)
+  Stage1.Infix {left, operator, operatorPosition, right} ->
     Infix
       (Pattern.resolve context left)
       (Constructor operatorPosition $ context !=~ operator)
       (resolve context right)
-  Stage1.InfixCons {Stage1.left, Stage1.operatorPosition, Stage1.right} ->
+  Stage1.InfixCons {left, operatorPosition, right} ->
     Infix (Pattern.resolve context left) (Cons operatorPosition) (resolve context right)
 
 fixWith :: Maybe Associativity -> Int -> Infix (Index scope) (Pattern scope) -> Pattern scope
@@ -40,18 +40,18 @@ fixWith = Infix.fixWith position fixity operators
       Constructor position _ -> position
       Cons position -> position
     fixity = \case
-      Constructor _ Constructor.Binding {Constructor.fixity} -> fixity
+      Constructor _ Constructor.Binding {fixity} -> fixity
       Cons _ -> Fixity Right 5
     operators pattern1 index pattern2 = case index of
-      Constructor _ Constructor.Binding {Constructor.index, Constructor.position} ->
+      Constructor _ Constructor.Binding {index, position} ->
         At
           { names = Map.empty,
             match =
               Match $
                 Pattern.Constructor
-                  { Pattern.constructorPosition = position,
-                    Pattern.constructor = index,
-                    Pattern.patterns = Strict.Vector.fromList [pattern1, pattern2]
+                  { constructorPosition = position,
+                    constructor = index,
+                    patterns = Strict.Vector.fromList [pattern1, pattern2]
                   }
           }
       Cons constructorPosition ->
@@ -60,9 +60,9 @@ fixWith = Infix.fixWith position fixity operators
             match =
               Match $
                 Pattern.Constructor
-                  { Pattern.constructorPosition,
-                    Pattern.constructor = Constructor.cons,
-                    Pattern.patterns = Strict.Vector.fromList [pattern1, pattern2]
+                  { constructorPosition,
+                    constructor = Constructor.cons,
+                    patterns = Strict.Vector.fromList [pattern1, pattern2]
                   }
           }
 

@@ -94,7 +94,7 @@ import Stage3.Check.TypeBinding (TypeBinding (TypeBinding))
 import qualified Stage3.Check.TypeBinding as TypeBinding
 import qualified Stage3.Index.Evidence as Evidence
 import {-# SOURCE #-} qualified Stage3.Simple.Builtin as Builtin
-import qualified Stage3.Simple.Constraint as Simple (argument, classx)
+import qualified Stage3.Simple.Constraint as Simple (argument)
 import qualified Stage3.Simple.Constraint as Simple.Constraint
 import qualified Stage3.Simple.Data as Simple.Data
 import qualified Stage3.Simple.Evidence as Simple (Evidence (..))
@@ -459,9 +459,9 @@ typeCheck context_ position = typeCheckWith context_
             kindx <- unshift context position kindx
             typeCheckWith (Shift.unshift context) kindx typex
           Variable index -> case localEnvironment Local.Table.! index of
-            Local.Rigid {Local.rigid} -> do
+            Local.Rigid {rigid} -> do
               unify context position kindx (Simple.lift rigid)
-            Local.Wobbly {Local.wobbly} -> do
+            Local.Wobbly {wobbly} -> do
               unify context position kindx wobbly
           Constructor constructor -> do
             kind <- Builtin.kind (pure . Simple.lift) indexType indexLift constructor
@@ -469,18 +469,18 @@ typeCheck context_ position = typeCheckWith context_
             where
               indexType index =
                 case typeEnvironment Type.Table.! index of
-                  TypeBinding {TypeBinding.kind = kind'} -> do
+                  TypeBinding {kind = kind'} -> do
                     Simple.lift <$> kind'
               indexLift constructor = do
-                let Constructor.Index {Constructor.typeIndex, Constructor.constructorIndex} = constructor
+                let Constructor.Index {typeIndex, constructorIndex} = constructor
                 datax <- do
                   let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
                   Builtin.index pure get typeIndex
-                DataInstance {DataInstance.types, DataInstance.constructors} <-
+                DataInstance {types, constructors} <-
                   Simple.Data.instanciate datax
                 let root = Stage3.Unify.constructor typeIndex
                     base = foldl call root types
-                    ConstructorInstance {ConstructorInstance.entries} =
+                    ConstructorInstance {entries} =
                       constructors Strict.Vector.! constructorIndex
                 pure $ foldr function base entries
           Constraint -> unify context position kind kindx
@@ -571,18 +571,18 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
               target <- fresh kind
               let indexType index =
                     case typeEnvironment Type.Table.! index of
-                      TypeBinding {TypeBinding.kind = kind'} -> do
+                      TypeBinding {kind = kind'} -> do
                         Simple.lift <$> kind'
                   indexLift constructor = do
-                    let Constructor.Index {Constructor.typeIndex, Constructor.constructorIndex} = constructor
+                    let Constructor.Index {typeIndex, constructorIndex} = constructor
                     datax <- do
                       let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
                       Builtin.index pure get typeIndex
-                    DataInstance {DataInstance.types, DataInstance.constructors} <-
+                    DataInstance {types, constructors} <-
                       Simple.Data.instanciate datax
                     let root = Stage3.Unify.constructor typeIndex
                         base = foldl call root types
-                        ConstructorInstance {ConstructorInstance.entries} =
+                        ConstructorInstance {entries} =
                           constructors Strict.Vector.! constructorIndex
                     pure $ foldr function base entries
               real <- Builtin.kind (pure . Simple.lift) indexType indexLift classx
@@ -604,18 +604,18 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
       classx <- Shift.partialUnshift quit classx
       Shift' <$> constrainWith (Shift.unshift context) classx term arguments
     constrainWith context@Context {localEnvironment} classx (Variable index) arguments
-      | Local.Rigid {Local.constraints} <- localEnvironment Local.Table.! index,
-        Just Local.Constraint {Local.arguments = arguments', Local.evidence} <- Map.lookup classx constraints,
+      | Local.Rigid {constraints} <- localEnvironment Local.Table.! index,
+        Just Local.Constraint {arguments = arguments', evidence} <- Map.lookup classx constraints,
         arguments' <- [Simple.lift argument | argument <- toList arguments'],
         length arguments' == length arguments = do
           traverse (uncurry $ unify context position) (zip arguments arguments')
           pure (Simple.Evidence.lift evidence)
     constrainWith context@Context {typeEnvironment} (Type2.Index classx) (Constructor index) arguments
-      | TypeBinding {TypeBinding.classInstances} <- typeEnvironment Type.Table.! classx,
+      | TypeBinding {classInstances} <- typeEnvironment Type.Table.! classx,
         Just instancex <- Map.lookup index classInstances = do
           TypeBinding.Instance dependencies <- instancex
           arguments <- for dependencies $ \case
-            constraint@Simple.Constraint.Constraint {Simple.classx}
+            constraint@Simple.Constraint.Constraint {classx}
               | argument <-
                   Simple.instanciate
                     (Strict.Vector.fromList arguments)
@@ -623,11 +623,11 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
                   constrain context position classx argument
           pure (direct (Type2.Index classx) index arguments)
     constrainWith context@Context {typeEnvironment} classx (Constructor (Type2.Index index)) arguments
-      | TypeBinding {TypeBinding.dataInstances} <- typeEnvironment Type.Table.! index,
+      | TypeBinding {dataInstances} <- typeEnvironment Type.Table.! index,
         Just instancex <- Map.lookup classx dataInstances = do
           TypeBinding.Instance dependencies <- instancex
           arguments <- for dependencies $ \case
-            constraint@Simple.Constraint.Constraint {Simple.classx}
+            constraint@Simple.Constraint.Constraint {classx}
               | argument <-
                   Simple.instanciate
                     (Strict.Vector.fromList arguments)
@@ -793,10 +793,10 @@ solveEvidence :: Evidence s scope -> ST s (Simple.Evidence scope)
 solveEvidence = \case
   Proof proof arguments -> do
     arguments <- traverse solveEvidence arguments
-    pure $ Simple.Proof {Simple.proof, Simple.arguments}
+    pure $ Simple.Proof {proof, arguments}
   Super base index -> do
     base <- solveEvidence base
-    pure $ Simple.Super {Simple.base, Simple.index}
+    pure $ Simple.Super {base, index}
   Shift' evidence -> shift <$> solveEvidence evidence
   Logical' reference ->
     readSTRef reference >>= \case
@@ -830,7 +830,7 @@ abort position = \case
         infinite = case lookup (Collect reference) labeled of
           Nothing -> error "bad occurs lookup"
           Just variable ->
-            let ast = Stage2.Variable {Stage2.startPosition = (), Stage2.variable}
+            let ast = Stage2.Variable {startPosition = (), variable}
              in Stage1.build $ Stage1.print $ Stage2.label temporary ast
     term <- Stage1.build . Stage1.print . Stage2.label temporary <$> fabricate Shift.Shift labeled term
     occurenceError position infinite term
@@ -843,15 +843,15 @@ abort position = \case
     argument <- Stage2.label temporary <$> fabricate Shift.Shift labeled constructor
     let head =
           Stage1.Call
-            { Stage1.startPosition = (),
-              Stage1.function,
-              Stage1.argument
+            { startPosition = (),
+              function,
+              argument
             }
         call function argument =
           Stage1.Call
-            { Stage1.startPosition = (),
-              Stage1.function,
-              Stage1.argument
+            { startPosition = (),
+              function,
+              argument
             }
         term = Stage1.build $ Stage1.print $ foldl call head fabricated
     constraintError position term
@@ -864,17 +864,17 @@ abort position = \case
   where
     temporaries :: Int -> Context s scopes -> Label.Context (Scope.Local ':+ scopes)
     temporaries length context = case Context.label context of
-      Label.Context {Label.terms, Label.locals, Label.types} ->
+      Label.Context {terms, locals, types} ->
         Label.Context
-          { Label.terms = Term.Table.Local terms,
-            Label.locals = Local.Table.Local names locals,
-            Label.types = Type.Table.Local types
+          { terms = Term.Table.Local terms,
+            locals = Local.Table.Local names locals,
+            types = Type.Table.Local types
           }
         where
           names = Vector.fromList $ do
             i <- [0 .. length]
             let name = Lexer.variableIdentifier (Text.pack $ "__flexible_" ++ show i)
-            pure Label.LocalBinding {Label.name}
+            pure Label.LocalBinding {name}
     fabricate ::
       Shift.Category scope scope' ->
       [(Collected s scope, Local.Index scope')] ->
@@ -888,8 +888,8 @@ abort position = \case
             Just variable ->
               pure
                 Stage2.Variable
-                  { Stage2.startPosition = (),
-                    Stage2.variable
+                  { startPosition = (),
+                    variable
                   }
             Nothing -> error "uncollected variable"
       Shift typex -> fabricate (category Shift.:. Shift.Shift) names' typex
@@ -898,41 +898,41 @@ abort position = \case
       Variable variable ->
         pure $
           Stage2.Variable
-            { Stage2.startPosition = (),
-              Stage2.variable = Shift.map category variable
+            { startPosition = (),
+              variable = Shift.map category variable
             }
       Constructor constructor ->
         pure $
           Shift.map category $
             Stage2.Constructor
-              { Stage2.startPosition = (),
-                Stage2.constructorPosition = (),
-                Stage2.constructor
+              { startPosition = (),
+                constructorPosition = (),
+                constructor
               }
       Call function argument -> do
         function <- fabricate category names function
         argument <- fabricate category names argument
-        pure $ Stage2.Call {Stage2.function, Stage2.argument}
+        pure $ Stage2.Call {function, argument}
       Function parameter result -> do
         parameter <- fabricate category names parameter
         result <- fabricate category names result
         pure $
           Stage2.Function
-            { Stage2.parameter,
-              Stage2.operatorPosition = (),
-              Stage2.result
+            { parameter,
+              operatorPosition = (),
+              result
             }
       Type universe -> do
         universe <- fabricate category names universe
         pure $
           Stage2.Type
-            { Stage2.startPosition = (),
-              Stage2.universe
+            { startPosition = (),
+              universe
             }
-      Constraint -> pure $ Stage2.Constraint {Stage2.startPosition = ()}
-      Small -> pure $ Stage2.Small {Stage2.startPosition = ()}
-      Large -> pure $ Stage2.Large {Stage2.startPosition = ()}
-      Universe -> pure $ Stage2.Universe {Stage2.startPosition = ()}
+      Constraint -> pure $ Stage2.Constraint {startPosition = ()}
+      Small -> pure $ Stage2.Small {startPosition = ()}
+      Large -> pure $ Stage2.Large {startPosition = ()}
+      Universe -> pure $ Stage2.Universe {startPosition = ()}
 
 -- todo, this is O(n^2) due to STRefs not having an order
 -- especially not a heterogeneous order

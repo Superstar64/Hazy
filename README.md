@@ -31,7 +31,7 @@ node output/index.mjs
 
 # TODOs
 
-- Use `UnorderedRecords` and `ConstructorFields` all throughout compiler
+- Use `UnorderedRecords` all throughout compiler
 - Add top level documentation to all modules
 
 # Missing

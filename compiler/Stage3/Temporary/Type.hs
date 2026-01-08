@@ -56,108 +56,108 @@ data Type s scope
 
 check :: Context s scope -> Unify.Type s scope -> Stage2.Type Position scope -> ST s (Type s scope)
 check context@Context {localEnvironment, typeEnvironment} kind = \case
-  Stage2.Variable {Stage2.startPosition, Stage2.variable} -> case localEnvironment Local.Table.! variable of
-    LocalBinding.Rigid {LocalBinding.rigid}
+  Stage2.Variable {startPosition, variable} -> case localEnvironment Local.Table.! variable of
+    LocalBinding.Rigid {rigid}
       | rigid <- lift rigid -> do
           Unify.unify context startPosition kind rigid
           pure $ Variable {variable}
-    LocalBinding.Wobbly {LocalBinding.wobbly} -> do
+    LocalBinding.Wobbly {wobbly} -> do
       Unify.unify context startPosition kind wobbly
       pure Variable {variable}
-  Stage2.Constructor {Stage2.constructorPosition, Stage2.constructor} -> do
+  Stage2.Constructor {constructorPosition, constructor} -> do
     kind' <- Builtin.kind (pure . lift) indexType indexConstructor constructor
     Unify.unify context constructorPosition kind kind'
     pure Constructor {constructor}
     where
       indexType constructor
-        | TypeBinding {TypeBinding.kind = kind'} <- typeEnvironment Type.Table.! constructor =
+        | TypeBinding {kind = kind'} <- typeEnvironment Type.Table.! constructor =
             do
               lift <$> kind'
       indexConstructor constructor = do
-        let Constructor.Index {Constructor.typeIndex, Constructor.constructorIndex} = constructor
+        let Constructor.Index {typeIndex, constructorIndex} = constructor
         datax <- do
           let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
           Builtin.index pure get typeIndex
-        DataInstance {DataInstance.types, DataInstance.constructors} <-
+        DataInstance {types, constructors} <-
           Simple.Data.instanciate datax
         let root = Unify.constructor typeIndex
             base = foldl Unify.call root types
-            ConstructorInstance {ConstructorInstance.entries} =
+            ConstructorInstance {entries} =
               constructors Strict.Vector.! constructorIndex
         pure $ foldr Unify.function base entries
-  Stage2.Tuple {Stage2.startPosition, Stage2.elements} -> do
+  Stage2.Tuple {startPosition, elements} -> do
     elements <- traverse (check context Unify.typex) elements
     Unify.unify context startPosition kind Unify.typex
     pure Tuple {elements}
-  Stage2.Call {Stage2.function, Stage2.argument} -> do
+  Stage2.Call {function, argument} -> do
     level <- Unify.fresh Unify.universe
     parameterType <- Unify.fresh (Unify.typeWith level)
     function <- check context (Unify.function parameterType kind) function
     argument <- check context parameterType argument
     pure Call {function, argument}
-  Stage2.Function {Stage2.parameter, Stage2.operatorPosition, Stage2.result} -> do
+  Stage2.Function {parameter, operatorPosition, result} -> do
     level <- Unify.fresh Unify.universe
     level' <- Unify.fresh Unify.universe
     parameter <- check context (Unify.typeWith level) parameter
     result <- check context (Unify.typeWith level') result
     Unify.unify context operatorPosition (Unify.typeWith level') kind
     pure Function {parameter, result}
-  Stage2.List {Stage2.startPosition, Stage2.element} -> do
+  Stage2.List {startPosition, element} -> do
     element <- check context Unify.typex element
     Unify.unify context startPosition kind Unify.typex
     pure List {element}
-  Stage2.SmallType {Stage2.startPosition} -> do
+  Stage2.SmallType {startPosition} -> do
     Unify.unify context startPosition kind Unify.kind
     pure SmallType {}
-  Stage2.StrictFunction {Stage2.operatorPosition} ->
+  Stage2.StrictFunction {operatorPosition} ->
     unsupportedFeatureStrictFunctions operatorPosition
-  Stage2.LiftedList {Stage2.startPosition, Stage2.items} -> do
+  Stage2.LiftedList {startPosition, items} -> do
     inner <- Unify.fresh Unify.typex
     Unify.unify context startPosition kind (Unify.listWith inner)
     items <- traverse (check context inner) items
     pure LiftedList {items}
-  Stage2.Type {Stage2.startPosition, Stage2.universe} -> case universe of
+  Stage2.Type {startPosition, universe} -> case universe of
     Stage2.Small {} -> do
       Unify.unify context startPosition kind Unify.kind
       pure SmallType {}
     _ -> universeMustBeSmall startPosition
-  Stage2.Constraint {Stage2.startPosition} -> do
+  Stage2.Constraint {startPosition} -> do
     Unify.unify context startPosition kind Unify.kind
     pure Constraint
-  Stage2.Small {Stage2.startPosition} -> uncheckable startPosition
-  Stage2.Large {Stage2.startPosition} -> uncheckable startPosition
-  Stage2.Universe {Stage2.startPosition} -> uncheckable startPosition
+  Stage2.Small {startPosition} -> uncheckable startPosition
+  Stage2.Large {startPosition} -> uncheckable startPosition
+  Stage2.Universe {startPosition} -> uncheckable startPosition
 
 solve :: Synonym.Context s scope -> Type s scope -> ST s (Solved.Type scope)
 solve context = \case
   Variable {variable} -> do
     pure
       Solved.Variable
-        { Solved.variable
+        { variable
         }
   Constructor {constructor} -> do
     synonym <- Synonym.lookup context constructor
     pure
       Solved.Constructor
-        { Solved.constructor,
-          Solved.synonym
+        { constructor,
+          synonym
         }
   Tuple {elements} -> do
     elements <- traverse (solve context) elements
-    pure $ Solved.Tuple {Solved.elements}
+    pure $ Solved.Tuple {elements}
   Call {function, argument} -> do
     function <- solve context function
     argument <- solve context argument
-    pure $ Solved.Call {Solved.function, Solved.argument}
+    pure $ Solved.Call {function, argument}
   Function {parameter, result} -> do
     parameter <- solve context parameter
     result <- solve context result
-    pure Solved.Function {Solved.parameter, Solved.result}
+    pure Solved.Function {parameter, result}
   List {element} -> do
     element <- solve context element
-    pure Solved.List {Solved.element}
+    pure Solved.List {element}
   LiftedList {items} -> do
     items <- traverse (solve context) items
-    pure $ Solved.LiftedList {Solved.items}
+    pure $ Solved.LiftedList {items}
   SmallType {} -> pure Solved.SmallType {}
   Constraint {} -> pure Solved.Constraint {}

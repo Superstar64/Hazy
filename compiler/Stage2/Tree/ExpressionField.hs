@@ -37,17 +37,17 @@ resolve ::
   Stage1.Field Position ->
   Field scope
 resolve context binding field = case field of
-  Stage1.Field {Stage1.variable, Stage1.field} -> make variable (Expression.resolve context field)
-  Stage1.Pun {Stage1.variable = variable@(position :@ _ :- localName)} ->
+  Stage1.Field {variable, field} -> make variable (Expression.resolve context field)
+  Stage1.Pun {variable = variable@(position :@ _ :- localName)} ->
     let index = context !-* position :@ Local :- localName
      in make variable (variablex position index)
   where
     make name@(position :@ (path :- root)) expression = case binding of
       Constructor.Binding
-        { Constructor.index = Constructor.Index typex _,
-          Constructor.selections,
-          Constructor.fields,
-          Constructor.fielded
+        { index = Constructor.Index typex _,
+          selections,
+          fields,
+          fielded
         }
           | fielded,
             Just index <- Map.lookup root fields -> case path of

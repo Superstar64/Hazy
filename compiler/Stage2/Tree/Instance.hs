@@ -76,7 +76,7 @@ resolve
                 combine [] = Strict.Nothing
                 members = map member (toList declarations)
                 member = \case
-                  Stage1.Definition {Stage1.startPosition, Stage1.leftHandSide, Stage1.rightHandSide} ->
+                  Stage1.Definition {startPosition, leftHandSide, rightHandSide} ->
                     case Partial.resolve
                       (patternInMethod startPosition)
                       (Scheme.augmentWith parameters context)

@@ -42,7 +42,7 @@ instance Shift.Functor Scheme where
   map category (Scheme scheme) = Scheme (Shift.map category scheme)
 
 instance Term.Functor Scheme where
-  map Term.Category {Term.general} = Shift.map general
+  map Term.Category {general} = Shift.map general
 
 instance Scope.Show Scheme where
   showsPrec = showsPrec
@@ -64,7 +64,7 @@ instanciate' fresh (Scheme SchemeOver {parameters, constraints, result}) =
     (Type.instanciate' fresh result)
 
 simplify :: Solved.Scheme scope -> Scheme scope
-simplify Solved.Scheme {Solved.parameters, Solved.constraints, Solved.result}
+simplify Solved.Scheme {parameters, constraints, result}
   | parameters <- fmap Solved.TypePattern._type parameters,
     constraints <- fmap Constraint.simplify constraints,
     result <- Type.simplify result =

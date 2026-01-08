@@ -75,43 +75,43 @@ merge entries@(entry :| _) =
                 <$> Verbose.resolving
                   (Variable.printLiteral' name)
                   Real.Auto
-                    { Real.position,
-                      Real.name,
-                      Real.fixity,
-                      Real.definitionAuto = Definition.merge $ fmap More.Function.functionAuto body
+                    { position,
+                      name,
+                      fixity,
+                      definitionAuto = Definition.merge $ fmap More.Function.functionAuto body
                     }
             Just annotation ->
               Real
                 <$> Verbose.resolving
                   (Variable.printLiteral' name)
                   Real.Manual
-                    { Real.position,
-                      Real.name,
-                      Real.fixity,
-                      Real.definition = Definition.merge $ fmap More.Function.functionManual body,
-                      Real.annotation
+                    { position,
+                      name,
+                      fixity,
+                      definition = Definition.merge $ fmap More.Function.functionManual body,
+                      annotation
                     }
-        | Just (_, More.Selector {More.Selector.typeIndex, More.Selector.selectorIndex}) <- selection,
+        | Just (_, More.Selector {typeIndex, selectorIndex}) <- selection,
           () <- noAnnotation ->
             pure $
               Select
                 More.Selector
-                  { More.Selector.typeIndex,
-                    More.Selector.selectorIndex
+                  { typeIndex,
+                    selectorIndex
                   }
-        | Just (_, More.Method {More.Method.typeIndex, More.Method.methodIndex}) <- method,
+        | Just (_, More.Method {typeIndex, methodIndex}) <- method,
           () <- noAnnotation ->
             pure $
               Method
                 More.Method
-                  { More.Method.typeIndex,
-                    More.Method.methodIndex
+                  { typeIndex,
+                    methodIndex
                   }
         | Just
             ( position,
               More.Shared
-                { More.Share.shareIndex,
-                  More.Share.bound
+                { shareIndex,
+                  bound
                 }
               ) <-
             share ->
@@ -119,12 +119,12 @@ merge entries@(entry :| _) =
              in pure $
                   Real
                     Real.Share
-                      { Real.position,
-                        Real.name,
-                        Real.fixity,
-                        Real.shareIndex,
-                        Real.bound,
-                        Real.annotationShare
+                      { position,
+                        name,
+                        fixity,
+                        shareIndex,
+                        bound,
+                        annotationShare
                       }
         | otherwise -> error "no entry"
       entries -> duplicateVariableEntries entries
@@ -136,7 +136,7 @@ merge entries@(entry :| _) =
       fixities -> duplicateFixityEntries (map fst fixities)
       where
         fixity = \case
-          Partial.Fixity {Partial.position, Partial.fixity} -> Just (position, fixity)
+          Partial.Fixity {position, fixity} -> Just (position, fixity)
           _ -> Nothing
     annotation = fmap snd annotation'
     annotation' = case mapMaybe annotation (toList entries) of
@@ -145,14 +145,14 @@ merge entries@(entry :| _) =
       annotations -> duplicateAnnotationEntries (map fst annotations)
       where
         annotation = \case
-          Partial.Annotation {Partial.position, Partial.annotation} -> Just (position, annotation)
+          Partial.Annotation {position, annotation} -> Just (position, annotation)
           _ -> Nothing
     functions = case mapMaybe definition (toList entries) of
       (position, function) : functions -> Just (position, function :| fmap snd functions)
       [] -> Nothing
       where
         definition = \case
-          Partial.Function {Partial.position, Partial.function} ->
+          Partial.Function {position, function} ->
             Just (position, function)
           _ -> Nothing
     selection = case mapMaybe selector (toList entries) of
@@ -161,7 +161,7 @@ merge entries@(entry :| _) =
       selectors -> duplicateFieldEntries (map fst selectors)
       where
         selector = \case
-          Partial.Selector {Partial.position, Partial.selector} ->
+          Partial.Selector {position, selector} ->
             Just (position, selector)
           _ -> Nothing
     method = case mapMaybe method (toList entries) of
@@ -170,7 +170,7 @@ merge entries@(entry :| _) =
       methods -> duplicateMethodEntries (map fst methods)
       where
         method = \case
-          Partial.Method {Partial.position, Partial.method} ->
+          Partial.Method {position, method} ->
             Just (position, method)
           _ -> Nothing
 
@@ -180,7 +180,7 @@ merge entries@(entry :| _) =
       shared -> duplicateVariableEntries (map fst shared)
       where
         shared = \case
-          Partial.Shared {Partial.position, Partial.share} ->
+          Partial.Shared {position, share} ->
             Just (position, share)
           _ -> Nothing
     noAnnotation = case annotation' of
@@ -205,30 +205,30 @@ bindings index index' terms = Map.fromList $ makeIndexes 0 (toList terms)
           where
             value =
               Term.Binding
-                { Term.position,
-                  Term.index = Term2.Index $ Term0.normal $ index n,
-                  Term.fixity,
-                  Term.selector = Selector.Normal
+                { position,
+                  index = Term2.Index $ Term0.normal $ index n,
+                  fixity,
+                  selector = Selector.Normal
                 }
-        Select More.Selector {More.Selector.typeIndex, More.Selector.selectorIndex} ->
+        Select More.Selector {typeIndex, selectorIndex} ->
           (name, value) : makeIndexes n declarations
           where
             select = Selector.Index (Type2.Index $ index' typeIndex) selectorIndex
             value =
               Term.Binding
-                { Term.position,
-                  Term.index = Term2.Select select,
-                  Term.fixity,
-                  Term.selector = Selector.Selector select
+                { position,
+                  index = Term2.Select select,
+                  fixity,
+                  selector = Selector.Selector select
                 }
-        Method More.Method {More.Method.typeIndex, More.Method.methodIndex} ->
+        Method More.Method {typeIndex, methodIndex} ->
           (name, value) : makeIndexes n declarations
           where
             method = Method.Index (Type2.Index $ index' typeIndex) methodIndex
             value =
               Term.Binding
-                { Term.position,
-                  Term.index = Term2.Method method,
-                  Term.fixity,
-                  Term.selector = Selector.Normal
+                { position,
+                  index = Term2.Method method,
+                  fixity,
+                  selector = Selector.Normal
                 }

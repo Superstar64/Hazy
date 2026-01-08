@@ -19,8 +19,8 @@ data Function s scope
 
 check :: Context s scope -> Unify.Type s scope -> Stage2.Function scope -> ST s (Function s scope)
 check context typex = \case
-  Stage2.Plain {Stage2.rightHandSide} -> Plain <$> RightHandSide.check context typex rightHandSide
-  Stage2.Bound {Stage2.functionPosition, Stage2.patternx, Stage2.function} -> do
+  Stage2.Plain {rightHandSide} -> Plain <$> RightHandSide.check context typex rightHandSide
+  Stage2.Bound {functionPosition, patternx, function} -> do
     argument <- Unify.fresh Unify.typex
     result <- Unify.fresh Unify.typex
     Unify.unify context functionPosition typex (Unify.function argument result)

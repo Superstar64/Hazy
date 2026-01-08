@@ -33,14 +33,14 @@ data Module = Module
 labelContext :: Vector Module -> Label.Context Global
 labelContext modules =
   Label.Context
-    { Label.Context.terms = Table.Term.Global $ labelTerms modules,
-      Label.Context.locals = Local.Table.Global,
-      Label.Context.types = Table.Type.Global $ labelTypes modules
+    { terms = Table.Term.Global $ labelTerms modules,
+      locals = Local.Table.Global,
+      types = Table.Type.Global $ labelTypes modules
     }
   where
-    labelTerms = fmap $ \Module {name, declarations = Declarations {Declarations.terms}} ->
+    labelTerms = fmap $ \Module {name, declarations = Declarations {terms}} ->
       TermDeclaration.labelBinding (toQualifiers name) <$> terms
-    labelTypes = fmap $ \Module {name, declarations = Declarations {Declarations.types}} ->
+    labelTypes = fmap $ \Module {name, declarations = Declarations {types}} ->
       TypeDeclaration.labelBinding (toQualifiers name) <$> types
 
 resolve :: (Debug verbose) => Vector (Stage1.Module Position) -> verbose (Vector Module)

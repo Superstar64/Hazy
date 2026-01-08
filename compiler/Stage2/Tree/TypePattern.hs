@@ -22,5 +22,5 @@ anonymize TypePattern {name} =
     }
 
 resolve :: Stage1.TypePattern position -> TypePattern position
-resolve Stage1.TypePattern {Stage1.position, Stage1.name} =
+resolve Stage1.TypePattern {position, name} =
   TypePattern {position, name}

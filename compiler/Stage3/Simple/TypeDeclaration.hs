@@ -60,28 +60,28 @@ instance Shift.Functor TypeDeclaration where
         }
 
 instance Term.Functor TypeDeclaration where
-  map Term.Category {Term.general} = Shift.map general
+  map Term.Category {general} = Shift.map general
 
 simplify :: Solved.TypeDeclaration scope -> TypeDeclaration scope
 simplify = \case
-  Solved.ADT {Solved.name, Solved.parameters, Solved.constructors, Solved.selectors} ->
+  Solved.ADT {name, parameters, constructors, selectors} ->
     Data
       { name,
         datax =
           Data.Data
-            { Data.parameters,
-              Data.constructors = Constructor.simplify <$> constructors,
-              Data.selectors
+            { parameters,
+              constructors = Constructor.simplify <$> constructors,
+              selectors
             }
       }
-  Solved.Class {Solved.name, Solved.parameter, Solved.constraints, Solved.methods} ->
+  Solved.Class {name, parameter, constraints, methods} ->
     Class
       { name,
         classx =
           Class.Class
-            { Class.parameter,
-              Class.constraints = Constraint.simplify <$> constraints,
-              Class.methods = Solved.Method.annotation' <$> methods
+            { parameter,
+              constraints = Constraint.simplify <$> constraints,
+              methods = Solved.Method.annotation' <$> methods
             }
       }
-  Solved.Synonym {Solved.name, Solved.definition' = definition} -> Synonym {name, definition}
+  Solved.Synonym {name, definition' = definition} -> Synonym {name, definition}

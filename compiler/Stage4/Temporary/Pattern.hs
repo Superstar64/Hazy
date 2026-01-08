@@ -43,7 +43,7 @@ instance Shift.Functor Pattern where
         }
 
 instance Term.Functor Pattern where
-  map Term.Category {Term.general} = Shift.map general
+  map Term.Category {general} = Shift.map general
 
 instance Shift Bindings where
   shift = shiftDefault
@@ -80,7 +80,7 @@ data Field scope = Field !Int !(Pattern scope)
 simplify :: Stage3.Pattern scope -> Pattern scope
 simplify (Stage3.At match) = case match of
   Stage3.Wildcard -> Wildcard
-  Stage3.Match {Stage3.match, Stage3.irrefutable} ->
+  Stage3.Match {match, irrefutable} ->
     Match
       { match = simplifyBindings match,
         irrefutable
@@ -88,23 +88,23 @@ simplify (Stage3.At match) = case match of
 
 simplifyBindings :: Stage3.Bindings scope -> Bindings scope
 simplifyBindings = \case
-  Stage3.Constructor {Stage3.constructor, Stage3.patterns} ->
+  Stage3.Constructor {constructor, patterns} ->
     Constructor
       { constructor,
         patterns = simplify <$> patterns
       }
-  Stage3.Record {Stage3.constructor, Stage3.fields, Stage3.fieldCount} ->
+  Stage3.Record {constructor, fields, fieldCount} ->
     Record
       { constructor,
         fields = resolveField <$> fields,
         fieldCount
       }
-  Stage3.List {Stage3.items} ->
+  Stage3.List {items} ->
     List
       { items = simplify <$> items
       }
-  Stage3.Character {Stage3.character} -> Character {character}
-  Stage3.String {Stage3.text} -> String {text}
+  Stage3.Character {character} -> Character {character}
+  Stage3.String {text} -> String {text}
 
 resolveField :: Stage3.Field.Field scope -> Field scope
 resolveField (Stage3.Field.Field index patternx) = Field index (simplify patternx)

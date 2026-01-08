@@ -111,7 +111,7 @@ simplify :: Solved.Type scope -> Type scope
 simplify typex = simplifyWith typex []
 
 simplifyWith :: Solved.Type scope -> [Type scope] -> Type scope
-simplifyWith Solved.Constructor {Solved.constructor, Solved.synonym} arguments = case synonym of
+simplifyWith Solved.Constructor {constructor, synonym} arguments = case synonym of
   Strict.Just synonym -> replace (Vector.fromList arguments) synonym
     where
       replace :: Vector (Type scope) -> Type (Local ':+ scope) -> Type scope
@@ -121,18 +121,18 @@ simplifyWith Solved.Constructor {Solved.constructor, Solved.synonym} arguments =
             Local index -> replacements Vector.! index
             Shift index -> Variable index
   Strict.Nothing -> foldl Call (Constructor constructor) arguments
-simplifyWith Solved.Call {Solved.function, Solved.argument} arguments =
+simplifyWith Solved.Call {function, argument} arguments =
   simplifyWith function (simplify argument : arguments)
 simplifyWith typex arguments@(_ : _) =
   foldl Call (simplify typex) arguments
 simplifyWith typex [] = case typex of
-  Solved.Variable {Solved.variable} -> Variable variable
-  Solved.Tuple {Solved.elements} ->
+  Solved.Variable {variable} -> Variable variable
+  Solved.Tuple {elements} ->
     foldl Call (Constructor $ Type2.Tuple (length elements)) (fmap simplify elements)
-  Solved.Function {Solved.parameter, Solved.result} ->
+  Solved.Function {parameter, result} ->
     Function (simplify parameter) (simplify result)
-  Solved.List {Solved.element} -> Constructor Type2.List `Call` simplify element
-  Solved.LiftedList {Solved.items} ->
+  Solved.List {element} -> Constructor Type2.List `Call` simplify element
+  Solved.LiftedList {items} ->
     let nil = Constructor (Type2.Lifted Constructor.nil)
         cons head tail =
           Constructor (Type2.Lifted Constructor.cons) `Call` head `Call` tail

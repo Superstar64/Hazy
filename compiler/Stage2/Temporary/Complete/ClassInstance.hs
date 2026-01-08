@@ -46,18 +46,18 @@ resolve ::
   [ClassInstance scope]
 resolve context lookup = \case
   Stage1.Instance
-    { Stage1.startPosition,
-      Stage1.prerequisites,
-      Stage1.className = Local :=. classx,
-      Stage1.instanceHead,
-      Stage1.instanceDefinition,
-      Stage1.classPosition
+    { startPosition,
+      prerequisites,
+      className = Local :=. classx,
+      instanceHead,
+      instanceDefinition,
+      classPosition
     }
-      | Just (classIndex, TypeDeclaration {TypeDeclaration.fields}) <- lookup classx ->
+      | Just (classIndex, TypeDeclaration {fields}) <- lookup classx ->
           let methods = case fields of
                 TypeDeclaration.Methods methods -> methods
                 _ -> instanceForNonClass classPosition
-              memberMethods = Map.fromList $ zip [name | Method {Method.name} <- toList methods] [0 ..]
+              memberMethods = Map.fromList $ zip [name | Method {name} <- toList methods] [0 ..]
               resolve dataIndex parameters =
                 ClassInstance
                   { classIndex,
@@ -76,29 +76,29 @@ resolve context lookup = \case
                 where
 
               entry = case instanceHead of
-                Head {InstanceHead.startPosition, InstanceHead.typeName, InstanceHead.parameters}
+                Head {startPosition, typeName, parameters}
                   | dataIndex <- context !=.* startPosition :@ typeName ->
                       resolve (Type3.toType2 (illegalInstanceData startPosition) dataIndex) parameters
-                InstanceHead.Lifted {InstanceHead.startPosition, InstanceHead.constructorName, InstanceHead.parameters}
+                InstanceHead.Lifted {startPosition, constructorName, parameters}
                   | index <- context !=*~ startPosition :@ constructorName ->
                       resolve (Type2.Lifted index) parameters
-                InstanceHead.TupleN {InstanceHead.count, InstanceHead.parameters} ->
+                InstanceHead.TupleN {count, parameters} ->
                   resolve (Type2.Tuple count) parameters
-                InstanceHead.Tuple {InstanceHead.parameters} ->
+                InstanceHead.Tuple {parameters} ->
                   resolve (Type2.Tuple (length parameters)) parameters
                 InstanceHead.List0 {} ->
                   resolve Type2.List Strict.Vector.empty
-                InstanceHead.List {InstanceHead.parameter} ->
+                InstanceHead.List {parameter} ->
                   resolve Type2.List (Strict.Vector.singleton parameter)
-                InstanceHead.List1 {InstanceHead.parameter} ->
+                InstanceHead.List1 {parameter} ->
                   resolve Type2.List (Strict.Vector.singleton parameter)
                 InstanceHead.Arrow0 {} ->
                   resolve Type2.Arrow Strict.Vector.empty
-                InstanceHead.Arrow1 {InstanceHead.parameter} ->
+                InstanceHead.Arrow1 {parameter} ->
                   resolve Type2.Arrow (Strict.Vector.singleton parameter)
-                InstanceHead.Arrow2 {InstanceHead.parameter, InstanceHead.parameter'} ->
+                InstanceHead.Arrow2 {parameter, parameter'} ->
                   resolve Type2.Arrow (Strict.Vector.fromList [parameter, parameter'])
-                InstanceHead.Arrow {InstanceHead.parameter, InstanceHead.parameter'} ->
+                InstanceHead.Arrow {parameter, parameter'} ->
                   resolve Type2.Arrow (Strict.Vector.fromList [parameter, parameter'])
            in [entry]
   _ -> []

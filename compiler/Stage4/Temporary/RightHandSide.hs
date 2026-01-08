@@ -45,11 +45,11 @@ instance Term.Functor RightHandSide where
         }
 
 simplify :: Stage3.RightHandSide scope -> RightHandSide scope
-simplify Stage3.RightHandSide {Stage3.body, Stage3.declarations}
+simplify Stage3.RightHandSide {body, declarations}
   | letBody <- case body of
-      Stage3.Body {Stage3.Body.body} ->
-        Statements.Done {Statements.done = Expression.simplify body}
-      Stage3.Body.Guards {Stage3.Body.guards} ->
+      Stage3.Body {body} ->
+        Statements.Done {done = Expression.simplify body}
+      Stage3.Body.Guards {guards} ->
         foldr1 Statements.Branch (Statements.simplify <$> guards) =
       RightHandSide
         { letBody,
@@ -60,8 +60,8 @@ desugar :: RightHandSide scope -> Statements scope
 desugar = \case
   RightHandSide {letBody, declarations} ->
     Statements.Let
-      { Statements.letBody,
-        Statements.declarations
+      { letBody,
+        declarations
       }
   Call {function, argument} ->
     Statements.call (desugar function) (Expression.monoVariable argument)

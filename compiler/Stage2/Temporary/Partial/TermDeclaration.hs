@@ -88,8 +88,7 @@ resolve
   lookupShared
   shareIndex
   ( Stage1.Definition
-      { Stage1.leftHandSide =
-          Stage1.Pattern pattern1
+      { leftHandSide = Stage1.Pattern pattern1
       }
       : declarations
     )
@@ -99,7 +98,7 @@ resolve
         Stage1.Variable {} -> False
         _ -> True
       entry = do
-        let Shared.Shared {Shared.patternx} = share
+        let Shared.Shared {patternx} = share
             selections = Pattern.selections patternx
         (position :@ name) <- toList bindings
         let _ :@ bound = selections Map.! name
@@ -110,28 +109,29 @@ resolve
                 name,
                 share =
                   More.Shared
-                    { More.Shared.shareIndex,
-                      More.Shared.bound
+                    { shareIndex,
+                      bound
                     }
               }
           )
-      Complete.Shared {Complete.Shared.bindings, Complete.Shared.share} =
+      Complete.Shared {bindings, share} =
         lookupShared shareIndex
 resolve context lookupTerm lookupType lookupShared shareIndex (declaration : declarations) =
   main ++ resolve context lookupTerm lookupType lookupShared shareIndex declarations
   where
     main = case declaration of
-      Stage1.Infix {Stage1.fixity, Stage1.termNames'} -> do
+      Stage1.Infix {fixity, termNames'} -> do
         position :@ Variable name <- toList termNames'
         pure (name, Fixity {position, name, fixity})
-      Stage1.Annotation {Stage1.termNames, Stage1.annotation} -> do
+      Stage1.Annotation {termNames, annotation} -> do
         position :@ name <- toList termNames
         annotation <- pure $ Scheme.resolve context annotation
         pure (name, Annotation {position, name, annotation})
-      Stage1.Definition {Stage1.leftHandSide, Stage1.rightHandSide} ->
-        let Partial.Definition position name functionAuto = Partial.resolve undefined context leftHandSide rightHandSide
+      Stage1.Definition {leftHandSide, rightHandSide} ->
+        let Partial.Definition position name functionAuto =
+              Partial.resolve undefined context leftHandSide rightHandSide
             functionManual = case lookupTerm name of
-              Complete.TermDeclaration {Complete.annotation = Just annotation} ->
+              Complete.TermDeclaration {annotation = Just annotation} ->
                 let context' = Scheme.augment annotation context
                     Partial.Definition _ _ functionManual =
                       Partial.resolve undefined context' leftHandSide rightHandSide
@@ -143,54 +143,54 @@ resolve context lookupTerm lookupType lookupShared shareIndex (declaration : dec
                     name,
                     function =
                       More.Function
-                        { More.Function.functionAuto,
-                          More.Function.functionManual
+                        { functionAuto,
+                          functionManual
                         }
                   }
               )
             ]
-      Stage1.Data {Stage1.typeName = name}
+      Stage1.Data {typeName = name}
         | (typeIndex, declaration) <- lookupType name -> case declaration of
-            Complete.TypeDeclaration {Complete.TypeDeclaration.fields}
+            Complete.TypeDeclaration {fields}
               | Complete.TypeDeclaration.Selectors selectors <- fields ->
                   zipWith entry [0 ..] $ toList selectors
               | otherwise -> error "data with no selectors"
               where
-                entry selectorIndex Complete.Selector {Complete.Selector.name, Complete.Selector.position} =
+                entry selectorIndex Complete.Selector {name, position} =
                   ( name,
                     Selector
                       { position,
                         name,
                         selector =
                           More.Selector
-                            { More.Selector.typeIndex,
-                              More.Selector.selectorIndex
+                            { typeIndex,
+                              selectorIndex
                             }
                       }
                   )
-      Stage1.Class {Stage1.typeName = name, Stage1.classDefinition}
+      Stage1.Class {typeName = name, classDefinition}
         | (typeIndex, declaration) <- lookupType name -> case declaration of
-            Complete.TypeDeclaration {Complete.TypeDeclaration.fields}
+            Complete.TypeDeclaration {fields}
               | Complete.TypeDeclaration.Methods methods <- fields ->
                   let Stage1.ClassDeclarations declarations = classDefinition
-                      methodSet = Set.fromList [name | Complete.Method {Complete.Method.name} <- toList methods]
-                      entry methodIndex Complete.Method {Complete.Method.name, Complete.Method.position} =
+                      methodSet = Set.fromList [name | Complete.Method {name} <- toList methods]
+                      entry methodIndex Complete.Method {name, position} =
                         ( name,
                           Method
                             { position,
                               name,
                               method =
                                 More.Method
-                                  { More.Method.typeIndex,
-                                    More.Method.methodIndex
+                                  { typeIndex,
+                                    methodIndex
                                   }
                             }
                         )
 
                       fixities
                         Stage1.ClassDefinition.Infix
-                          { Stage1.ClassDefinition.fixity,
-                            Stage1.ClassDefinition.termNames'
+                          { fixity,
+                            termNames'
                           } = do
                           position :@ name <- toList termNames'
                           if

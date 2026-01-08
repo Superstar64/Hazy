@@ -40,13 +40,13 @@ data Context s scope = Context
   }
 
 start :: Precontext -> Builtin -> [Text] -> ST s (Context s Scope.Global)
-start Precontext {Precontext.terms, Precontext.types} builtin unique = do
+start Precontext {terms, types} builtin unique = do
   unique <- newSTRef unique
   used <- newSTRef Map.empty
-  let globalType GlobalType {GlobalType.classInstances, GlobalType.dataInstances} =
+  let globalType GlobalType {classInstances, dataInstances} =
         Type.Binding
-          { Type.classInstances = Term.Binding.Global <$> classInstances,
-            Type.dataInstances = Term.Binding.Global <$> dataInstances
+          { classInstances = Term.Binding.Global <$> classInstances,
+            dataInstances = Term.Binding.Global <$> dataInstances
           }
   pure
     Context
@@ -79,10 +79,10 @@ localBindings names instances Context {terms, evidence, types, unique, used, bui
       builtin
     }
   where
-    go LocalType {LocalType.classInstances, LocalType.dataInstances} =
+    go LocalType {classInstances, dataInstances} =
       Type.Binding
-        { Type.classInstances = Map.map Term.Binding.Local classInstances,
-          Type.dataInstances = Map.map Term.Binding.Local dataInstances
+        { classInstances = Map.map Term.Binding.Local classInstances,
+          dataInstances = Map.map Term.Binding.Local dataInstances
         }
 
 patternBindings ::

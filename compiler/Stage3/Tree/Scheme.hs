@@ -35,4 +35,4 @@ augment position parameters constraints =
     (Simple.Constraint.simplify <$> constraints)
   where
     name i = case parameters Strict.Vector.! i of
-      TypePattern {TypePattern.name} -> name
+      TypePattern {name} -> name

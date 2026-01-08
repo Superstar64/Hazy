@@ -40,30 +40,29 @@ attempt context target label = \case
   Bind {patternx, check, thenx} -> do
     (prelude, check) <- Expression.generate context check
     case patternx of
-      Constructor {constructor = Constructor.Index {Constructor.constructorIndex}, patterns} -> do
+      Constructor {constructor = Constructor.Index {constructorIndex}, patterns} -> do
         names <- Vector.replicateM patterns (Context.fresh context)
         context <- pure $ Context.patternBindings names context
         thenx <- attempt context target label thenx
         let ifx = Javascript.If condition (bind ++ thenx)
             condition =
               Javascript.Equal
-                { Javascript.left =
+                { left =
                     Javascript.Member
-                      { Javascript.object = check,
-                        Javascript.field = head Mangle.fields
+                      { object = check,
+                        field = head Mangle.fields
                       },
-                  Javascript.right =
+                  right =
                     Javascript.Number
-                      { Javascript.number =
-                          constructorIndex
+                      { number = constructorIndex
                       }
                 }
             bind = do
               (field, name) <- zip (tail Mangle.fields) (toList names)
               let member =
                     Javascript.Member
-                      { Javascript.object = check,
-                        Javascript.field
+                      { object = check,
+                        field
                       }
               pure $ Javascript.Const name member
         pure $ prelude ++ [ifx]
@@ -74,10 +73,10 @@ attempt context target label = \case
         let ifx = Javascript.If condition thenx
             condition =
               Javascript.Equal
-                { Javascript.left = check,
-                  Javascript.right =
+                { left = check,
+                  right =
                     Javascript.String
-                      { Javascript.string = Text.singleton character
+                      { string = Text.singleton character
                       }
                 }
         pure $ prelude ++ [ifx]

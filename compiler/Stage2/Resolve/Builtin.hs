@@ -134,318 +134,318 @@ fields proxy = Map.keysSet (methods proxy)
 false =
   ( falseName,
     Constructor.Binding
-      { Constructor.position = Position.internal,
-        Constructor.index = Constructor.false,
-        Constructor.fixity = Fixity Associativity.Left 9,
-        Constructor.fields = Map.empty,
-        Constructor.selections = Strict.Vector.empty,
-        Constructor.unordered = False,
-        Constructor.fielded = False
+      { position = Position.internal,
+        index = Constructor.false,
+        fixity = Fixity Associativity.Left 9,
+        fields = Map.empty,
+        selections = Strict.Vector.empty,
+        unordered = False,
+        fielded = False
       }
   )
 
 true =
   ( trueName,
     Constructor.Binding
-      { Constructor.position = Position.internal,
-        Constructor.index = Constructor.true,
-        Constructor.fixity = Fixity Associativity.Left 9,
-        Constructor.fields = Map.empty,
-        Constructor.selections = Strict.Vector.empty,
-        Constructor.unordered = False,
-        Constructor.fielded = False
+      { position = Position.internal,
+        index = Constructor.true,
+        fixity = Fixity Associativity.Left 9,
+        fields = Map.empty,
+        selections = Strict.Vector.empty,
+        unordered = False,
+        fielded = False
       }
   )
 
 bool =
   ( boolName,
     Type.Binding
-      { Type.position = Position.internal,
-        Type.index = Type3.Index $ Type2.Bool,
-        Type.constructors = Set.fromList [falseName, trueName],
-        Type.fields = Set.empty,
-        Type.methods = Map.empty
+      { position = Position.internal,
+        index = Type3.Index $ Type2.Bool,
+        constructors = Set.fromList [falseName, trueName],
+        fields = Set.empty,
+        methods = Map.empty
       }
   )
 
 char =
   ( charName,
     Type.Binding
-      { Type.position = Position.internal,
-        Type.index = Type3.Index $ Type2.Char,
-        Type.constructors = Set.empty,
-        Type.fields = Set.empty,
-        Type.methods = Map.empty
+      { position = Position.internal,
+        index = Type3.Index $ Type2.Char,
+        constructors = Set.empty,
+        fields = Set.empty,
+        methods = Map.empty
       }
   )
 
 typex =
   ( typeName,
     Type.Binding
-      { Type.position = Position.internal,
-        Type.index = Type3.Type,
-        Type.constructors = Set.empty,
-        Type.fields = Set.empty,
-        Type.methods = Map.empty
+      { position = Position.internal,
+        index = Type3.Type,
+        constructors = Set.empty,
+        fields = Set.empty,
+        methods = Map.empty
       }
   )
 
 constraint =
   ( constraintName,
     Type.Binding
-      { Type.position = Position.internal,
-        Type.index = Type3.Constraint,
-        Type.constructors = Set.empty,
-        Type.fields = Set.empty,
-        Type.methods = Map.empty
+      { position = Position.internal,
+        index = Type3.Constraint,
+        constructors = Set.empty,
+        fields = Set.empty,
+        methods = Map.empty
       }
   )
 
 small =
   ( smallName,
     Type.Binding
-      { Type.position = Position.internal,
-        Type.index = Type3.Small,
-        Type.constructors = Set.empty,
-        Type.fields = Set.empty,
-        Type.methods = Map.empty
+      { position = Position.internal,
+        index = Type3.Small,
+        constructors = Set.empty,
+        fields = Set.empty,
+        methods = Map.empty
       }
   )
 
 large =
   ( largeName,
     Type.Binding
-      { Type.position = Position.internal,
-        Type.index = Type3.Large,
-        Type.constructors = Set.empty,
-        Type.fields = Set.empty,
-        Type.methods = Map.empty
+      { position = Position.internal,
+        index = Type3.Large,
+        constructors = Set.empty,
+        fields = Set.empty,
+        methods = Map.empty
       }
   )
 
 universe =
   ( universeName,
     Type.Binding
-      { Type.position = Position.internal,
-        Type.index = Type3.Universe,
-        Type.constructors = Set.empty,
-        Type.fields = Set.empty,
-        Type.methods = Map.empty
+      { position = Position.internal,
+        index = Type3.Universe,
+        constructors = Set.empty,
+        fields = Set.empty,
+        methods = Map.empty
       }
   )
 
 st =
   ( stName,
     Type.Binding
-      { Type.position = Position.internal,
-        Type.index = Type3.Index $ Type2.ST,
-        Type.constructors = Set.empty,
-        Type.fields = Set.empty,
-        Type.methods = Map.empty
+      { position = Position.internal,
+        index = Type3.Index $ Type2.ST,
+        constructors = Set.empty,
+        fields = Set.empty,
+        methods = Map.empty
       }
   )
 
 runST =
   ( runSTName,
     Term.Binding
-      { Term.position = Position.internal,
-        Term.fixity = Fixity Associativity.Left 9,
-        Term.index = Term2.RunST,
-        Term.selector = Normal
+      { position = Position.internal,
+        fixity = Fixity Associativity.Left 9,
+        index = Term2.RunST,
+        selector = Normal
       }
   )
 
 integer =
   ( integerName,
     Type.Binding
-      { Type.position = Position.internal,
-        Type.index = Type3.Index Type2.Integer,
-        Type.constructors = Set.empty,
-        Type.fields = Set.empty,
-        Type.methods = Map.empty
+      { position = Position.internal,
+        index = Type3.Index Type2.Integer,
+        constructors = Set.empty,
+        fields = Set.empty,
+        methods = Map.empty
       }
   )
 
 int =
   ( intName,
     Type.Binding
-      { Type.position = Position.internal,
-        Type.index = Type3.Index Type2.Int,
-        Type.constructors = Set.empty,
-        Type.fields = Set.empty,
-        Type.methods = Map.empty
+      { position = Position.internal,
+        index = Type3.Index Type2.Int,
+        constructors = Set.empty,
+        fields = Set.empty,
+        methods = Map.empty
       }
   )
 
 num =
   ( numName,
     Type.Binding
-      { Type.position = Position.internal,
-        Type.index = Type3.Index Type2.Num,
-        Type.constructors = Set.empty,
-        Type.fields = fields (Proxy :: Proxy Method.Num),
-        Type.methods = methods (Proxy :: Proxy Method.Num)
+      { position = Position.internal,
+        index = Type3.Index Type2.Num,
+        constructors = Set.empty,
+        fields = fields (Proxy :: Proxy Method.Num),
+        methods = methods (Proxy :: Proxy Method.Num)
       }
   )
 
 plus =
   ( plusName,
     Term.Binding
-      { Term.position = Position.internal,
-        Term.index = Term2.Method Method.plus,
-        Term.fixity = Fixity Associativity.Left 6,
-        Term.selector = Normal
+      { position = Position.internal,
+        index = Term2.Method Method.plus,
+        fixity = Fixity Associativity.Left 6,
+        selector = Normal
       }
   )
 
 minus =
   ( minusName,
     Term.Binding
-      { Term.position = Position.internal,
-        Term.index = Term2.Method Method.minus,
-        Term.fixity = Fixity Associativity.Left 6,
-        Term.selector = Normal
+      { position = Position.internal,
+        index = Term2.Method Method.minus,
+        fixity = Fixity Associativity.Left 6,
+        selector = Normal
       }
   )
 
 multiply =
   ( multiplyName,
     Term.Binding
-      { Term.position = Position.internal,
-        Term.index = Term2.Method Method.multiply,
-        Term.fixity = Fixity Associativity.Left 7,
-        Term.selector = Normal
+      { position = Position.internal,
+        index = Term2.Method Method.multiply,
+        fixity = Fixity Associativity.Left 7,
+        selector = Normal
       }
   )
 
 negate =
   ( negateName,
     Term.Binding
-      { Term.position = Position.internal,
-        Term.index = Term2.Method Method.negate,
-        Term.fixity = Fixity Associativity.Left 9,
-        Term.selector = Normal
+      { position = Position.internal,
+        index = Term2.Method Method.negate,
+        fixity = Fixity Associativity.Left 9,
+        selector = Normal
       }
   )
 
 abs =
   ( absName,
     Term.Binding
-      { Term.position = Position.internal,
-        Term.index = Term2.Method Method.abs,
-        Term.fixity = Fixity Associativity.Left 9,
-        Term.selector = Normal
+      { position = Position.internal,
+        index = Term2.Method Method.abs,
+        fixity = Fixity Associativity.Left 9,
+        selector = Normal
       }
   )
 
 signum =
   ( signumName,
     Term.Binding
-      { Term.position = Position.internal,
-        Term.index = Term2.Method Method.signum,
-        Term.fixity = Fixity Associativity.Left 9,
-        Term.selector = Normal
+      { position = Position.internal,
+        index = Term2.Method Method.signum,
+        fixity = Fixity Associativity.Left 9,
+        selector = Normal
       }
   )
 
 fromInteger =
   ( fromIntegerName,
     Term.Binding
-      { Term.position = Position.internal,
-        Term.index = Term2.Method Method.fromInteger,
-        Term.fixity = Fixity Associativity.Left 9,
-        Term.selector = Normal
+      { position = Position.internal,
+        index = Term2.Method Method.fromInteger,
+        fixity = Fixity Associativity.Left 9,
+        selector = Normal
       }
   )
 
 enum =
   ( enumName,
     Type.Binding
-      { Type.position = Position.internal,
-        Type.index = Type3.Index Type2.Enum,
-        Type.constructors = Set.empty,
-        Type.fields = fields (Proxy :: Proxy Method.Enum),
-        Type.methods = methods (Proxy :: Proxy Method.Enum)
+      { position = Position.internal,
+        index = Type3.Index Type2.Enum,
+        constructors = Set.empty,
+        fields = fields (Proxy :: Proxy Method.Enum),
+        methods = methods (Proxy :: Proxy Method.Enum)
       }
   )
 
 succ =
   ( succName,
     Term.Binding
-      { Term.position = Position.internal,
-        Term.index = Term2.Method Method.succ,
-        Term.fixity = Fixity Associativity.Left 9,
-        Term.selector = Normal
+      { position = Position.internal,
+        index = Term2.Method Method.succ,
+        fixity = Fixity Associativity.Left 9,
+        selector = Normal
       }
   )
 
 pred =
   ( predName,
     Term.Binding
-      { Term.position = Position.internal,
-        Term.index = Term2.Method Method.pred,
-        Term.fixity = Fixity Associativity.Left 9,
-        Term.selector = Normal
+      { position = Position.internal,
+        index = Term2.Method Method.pred,
+        fixity = Fixity Associativity.Left 9,
+        selector = Normal
       }
   )
 
 toEnum =
   ( toEnumName,
     Term.Binding
-      { Term.position = Position.internal,
-        Term.index = Term2.Method Method.toEnum,
-        Term.fixity = Fixity Associativity.Left 9,
-        Term.selector = Normal
+      { position = Position.internal,
+        index = Term2.Method Method.toEnum,
+        fixity = Fixity Associativity.Left 9,
+        selector = Normal
       }
   )
 
 fromEnum =
   ( fromEnumName,
     Term.Binding
-      { Term.position = Position.internal,
-        Term.index = Term2.Method Method.fromEnum,
-        Term.fixity = Fixity Associativity.Left 9,
-        Term.selector = Normal
+      { position = Position.internal,
+        index = Term2.Method Method.fromEnum,
+        fixity = Fixity Associativity.Left 9,
+        selector = Normal
       }
   )
 
 enumFrom =
   ( enumFromName,
     Term.Binding
-      { Term.position = Position.internal,
-        Term.index = Term2.Method Method.enumFrom,
-        Term.fixity = Fixity Associativity.Left 9,
-        Term.selector = Normal
+      { position = Position.internal,
+        index = Term2.Method Method.enumFrom,
+        fixity = Fixity Associativity.Left 9,
+        selector = Normal
       }
   )
 
 enumFromThen =
   ( enumFromThenName,
     Term.Binding
-      { Term.position = Position.internal,
-        Term.index = Term2.Method Method.enumFromThen,
-        Term.fixity = Fixity Associativity.Left 9,
-        Term.selector = Normal
+      { position = Position.internal,
+        index = Term2.Method Method.enumFromThen,
+        fixity = Fixity Associativity.Left 9,
+        selector = Normal
       }
   )
 
 enumFromTo =
   ( enumFromToName,
     Term.Binding
-      { Term.position = Position.internal,
-        Term.index = Term2.Method Method.enumFromTo,
-        Term.fixity = Fixity Associativity.Left 9,
-        Term.selector = Normal
+      { position = Position.internal,
+        index = Term2.Method Method.enumFromTo,
+        fixity = Fixity Associativity.Left 9,
+        selector = Normal
       }
   )
 
 enumFromThenTo =
   ( enumFromThenToName,
     Term.Binding
-      { Term.position = Position.internal,
-        Term.index = Term2.Method Method.enumFromThenTo,
-        Term.fixity = Fixity Associativity.Left 9,
-        Term.selector = Normal
+      { position = Position.internal,
+        index = Term2.Method Method.enumFromThenTo,
+        fixity = Fixity Associativity.Left 9,
+        selector = Normal
       }
   )
 

@@ -27,36 +27,36 @@ generate ::
 generate context expression = do
   name <- fresh context
   let letx = Javascript.Let name
-  body <- generateInto context Javascript.Variable {Javascript.name} expression
-  pure (letx : body, Javascript.Variable {Javascript.name})
+  body <- generateInto context Javascript.Variable {name} expression
+  pure (letx : body, Javascript.Variable {name})
 
 force :: Javascript.Expression -> Javascript.Expression
 force object =
   let base =
         Javascript.Member
-          { Javascript.object,
-            Javascript.field = Mangle.value
+          { object,
+            field = Mangle.value
           }
       value =
         Javascript.Ternary
-          { Javascript.condition =
+          { condition =
               Javascript.Member
-                { Javascript.object,
-                  Javascript.field = Mangle.lazy
+                { object,
+                  field = Mangle.lazy
                 },
-            Javascript.valid =
+            valid =
               Javascript.Call
-                { Javascript.function = base,
-                  Javascript.arguments = []
+                { function = base,
+                  arguments = []
                 },
-            Javascript.invalid = base
+            invalid = base
           }
    in value
 
 evaluate :: Javascript.Expression -> [Javascript.Expression] -> Javascript.Expression
 evaluate thunk [] = force thunk
 evaluate function arguments =
-  Javascript.Call {Javascript.function, Javascript.arguments}
+  Javascript.Call {function, arguments}
 
 generateInto ::
   Context s scope ->
@@ -66,24 +66,21 @@ generateInto ::
 generateInto context target = \case
   Variable {variable, instanciation = Instanciation instanciation} -> do
     name <- symbol context (context !- variable)
-    let expression = Javascript.Variable {Javascript.name}
+    let expression = Javascript.Variable {name}
     arguments <- traverse (Evidence.generate context) (toList instanciation)
     pure [done (evaluate expression arguments)]
-  Constructor {constructor = Constructor.Index {Constructor.constructorIndex}, arguments} -> do
+  Constructor {constructor = Constructor.Index {constructorIndex}, arguments} -> do
     arguments <- traverse (thunk context) (toList arguments)
     let tag = Javascript.Number constructorIndex
         elements = map Javascript.Literal (tag : arguments)
         fields = zip Mangle.fields elements
-        object =
-          Javascript.Object
-            { Javascript.fields
-            }
+        object = Javascript.Object {fields}
     pure [done object]
   Character {character} -> do
-    let string = Javascript.String {Javascript.string = Text.singleton character}
+    let string = Javascript.String {string = Text.singleton character}
     pure [done string]
   Method
-    { method = Method.Index {Method.methodIndex},
+    { method = Method.Index {methodIndex},
       evidence,
       instanciation = Instanciation instanciation
     } -> do
@@ -91,19 +88,19 @@ generateInto context target = \case
       name <- Context.fresh context
       let value =
             Javascript.Member
-              { Javascript.object = evidence,
-                Javascript.field = Mangle.fields !! methodIndex
+              { object = evidence,
+                field = Mangle.fields !! methodIndex
               }
           statement = Javascript.Const name value
-          expression = Javascript.Variable {Javascript.name}
+          expression = Javascript.Variable {name}
       arguments <- traverse (Evidence.generate context) (toList instanciation)
       pure [statement, done (evaluate expression arguments)]
-  Selector {selector = Selector.Index {Selector.selectorIndex}, argument} -> do
+  Selector {selector = Selector.Index {selectorIndex}, argument} -> do
     (statements, object) <- generate context argument
     let select =
           Javascript.Member
-            { Javascript.object,
-              Javascript.field = Mangle.fields !! selectorIndex
+            { object,
+              field = Mangle.fields !! selectorIndex
             }
     pure $ statements ++ [done (force select)]
   Let {declarations, letBody} -> do
@@ -118,8 +115,8 @@ generateInto context target = \case
     pure
       [ done
           Javascript.Arrow
-            { Javascript.parameters = [name],
-              Javascript.body = statements ++ [returnx]
+            { parameters = [name],
+              body = statements ++ [returnx]
             }
       ]
   Call {function, argument} -> do
@@ -127,8 +124,8 @@ generateInto context target = \case
     argument <- thunk context argument
     let call =
           Javascript.Call
-            { Javascript.function,
-              Javascript.arguments = [argument]
+            { function,
+              arguments = [argument]
             }
     pure $ statements ++ [done call]
   Join {statements} -> Statements.generate context target statements
@@ -137,15 +134,15 @@ generateInto context target = \case
     pure
       [ done
           Javascript.Number
-            { Javascript.number = fromIntegral integer
+            { number = fromIntegral integer
             }
       ]
   where
     done value =
       Javascript.Expression
         ( Javascript.Assign
-            { Javascript.target,
-              Javascript.value
+            { target,
+              value
             }
         )
 
@@ -153,42 +150,42 @@ thunk :: Context s scope -> Expression scope -> ST s Javascript.Expression
 thunk context value = do
   let member =
         Javascript.Member
-          { Javascript.object = Javascript.This,
-            Javascript.field = Mangle.value
+          { object = Javascript.This,
+            field = Mangle.value
           }
   body <- generateInto context member value
   let flag =
         Javascript.Expression
           Javascript.Assign
-            { Javascript.target =
+            { target =
                 Javascript.Member
-                  { Javascript.object = Javascript.This,
-                    Javascript.field = Mangle.lazy
+                  { object = Javascript.This,
+                    field = Mangle.lazy
                   },
-              Javascript.value =
+              value =
                 Javascript.Number
-                  { Javascript.number = 0
+                  { number = 0
                   }
             }
       return =
         Javascript.Return
           Javascript.Member
-            { Javascript.object = Javascript.This,
-              Javascript.field = Mangle.value
+            { object = Javascript.This,
+              field = Mangle.value
             }
       fields =
         [ ( Mangle.lazy,
             Javascript.Literal
-              { Javascript.literal = Javascript.Number {Javascript.number = 1}
+              { literal = Javascript.Number {number = 1}
               }
           ),
           ( Mangle.value,
             Javascript.Method
-              { Javascript.definition = mconcat [body, [flag], [return]]
+              { definition = mconcat [body, [flag], [return]]
               }
           )
         ]
-  pure Javascript.Object {Javascript.fields}
+  pure Javascript.Object {fields}
 
 declaration :: Context s scope -> Int -> Expression (Local ':+ scope) -> ST s Javascript.Expression
 declaration context constraintCount expression = do
@@ -200,6 +197,6 @@ declaration context constraintCount expression = do
         (statements, result) <- generate context expression
         pure $
           Javascript.Arrow
-            { Javascript.parameters = toList fresh,
-              Javascript.body = statements ++ [Javascript.Return result]
+            { parameters = toList fresh,
+              body = statements ++ [Javascript.Return result]
             }

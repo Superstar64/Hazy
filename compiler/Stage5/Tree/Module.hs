@@ -43,16 +43,16 @@ generate modules = Vector.imap go modules
 precontext :: Vector Module -> Precontext
 precontext modules =
   Precontext
-    { Precontext.terms = names <$> modules,
-      Precontext.types = instanceNames <$> modules
+    { terms = names <$> modules,
+      types = instanceNames <$> modules
     }
   where
     names Module {name = path, declarations = Declarations {terms}} = generate <$> terms
       where
-        generate Definition {TermDeclaration.name} =
+        generate Definition {name} =
           Global
-            { Global.path,
-              Global.name = Mangle.mangle name
+            { path,
+              name = Mangle.mangle name
             }
     instanceNames
       Module
@@ -60,13 +60,13 @@ precontext modules =
           declarations = Declarations {types, classInstances, dataInstances}
         } = Vector.zipWith3 generate types classInstances dataInstances
         where
-          global name = Global {Global.path, Global.name}
+          global name = Global {path, name}
           generate typex classInstances dataInstances =
             GlobalType
-              { GlobalType.classInstances =
+              { classInstances =
                   let go key _ = global $ single Mangle.Class key
                    in Map.mapWithKey go classInstances,
-                GlobalType.dataInstances =
+                dataInstances =
                   let go key _ = global $ single Mangle.Data key
                    in Map.mapWithKey go dataInstances
               }
@@ -86,8 +86,8 @@ precontext modules =
 generate' :: Precontext -> FullQualifiers -> Int -> Declarations Scope.Global -> ST s [Javascript.Statement 'False]
 generate'
   precontext@Precontext
-    { Precontext.terms = termNames,
-      Precontext.types = typeNames
+    { terms = termNames,
+      types = typeNames
     }
   moduleName
   moduleIndex
@@ -102,25 +102,25 @@ generate'
           _ -> undefined
         builtin =
           Context.Builtin
-            { Context.numInt,
-              Context.numInteger,
-              Context.enumInt,
-              Context.enumInteger
+            { numInt,
+              numInteger,
+              enumInt,
+              enumInteger
             }
     context <- Context.start precontext builtin unique
     statements <-
       for (zip [0 ..] (toList terms)) $
         \( termIndex,
            Definition
-             { TermDeclaration.typex,
-               TermDeclaration.definition
+             { typex,
+               definition
              }
            ) ->
             do
               let count = Scheme.constraintCount typex
               thunk <- Expression.declaration context count definition
               source <- Context.fresh context
-              let Global {Global.name} = termNames Vector.! moduleIndex Vector.! termIndex
+              let Global {name} = termNames Vector.! moduleIndex Vector.! termIndex
               pure
                 [ Javascript.Const source thunk,
                   Javascript.Export source name
@@ -131,7 +131,7 @@ generate'
         for (Map.toList classInstances) $ \(targetIndex, instancex) -> do
           instancex <- Instance.generate context instancex
           source <- Context.fresh context
-          let Global {Global.name} =
+          let Global {name} =
                 typeNames Vector.! moduleIndex Vector.! typeIndex `GlobalType.indexClass` targetIndex
           pure
             [ Javascript.Const source instancex,
@@ -143,14 +143,14 @@ generate'
         for (Map.toList dataInstances) $ \(targetIndex, instancex) -> do
           instancex <- Instance.generate context instancex
           source <- Context.fresh context
-          let Global {Global.name} =
+          let Global {name} =
                 typeNames Vector.! moduleIndex Vector.! typeIndex `GlobalType.indexData` targetIndex
           pure
             [ Javascript.Const source instancex,
               Javascript.Export source name
             ]
     wanted <- readSTRef (Context.used context)
-    imports <- for (Map.toList wanted) $ \(Global {Global.path, Global.name}, temporary) -> do
+    imports <- for (Map.toList wanted) $ \(Global {path, name}, temporary) -> do
       pure $ Javascript.Import name temporary (Mangle.depth moduleName <> Mangle.pathJS path <> Mangle.mjs)
     let builtin =
           [ Javascript.Import Mangle.numInt numInt (Mangle.depth moduleName <> Mangle.runtime),

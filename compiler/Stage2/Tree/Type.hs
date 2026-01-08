@@ -201,12 +201,12 @@ anonymize = \case
 
 resolve :: Resolved.Context scope -> Stage1.Type Position -> Type Position scope
 resolve context = \case
-  Stage1.Variable {Stage1.startPosition, Stage1.variable} ->
+  Stage1.Variable {startPosition, variable} ->
     Variable
       { startPosition,
         variable = context !$ variable
       }
-  Stage1.Constructor {Stage1.startPosition = constructorPosition@startPosition, Stage1.constructor} ->
+  Stage1.Constructor {startPosition = constructorPosition@startPosition, constructor} ->
     case context Resolved.!=.* constructor of
       Type3.Index constructor ->
         Constructor
@@ -219,269 +219,269 @@ resolve context = \case
       Type3.Small -> Small {startPosition}
       Type3.Large -> Large {startPosition}
       Type3.Universe -> Universe {startPosition}
-  Stage1.Unit {Stage1.startPosition = constructorPosition@startPosition} ->
+  Stage1.Unit {startPosition = constructorPosition@startPosition} ->
     Constructor
       { startPosition,
         constructorPosition,
         constructor = Type2.Tuple 0
       }
-  Stage1.Arrow {Stage1.startPosition = constructorPosition@startPosition} ->
+  Stage1.Arrow {startPosition = constructorPosition@startPosition} ->
     Constructor
       { startPosition,
         constructorPosition,
         constructor = Type2.Arrow
       }
-  Stage1.Listing {Stage1.startPosition = constructorPosition@startPosition} ->
+  Stage1.Listing {startPosition = constructorPosition@startPosition} ->
     Constructor
       { startPosition,
         constructorPosition,
         constructor = Type2.List
       }
-  Stage1.Tupling {Stage1.startPosition = constructorPosition@startPosition, Stage1.count} ->
+  Stage1.Tupling {startPosition = constructorPosition@startPosition, count} ->
     Constructor
       { startPosition,
         constructorPosition,
         constructor = Type2.Tuple count
       }
-  Stage1.List {Stage1.startPosition, Stage1.element} ->
+  Stage1.List {startPosition, element} ->
     List
       { startPosition,
         element = resolve context element
       }
-  Stage1.Tuple {Stage1.startPosition, Stage1.elements} ->
+  Stage1.Tuple {startPosition, elements} ->
     Tuple
       { startPosition,
         elements = fmap (resolve context) elements
       }
-  Stage1.Call {Stage1.function, Stage1.argument} ->
+  Stage1.Call {function, argument} ->
     Call
       { function = resolve context function,
         argument = resolve context argument
       }
-  Stage1.Function {Stage1.parameter, Stage1.operatorPosition, Stage1.result} ->
+  Stage1.Function {parameter, operatorPosition, result} ->
     Function
       { parameter = resolve context parameter,
         operatorPosition,
         result = resolve context result
       }
-  Stage1.StrictFunction {Stage1.parameter, Stage1.operatorPosition, Stage1.result} ->
+  Stage1.StrictFunction {parameter, operatorPosition, result} ->
     StrictFunction
       { parameter = resolve context parameter,
         operatorPosition,
         result = resolve context result
       }
-  Stage1.Lifted {Stage1.startPosition = constructorPosition@startPosition, Stage1.lifted} ->
+  Stage1.Lifted {startPosition = constructorPosition@startPosition, lifted} ->
     Constructor
       { startPosition,
         constructorPosition,
         constructor = Type2.Lifted (context !=*~ lifted)
       }
-  Stage1.LiftedCons {Stage1.startPosition = constructorPosition@startPosition} ->
+  Stage1.LiftedCons {startPosition = constructorPosition@startPosition} ->
     Constructor
       { startPosition,
         constructorPosition,
         constructor = Type2.Lifted Constructor.cons
       }
-  Stage1.LiftedList {Stage1.startPosition = constructorPosition@startPosition, Stage1.items}
+  Stage1.LiftedList {startPosition = constructorPosition@startPosition, items}
     | null items -> Constructor {startPosition, constructorPosition, constructor = Type2.Lifted Constructor.nil}
     | otherwise ->
         LiftedList
           { startPosition,
             items = resolve context <$> Strict.Vector1.fromVector items
           }
-  Stage1.Infix {Stage1.startPosition, Stage1.left, Stage1.operator, Stage1.right} ->
+  Stage1.Infix {startPosition, left, operator, right} ->
     Infix.fix operators
     where
       operators =
         Infix.resolve context $
           Stage1.TypeInfix.Infix
-            { Stage1.TypeInfix.startPosition,
-              Stage1.TypeInfix.left,
-              Stage1.TypeInfix.operator,
-              Stage1.TypeInfix.right
+            { startPosition,
+              left,
+              operator,
+              right
             }
-  Stage1.InfixCons {Stage1.startPosition, Stage1.head, Stage1.operatorPosition, Stage1.tail} ->
+  Stage1.InfixCons {startPosition, head, operatorPosition, tail} ->
     Infix.fix operators
     where
       operators =
         Infix.resolve context $
           Stage1.TypeInfix.InfixCons
-            { Stage1.TypeInfix.startPosition,
-              Stage1.TypeInfix.head,
-              Stage1.TypeInfix.operatorPosition,
-              Stage1.TypeInfix.tail
+            { startPosition,
+              head,
+              operatorPosition,
+              tail
             }
-  Stage1.Type {Stage1.startPosition, Stage1.universe} ->
+  Stage1.Type {startPosition, universe} ->
     Type
       { startPosition,
         universe = resolve context universe
       }
-  Stage1.Star {Stage1.startPosition} -> SmallType {startPosition}
+  Stage1.Star {startPosition} -> SmallType {startPosition}
 
 label :: Label.Context scope -> Type unit scope -> Stage1.Type ()
 label context = \case
   Variable {variable} ->
     Stage1.Variable
-      { Stage1.startPosition = (),
-        Stage1.variable = () :@ context Label.!-.* variable
+      { startPosition = (),
+        variable = () :@ context Label.!-.* variable
       }
   Constructor {constructor} -> case constructor of
     Type2.Index constructor ->
       Stage1.Constructor
-        { Stage1.startPosition = (),
-          Stage1.constructor = () :@ context Label.!=.* constructor
+        { startPosition = (),
+          constructor = () :@ context Label.!=.* constructor
         }
     Type2.Lifted lifted ->
       Constructor.run normal all lifted
       where
         normal typeIndex constructorIndex
-          | Label.TypeBinding {Label.constructorNames} <- context Label.!=. typeIndex =
+          | Label.TypeBinding {constructorNames} <- context Label.!=. typeIndex =
               Stage1.Lifted
-                { Stage1.startPosition = (),
-                  Stage1.lifted = () :@ constructorNames Strict.Vector.! constructorIndex
+                { startPosition = (),
+                  lifted = () :@ constructorNames Strict.Vector.! constructorIndex
                 }
         all =
           Constructor.All
-            { Constructor.bool,
-              Constructor.list,
-              Constructor.tuplex
+            { bool,
+              list,
+              tuplex
             }
         bool Constructor.False =
           Stage1.Lifted
-            { Stage1.startPosition = (),
-              Stage1.lifted = () :@ hazy := ConstructorIdentifier (constructorIdentifier $ pack "False")
+            { startPosition = (),
+              lifted = () :@ hazy := ConstructorIdentifier (constructorIdentifier $ pack "False")
             }
         bool Constructor.True =
           Stage1.Lifted
-            { Stage1.startPosition = (),
-              Stage1.lifted = () :@ hazy := ConstructorIdentifier (constructorIdentifier $ pack "True")
+            { startPosition = (),
+              lifted = () :@ hazy := ConstructorIdentifier (constructorIdentifier $ pack "True")
             }
         list Constructor.Nil =
           Stage1.LiftedList
-            { Stage1.startPosition = (),
-              Stage1.items = Strict.Vector.empty
+            { startPosition = (),
+              items = Strict.Vector.empty
             }
         list Constructor.Cons =
           Stage1.LiftedCons
-            { Stage1.startPosition = ()
+            { startPosition = ()
             }
         tuplex count _ =
           Stage1.Tupling
-            { Stage1.startPosition = (),
-              Stage1.count
+            { startPosition = (),
+              count
             }
     Type2.Bool ->
       Stage1.Constructor
-        { Stage1.startPosition = (),
-          Stage1.constructor = () :@ hazy :=. constructorIdentifier (pack "Bool")
+        { startPosition = (),
+          constructor = () :@ hazy :=. constructorIdentifier (pack "Bool")
         }
     Type2.Char ->
       Stage1.Constructor
-        { Stage1.startPosition = (),
-          Stage1.constructor = () :@ hazy :=. constructorIdentifier (pack "Char")
+        { startPosition = (),
+          constructor = () :@ hazy :=. constructorIdentifier (pack "Char")
         }
     Type2.ST ->
       Stage1.Constructor
-        { Stage1.startPosition = (),
-          Stage1.constructor = () :@ hazy :=. constructorIdentifier (pack "ST")
+        { startPosition = (),
+          constructor = () :@ hazy :=. constructorIdentifier (pack "ST")
         }
     Type2.Arrow ->
       Stage1.Arrow
-        { Stage1.startPosition = ()
+        { startPosition = ()
         }
     Type2.List ->
       Stage1.Listing
-        { Stage1.startPosition = ()
+        { startPosition = ()
         }
     Type2.Tuple count ->
       Stage1.Tupling
-        { Stage1.startPosition = (),
-          Stage1.count
+        { startPosition = (),
+          count
         }
     Type2.Integer ->
       Stage1.Constructor
-        { Stage1.startPosition = (),
-          Stage1.constructor = () :@ hazy :=. constructorIdentifier (pack "Integer")
+        { startPosition = (),
+          constructor = () :@ hazy :=. constructorIdentifier (pack "Integer")
         }
     Type2.Int ->
       Stage1.Constructor
-        { Stage1.startPosition = (),
-          Stage1.constructor = () :@ hazy :=. constructorIdentifier (pack "Int")
+        { startPosition = (),
+          constructor = () :@ hazy :=. constructorIdentifier (pack "Int")
         }
     Type2.Num ->
       Stage1.Constructor
-        { Stage1.startPosition = (),
-          Stage1.constructor = () :@ hazy :=. constructorIdentifier (pack "Num")
+        { startPosition = (),
+          constructor = () :@ hazy :=. constructorIdentifier (pack "Num")
         }
     Type2.Enum ->
       Stage1.Constructor
-        { Stage1.startPosition = (),
-          Stage1.constructor = () :@ hazy :=. constructorIdentifier (pack "Enum")
+        { startPosition = (),
+          constructor = () :@ hazy :=. constructorIdentifier (pack "Enum")
         }
   List {element} ->
     Stage1.List
-      { Stage1.startPosition = (),
-        Stage1.element = label context element
+      { startPosition = (),
+        element = label context element
       }
   Tuple {elements} ->
     Stage1.Tuple
-      { Stage1.startPosition = (),
-        Stage1.elements = fmap (label context) elements
+      { startPosition = (),
+        elements = fmap (label context) elements
       }
   Call {function, argument} ->
     Stage1.Call
-      { Stage1.startPosition = (),
-        Stage1.function = label context function,
-        Stage1.argument = label context argument
+      { startPosition = (),
+        function = label context function,
+        argument = label context argument
       }
   Function {parameter, result} ->
     Stage1.Function
-      { Stage1.startPosition = (),
-        Stage1.parameter = label context parameter,
-        Stage1.operatorPosition = (),
-        Stage1.result = label context result
+      { startPosition = (),
+        parameter = label context parameter,
+        operatorPosition = (),
+        result = label context result
       }
   StrictFunction {parameter, result} ->
     Stage1.StrictFunction
-      { Stage1.startPosition = (),
-        Stage1.parameter = label context parameter,
-        Stage1.operatorPosition = (),
-        Stage1.result = label context result
+      { startPosition = (),
+        parameter = label context parameter,
+        operatorPosition = (),
+        result = label context result
       }
   LiftedList {items} ->
     Stage1.LiftedList
-      { Stage1.startPosition = (),
-        Stage1.items = Strict.Vector1.toVector $ label context <$> items
+      { startPosition = (),
+        items = Strict.Vector1.toVector $ label context <$> items
       }
   Type {universe} ->
     Stage1.Type
-      { Stage1.startPosition = (),
-        Stage1.universe = label context universe
+      { startPosition = (),
+        universe = label context universe
       }
   Constraint {} ->
     Stage1.Constructor
-      { Stage1.startPosition = (),
-        Stage1.constructor = () :@ hazy :=. constructorIdentifier (pack "Constraint")
+      { startPosition = (),
+        constructor = () :@ hazy :=. constructorIdentifier (pack "Constraint")
       }
   Small {} ->
     Stage1.Constructor
-      { Stage1.startPosition = (),
-        Stage1.constructor = () :@ hazy :=. constructorIdentifier (pack "Small")
+      { startPosition = (),
+        constructor = () :@ hazy :=. constructorIdentifier (pack "Small")
       }
   Large {} ->
     Stage1.Constructor
-      { Stage1.startPosition = (),
-        Stage1.constructor = () :@ hazy :=. constructorIdentifier (pack "Large")
+      { startPosition = (),
+        constructor = () :@ hazy :=. constructorIdentifier (pack "Large")
       }
   Universe {} ->
     Stage1.Constructor
-      { Stage1.startPosition = (),
-        Stage1.constructor = () :@ hazy :=. constructorIdentifier (pack "Universe")
+      { startPosition = (),
+        constructor = () :@ hazy :=. constructorIdentifier (pack "Universe")
       }
   SmallType {} ->
     Stage1.Constructor
-      { Stage1.startPosition = (),
-        Stage1.constructor = () :@ hazy :=. constructorIdentifier (pack "Type")
+      { startPosition = (),
+        constructor = () :@ hazy :=. constructorIdentifier (pack "Type")
       }
   where
     hazy = Local :. constructorIdentifier (pack "Hazy")

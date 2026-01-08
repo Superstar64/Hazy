@@ -76,10 +76,10 @@ resolve ::
   [(ConstructorIdentifier, TypeDeclaration scope)]
 resolve context entry = case entry of
   Stage1.Synonym
-    { Stage1.startPosition,
-      Stage1.typeName = name,
-      Stage1.parameters,
-      Stage1.typeDefinition
+    { startPosition,
+      typeName = name,
+      parameters,
+      typeDefinition
     }
       | parameters <- TypePattern.resolve <$> parameters ->
           let item =
@@ -88,8 +88,8 @@ resolve context entry = case entry of
                     name = name,
                     synonym =
                       More.Synonym
-                        { More.Synonym.parameters,
-                          More.Synonym.synonym
+                        { parameters,
+                          synonym
                         }
                   }
               synonym = Type.resolve context' typeDefinition
@@ -97,11 +97,11 @@ resolve context entry = case entry of
                   context' = augmentLocalTypes parameters context
            in [(name, item)]
   Stage1.Data
-    { Stage1.brand,
-      Stage1.startPosition,
-      Stage1.typeName = name,
-      Stage1.parameters,
-      Stage1.dataDefinition
+    { brand,
+      startPosition,
+      typeName = name,
+      parameters,
+      dataDefinition
     }
       | parameters <- TypePattern.resolve <$> parameters ->
           let item = case dataDefinition of
@@ -111,10 +111,10 @@ resolve context entry = case entry of
                       name,
                       adt =
                         More.ADT
-                          { More.ADT.brand,
-                            More.ADT.parameters,
-                            More.ADT.constructors,
-                            More.ADT.selectors
+                          { brand,
+                            parameters,
+                            constructors,
+                            selectors
                           }
                     }
                   where
@@ -124,32 +124,26 @@ resolve context entry = case entry of
                         duplicate [constructor] = constructor
                         duplicate constructors =
                           duplicateConstructorEntries
-                            [position | Constructor {Constructor.position} <- constructors]
+                            [position | Constructor {position} <- constructors]
                         entries constructor = (name, entry)
                           where
-                            entry@Constructor {Constructor.name} =
+                            entry@Constructor {name} =
                               Constructor.resolve context' resolve constructor
                               where
                                 resolve = fmap Complete.Selector.name selectors
                     selectors = orderWith' const $ foldMap entries (zip [0 ..] $ toList constructors)
                       where
-                        entries (first, Constructor {Constructor.fields}) = do
-                          ( index,
-                            Complete.Field
-                              { Complete.Field.name,
-                                Complete.Field.position,
-                                Complete.Field.field
-                              }
-                            ) <-
+                        entries (first, Constructor {fields}) = do
+                          (index, Complete.Field {name, position, field}) <-
                             zip [0 ..] $ toList fields
                           let fields = Strict.Vector.fromList $ do
-                                Constructor {Constructor.fields} <- toList constructors
-                                let check (_, Complete.Field {Complete.Field.name = name'}) =
+                                Constructor {fields} <- toList constructors
+                                let check (_, Complete.Field {name = name'}) =
                                       name == name'
                                     found = find check $ zip [0 ..] $ toList fields
                                 pure $ case found of
                                   Nothing -> Strict.Nothing
-                                  Just (index, Complete.Field {Complete.Field.field}) ->
+                                  Just (index, Complete.Field {field}) ->
                                     Strict.Just (index, field)
                               strict = Entry.strict $ Field.entry field
                               indexes = fmap fst <$> fields
@@ -162,20 +156,20 @@ resolve context entry = case entry of
                               uniform = all (== Strict.Just index) indexes && all (== Strict.Just strict) stricts
                           let item =
                                 Complete.Selector
-                                  { Complete.Selector.position,
-                                    Complete.Selector.name,
-                                    Complete.Selector.real =
+                                  { position,
+                                    name,
+                                    real =
                                       Selector.Selector
-                                        { Selector.name,
-                                          Selector.position,
-                                          Selector.first,
-                                          Selector.index,
-                                          Selector.uniform =
+                                        { name,
+                                          position,
+                                          first,
+                                          index,
+                                          uniform =
                                             if seq sane uniform
                                               then
-                                                Selector.Uniform {Selector.strict}
+                                                Selector.Uniform {strict}
                                               else
-                                                Selector.Disjoint {Selector.indexes}
+                                                Selector.Disjoint {indexes}
                                         }
                                   }
                           pure (name, item)
@@ -185,9 +179,9 @@ resolve context entry = case entry of
                       name = name,
                       gadt =
                         More.GADT
-                          { More.GADT.brand,
-                            More.GADT.parameters,
-                            More.GADT.gadtConstructors
+                          { brand,
+                            parameters,
+                            gadtConstructors
                           }
                     }
                   where
@@ -202,11 +196,11 @@ resolve context entry = case entry of
                             entries = GADTConstructor.resolve context constructor
            in [(name, item)]
   Stage1.Class
-    { Stage1.startPosition,
-      Stage1.typeName = name,
-      Stage1.parameter,
-      Stage1.superClasses,
-      Stage1.classDefinition
+    { startPosition,
+      typeName = name,
+      parameter,
+      superClasses,
+      classDefinition
     }
       | parameter <- TypePattern.resolve parameter ->
           let Stage1.ClassDeclarations declarations = classDefinition
@@ -216,16 +210,16 @@ resolve context entry = case entry of
                     name,
                     classx =
                       More.Class
-                        { More.Class.parameter,
-                          More.Class.constraints,
-                          More.Class.methods
+                        { parameter,
+                          constraints,
+                          methods
                         }
                   }
               context' = augmentLocalTypes (Strict.Vector.singleton parameter) context
               methods = orderNonEmpty' Method.merge $ foldMap (Method.resolve context') declarations
               constraints = Constraint.resolve context' <$> superClasses
            in [(name, item)]
-  Stage1.KindAnnotation {Stage1.typeNames, Stage1.kindAnnotation} -> do
+  Stage1.KindAnnotation {typeNames, kindAnnotation} -> do
     position :@ name <- toList typeNames
     let annotation = Type.resolve context kindAnnotation
     pure (name, Annotation {position, name, annotation})

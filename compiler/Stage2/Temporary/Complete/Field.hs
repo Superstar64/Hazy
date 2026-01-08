@@ -33,9 +33,9 @@ resolve context (Stage1.Field names entry) = do
             name,
             field =
               Real.Field
-                { Real.position,
-                  Real.name,
-                  Real.entry = Entry.resolve context entry
+                { position,
+                  name,
+                  entry = Entry.resolve context entry
                 }
           }
   pure (name, item)

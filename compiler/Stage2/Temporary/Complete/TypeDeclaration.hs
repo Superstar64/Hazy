@@ -70,10 +70,10 @@ merge entries@(entry :| _) =
         | Just
             ( position,
               More.ADT
-                { More.ADT.brand,
-                  More.ADT.parameters,
-                  More.ADT.constructors,
-                  More.ADT.selectors
+                { brand,
+                  parameters,
+                  constructors,
+                  selectors
                 }
               ) <-
             adt ->
@@ -83,80 +83,80 @@ merge entries@(entry :| _) =
                 | constructors <- fmap Constructor.shrink constructors,
                   selectors <- fmap Selector.shrink selectors ->
                     Real.ADT
-                      { Real.position,
-                        Real.name,
-                        Real.brand,
-                        Real.parameters,
-                        Real.constructors,
-                        Real.selectors,
-                        Real.annotation
+                      { position,
+                        name,
+                        brand,
+                        parameters,
+                        constructors,
+                        selectors,
+                        annotation
                       }
         | Just
             ( _,
               More.GADT
-                { More.GADT.brand,
-                  More.GADT.parameters,
-                  More.GADT.gadtConstructors
+                { brand,
+                  parameters,
+                  gadtConstructors
                 }
               ) <-
             gadt ->
             Verbose.resolving
               (Variable.print' name)
               Real.GADT
-                { Real.position,
-                  Real.name,
-                  Real.parameters,
-                  Real.brand,
-                  Real.gadtConstructors = fmap GADTConstructor.shrink gadtConstructors,
-                  Real.annotation
+                { position,
+                  name,
+                  parameters,
+                  brand,
+                  gadtConstructors = fmap GADTConstructor.shrink gadtConstructors,
+                  annotation
                 }
         | Just
             ( position,
               More.Class
-                { More.Class.parameter,
-                  More.Class.constraints,
-                  More.Class.methods
+                { parameter,
+                  constraints,
+                  methods
                 }
               ) <-
             classx ->
             Verbose.resolving
               (Variable.print' name)
               Real.Class
-                { Real.position,
-                  Real.name,
-                  Real.parameter,
-                  Real.constraints,
-                  Real.methods = fmap Method.shrink methods,
-                  Real.annotation
+                { position,
+                  name,
+                  parameter,
+                  constraints,
+                  methods = fmap Method.shrink methods,
+                  annotation
                 }
         | Just
             ( _,
               More.Synonym
-                { More.Synonym.parameters,
-                  More.Synonym.synonym
+                { parameters,
+                  synonym
                 }
               ) <-
             synonym ->
             Verbose.resolving
               (Variable.print' name)
               Real.Synonym
-                { Real.position,
-                  Real.name,
-                  Real.parameters,
-                  Real.synonym,
-                  Real.annotation
+                { position,
+                  name,
+                  parameters,
+                  synonym,
+                  annotation
                 }
       entries -> duplicateTypeEntries entries
     position = Partial.position entry
     name = Partial.name entry
     fields
-      | Just (_, More.ADT {More.ADT.selectors}) <- adt = Selectors selectors
+      | Just (_, More.ADT {selectors}) <- adt = Selectors selectors
       | Just (_, More.GADT {}) <- gadt = Selectors Strict.Vector.empty
-      | Just (_, More.Class {More.Class.methods}) <- classx = Methods methods
+      | Just (_, More.Class {methods}) <- classx = Methods methods
       | otherwise = NoFields
     constructors
-      | Just (_, More.ADT {More.ADT.constructors}) <- adt = ADT constructors
-      | Just (_, More.GADT {More.GADT.gadtConstructors}) <- gadt = GADT gadtConstructors
+      | Just (_, More.ADT {constructors}) <- adt = ADT constructors
+      | Just (_, More.GADT {gadtConstructors}) <- gadt = GADT gadtConstructors
       | otherwise = NoConstructors
     adt = case mapMaybe adt (toList entries) of
       [] -> Nothing
@@ -165,8 +165,8 @@ merge entries@(entry :| _) =
       where
         adt = \case
           Partial.ADT
-            { Partial.position,
-              Partial.adt
+            { position,
+              adt
             } -> Just (position, adt)
           _ -> Nothing
 
@@ -177,8 +177,8 @@ merge entries@(entry :| _) =
       where
         gadt = \case
           Partial.GADT
-            { Partial.position,
-              Partial.gadt
+            { position,
+              gadt
             } -> Just (position, gadt)
           _ -> Nothing
 
@@ -188,7 +188,7 @@ merge entries@(entry :| _) =
       classes -> duplicateTypeEntries (map fst classes)
       where
         classx = \case
-          Partial.Class {Partial.position, Partial.classx} ->
+          Partial.Class {position, classx} ->
             Just (position, (classx))
           _ -> Nothing
 
@@ -198,7 +198,7 @@ merge entries@(entry :| _) =
       synonyms -> duplicateTypeEntries (map fst synonyms)
       where
         synonym = \case
-          Partial.Synonym {Partial.position, Partial.synonym} ->
+          Partial.Synonym {position, synonym} ->
             Just (position, synonym)
           _ -> Nothing
 
@@ -208,7 +208,7 @@ merge entries@(entry :| _) =
       annotations -> duplicateTypeEntries (map fst annotations)
       where
         annotation = \case
-          Partial.Annotation {Partial.position, Partial.annotation} -> Just (position, annotation)
+          Partial.Annotation {position, annotation} -> Just (position, annotation)
           _ -> Nothing
 
 indexes :: Strict.Vector (TypeDeclaration scope) -> Map ConstructorIdentifier Int
@@ -222,25 +222,25 @@ bindings index types = Map.map typeIndex (indexes types)
   where
     typeIndex vectorIndex =
       Type.Binding
-        { Type.position,
-          Type.index = Type3.Index $ Type2.Index $ index vectorIndex,
-          Type.constructors =
+        { position,
+          index = Type3.Index $ Type2.Index $ index vectorIndex,
+          constructors =
             case constructors of
               ADT constructors ->
                 Set.fromList
-                  [name | Constructor {Constructor.name} <- toList constructors]
+                  [name | Constructor {name} <- toList constructors]
               GADT gadtConstructors ->
                 Set.fromList
-                  [name | GADTConstructor {GADTConstructor.name} <- toList gadtConstructors]
+                  [name | GADTConstructor {name} <- toList gadtConstructors]
               NoConstructors -> Set.empty,
-          Type.fields =
+          fields =
             case fields of
-              Selectors selectors -> Set.fromList [name | Selector {Selector.name} <- toList selectors]
-              Methods methods -> Set.fromList [name | Method {Method.name} <- toList methods]
+              Selectors selectors -> Set.fromList [name | Selector {name} <- toList selectors]
+              Methods methods -> Set.fromList [name | Method {name} <- toList methods]
               NoFields -> Set.empty,
-          Type.methods =
+          methods =
             case fields of
-              Methods methods -> Map.fromList (zipWith (\(Method {Method.name}) i -> (name, i)) (toList methods) [0 ..])
+              Methods methods -> Map.fromList (zipWith (\(Method {name}) i -> (name, i)) (toList methods) [0 ..])
               _ -> Map.empty
         }
       where

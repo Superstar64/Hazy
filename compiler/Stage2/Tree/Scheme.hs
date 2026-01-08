@@ -67,7 +67,7 @@ augmentWith parameters context = case shift context of
     indexes = Local.Local <$> [0 ..]
 
 resolve :: Context scope -> Stage1.Scheme Position -> Scheme Position scope
-resolve context (Stage1.Explicit {Stage1.startPosition, Stage1.parameters, Stage1.constraints, Stage1.result})
+resolve context (Stage1.Explicit {startPosition, parameters, constraints, result})
   | parameters <- TypePattern.resolve <$> parameters,
     context <- augmentWith parameters context =
       Scheme
@@ -79,7 +79,7 @@ resolve context (Stage1.Explicit {Stage1.startPosition, Stage1.parameters, Stage
         }
   where
     implicit = False
-resolve context Stage1.Implicit {Stage1.startPosition, Stage1.constraints, Stage1.result}
+resolve context Stage1.Implicit {startPosition, constraints, result}
   | context <- augmentWith parameters context =
       Scheme
         { startPosition,
@@ -91,6 +91,6 @@ resolve context Stage1.Implicit {Stage1.startPosition, Stage1.constraints, Stage
   where
     implicit = True
     parameters = fabricate <$> names
-    fabricate name = TypePattern {TypePattern.position = startPosition, TypePattern.name}
+    fabricate name = TypePattern {position = startPosition, name}
     names = Strict.Vector.fromList $ nubOrd $ filter (`Map.notMember` localTypes context) free
     free = map (\(_ :@ name) -> name) $ foldMap freeTypeVariables constraints <> freeTypeVariables result

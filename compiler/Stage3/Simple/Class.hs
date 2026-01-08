@@ -47,7 +47,7 @@ instanciate context position index Class {parameter, methods} = do
   methods <- pure $ Simple.Scheme.instanciate' types <$> methods
   pure
     ClassInstance
-      { ClassInstance.typex,
-        ClassInstance.evidence,
-        ClassInstance.methods
+      { typex,
+        evidence,
+        methods
       }

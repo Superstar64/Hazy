@@ -35,7 +35,7 @@ instance Shift.Functor Evidence where
         }
 
 instance Term.Functor Evidence where
-  map Term.Category {Term.general} = Shift.map general
+  map Term.Category {general} = Shift.map general
 
 lift :: Evidence scope -> Unify.Evidence s scope
 lift = \case

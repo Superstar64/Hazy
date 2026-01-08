@@ -33,10 +33,10 @@ merge entries@(entry :| _) =
       name,
       method =
         Real.Method
-          { Real.position,
-            Real.name,
-            Real.annotation,
-            Real.definition
+          { position,
+            name,
+            annotation,
+            definition
           }
     }
   where
@@ -53,10 +53,10 @@ merge entries@(entry :| _) =
     annotations = mapMaybe annotation (toList entries)
       where
         annotation = \case
-          Partial.Annotation {Partial.position, Partial.annotation} -> Just (position, annotation)
+          Partial.Annotation {position, annotation} -> Just (position, annotation)
           _ -> Nothing
     functions = mapMaybe function (toList entries)
       where
         function = \case
-          Partial.Function {Partial.function} -> Just function
+          Partial.Function {function} -> Just function
           _ -> Nothing

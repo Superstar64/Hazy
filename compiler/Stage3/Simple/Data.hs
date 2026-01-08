@@ -40,7 +40,7 @@ instanciate Data {parameters, constructors, selectors} = do
   types <- traverse (Unify.fresh . Type.lift) parameters
   pure
     DataInstance
-      { DataInstance.types,
-        DataInstance.constructors = Constructor.instanciate types <$> constructors,
-        DataInstance.selectors
+      { types,
+        constructors = Constructor.instanciate types <$> constructors,
+        selectors
       }

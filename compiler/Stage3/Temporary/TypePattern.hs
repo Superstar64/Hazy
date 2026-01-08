@@ -17,6 +17,6 @@ solve TypePattern {typex, name, position} = do
   typex <- Unify.solve position typex
   pure
     Solved.TypePattern
-      { Solved.name,
-        Solved.typex
+      { name,
+        typex
       }

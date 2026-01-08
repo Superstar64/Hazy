@@ -38,13 +38,13 @@ anonymize Entry {entry, strict} =
 
 resolve :: Context scope -> Stage1.Entry -> Entry Position scope
 resolve context = \case
-  Stage1.Lazy {Stage1.startPosition, Stage1.entry} ->
+  Stage1.Lazy {startPosition, entry} ->
     Entry
       { startPosition,
         entry = Scheme.resolve context entry,
         strict = False
       }
-  Stage1.Strict {Stage1.startPosition, Stage1.entry} ->
+  Stage1.Strict {startPosition, entry} ->
     Entry
       { startPosition,
         entry = Scheme.resolve context entry,

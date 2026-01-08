@@ -70,7 +70,7 @@ infixr 6 </>
     where
       terms = Map.unionWith combine terms1 terms2
         where
-          combine left@Term.Binding {Term.selector} ~Term.Binding {Term.selector = selector'} =
+          combine left@Term.Binding {selector} ~Term.Binding {selector = selector'} =
             left {Term.selector = selector <> selector'}
       constructors = Map.union constructors1 constructors2
       types = Map.union types1 types2
@@ -98,10 +98,10 @@ fromFunctor ::
   Bindings stability scope
 fromFunctor
   Functor.Bindings
-    { Functor.terms,
-      Functor.constructors,
-      Functor.types,
-      Functor.stability
+    { terms,
+      constructors,
+      types,
+      stability
     } =
     Bindings
       { terms = fmap Term.fromFunctor terms,
@@ -125,10 +125,10 @@ toFunctor
       stability
     } =
     Functor.Bindings
-      { Functor.terms = fmap Term.toFunctor terms,
-        Functor.constructors = fmap Constructor.toFunctor constructors,
-        Functor.types = fmap Type.toFunctor types,
-        Functor.stability
+      { terms = fmap Term.toFunctor terms,
+        constructors = fmap Constructor.toFunctor constructors,
+        types = fmap Type.toFunctor types,
+        stability
       }
 
 updateStability stability Bindings {terms, constructors, types} =

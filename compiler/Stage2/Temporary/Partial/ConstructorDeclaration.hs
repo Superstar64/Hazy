@@ -50,46 +50,41 @@ resolve ::
   Stage1.Declaration Position ->
   [(Constructor, ConstructorDeclaration)]
 resolve lookup entry = case entry of
-  Stage1.Infix {Stage1.fixity, Stage1.termNames'} -> do
+  Stage1.Infix {fixity, termNames'} -> do
     position :@ Constructor name <- toList termNames'
     pure (name, Fixity {position, name, fixity})
-  Stage1.Unordered {Stage1.constructorNames} -> do
+  Stage1.Unordered {constructorNames} -> do
     position :@ name <- toList constructorNames
     pure (name, Unordered {position, name})
-  Stage1.Fields {Stage1.constructorNames} -> do
+  Stage1.Fields {constructorNames} -> do
     position :@ name <- toList constructorNames
     pure (name, Fields {position, name})
-  Stage1.Data {Stage1.typeName = name}
+  Stage1.Data {typeName = name}
     | Just (typeIndex, declaration) <- lookup name -> case declaration of
-        Complete.TypeDeclaration {Complete.constructors = Complete.ADT constructors} ->
+        Complete.TypeDeclaration {constructors = Complete.ADT constructors} ->
           zipWith entry [0 ..] $ toList constructors
           where
             entry
               constructorIndex
-              Complete.Constructor
-                { Complete.Constructor.name,
-                  Complete.Constructor.position,
-                  Complete.Constructor.fields,
-                  Complete.Constructor.selections
-                } =
+              Complete.Constructor {name, position, fields, selections} =
                 (name, Declaration {position, name, constructor})
                 where
-                  map = [(name, i) | (i, Field {Field.name}) <- zip [0 ..] $ toList fields]
+                  map = [(name, i) | (i, Field {name}) <- zip [0 ..] $ toList fields]
                   constructor =
                     More.Constructor
-                      { More.typeIndex,
-                        More.constructorIndex,
-                        More.selections,
-                        More.fields = Map.fromList map
+                      { typeIndex,
+                        constructorIndex,
+                        selections,
+                        fields = Map.fromList map
                       }
-        Complete.TypeDeclaration {Complete.constructors = Complete.GADT gadtConstructors} ->
+        Complete.TypeDeclaration {constructors = Complete.GADT gadtConstructors} ->
           zipWith entry [0 ..] $ toList gadtConstructors
           where
             entry
               constructorIndex
               Complete.GADTConstructor
-                { Complete.GADTConstructor.name,
-                  Complete.GADTConstructor.position
+                { name,
+                  position
                 } =
                 (name, Declaration {position, name, constructor})
                 where
@@ -97,10 +92,10 @@ resolve lookup entry = case entry of
                   fields = Map.empty
                   constructor =
                     More.Constructor
-                      { More.typeIndex,
-                        More.constructorIndex,
-                        More.selections,
-                        More.fields
+                      { typeIndex,
+                        constructorIndex,
+                        selections,
+                        fields
                       }
         _ -> error "constructor from non data"
   _ -> []

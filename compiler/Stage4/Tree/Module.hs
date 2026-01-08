@@ -13,7 +13,7 @@ data Module = Module
   deriving (Show)
 
 simplify :: Stage3.Module -> Module
-simplify Stage3.Module {Stage3.name, Stage3.declarations} =
+simplify Stage3.Module {name, declarations} =
   Module
     { name,
       declarations = Declarations.finish (Declarations.simplify declarations)

@@ -72,20 +72,20 @@ checkHead ::
   (t (Stage2.TypePattern Position), Unify.Type s scope) ->
   ST s (t (Unsolved.TypePattern s scope), Unify.Type s scope)
 checkHead context position annotation (parameters, target) = do
-  let fresh Stage2.TypePattern {Stage2.TypePattern.name, Stage2.TypePattern.position} = do
+  let fresh Stage2.TypePattern {name, position} = do
         level <- Unify.fresh Unify.universe
         typex <- Unify.fresh (Unify.typeWith level)
         pure
           Unsolved.TypePattern
-            { Unsolved.TypePattern.name,
-              Unsolved.TypePattern.typex,
-              Unsolved.TypePattern.position
+            { name,
+              typex,
+              position
             }
   parameters <- traverse fresh parameters
   let kind = foldr (Unify.function . Unsolved.TypePattern.typex) target parameters
   case annotation of
     KindAnnotation.Inferred -> pure ()
-    KindAnnotation.Annotation {KindAnnotation.kind'} -> do
+    KindAnnotation.Annotation {kind'} -> do
       Unify.unify context position kind (Simple.lift kind')
     KindAnnotation.Synonym {} -> error "unexpected synonym annotation"
   pure (parameters, kind)
@@ -95,12 +95,12 @@ check
   context
   annotation
   Stage2.ADT
-    { Stage2.position,
-      Stage2.name,
-      Stage2.brand,
-      Stage2.constructors,
-      Stage2.selectors,
-      Stage2.parameters
+    { position,
+      name,
+      brand,
+      constructors,
+      selectors,
+      parameters
     } =
     do
       (parameters, kind) <- checkHead context position annotation (parameters, Unify.typex)
@@ -125,11 +125,11 @@ check
   context
   annotation
   Stage2.Class
-    { Stage2.name,
-      Stage2.position,
-      Stage2.methods,
-      Stage2.constraints,
-      Stage2.parameter
+    { name,
+      position,
+      methods,
+      constraints,
+      parameter
     } = do
     (Identity parameter, kind) <-
       checkHead context position annotation (Identity parameter, Unify.constraint)
@@ -150,12 +150,12 @@ check
           constraints,
           methods
         }
-check _ annotation Stage2.Synonym {Stage2.name}
+check _ annotation Stage2.Synonym {name}
   | KindAnnotation.Synonym
-      { KindAnnotation.kind',
-        KindAnnotation.kind,
-        KindAnnotation.definition,
-        KindAnnotation.definition'
+      { kind',
+        kind,
+        definition,
+        definition'
       } <-
       annotation = do
       pure $
@@ -167,4 +167,4 @@ check _ annotation Stage2.Synonym {Stage2.name}
             definition'
           }
   | otherwise = error "bad annotation"
-check _ _ Stage2.GADT {Stage2.position} = unsupportedFeatureGADTs position
+check _ _ Stage2.GADT {position} = unsupportedFeatureGADTs position

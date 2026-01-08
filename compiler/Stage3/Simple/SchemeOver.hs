@@ -112,21 +112,21 @@ augmentNamed name position parameters constraints Context {termEnvironment, loca
               let check = valid Vector.! head
                   evidence =
                     Evidence.Proof
-                      { Evidence.proof = Evidence.assumed index,
-                        Evidence.arguments = Strict.Vector.empty
+                      { proof = Evidence.assumed index,
+                        arguments = Strict.Vector.empty
                       }
                   go classx arguments evidence@base = do
                     let argument =
                           LocalBinding.Constraint
-                            { LocalBinding.arguments,
-                              LocalBinding.evidence
+                            { arguments,
+                              evidence
                             }
-                    Class.Class {Class.constraints} <- do
+                    Class.Class {constraints} <- do
                       let get index = assumeClass <$> TypeBinding.content (typeEnvironment Type.! index)
                       Builtin.index pure get classx
                     constraints <- for (zip [0 ..] $ toList constraints) $
                       \(index, Constraint {classx, arguments = arguments'}) ->
-                        go classx (arguments <> arguments') Evidence.Super {Evidence.base, Evidence.index}
+                        go classx (arguments <> arguments') Evidence.Super {base, index}
                     pure $ (shift classx, seq check argument) : concat constraints
                in go classx arguments evidence
           | otherwise -> pure []
@@ -134,9 +134,9 @@ augmentNamed name position parameters constraints Context {termEnvironment, loca
   constrainted <- zipWithM go (toList parameters) [0 ..]
   let rigid (typex, constraints) index =
         LocalBinding.Rigid
-          { LocalBinding.label = Label.LocalBinding {Label.name = name index},
-            LocalBinding.rigid = shift typex,
-            LocalBinding.constraints
+          { label = Label.LocalBinding {name = name index},
+            rigid = shift typex,
+            constraints
           }
   pure
     Context

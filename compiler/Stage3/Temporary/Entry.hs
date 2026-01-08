@@ -19,7 +19,7 @@ data Entry s scope = Entry
   }
 
 check :: Context s scope -> Stage2.Entry Position scope -> ST s (Entry s scope)
-check context Stage2.Entry {Stage2.startPosition, Stage2.entry = Stage2.Scheme {Stage2.result}, Stage2.strict} = do
+check context Stage2.Entry {startPosition, entry = Stage2.Scheme {result}, strict} = do
   entry <- pure $ Shift.map (Shift.Unshift $ unsupportedFeaturePolymorphicComponents startPosition) result
   entry <- Type.check context Unify.typex entry
   pure
@@ -34,7 +34,7 @@ solve context Entry {entry, strict} = do
   let entry' = Simple.simplify entry
   pure
     Solved.Entry
-      { Solved.entry,
-        Solved.entry',
-        Solved.strict
+      { entry,
+        entry',
+        strict
       }

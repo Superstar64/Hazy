@@ -28,11 +28,11 @@ data Method scope
 
 resolve :: Context scope -> Stage1.ClassDeclaration Position -> [(Variable, Method scope)]
 resolve context' entry = case entry of
-  Stage1.Annotation {Stage1.termNames, Stage1.annotation} -> do
+  Stage1.Annotation {termNames, annotation} -> do
     position :@ name <- toList termNames
     annotation <- pure $ Scheme.resolve context' annotation
     pure (name, Annotation {position, name, annotation})
-  Stage1.Definition {Stage1.startPosition, Stage1.leftHandSide, Stage1.rightHandSide} ->
+  Stage1.Definition {startPosition, leftHandSide, rightHandSide} ->
     case Partial.resolve (patternInMethod startPosition) context' leftHandSide rightHandSide of
       Partial.Definition position name function -> [(name, Function {position, name, function})]
   Stage1.Infix {} -> []

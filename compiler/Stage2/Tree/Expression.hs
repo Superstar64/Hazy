@@ -371,11 +371,11 @@ resolve :: Context scope -> Stage1.Expression Position -> Expression scope
 resolve context expression = resolveWith context expression []
 
 resolveWith :: Context scope -> Stage1.Expression Position -> [Expression scope] -> Expression scope
-resolveWith context Stage1.Variable {Stage1.variable = startPosition :@ variable} arguments =
+resolveWith context Stage1.Variable {variable = startPosition :@ variable} arguments =
   resolveTerm2 startPosition (context !-* startPosition :@ variable) (Reverse.fromList arguments)
-resolveWith context Stage1.Constructor {Stage1.constructor = startPosition :@ constructor} arguments =
+resolveWith context Stage1.Constructor {constructor = startPosition :@ constructor} arguments =
   resolveConstructor2 startPosition (context !=*~ startPosition :@ constructor) (Reverse.fromList arguments)
-resolveWith context Stage1.Call {Stage1.function, Stage1.argument} arguments
+resolveWith context Stage1.Call {function, argument} arguments
   | argument <- resolve context argument =
       resolveWith context function (argument : arguments)
 resolveWith context expression arguments@(_ : _)
@@ -387,58 +387,58 @@ resolveWith context expression arguments@(_ : _)
           argument
         }
 resolveWith context expression [] = case expression of
-  Stage1.Integer {Stage1.startPosition, Stage1.integer} -> Integer {startPosition, integer}
-  Stage1.Float {Stage1.startPosition, Stage1.float} -> Float {startPosition, float}
-  Stage1.Character {Stage1.startPosition, Stage1.character} -> Character {startPosition, character}
-  Stage1.String {Stage1.startPosition, Stage1.string} -> String {startPosition, string}
-  Stage1.Tupling {Stage1.startPosition, Stage1.count} ->
+  Stage1.Integer {startPosition, integer} -> Integer {startPosition, integer}
+  Stage1.Float {startPosition, float} -> Float {startPosition, float}
+  Stage1.Character {startPosition, character} -> Character {startPosition, character}
+  Stage1.String {startPosition, string} -> String {startPosition, string}
+  Stage1.Tupling {startPosition, count} ->
     Constructor
       { constructorPosition = startPosition,
         constructor = Constructor.tuple count
       }
-  Stage1.Unit {Stage1.startPosition} ->
+  Stage1.Unit {startPosition} ->
     Constructor
       { constructorPosition = startPosition,
         constructor = Constructor.tuple 0
       }
-  Stage1.Tuple {Stage1.startPosition, Stage1.elements} ->
+  Stage1.Tuple {startPosition, elements} ->
     Tuple
       { startPosition,
         elements = fmap (resolve context) elements
       }
-  Stage1.List {Stage1.startPosition, Stage1.items} ->
+  Stage1.List {startPosition, items} ->
     List
       { startPosition,
         items = fmap (resolve context) items
       }
-  Stage1.SequenceFrom {Stage1.startPosition, Stage1.from} ->
+  Stage1.SequenceFrom {startPosition, from} ->
     let arguments = Reverse.fromList [resolve context from]
      in resolveTerm2 startPosition (Term2.Method Method.enumFrom) arguments
-  Stage1.SequenceFromThen {Stage1.startPosition, Stage1.from, Stage1.thenx} ->
+  Stage1.SequenceFromThen {startPosition, from, thenx} ->
     let arguments = Reverse.fromList [resolve context from, resolve context thenx]
      in resolveTerm2 startPosition (Term2.Method Method.enumFromThen) arguments
-  Stage1.SequenceFromTo {Stage1.startPosition, Stage1.from, Stage1.to} ->
+  Stage1.SequenceFromTo {startPosition, from, to} ->
     let arguments = Reverse.fromList [resolve context from, resolve context to]
      in resolveTerm2 startPosition (Term2.Method Method.enumFromTo) arguments
-  Stage1.SequenceFromThenTo {Stage1.startPosition, Stage1.from, Stage1.thenx, Stage1.to} ->
+  Stage1.SequenceFromThenTo {startPosition, from, thenx, to} ->
     let arguments = Reverse.fromList [resolve context from, resolve context thenx, resolve context to]
      in resolveTerm2 startPosition (Term2.Method Method.enumFromThenTo) arguments
-  Stage1.Comprehension {Stage1.startPosition, Stage1.statements} ->
+  Stage1.Comprehension {startPosition, statements} ->
     Comprehension
       { startPosition,
         statements = Statements.resolve context statements
       }
-  Stage1.Record {Stage1.startPosition, Stage1.constructor, Stage1.fields} ->
+  Stage1.Record {startPosition, constructor, fields} ->
     case context != constructor of
       binding@Constructor.Binding
-        { Constructor.index = Constructor.Index typex constructorIndex
+        { index = Constructor.Index typex constructorIndex
         } ->
           Record
             { constructorPosition = startPosition,
               constructor = Constructor.Index typex constructorIndex,
               fields = fmap (Field.resolve context binding) fields
             }
-  Stage1.Update {Stage1.base, Stage1.updatePosition, Stage1.updates} -> case first of
+  Stage1.Update {base, updatePosition, updates} -> case first of
     Selector.Index index _ ->
       Update
         { base = resolve context base,
@@ -447,36 +447,36 @@ resolveWith context expression [] = case expression of
         }
     where
       first = case head (toList updates) of
-        Stage1.Field {Stage1.Field.variable} -> context !-% variable
-        Stage1.Pun {Stage1.Field.variable} -> context !-% variable
-  Stage1.Let {Stage1.declarations, Stage1.body}
+        Stage1.Field {variable} -> context !-% variable
+        Stage1.Pun {variable} -> context !-% variable
+  Stage1.Let {declarations, body}
     | (context, declarations) <- Declarations.resolve context declarations ->
         Let
           { declarations,
             letBody = resolve context body
           }
-  Stage1.If {Stage1.condition, Stage1.thenx, Stage1.elsex} ->
+  Stage1.If {condition, thenx, elsex} ->
     If
       { condition = resolve context condition,
         thenx = resolve context thenx,
         elsex = resolve context elsex
       }
-  Stage1.MultiwayIf {Stage1.branches} ->
+  Stage1.MultiwayIf {branches} ->
     MultiwayIf
       { branches = fmap (RightHandSide.resolve context) branches
       }
-  Stage1.Case {Stage1.startPosition, Stage1.scrutinee, Stage1.cases} ->
+  Stage1.Case {startPosition, scrutinee, cases} ->
     Case
       { startPosition,
         scrutinee = resolve context scrutinee,
         cases = fmap (Alternative.resolve context) cases
       }
-  Stage1.Do {Stage1.startPosition, Stage1.statements} ->
+  Stage1.Do {startPosition, statements} ->
     Do
       { startPosition,
         statements = Statements.resolve context statements
       }
-  Stage1.Lambda {Stage1.startPosition, Stage1.parameters, Stage1.body}
+  Stage1.Lambda {startPosition, parameters, body}
     | parameters <- toList parameters,
       initial <- head parameters,
       patterns <- tail parameters,
@@ -484,42 +484,42 @@ resolveWith context expression [] = case expression of
         Lambda
           { startPosition,
             parameter,
-            body = Lambda.resolve (Pattern.augment parameter context) Lambda.Resolve {Lambda.patterns} body
+            body = Lambda.resolve (Pattern.augment parameter context) Lambda.Resolve {patterns} body
           }
-  Stage1.LambdaCase {Stage1.startPosition, Stage1.cases} ->
+  Stage1.LambdaCase {startPosition, cases} ->
     LambdaCase
       { startPosition,
         cases = fmap (Alternative.resolve context) cases
       }
-  Stage1.Cons {Stage1.startPosition} ->
+  Stage1.Cons {startPosition} ->
     Constructor
       { constructorPosition = startPosition,
         constructor = Constructor.cons
       }
-  Stage1.Infix {Stage1.left, Stage1.operator, Stage1.right} ->
+  Stage1.Infix {left, operator, right} ->
     Infix.fix $
       Infix.resolve
         context
         Stage1.Infix.Infix
-          { Stage1.Infix.left,
-            Stage1.Infix.operator,
-            Stage1.Infix.right
+          { left,
+            operator,
+            right
           }
-  Stage1.InfixCons {Stage1.head, Stage1.operatorPosition, Stage1.tail} ->
+  Stage1.InfixCons {head, operatorPosition, tail} ->
     Infix.fix $
       Infix.resolve
         context
         Stage1.Infix.InfixCons
-          { Stage1.Infix.head,
-            Stage1.Infix.operatorPosition,
-            Stage1.Infix.tail
+          { head,
+            operatorPosition,
+            tail
           }
-  Stage1.LeftSection {Stage1.leftSection, Stage1.operator} -> case operator of
+  Stage1.LeftSection {leftSection, operator} -> case operator of
     operatorPosition :@ QualifiedVariable operator -> case context !- (operatorPosition :@ operator) of
       Term.Binding
-        { Term.position,
-          Term.index,
-          Term.fixity = Fixity associativity precedence
+        { position,
+          index,
+          fixity = Fixity associativity precedence
         } -> case associativity of
           Left ->
             let left = Infix.fixWith (Just Left) precedence $ Infix.resolve context leftSection
@@ -529,9 +529,9 @@ resolveWith context expression [] = case expression of
              in resolveTerm2 position index (Nil :> left)
     operatorPosition :@ QualifiedConstructor operator -> case context !=~ (operatorPosition :@ operator) of
       Constructor.Binding
-        { Constructor.position,
-          Constructor.index,
-          Constructor.fixity = Fixity associativity precedence
+        { position,
+          index,
+          fixity = Fixity associativity precedence
         } ->
           case associativity of
             Left ->
@@ -542,7 +542,7 @@ resolveWith context expression [] = case expression of
                in resolveConstructor2 position index (Nil :> left)
     where
 
-  Stage1.LeftSectionCons {Stage1.operatorPosition, Stage1.leftSection} -> case associativity of
+  Stage1.LeftSectionCons {operatorPosition, leftSection} -> case associativity of
     Left ->
       let left = Infix.fixWith (Just Left) precedence $ Infix.resolve context leftSection
        in resolveConstructor2 operatorPosition Constructor.cons (Nil :> left)
@@ -551,11 +551,11 @@ resolveWith context expression [] = case expression of
        in resolveConstructor2 operatorPosition Constructor.cons (Nil :> left)
     where
       Fixity associativity precedence = Fixity Right 5
-  Stage1.RightSection {Stage1.operator, Stage1.rightSection} -> case operator of
+  Stage1.RightSection {operator, rightSection} -> case operator of
     operatorPosition :@ QualifiedVariable operator -> case context !- operatorPosition :@ operator of
       Term.Binding
-        { Term.index,
-          Term.fixity = Fixity associativity precedence
+        { index,
+          fixity = Fixity associativity precedence
         } ->
           let right = case associativity of
                 Right -> Infix.fixWith (Just Right) precedence $ Infix.resolve context rightSection
@@ -567,15 +567,15 @@ resolveWith context expression [] = case expression of
                 Term2.RunST -> badRunSTCall operatorPosition
     operatorPosition :@ QualifiedConstructor name -> case context !=~ operatorPosition :@ name of
       Constructor.Binding
-        { Constructor.index,
-          Constructor.fixity = Fixity associativity precedence
+        { index,
+          fixity = Fixity associativity precedence
         } ->
           let right =
                 case associativity of
                   Right -> Infix.fixWith (Just Right) precedence $ Infix.resolve context rightSection
                   _ -> Infix.fixWith Nothing (precedence + 1) $ Infix.resolve context rightSection
            in RightSectionConstructor {operatorPosition, leftConstructor = index, right}
-  Stage1.RightSectionCons {Stage1.operatorPosition, Stage1.rightSection} -> case associativity of
+  Stage1.RightSectionCons {operatorPosition, rightSection} -> case associativity of
     Right ->
       let right = Infix.fixWith (Just Right) precedence $ Infix.resolve context rightSection
        in RightSectionCons {operatorPosition, right}
@@ -584,7 +584,7 @@ resolveWith context expression [] = case expression of
        in RightSectionCons {operatorPosition, right}
     where
       Fixity associativity precedence = Fixity Right 5
-  Stage1.Annotation {Stage1.expression, Stage1.operatorPosition, Stage1.annotation} ->
+  Stage1.Annotation {expression, operatorPosition, annotation} ->
     let scheme' = Scheme.resolve context annotation
         context' = Scheme.augment scheme' context
      in Annotation
