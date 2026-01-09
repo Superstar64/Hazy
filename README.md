@@ -304,6 +304,27 @@ exotic a b c d = a == b && c == d
 ### Strict constructor fields are ignored
 The fields of a constructor are all lazy.
 
+### Class methods are always public
+If you have access to a typeclass, then you are able to define instances for
+it's methods regards on whether or not the method is exported.
+
+For example, this is legal:
+```haskell
+module Hidden ( Hidden ) where
+
+class Hidden a where
+ private :: a
+```
+```haskell
+module Usage where
+import Hidden (Hidden)
+
+data Usage = Usage
+
+instance Hidden Usage where
+  private = Usage
+```
+
 ## Intentional
 These are deviations that are unlikely to be fixed in the the near future.
 
