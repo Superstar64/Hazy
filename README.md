@@ -301,6 +301,9 @@ exotic :: (Eq (f Int), Eq (f Char)) => f Int -> f Int -> f Char -> f Char -> Boo
 exotic a b c d = a == b && c == d
 ```
 
+### Strict constructor fields are ignored
+The fields of a constructor are all lazy.
+
 ## Intentional
 These are deviations that are unlikely to be fixed in the the near future.
 
