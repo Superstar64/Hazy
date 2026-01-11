@@ -1,3 +1,5 @@
+{-# LANGUAGE_HAZY UnorderedRecords #-}
+
 -- |
 -- Parser syntax tree for right hand sides
 module Stage1.Tree.RightHandSide where
@@ -13,14 +15,23 @@ data RightHandSide position
   = -- |
     -- > x = e
     -- >   ^^^
-    RightHandSide !(Body position) !(Declarations position)
+    RightHandSide
+    { body :: !(Body position),
+      declarations :: !(Declarations position)
+    }
   deriving (Show)
 
 parse :: Parser () -> Parser (RightHandSide Position)
 parse equal =
-  RightHandSide
+  rightHandSide
     <$> Body.parse equal
     <*> asum
       [ token "where" *> Declarations.parse,
         pure Declarations.empty
       ]
+  where
+    rightHandSide body declarations =
+      RightHandSide
+        { body,
+          declarations
+        }

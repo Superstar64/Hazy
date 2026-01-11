@@ -1,3 +1,4 @@
+{-# LANGUAGE_HAZY UnorderedRecords #-}
 module Stage1.Tree.InstanceDeclarations where
 
 import qualified Data.Vector.Strict as Strict
@@ -11,17 +12,20 @@ newtype InstanceDeclarations position
   = -- |
     -- > Instance C A where { x = A }
     -- >              ^^^^^^^^^^^^^^^
-    InstanceDeclarations (Strict.Vector (InstanceDeclaration position))
+    InstanceDeclarations
+    { declarations :: Strict.Vector (InstanceDeclaration position)
+    }
   deriving (Show)
 
 parse :: Parser (InstanceDeclarations Position)
 parse =
   asum
     [ token "where" *> parse,
-      pure (InstanceDeclarations Strict.Vector.empty)
+      pure (instanceDeclarations Strict.Vector.empty)
     ]
   where
+    instanceDeclarations declarations = InstanceDeclarations {declarations}
     parse :: Parser (InstanceDeclarations Position)
     parse =
-      InstanceDeclarations . Strict.Vector.fromList
+      instanceDeclarations . Strict.Vector.fromList
         <$> betweenBraces (sepEndBySemicolon InstanceDeclaration.parse)

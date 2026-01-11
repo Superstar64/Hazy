@@ -64,7 +64,7 @@ resolve ::
   ( Context (Scope.Declaration ':+ scope),
     Declarations (Scope.Declaration ':+ scope)
   )
-resolve initial@Context {canonical, extensions} (Stage1.Declarations declarations) =
+resolve initial@Context {canonical, extensions} Stage1.Declarations {declarations} =
   (context, Complete.shrink complete)
   where
     context

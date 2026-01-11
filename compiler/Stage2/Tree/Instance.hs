@@ -67,7 +67,7 @@ resolve
   classPosition
   parameters
   memberMethods
-  (Stage1.InstanceDeclarations declarations)
+  Stage1.InstanceDeclarations {declarations}
     | parameters <- TypePattern.resolve <$> parameters,
       prerequisites <- fmap (Constraint.resolve (Scheme.augmentWith parameters context)) prerequisites =
         let members = orderListInt' combine (length memberMethods) members

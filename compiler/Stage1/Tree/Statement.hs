@@ -1,3 +1,5 @@
+{-# LANGUAGE_HAZY UnorderedRecords #-}
+
 -- |
 -- Parser syntax tree for statements and guards
 module Stage1.Tree.Statement where
@@ -15,16 +17,21 @@ data Statement position
   = Run !(Expression position)
   | -- |
     -- > x <- e
-    Bind !(Pattern position) !(Expression position)
+    Bind
+      { patternx :: !(Pattern position),
+        expression :: !(Expression position)
+      }
   | -- |
     -- > let x = e
-    Let2 !(Declarations position)
+    Let !(Declarations position)
   deriving (Show)
 
 parse :: Parser (Statement Position)
 parse =
   asum
-    [ Bind <$> try (Pattern.parse <* token "<-") <*> Expression.parse,
+    [ bind <$> try (Pattern.parse <* token "<-") <*> Expression.parse,
       Run <$> try Expression.parse,
-      Let2 <$> (token "let" *> Declarations.parse)
+      Let <$> (token "let" *> Declarations.parse)
     ]
+  where
+    bind patternx expression = Bind {patternx, expression}

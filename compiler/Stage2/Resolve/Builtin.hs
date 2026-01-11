@@ -8,7 +8,7 @@ import Data.Text (pack)
 import qualified Data.Vector.Strict as Strict.Vector
 import Stage1.Lexer (constructorIdentifier, variableIdentifier, variableSymbol)
 import qualified Stage1.Position as Position
-import qualified Stage1.Tree.Associativity as Associativity
+import Stage1.Tree.Associativity (Associativity (..))
 import Stage1.Tree.Fixity (Fixity (..))
 import Stage1.Variable (Constructor (ConstructorIdentifier), Variable (..))
 import qualified Stage2.Index.Constructor as Constructor (false, true)
@@ -22,7 +22,8 @@ import qualified Stage2.Resolve.Binding.Term as Term
 import qualified Stage2.Resolve.Binding.Type as Type
 import Stage2.Resolve.Bindings (Bindings (..))
 import Prelude hiding
-  ( abs,
+  ( Either (Left, Right),
+    abs,
     enumFrom,
     enumFromThen,
     enumFromThenTo,
@@ -136,7 +137,7 @@ false =
     Constructor.Binding
       { position = Position.internal,
         index = Constructor.false,
-        fixity = Fixity Associativity.Left 9,
+        fixity = Fixity {associativity = Left, precedence = 9},
         fields = Map.empty,
         selections = Strict.Vector.empty,
         unordered = False,
@@ -149,7 +150,7 @@ true =
     Constructor.Binding
       { position = Position.internal,
         index = Constructor.true,
-        fixity = Fixity Associativity.Left 9,
+        fixity = Fixity {associativity = Left, precedence = 9},
         fields = Map.empty,
         selections = Strict.Vector.empty,
         unordered = False,
@@ -161,7 +162,7 @@ bool =
   ( boolName,
     Type.Binding
       { position = Position.internal,
-        index = Type3.Index $ Type2.Bool,
+        index = Type3.Index Type2.Bool,
         constructors = Set.fromList [falseName, trueName],
         fields = Set.empty,
         methods = Map.empty
@@ -249,7 +250,7 @@ runST =
   ( runSTName,
     Term.Binding
       { position = Position.internal,
-        fixity = Fixity Associativity.Left 9,
+        fixity = Fixity {associativity = Left, precedence = 9},
         index = Term2.RunST,
         selector = Normal
       }
@@ -293,7 +294,7 @@ plus =
     Term.Binding
       { position = Position.internal,
         index = Term2.Method Method.plus,
-        fixity = Fixity Associativity.Left 6,
+        fixity = Fixity {associativity = Left, precedence = 6},
         selector = Normal
       }
   )
@@ -303,7 +304,7 @@ minus =
     Term.Binding
       { position = Position.internal,
         index = Term2.Method Method.minus,
-        fixity = Fixity Associativity.Left 6,
+        fixity = Fixity {associativity = Left, precedence = 6},
         selector = Normal
       }
   )
@@ -313,7 +314,7 @@ multiply =
     Term.Binding
       { position = Position.internal,
         index = Term2.Method Method.multiply,
-        fixity = Fixity Associativity.Left 7,
+        fixity = Fixity {associativity = Left, precedence = 7},
         selector = Normal
       }
   )
@@ -323,7 +324,7 @@ negate =
     Term.Binding
       { position = Position.internal,
         index = Term2.Method Method.negate,
-        fixity = Fixity Associativity.Left 9,
+        fixity = Fixity {associativity = Left, precedence = 9},
         selector = Normal
       }
   )
@@ -333,7 +334,7 @@ abs =
     Term.Binding
       { position = Position.internal,
         index = Term2.Method Method.abs,
-        fixity = Fixity Associativity.Left 9,
+        fixity = Fixity {associativity = Left, precedence = 9},
         selector = Normal
       }
   )
@@ -343,7 +344,7 @@ signum =
     Term.Binding
       { position = Position.internal,
         index = Term2.Method Method.signum,
-        fixity = Fixity Associativity.Left 9,
+        fixity = Fixity {associativity = Left, precedence = 9},
         selector = Normal
       }
   )
@@ -353,7 +354,7 @@ fromInteger =
     Term.Binding
       { position = Position.internal,
         index = Term2.Method Method.fromInteger,
-        fixity = Fixity Associativity.Left 9,
+        fixity = Fixity {associativity = Left, precedence = 9},
         selector = Normal
       }
   )
@@ -374,7 +375,7 @@ succ =
     Term.Binding
       { position = Position.internal,
         index = Term2.Method Method.succ,
-        fixity = Fixity Associativity.Left 9,
+        fixity = Fixity {associativity = Left, precedence = 9},
         selector = Normal
       }
   )
@@ -384,7 +385,7 @@ pred =
     Term.Binding
       { position = Position.internal,
         index = Term2.Method Method.pred,
-        fixity = Fixity Associativity.Left 9,
+        fixity = Fixity {associativity = Left, precedence = 9},
         selector = Normal
       }
   )
@@ -394,7 +395,7 @@ toEnum =
     Term.Binding
       { position = Position.internal,
         index = Term2.Method Method.toEnum,
-        fixity = Fixity Associativity.Left 9,
+        fixity = Fixity {associativity = Left, precedence = 9},
         selector = Normal
       }
   )
@@ -404,7 +405,7 @@ fromEnum =
     Term.Binding
       { position = Position.internal,
         index = Term2.Method Method.fromEnum,
-        fixity = Fixity Associativity.Left 9,
+        fixity = Fixity {associativity = Left, precedence = 9},
         selector = Normal
       }
   )
@@ -414,7 +415,7 @@ enumFrom =
     Term.Binding
       { position = Position.internal,
         index = Term2.Method Method.enumFrom,
-        fixity = Fixity Associativity.Left 9,
+        fixity = Fixity {associativity = Left, precedence = 9},
         selector = Normal
       }
   )
@@ -424,7 +425,7 @@ enumFromThen =
     Term.Binding
       { position = Position.internal,
         index = Term2.Method Method.enumFromThen,
-        fixity = Fixity Associativity.Left 9,
+        fixity = Fixity {associativity = Left, precedence = 9},
         selector = Normal
       }
   )
@@ -434,7 +435,7 @@ enumFromTo =
     Term.Binding
       { position = Position.internal,
         index = Term2.Method Method.enumFromTo,
-        fixity = Fixity Associativity.Left 9,
+        fixity = Fixity {associativity = Left, precedence = 9},
         selector = Normal
       }
   )
@@ -444,7 +445,7 @@ enumFromThenTo =
     Term.Binding
       { position = Position.internal,
         index = Term2.Method Method.enumFromThenTo,
-        fixity = Fixity Associativity.Left 9,
+        fixity = Fixity {associativity = Left, precedence = 9},
         selector = Normal
       }
   )

@@ -155,7 +155,7 @@ bindings patternx =
       Term.Binding
         { position,
           index = Term2.index $ Term.Pattern x,
-          fixity = Fixity Left 9,
+          fixity = Fixity {associativity = Left, precedence = 9},
           selector = Term.Normal
         }
 

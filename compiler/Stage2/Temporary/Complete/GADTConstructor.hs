@@ -20,7 +20,7 @@ shrink :: GADTConstructor scope -> Real.GADTConstructor scope
 shrink = constructor
 
 resolve :: Context scope -> Stage1.GADTConstructor -> [GADTConstructor scope]
-resolve context (Stage1.GADTConstructor names scheme) = do
+resolve context Stage1.GADTConstructor {names, scheme} = do
   position :@ name <- toList names
   pure
     GADTConstructor

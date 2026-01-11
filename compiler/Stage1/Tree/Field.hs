@@ -1,3 +1,5 @@
+{-# LANGUAGE_HAZY UnorderedRecords #-}
+
 -- |
 -- Parser syntax tree for constructor fields
 module Stage1.Tree.Field where
@@ -22,11 +24,18 @@ data Field position
   = -- |
     -- > data T = C { x :: t }
     -- >              ^^^^^^
-    Field !(Strict.Vector1 (Marked Variable position)) !Entry
+    Field
+    { names :: !(Strict.Vector1 (Marked Variable position)),
+      entry :: !Entry
+    }
   deriving (Show)
 
 instance TermBindingVariables Field where
-  termBindingVariables (Field names _) = toList names
+  termBindingVariables Field {names} = toList names
 
 parse :: Parser (Field Position)
-parse = (Field . Strict.fromNonEmpty <$> sepBy1Comma Marked.parseLiteral) <*> (token "::" *> Entry.parse Scheme.parse)
+parse =
+  (field . Strict.fromNonEmpty <$> sepBy1Comma Marked.parseLiteral)
+    <*> (token "::" *> Entry.parse Scheme.parse)
+  where
+    field names entry = Field {names, entry}

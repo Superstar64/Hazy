@@ -1,3 +1,5 @@
+{-# LANGUAGE_HAZY UnorderedRecords #-}
+
 -- |
 -- Parser syntax tree for left hand sides
 module Stage1.Tree.LeftHandSide where

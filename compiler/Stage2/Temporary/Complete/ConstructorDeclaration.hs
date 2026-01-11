@@ -63,7 +63,7 @@ merge ~Extensions {unorderedRecords, constructorFields} entries@(entry :| _) =
     position = Source.position entry
     name = Source.name entry
     fixity = case mapMaybe fixity (toList entries) of
-      [] -> Fixity Left 9
+      [] -> Fixity {associativity = Left, precedence = 9}
       [(_, fixity)] -> fixity
       fixities -> duplicateFixityEntries (map fst fixities)
       where

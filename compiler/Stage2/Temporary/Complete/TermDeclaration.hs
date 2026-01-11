@@ -131,7 +131,7 @@ merge entries@(entry :| _) =
     position = Partial.position entry
     name = Partial.name entry
     fixity = case mapMaybe fixity (toList entries) of
-      [] -> Fixity Left 9
+      [] -> Fixity {associativity = Left, precedence = 9}
       [(_, fixity)] -> fixity
       fixities -> duplicateFixityEntries (map fst fixities)
       where

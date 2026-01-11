@@ -1,3 +1,5 @@
+{-# LANGUAGE_HAZY UnorderedRecords #-}
+
 -- |
 -- Syntax tree for case alternatives
 module Stage1.Tree.Alternative (Alternative (..), parse, parseMany) where
@@ -17,11 +19,16 @@ data Alternative position
     --
     -- > case e of { x -> e }
     -- >             ^^^^^^
-    Alternative !(Pattern position) !(RightHandSide position)
+    Alternative
+    { parameter :: !(Pattern position),
+      rightHandSide :: !(RightHandSide position)
+    }
   deriving (Show)
 
 parse :: Parser (Alternative Position)
-parse = Alternative <$> Pattern.parse <*> RightHandSide.parse (token "->")
+parse = alternative <$> Pattern.parse <*> RightHandSide.parse (token "->")
+  where
+    alternative parameter rightHandSide = Alternative {parameter, rightHandSide}
 
 -- |
 -- Parse multiple alternatives between braces

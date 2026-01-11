@@ -25,6 +25,6 @@ instance Shift.Functor RightHandSide where
     RightHandSide (Shift.map (Shift.Over category) body) (Shift.map (Shift.Over category) declarations)
 
 resolve :: Context scope -> Stage1.RightHandSide Position -> RightHandSide scope
-resolve context (Stage1.RightHandSide body1 declarations)
+resolve context Stage1.RightHandSide {body, declarations}
   | (context, locals) <- Declarations.resolve context declarations =
-      RightHandSide (Body.resolve context body1) locals
+      RightHandSide (Body.resolve context body) locals

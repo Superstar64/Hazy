@@ -26,7 +26,7 @@ instance Shift.Functor Alternative where
       (Shift.map (Shift.Over category) rightHandSide)
 
 resolve :: Context scope -> Stage1.Alternative Position -> Alternative scope
-resolve context (Stage1.Alternative pattern1 rightHandSide) =
+resolve context (Stage1.Alternative {parameter, rightHandSide}) =
   Alternative pattern' (RightHandSide.resolve (Pattern.augment pattern' context) rightHandSide)
   where
-    pattern' = Pattern.resolve context pattern1
+    pattern' = Pattern.resolve context parameter

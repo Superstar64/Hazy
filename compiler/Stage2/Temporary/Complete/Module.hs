@@ -60,7 +60,7 @@ resolve modules = mfix $ \main ->
                 { modulePosition,
                   extensions,
                   exports,
-                  declarations = Stage1.Declarations declarations
+                  declarations = Stage1.Declarations {declarations}
                 } =
                   modules Vector.! index
               imports = mapMaybe Stage1.toImport (toList declarations)
@@ -71,7 +71,7 @@ resolve modules = mfix $ \main ->
           { extensions,
             modulePosition,
             name,
-            declarations = ~(Stage1.Declarations declarations)
+            declarations = ~Stage1.Declarations {declarations}
           } = make <$> resolved
           where
             imports = mapMaybe Stage1.toImport (toList declarations)

@@ -1,3 +1,5 @@
+{-# LANGUAGE_HAZY UnorderedRecords #-}
+
 -- |
 -- Parser syntax tree for declaration groups
 module Stage1.Tree.Declarations where
@@ -18,13 +20,17 @@ newtype Declarations position
   = -- |
     -- > let { x = e ; y = e } in e
     -- >     ^^^^^^^^^^^^^^^^^
-    Declarations (Strict.Vector (Declaration position))
+    Declarations {declarations :: Strict.Vector (Declaration position)}
   deriving (Show)
 
 instance TermBindingVariables Declarations where
-  termBindingVariables (Declarations declarations) = foldMap termBindingVariables declarations
+  termBindingVariables Declarations {declarations} = foldMap termBindingVariables declarations
 
 parse :: Parser (Declarations Position)
-parse = Declarations . Strict.Vector.fromList <$> betweenBraces (sepEndBySemicolon Declaration.parse)
+parse =
+  declarations . Strict.Vector.fromList
+    <$> betweenBraces (sepEndBySemicolon Declaration.parse)
+  where
+    declarations declarations = Declarations {declarations}
 
-empty = Declarations Strict.Vector.empty
+empty = Declarations {declarations = Strict.Vector.empty}

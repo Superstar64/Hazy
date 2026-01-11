@@ -1,3 +1,5 @@
+{-# LANGUAGE_HAZY UnorderedRecords #-}
+
 -- |
 -- Syntax tree for definition bodies
 module Stage1.Tree.Body where
@@ -20,7 +22,7 @@ data Body position
     --
     --  > case e of { x -> e }
     --  >               ^^^^
-    Body !(Expression position)
+    Body {expression :: !(Expression position)}
   | -- |
     --
     --  Body with guards
@@ -33,7 +35,7 @@ data Body position
     --
     -- > x of x <- e; e
     -- >   ^^^^^^^^^^^^
-    Guards !(Strict.Vector1 (Statements position))
+    Guards {statements :: !(Strict.Vector1 (Statements position))}
   deriving (Show)
 
 parse ::
@@ -42,11 +44,13 @@ parse ::
   Parser (Body Position)
 parse equal =
   asum
-    [ Body <$> (equal *> Expression.parse),
-      Guards . Strict.fromNonEmpty <$> some guards
+    [ body <$> (equal *> Expression.parse),
+      guards . Strict.fromNonEmpty <$> some parseGuards
     ]
   where
-    guards =
+    body expression = Body {expression}
+    guards statements = Guards {statements}
+    parseGuards =
       asum
         [ token "|" *> Statements.parseComprehension <*> (equal *> Expression.parse),
           token "of" *> betweenBraces Statements.parseDo

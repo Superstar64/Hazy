@@ -2,7 +2,7 @@ module Stage2.Tree.Statements where
 
 import Data.Foldable (toList)
 import Stage1.Position (Position)
-import qualified Stage1.Tree.Expression as Stage1 (Expression (..))
+import qualified Stage1.Tree.Expression as Stage1 (Expression)
 import qualified Stage1.Tree.Statement as Stage1 (Statement (..))
 import qualified Stage1.Tree.Statements as Stage1 (Statements (..))
 import Stage2.Resolve.Context (Context (..))
@@ -41,21 +41,21 @@ instance Shift.Functor Statements where
       Let (Shift.map (Shift.Over category) declarations) (Shift.map (Shift.Over category) statements)
 
 resolve :: Context scope -> Stage1.Statements Position -> Statements scope
-resolve context (Stage1.Statements statements1 expression1) = statements context (toList statements1) expression1
+resolve context Stage1.Statements {body, done} = statements context (toList body) done
   where
     statements :: Context scope -> [Stage1.Statement Position] -> Stage1.Expression Position -> Statements scope
-    statements context [] expression1 = Done (Expression.resolve context expression1)
-    statements context (Stage1.Run expression1 : expressions) done =
+    statements context [] done = Done (Expression.resolve context done)
+    statements context (Stage1.Run run : remaining) done =
       Run
-        (Expression.resolve context expression1)
-        (statements context expressions done)
-    statements context (Stage1.Bind pattern1 expression1 : expressions) done =
+        (Expression.resolve context run)
+        (statements context remaining done)
+    statements context (Stage1.Bind {patternx, expression} : remaining) done =
       Bind
         pattern'
-        (Expression.resolve context expression1)
-        (statements (Pattern.augment pattern' context) expressions done)
+        (Expression.resolve context expression)
+        (statements (Pattern.augment pattern' context) remaining done)
       where
-        pattern' = Pattern.resolve context pattern1
-    statements context (Stage1.Let2 declarations : expressions) done
+        pattern' = Pattern.resolve context patternx
+    statements context (Stage1.Let declarations : remaining) done
       | (context, locals) <- Declarations.resolve context declarations =
-          Let locals (statements context expressions done)
+          Let locals (statements context remaining done)

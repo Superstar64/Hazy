@@ -1,3 +1,5 @@
+{-# LANGUAGE_HAZY UnorderedRecords #-}
+
 -- |
 -- Parser syntax tree for data types
 module Stage1.Tree.Data where
@@ -26,23 +28,32 @@ data Data position
   = -- |
     --  > data T = A
     --  >        ^^^
-    ADT !(Strict.Vector (Constructor position)) !(Strict.Vector QualifiedConstructorIdentifier)
+    ADT
+      { constructors :: !(Strict.Vector (Constructor position)),
+        derivingx :: !(Strict.Vector QualifiedConstructorIdentifier)
+      }
   | -- |
     --  > data T where { A :: T }
     --  >        ^^^^^^^^^^^^^^^^
-    GADT !(Strict.Vector GADTConstructor)
+    GADT {gadtConstructors :: !(Strict.Vector GADTConstructor)}
   deriving (Show)
 
 instance TermBindingVariables Data where
-  termBindingVariables (ADT constructors _) = foldMap termBindingVariables constructors
+  termBindingVariables ADT {constructors} = foldMap termBindingVariables constructors
   termBindingVariables _ = mempty
 
 parse :: Parser (Data Position)
 parse =
   asum
-    [ GADT <$ token "where" <*> betweenBraces (Strict.Vector.fromList <$> sepEndBySemicolon GADTConstructor.parse),
-      ADT <$> Constructor.parseMany <*> parseDerive
+    [ gadt
+        <$ token "where"
+        <*> betweenBraces
+          (Strict.Vector.fromList <$> sepEndBySemicolon GADTConstructor.parse),
+      adt <$> Constructor.parseMany <*> parseDerive
     ]
+  where
+    adt constructors derivingx = ADT {constructors, derivingx}
+    gadt gadtConstructors = GADT {gadtConstructors}
 
 parseDerive :: Parser (Strict.Vector QualifiedConstructorIdentifier)
 parseDerive =

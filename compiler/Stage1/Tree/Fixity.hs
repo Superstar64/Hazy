@@ -1,3 +1,5 @@
+{-# LANGUAGE_HAZY UnorderedRecords #-}
+
 -- |
 -- Parser syntax tree for operator fixity
 module Stage1.Tree.Fixity where
@@ -11,8 +13,13 @@ data Fixity
   = -- |
     -- > infix 9 `x`
     -- > ^^^^^^^
-    Fixity !Associativity !Int
+    Fixity
+    { associativity :: Associativity,
+      precedence :: !Int
+    }
   deriving (Show, Read)
 
 parse :: Parser Fixity
-parse = Fixity <$> Associativity.parse <*> (fromMaybe 9 <$> optional (fromInteger <$> integer))
+parse = fixity <$> Associativity.parse <*> (fromMaybe 9 <$> optional (fromInteger <$> integer))
+  where
+    fixity associativity precedence = Fixity {associativity, precedence}

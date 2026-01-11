@@ -1,3 +1,4 @@
+{-# LANGUAGE_HAZY UnorderedRecords #-}
 module Stage1.Tree.Import where
 
 import Stage1.Parser (Parser, position, token)

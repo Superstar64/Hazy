@@ -1,3 +1,5 @@
+{-# LANGUAGE_HAZY UnorderedRecords #-}
+
 -- |
 -- Parser syntax tree for gadt constructors
 module Stage1.Tree.GADTConstructor where
@@ -19,8 +21,16 @@ data GADTConstructor
   = -- |
     -- > data T where { C :: T }
     -- >                ^^^^^^
-    GADTConstructor !(Strict.Vector1 (Marked Constructor Position)) !(Scheme Position)
+    GADTConstructor
+    { names :: !(Strict.Vector1 (Marked Constructor Position)),
+      scheme :: !(Scheme Position)
+    }
   deriving (Show)
 
 parse :: Parser GADTConstructor
-parse = GADTConstructor . Strict.fromNonEmpty <$> sepBy1Comma Marked.parseLiteral <*> (token "::" *> Scheme.parse)
+parse =
+  gadtConstructor . Strict.fromNonEmpty
+    <$> sepBy1Comma Marked.parseLiteral
+    <*> (token "::" *> Scheme.parse)
+  where
+    gadtConstructor names scheme = GADTConstructor {names, scheme}

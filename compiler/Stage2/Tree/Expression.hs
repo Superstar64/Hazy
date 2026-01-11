@@ -519,7 +519,7 @@ resolveWith context expression [] = case expression of
       Term.Binding
         { position,
           index,
-          fixity = Fixity associativity precedence
+          fixity = Fixity {associativity, precedence}
         } -> case associativity of
           Left ->
             let left = Infix.fixWith (Just Left) precedence $ Infix.resolve context leftSection
@@ -531,7 +531,7 @@ resolveWith context expression [] = case expression of
       Constructor.Binding
         { position,
           index,
-          fixity = Fixity associativity precedence
+          fixity = Fixity {associativity, precedence}
         } ->
           case associativity of
             Left ->
@@ -550,12 +550,12 @@ resolveWith context expression [] = case expression of
       let left = Infix.fixWith Nothing (precedence + 1) $ Infix.resolve context leftSection
        in resolveConstructor2 operatorPosition Constructor.cons (Nil :> left)
     where
-      Fixity associativity precedence = Fixity Right 5
+      Fixity {associativity, precedence} = Fixity {associativity = Right, precedence = 5}
   Stage1.RightSection {operator, rightSection} -> case operator of
     operatorPosition :@ QualifiedVariable operator -> case context !- operatorPosition :@ operator of
       Term.Binding
         { index,
-          fixity = Fixity associativity precedence
+          fixity = Fixity {associativity, precedence}
         } ->
           let right = case associativity of
                 Right -> Infix.fixWith (Just Right) precedence $ Infix.resolve context rightSection
@@ -568,7 +568,7 @@ resolveWith context expression [] = case expression of
     operatorPosition :@ QualifiedConstructor name -> case context !=~ operatorPosition :@ name of
       Constructor.Binding
         { index,
-          fixity = Fixity associativity precedence
+          fixity = Fixity {associativity, precedence}
         } ->
           let right =
                 case associativity of
@@ -583,7 +583,7 @@ resolveWith context expression [] = case expression of
       let right = Infix.fixWith Nothing (precedence + 1) $ Infix.resolve context rightSection
        in RightSectionCons {operatorPosition, right}
     where
-      Fixity associativity precedence = Fixity Right 5
+      Fixity {associativity, precedence} = Fixity {associativity = Right, precedence = 5}
   Stage1.Annotation {expression, operatorPosition, annotation} ->
     let scheme' = Scheme.resolve context annotation
         context' = Scheme.augment scheme' context

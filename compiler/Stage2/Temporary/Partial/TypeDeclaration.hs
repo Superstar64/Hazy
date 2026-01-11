@@ -105,7 +105,7 @@ resolve context entry = case entry of
     }
       | parameters <- TypePattern.resolve <$> parameters ->
           let item = case dataDefinition of
-                Stage1.ADT constructorsx _ ->
+                Stage1.ADT {constructors = constructorsx} ->
                   ADT
                     { position = startPosition,
                       name,
@@ -173,7 +173,7 @@ resolve context entry = case entry of
                                         }
                                   }
                           pure (name, item)
-                Stage1.GADT constructors ->
+                Stage1.GADT {gadtConstructors = constructors} ->
                   GADT
                     { position = startPosition,
                       name = name,
@@ -203,7 +203,7 @@ resolve context entry = case entry of
       classDefinition
     }
       | parameter <- TypePattern.resolve parameter ->
-          let Stage1.ClassDeclarations declarations = classDefinition
+          let Stage1.ClassDeclarations {declarations} = classDefinition
               item =
                 Class
                   { position = startPosition,

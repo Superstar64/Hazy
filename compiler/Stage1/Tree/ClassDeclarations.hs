@@ -1,3 +1,4 @@
+{-# LANGUAGE_HAZY UnorderedRecords #-}
 module Stage1.Tree.ClassDeclarations where
 
 import qualified Data.Vector.Strict as Strict
@@ -12,18 +13,24 @@ newtype ClassDeclarations position
   = -- |
     -- > Class A a where { x :: a }
     -- >           ^^^^^^^^^^^^^^^^
-    ClassDeclarations (Strict.Vector (ClassDeclaration position))
+    ClassDeclarations
+    { declarations :: Strict.Vector (ClassDeclaration position)
+    }
   deriving (Show)
 
 instance TermBindingVariables ClassDeclarations where
-  termBindingVariables (ClassDeclarations declarations) = foldMap termBindingVariables declarations
+  termBindingVariables ClassDeclarations {declarations} =
+    foldMap termBindingVariables declarations
 
 parse :: Parser (ClassDeclarations Position)
 parse =
   asum
     [ token "where" *> parse,
-      pure (ClassDeclarations Strict.Vector.empty)
+      pure $ classDeclarations Strict.Vector.empty
     ]
   where
+    classDeclarations declarations = ClassDeclarations {declarations}
     parse :: Parser (ClassDeclarations Position)
-    parse = ClassDeclarations . Strict.Vector.fromList <$> betweenBraces (sepEndBySemicolon ClassDeclaration.parse)
+    parse =
+      classDeclarations . Strict.Vector.fromList
+        <$> betweenBraces (sepEndBySemicolon ClassDeclaration.parse)

@@ -8,7 +8,7 @@ import qualified Data.Set as Set
 import Error (missingMethodEntry)
 import Stage1.Position (Position)
 import qualified Stage1.Tree.ClassDeclaration as Stage1.ClassDefinition
-import qualified Stage1.Tree.ClassDeclarations as Stage1 (ClassDeclarations (ClassDeclarations))
+import qualified Stage1.Tree.ClassDeclarations as Stage1 (ClassDeclarations (..))
 import qualified Stage1.Tree.Declaration as Stage1 (Declaration (..))
 import Stage1.Tree.Fixity (Fixity)
 import qualified Stage1.Tree.LeftHandSide as Stage1 (LeftHandSide (Pattern))
@@ -172,7 +172,7 @@ resolve context lookupTerm lookupType lookupShared shareIndex (declaration : dec
         | (typeIndex, declaration) <- lookupType name -> case declaration of
             Complete.TypeDeclaration {fields}
               | Complete.TypeDeclaration.Methods methods <- fields ->
-                  let Stage1.ClassDeclarations declarations = classDefinition
+                  let Stage1.ClassDeclarations {declarations} = classDefinition
                       methodSet = Set.fromList [name | Complete.Method {name} <- toList methods]
                       entry methodIndex Complete.Method {name, position} =
                         ( name,

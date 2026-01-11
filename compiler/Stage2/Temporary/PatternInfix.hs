@@ -41,7 +41,7 @@ fixWith = Infix.fixWith position fixity operators
       Cons position -> position
     fixity = \case
       Constructor _ Constructor.Binding {fixity} -> fixity
-      Cons _ -> Fixity Right 5
+      Cons _ -> Fixity {associativity = Right, precedence = 5}
     operators pattern1 index pattern2 = case index of
       Constructor _ Constructor.Binding {index, position} ->
         At

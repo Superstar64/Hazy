@@ -34,7 +34,7 @@ fixWith = Infix.fixWith position fixity operator
     fixity :: Index scope -> Fixity
     fixity = \case
       Constructor _ Constructor.Binding {fixity} -> fixity
-      Cons _ -> Fixity Right 5
+      Cons _ -> Fixity {associativity = Right, precedence = 5}
 
     operator :: Type Position scope -> Index scope -> Type Position scope -> Type Position scope
     operator left operator right = case operator of

@@ -1,3 +1,4 @@
+{-# LANGUAGE_HAZY UnorderedRecords #-}
 module Stage1.Tree.Scheme where
 
 import qualified Data.Vector.Strict as Strict

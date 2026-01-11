@@ -47,7 +47,7 @@ resolve failure context leftHandSide rightHandSide = case leftHandSide of
     }
       | functionPosition <- Stage1.Infix.startPosition patternx,
         functionPosition' <- Stage1.Infix.startPosition patternx',
-        ~Term.Binding {fixity = Fixity associativity precedence} <-
+        ~Term.Binding {fixity = Fixity {associativity, precedence}} <-
           context !- (position :@ Local :- operator),
         patternx <- case associativity of
           Left -> Pattern.Infix.fixWith (Just Left) precedence $ Pattern.Infix.resolve context patternx

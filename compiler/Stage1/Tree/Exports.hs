@@ -1,3 +1,5 @@
+{-# LANGUAGE_HAZY UnorderedRecords #-}
+
 -- |
 -- Parser syntax tree for module exports
 module Stage1.Tree.Exports where
@@ -18,7 +20,7 @@ data Exports
   = -- |
     -- > module M ( x )
     -- >          ^^^^^
-    Exports !(Strict.Vector Symbol)
+    Exports {exports :: !(Strict.Vector Symbol)}
   | Builtin
   | Default
   deriving (Show)
@@ -26,7 +28,9 @@ data Exports
 parse :: Parser Exports
 parse =
   asum
-    [ Exports . Strict.Vector.fromList <$> betweenParens (sepEndByComma ExportSymbol.parse),
+    [ exports . Strict.Vector.fromList <$> betweenParens (sepEndByComma ExportSymbol.parse),
       Builtin <$ betweenBuiltinPragma (pure ()),
       pure Default
     ]
+  where
+    exports exports = Exports {exports}

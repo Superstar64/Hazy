@@ -25,7 +25,7 @@ indexes :: [Field scope] -> Map Variable Int
 indexes fields = Map.fromList $ zip [name field | field <- fields] [0 ..]
 
 resolve :: Context scope -> Stage1.Field Position -> [(Variable, Field scope)]
-resolve context (Stage1.Field names entry) = do
+resolve context Stage1.Field {names, entry} = do
   position :@ name <- toList names
   let item =
         Field

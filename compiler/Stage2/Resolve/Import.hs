@@ -27,14 +27,14 @@ import Error
 import Stage1.Extensions (Extensions (Extensions, implicitPrelude, stableImports))
 import qualified Stage1.Extensions as Stage1 (Extensions (..))
 import Stage1.Position (Position)
-import qualified Stage1.Tree.Alias as Stage1 (Alias (Alias, NoAlias))
+import qualified Stage1.Tree.Alias as Stage1 (Alias (Alias, NoAlias, name))
 import qualified Stage1.Tree.ExportSymbol as Stage1.Export
 import qualified Stage1.Tree.Exports as Stage1 (Exports (..))
 import qualified Stage1.Tree.Import as Stage1 (Import (..))
 import Stage1.Tree.ImportFields (Fields (..))
 import qualified Stage1.Tree.ImportFields as Stage1 (Fields (AllFields, Fields))
 import qualified Stage1.Tree.ImportSymbol as Stage1.Import
-import qualified Stage1.Tree.ImportSymbols as Stage1 (Symbols (All, Hiding, Symbols))
+import qualified Stage1.Tree.ImportSymbols as Stage1 (Symbols (..))
 import Stage1.Tree.Marked (Marked (..))
 import Stage1.Tree.Qualification (Qualification (..))
 import Stage1.Variable
@@ -303,7 +303,7 @@ pickData position name AllFields request = do
               stability = ()
             }
     Nothing -> typeNotInScope position
-pickData position name (Fields picks) _ = pure $ Dependency acyclic
+pickData position name Fields {picks} _ = pure $ Dependency acyclic
   where
     forceType :: (Monad m) => Bindings () a b (m c) -> m ()
     forceType bindings = do
@@ -508,7 +508,7 @@ pickImports' (StableImports stableImports) declarations request = Map.fromListWi
     declarations
   let qualifiedName = case alias of
         Stage1.NoAlias | root :.. name <- name -> root :. name
-        Stage1.Alias name | root :.. name <- name -> root :. name
+        Stage1.Alias {name} | root :.. name <- name -> root :. name
       base = case Map.lookup name request of
         Just bindings -> Bindings.updateStability stability <$> bindings
         Nothing -> moduleNotFound position
@@ -527,14 +527,14 @@ pickImports' (StableImports stableImports) declarations request = Map.fromListWi
               stability
             }
       bindings = case symbols of
-        Stage1.Symbols symbols -> update <$> foldr combine empty items
+        Stage1.Symbols {symbols} -> update <$> foldr combine empty items
           where
             combine = liftM2 (<>)
             empty = pure $ Dependency $ mempty
             items = [contramap (Contramap (! position :@ name)) <$> pickSymbol symbol base | symbol <- toList symbols]
             update = updateStability (Stable [position])
         Stage1.All -> contramap (Contramap (! position :@ name)) . Dependency <$> all
-        Stage1.Hiding symbols -> do
+        Stage1.Hiding {symbols} -> do
           base@Bindings {terms, constructors, types, stability} <- all
           let bindings =
                 Bindings
@@ -551,7 +551,7 @@ pickImports' (StableImports stableImports) declarations request = Map.fromListWi
                     case fields of
                       Stage1.AllFields -> case base !=. typeVariable of
                         Functor.Type.Binding {fields} -> toList fields
-                      Stage1.Fields picks -> do
+                      Stage1.Fields {picks} -> do
                         _ :@ Variable name <- toList picks
                         pure name
               constructorDeletions = do
@@ -560,7 +560,7 @@ pickImports' (StableImports stableImports) declarations request = Map.fromListWi
                 case fields of
                   Stage1.AllFields -> case base !=. typeVariable of
                     Functor.Type.Binding {constructors} -> toList constructors
-                  Stage1.Fields picks -> do
+                  Stage1.Fields {picks} -> do
                     _ :@ Constructor name <- toList picks
                     pure name
               typeDeletions = do
@@ -578,7 +578,7 @@ pickExports ::
   Stage1.Exports ->
   Map Qualifiers (m (Bindings Stability () () ())) ->
   m (Dependency () (Core ()) scope)
-pickExports _ (Stage1.Exports exports) request = do
+pickExports _ Stage1.Exports {exports} request = do
   let pick export = case export of
         Stage1.Export.Module {modulex = position :@ root :.. name} ->
           case Map.lookup (root :. name) request of

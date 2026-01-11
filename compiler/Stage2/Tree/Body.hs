@@ -26,5 +26,5 @@ instance Shift.Functor Body where
 
 resolve :: Context scope -> Stage1.Body Position -> Body scope
 resolve context = \case
-  Stage1.Body expression1 -> Body (Expression.resolve context expression1)
-  Stage1.Guards statements1 -> Guards (fmap (Statements.resolve context) statements1)
+  Stage1.Body {expression} -> Body (Expression.resolve context expression)
+  Stage1.Guards {statements} -> Guards (fmap (Statements.resolve context) statements)

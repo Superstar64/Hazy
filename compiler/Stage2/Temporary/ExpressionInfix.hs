@@ -59,7 +59,7 @@ fixWith = Infix.fixWith position fixity operator
     fixity = \case
       Term _ Term.Binding {fixity} -> fixity
       Constructor _ Constructor.Binding {fixity} -> fixity
-      Cons _ -> Fixity Right 5
+      Cons _ -> Fixity {associativity = Right, precedence = 5}
     operator :: Expression scope -> Index scope -> Expression scope -> Expression scope
     operator left index right = case index of
       Term _ Term.Binding {index, position} ->

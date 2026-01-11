@@ -1,3 +1,5 @@
+{-# LANGUAGE_HAZY UnorderedRecords #-}
+
 -- |
 -- Syntax tree for operator associativity
 module Stage1.Tree.Associativity where

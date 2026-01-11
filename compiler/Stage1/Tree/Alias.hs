@@ -1,3 +1,5 @@
+{-# LANGUAGE_HAZY UnorderedRecords #-}
+
 -- |
 -- Parser syntax tree for import renames
 module Stage1.Tree.Alias (Alias (..), parse) where
@@ -12,7 +14,7 @@ data Alias
     --
     -- > import A as B
     -- >        ^^^^^^
-    Alias !FullQualifiers
+    Alias {name :: !FullQualifiers}
   | NoAlias
   deriving (Show)
 
@@ -21,4 +23,4 @@ parse = scope <$> optional (token "as" *> Variable.parse)
   where
     scope = \case
       Nothing -> NoAlias
-      Just name -> Alias name
+      Just name -> Alias {name}

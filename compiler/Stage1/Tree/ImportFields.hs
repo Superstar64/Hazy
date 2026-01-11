@@ -1,3 +1,5 @@
+{-# LANGUAGE_HAZY UnorderedRecords #-}
+
 -- |
 -- Parser syntax tree for import data fields
 module Stage1.Tree.ImportFields where
@@ -21,7 +23,7 @@ data Fields
   = -- |
     -- > import M ( C ( a ) )
     -- >              ^^^^^
-    Fields !(Strict.Vector (Marked Name Position))
+    Fields {picks :: !(Strict.Vector (Marked Name Position))}
   | AllFields
   deriving (Show)
 
@@ -29,6 +31,8 @@ parse :: Parser Fields
 parse =
   asum
     [ AllFields <$ try (betweenParens (token "..")),
-      Fields <$> betweenParens (Strict.Vector.fromList <$> sepByComma Marked.parseLiteral),
-      pure (Fields Strict.Vector.empty)
+      fields <$> betweenParens (Strict.Vector.fromList <$> sepByComma Marked.parseLiteral),
+      pure (fields Strict.Vector.empty)
     ]
+  where
+    fields picks = Fields {picks}

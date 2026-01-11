@@ -1,3 +1,4 @@
+{-# LANGUAGE_HAZY UnorderedRecords #-}
 module Stage1.Tree.ClassDeclaration where
 
 import Data.Foldable (toList)
