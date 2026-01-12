@@ -23,12 +23,9 @@ import Stage5.Generate.GlobalType (GlobalType (GlobalType))
 import qualified Stage5.Generate.GlobalType as GlobalType
 import Stage5.Generate.LocalType (LocalType (LocalType))
 import qualified Stage5.Generate.LocalType as LocalType
+import qualified Stage5.Generate.Mangle as Mangle
 import Stage5.Generate.Precontext (Precontext (Precontext))
 import qualified Stage5.Generate.Precontext as Precontext
-
-data Builtin = Builtin
-  { numInt, numInteger, enumInt, enumInteger :: !Text
-  }
 
 data Context s scope = Context
   { terms :: !(Term.Table Term.Binding scope),
@@ -36,12 +33,12 @@ data Context s scope = Context
     types :: !(Type.Table Type.Binding scope),
     unique :: !(STRef s [Text]),
     used :: !(STRef s (Map Global Text)),
-    builtin :: !Builtin
+    builtin :: !(Mangle.Builtin Text)
   }
 
-start :: Precontext -> Builtin -> [Text] -> ST s (Context s Scope.Global)
-start Precontext {terms, types} builtin unique = do
-  unique <- newSTRef unique
+start :: Precontext -> ST s (Context s Scope.Global)
+start Precontext {terms, types} = do
+  unique <- newSTRef Mangle.unique
   used <- newSTRef Map.empty
   let globalType GlobalType {classInstances, dataInstances} =
         Type.Binding
@@ -54,8 +51,8 @@ start Precontext {terms, types} builtin unique = do
         evidence = Evidence0.Global,
         types = Type.Global (fmap globalType <$> types),
         unique,
-        used,
-        builtin
+        builtin = Mangle.builtin,
+        used
       }
 
 fresh :: Context s scope -> ST s Text

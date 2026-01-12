@@ -11,13 +11,14 @@ import qualified Stage5.Generate.Binding.Evidence as Evidence (Binding (..))
 import qualified Stage5.Generate.Binding.Type as Type
 import Stage5.Generate.Context (Context (Context), (!=.))
 import qualified Stage5.Generate.Context as Context
+import qualified Stage5.Generate.Mangle as Magnle
 import qualified Stage5.Generate.Mangle as Mangle
 
 generate :: Context s scope -> Evidence scope -> ST s Javascript.Expression
 generate
   ~context@Context
     { builtin =
-        Context.Builtin
+        Magnle.Builtin
           { numInt,
             numInteger,
             enumInt,

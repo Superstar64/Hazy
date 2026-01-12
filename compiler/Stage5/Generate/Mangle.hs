@@ -1,5 +1,7 @@
 module Stage5.Generate.Mangle where
 
+import Control.Applicative (liftA)
+import Data.Foldable (toList)
 import Data.List.NonEmpty (NonEmpty (..))
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Set as Set
@@ -20,6 +22,13 @@ import qualified Stage2.Index.Constructor as Constructor
 import qualified Stage2.Index.Type as Type
 import qualified Stage2.Index.Type2 as Type2
 import System.FilePath ((</>))
+
+names :: [Text]
+names = filter (`Set.notMember` keywords) $ map pack $ go [[]]
+  where
+    go base =
+      let prefix = base >>= (\base -> [letter : base | letter <- ['a' .. 'z']])
+       in prefix ++ go prefix
 
 data Brand
   = Class
@@ -55,7 +64,7 @@ mangleInstance run brand name target = Text.Lazy.toStrict $ Builder.toLazyText b
     for target = case target of
       Type2.Index index -> qualify (run index)
       Type2.Lifted Constructor.Index {typeIndex, constructorIndex} ->
-        -- mention constructor name in instance mangling
+        -- todo mention constructor name in instance mangling
         for typeIndex <> fromString "." <> fromString (show constructorIndex)
       Type2.Bool -> fromString "Hazy.Bool"
       Type2.Char -> fromString "Hazy.Char"
@@ -90,14 +99,7 @@ supers :: [Text]
 supers = [pack ("$" ++ show i) | i <- [0 ..]]
 
 fields :: [Text]
-fields = unique
-
-unique :: [Text]
-unique = filter (`Set.notMember` keywords) $ map pack $ go [[]]
-  where
-    go base =
-      let prefix = base >>= (\base -> [letter : base | letter <- ['a' .. 'z']])
-       in prefix ++ go prefix
+fields = names
 
 path :: FullQualifiers -> FilePath
 path = (++ ".mjs") . foldr1 (</>) . fmap unpack . path'
@@ -120,10 +122,57 @@ mjs = pack ".mjs"
 
 runtime = pack "Hazy.mjs"
 
-numInt = pack "numInt"
+data Builtin a = Builtin
+  { numInt, numInteger, enumInt, enumInteger :: a
+  }
 
-numInteger = pack "numInteger"
+instance Functor Builtin where
+  fmap = liftA
 
-enumInt = pack "enumInt"
+instance Applicative Builtin where
+  pure numInt@numInteger@enumInt@enumInteger =
+    Builtin
+      { numInt,
+        numInteger,
+        enumInt,
+        enumInteger
+      }
+  function <*> argument =
+    Builtin
+      { numInt = numInt function (numInt argument),
+        numInteger = numInteger function (numInteger argument),
+        enumInt = enumInt function (enumInt argument),
+        enumInteger = enumInteger function (enumInteger argument)
+      }
 
-enumInteger = pack "enumInteger"
+instance Foldable Builtin where
+  toList Builtin {numInt, numInteger, enumInt, enumInteger} =
+    [ numInt,
+      numInteger,
+      enumInt,
+      enumInteger
+    ]
+  foldMap go = foldMap go . toList
+
+canonical :: Builtin Text
+canonical =
+  Builtin
+    { numInt = pack "numInt",
+      numInteger = pack "numInteger",
+      enumInt = pack "enumInt",
+      enumInteger = pack "enumInteger"
+    }
+
+builtin :: Builtin Text
+unique :: [Text]
+(builtin, unique) = case names of
+  numInt : numInteger : enumInt : enumInteger : unique -> (builtins, unique)
+    where
+      builtins =
+        Builtin
+          { numInt,
+            numInteger,
+            enumInt,
+            enumInteger
+          }
+  _ -> error "bad names"

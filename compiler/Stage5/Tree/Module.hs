@@ -25,7 +25,6 @@ import Stage5.Generate.Global (Global (Global))
 import qualified Stage5.Generate.Global as Global
 import Stage5.Generate.GlobalType (GlobalType (GlobalType))
 import qualified Stage5.Generate.GlobalType as GlobalType
-import qualified Stage5.Generate.Mangle as Mandle
 import qualified Stage5.Generate.Mangle as Mangle
 import Stage5.Generate.Precontext (Precontext (Precontext))
 import qualified Stage5.Generate.Precontext as Precontext
@@ -96,18 +95,7 @@ generate'
       classInstances,
       dataInstances
     } = do
-    let (numInt, numInteger, enumInt, enumInteger, unique) = case Mandle.unique of
-          (numInt : numInteger : enumInt : enumInteger : unique) ->
-            (numInt, numInteger, enumInt, enumInteger, unique)
-          _ -> undefined
-        builtin =
-          Context.Builtin
-            { numInt,
-              numInteger,
-              enumInt,
-              enumInteger
-            }
-    context <- Context.start precontext builtin unique
+    context <- Context.start precontext
     statements <-
       for (zip [0 ..] (toList terms)) $
         \( termIndex,
@@ -152,12 +140,12 @@ generate'
     wanted <- readSTRef (Context.used context)
     imports <- for (Map.toList wanted) $ \(Global {path, name}, temporary) -> do
       pure $ Javascript.Import name temporary (Mangle.depth moduleName <> Mangle.pathJS path <> Mangle.mjs)
-    let builtin =
-          [ Javascript.Import Mangle.numInt numInt (Mangle.depth moduleName <> Mangle.runtime),
-            Javascript.Import Mangle.numInteger numInteger (Mangle.depth moduleName <> Mangle.runtime),
-            Javascript.Import Mangle.enumInt enumInt (Mangle.depth moduleName <> Mangle.runtime),
-            Javascript.Import Mangle.enumInteger enumInteger (Mangle.depth moduleName <> Mangle.runtime)
-          ]
+    let builtin = toList $ importBuiltin <$> Mangle.canonical <*> Mangle.builtin
+        importBuiltin canonical target =
+          Javascript.Import
+            canonical
+            target
+            (Mangle.depth moduleName <> Mangle.runtime)
     pure $
       concat
         [ concat statements,
