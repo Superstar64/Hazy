@@ -202,6 +202,23 @@ sortBy by = map runBy . sort . map By where
     compare (By a) (By b) = by a b
 ```
 
+### Extended Function Bindings 
+* Pragma: `ExtendedFunctionBindings`
+* Toggleable: False
+
+Function bindings are not requried to be contiguous and they may have different
+number of clauses.
+
+For example, this is legal:
+```haskell
+notJust (Just bool) = Just (not bool)
+id x = x
+notJust = id
+```
+
+Here, both `notJust` are combined into a single function and the second case
+of `notJust` is eta expanded.
+
 ## GHC Extensions
 ### Scoped Type Variables
 * Pragma: `ScopedTypeVariables`

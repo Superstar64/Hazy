@@ -169,6 +169,7 @@ data Extension
   | TraditionalRecordSyntax
   | TypeOperators
   | ExtendedLocalDeclarations
+  | ExtendedFunctionBindings
   | OfGuardBlocks
   | StableImports
   | UnorderedRecords
