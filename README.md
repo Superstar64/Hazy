@@ -283,6 +283,11 @@ However, #2 is a illegal because lists expect their elements to be `Type`s and
 Proper type operators are not implemented. Instead, only ticked infix constructors
 are supported for completeness for `DataKinds`.
 
+### NamedFieldPuns
+* Pragma: `NamedFieldPuns`
+
+Named field pun syntax is supported.
+
 # Deviations:
 ## Bugs
 These are deviations that will are planned to get fixed at some point.
