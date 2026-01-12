@@ -9,6 +9,10 @@ export const placeholder = {
   },
 };
 
+export function abort() {
+  throw new Error("bottom");
+}
+
 export const numInt = {
   a: placeholder,
   b: placeholder,

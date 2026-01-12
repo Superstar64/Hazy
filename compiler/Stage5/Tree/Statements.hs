@@ -10,7 +10,7 @@ import qualified Javascript.Tree.Statement as Javascript (Statement (..))
 import qualified Stage2.Index.Constructor as Constructor
 import Stage4.Tree.Pattern (Pattern (..))
 import Stage4.Tree.Statements (Statements (..))
-import Stage5.Generate.Context (Context, fresh, localBindings)
+import Stage5.Generate.Context (Context (..), fresh, localBindings)
 import qualified Stage5.Generate.Context as Context
 import qualified Stage5.Generate.Mangle as Mangle
 import {-# SOURCE #-} qualified Stage5.Tree.Declarations as Declarations
@@ -21,10 +21,16 @@ generate ::
   Javascript.Expression ->
   Statements scope ->
   ST s [Javascript.Statement 'True]
-generate context target statements = do
+generate context@Context {builtin = Mangle.Builtin {abort}} target statements = do
   label <- Context.fresh context
   statements <- attempt context target label statements
-  pure [Javascript.Label label statements]
+  let bottom =
+        Javascript.Expression
+          Javascript.Call
+            { function = Javascript.Variable {name = abort},
+              arguments = []
+            }
+  pure [Javascript.Label label (statements ++ [bottom])]
 
 attempt ::
   Context s scope ->

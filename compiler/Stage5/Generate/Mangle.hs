@@ -123,31 +123,39 @@ mjs = pack ".mjs"
 runtime = pack "Hazy.mjs"
 
 data Builtin a = Builtin
-  { numInt, numInteger, enumInt, enumInteger :: a
+  { abort,
+    numInt,
+    numInteger,
+    enumInt,
+    enumInteger ::
+      a
   }
 
 instance Functor Builtin where
   fmap = liftA
 
 instance Applicative Builtin where
-  pure numInt@numInteger@enumInt@enumInteger =
+  pure abort@numInt@numInteger@enumInt@enumInteger =
     Builtin
-      { numInt,
+      { abort,
+        numInt,
         numInteger,
         enumInt,
         enumInteger
       }
   function <*> argument =
     Builtin
-      { numInt = numInt function (numInt argument),
+      { abort = abort function (abort argument),
+        numInt = numInt function (numInt argument),
         numInteger = numInteger function (numInteger argument),
         enumInt = enumInt function (enumInt argument),
         enumInteger = enumInteger function (enumInteger argument)
       }
 
 instance Foldable Builtin where
-  toList Builtin {numInt, numInteger, enumInt, enumInteger} =
-    [ numInt,
+  toList Builtin {abort, numInt, numInteger, enumInt, enumInteger} =
+    [ abort,
+      numInt,
       numInteger,
       enumInt,
       enumInteger
@@ -157,7 +165,8 @@ instance Foldable Builtin where
 canonical :: Builtin Text
 canonical =
   Builtin
-    { numInt = pack "numInt",
+    { abort = pack "abort",
+      numInt = pack "numInt",
       numInteger = pack "numInteger",
       enumInt = pack "enumInt",
       enumInteger = pack "enumInteger"
@@ -166,13 +175,19 @@ canonical =
 builtin :: Builtin Text
 unique :: [Text]
 (builtin, unique) = case names of
-  numInt : numInteger : enumInt : enumInteger : unique -> (builtins, unique)
-    where
-      builtins =
-        Builtin
-          { numInt,
-            numInteger,
-            enumInt,
-            enumInteger
-          }
+  abort
+    : numInt
+    : numInteger
+    : enumInt
+    : enumInteger
+    : unique -> (builtins, unique)
+      where
+        builtins =
+          Builtin
+            { abort,
+              numInt,
+              numInteger,
+              enumInt,
+              enumInteger
+            }
   _ -> error "bad names"
