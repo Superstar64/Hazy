@@ -58,7 +58,8 @@ node output/index.mjs
 
 # Extensions
 Hazy implements original extensions alongside some GHC extensions.
-Note that only extensions that aren't fully backwards compatible are toggleable.
+Note that you can only toggle the only extensions that aren't fully backwards
+compatible.
 
 ## Custom Extensions
 
@@ -66,9 +67,9 @@ Note that only extensions that aren't fully backwards compatible are toggleable.
 * Pragma: `ConstructorFields`
 * Toggleable: True
 
-This is Hazy's take on `DisambiguateRecordFields`. This extension causes constructor
-fields to be associated to the constructor and thus may be accessed without needing
-to import said fields.
+This is Hazy's take on `DisambiguateRecordFields`. This extension causes
+constructor fields to be associated to the constructor and thus may be accessed
+without needing to import said fields.
 
 For example, this would now be valid:
 ```haskell
@@ -111,7 +112,7 @@ dot' Point {x, y} = x + y -- #2
 Here, #1 is order dependent so it would be rejected while #2 is order independent
 so it would be accepted.
 
-This extension apply per constructor, so even modules that have this extension
+This extension applies per constructor, so even modules that have this extension
 disabled are still affected.
 
 Additionaly, the `UNORDEREDRECORDS` pragma can enable this per constructor.
@@ -127,9 +128,9 @@ data Multiple = Single Int | Many { x, y :: Int }
 * Pragma: `StableImports`
 * Toggleable: True
 
-The extension requires this property to hold:
+This extension requires this property to hold:
 
-    Your imported modules may freely add new symbols without fear of overlapping symbols.
+    Your imported modules may freely add new symbols without causing overlapping symbols.
 
 This boils down to requiring all imports either use import lists or non
 overlapping qualified imports.
@@ -145,12 +146,14 @@ import qualified E as D -- #5
 
 Import #1 is rejected because it imports everything. Import #4, #5 are rejected
 because they overlap with import lists. Import #2 is okay because it uses an
-import list. Import #3 is okay because it's the slow qualified module in it's namespace.
+import list. Import #3 is okay because it's the only qualified module in it's
+namespace.
 
 Note that exporting new constructors is considered an API break, so importing
 all constructors of a type is still allowed.
 
-This can be disabled with `{-# LANGUAGE NoStableImports #-}` or `{-# LANGUAGE Haskell2010 #-}`.
+This can be disabled with `{-# LANGUAGE NoStableImports #-}` or
+`{-# LANGUAGE Haskell2010 #-}`.
 
 ### Of Guard Blocks
 * Pragma: `OfGuardBlocks`
@@ -202,7 +205,7 @@ sortBy by = map runBy . sort . map By where
 ## GHC Extensions
 ### Scoped Type Variables
 * Pragma: `ScopedTypeVariables`
-* Toogleable: False
+* Toggleable: False
 
 Hazy only implements the scoped type variables with type signaturues.
 It does not implement pattern type signatures.
@@ -213,6 +216,7 @@ It does not implement pattern type signatures.
 This is a subset of GHC's `RankNTypes`.
 
 Planned.
+
 ### GADTs
 Pragma: `GADTs`
 
@@ -233,22 +237,22 @@ Lambda case syntax is supported.
 
 ### MultiwayIf
 * Pragma: `MultiwayIf`
-* Toogleable: False
+* Toggleable: False
 
 Multiway if syntax is supported.
 
 ### Empty Case
 * Pragma: `EmptyCase`
-* Toogleable: False
+* Toggleable: False
 
 Empty case syntax is supported.
 
 ### Data Kinds
 * Pragma: `DataKinds`
-* Toogleable: False
+* Toggleable: False
 
-Data kinds are supported. Type level data constructors must be ticked however.
-The scope of constructors does not pollude the scope of types.
+Data kinds are supported. However, The scope of constructors does not pollude
+the scope of types. This means that type level data constructors must be ticked.
 
 If you want unticked operators, it's recommended you use type synonyms.
 ```haskell
@@ -274,7 +278,7 @@ However, #2 is a illegal because lists expect their elements to be `Type`s and
 
 ### TypeOperators
 * Pragma: `TypeOperators`
-* Toogleable: False
+* Toggleable: False
 
 Proper type operators are not implemented. Instead, only ticked infix constructors
 are supported for completeness for `DataKinds`.
@@ -359,15 +363,17 @@ For example:
 ```haskell
 import Prelude hiding ( Just )
 ```
+
 Will hide the `Just` constructor in Haskell, but this wouldn't hide anything in Hazy.
 Instead, the syntax for hiding constructor mirrors that of import constructors.
+
 ```haskell
 import Prelude hiding (Maybe (Just))
 ```
 
 ### No orphan instances
-Hazy does not support orphan instance. All instance declaration must have either
-the class or the data instance in the same module.
+Hazy does not support orphan instances. All instance declarations must have
+either the class or the data instance in the same module.
 
 ### Postfix Operators
 Left sections are treated as function application and are not eta expanded.
