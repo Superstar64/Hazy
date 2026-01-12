@@ -58,9 +58,9 @@ good = do
     callProcessVerbose "hazy" ["--simplify", good, "-I", "library/runtime", "-I", "library/base"]
 
 run = do
-  dirty <- doesDirectoryExist ".build/base"
-  when dirty $ callProcessVerbose "rm" ["-r", ".build/base"]
-  unless dirty $ callProcessVerbose "mkdir" ["-p", ".build"]
+  dirty <- doesDirectoryExist ".build"
+  when dirty $ callProcessVerbose "rm" ["-r", ".build"]
+  callProcessVerbose "mkdir" [".build"]
   callProcessVerbose "cp" ["-R", "runtime", ".build/base"]
   callProcessVerbose "hazy" ["-I", "library/runtime", "library/base", "-o", ".build/base"]
   run <- listDirectory "test/run"
