@@ -5,7 +5,6 @@ import Data.Foldable (toList)
 import qualified Data.Map as Map
 import qualified Javascript.Tree.Expression as Javacript
 import qualified Javascript.Tree.Expression as Javascript
-import qualified Stage2.Index.Type2 as Type2
 import qualified Stage3.Index.Evidence as Evidence (Index (..))
 import Stage4.Tree.Evidence (Evidence (..))
 import qualified Stage5.Generate.Binding.Evidence as Evidence (Binding (..))
@@ -39,28 +38,29 @@ generate
               }
       where
         base = case proof of
-          Evidence.Direct Type2.Num Type2.Int ->
+          Evidence.NumInt ->
             pure Javascript.Variable {name = numInt}
-          Evidence.Direct Type2.Num Type2.Integer ->
+          Evidence.NumInteger ->
             pure Javascript.Variable {name = numInteger}
-          Evidence.Direct Type2.Enum Type2.Int ->
+          Evidence.EnumInt ->
             pure Javascript.Variable {name = enumInt}
-          Evidence.Direct Type2.Enum Type2.Integer ->
+          Evidence.EnumInteger ->
             pure Javascript.Variable {name = enumInteger}
-          Evidence.Direct (Type2.Index index) target
+          Evidence.Class index target
             | Type.Binding {classInstances} <- context !=. index,
               Just binding <- Map.lookup target classInstances -> do
                 name <- Context.symbol context binding
                 pure Javascript.Variable {name}
-          Evidence.Direct target (Type2.Index index)
+            | otherwise -> error "bad evidence"
+          Evidence.Data target index
             | Type.Binding {dataInstances} <- context !=. index,
               Just binding <- Map.lookup target dataInstances -> do
                 name <- Context.symbol context binding
                 pure Javascript.Variable {name}
+            | otherwise -> error "bad evidence"
           Evidence.Index index
             | Evidence.Binding name <- context Context.!~ index ->
                 pure Javascript.Variable {name}
-          _ -> error "bad evidence"
     Super {base, index} -> do
       base <- generate context base
       pure

@@ -555,13 +555,13 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
       [Type s scope] ->
       ST s (Evidence s scope)
     constrainWith _ Type2.Num (Constructor Type2.Integer) [] =
-      pure $ Proof (Evidence.Direct Type2.Num Type2.Integer) Strict.Vector.empty
+      pure $ Proof Evidence.NumInteger Strict.Vector.empty
     constrainWith _ Type2.Num (Constructor Type2.Int) [] =
-      pure $ Proof (Evidence.Direct Type2.Num Type2.Int) Strict.Vector.empty
+      pure $ Proof Evidence.NumInt Strict.Vector.empty
     constrainWith _ Type2.Enum (Constructor Type2.Integer) [] =
-      pure $ Proof (Evidence.Direct Type2.Enum Type2.Integer) Strict.Vector.empty
+      pure $ Proof Evidence.EnumInteger Strict.Vector.empty
     constrainWith _ Type2.Enum (Constructor Type2.Int) [] =
-      pure $ Proof (Evidence.Direct Type2.Enum Type2.Int) Strict.Vector.empty
+      pure $ Proof Evidence.EnumInt Strict.Vector.empty
     constrainWith context@Context {typeEnvironment} classx term@(Logical reference) arguments =
       readSTRef reference >>= \case
         Solved term -> constrainWith context classx term arguments
@@ -621,7 +621,7 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
                     (Strict.Vector.fromList arguments)
                     (Simple.argument constraint) -> do
                   constrain context position classx argument
-          pure (direct (Type2.Index classx) index arguments)
+          pure (Proof (Evidence.Class classx index) arguments)
     constrainWith context@Context {typeEnvironment} classx (Constructor (Type2.Index index)) arguments
       | TypeBinding {dataInstances} <- typeEnvironment Type.Table.! index,
         Just instancex <- Map.lookup classx dataInstances = do
@@ -633,7 +633,7 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
                     (Strict.Vector.fromList arguments)
                     (Simple.argument constraint) -> do
                   constrain context position classx argument
-          pure (direct classx (Type2.Index index) arguments)
+          pure (Proof (Evidence.Data classx index) arguments)
     constrainWith context classx (Call function argument) arguments =
       constrainWith context classx function (argument : arguments)
     constrainWith context classx (Function argument result) arguments = do
@@ -642,9 +642,6 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
       constrainWith context classx (arrow `Call` argument `Call` result) arguments
     constrainWith _ _ _ _ =
       abort position (Constrain context_ classx_ term_ arguments_)
-
-direct :: Type2.Index scope -> Type2.Index scope -> Strict.Vector (Evidence s scope) -> Evidence s scope
-direct classx head arguments = Proof (Evidence.Direct classx head) arguments
 
 reconstrain :: Context s scope -> Position -> Map (Type2.Index scope) (Delay s scope) -> Type s scope -> ST s ()
 reconstrain context position constraints term =
