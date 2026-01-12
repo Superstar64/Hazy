@@ -170,6 +170,7 @@ data Extension
   | TypeOperators
   | ExtendedLocalDeclarations
   | ExtendedFunctionBindings
+  | ExtendedImportDeclarations
   | OfGuardBlocks
   | StableImports
   | UnorderedRecords

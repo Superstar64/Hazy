@@ -219,6 +219,12 @@ notJust = id
 Here, both `notJust` are combined into a single function and the second case
 of `notJust` is eta expanded.
 
+### Extended Import Declarations
+* Pragma: `ExtendedImportDeclarations`
+* Toggleable: False
+
+Import declarations may appear anywhere inside a module.
+
 ## GHC Extensions
 ### Scoped Type Variables
 * Pragma: `ScopedTypeVariables`
