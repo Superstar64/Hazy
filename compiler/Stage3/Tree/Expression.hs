@@ -13,6 +13,7 @@ import qualified Stage2.Scope as Scope
 import qualified Stage2.Tree.Selector as Selector (Uniform)
 import qualified Stage3.Simple.Evidence as Simple (Evidence)
 import qualified Stage3.Simple.Instanciation as Simple (Instanciation)
+import Stage3.Tree.Alternative (Alternative)
 import Stage3.Tree.Declarations (Declarations)
 import Stage3.Tree.ExpressionField (Field)
 import Stage3.Tree.Lambda (Lambda)
@@ -61,6 +62,10 @@ data Expression scope
       { condition :: !(Expression scope),
         thenx :: !(Expression scope),
         elsex :: !(Expression scope)
+      }
+  | Case
+      { scrutinee :: !(Expression scope),
+        cases :: !(Strict.Vector (Alternative scope))
       }
   | Lambda
       { parameter :: !(Pattern scope),

@@ -9,8 +9,7 @@ import Data.Traversable (for)
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
 import Error
-  ( unsupportedFeatureCaseExpressions,
-    unsupportedFeatureDoNotation,
+  ( unsupportedFeatureDoNotation,
     unsupportedFeatureExpressionAnnotation,
     unsupportedFeatureFloatingPointLiterals,
     unsupportedFeatureLambdaCase,
@@ -45,6 +44,8 @@ import qualified Stage3.Simple.Class as Simple.Class
 import qualified Stage3.Simple.Data as Simple.Data
 import Stage3.Simple.Scheme (instanciate)
 import {-# SOURCE #-} Stage3.Simple.TypeDeclaration (assumeClass, assumeData)
+import Stage3.Temporary.Alternative (Alternative)
+import qualified Stage3.Temporary.Alternative as Alternative
 import Stage3.Temporary.Declarations (Declarations)
 import qualified Stage3.Temporary.Declarations as Declarations
 import Stage3.Temporary.ExpressionField (Field)
@@ -106,6 +107,10 @@ data Expression s scope
       { conditionx :: !(Expression s scope),
         thenx :: !(Expression s scope),
         elsex :: !(Expression s scope)
+      }
+  | Case
+      { scrutinee :: !(Expression s scope),
+        cases :: !(Strict.Vector (Alternative s scope))
       }
   | Lambda
       { parameter :: !(Pattern s scope),
@@ -246,8 +251,11 @@ check _ _ Stage2.Comprehension {startPosition} =
   unsupportedFeatureListComprehension startPosition
 check _ _ Stage2.Update {updatePosition} =
   unsupportedFeatureRecordUpdate updatePosition
-check _ _ Stage2.Case {startPosition} =
-  unsupportedFeatureCaseExpressions startPosition
+check context typex Stage2.Case {scrutinee, cases} = do
+  binder <- Unify.fresh Unify.typex
+  scrutinee <- check context binder scrutinee
+  cases <- traverse (Alternative.check context typex binder) cases
+  pure Case {scrutinee, cases}
 check _ _ Stage2.Do {startPosition} =
   unsupportedFeatureDoNotation startPosition
 check context typex Stage2.Lambda {startPosition, parameter, body} = do
@@ -313,6 +321,10 @@ solve = \case
     true <- solve true
     false <- solve false
     pure $ Solved.If condition true false
+  Case {scrutinee, cases} -> do
+    scrutinee <- solve scrutinee
+    cases <- traverse Alternative.solve cases
+    pure Solved.Case {scrutinee, cases}
   Lambda {parameter, body} -> do
     parameter <- Pattern.solve parameter
     body <- Lambda.solve body

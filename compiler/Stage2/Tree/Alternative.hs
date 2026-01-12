@@ -13,7 +13,10 @@ import Stage2.Tree.RightHandSide (RightHandSide)
 import qualified Stage2.Tree.RightHandSide as RightHandSide (resolve)
 
 data Alternative scope
-  = Alternative !(Pattern scope) !(RightHandSide (Scope.Pattern ':+ scope))
+  = Alternative
+  { parameter :: !(Pattern scope),
+    rightHandSide :: !(RightHandSide (Scope.Pattern ':+ scope))
+  }
   deriving (Show)
 
 instance Shift Alternative where

@@ -290,6 +290,18 @@ simplifyWith expression [] = case expression of
           )
       )
       (simplify elsex)
+  Stage3.Case {scrutinee, cases}
+    | null cases ->
+        Join
+          { statements = Statements.Bottom
+          }
+    | otherwise ->
+        Call
+          { function =
+              Definition.desugar $
+                foldr1 (<>) (Definition . Function.simplify <$> toList cases),
+            argument = simplify scrutinee
+          }
   Stage3.Lambda {parameter, body} ->
     let definition =
           Bound

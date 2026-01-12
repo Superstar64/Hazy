@@ -309,6 +309,7 @@ executable hazy
     Stage3.Temporary.TermDeclaration
     Stage3.Temporary.Type
     Stage3.Temporary.TypePattern
+    Stage3.Tree.Alternative
     Stage3.Tree.Body
     Stage3.Tree.Constraint
     Stage3.Tree.Constructor

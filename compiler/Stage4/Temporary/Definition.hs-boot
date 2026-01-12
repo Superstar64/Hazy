@@ -12,4 +12,6 @@ data Definition scope
       { definition :: !(Function scope)
       }
 
+instance Semigroup (Definition scope)
+
 desugar :: Definition scope -> Expression scope

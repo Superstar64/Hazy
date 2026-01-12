@@ -89,7 +89,6 @@ module Error
     unsupportedFeatureRightSection,
     unsupportedFeatureDoNotation,
     unsupportedFeatureLambdaCase,
-    unsupportedFeatureCaseExpressions,
     unsupportedFeatureRecordUpdate,
     unsupportedFeatureListComprehension,
     unsupportedFeatureConstraintedTypeDefaulting,
@@ -557,8 +556,6 @@ constraintedTypeDefaulting = fromString "constrained type defaulting"
 
 recordUpdate = fromString "record update"
 
-caseExpressions = fromString "case expressions"
-
 doNotation = fromString "do notation"
 
 lambdaCase = fromString "lambda case"
@@ -591,10 +588,6 @@ unsupportedFeatureDoNotation =
 unsupportedFeatureLambdaCase :: Position -> a
 unsupportedFeatureLambdaCase =
   unsupportedFeature lambdaCase
-
-unsupportedFeatureCaseExpressions :: Position -> a
-unsupportedFeatureCaseExpressions =
-  unsupportedFeature caseExpressions
 
 unsupportedFeatureRecordUpdate :: Position -> a
 unsupportedFeatureRecordUpdate =

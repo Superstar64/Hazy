@@ -5,6 +5,7 @@ import Stage2.Scope (Environment ((:+)))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Category (Rotate), Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import qualified Stage3.Tree.Alternative as Stage3 (Alternative (..))
 import qualified Stage3.Tree.Function as Stage3 (Function (..))
 import qualified Stage3.Tree.Lambda as Stage3 (Lambda)
 import qualified Stage3.Tree.Lambda as Stage3.Lambda
@@ -73,6 +74,16 @@ instance Simplify Stage3.Lambda where
         { patternx = Pattern.simplify parameter,
           body = simplify body
         }
+
+instance Simplify Stage3.Alternative where
+  simplify Stage3.Alternative {parameter, rightHandSide} =
+    Bound
+      { patternx = Pattern.simplify parameter,
+        body =
+          Plain
+            { plain = RightHandSide.simplify rightHandSide
+            }
+      }
 
 etaExpandable :: Function scope -> Bool
 etaExpandable Plain {} = False

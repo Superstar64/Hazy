@@ -41,7 +41,6 @@ node output/index.mjs
 - Floating Point Literals
 - Constrained Type Defaulting
 - List Comprehensions
-- Case Expressions
 - Do notation
 - Lambda Case
 - Record Updates
