@@ -70,15 +70,18 @@ export const enumBool = enumInt;
 export const enumChar = enumInt;
 
 export const eqBool = {
+  a: strict((x, y) => boolean(x.a === y.a)),
+  b: strict((x, y) => boolean(x.a === y.a)),
+};
+
+export const eqChar = {
   a: strict2((x, y) => boolean(x === y)),
   b: strict2((x, y) => boolean(x !== y)),
 };
 
-export const eqChar = eqBool;
+export const eqInt = eqChar;
 
-export const eqInt = eqBool;
-
-export const eqInteger = eqBool;
+export const eqInteger = eqChar;
 
 // todo perform replacement on invalid scalar values
 export const pack = strict((list) => {
