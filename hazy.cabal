@@ -371,7 +371,6 @@ executable hazy
     Stage5.Tree.Instance
     Stage5.Tree.Module
     Stage5.Tree.Statements
-    Unique
     Verbose
 
   build-depends:

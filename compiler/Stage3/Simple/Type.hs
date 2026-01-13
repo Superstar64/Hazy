@@ -28,7 +28,7 @@ data Type scope
   | Small
   | Large
   | Universe
-  deriving (Show)
+  deriving (Show, Eq)
 
 infixr 0 `Function`
 

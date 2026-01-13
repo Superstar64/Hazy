@@ -1,6 +1,5 @@
 module Stage3.Simple.SchemeOver where
 
-import Control.Monad (guard, zipWithM)
 import Control.Monad.ST (ST)
 import Data.Foldable (toList)
 import qualified Data.Kind
@@ -10,7 +9,7 @@ import Data.Traversable (for)
 import qualified Data.Vector as Vector
 import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
-import Error (nonUniqueConstraints)
+import Order (orderWithInt)
 import Stage1.Lexer (variableIdentifier)
 import Stage1.Position (Position)
 import Stage1.Variable (VariableIdentifier)
@@ -35,7 +34,6 @@ import Stage3.Simple.Type (Type)
 import qualified Stage3.Simple.Type as Type (lift)
 import {-# SOURCE #-} Stage3.Simple.TypeDeclaration (assumeClass)
 import {-# SOURCE #-} qualified Stage3.Unify as Unify
-import Unique (unique)
 import Prelude hiding (head)
 
 data SchemeOver typex scope = SchemeOver
@@ -98,52 +96,41 @@ augmentNamed ::
   Strict.Vector (Constraint scope) ->
   Context s scope ->
   ST s (Context s (Local ':+ scope))
-augmentNamed name position parameters constraints Context {termEnvironment, localEnvironment, typeEnvironment} = do
-  let valid = Vector.generate (length parameters) $ \i ->
-        if unique $ do
-          Constraint {classx, head} <- toList constraints
-          guard $ i == head
-          pure classx
-          then ()
-          else nonUniqueConstraints position
-      constraint variable = fmap concat $ for (zip [0 ..] $ toList constraints) $ \case
-        (index, Constraint {classx, head, arguments})
-          | variable == head ->
-              let check = valid Vector.! head
-                  evidence =
-                    Evidence.Proof
-                      { proof = Evidence.assumed index,
-                        arguments = Strict.Vector.empty
-                      }
-                  go classx arguments evidence@base = do
-                    let argument =
-                          LocalBinding.Constraint
-                            { arguments,
-                              evidence
-                            }
-                    Class.Class {constraints} <- do
-                      let get index = assumeClass <$> TypeBinding.content (typeEnvironment Type.! index)
-                      Builtin.index pure get classx
-                    constraints <- for (zip [0 ..] $ toList constraints) $
-                      \(index, Constraint {classx, arguments = arguments'}) ->
-                        go classx (arguments <> arguments') Evidence.Super {base, index}
-                    pure $ (shift classx, seq check argument) : concat constraints
-               in go classx arguments evidence
-          | otherwise -> pure []
-      go argument index = (,) argument . Map.fromList <$> constraint index
-  constrainted <- zipWithM go (toList parameters) [0 ..]
-  let rigid (typex, constraints) index =
-        LocalBinding.Rigid
-          { label = Label.LocalBinding {name = name index},
-            rigid = shift typex,
-            constraints
+augmentNamed name position parameters constraints Context {termEnvironment, localEnvironment, typeEnvironment}
+  | parameters <- Strict.Vector.toLazy parameters = do
+      let entailed classx arguments evidence = do
+            Class.Class {constraints} <- do
+              let get index = assumeClass <$> TypeBinding.content (typeEnvironment Type.! index)
+              Builtin.index pure get classx
+            children <- for (zip [0 ..] $ toList constraints) $ \(index, Constraint {classx, arguments = arguments'}) ->
+              entailed classx (arguments <> arguments') Evidence.Super {base = evidence, index}
+            let root =
+                  LocalBinding.Constraint
+                    { arguments,
+                      evidence
+                    }
+            pure $ (shift classx, root) : concat children
+          collect Constraint {classx, head, arguments} = do
+            let evidence = Evidence.Proof {proof = Evidence.assumed head, arguments = Strict.Vector.empty}
+            entail <- entailed classx arguments evidence
+            pure (head, entail)
+      collected <- traverse collect (toList constraints)
+      let ordered = orderWithInt (++) [] (length parameters) collected
+          constraints = Vector.map (Map.fromListWith $ LocalBinding.combine position) ordered
+          rigid index typex constraints =
+            LocalBinding.Rigid
+              { label = Label.LocalBinding {name = name index},
+                rigid = shift typex,
+                constraints
+              }
+          locals = Vector.izipWith rigid parameters constraints
+      () <- pure $ foldr (\map () -> foldr seq () map) () constraints
+      pure
+        Context
+          { termEnvironment = Term.Local termEnvironment,
+            localEnvironment = Local.Local locals localEnvironment,
+            typeEnvironment = Type.Local typeEnvironment
           }
-  pure
-    Context
-      { termEnvironment = Term.Local termEnvironment,
-        localEnvironment = Local.Local (Vector.fromList $ zipWith rigid constrainted [0 ..]) localEnvironment,
-        typeEnvironment = Type.Local typeEnvironment
-      }
 
 augment ::
   Position ->

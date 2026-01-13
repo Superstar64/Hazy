@@ -304,7 +304,7 @@ eq =
   ( eqName,
     Type.Binding
       { position = Position.internal,
-        index = Type3.Index Type2.Num,
+        index = Type3.Index Type2.Eq,
         constructors = Set.empty,
         fields = fields (Proxy :: Proxy Method.Eq),
         methods = methods (Proxy :: Proxy Method.Eq)

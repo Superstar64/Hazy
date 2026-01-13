@@ -6,9 +6,5 @@ module Data.Eq
   )
 where
 
-import Data.Bool (Bool)
+import Hazy (Eq (..))
 import Prelude ()
-
-class Eq a where
-  infix 4 ==, /=
-  (==), (/=) :: a -> a -> Bool

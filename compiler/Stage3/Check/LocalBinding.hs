@@ -4,6 +4,8 @@ import qualified Data.Kind (Type)
 import Data.Map (Map)
 import qualified Data.Map as Map
 import qualified Data.Vector.Strict as Strict
+import Error (nonUniqueConstraints)
+import Stage1.Position (Position)
 import qualified Stage2.Index.Type2 as Type2
 import qualified Stage2.Label.Binding.Local as Label
 import Stage2.Scope (Environment)
@@ -17,7 +19,7 @@ data LocalBinding s scope
   = Rigid
       { label :: !(forall scope. Label.LocalBinding scope),
         rigid :: !(Simple.Type scope),
-        constraints :: Map (Type2.Index scope) (Constraint scope)
+        constraints :: !(Map (Type2.Index scope) (Constraint scope))
       }
   | Wobbly
       { label :: !(forall scope. Label.LocalBinding scope),
@@ -38,6 +40,13 @@ data Constraint scope = Constraint
   { arguments :: !(Strict.Vector (Simple.Type scope)),
     evidence :: !(Simple.Evidence scope)
   }
+  deriving (Show)
+
+combine :: Position -> Constraint scope -> Constraint scope -> Constraint scope
+combine position left@Constraint {arguments} Constraint {arguments = argument'}
+  -- evidence is left biased
+  | arguments == argument' = left
+  | otherwise = nonUniqueConstraints position
 
 instance Shift Constraint where
   shift Constraint {arguments, evidence} =
