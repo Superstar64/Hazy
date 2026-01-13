@@ -43,7 +43,7 @@ fixWith = Infix.fixWith position fixity operators
       Constructor _ Constructor.Binding {fixity} -> fixity
       Cons _ -> Fixity {associativity = Right, precedence = 5}
     operators pattern1 index pattern2 = case index of
-      Constructor _ Constructor.Binding {index, position} ->
+      Constructor position Constructor.Binding {index} ->
         At
           { names = Map.empty,
             match =

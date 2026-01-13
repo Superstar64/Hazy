@@ -62,9 +62,9 @@ fixWith = Infix.fixWith position fixity operator
       Cons _ -> Fixity {associativity = Right, precedence = 5}
     operator :: Expression scope -> Index scope -> Expression scope -> Expression scope
     operator left index right = case index of
-      Term _ Term.Binding {index, position} ->
+      Term position Term.Binding {index} ->
         Expression.resolveTerm2 position index (Nil :> left :> right)
-      Constructor _ Constructor.Binding {index, position} ->
+      Constructor position Constructor.Binding {index} ->
         Expression.resolveConstructor2 position index (Nil :> left :> right)
       Cons position ->
         Expression.resolveConstructor2 position Constructor.cons (Nil :> left :> right)
