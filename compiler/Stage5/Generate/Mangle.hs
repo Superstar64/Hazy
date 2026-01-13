@@ -127,6 +127,8 @@ data Builtin a = Builtin
   { abort,
     numInt,
     numInteger,
+    enumBool,
+    enumChar,
     enumInt,
     enumInteger,
     eqBool,
@@ -140,11 +142,13 @@ instance Functor Builtin where
   fmap = liftA
 
 instance Applicative Builtin where
-  pure abort@numInt@numInteger@enumInt@enumInteger@eqBool@eqChar@eqInt@eqInteger =
+  pure abort@numInt@numInteger@enumBool@enumChar@enumInt@enumInteger@eqBool@eqChar@eqInt@eqInteger =
     Builtin
       { abort,
         numInt,
         numInteger,
+        enumBool,
+        enumChar,
         enumInt,
         enumInteger,
         eqBool,
@@ -157,6 +161,8 @@ instance Applicative Builtin where
       { abort = abort function (abort argument),
         numInt = numInt function (numInt argument),
         numInteger = numInteger function (numInteger argument),
+        enumBool = enumBool function (enumBool argument),
+        enumChar = enumChar function (enumChar argument),
         enumInt = enumInt function (enumInt argument),
         enumInteger = enumInteger function (enumInteger argument),
         eqBool = eqBool function (eqBool argument),
@@ -181,6 +187,8 @@ canonical =
     { abort = pack "abort",
       numInt = pack "numInt",
       numInteger = pack "numInteger",
+      enumBool = pack "enumBool",
+      enumChar = pack "enumChar",
       enumInt = pack "enumInt",
       enumInteger = pack "enumInteger",
       eqBool = pack "eqBool",
@@ -195,6 +203,8 @@ unique :: [Text]
   abort
     : numInt
     : numInteger
+    : enumBool
+    : enumChar
     : enumInt
     : enumInteger
     : eqBool
@@ -208,6 +218,8 @@ unique :: [Text]
             { abort,
               numInt,
               numInteger,
+              enumBool,
+              enumChar,
               enumInt,
               enumInteger,
               eqBool,

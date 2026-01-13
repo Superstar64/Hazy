@@ -21,6 +21,8 @@ generate
         Magnle.Builtin
           { numInt,
             numInteger,
+            enumBool,
+            enumChar,
             enumInt,
             enumInteger,
             eqBool,
@@ -47,6 +49,10 @@ generate
             pure Javascript.Variable {name = numInt}
           Evidence.NumInteger ->
             pure Javascript.Variable {name = numInteger}
+          Evidence.EnumBool ->
+            pure Javacript.Variable {name = enumBool}
+          Evidence.EnumChar ->
+            pure Javascript.Variable {name = enumChar}
           Evidence.EnumInt ->
             pure Javascript.Variable {name = enumInt}
           Evidence.EnumInteger ->

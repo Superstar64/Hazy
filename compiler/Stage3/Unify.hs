@@ -558,6 +558,10 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
       pure $ Proof Evidence.NumInteger Strict.Vector.empty
     constrainWith _ Type2.Num (Constructor Type2.Int) [] =
       pure $ Proof Evidence.NumInt Strict.Vector.empty
+    constrainWith _ Type2.Enum (Constructor Type2.Bool) [] =
+      pure $ Proof Evidence.EnumBool Strict.Vector.empty
+    constrainWith _ Type2.Enum (Constructor Type2.Char) [] =
+      pure $ Proof Evidence.EnumChar Strict.Vector.empty
     constrainWith _ Type2.Enum (Constructor Type2.Integer) [] =
       pure $ Proof Evidence.EnumInteger Strict.Vector.empty
     constrainWith _ Type2.Enum (Constructor Type2.Int) [] =

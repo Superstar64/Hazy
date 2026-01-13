@@ -14,6 +14,8 @@ data Index scope
   | Data !(Type2.Index scope) (Type.Index scope)
   | NumInteger
   | NumInt
+  | EnumBool
+  | EnumChar
   | EnumInteger
   | EnumInt
   | EqBool
@@ -35,6 +37,8 @@ instance Shift.Functor Index where
     Data classx head -> Data (Shift.map category classx) (Shift.map category head)
     NumInteger -> NumInteger
     NumInt -> NumInt
+    EnumBool -> EnumBool
+    EnumChar -> EnumChar
     EnumInteger -> EnumInteger
     EnumInt -> EnumInt
     EqBool -> EqBool
@@ -56,6 +60,8 @@ instance Shift.PartialUnshift Index where
     e -> pure $ case e of
       NumInteger -> NumInteger
       NumInt -> NumInt
+      EnumBool -> EnumBool
+      EnumChar -> EnumChar
       EnumInteger -> EnumInteger
       EnumInt -> EnumInt
       EqBool -> EqBool
