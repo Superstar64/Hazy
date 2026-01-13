@@ -61,6 +61,10 @@ export const enumInt = {
 
 export const enumInteger = enumInt;
 
+export const enumBool = enumInt;
+
+export const enumChar = enumInt;
+
 export const eqBool = {
   a: placeholder,
   b: placeholder,

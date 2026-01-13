@@ -172,12 +172,18 @@ instance Applicative Builtin where
       }
 
 instance Foldable Builtin where
-  toList Builtin {abort, numInt, numInteger, enumInt, enumInteger} =
-    [ abort,
-      numInt,
-      numInteger,
-      enumInt,
-      enumInteger
+  toList (Builtin a b c d e f g h i j k) =
+    [ a,
+      b,
+      c,
+      d,
+      e,
+      f,
+      g,
+      h,
+      i,
+      j,
+      k
     ]
   foldMap go = foldMap go . toList
 
