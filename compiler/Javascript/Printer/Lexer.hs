@@ -13,9 +13,11 @@ module Javascript.Printer.Lexer
   )
 where
 
+import Data.Char (isAlphaNum, ord)
 import Data.List.NonEmpty (NonEmpty)
-import Data.Text (Text, pack)
+import Data.Text (Text, pack, unpack)
 import Data.Text.Lazy.Builder (Builder, fromString, fromText)
+import qualified Numeric
 import Prelude hiding (String, print)
 import qualified Prelude
 
@@ -53,7 +55,19 @@ instance Print String where
   print (String ast) = ast
 
 string :: Text -> String
-string text = String $ Lexer $ fromString "\"" <> fromText text <> fromString "\"" <> fromString " "
+string text =
+  String $
+    Lexer $
+      mconcat
+        [ fromString "\"",
+          foldMap char (unpack text),
+          fromString "\"",
+          fromString " "
+        ]
+  where
+    char letter
+      | isAlphaNum letter || letter `elem` " ./" = fromString [letter]
+      | otherwise = fromString "\\u{" <> fromString (Numeric.showHex (ord letter) "") <> fromString "}"
 
 newtype Number = Number Lexer
 
