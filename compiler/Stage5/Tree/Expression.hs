@@ -133,8 +133,8 @@ generateInto context target = \case
   Integer {integer} ->
     pure
       [ done
-          Javascript.Number
-            { number = fromIntegral integer
+          Javascript.BigInt
+            { bigInt = integer
             }
       ]
   where

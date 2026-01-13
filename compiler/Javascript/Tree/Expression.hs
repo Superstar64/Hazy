@@ -18,7 +18,8 @@ import Prelude hiding (print)
 data Expression
   = Variable {name :: !Text}
   | Object {fields :: [(Text, Field)]}
-  | Number {number :: Int}
+  | Number {number :: !Int}
+  | BigInt {bigInt :: !Integer}
   | This
   | Member
       { object :: Expression,
@@ -176,7 +177,12 @@ instance Print (Printer.PrimaryExpression yield await) where
         list <- foldl Printer.propertyDefinitionList2 first tail ->
           Printer.objectLiteral2 list
   run Number {number}
-    | literal <- Printer.literal3 number =
+    | number <- Printer.int number,
+      literal <- Printer.literal3 number =
+        Printer.primaryExpression3 literal
+  run BigInt {bigInt}
+    | number <- Printer.bigInt bigInt,
+      literal <- Printer.literal3 number =
         Printer.primaryExpression3 literal
   run This = Printer.primaryExpression1
   run String {string}

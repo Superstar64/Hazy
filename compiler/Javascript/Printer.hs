@@ -75,8 +75,11 @@ where
 
 import Javascript.Printer.Lexer
   ( Identifier,
+    Number,
     String,
+    bigInt,
     identifier,
+    int,
     string,
   )
 import Javascript.Printer.Tree.AdditiveExpression

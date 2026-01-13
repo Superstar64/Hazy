@@ -5,6 +5,9 @@ module Javascript.Printer.Lexer
     identifier,
     String,
     string,
+    Number,
+    int,
+    bigInt,
     token,
     run,
   )
@@ -36,9 +39,6 @@ instance (Print ast) => Print [ast] where
 instance (Print ast) => Print (NonEmpty ast) where
   print = foldMap print
 
-instance Print Int where
-  print = Lexer . fromText . pack . show
-
 newtype Identifier = Identifier Lexer
 
 instance Print Identifier where
@@ -54,6 +54,17 @@ instance Print String where
 
 string :: Text -> String
 string text = String $ Lexer $ fromString "\"" <> fromText text <> fromString "\"" <> fromString " "
+
+newtype Number = Number Lexer
+
+instance Print Number where
+  print (Number ast) = ast
+
+int :: Int -> Number
+int number = Number $ Lexer $ fromText $ pack $ show number
+
+bigInt :: Integer -> Number
+bigInt number = Number $ Lexer $ fromText $ pack $ show number ++ "n"
 
 token :: Prelude.String -> Lexer
 token = Lexer . (<> fromString " ") . fromString
