@@ -22,7 +22,11 @@ generate
           { numInt,
             numInteger,
             enumInt,
-            enumInteger
+            enumInteger,
+            eqBool,
+            eqChar,
+            eqInteger,
+            eqInt
           }
     } = \case
     Proof {proof, arguments} ->
@@ -47,6 +51,14 @@ generate
             pure Javascript.Variable {name = enumInt}
           Evidence.EnumInteger ->
             pure Javascript.Variable {name = enumInteger}
+          Evidence.EqBool ->
+            pure Javascript.Variable {name = eqBool}
+          Evidence.EqChar ->
+            pure Javascript.Variable {name = eqChar}
+          Evidence.EqInt ->
+            pure Javascript.Variable {name = eqInt}
+          Evidence.EqInteger ->
+            pure Javascript.Variable {name = eqInteger}
           Evidence.Class index target
             | Type.Binding {classInstances} <- context !=. index,
               Just binding <- Map.lookup target classInstances -> do

@@ -418,6 +418,11 @@ label context = \case
         { startPosition = (),
           constructor = () :@ hazy :=. constructorIdentifier (pack "Enum")
         }
+    Type2.Eq ->
+      Stage1.Constructor
+        { startPosition = (),
+          constructor = () :@ hazy :=. constructorIdentifier (pack "Eq")
+        }
   List {element} ->
     Stage1.List
       { startPosition = (),

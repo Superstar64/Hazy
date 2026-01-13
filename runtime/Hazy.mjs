@@ -61,6 +61,17 @@ export const enumInt = {
 
 export const enumInteger = enumInt;
 
+export const eqBool = {
+  a: placeholder,
+  b: placeholder,
+};
+
+export const eqChar = eqBool;
+
+export const eqInt = eqBool;
+
+export const eqInteger = eqBool;
+
 // todo perform replacement on invalid scalar values
 export const pack = strict((list) => {
   let buffer = "";

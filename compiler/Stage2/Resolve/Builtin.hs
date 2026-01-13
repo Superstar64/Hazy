@@ -66,6 +66,8 @@ intName = constructorIdentifier (pack "Int")
 
 numName = constructorIdentifier (pack "Num")
 
+eqName = constructorIdentifier (pack "Eq")
+
 plusName = VariableSymbol $ variableSymbol (pack "+")
 
 minusName = VariableSymbol $ variableSymbol (pack "-")
@@ -98,6 +100,10 @@ enumFromToName = VariableIdentifier $ variableIdentifier (pack "enumFromTo")
 
 enumFromThenToName = VariableIdentifier $ variableIdentifier (pack "enumFromThenTo")
 
+equalName = VariableSymbol $ variableSymbol (pack "==")
+
+notEqualName = VariableSymbol $ variableSymbol (pack "/=")
+
 class (Enum enum, Bounded enum) => MethodNames enum where
   name :: enum -> Variable
 
@@ -121,6 +127,11 @@ instance MethodNames Method.Enum where
     Method.EnumFromThen -> enumFromThenName
     Method.EnumFromTo -> enumFromToName
     Method.EnumFromThenTo -> enumFromThenToName
+
+instance MethodNames Method.Eq where
+  name = \case
+    Method.Equal -> equalName
+    Method.NotEqual -> notEqualName
 
 data Proxy e = Proxy
 
@@ -289,6 +300,17 @@ num =
       }
   )
 
+eq =
+  ( eqName,
+    Type.Binding
+      { position = Position.internal,
+        index = Type3.Index Type2.Num,
+        constructors = Set.empty,
+        fields = fields (Proxy :: Proxy Method.Eq),
+        methods = methods (Proxy :: Proxy Method.Eq)
+      }
+  )
+
 plus =
   ( plusName,
     Term.Binding
@@ -450,6 +472,26 @@ enumFromThenTo =
       }
   )
 
+equal =
+  ( equalName,
+    Term.Binding
+      { position = Position.internal,
+        index = Term2.Method Method.equal,
+        fixity = Fixity {associativity = None, precedence = 4},
+        selector = Normal
+      }
+  )
+
+notEqual =
+  ( notEqualName,
+    Term.Binding
+      { position = Position.internal,
+        index = Term2.Method Method.notEqual,
+        fixity = Fixity {associativity = None, precedence = 4},
+        selector = Normal
+      }
+  )
+
 builtin :: Bindings () scope
 builtin =
   Bindings
@@ -471,6 +513,8 @@ builtin =
             enumFromThen,
             enumFromTo,
             enumFromThenTo,
+            equal,
+            notEqual,
             runST
           ],
       constructors = Map.fromListWith undefined [false, true],
@@ -488,7 +532,8 @@ builtin =
             integer,
             int,
             num,
-            enum
+            enum,
+            eq
           ],
       stability = ()
     }

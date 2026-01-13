@@ -21,6 +21,7 @@ data Index scope
   | Int
   | Num
   | Enum
+  | Eq
   deriving (Show, Eq, Ord)
 
 instance Shift Index where
@@ -49,6 +50,7 @@ traverse run = \case
   Int -> pure Int
   Num -> pure Num
   Enum -> pure Enum
+  Eq -> pure Eq
 
 unlocal :: Index (Local ':+ scope) -> Index scope
 unlocal = map Type1.unlocal

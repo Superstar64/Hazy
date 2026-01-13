@@ -36,6 +36,7 @@ kind pure typex constructor = \case
     Type2.Int -> Type.smallType
     Type2.Num -> classKind
     Type2.Enum -> classKind
+    Type2.Eq -> classKind
     where
       dataKind = Data.kind $ index id (error "bad index") real
       classKind = Class.kind $ index id (error "bad index") real
@@ -60,6 +61,7 @@ instance Builtin Class where
     Type2.Index index -> normal index
     Type2.Num -> pure num
     Type2.Enum -> pure enum
+    Type2.Eq -> pure eq
     _ -> error "bad class index"
 
 bool :: Data scope
@@ -148,3 +150,17 @@ enum =
         go Method.EnumFromThenTo =
           Scheme.mono $
             var `Type.Function` var `Type.Function` var `Type.Function` Type.Constructor Type2.List `Type.Call` var
+
+eq :: Class scope
+eq =
+  Class
+    { parameter = Type.smallType,
+      constraints = Strict.Vector.empty,
+      methods = Strict.Vector.fromList set
+    }
+  where
+    set = map go [minBound .. maxBound]
+      where
+        var = Type.Variable (Local.Local 0)
+        go Method.Equal = Scheme.mono $ var `Type.Function` var `Type.Function` Type.Constructor Type2.Bool
+        go Method.NotEqual = Scheme.mono $ var `Type.Function` var `Type.Function` Type.Constructor Type2.Bool

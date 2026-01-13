@@ -76,6 +76,7 @@ mangleInstance run brand name target = Text.Lazy.toStrict $ Builder.toLazyText b
       Type2.Int -> fromString "Hazy.Int"
       Type2.Num -> fromString "Hazy.Num"
       Type2.Enum -> fromString "Hazy.Enum"
+      Type2.Eq -> fromString "Hazy.Eq"
     qualify :: FullyQualifiedConstructorIdentifier -> Builder
     qualify (Local :.. root :.=. name) =
       mconcat
@@ -127,7 +128,11 @@ data Builtin a = Builtin
     numInt,
     numInteger,
     enumInt,
-    enumInteger ::
+    enumInteger,
+    eqBool,
+    eqChar,
+    eqInt,
+    eqInteger ::
       a
   }
 
@@ -135,13 +140,17 @@ instance Functor Builtin where
   fmap = liftA
 
 instance Applicative Builtin where
-  pure abort@numInt@numInteger@enumInt@enumInteger =
+  pure abort@numInt@numInteger@enumInt@enumInteger@eqBool@eqChar@eqInt@eqInteger =
     Builtin
       { abort,
         numInt,
         numInteger,
         enumInt,
-        enumInteger
+        enumInteger,
+        eqBool,
+        eqChar,
+        eqInt,
+        eqInteger
       }
   function <*> argument =
     Builtin
@@ -149,7 +158,11 @@ instance Applicative Builtin where
         numInt = numInt function (numInt argument),
         numInteger = numInteger function (numInteger argument),
         enumInt = enumInt function (enumInt argument),
-        enumInteger = enumInteger function (enumInteger argument)
+        enumInteger = enumInteger function (enumInteger argument),
+        eqBool = eqBool function (eqBool argument),
+        eqChar = eqChar function (eqChar argument),
+        eqInt = eqInt function (eqInt argument),
+        eqInteger = eqInteger function (eqInteger argument)
       }
 
 instance Foldable Builtin where
@@ -169,7 +182,11 @@ canonical =
       numInt = pack "numInt",
       numInteger = pack "numInteger",
       enumInt = pack "enumInt",
-      enumInteger = pack "enumInteger"
+      enumInteger = pack "enumInteger",
+      eqBool = pack "eqBool",
+      eqChar = pack "eqChar",
+      eqInt = pack "eqInt",
+      eqInteger = pack "eqInteger"
     }
 
 builtin :: Builtin Text
@@ -180,6 +197,10 @@ unique :: [Text]
     : numInteger
     : enumInt
     : enumInteger
+    : eqBool
+    : eqChar
+    : eqInt
+    : eqInteger
     : unique -> (builtins, unique)
       where
         builtins =
@@ -188,6 +209,10 @@ unique :: [Text]
               numInt,
               numInteger,
               enumInt,
-              enumInteger
+              enumInteger,
+              eqBool,
+              eqChar,
+              eqInt,
+              eqInteger
             }
   _ -> error "bad names"

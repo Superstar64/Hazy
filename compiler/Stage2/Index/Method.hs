@@ -3,12 +3,12 @@ module Stage2.Index.Method where
 import qualified Stage2.Index.Type2 as Type2
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import Prelude hiding (Enum)
+import Prelude hiding (Enum, Eq)
 import qualified Prelude
 
 data Index scope = Index
   {typeIndex :: !(Type2.Index scope), methodIndex :: !Int}
-  deriving (Show, Eq, Ord)
+  deriving (Show, Prelude.Eq, Ord)
 
 instance Shift Index where
   shift = shiftDefault
@@ -66,3 +66,12 @@ enumFromThen = Index Type2.Enum $ Prelude.fromEnum EnumFromThen
 enumFromTo = Index Type2.Enum $ Prelude.fromEnum EnumFromTo
 
 enumFromThenTo = Index Type2.Enum $ Prelude.fromEnum EnumFromThenTo
+
+data Eq
+  = Equal
+  | NotEqual
+  deriving (Prelude.Enum, Bounded)
+
+equal = Index Type2.Eq $ Prelude.fromEnum Equal
+
+notEqual = Index Type2.Eq $ Prelude.fromEnum NotEqual

@@ -562,6 +562,14 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
       pure $ Proof Evidence.EnumInteger Strict.Vector.empty
     constrainWith _ Type2.Enum (Constructor Type2.Int) [] =
       pure $ Proof Evidence.EnumInt Strict.Vector.empty
+    constrainWith _ Type2.Eq (Constructor Type2.Bool) [] =
+      pure $ Proof Evidence.EqBool Strict.Vector.empty
+    constrainWith _ Type2.Eq (Constructor Type2.Char) [] =
+      pure $ Proof Evidence.EqChar Strict.Vector.empty
+    constrainWith _ Type2.Eq (Constructor Type2.Integer) [] =
+      pure $ Proof Evidence.EqInteger Strict.Vector.empty
+    constrainWith _ Type2.Eq (Constructor Type2.Int) [] =
+      pure $ Proof Evidence.EqInt Strict.Vector.empty
     constrainWith context@Context {typeEnvironment} classx term@(Logical reference) arguments =
       readSTRef reference >>= \case
         Solved term -> constrainWith context classx term arguments

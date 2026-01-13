@@ -16,6 +16,10 @@ data Index scope
   | NumInt
   | EnumInteger
   | EnumInt
+  | EqBool
+  | EqChar
+  | EqInteger
+  | EqInt
   deriving (Eq, Show)
 
 assumed :: Int -> Index (Scope.Local ':+ scopes)
@@ -33,6 +37,10 @@ instance Shift.Functor Index where
     NumInt -> NumInt
     EnumInteger -> EnumInteger
     EnumInt -> EnumInt
+    EqBool -> EqBool
+    EqChar -> EqChar
+    EqInt -> EqInt
+    EqInteger -> EqInteger
 
 instance Shift.PartialUnshift Index where
   partialUnshift fail = \case
@@ -50,3 +58,7 @@ instance Shift.PartialUnshift Index where
       NumInt -> NumInt
       EnumInteger -> EnumInteger
       EnumInt -> EnumInt
+      EqBool -> EqBool
+      EqChar -> EqChar
+      EqInt -> EqInt
+      EqInteger -> EqInteger
