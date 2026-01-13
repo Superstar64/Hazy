@@ -786,23 +786,23 @@ solve position = solve
       Large -> pure $ Simple.Large
       Universe -> pure $ Simple.Universe
 
-solveEvidence :: Evidence s scope -> ST s (Simple.Evidence scope)
-solveEvidence = \case
+solveEvidence :: Position -> Evidence s scope -> ST s (Simple.Evidence scope)
+solveEvidence position = \case
   Proof proof arguments -> do
-    arguments <- traverse solveEvidence arguments
+    arguments <- traverse (solveEvidence position) arguments
     pure $ Simple.Proof {proof, arguments}
   Super base index -> do
-    base <- solveEvidence base
+    base <- solveEvidence position base
     pure $ Simple.Super {base, index}
-  Shift' evidence -> shift <$> solveEvidence evidence
+  Shift' evidence -> shift <$> solveEvidence position evidence
   Logical' reference ->
     readSTRef reference >>= \case
-      Solved' evidence -> solveEvidence evidence
-      Unsolved' -> error "solve evidence can't fail"
+      Solved' evidence -> solveEvidence position evidence
+      Unsolved' -> ambiguousType position
 
-solveInstanciation :: Instanciation s scope -> ST s (Simple.Instanciation scope)
-solveInstanciation (Instanciation instanciation) = do
-  instanciation <- traverse solveEvidence instanciation
+solveInstanciation :: Position -> Instanciation s scope -> ST s (Simple.Instanciation scope)
+solveInstanciation position (Instanciation instanciation) = do
+  instanciation <- traverse (solveEvidence position) instanciation
   pure $ Simple.Instanciation instanciation
 
 data Error s where

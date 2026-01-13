@@ -78,7 +78,7 @@ check
       \Simple.Constraint {classx, arguments} -> do
         let parameter = foldl Simple.Type.Call base arguments
         evidence <- Unify.constrain context startPosition (shift classx) (Simple.Type.lift parameter)
-        Unify.solveEvidence evidence
+        Unify.solveEvidence startPosition evidence
     let check scheme member = for member $ \member -> do
           context <- Simple.Scheme.augment' startPosition scheme context
           let Simple.Scheme Simple.SchemeOver {result} = scheme

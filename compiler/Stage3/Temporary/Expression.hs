@@ -18,6 +18,7 @@ import Error
     unsupportedFeatureRightSection,
     unsupportedFeatureRunST,
   )
+import Stage1.Position (Position)
 import qualified Stage2.Index.Constructor as Constructor
 import qualified Stage2.Index.Method as Method
 import qualified Stage2.Index.Selector as Selector
@@ -62,7 +63,8 @@ import Prelude hiding (Bool (False, True))
 
 data Expression s scope
   = Variable
-      { variable :: !(Term.Index scope),
+      { variablePosition :: !Position,
+        variable :: !(Term.Index scope),
         instanciation :: !(Unify.Instanciation s scope)
       }
   | Constructor
@@ -74,12 +76,14 @@ data Expression s scope
         uniform :: !(Redirect.Uniform)
       }
   | Method
-      { method :: !(Method.Index scope),
+      { methodPosition :: !Position,
+        method :: !(Method.Index scope),
         evidence :: !(Unify.Evidence s scope),
         instanciation :: !(Unify.Instanciation s scope)
       }
   | Integer
-      { integer :: !Integer,
+      { startPosition :: !Position,
+        integer :: !Integer,
         evidence :: !(Unify.Evidence s scope)
       }
   | Character
@@ -127,11 +131,11 @@ check context@Context {termEnvironment} typex Stage2.Variable {variablePosition,
     Wobbly scheme -> do
       (typex', instanciation) <- Unify.instanciate context variablePosition (Unify.monoScheme scheme)
       Unify.unify context variablePosition typex typex'
-      pure Variable {variable, instanciation}
+      pure Variable {variablePosition, variable, instanciation}
     Rigid scheme -> do
       (typex', instanciation) <- instanciate context variablePosition scheme
       Unify.unify context variablePosition typex typex'
-      pure Variable {variable, instanciation}
+      pure Variable {variablePosition, variable, instanciation}
 check context@Context {typeEnvironment} typex Stage2.Constructor {constructorPosition, constructor} =
   do
     let Constructor.Index typeIndex constructorIndex = constructor
@@ -204,7 +208,7 @@ check
         let method' = methods Strict.Vector.! methodIndex
         (typex', instanciation) <- Unify.instanciate context methodPosition method'
         Unify.unify context methodPosition typex typex'
-        pure Method {method, evidence, instanciation}
+        pure Method {methodPosition, method, evidence, instanciation}
 check context typex Stage2.List {startPosition, items} = do
   inner <- Unify.fresh Unify.typex
   Unify.unify context startPosition typex (Unify.listWith inner)
@@ -229,7 +233,7 @@ check context typex Stage2.MultiwayIf {branches} = do
   pure (MultiwayIf branches)
 check context typex Stage2.Integer {startPosition, integer} = do
   evidence <- Unify.constrain context startPosition Type2.Num typex
-  pure $ Integer {integer, evidence}
+  pure $ Integer {startPosition, integer, evidence}
 check context typex Stage2.String {startPosition, string} = do
   Unify.unify context startPosition typex (Unify.listWith Unify.char)
   pure $ String string
@@ -284,8 +288,8 @@ check _ _ Stage2.RunST {startPosition} =
 
 solve :: Expression s scope -> ST s (Solved.Expression scope)
 solve = \case
-  Variable {variable, instanciation} -> do
-    instanciation <- Unify.solveInstanciation instanciation
+  Variable {variablePosition, variable, instanciation} -> do
+    instanciation <- Unify.solveInstanciation variablePosition instanciation
     pure
       Solved.Variable
         { variable,
@@ -293,9 +297,9 @@ solve = \case
         }
   Constructor {constructor, parameters} -> pure $ Solved.Constructor {constructor, parameters}
   Selector {selector, uniform} -> pure $ Solved.Selector {selector, uniform}
-  Method {method, evidence, instanciation} -> do
-    evidence <- Unify.solveEvidence evidence
-    instanciation <- Unify.solveInstanciation instanciation
+  Method {methodPosition, method, evidence, instanciation} -> do
+    evidence <- Unify.solveEvidence methodPosition evidence
+    instanciation <- Unify.solveInstanciation methodPosition instanciation
     pure $
       Solved.Method
         { method,
@@ -332,8 +336,8 @@ solve = \case
   MultiwayIf branches -> do
     branches <- traverse RightHandSide.solve branches
     pure $ Solved.MultiwayIf branches
-  Integer {integer, evidence} -> do
-    evidence <- Unify.solveEvidence evidence
+  Integer {startPosition, integer, evidence} -> do
+    evidence <- Unify.solveEvidence startPosition evidence
     pure Solved.Integer {integer, evidence}
   String {string} -> pure $ Solved.String {string}
   Character {character} -> pure $ Solved.Character {character}
