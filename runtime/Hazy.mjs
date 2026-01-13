@@ -17,6 +17,10 @@ function strict2(f) {
   return strict((x) => (y) => f(force(x), force(y)));
 }
 
+function boolean(b) {
+  return { a: b ? 1 : 0 };
+}
+
 export const placeholder = {
   a: 1,
   b() {
@@ -66,8 +70,8 @@ export const enumBool = enumInt;
 export const enumChar = enumInt;
 
 export const eqBool = {
-  a: placeholder,
-  b: placeholder,
+  a: strict2((x, y) => boolean(x === y)),
+  b: strict2((x, y) => boolean(x !== y)),
 };
 
 export const eqChar = eqBool;
