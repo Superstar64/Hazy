@@ -137,10 +137,12 @@ check
     let simplify = Synonym.fromProper context
     constraints <- traverse (Constraint.check context) constraints
     constraints <- traverse (Constraint.solve simplify) constraints
-    methods <- traverse (Unsolved.Method.check context) methods
-    methods <- traverse (Unsolved.Method.solve simplify) methods
+    methods <- traverse (Unsolved.Method.check1 context) methods
+    methods <- traverse (Unsolved.Method.solve1 simplify) methods
     kind' <- Unify.solve position kind
     parameter <- Unify.solve position . Unsolved.TypePattern.typex $ parameter
+    methods <- traverse (Unsolved.Method.check2 context) methods
+    methods <- traverse Unsolved.Method.solve2 methods
     pure $
       Class
         { name,
