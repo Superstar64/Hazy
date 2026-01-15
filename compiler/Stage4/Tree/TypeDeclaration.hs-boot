@@ -1,13 +1,13 @@
-module Stage3.Simple.TypeDeclaration where
+module Stage4.Tree.TypeDeclaration where
 
 import Stage1.Variable (ConstructorIdentifier)
 import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (Shift)
 import qualified Stage2.Shift as Shift
-import {-# SOURCE #-} Stage3.Simple.Class (Class)
-import {-# SOURCE #-} Stage3.Simple.Data (Data)
-import {-# SOURCE #-} Stage3.Simple.Type (Type)
-import {-# SOURCE #-} qualified Stage3.Tree.TypeDeclaration as Solved (TypeDeclaration)
+import {-# SOURCE #-} qualified Stage3.Tree.TypeDeclaration as Solved
+import {-# SOURCE #-} Stage4.Tree.Class (Class)
+import {-# SOURCE #-} Stage4.Tree.Data (Data)
+import {-# SOURCE #-} Stage4.Tree.Type (Type)
 
 data TypeDeclaration scope
   = Data

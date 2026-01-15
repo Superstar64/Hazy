@@ -5,10 +5,10 @@ import Stage2.Shift (Shift (..))
 import Stage3.Check.TypeAnnotation (TypeAnnotation (Annotation, Inferred))
 import qualified Stage3.Check.TypeAnnotation as Annotation (annotation')
 import qualified Stage3.Functor.Annotated as Functor (Annotated (..))
-import {-# SOURCE #-} qualified Stage3.Simple.Scheme as Simple (Scheme)
 import {-# SOURCE #-} Stage3.Tree.TermDeclaration (TermDeclaration)
 import {-# SOURCE #-} qualified Stage3.Tree.TermDeclaration as TermDeclaration
 import {-# SOURCE #-} qualified Stage3.Unify as Unify
+import {-# SOURCE #-} qualified Stage4.Tree.Scheme as Simple (Scheme)
 
 data Type s scope
   = Wobbly !(Unify.Type s scope)

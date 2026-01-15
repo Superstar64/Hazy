@@ -3,8 +3,8 @@ module Stage3.Tree.Constraint where
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Stage2.Index.Type2 as Type2
 import Stage2.Scope (Environment ((:+)), Local)
-import {-# SOURCE #-} qualified Stage3.Simple.Type as Simple
 import Stage3.Tree.Type (Type)
+import {-# SOURCE #-} qualified Stage4.Tree.Type as Simple
 
 data Constraint scope = Constraint
   { classx :: !(Type2.Index scope),

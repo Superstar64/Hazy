@@ -24,7 +24,7 @@ import qualified Stage3.Simple.Scheme as Simple (Scheme (..))
 import qualified Stage3.Simple.Scheme as Simple.Scheme
 import qualified Stage3.Simple.SchemeOver as Simple (SchemeOver (..))
 import qualified Stage3.Simple.Type as Simple.Type
-import {-# SOURCE #-} Stage3.Simple.TypeDeclaration (assumeClass)
+import Stage3.Simple.TypeDeclaration (assumeClass)
 import qualified Stage3.Temporary.Definition as Unsolved.Definition
 import Stage3.Tree.Definition (Definition)
 import qualified Stage3.Tree.Scheme as Scheme

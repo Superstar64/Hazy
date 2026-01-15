@@ -9,7 +9,7 @@ import qualified Stage2.Index.Local as Local
 import qualified Stage2.Index.Type2 as Type2
 import Stage2.Scope (Environment ((:+)))
 import qualified Stage2.Scope as Scope
-import {-# SOURCE #-} qualified Stage3.Simple.Type as Simple
+import qualified Stage3.Simple.Type as Simple
 
 data Type scope
   = Variable

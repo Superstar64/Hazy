@@ -1,6 +1,6 @@
 {-# LANGUAGE RoleAnnotations #-}
 
-module Stage3.Simple.Constraint where
+module Stage4.Tree.Constraint where
 
 import Data.Kind (Type)
 import Stage2.Scope (Environment)

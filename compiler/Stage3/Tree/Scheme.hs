@@ -6,8 +6,8 @@ import qualified Data.Vector.Strict as Strict.Vector
 import Stage1.Position (Position)
 import Stage2.Scope (Environment (..), Local)
 import Stage3.Check.Context (Context (..))
-import {-# SOURCE #-} qualified Stage3.Simple.Constraint as Simple.Constraint
-import {-# SOURCE #-} qualified Stage3.Simple.SchemeOver as SchemeOver
+import qualified Stage3.Simple.Constraint as Simple.Constraint
+import qualified Stage3.Simple.SchemeOver as SchemeOver
 import Stage3.Tree.Constraint (Constraint (..))
 import Stage3.Tree.Type (Type)
 import Stage3.Tree.TypePattern (TypePattern (TypePattern))

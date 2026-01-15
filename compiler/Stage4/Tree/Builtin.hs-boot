@@ -1,11 +1,11 @@
-module Stage3.Simple.Builtin where
+module Stage4.Tree.Builtin where
 
 import qualified Stage2.Index.Constructor as Constructor
 import qualified Stage2.Index.Type as Type
 import qualified Stage2.Index.Type2 as Type2
-import {-# SOURCE #-} Stage3.Simple.Class (Class)
-import {-# SOURCE #-} Stage3.Simple.Data (Data)
-import {-# SOURCE #-} Stage3.Simple.Type (Type)
+import {-# SOURCE #-} Stage4.Tree.Class (Class)
+import {-# SOURCE #-} Stage4.Tree.Data (Data)
+import Stage4.Tree.Type (Type)
 
 kind ::
   (Type scope -> typex) ->

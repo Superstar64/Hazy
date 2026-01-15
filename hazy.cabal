@@ -345,6 +345,11 @@ executable hazy
     Stage4.Temporary.RightHandSide
     Stage4.Temporary.Statements
     Stage4.Temporary.TermDeclaration
+    Stage4.Tree.Builtin
+    Stage4.Tree.Class
+    Stage4.Tree.Constraint
+    Stage4.Tree.Constructor
+    Stage4.Tree.Data
     Stage4.Tree.Declarations
     Stage4.Tree.Evidence
     Stage4.Tree.Expression
@@ -353,8 +358,10 @@ executable hazy
     Stage4.Tree.Module
     Stage4.Tree.Pattern
     Stage4.Tree.Scheme
+    Stage4.Tree.SchemeOver
     Stage4.Tree.Statements
     Stage4.Tree.TermDeclaration
+    Stage4.Tree.Type
     Stage4.Tree.TypeDeclaration
     Stage5.Generate.Binding.Evidence
     Stage5.Generate.Binding.Term

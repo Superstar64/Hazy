@@ -23,13 +23,13 @@ import qualified Stage3.Check.DataInstance as DataInstance
 import qualified Stage3.Check.LocalBinding as LocalBinding (LocalBinding (..))
 import Stage3.Check.TypeBinding (TypeBinding (TypeBinding))
 import qualified Stage3.Check.TypeBinding as TypeBinding
-import {-# SOURCE #-} qualified Stage3.Simple.Builtin as Builtin
 import qualified Stage3.Simple.Data as Simple.Data
 import Stage3.Simple.Type (lift)
-import {-# SOURCE #-} Stage3.Simple.TypeDeclaration as Simple (assumeData)
 import qualified Stage3.Synonym as Synonym
 import qualified Stage3.Tree.Type as Solved
 import {-# SOURCE #-} qualified Stage3.Unify as Unify
+import {-# SOURCE #-} qualified Stage4.Tree.Builtin as Builtin
+import {-# SOURCE #-} Stage4.Tree.TypeDeclaration as Simple (assumeData)
 
 data Type s scope
   = Variable {variable :: !(Local.Index scope)}

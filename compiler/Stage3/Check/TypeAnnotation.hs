@@ -7,11 +7,11 @@ import Error (unsupportedFeaturePatternLetBinds)
 import qualified Stage2.Index.Term0 as Term0
 import qualified Stage2.Tree.TermDeclaration as Stage2 (TermDeclaration (..))
 import {-# SOURCE #-} Stage3.Check.Context (Context)
-import {-# SOURCE #-} qualified Stage3.Simple.Scheme as Simple
 import qualified Stage3.Synonym as Synonym
 import {-# SOURCE #-} qualified Stage3.Temporary.Scheme as Scheme (check, solve)
 import {-# SOURCE #-} Stage3.Tree.Scheme (Scheme)
 import {-# SOURCE #-} qualified Stage3.Unify as Unify
+import {-# SOURCE #-} qualified Stage4.Tree.Scheme as Simple
 
 data TypeAnnotation inferred scope
   = Annotation

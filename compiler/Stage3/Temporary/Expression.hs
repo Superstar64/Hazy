@@ -44,7 +44,6 @@ import qualified Stage3.Simple.Builtin as Builtin
 import qualified Stage3.Simple.Class as Simple.Class
 import qualified Stage3.Simple.Data as Simple.Data
 import Stage3.Simple.Scheme (instanciate)
-import {-# SOURCE #-} Stage3.Simple.TypeDeclaration (assumeClass, assumeData)
 import Stage3.Temporary.Alternative (Alternative)
 import qualified Stage3.Temporary.Alternative as Alternative
 import Stage3.Temporary.Declarations (Declarations)
@@ -59,6 +58,7 @@ import Stage3.Temporary.RightHandSide (RightHandSide)
 import qualified Stage3.Temporary.RightHandSide as RightHandSide
 import qualified Stage3.Tree.Expression as Solved
 import qualified Stage3.Unify as Unify
+import {-# SOURCE #-} Stage4.Tree.TypeDeclaration (assumeClass, assumeData)
 import Prelude hiding (Bool (False, True))
 
 data Expression s scope

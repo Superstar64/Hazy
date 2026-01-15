@@ -18,7 +18,7 @@ import {-# SOURCE #-} qualified Stage3.Check.KindAnnotation as KindAnnotation
 import qualified Stage3.Functor.Annotated as Functor (Annotated (..), NoLabel)
 import Stage3.Simple.Constraint (Constraint)
 import {-# SOURCE #-} qualified Stage3.Simple.Type as Simple (Type)
-import {-# SOURCE #-} qualified Stage3.Simple.TypeDeclaration as Simple (TypeDeclaration, simplify)
+import qualified Stage3.Simple.TypeDeclaration as Simple (TypeDeclaration, simplify)
 import {-# SOURCE #-} Stage3.Tree.TypeDeclaration (TypeDeclaration)
 import {-# SOURCE #-} qualified Stage3.Tree.TypeDeclaration as TypeDeclaration
 

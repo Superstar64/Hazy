@@ -4,7 +4,7 @@ module Stage3.Tree.TermDeclaration where
 
 import Data.Kind (Type)
 import Stage2.Scope (Environment)
-import {-# SOURCE #-} qualified Stage3.Simple.Scheme as Simple
+import {-# SOURCE #-} qualified Stage4.Tree.Scheme as Simple
 
 type role TermDeclaration nominal
 

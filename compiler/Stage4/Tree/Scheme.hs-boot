@@ -1,6 +1,6 @@
 {-# LANGUAGE RoleAnnotations #-}
 
-module Stage3.Simple.Scheme where
+module Stage4.Tree.Scheme where
 
 import Data.Kind (Type)
 import qualified Stage2.Index.Term as Term
