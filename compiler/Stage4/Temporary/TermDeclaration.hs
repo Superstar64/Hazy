@@ -31,7 +31,7 @@ instance Term.Functor TermDeclaration where
   map category Definition {name, definition, typex} =
     Definition
       { name,
-        definition = Term.map (Term.over category) definition,
+        definition = Term.map (Term.Over category) definition,
         typex = Term.map category typex
       }
 

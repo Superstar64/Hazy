@@ -34,4 +34,4 @@ instance Shift.Functor Evidence where
         }
 
 instance Term.Functor Evidence where
-  map Term.Category {general} = Shift.map general
+  map category = Shift.map (Term.general category)

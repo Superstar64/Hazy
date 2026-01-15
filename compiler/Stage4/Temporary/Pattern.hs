@@ -43,7 +43,7 @@ instance Shift.Functor Pattern where
         }
 
 instance Term.Functor Pattern where
-  map Term.Category {general} = Shift.map general
+  map category = Shift.map (Term.general category)
 
 instance Shift Bindings where
   shift = shiftDefault

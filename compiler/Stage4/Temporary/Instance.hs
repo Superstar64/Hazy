@@ -31,10 +31,10 @@ instance Shift.Functor Instance where
 instance Term.Functor Instance where
   map category Instance {evidence, prerequisitesCount, memberConstraintCounts, members} =
     Instance
-      { evidence = Term.map (Term.over category) <$> evidence,
+      { evidence = Term.map (Term.Over category) <$> evidence,
         prerequisitesCount,
         memberConstraintCounts,
-        members = Term.map (Term.over (Term.over category)) <$> members
+        members = Term.map (Term.Over (Term.Over category)) <$> members
       }
 
 simplify :: Stage3.Instance scope -> Instance scope

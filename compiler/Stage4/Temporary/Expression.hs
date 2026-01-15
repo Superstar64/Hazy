@@ -82,54 +82,55 @@ instance Shift.Functor Expression where
   map = Term.mapDefault
 
 instance Term.Functor Expression where
-  map category@Term.Category {general} = \case
-    Variable {variable, instanciation} ->
-      Variable
-        { variable = Term.map category variable,
-          instanciation = Shift.map general instanciation
-        }
-    Selector {selector, argument} ->
-      Selector
-        { selector = Shift.map general selector,
-          argument = Term.map category argument
-        }
-    Constructor {constructor, arguments} ->
-      Constructor
-        { constructor = Shift.map general constructor,
-          arguments = Term.map category <$> arguments
-        }
-    Method {method, evidence, instanciation} ->
-      Method
-        { method = Shift.map general method,
-          evidence = Term.map category evidence,
-          instanciation = Shift.map general instanciation
-        }
-    Integer {integer} ->
-      Integer
-        { integer
-        }
-    Character {character} ->
-      Character
-        { character
-        }
-    Let {declarations, letBody} ->
-      Let
-        { declarations = Term.map (Term.over category) declarations,
-          letBody = Term.map (Term.over category) letBody
-        }
-    Lambda {body} ->
-      Lambda
-        { body = Term.map (Term.over category) body
-        }
-    Call {function, argument} ->
-      Call
-        { function = Term.map category function,
-          argument = Term.map category argument
-        }
-    Join {statements} ->
-      Join
-        { statements = Term.map category statements
-        }
+  map category
+    | general <- Term.general category = \case
+        Variable {variable, instanciation} ->
+          Variable
+            { variable = Term.map category variable,
+              instanciation = Shift.map general instanciation
+            }
+        Selector {selector, argument} ->
+          Selector
+            { selector = Shift.map general selector,
+              argument = Term.map category argument
+            }
+        Constructor {constructor, arguments} ->
+          Constructor
+            { constructor = Shift.map general constructor,
+              arguments = Term.map category <$> arguments
+            }
+        Method {method, evidence, instanciation} ->
+          Method
+            { method = Shift.map general method,
+              evidence = Term.map category evidence,
+              instanciation = Shift.map general instanciation
+            }
+        Integer {integer} ->
+          Integer
+            { integer
+            }
+        Character {character} ->
+          Character
+            { character
+            }
+        Let {declarations, letBody} ->
+          Let
+            { declarations = Term.map (Term.Over category) declarations,
+              letBody = Term.map (Term.Over category) letBody
+            }
+        Lambda {body} ->
+          Lambda
+            { body = Term.map (Term.Over category) body
+            }
+        Call {function, argument} ->
+          Call
+            { function = Term.map category function,
+              argument = Term.map category argument
+            }
+        Join {statements} ->
+          Join
+            { statements = Term.map category statements
+            }
 
 monoVariable :: Term.Index scope -> Expression scope
 monoVariable variable =

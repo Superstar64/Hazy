@@ -66,17 +66,17 @@ instance Term.Functor Statements where
       Bind
         { patternx = Term.map category patternx,
           check = Term.map category check,
-          thenx = Term.map (Term.over category) thenx
+          thenx = Term.map (Term.Over category) thenx
         }
     LetOne {declaration, body} ->
       LetOne
         { declaration = Term.map category declaration,
-          body = Term.map (Term.over category) body
+          body = Term.map (Term.Over category) body
         }
     Let {declarations, letBody} ->
       Let
-        { declarations = Term.map (Term.over category) declarations,
-          letBody = Term.map (Term.over category) letBody
+        { declarations = Term.map (Term.Over category) declarations,
+          letBody = Term.map (Term.Over category) letBody
         }
     Branch {left, right} ->
       Branch
@@ -89,22 +89,7 @@ bind :: Pattern scope -> Expression scope -> Statements (Scope.Pattern ':+ scope
 bind Pattern.Wildcard check thenx =
   LetOne
     { declaration = check,
-      body =
-        let category ::
-              Term.Category
-                (Scope.Pattern ':+ scope)
-                (Scope.Declaration ':+ scope)
-            category =
-              Term.Category
-                { general =
-                    Shift.Unshift (error "bad unshift")
-                      Shift.:. Shift.Over Shift.Shift,
-                  term = \case
-                    Term.Pattern Term.At -> Term.Declaration 0
-                    Term.Shift index -> Term.Shift index
-                    _ -> error "bad wildcard bind"
-                }
-         in Term.map category thenx
+      body = Term.map Term.ReplaceWildcard thenx
     }
 bind Pattern.Match {match, irrefutable} check thenx = case match of
   Pattern.Constructor {constructor, patterns} -> go (length patterns - 1)
@@ -121,15 +106,7 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
             patternx <- Pattern.Match {match, irrefutable},
             target <- shift target,
             check' <- Expression.monoVariable $ Term.Pattern $ Term.Select index Term.At,
-            let category =
-                  Term.Category
-                    { general = Shift.Shift,
-                      term = \case
-                        Term.Pattern (Term.Select index' bound)
-                          | index == index' -> Term.Pattern bound
-                        index -> shift index
-                    },
-            thenx <- Term.map category thenx ->
+            thenx <- Term.map (Term.SimplifyPattern index) thenx ->
               bind patternx check (bind target check' thenx)
   Pattern.Record {constructor, fields, fieldCount} -> go (length fields - 1)
     where
@@ -138,17 +115,7 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
           match <- Pattern.Constructor {constructor, patterns},
           patternx <- Pattern.Match {match, irrefutable},
           fields <- (\(Pattern.Field field _) -> field) <$> fields,
-          let category :: Term.Category (Scope.Pattern ':+ scope) (Scope.Pattern ':+ scope)
-              category =
-                Term.Category
-                  { general = Shift.Id,
-                    term = \case
-                      Term.Pattern Term.At -> Term.Pattern Term.At
-                      Term.Pattern (Term.Select index' bound) ->
-                        Term.Pattern (Term.Select (fields Strict.Vector.! index') bound)
-                      Term.Shift index -> Term.Shift index
-                  },
-          thenx <- Term.map category thenx =
+          thenx <- Term.map (Term.RenamePattern (fields Strict.Vector.!)) thenx =
             expand patternx check thenx
       go index = case fields Strict.Vector.! index of
         Pattern.Field field patternx -> case patternx of
@@ -159,15 +126,7 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
               patternx <- Pattern.Match {match, irrefutable},
               target <- shift target,
               check' <- Expression.monoVariable $ Term.Pattern $ Term.Select index Term.At,
-              let category =
-                    Term.Category
-                      { general = Shift.Shift,
-                        term = \case
-                          Term.Pattern (Term.Select index' bound)
-                            | index == index' -> Term.Pattern bound
-                          index -> shift index
-                      },
-              thenx <- Term.map category thenx ->
+              thenx <- Term.map (Term.SimplifyPattern index) thenx ->
                 bind patternx check (bind target check' thenx)
   Pattern.List {items}
     | (head, items) <- Strict.Vector1.uncons items,
@@ -186,19 +145,8 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
           { constructor = Constructor.cons,
             patterns
           },
-      cons <- Pattern.Match {match, irrefutable},
-      let category :: Term.Category (Scope.Pattern ':+ scope) (Scope.Pattern ':+ scope)
-          category =
-            Term.Category
-              { general = Shift.Id,
-                term = \case
-                  Term.Pattern Term.At -> Term.Pattern Term.At
-                  Term.Pattern (Term.Select 0 bound) -> Term.Pattern (Term.Select 0 bound)
-                  Term.Pattern (Term.Select index bound) ->
-                    Term.Pattern (Term.Select 1 (Term.Select (index - 1) bound))
-                  Term.Shift index -> Term.Shift index
-              } ->
-        bind cons check (Term.map category thenx)
+      cons <- Pattern.Match {match, irrefutable} ->
+        bind cons check (Term.map Term.SimplifyList thenx)
   Pattern.String {text}
     | let wrap character
             | match <- Pattern.Character {character} =
@@ -230,21 +178,7 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
             finish
               (shift patternx)
               Expression.lambdaVariable
-              ( let category ::
-                      Term.Category
-                        (Scope.Pattern ':+ scope)
-                        (Scope.Pattern ':+ (Scope.Declaration ':+ scope))
-                    category =
-                      Term.Category
-                        { general = Shift.Over Shift.Shift,
-                          term = \case
-                            Term.Pattern Term.At -> Term.Shift $ Term.Declaration 0
-                            Term.Pattern (Term.Select index bound) ->
-                              Term.Pattern (Term.Select index bound)
-                            Term.Shift index -> Term.Shift (Term.Shift index)
-                        }
-                 in Term.map category thenx
-              )
+              (Term.map Term.LetPattern thenx)
         }
     finish ::
       Pattern scope ->

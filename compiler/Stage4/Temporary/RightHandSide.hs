@@ -38,8 +38,8 @@ instance Term.Functor RightHandSide where
   map category = \case
     RightHandSide {letBody, declarations} ->
       RightHandSide
-        { letBody = Term.map (Term.over category) letBody,
-          declarations = Term.map (Term.over category) declarations
+        { letBody = Term.map (Term.Over category) letBody,
+          declarations = Term.map (Term.Over category) declarations
         }
     Call {function, argument} ->
       Call

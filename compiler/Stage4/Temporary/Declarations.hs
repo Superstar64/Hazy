@@ -30,17 +30,16 @@ instance Shift.Functor Declarations where
   map = Term.mapDefault
 
 instance Term.Functor Declarations where
-  map
-    category@Term.Category {general}
-    Declarations {terms, types, classInstances, dataInstances} =
-      Declarations
-        { terms = Term.map category <$> terms,
-          types = Term.map category <$> types,
-          classInstances =
-            Shift.mapmap general . fmap (Term.map category) <$> classInstances,
-          dataInstances =
-            Shift.mapmap general . fmap (Term.map category) <$> dataInstances
-        }
+  map category Declarations {terms, types, classInstances, dataInstances}
+    | general <- Term.general category =
+        Declarations
+          { terms = Term.map category <$> terms,
+            types = Term.map category <$> types,
+            classInstances =
+              Shift.mapmap general . fmap (Term.map category) <$> classInstances,
+            dataInstances =
+              Shift.mapmap general . fmap (Term.map category) <$> dataInstances
+          }
 
 simplify :: Stage3.Declarations scope -> Declarations scope
 simplify

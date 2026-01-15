@@ -45,13 +45,13 @@ instance Term.Functor Function where
     Bound {patternx, body} ->
       Bound
         { patternx = Term.map category patternx,
-          body = Term.map (Term.over category) body
+          body = Term.map (Term.Over category) body
         }
     Bind {patternx, variable, thenx} ->
       Bind
         { patternx = Term.map category patternx,
           variable = Term.map category variable,
-          thenx = Term.map (Term.over category) thenx
+          thenx = Term.map (Term.Over category) thenx
         }
 
 class Simplify source where

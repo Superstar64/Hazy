@@ -24,7 +24,7 @@ instance Shift.Functor Scheme where
   map category (Scheme scheme) = Scheme (Shift.map category scheme)
 
 instance Term.Functor Scheme where
-  map Term.Category {general} = Shift.map general
+  map category = Shift.map (Term.general category)
 
 instance Scope.Show Scheme where
   showsPrec = showsPrec

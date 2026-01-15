@@ -60,7 +60,7 @@ instance Shift.Functor TypeDeclaration where
         }
 
 instance Term.Functor TypeDeclaration where
-  map Term.Category {general} = Shift.map general
+  map category = Shift.map (Term.general category)
 
 simplify :: Solved.TypeDeclaration scope -> TypeDeclaration scope
 simplify = \case
