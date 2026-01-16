@@ -36,10 +36,6 @@ instance Shift.Functor Index where
   map (Shift.Over category) (Shift index) = Shift (Shift.map category index)
   map Shift.Shift index = Shift index
   map (category1 Shift.:. category2) index = Shift.map category1 $ Shift.map category2 index
-  map Shift.Rotate index = case index of
-    Assumed index -> Shift (Assumed index)
-    Shift (Assumed index) -> Assumed index
-    Shift (Shift index) -> Shift (Shift index)
   map (Shift.Unshift _) (Shift index) = index
   map (Shift.Unshift abort) Assumed {} = absurd abort
 

@@ -3,7 +3,7 @@ module Stage4.Temporary.Function where
 import qualified Stage2.Index.Term as Term
 import Stage2.Scope (Environment ((:+)))
 import qualified Stage2.Scope as Scope
-import Stage2.Shift (Category (Rotate), Shift, shift, shiftDefault)
+import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Alternative as Stage3 (Alternative (..))
 import qualified Stage3.Tree.Function as Stage3 (Function (..))
@@ -91,27 +91,30 @@ etaExpandable Bound {} = True
 etaExpandable Bind {thenx} = etaExpandable thenx
 
 etaExpand :: Function scope -> Function (Scope.Declaration ':+ scope)
-etaExpand = \case
-  Plain {plain} ->
-    Plain
-      { plain =
-          RightHandSide.Call
-            { function = shift plain,
-              argument = Term.Declaration 0
-            }
-      }
-  Bound {patternx, body} ->
-    Bind
-      { patternx = shift patternx,
-        variable = Term.Declaration 0,
-        thenx = Shift.map (Shift.Over Shift.Shift) body
-      }
-  Bind {patternx, variable, thenx} ->
-    Bind
-      { patternx = shift patternx,
-        variable = shift variable,
-        thenx = Shift.map Rotate $ etaExpand thenx
-      }
+etaExpand = etaExpand Shift.Shift (Term.Declaration 0)
+  where
+    etaExpand :: Shift.Category scope1 scope2 -> Term.Index scope2 -> Function scope1 -> Function scope2
+    etaExpand category argument = \case
+      Plain {plain} ->
+        Plain
+          { plain =
+              RightHandSide.Call
+                { function = Shift.map category plain,
+                  argument
+                }
+          }
+      Bound {patternx, body} ->
+        Bind
+          { patternx = Shift.map category patternx,
+            variable = argument,
+            thenx = Shift.map (Shift.Over category) body
+          }
+      Bind {patternx, variable, thenx} ->
+        Bind
+          { patternx = Shift.map category patternx,
+            variable = Shift.map category variable,
+            thenx = etaExpand (Shift.Over category) (shift argument) thenx
+          }
 
 desugarUnitary :: Function scope -> Statements scope
 desugarUnitary = \case

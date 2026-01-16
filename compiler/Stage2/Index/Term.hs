@@ -41,12 +41,6 @@ instance Shift.Functor Index where
   map (Shift.Over _) (Declaration index) = Declaration index
   map (Shift.Over _) (Pattern bound) = Pattern bound
   map (after Shift.:. before) index = Shift.map after (Shift.map before index)
-  map Shift.Rotate index = case index of
-    Declaration local -> Shift (Declaration local)
-    Pattern bind -> Shift (Pattern bind)
-    Shift (Declaration local) -> Declaration local
-    Shift (Pattern bind) -> Pattern bind
-    Shift (Shift index) -> Shift (Shift index)
   map (Shift.Unshift _) (Shift index) = index
   map (Shift.Unshift abort) _ = absurd abort
 
