@@ -1,11 +1,11 @@
 module Stage4.Temporary.Definition where
 
-import qualified Stage2.Index.Term as Term
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Definition as Stage3 (Definition (..))
+import qualified Stage4.Index.Term as Term
 import Stage4.Temporary.Expression (Expression)
 import qualified Stage4.Temporary.Expression as Expression
 import Stage4.Temporary.Function (Function)

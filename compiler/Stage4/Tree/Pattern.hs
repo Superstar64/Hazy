@@ -1,9 +1,9 @@
 module Stage4.Tree.Pattern where
 
 import qualified Stage2.Index.Constructor as Constructor
-import qualified Stage2.Index.Term as Term
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import qualified Stage4.Index.Term as Term
 
 data Pattern scope
   = Constructor

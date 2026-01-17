@@ -1,10 +1,10 @@
 module Stage4.Tree.Evidence (Evidence (..)) where
 
 import qualified Data.Vector.Strict as Strict
-import qualified Stage2.Index.Term as Term
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Index.Evidence as Evidence
+import qualified Stage4.Index.Term as Term
 
 data Evidence scope
   = Proof

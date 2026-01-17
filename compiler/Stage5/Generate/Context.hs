@@ -85,12 +85,12 @@ localBindings names instances Context {terms, evidence, types, unique, used, bui
 patternBindings ::
   Vector Text ->
   Context s scope ->
-  Context s (Scope.Pattern ':+ scope)
+  Context s (Scope.SimplePattern ':+ scope)
 patternBindings names Context {terms, evidence, types, unique, used, builtin} =
   Context
-    { terms = Term.Pattern (Term.Binding.Local <$> names) terms,
-      evidence = Evidence0.Pattern evidence,
-      types = Type.Pattern types,
+    { terms = Term.SimplePattern (Term.Binding.Local <$> names) terms,
+      evidence = Evidence0.SimplePattern evidence,
+      types = Type.SimplePattern types,
       unique,
       used,
       builtin

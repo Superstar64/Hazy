@@ -2,11 +2,11 @@ module Stage4.Temporary.Instance where
 
 import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import qualified Data.Vector.Strict as Strict (Vector)
-import qualified Stage2.Index.Term as Term
 import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (Shift (shift), shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Instance as Stage3
+import qualified Stage4.Index.Term as Term
 import qualified Stage4.Temporary.Definition as Definition
 import Stage4.Temporary.Expression (Expression)
 import qualified Stage4.Temporary.Expression as Expression

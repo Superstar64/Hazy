@@ -7,12 +7,12 @@ import Data.Vector.Strict ((//))
 import qualified Data.Vector.Strict as Strict.Vector
 import qualified Stage2.Index.Constructor as Constructor
 import qualified Stage2.Index.Constructor as Constructor2
-import qualified Stage2.Index.Term as Term
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Statements as Stage3
+import qualified Stage4.Index.Term as Term
 import {-# SOURCE #-} Stage4.Temporary.Declarations (Declarations)
 import {-# SOURCE #-} qualified Stage4.Temporary.Declarations as Declarations
 import {-# SOURCE #-} Stage4.Temporary.Expression (Expression)
@@ -27,7 +27,7 @@ data Statements scope
   | Bind
       { patternx :: !(Real.Pattern.Pattern scope),
         check :: !(Expression scope),
-        thenx :: !(Statements (Scope.Pattern ':+ scope))
+        thenx :: !(Statements (Scope.SimplePattern ':+ scope))
       }
   | Let
       { declarations :: !(Declarations (Scope.Declaration ':+ scope)),
@@ -195,13 +195,13 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
                     patterns = length patterns
                   },
               check,
-              thenx
+              thenx = Term.map Term.FinishPattern thenx
             }
       | Pattern.Character {character} <- match =
           Bind
             { patternx = Real.Pattern.Character {character},
               check,
-              thenx
+              thenx = Term.map Term.FinishPattern thenx
             }
       where
         wildcard Pattern.Wildcard {} = True

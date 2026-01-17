@@ -11,7 +11,7 @@ data Statements scope
   | Bind
       { patternx :: !(Pattern scope),
         check :: !(Expression scope),
-        thenx :: !(Statements (Scope.Pattern ':+ scope))
+        thenx :: !(Statements (Scope.SimplePattern ':+ scope))
       }
   | Let
       { declarations :: !(Declarations (Scope.Declaration ':+ scope)),

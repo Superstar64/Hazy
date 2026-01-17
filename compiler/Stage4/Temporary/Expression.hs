@@ -11,7 +11,6 @@ import qualified Data.Vector.Strict as Strict.Vector
 import qualified Stage2.Index.Constructor as Constructor
 import qualified Stage2.Index.Method as Method
 import qualified Stage2.Index.Selector as Selector (Index (..))
-import qualified Stage2.Index.Term as Term
 import Stage2.Scope (Environment ((:+)))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shift, shiftDefault)
@@ -20,7 +19,7 @@ import qualified Stage2.Tree.Selector as Selector (Uniform (..))
 import qualified Stage3.Tree.Expression as Stage3 (Expression (..))
 import qualified Stage3.Tree.ExpressionField as Stage3 (Field (Field))
 import qualified Stage3.Tree.ExpressionField as Stage3.Field
-import qualified Stage4.Index.Term as Real.Term
+import qualified Stage4.Index.Term as Term
 import {-# SOURCE #-} Stage4.Temporary.Declarations (Declarations)
 import {-# SOURCE #-} qualified Stage4.Temporary.Declarations as Declarations
 import {-# SOURCE #-} Stage4.Temporary.Definition (Definition (Definition))
@@ -222,7 +221,7 @@ simplifyWith expression arguments@(_ : _) =
 simplifyWith expression [] = case expression of
   Stage3.Variable {variable, instanciation} ->
     Variable
-      { variable,
+      { variable = Term.from variable,
         instanciation
       }
   Stage3.Selector {selector, uniform} ->
@@ -337,7 +336,7 @@ finish :: Expression scope -> Real.Expression scope
 finish = \case
   Variable {variable, instanciation} ->
     Real.Variable
-      { variable = Real.Term.finish variable,
+      { variable,
         instanciation
       }
   Constructor {constructor, arguments} ->

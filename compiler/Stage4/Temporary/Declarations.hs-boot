@@ -3,11 +3,11 @@
 module Stage4.Temporary.Declarations where
 
 import Data.Kind (Type)
-import qualified Stage2.Index.Term as Term
 import Stage2.Scope (Environment)
 import Stage2.Shift (Shift)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Declarations as Stage3
+import qualified Stage4.Index.Term as Term
 import qualified Stage4.Tree.Declarations as Real
 
 type role Declarations nominal

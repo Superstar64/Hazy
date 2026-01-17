@@ -1,6 +1,5 @@
 module Stage4.Temporary.RightHandSide where
 
-import qualified Stage2.Index.Term as Term
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shiftDefault)
@@ -9,6 +8,7 @@ import qualified Stage3.Tree.Body as Stage3 (Body (Body))
 import qualified Stage3.Tree.Body as Stage3.Body
 import qualified Stage3.Tree.Expression as Stage3 (Expression)
 import qualified Stage3.Tree.RightHandSide as Stage3 (RightHandSide (..))
+import qualified Stage4.Index.Term as Term
 import {-# SOURCE #-} Stage4.Temporary.Declarations (Declarations)
 import {-# SOURCE #-} qualified Stage4.Temporary.Declarations as Declarations
 import {-# SOURCE #-} Stage4.Temporary.Expression (Expression)

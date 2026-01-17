@@ -1,12 +1,12 @@
 module Stage4.Temporary.TermDeclaration where
 
 import Stage1.Variable (Variable)
-import qualified Stage2.Index.Term as Term
 import Stage2.Scope (Environment ((:+)))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.TermDeclaration as Stage3
+import qualified Stage4.Index.Term as Term
 import qualified Stage4.Temporary.Definition as Definition
 import Stage4.Temporary.Expression (Expression)
 import {-# SOURCE #-} qualified Stage4.Temporary.Expression as Expression

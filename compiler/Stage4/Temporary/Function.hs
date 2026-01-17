@@ -1,6 +1,5 @@
 module Stage4.Temporary.Function where
 
-import qualified Stage2.Index.Term as Term
 import Stage2.Scope (Environment ((:+)))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shift, shiftDefault)
@@ -9,6 +8,7 @@ import qualified Stage3.Tree.Alternative as Stage3 (Alternative (..))
 import qualified Stage3.Tree.Function as Stage3 (Function (..))
 import qualified Stage3.Tree.Lambda as Stage3 (Lambda)
 import qualified Stage3.Tree.Lambda as Stage3.Lambda
+import qualified Stage4.Index.Term as Term
 import {-# SOURCE #-} qualified Stage4.Temporary.Expression as Expression
 import Stage4.Temporary.Pattern (Pattern)
 import qualified Stage4.Temporary.Pattern as Pattern

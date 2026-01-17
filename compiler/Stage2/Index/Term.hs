@@ -44,65 +44,6 @@ instance Shift.Functor Index where
   map (Shift.Unshift _) (Shift index) = index
   map (Shift.Unshift abort) _ = absurd abort
 
-data Category scope scope' where
-  Lift :: Shift.Category scope scope' -> Category scope scope'
-  Over :: Category scopes scopes' -> Category (scope1 ':+ scopes) (scope1 ':+ scopes')
-  ReplaceWildcard :: Category (Pattern ':+ scope) (Declaration ':+ scope)
-  SimplifyPattern :: Int -> Category (Pattern ':+ scope) (Pattern ':+ Pattern ':+ scope)
-  RenamePattern :: (Int -> Int) -> Category (Pattern ':+ scope) (Pattern ':+ scope)
-  SimplifyList :: Category (Pattern ':+ scope) (Pattern ':+ scope)
-  LetPattern :: Category (Pattern ':+ scope) (Pattern ':+ Declaration ':+ scope)
-
-general :: Category scope scope' -> Shift.Category scope scope'
-general = \case
-  Lift category -> category
-  Over category -> Shift.Over (general category)
-  ReplaceWildcard -> Shift.Unshift (error "bad unshift") Shift.:. Shift.Over Shift.Shift
-  SimplifyPattern _ -> Shift.Shift
-  RenamePattern _ -> Shift.Id
-  SimplifyList -> Shift.Id
-  LetPattern -> Shift.Over Shift.Shift
-
-class (Shift.Functor term) => Functor term where
-  map ::
-    Category scope scope' ->
-    term scope ->
-    term scope'
-
-instance Functor Index where
-  map (Lift category) index = Shift.map category index
-  map (Over category) (Shift index) = Shift $ map category index
-  map (Over _) (Declaration index) = Declaration index
-  map (Over _) (Pattern bound) = Pattern bound
-  map ReplaceWildcard index = case index of
-    Pattern At -> Declaration 0
-    Pattern _ -> error "bad wildcard bind"
-    Shift index -> Shift index
-  map (SimplifyPattern target) index = case index of
-    Pattern (Select source bound)
-      | source == target -> Pattern bound
-    Pattern _ -> shift index
-    Shift _ -> shift index
-  map (RenamePattern rename) index = case index of
-    Pattern At -> Pattern At
-    Pattern (Select index' bound) ->
-      Pattern (Select (rename index') bound)
-    Shift index -> Shift index
-  map SimplifyList index = case index of
-    Pattern At -> Pattern At
-    Pattern (Select 0 bound) -> Pattern (Select 0 bound)
-    Pattern (Select index bound) ->
-      Pattern (Select 1 (Select (index - 1) bound))
-    Shift index -> Shift index
-  map LetPattern index = case index of
-    Pattern At -> Shift $ Declaration 0
-    Pattern (Select index bound) ->
-      Pattern (Select index bound)
-    Shift index -> Shift (Shift index)
-
-mapDefault :: (Functor term) => Shift.Category scope scope' -> term scope -> term scope'
-mapDefault = map . Lift
-
 data Bound
   = At
   | Select !Int !Bound

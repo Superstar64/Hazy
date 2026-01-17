@@ -2,11 +2,11 @@ module Stage4.Temporary.Declarations where
 
 import Data.Map (Map)
 import Data.Vector (Vector)
-import qualified Stage2.Index.Term as Term
 import qualified Stage2.Index.Type2 as Type2
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Declarations as Stage3
+import qualified Stage4.Index.Term as Term
 import Stage4.Temporary.Instance (Instance)
 import qualified Stage4.Temporary.Instance as Instance
 import Stage4.Temporary.TermDeclaration (TermDeclaration)

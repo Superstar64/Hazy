@@ -4,11 +4,11 @@ import qualified Data.Strict.Vector1 as Strict (Vector1)
 import Data.Text (Text)
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Stage2.Index.Constructor as Constructor
-import qualified Stage2.Index.Term as Term
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Pattern as Stage3
 import qualified Stage3.Tree.PatternField as Stage3.Field
+import qualified Stage4.Index.Term as Term
 
 data Pattern scope
   = Wildcard

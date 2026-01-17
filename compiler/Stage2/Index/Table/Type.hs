@@ -17,6 +17,7 @@ import Stage2.Scope
     Global,
     Local,
     Pattern,
+    SimplePattern,
   )
 import Stage2.Shift (Shift (..))
 import qualified Stage2.Shift as Shift
@@ -28,11 +29,13 @@ data Table value scope where
   Pattern :: Table value scope -> Table value (Pattern ':+ scope)
   Local :: Table value scope -> Table value (Local ':+ scope)
   Global :: Vector (Vector (value Global)) -> Table value Global
+  SimplePattern :: Table value scope -> Table value (SimplePattern ':+ scope)
 
 instance Shift.Unshift (Table value) where
   unshift (Declaration _ table) = table
   unshift (Pattern table) = table
   unshift (Local table) = table
+  unshift (SimplePattern table) = table
 
 (!) :: (Shift value) => Table value scope -> Index scope -> value scope
 Declaration values _ ! Index.Declaration index = values Vector.! index
@@ -40,6 +43,7 @@ Declaration _ table ! Index.Shift index = shift $ table ! index
 Pattern table ! Index.Shift index = shift $ table ! index
 Local table ! Index.Shift index = shift $ table ! index
 Global values ! Index.Global global local = values Vector.! global Vector.! local
+SimplePattern table ! Index.Shift index = shift $ table ! index
 
 type Map :: (Environment -> Data.Kind.Type) -> (Environment -> Data.Kind.Type) -> Data.Kind.Type
 newtype Map value value' = Map (forall scope. value scope -> value' scope)
@@ -50,3 +54,4 @@ map (Map f) = \case
   Pattern table -> Pattern (map (Map f) table)
   Local table -> Local (map (Map f) table)
   Global values -> Global (Vector.map (Vector.map f) values)
+  SimplePattern table -> SimplePattern (map (Map f) table)

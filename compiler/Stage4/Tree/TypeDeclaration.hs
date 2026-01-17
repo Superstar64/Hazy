@@ -1,12 +1,12 @@
 module Stage4.Tree.TypeDeclaration where
 
 import Stage1.Lexer (ConstructorIdentifier)
-import qualified Stage2.Index.Term as Term
 import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Method as Solved.Method
 import qualified Stage3.Tree.TypeDeclaration as Solved
+import qualified Stage4.Index.Term as Term
 import Stage4.Tree.Class (Class)
 import qualified Stage4.Tree.Class as Class
 import qualified Stage4.Tree.Constraint as Constraint
