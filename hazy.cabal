@@ -336,15 +336,10 @@ executable hazy
     Stage3.Unify
     Stage4.Index.Table.Term
     Stage4.Index.Term
-    Stage4.Temporary.Declarations
     Stage4.Temporary.Definition
-    Stage4.Temporary.Expression
     Stage4.Temporary.Function
-    Stage4.Temporary.Instance
     Stage4.Temporary.Pattern
     Stage4.Temporary.RightHandSide
-    Stage4.Temporary.Statements
-    Stage4.Temporary.TermDeclaration
     Stage4.Tree.Builtin
     Stage4.Tree.Class
     Stage4.Tree.Constraint

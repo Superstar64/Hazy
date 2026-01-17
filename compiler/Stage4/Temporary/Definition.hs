@@ -6,11 +6,11 @@ import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Definition as Stage3 (Definition (..))
 import qualified Stage4.Index.Term as Term
-import Stage4.Temporary.Expression (Expression)
-import qualified Stage4.Temporary.Expression as Expression
 import Stage4.Temporary.Function (Function)
 import qualified Stage4.Temporary.Function as Function
-import qualified Stage4.Temporary.Statements as Statements
+import Stage4.Tree.Expression (Expression)
+import qualified Stage4.Tree.Expression as Expression
+import qualified Stage4.Tree.Statements as Statements
 
 data Definition scope
   = Alternative

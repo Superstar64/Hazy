@@ -1,7 +1,7 @@
 module Stage4.Temporary.Definition where
 
-import {-# SOURCE #-} Stage4.Temporary.Expression (Expression)
 import Stage4.Temporary.Function (Function)
+import {-# SOURCE #-} Stage4.Tree.Expression (Expression)
 
 data Definition scope
   = Alternative

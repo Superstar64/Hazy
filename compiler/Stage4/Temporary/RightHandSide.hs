@@ -9,12 +9,12 @@ import qualified Stage3.Tree.Body as Stage3.Body
 import qualified Stage3.Tree.Expression as Stage3 (Expression)
 import qualified Stage3.Tree.RightHandSide as Stage3 (RightHandSide (..))
 import qualified Stage4.Index.Term as Term
-import {-# SOURCE #-} Stage4.Temporary.Declarations (Declarations)
-import {-# SOURCE #-} qualified Stage4.Temporary.Declarations as Declarations
-import {-# SOURCE #-} Stage4.Temporary.Expression (Expression)
-import {-# SOURCE #-} qualified Stage4.Temporary.Expression as Expression
-import Stage4.Temporary.Statements (Statements)
-import qualified Stage4.Temporary.Statements as Statements
+import {-# SOURCE #-} Stage4.Tree.Declarations (Declarations)
+import {-# SOURCE #-} qualified Stage4.Tree.Declarations as Declarations
+import {-# SOURCE #-} Stage4.Tree.Expression (Expression)
+import {-# SOURCE #-} qualified Stage4.Tree.Expression as Expression
+import Stage4.Tree.Statements (Statements)
+import qualified Stage4.Tree.Statements as Statements
 
 data RightHandSide scope
   = RightHandSide
