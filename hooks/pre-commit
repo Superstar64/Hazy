@@ -84,7 +84,7 @@ if [ -n "$HASKELL_FILES" ]; then
 
     echo "=== Building Compiler ==="
 
-    if ! cabal build hazy --verbose=0; then
+    if ! cabal build hazy; then
         echo "Complication failed"
         exit 1
     fi
