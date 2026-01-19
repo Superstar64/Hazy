@@ -16,6 +16,9 @@ executable hazy
   other-modules:
     Data.Acyclic
     Data.Acyclic.Axiom
+    Data.Heptafoldable
+    Data.Heptafunctor
+    Data.Heptatraversable
     Data.Hexafoldable
     Data.Hexafunctor
     Data.Hexatraversable
