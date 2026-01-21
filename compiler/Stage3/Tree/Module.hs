@@ -1,6 +1,6 @@
 module Stage3.Tree.Module where
 
-import Data.Acyclic (Loeb6 (..), loeb6)
+import Data.Acyclic (Loeb7 (..), loeb7)
 import qualified Data.Map as Map
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
@@ -18,7 +18,7 @@ import Stage3.Check.Context (globalBindings)
 import qualified Stage3.Check.InstanceAnnotation as InstanceAnnotation
 import qualified Stage3.Check.KindAnnotation as KindAnnotation
 import qualified Stage3.Check.TypeAnnotation as TypeAnnotation
-import qualified Stage3.Functor.Annotated as Functor (Annotated (Annotated, meta))
+import qualified Stage3.Functor.Annotated as Functor (Annotated (..))
 import qualified Stage3.Functor.Declarations as Functor (Declarations (..))
 import qualified Stage3.Functor.Instance.Key as Instance.Key
 import Stage3.Functor.Module (fromStage2)
@@ -33,6 +33,8 @@ import qualified Stage3.Tree.Instance as Instance
 import Stage3.Tree.TermDeclaration (TermDeclaration)
 import Stage3.Tree.TypeDeclaration (TypeDeclaration)
 import qualified Stage3.Tree.TypeDeclaration as TypeDeclaration
+import Stage3.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
+import qualified Stage3.Tree.TypeDeclarationExtra as TypeDeclarationExtra
 
 data Module = Module
   { name :: !FullQualifiers,
@@ -46,6 +48,7 @@ fromFunctor ::
     (TermDeclaration Global)
     b
     (TypeDeclaration Global)
+    (TypeDeclarationExtra Global)
     e
     (Instance Global) ->
   Module
@@ -61,6 +64,7 @@ fromFunctors ::
     (TermDeclaration Global)
     b
     (TypeDeclaration Global)
+    (TypeDeclarationExtra Global)
     e
     (Instance Global) ->
   Vector Module
@@ -69,8 +73,8 @@ fromFunctors (Functor.ModuleSet modules) = fmap fromFunctor modules
 check :: Vector Stage2.Module -> Vector Module
 check modules =
   fromFunctors $
-    loeb6 $
-      Loeb6 $
+    loeb7 $
+      Loeb7 $
         let go1 global local declaration =
               ( cyclicalTypeChecking $ Stage2.TermDeclaration.position declaration,
                 \modules ->
@@ -104,11 +108,21 @@ check modules =
                   -- todo, augment context with self to allow basic recursive inference
                   TypeDeclaration.check context annotation declaration
               )
-            go5 _ _ declaration =
+            go5 global local declaration =
+              ( cyclicalTypeChecking $ Stage2.TypeDeclaration.position declaration,
+                \moduleSet@(Functor.ModuleSet modules) -> do
+                  let Functor.Module {declarations} = modules Vector.! global
+                      Functor.Declarations {types} = declarations
+                      Functor.Annotated {content} = types Vector.! local
+                  proper <- content
+                  let context = globalBindings moduleSet
+                  TypeDeclarationExtra.check context proper declaration
+              )
+            go6 _ _ declaration =
               ( cyclicalTypeChecking $ Stage2.Instance.startPosition declaration,
                 \modules -> InstanceAnnotation.check (globalBindings modules) declaration
               )
-            go6 global key declaration =
+            go7 global key declaration =
               ( cyclicalTypeChecking $ Stage2.Instance.startPosition declaration,
                 \moduleSet@(Functor.ModuleSet modules) -> do
                   let Functor.Module {declarations} = modules Vector.! global
@@ -125,4 +139,4 @@ check modules =
                       annotation <- meta
                       Instance.check (globalBindings moduleSet) classKey dataKey annotation declaration
               )
-         in mapWithKey go1 go2 go3 go4 go5 go6 (Functor.ModuleSet $ fmap fromStage2 modules)
+         in mapWithKey go1 go2 go3 go4 go5 go6 go7 (Functor.ModuleSet $ fmap fromStage2 modules)

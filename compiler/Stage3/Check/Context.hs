@@ -48,6 +48,7 @@ globalBindings ::
     (ST s (TermDeclaration Global))
     (ST s (KindAnnotation Global))
     (ST s (TypeDeclaration Global))
+    (ST s x)
     (ST s (InstanceAnnotation Global))
     (ST s i) ->
   Context s Global
@@ -72,6 +73,7 @@ localBindings ::
     b
     (ST s (KindAnnotation (Declaration ':+ scope)))
     (ST s (TypeDeclaration (Declaration ':+ scope)))
+    (ST s x)
     (ST s (InstanceAnnotation (Declaration ':+ scope)))
     (ST s i) ->
   Context s scope ->

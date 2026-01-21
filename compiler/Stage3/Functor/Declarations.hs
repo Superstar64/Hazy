@@ -2,9 +2,9 @@ module Stage3.Functor.Declarations where
 
 import Data.Bifunctor (Bifunctor (..))
 import Data.Bitraversable (Bitraversable (bitraverse))
-import Data.Hexafoldable (Hexafoldable (hexafoldMap))
-import Data.Hexafunctor (Hexafunctor (hexamap))
-import Data.Hexatraversable (Hexatraversable (hexatraverse), hexafoldMapDefault, hexamapDefault)
+import Data.Heptafoldable (Heptafoldable (heptafoldMap))
+import Data.Heptafunctor (Heptafunctor (heptamap))
+import Data.Heptatraversable (Heptatraversable (heptatraverse), heptafoldMapDefault, heptamapDefault)
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Vector (Vector)
@@ -30,48 +30,80 @@ import qualified Stage2.Tree.TypeDeclaration as Stage2.TypeDeclaration
 import Stage3.Functor.Annotated (Annotated (..), NoLabel (..))
 import Stage3.Functor.Instance.Key (Key (..))
 
-data Declarations scope a b c d e f = Declarations
+data Declarations scope a b c d e f g = Declarations
   { terms :: !(Vector (Annotated Label.TermBinding a b)),
     types :: !(Vector (Annotated Label.TypeBinding c d)),
-    dataInstances :: !(Vector (Map (Type2.Index scope) (Annotated NoLabel e f))),
-    classInstances :: !(Vector (Map (Type2.Index scope) (Annotated NoLabel e f)))
+    typeExtras :: !(Vector e),
+    dataInstances :: !(Vector (Map (Type2.Index scope) (Annotated NoLabel f g))),
+    classInstances :: !(Vector (Map (Type2.Index scope) (Annotated NoLabel f g)))
   }
 
-instance Hexafunctor (Declarations scope) where
-  hexamap = hexamapDefault
+instance Heptafunctor (Declarations scope) where
+  heptamap = heptamapDefault
 
-instance Hexafoldable (Declarations scope) where
-  hexafoldMap = hexafoldMapDefault
+instance Heptafoldable (Declarations scope) where
+  heptafoldMap = heptafoldMapDefault
 
-instance Hexatraversable (Declarations scope) where
-  hexatraverse f g h i j k Declarations {terms, types, dataInstances, classInstances} =
+instance Heptatraversable (Declarations scope) where
+  heptatraverse
+    f
+    g
+    h
+    i
+    j
+    k
+    l
     Declarations
-      <$> traverse (bitraverse f g) terms
-      <*> traverse (bitraverse h i) types
-      <*> traverse (traverse (bitraverse j k)) dataInstances
-      <*> traverse (traverse (bitraverse j k)) classInstances
+      { terms,
+        types,
+        typeExtras,
+        dataInstances,
+        classInstances
+      } =
+      Declarations
+        <$> traverse (bitraverse f g) terms
+        <*> traverse (bitraverse h i) types
+        <*> traverse j typeExtras
+        <*> traverse (traverse (bitraverse k l)) dataInstances
+        <*> traverse (traverse (bitraverse k l)) classInstances
 
 mapWithKey ::
   (Int -> a1 -> a2) ->
   (Int -> b1 -> b2) ->
   (Int -> c1 -> c2) ->
   (Int -> d1 -> d2) ->
-  (Key scope -> e1 -> e2) ->
+  (Int -> e1 -> e2) ->
   (Key scope -> f1 -> f2) ->
-  Declarations scope a1 b1 c1 d1 e1 f1 ->
-  Declarations scope a2 b2 c2 d2 e2 f2
-mapWithKey f1 f2 f3 f4 f5 f6 Declarations {terms, types, dataInstances, classInstances} =
+  (Key scope -> g1 -> g2) ->
+  Declarations scope a1 b1 c1 d1 e1 f1 g1 ->
+  Declarations scope a2 b2 c2 d2 e2 f2 g2
+mapWithKey
+  f1
+  f2
+  f3
+  f4
+  f5
+  f6
+  f7
   Declarations
-    { terms = Vector.imap (\i -> bimap (f1 i) (f2 i)) terms,
-      types = Vector.imap (\i -> bimap (f3 i) (f4 i)) types,
-      dataInstances = Vector.imap datax dataInstances,
-      classInstances = Vector.imap classx classInstances
-    }
-  where
-    datax index = Map.mapWithKey $
-      \classKey -> let key = Data {index, classKey} in bimap (f5 key) (f6 key)
-    classx index = Map.mapWithKey $
-      \dataKey -> let key = Class {index, dataKey} in bimap (f5 key) (f6 key)
+    { terms,
+      types,
+      typeExtras,
+      dataInstances,
+      classInstances
+    } =
+    Declarations
+      { terms = Vector.imap (\i -> bimap (f1 i) (f2 i)) terms,
+        types = Vector.imap (\i -> bimap (f3 i) (f4 i)) types,
+        typeExtras = Vector.imap f5 typeExtras,
+        dataInstances = Vector.imap datax dataInstances,
+        classInstances = Vector.imap classx classInstances
+      }
+    where
+      datax index = Map.mapWithKey $
+        \classKey -> let key = Data {index, classKey} in bimap (f6 key) (f7 key)
+      classx index = Map.mapWithKey $
+        \dataKey -> let key = Class {index, dataKey} in bimap (f6 key) (f7 key)
 
 fromStage2 ::
   Qualifiers ->
@@ -80,6 +112,7 @@ fromStage2 ::
     scope
     (Stage2.TermDeclaration scope)
     (Stage2.TermDeclaration scope)
+    (Stage2.TypeDeclaration scope)
     (Stage2.TypeDeclaration scope)
     (Stage2.TypeDeclaration scope)
     (Stage2.Instance scope)
@@ -113,6 +146,7 @@ fromStage2
      in Declarations
           { terms = termDeclaration <$> terms,
             types = typeDeclaration <$> types,
+            typeExtras = types,
             dataInstances = fmap instancex <$> dataInstances,
             classInstances = fmap instancex <$> classInstances
           }

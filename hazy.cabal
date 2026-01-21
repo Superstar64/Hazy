@@ -335,6 +335,7 @@ executable hazy
     Stage3.Tree.TermDeclaration
     Stage3.Tree.Type
     Stage3.Tree.TypeDeclaration
+    Stage3.Tree.TypeDeclarationExtra
     Stage3.Tree.TypePattern
     Stage3.Unify
     Stage4.Index.Table.Term

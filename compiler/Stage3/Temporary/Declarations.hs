@@ -1,8 +1,8 @@
 module Stage3.Temporary.Declarations where
 
 import Control.Monad.ST (ST)
-import Data.Acyclic (loebST6)
-import Data.Hexafunctor (Hexafunctor (hexamap))
+import Data.Acyclic (loebST7)
+import Data.Heptafunctor (heptamap)
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Vector (Vector)
@@ -33,11 +33,14 @@ import Stage3.Tree.Instance (Instance)
 import qualified Stage3.Tree.Instance as Instance
 import Stage3.Tree.TypeDeclaration (TypeDeclaration)
 import qualified Stage3.Tree.TypeDeclaration as TypeDeclaration
+import Stage3.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
+import qualified Stage3.Tree.TypeDeclarationExtra as TypeDeclarationExtra
 import qualified Stage3.Unify as Unify
 
 data Declarations s scope = Declarations
   { terms :: !(Vector (TermDeclaration s scope)),
     types :: !(Vector (TypeDeclaration scope)),
+    typeExtras :: !(Vector (TypeDeclarationExtra scope)),
     classInstances :: !(Vector (Map (Type2.Index scope) (Instance scope))),
     dataInstances :: !(Vector (Map (Type2.Index scope) (Instance scope)))
   }
@@ -49,13 +52,15 @@ fromFunctor ::
     (TermDeclaration s scope)
     c
     (TypeDeclaration scope)
+    (TypeDeclarationExtra scope)
     e
     (Instance scope) ->
   Declarations s scope
-fromFunctor Functor.Declarations {terms, types, classInstances, dataInstances} =
+fromFunctor Functor.Declarations {terms, types, typeExtras, classInstances, dataInstances} =
   Declarations
     { terms = Functor.content <$> terms,
       types = Functor.content <$> types,
+      typeExtras,
       dataInstances = fmap (fmap Functor.content) dataInstances,
       classInstances = fmap (fmap Functor.content) classInstances
     }
@@ -71,7 +76,7 @@ check ::
     )
 check context declarations = do
   functor <-
-    loebST6 $
+    loebST7 $
       let go1 index declaration =
             ( cyclicalTypeChecking $ Stage2.TermDeclaration.position declaration,
               \declarations -> do
@@ -101,11 +106,19 @@ check context declarations = do
                 annotation <- meta
                 TypeDeclaration.check context annotation declaration
             )
-          go5 _ declaration =
+          go5 index declaration =
+            ( cyclicalTypeChecking $ Stage2.TypeDeclaration.position declaration,
+              \declarations@Functor.Declarations {types} -> do
+                context <- pure $ localBindings declarations context
+                let Functor.Annotated {content} = types Vector.! index
+                proper <- content
+                TypeDeclarationExtra.check context proper declaration
+            )
+          go6 _ declaration =
             ( cyclicalTypeChecking $ Stage2.Instance.startPosition declaration,
               \declarations -> InstanceAnnotation.check (localBindings declarations context) declaration
             )
-          go6 key declaration =
+          go7 key declaration =
             ( cyclicalTypeChecking $ Stage2.Instance.startPosition declaration,
               \declarations -> do
                 let Functor.Declarations {dataInstances, classInstances} = declarations
@@ -121,16 +134,17 @@ check context declarations = do
                     annotation <- meta
                     Instance.check (localBindings declarations context) classKey dataKey annotation declaration
             )
-       in mapWithKey go1 go2 go3 go4 go5 go6 $ Functor.fromStage2 Local declarations
-  pure (localBindings (hexamap pure (const ()) pure pure pure pure functor) context, fromFunctor functor)
+       in mapWithKey go1 go2 go3 go4 go5 go6 go7 $ Functor.fromStage2 Local declarations
+  pure (localBindings (heptamap pure (const ()) pure pure pure pure pure functor) context, fromFunctor functor)
 
 solve :: Declarations s scope -> ST s (Solved.Declarations scope)
-solve Declarations {terms, types, dataInstances, classInstances} = do
+solve Declarations {terms, types, typeExtras, dataInstances, classInstances} = do
   terms <- traverse TermDeclaration.solve terms
   pure
     Solved.Declarations
       { terms,
         types,
+        typeExtras,
         dataInstances,
         classInstances
       }
