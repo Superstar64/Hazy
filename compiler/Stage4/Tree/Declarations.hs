@@ -13,10 +13,13 @@ import Stage4.Tree.TermDeclaration (TermDeclaration)
 import qualified Stage4.Tree.TermDeclaration as TermDeclaration
 import Stage4.Tree.TypeDeclaration (TypeDeclaration)
 import qualified Stage4.Tree.TypeDeclaration as TypeDeclaration
+import Stage4.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
+import qualified Stage4.Tree.TypeDeclarationExtra as TypeDeclarationExtra
 
 data Declarations scope = Declarations
   { terms :: !(Vector (TermDeclaration scope)),
     types :: !(Vector (TypeDeclaration scope)),
+    typeExtras :: !(Vector (TypeDeclarationExtra scope)),
     classInstances :: !(Vector (Map (Type2.Index scope) (Instance scope))),
     dataInstances :: !(Vector (Map (Type2.Index scope) (Instance scope)))
   }
@@ -29,11 +32,12 @@ instance Shift.Functor Declarations where
   map = Term.mapDefault
 
 instance Term.Functor Declarations where
-  map category Declarations {terms, types, classInstances, dataInstances}
+  map category Declarations {terms, types, typeExtras, classInstances, dataInstances}
     | general <- Term.general category =
         Declarations
           { terms = Term.map category <$> terms,
             types = Term.map category <$> types,
+            typeExtras = Term.map category <$> typeExtras,
             classInstances =
               Shift.mapmap general . fmap (Term.map category) <$> classInstances,
             dataInstances =
@@ -45,12 +49,14 @@ simplify
   Stage3.Declarations
     { terms,
       types,
+      typeExtras,
       classInstances,
       dataInstances
     } =
     Declarations
       { terms = TermDeclaration.simplify <$> terms,
         types = TypeDeclaration.simplify <$> types,
+        typeExtras = TypeDeclarationExtra.simplify <$> typeExtras,
         classInstances = fmap Instance.simplify <$> classInstances,
         dataInstances = fmap Instance.simplify <$> dataInstances
       }
