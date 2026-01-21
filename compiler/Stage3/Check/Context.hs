@@ -23,6 +23,7 @@ import qualified Stage3.Functor.Module as Functor (Module (..))
 import qualified Stage3.Functor.ModuleSet as Functor (ModuleSet (..))
 import {-# SOURCE #-} Stage3.Tree.TermDeclaration (TermDeclaration)
 import {-# SOURCE #-} Stage3.Tree.TypeDeclaration (TypeDeclaration)
+import {-# SOURCE #-} Stage3.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 import {-# SOURCE #-} qualified Stage3.Unify as Unify
 
 type Context :: Data.Kind.Type -> Environment -> Data.Kind.Type
@@ -48,7 +49,7 @@ globalBindings ::
     (ST s (TermDeclaration Global))
     (ST s (KindAnnotation Global))
     (ST s (TypeDeclaration Global))
-    (ST s x)
+    (ST s (TypeDeclarationExtra Global))
     (ST s (InstanceAnnotation Global))
     (ST s i) ->
   Context s Global
@@ -63,8 +64,8 @@ globalBindings (Functor.ModuleSet modules) =
     kinds Functor.Module {declarations} = typeBindings declarations
     termBindings Functor.Declarations {terms} =
       TermBinding.rigid <$> terms
-    typeBindings Functor.Declarations {types, classInstances, dataInstances} =
-      Vector.zipWith3 TypeBinding.rigid types dataInstances classInstances
+    typeBindings Functor.Declarations {types, typeExtras, classInstances, dataInstances} =
+      Vector.zipWith4 TypeBinding.rigid types typeExtras dataInstances classInstances
 
 localBindings ::
   Functor.Declarations
@@ -73,13 +74,13 @@ localBindings ::
     b
     (ST s (KindAnnotation (Declaration ':+ scope)))
     (ST s (TypeDeclaration (Declaration ':+ scope)))
-    (ST s x)
+    (ST s (TypeDeclarationExtra (Declaration ':+ scope)))
     (ST s (InstanceAnnotation (Declaration ':+ scope)))
     (ST s i) ->
   Context s scope ->
   Context s (Declaration ':+ scope)
 localBindings
-  Functor.Declarations {terms, types, classInstances, dataInstances}
+  Functor.Declarations {terms, types, typeExtras, classInstances, dataInstances}
   Context {termEnvironment, localEnvironment, typeEnvironment} =
     Context
       { termEnvironment = Term.Declaration termBindings termEnvironment,
@@ -88,7 +89,7 @@ localBindings
       }
     where
       termBindings = TermBinding.wobbly <$> terms
-      typeBindings = Vector.zipWith3 TypeBinding.rigid types dataInstances classInstances
+      typeBindings = Vector.zipWith4 TypeBinding.rigid types typeExtras dataInstances classInstances
 
 label :: Context s scope -> Label.Context scope
 label Context {termEnvironment, localEnvironment, typeEnvironment} =

@@ -7,7 +7,7 @@ import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift)
 import qualified Stage2.Shift as Shift
-import qualified Stage3.Tree.Expression as Stage3
+import {-# SOURCE #-} qualified Stage3.Tree.Expression as Stage3
 import qualified Stage4.Index.Term as Term
 
 type role Expression nominal
