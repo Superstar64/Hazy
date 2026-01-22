@@ -1,17 +1,13 @@
 module Stage4.Tree.TypeDeclarationExtra where
 
-import qualified Data.Vector.Strict as Strict
-import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (Shift)
 import qualified Stage2.Shift as Shift
 import {-# SOURCE #-} qualified Stage3.Tree.TypeDeclarationExtra as Stage3
-import {-# SOURCE #-} Stage4.Tree.Expression (Expression)
+import {-# SOURCE #-} Stage4.Tree.ClassExtra (ClassExtra)
 
 data TypeDeclarationExtra scope
   = ADT
-  | Class
-      { defaults :: !(Strict.Vector (Expression (Local ':+ Local ':+ scope)))
-      }
+  | Class !(ClassExtra scope)
   | Synonym
   | GADT
 

@@ -9,10 +9,14 @@ import qualified Stage2.Index.Type as Type (Index)
 import qualified Stage2.Index.Type2 as Type2
 import Stage4.Tree.Class (Class (Class))
 import qualified Stage4.Tree.Class as Class
+import Stage4.Tree.ClassExtra (ClassExtra (..))
 import Stage4.Tree.Constructor (Constructor (..))
 import Stage4.Tree.Data (Data (Data))
 import qualified Stage4.Tree.Data as Data
+import Stage4.Tree.Expression (Expression)
+import qualified Stage4.Tree.Expression as Expression
 import qualified Stage4.Tree.Scheme as Scheme
+import qualified Stage4.Tree.Statements as Statements
 import Stage4.Tree.Type (Type)
 import qualified Stage4.Tree.Type as Type (Type (..), smallType)
 
@@ -62,6 +66,14 @@ instance Builtin Class where
     Type2.Num -> pure num
     Type2.Enum -> pure enum
     Type2.Eq -> pure eq
+    _ -> error "bad class index"
+
+instance Builtin ClassExtra where
+  index pure normal = \case
+    Type2.Index index -> normal index
+    Type2.Num -> pure numExtra
+    Type2.Enum -> pure enumExtra
+    Type2.Eq -> pure eqExtra
     _ -> error "bad class index"
 
 bool :: Data scope
@@ -126,6 +138,18 @@ num =
         go Method.Signum = Scheme.mono $ var `Type.Function` var
         go Method.FromInteger = Scheme.mono $ Type.Constructor Type2.Integer `Type.Function` var
 
+numExtra :: ClassExtra scope
+numExtra =
+  ClassExtra
+    { defaults = Strict.Vector.fromList set
+    }
+  where
+    set = map go [minBound .. maxBound]
+      where
+        -- todo proper defaults for num
+        go :: Method.Num -> Expression scope
+        go _ = Expression.Join {statements = Statements.Bottom}
+
 enum :: Class scope
 enum =
   Class
@@ -151,6 +175,18 @@ enum =
           Scheme.mono $
             var `Type.Function` var `Type.Function` var `Type.Function` Type.Constructor Type2.List `Type.Call` var
 
+enumExtra :: ClassExtra scope
+enumExtra =
+  ClassExtra
+    { defaults = Strict.Vector.fromList set
+    }
+  where
+    set = map go [minBound .. maxBound]
+      where
+        -- todo proper defaults for enum
+        go :: Method.Enum -> Expression scope
+        go _ = Expression.Join {statements = Statements.Bottom}
+
 eq :: Class scope
 eq =
   Class
@@ -164,3 +200,15 @@ eq =
         var = Type.Variable (Local.Local 0)
         go Method.Equal = Scheme.mono $ var `Type.Function` var `Type.Function` Type.Constructor Type2.Bool
         go Method.NotEqual = Scheme.mono $ var `Type.Function` var `Type.Function` Type.Constructor Type2.Bool
+
+eqExtra :: ClassExtra scope
+eqExtra =
+  ClassExtra
+    { defaults = Strict.Vector.fromList set
+    }
+  where
+    set = map go [minBound .. maxBound]
+      where
+        -- todo proper defaults for num
+        go :: Method.Eq -> Expression scope
+        go _ = Expression.Join {statements = Statements.Bottom}

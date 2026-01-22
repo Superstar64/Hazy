@@ -347,6 +347,7 @@ executable hazy
     Stage4.Temporary.RightHandSide
     Stage4.Tree.Builtin
     Stage4.Tree.Class
+    Stage4.Tree.ClassExtra
     Stage4.Tree.Constraint
     Stage4.Tree.Constructor
     Stage4.Tree.Data
