@@ -14,7 +14,6 @@ import qualified Stage2.Tree.TypeDeclaration as Stage2
     parameters,
   )
 import Stage3.Check.Context (Context)
-import qualified Stage3.Simple.Type as Simple (Type, simplify)
 import qualified Stage3.Synonym as Synonym
 import qualified Stage3.Temporary.Scheme as Unsolved.Scheme
 import qualified Stage3.Temporary.Type as Type
@@ -22,6 +21,7 @@ import qualified Stage3.Temporary.Type as Unsolved.Type
 import qualified Stage3.Tree.Type as Solved
 import {-# SOURCE #-} qualified Stage3.Tree.TypeDeclaration as TypeDeclaration
 import {-# SOURCE #-} qualified Stage3.Unify as Unify
+import qualified Stage4.Tree.Type as Simple (Type, simplify)
 
 data KindAnnotation scope
   = Annotation {kind' :: !(Simple.Type scope)}

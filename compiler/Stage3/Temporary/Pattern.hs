@@ -27,13 +27,13 @@ import Stage3.Check.DataInstance (DataInstance (DataInstance))
 import qualified Stage3.Check.DataInstance as DataInstance
 import Stage3.Check.TermBinding (TermBinding (..), Type (..))
 import qualified Stage3.Check.TypeBinding as TypeBinding
-import qualified Stage3.Simple.Builtin as Builtin
 import qualified Stage3.Simple.Data as Simple.Data
-import Stage3.Simple.TypeDeclaration (assumeData)
 import Stage3.Temporary.PatternField (Field)
 import qualified Stage3.Temporary.PatternField as Field
 import qualified Stage3.Tree.Pattern as Solved
 import qualified Stage3.Unify as Unify
+import qualified Stage4.Tree.Builtin as Builtin
+import Stage4.Tree.TypeDeclaration (assumeData)
 import Prelude hiding (Bool (False, True))
 import qualified Prelude
 

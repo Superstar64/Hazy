@@ -2,8 +2,8 @@ module Stage3.Check.KindAnnotation where
 
 import qualified Data.Strict.Maybe as Strict
 import Stage2.Scope (Environment ((:+)), Local)
-import qualified Stage3.Simple.Type as Simple (Type)
 import qualified Stage3.Tree.Type as Solved
+import qualified Stage4.Tree.Type as Simple (Type)
 
 data KindAnnotation scope
   = Annotation {kind' :: !(Simple.Type scope)}

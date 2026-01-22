@@ -11,14 +11,14 @@ import qualified Stage2.Index.Term as Term (Index)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import qualified Stage2.Tree.Selector as Selector (Uniform)
-import qualified Stage3.Simple.Evidence as Simple (Evidence)
-import qualified Stage3.Simple.Instanciation as Simple (Instanciation)
 import Stage3.Tree.Alternative (Alternative)
 import Stage3.Tree.Declarations (Declarations)
 import Stage3.Tree.ExpressionField (Field)
 import Stage3.Tree.Lambda (Lambda)
 import Stage3.Tree.Pattern (Pattern)
 import Stage3.Tree.RightHandSide (RightHandSide)
+import qualified Stage4.Tree.Evidence as Simple (Evidence)
+import qualified Stage4.Tree.Instanciation as Simple (Instanciation)
 import Prelude hiding (Bool (False, True))
 
 data Expression scope

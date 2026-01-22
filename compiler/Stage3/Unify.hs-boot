@@ -15,7 +15,7 @@ import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift)
 import {-# SOURCE #-} Stage3.Check.Context (Context)
 import qualified Stage3.Index.Evidence as Evidence
-import {-# SOURCE #-} qualified Stage3.Simple.Type as Simple
+import {-# SOURCE #-} qualified Stage4.Tree.Type as Simple
 
 type role Type nominal nominal
 

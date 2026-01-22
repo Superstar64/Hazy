@@ -9,9 +9,9 @@ import Stage2.Scope (Environment)
 import qualified Stage2.Tree.TypePattern as Stage2 (TypePattern)
 import {-# SOURCE #-} Stage3.Check.Context (Context)
 import {-# SOURCE #-} Stage3.Check.KindAnnotation (KindAnnotation)
-import qualified Stage3.Simple.Type as Simple
 import {-# SOURCE #-} qualified Stage3.Temporary.TypePattern as Unsolved
 import {-# SOURCE #-} qualified Stage3.Unify as Unify
+import qualified Stage4.Tree.Type as Simple
 
 type role TypeDeclaration nominal
 

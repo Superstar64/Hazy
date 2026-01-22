@@ -40,7 +40,6 @@ import Stage3.Check.DataInstance (DataInstance (DataInstance))
 import qualified Stage3.Check.DataInstance as DataInstance
 import Stage3.Check.TermBinding (TermBinding (..), Type (..))
 import qualified Stage3.Check.TypeBinding as TypeBinding
-import qualified Stage3.Simple.Builtin as Builtin
 import qualified Stage3.Simple.Class as Simple.Class
 import qualified Stage3.Simple.Data as Simple.Data
 import Stage3.Simple.Scheme (instanciate)
@@ -58,6 +57,7 @@ import Stage3.Temporary.RightHandSide (RightHandSide)
 import qualified Stage3.Temporary.RightHandSide as RightHandSide
 import qualified Stage3.Tree.Expression as Solved
 import qualified Stage3.Unify as Unify
+import {-# SOURCE #-} qualified Stage4.Tree.Builtin as Builtin
 import {-# SOURCE #-} Stage4.Tree.TypeDeclaration (assumeClass, assumeData)
 import Prelude hiding (Bool (False, True))
 

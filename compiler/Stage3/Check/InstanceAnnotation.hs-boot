@@ -5,7 +5,7 @@ module Stage3.Check.InstanceAnnotation where
 import Data.Kind (Type)
 import qualified Data.Vector.Strict as Strict (Vector)
 import Stage2.Scope (Environment)
-import qualified Stage3.Simple.Constraint as Simple
+import qualified Stage4.Tree.Constraint as Simple
 
 type role InstanceAnnotation nominal
 

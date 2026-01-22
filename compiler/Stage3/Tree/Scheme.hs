@@ -6,12 +6,12 @@ import qualified Data.Vector.Strict as Strict.Vector
 import Stage1.Position (Position)
 import Stage2.Scope (Environment (..), Local)
 import Stage3.Check.Context (Context (..))
-import qualified Stage3.Simple.Constraint as Simple.Constraint
-import qualified Stage3.Simple.SchemeOver as SchemeOver
+import Stage3.Simple.SchemeOver (augmentNamed)
 import Stage3.Tree.Constraint (Constraint (..))
 import Stage3.Tree.Type (Type)
 import Stage3.Tree.TypePattern (TypePattern (TypePattern))
 import qualified Stage3.Tree.TypePattern as TypePattern
+import qualified Stage4.Tree.Constraint as Simple.Constraint
 import Prelude hiding (head)
 
 data Scheme scope = Scheme
@@ -28,7 +28,7 @@ augment ::
   Context s scope ->
   ST s (Context s (Local ':+ scope))
 augment position parameters constraints =
-  SchemeOver.augmentNamed
+  augmentNamed
     name
     position
     (TypePattern.typex <$> parameters)

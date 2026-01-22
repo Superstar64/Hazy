@@ -6,7 +6,7 @@ import Control.Monad.ST (ST)
 import Data.Kind (Type)
 import qualified Data.Strict.Maybe as Strict
 import Stage2.Scope (Environment ((:+)), Local)
-import {-# SOURCE #-} qualified Stage3.Simple.Type as Simple
+import {-# SOURCE #-} qualified Stage4.Tree.Type as Simple
 
 type role TypeBinding nominal nominal
 

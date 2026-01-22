@@ -10,7 +10,7 @@ import Stage2.Shift (Shift, shift)
 import qualified Stage2.Shift as Shift
 import {-# SOURCE #-} qualified Stage3.Check.Context as Proper (Context, typeEnvironment_)
 import {-# SOURCE #-} qualified Stage3.Check.TypeBinding as Proper (TypeBinding, synonym_)
-import {-# SOURCE #-} Stage3.Simple.Type (Type)
+import Stage4.Tree.Type (Type)
 import Prelude hiding (lookup)
 
 newtype Synonym scope = Synonym (Strict.Maybe (Type (Local ':+ scope)))

@@ -6,12 +6,12 @@ import qualified Stage2.Shift as Shift
 import qualified Stage2.Tree.Entry as Stage2 (Entry (..))
 import qualified Stage2.Tree.Scheme as Stage2 (Scheme (Scheme, result))
 import Stage3.Check.Context (Context (..))
-import qualified Stage3.Simple.Type as Simple
 import qualified Stage3.Synonym as Synonym
 import Stage3.Temporary.Type (Type)
 import qualified Stage3.Temporary.Type as Type
 import qualified Stage3.Tree.Entry as Solved
 import qualified Stage3.Unify as Unify
+import qualified Stage4.Tree.Type as Simple
 
 data Entry s scope = Entry
   { entry :: !(Type s scope),

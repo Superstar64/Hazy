@@ -4,7 +4,7 @@ module Stage3.Tree.TypePattern where
 
 import Data.Kind (Type)
 import Stage2.Scope (Environment)
-import qualified Stage3.Simple.Type as Simple
+import qualified Stage4.Tree.Type as Simple
 
 type role TypePattern nominal
 

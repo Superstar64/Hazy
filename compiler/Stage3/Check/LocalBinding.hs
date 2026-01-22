@@ -10,9 +10,9 @@ import qualified Stage2.Index.Type2 as Type2
 import qualified Stage2.Label.Binding.Local as Label
 import Stage2.Scope (Environment)
 import Stage2.Shift (Shift (shift))
-import qualified Stage3.Simple.Evidence as Simple (Evidence)
-import Stage3.Simple.Type as Simple (Type)
 import {-# SOURCE #-} qualified Stage3.Unify as Unify (Type)
+import qualified Stage4.Tree.Evidence as Simple (Evidence)
+import Stage4.Tree.Type as Simple (Type)
 
 type LocalBinding :: Data.Kind.Type -> Environment -> Data.Kind.Type
 data LocalBinding s scope

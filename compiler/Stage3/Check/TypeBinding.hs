@@ -16,14 +16,14 @@ import {-# SOURCE #-} qualified Stage3.Check.InstanceAnnotation as InstanceAnnot
 import {-# SOURCE #-} Stage3.Check.KindAnnotation (KindAnnotation)
 import {-# SOURCE #-} qualified Stage3.Check.KindAnnotation as KindAnnotation
 import qualified Stage3.Functor.Annotated as Functor (Annotated (..), NoLabel)
-import Stage3.Simple.Constraint (Constraint)
-import {-# SOURCE #-} qualified Stage3.Simple.Type as Simple (Type)
-import qualified Stage3.Simple.TypeDeclaration as Simple (TypeDeclaration, simplify)
-import qualified Stage3.Simple.TypeDeclarationExtra as Simple (TypeDeclarationExtra)
-import qualified Stage3.Simple.TypeDeclarationExtra as SimpleExtra (simplify)
 import {-# SOURCE #-} Stage3.Tree.TypeDeclaration (TypeDeclaration)
 import {-# SOURCE #-} qualified Stage3.Tree.TypeDeclaration as TypeDeclaration
 import {-# SOURCE #-} Stage3.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
+import Stage4.Tree.Constraint (Constraint)
+import qualified Stage4.Tree.Type as Simple (Type)
+import {-# SOURCE #-} qualified Stage4.Tree.TypeDeclaration as Simple (TypeDeclaration, simplify)
+import {-# SOURCE #-} qualified Stage4.Tree.TypeDeclarationExtra as Simple (TypeDeclarationExtra)
+import {-# SOURCE #-} qualified Stage4.Tree.TypeDeclarationExtra as SimpleExtra (simplify)
 
 type TypeBinding :: Data.Kind.Type -> Environment -> Data.Kind.Type
 data TypeBinding s scope = TypeBinding

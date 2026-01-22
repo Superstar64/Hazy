@@ -20,7 +20,7 @@ import Stage3.Check.Context (Context (..))
 import Stage3.Check.KindAnnotation (KindAnnotation)
 import qualified Stage3.Check.KindAnnotation as KindAnnotation
 import qualified Stage3.Check.KindAnnotation as Stage3
-import qualified Stage3.Simple.Type as Simple (Type, lift)
+import qualified Stage3.Simple.Type as Simple (lift)
 import qualified Stage3.Synonym as Synonym
 import qualified Stage3.Temporary.Constraint as Constraint
 import qualified Stage3.Temporary.Constructor as Unsolved.Constructor
@@ -33,6 +33,7 @@ import Stage3.Tree.Constructor (Constructor)
 import Stage3.Tree.Method (Method)
 import Stage3.Tree.Type (Type)
 import qualified Stage3.Unify as Unify
+import qualified Stage4.Tree.Type as Simple (Type)
 
 data TypeDeclaration scope
   = ADT

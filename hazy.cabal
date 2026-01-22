@@ -278,18 +278,14 @@ executable hazy
     Stage3.Index.Evidence
     Stage3.Index.Evidence0
     Stage3.Index.Table.Evidence0
-    Stage3.Simple.Builtin
     Stage3.Simple.Class
     Stage3.Simple.Constraint
     Stage3.Simple.Constructor
     Stage3.Simple.Data
     Stage3.Simple.Evidence
-    Stage3.Simple.Instanciation
     Stage3.Simple.Scheme
     Stage3.Simple.SchemeOver
     Stage3.Simple.Type
-    Stage3.Simple.TypeDeclaration
-    Stage3.Simple.TypeDeclarationExtra
     Stage3.Synonym
     Stage3.Temporary.Alternative
     Stage3.Temporary.Body

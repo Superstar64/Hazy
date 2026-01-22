@@ -10,16 +10,16 @@ import qualified Stage2.Tree.TermDeclaration as Stage2 (TermDeclaration (..))
 import Stage3.Check.Context (Context (..))
 import Stage3.Check.TypeAnnotation (TypeAnnotation)
 import qualified Stage3.Check.TypeAnnotation as TypeAnnotation
-import qualified Stage3.Simple.Scheme as Simple (Scheme)
-import qualified Stage3.Simple.Scheme as Simple.Scheme
 import Stage3.Simple.Type (lift)
-import qualified Stage3.Simple.Type as Simple (simplify)
 import Stage3.Temporary.Definition (Definition)
 import qualified Stage3.Temporary.Definition as Definition
 import qualified Stage3.Tree.Scheme as Solved (Scheme (..))
 import qualified Stage3.Tree.Scheme as Solved.Scheme
 import qualified Stage3.Tree.TermDeclaration as Solved (TermDeclaration (..))
 import qualified Stage3.Unify as Unify
+import qualified Stage4.Tree.Scheme as Simple (Scheme)
+import qualified Stage4.Tree.Scheme as Simple.Scheme
+import qualified Stage4.Tree.Type as Simple (simplify)
 
 data TermDeclaration s scope
   = Auto

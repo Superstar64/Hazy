@@ -15,20 +15,22 @@ import Stage3.Check.Context (Context (..))
 import Stage3.Check.InstanceAnnotation (InstanceAnnotation (InstanceAnnotation))
 import qualified Stage3.Check.InstanceAnnotation as InstanceAnnotation
 import qualified Stage3.Check.TypeBinding as TypeBinding
-import qualified Stage3.Simple.Builtin as Builtin
-import qualified Stage3.Simple.Class as Simple.Class
-import qualified Stage3.Simple.Constraint as Simple (Constraint (Constraint))
-import qualified Stage3.Simple.Constraint as Simple.Constraint
-import qualified Stage3.Simple.Evidence as Simple (Evidence)
-import qualified Stage3.Simple.Scheme as Simple (Scheme (..))
-import qualified Stage3.Simple.Scheme as Simple.Scheme
-import qualified Stage3.Simple.SchemeOver as Simple (SchemeOver (..))
-import qualified Stage3.Simple.Type as Simple.Type
-import Stage3.Simple.TypeDeclaration (assumeClass)
+import qualified Stage3.Simple.Scheme as Simple.Scheme (augment')
+import qualified Stage3.Simple.Type as Simple.Type (lift)
 import qualified Stage3.Temporary.Definition as Unsolved.Definition
 import Stage3.Tree.Definition (Definition)
 import qualified Stage3.Tree.Scheme as Scheme
 import qualified Stage3.Unify as Unify
+import {-# SOURCE #-} qualified Stage4.Tree.Builtin as Builtin
+import {-# SOURCE #-} qualified Stage4.Tree.Class as Simple.Class
+import qualified Stage4.Tree.Constraint as Simple (Constraint (Constraint))
+import qualified Stage4.Tree.Constraint as Simple.Constraint
+import qualified Stage4.Tree.Evidence as Simple (Evidence)
+import qualified Stage4.Tree.Scheme as Simple (Scheme (..))
+import qualified Stage4.Tree.Scheme as Simple.Scheme (constraintCount)
+import qualified Stage4.Tree.SchemeOver as Simple (SchemeOver (..))
+import qualified Stage4.Tree.Type as Simple.Type (Type (..), substitute)
+import Stage4.Tree.TypeDeclaration (assumeClass)
 
 data Instance scope = Instance
   { evidence :: !(Strict.Vector (Simple.Evidence (Local ':+ scope))),

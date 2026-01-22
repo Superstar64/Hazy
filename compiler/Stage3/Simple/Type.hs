@@ -1,13 +1,4 @@
-module Stage3.Simple.Type
-  ( Type (..),
-    smallType,
-    substitute,
-    instanciate,
-    instanciate',
-    lift,
-    simplify,
-  )
-where
+module Stage3.Simple.Type where
 
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
@@ -17,7 +8,7 @@ import qualified Stage2.Index.Type2 as Type2
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (Shift (..))
 import {-# SOURCE #-} qualified Stage3.Unify as Unify
-import {-# SOURCE #-} Stage4.Tree.Type (Type (..), simplify, smallType, substitute)
+import Stage4.Tree.Type (Type (..))
 import Prelude hiding (map)
 
 instanciate :: Strict.Vector (Unify.Type s scope) -> Type (Local ':+ scope) -> Unify.Type s scope

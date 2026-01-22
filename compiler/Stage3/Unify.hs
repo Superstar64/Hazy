@@ -93,14 +93,15 @@ import qualified Stage3.Check.LocalBinding as Local (Constraint (..), LocalBindi
 import Stage3.Check.TypeBinding (TypeBinding (TypeBinding))
 import qualified Stage3.Check.TypeBinding as TypeBinding
 import qualified Stage3.Index.Evidence as Evidence
-import qualified Stage3.Simple.Constraint as Simple (argument)
-import qualified Stage3.Simple.Constraint as Simple.Constraint
 import qualified Stage3.Simple.Data as Simple.Data
-import qualified Stage3.Simple.Evidence as Simple (Evidence (..))
-import qualified Stage3.Simple.Evidence as Simple.Evidence
-import qualified Stage3.Simple.Instanciation as Simple (Instanciation (..))
-import qualified Stage3.Simple.Type as Simple (Type (..), instanciate, lift)
+import qualified Stage3.Simple.Evidence as Simple.Evidence (lift)
+import qualified Stage3.Simple.Type as Simple (instanciate, lift)
 import {-# SOURCE #-} qualified Stage4.Tree.Builtin as Builtin
+import qualified Stage4.Tree.Constraint as Simple (argument)
+import qualified Stage4.Tree.Constraint as Simple.Constraint
+import qualified Stage4.Tree.Evidence as Simple (Evidence (..))
+import qualified Stage4.Tree.Instanciation as Simple (Instanciation (..))
+import qualified Stage4.Tree.Type as Simple (Type (..))
 import {-# SOURCE #-} Stage4.Tree.TypeDeclaration (assumeData)
 import Prelude hiding (head)
 

@@ -4,11 +4,11 @@ import Control.Monad.ST (ST)
 import Stage1.Position (Position)
 import qualified Stage2.Tree.Method as Stage2 (Method (..))
 import Stage3.Check.Context (Context)
-import qualified Stage3.Simple.Scheme as Simple (simplify)
 import qualified Stage3.Synonym as Synonym
 import Stage3.Temporary.Scheme (Scheme)
 import qualified Stage3.Temporary.Scheme as Scheme
 import qualified Stage3.Tree.Method as Solved (Method (..))
+import qualified Stage4.Tree.Scheme as Simple (simplify)
 
 data Method s scope = Method
   { position :: !Position,

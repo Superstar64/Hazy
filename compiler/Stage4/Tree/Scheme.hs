@@ -4,7 +4,7 @@ import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Scheme as Solved
-import {-# SOURCE #-} qualified Stage3.Tree.TypePattern as Solved.TypePattern
+import qualified Stage3.Tree.TypePattern as Solved.TypePattern
 import qualified Stage4.Index.Term as Term
 import qualified Stage4.Tree.Constraint as Constraint
 import Stage4.Tree.SchemeOver (SchemeOver (..))

@@ -1,13 +1,9 @@
 module Stage3.Simple.Scheme
-  ( Scheme (..),
-    mono,
-    lift,
+  ( lift,
     instanciate,
-    simplify,
     augment,
     augment',
     instanciate',
-    constraintCount,
   )
 where
 
@@ -17,13 +13,12 @@ import Stage1.Position (Position)
 import Stage2.Scope (Environment ((:+)), Local)
 import {-# SOURCE #-} Stage3.Check.Context (Context (..))
 import qualified Stage3.Simple.Constraint as Constraint
-import Stage3.Simple.SchemeOver (SchemeOver (..), augment)
+import Stage3.Simple.SchemeOver (augment)
 import qualified Stage3.Simple.SchemeOver as SchemeOver
 import qualified Stage3.Simple.Type as Type
 import {-# SOURCE #-} qualified Stage3.Unify as Unify
--- todo, this should probably be an SOURCE import
--- but that doesn't seem to required at the moment
-import Stage4.Tree.Scheme (Scheme (..), constraintCount, mono, simplify)
+import Stage4.Tree.Scheme (Scheme (..))
+import Stage4.Tree.SchemeOver (SchemeOver (..))
 import Prelude hiding (head)
 
 lift :: Scheme scope -> Unify.Scheme s scope

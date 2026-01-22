@@ -1,7 +1,5 @@
 module Stage3.Simple.SchemeOver
-  ( SchemeOver (..),
-    mono,
-    Lift (..),
+  ( Lift (..),
     lift,
     augmentNamed,
     augment,
@@ -32,16 +30,16 @@ import Stage3.Check.Context (Context (..))
 import qualified Stage3.Check.LocalBinding as LocalBinding
 import qualified Stage3.Check.TypeBinding as TypeBinding
 import qualified Stage3.Index.Evidence as Evidence (assumed)
-import qualified Stage3.Simple.Builtin as Builtin
-import Stage3.Simple.Constraint (Constraint (..))
-import qualified Stage3.Simple.Constraint as Constraint
-import qualified Stage3.Simple.Evidence as Evidence (Evidence (..))
-import Stage3.Simple.Type (Type)
+import qualified Stage3.Simple.Constraint as Constraint (lift)
 import qualified Stage3.Simple.Type as Type (lift)
-import Stage3.Simple.TypeDeclaration (assumeClass)
 import {-# SOURCE #-} qualified Stage3.Unify as Unify
+import {-# SOURCE #-} qualified Stage4.Tree.Builtin as Builtin
 import {-# SOURCE #-} qualified Stage4.Tree.Class as Class (Class (..))
-import Stage4.Tree.SchemeOver (SchemeOver (..), mono)
+import Stage4.Tree.Constraint (Constraint (..))
+import qualified Stage4.Tree.Evidence as Evidence (Evidence (..))
+import Stage4.Tree.SchemeOver (SchemeOver (..))
+import Stage4.Tree.Type (Type)
+import {-# SOURCE #-} Stage4.Tree.TypeDeclaration (assumeClass)
 import Prelude hiding (head)
 
 type Lift ::
