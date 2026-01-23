@@ -3,8 +3,7 @@ module Stage4.Tree.TypeDeclarationExtra where
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.TypeDeclarationExtra as Stage3
-import Stage4.Index.Term (mapDefault)
-import qualified Stage4.Index.Term as Term
+import qualified Stage4.Shift as Shift2
 import Stage4.Tree.ClassExtra (ClassExtra)
 import qualified Stage4.Tree.ClassExtra as ClassExtra
 
@@ -26,11 +25,11 @@ instance Shift TypeDeclarationExtra where
   shift = shiftDefault
 
 instance Shift.Functor TypeDeclarationExtra where
-  map = mapDefault
+  map = Shift2.mapDefault
 
-instance Term.Functor TypeDeclarationExtra where
+instance Shift2.Functor TypeDeclarationExtra where
   map category = \case
     ADT -> ADT
     GADT -> GADT
     Synonym -> Synonym
-    Class extra -> Class (Term.map category extra)
+    Class extra -> Class (Shift2.map category extra)

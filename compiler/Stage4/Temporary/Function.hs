@@ -9,6 +9,7 @@ import qualified Stage3.Tree.Function as Stage3 (Function (..))
 import qualified Stage3.Tree.Lambda as Stage3 (Lambda)
 import qualified Stage3.Tree.Lambda as Stage3.Lambda
 import qualified Stage4.Index.Term as Term
+import qualified Stage4.Shift as Shift2
 import Stage4.Temporary.Pattern (Pattern)
 import qualified Stage4.Temporary.Pattern as Pattern
 import Stage4.Temporary.RightHandSide (RightHandSide)
@@ -34,24 +35,24 @@ instance Shift Function where
   shift = shiftDefault
 
 instance Shift.Functor Function where
-  map = Term.mapDefault
+  map = Shift2.mapDefault
 
-instance Term.Functor Function where
+instance Shift2.Functor Function where
   map category = \case
     Plain {plain} ->
       Plain
-        { plain = Term.map category plain
+        { plain = Shift2.map category plain
         }
     Bound {patternx, body} ->
       Bound
-        { patternx = Term.map category patternx,
-          body = Term.map (Term.Over category) body
+        { patternx = Shift2.map category patternx,
+          body = Shift2.map (Shift2.Over category) body
         }
     Bind {patternx, variable, thenx} ->
       Bind
-        { patternx = Term.map category patternx,
-          variable = Term.map category variable,
-          thenx = Term.map (Term.Over category) thenx
+        { patternx = Shift2.map category patternx,
+          variable = Shift2.map category variable,
+          thenx = Shift2.map (Shift2.Over category) thenx
         }
 
 class Simplify source where

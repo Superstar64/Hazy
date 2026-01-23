@@ -5,7 +5,7 @@ import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Scheme as Solved
 import qualified Stage3.Tree.TypePattern as Solved.TypePattern
-import qualified Stage4.Index.Term as Term
+import qualified Stage4.Shift as Shift2
 import qualified Stage4.Tree.Constraint as Constraint
 import Stage4.Tree.SchemeOver (SchemeOver (..))
 import qualified Stage4.Tree.SchemeOver as SchemeOver
@@ -23,8 +23,8 @@ instance Shift Scheme where
 instance Shift.Functor Scheme where
   map category (Scheme scheme) = Scheme (Shift.map category scheme)
 
-instance Term.Functor Scheme where
-  map category = Shift.map (Term.general category)
+instance Shift2.Functor Scheme where
+  map category = Shift.map (Shift2.general category)
 
 instance Scope.Show Scheme where
   showsPrec = showsPrec

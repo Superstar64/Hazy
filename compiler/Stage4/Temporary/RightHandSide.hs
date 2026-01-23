@@ -9,6 +9,7 @@ import qualified Stage3.Tree.Body as Stage3.Body
 import qualified Stage3.Tree.Expression as Stage3 (Expression)
 import qualified Stage3.Tree.RightHandSide as Stage3 (RightHandSide (..))
 import qualified Stage4.Index.Term as Term
+import qualified Stage4.Shift as Shift2
 import {-# SOURCE #-} Stage4.Tree.Declarations (Declarations)
 import {-# SOURCE #-} qualified Stage4.Tree.Declarations as Declarations
 import {-# SOURCE #-} Stage4.Tree.Expression (Expression)
@@ -32,21 +33,21 @@ instance Shift RightHandSide where
   shift = shiftDefault
 
 instance Shift.Functor RightHandSide where
-  map = Term.mapDefault
+  map = Shift2.mapDefault
 
-instance Term.Functor RightHandSide where
+instance Shift2.Functor RightHandSide where
   map category = \case
     RightHandSide {letBody, declarations} ->
       RightHandSide
-        { letBody = Term.map (Term.Over category) letBody,
-          declarations = Term.map (Term.Over category) declarations
+        { letBody = Shift2.map (Shift2.Over category) letBody,
+          declarations = Shift2.map (Shift2.Over category) declarations
         }
     Call {function, argument} ->
       Call
-        { function = Term.map category function,
-          argument = Term.map category argument
+        { function = Shift2.map category function,
+          argument = Shift2.map category argument
         }
-    Done {done} -> Done {done = Term.map category done}
+    Done {done} -> Done {done = Shift2.map category done}
 
 class Simplify source where
   simplify :: source scope -> RightHandSide scope

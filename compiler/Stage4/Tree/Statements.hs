@@ -13,6 +13,7 @@ import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Statements as Stage3
 import qualified Stage4.Index.Term as Term
+import qualified Stage4.Shift as Shift2
 import Stage4.Temporary.Pattern (Pattern)
 import qualified Stage4.Temporary.Pattern as Pattern
 import {-# SOURCE #-} Stage4.Tree.Declarations (Declarations)
@@ -53,34 +54,34 @@ instance Shift Statements where
   shift = shiftDefault
 
 instance Shift.Functor Statements where
-  map = Term.mapDefault
+  map = Shift2.mapDefault
 
-instance Term.Functor Statements where
+instance Shift2.Functor Statements where
   map category = \case
     Done {done} ->
       Done
-        { done = Term.map category done
+        { done = Shift2.map category done
         }
     Bind {patternx, check, thenx} ->
       Bind
-        { patternx = Term.map category patternx,
-          check = Term.map category check,
-          thenx = Term.map (Term.Over category) thenx
+        { patternx = Shift2.map category patternx,
+          check = Shift2.map category check,
+          thenx = Shift2.map (Shift2.Over category) thenx
         }
     LetOne {declaration, body} ->
       LetOne
-        { declaration = Term.map category declaration,
-          body = Term.map (Term.Over category) body
+        { declaration = Shift2.map category declaration,
+          body = Shift2.map (Shift2.Over category) body
         }
     Let {declarations, letBody} ->
       Let
-        { declarations = Term.map (Term.Over category) declarations,
-          letBody = Term.map (Term.Over category) letBody
+        { declarations = Shift2.map (Shift2.Over category) declarations,
+          letBody = Shift2.map (Shift2.Over category) letBody
         }
     Branch {left, right} ->
       Branch
-        { left = Term.map category left,
-          right = Term.map category right
+        { left = Shift2.map category left,
+          right = Shift2.map category right
         }
     Bottom -> Bottom
 
@@ -88,7 +89,7 @@ bind :: Pattern scope -> Expression scope -> Statements (Scope.Pattern ':+ scope
 bind Pattern.Wildcard check thenx =
   LetOne
     { declaration = check,
-      body = Term.map Term.ReplaceWildcard thenx
+      body = Shift2.map Shift2.ReplaceWildcard thenx
     }
 bind Pattern.Match {match, irrefutable} check thenx = case match of
   Pattern.Constructor {constructor, patterns} -> go (length patterns - 1)
@@ -105,7 +106,7 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
             patternx <- Pattern.Match {match, irrefutable},
             target <- shift target,
             check' <- Expression.monoVariable $ Term.Pattern $ Term.Select index Term.At,
-            thenx <- Term.map (Term.SimplifyPattern index) thenx ->
+            thenx <- Shift2.map (Shift2.SimplifyPattern index) thenx ->
               bind patternx check (bind target check' thenx)
   Pattern.Record {constructor, fields, fieldCount} -> go (length fields - 1)
     where
@@ -114,7 +115,7 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
           match <- Pattern.Constructor {constructor, patterns},
           patternx <- Pattern.Match {match, irrefutable},
           fields <- (\(Pattern.Field field _) -> field) <$> fields,
-          thenx <- Term.map (Term.RenamePattern (fields Strict.Vector.!)) thenx =
+          thenx <- Shift2.map (Shift2.RenamePattern (fields Strict.Vector.!)) thenx =
             expand patternx check thenx
       go index = case fields Strict.Vector.! index of
         Pattern.Field field patternx -> case patternx of
@@ -125,7 +126,7 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
               patternx <- Pattern.Match {match, irrefutable},
               target <- shift target,
               check' <- Expression.monoVariable $ Term.Pattern $ Term.Select index Term.At,
-              thenx <- Term.map (Term.SimplifyPattern index) thenx ->
+              thenx <- Shift2.map (Shift2.SimplifyPattern index) thenx ->
                 bind patternx check (bind target check' thenx)
   Pattern.List {items}
     | (head, items) <- Strict.Vector1.uncons items,
@@ -145,7 +146,7 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
             patterns
           },
       cons <- Pattern.Match {match, irrefutable} ->
-        bind cons check (Term.map Term.SimplifyList thenx)
+        bind cons check (Shift2.map Shift2.SimplifyList thenx)
   Pattern.String {text}
     | let wrap character
             | match <- Pattern.Character {character} =
@@ -177,7 +178,7 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
             finish
               (shift patternx)
               Expression.lambdaVariable
-              (Term.map Term.LetPattern thenx)
+              (Shift2.map Shift2.LetPattern thenx)
         }
     finish ::
       Pattern scope ->
@@ -194,13 +195,13 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
                     patterns = length patterns
                   },
               check,
-              thenx = Term.map Term.FinishPattern thenx
+              thenx = Shift2.map Shift2.FinishPattern thenx
             }
       | Pattern.Character {character} <- match =
           Bind
             { patternx = Real.Pattern.Character {character},
               check,
-              thenx = Term.map Term.FinishPattern thenx
+              thenx = Shift2.map Shift2.FinishPattern thenx
             }
       where
         wildcard Pattern.Wildcard {} = True

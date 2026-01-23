@@ -7,7 +7,7 @@ import Stage2.Scope (Environment)
 import Stage2.Shift (Shift)
 import qualified Stage2.Shift as Shift
 import {-# SOURCE #-} qualified Stage3.Tree.Scheme as Solved
-import qualified Stage4.Index.Term as Term
+import qualified Stage4.Shift as Shift2
 
 type role Scheme nominal
 
@@ -20,6 +20,6 @@ instance Shift Scheme
 
 instance Shift.Functor Scheme
 
-instance Term.Functor Scheme
+instance Shift2.Functor Scheme
 
 simplify :: Solved.Scheme scope -> Scheme scope

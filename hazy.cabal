@@ -337,6 +337,7 @@ executable hazy
     Stage3.Unify
     Stage4.Index.Table.Term
     Stage4.Index.Term
+    Stage4.Shift
     Stage4.Temporary.Definition
     Stage4.Temporary.Function
     Stage4.Temporary.Pattern

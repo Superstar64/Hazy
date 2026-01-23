@@ -1,10 +1,6 @@
 module Stage4.Index.Term
   ( Index (..),
     from,
-    Category (..),
-    Functor (..),
-    general,
-    mapDefault,
     Bound (..),
   )
 where
@@ -15,6 +11,7 @@ import qualified Stage2.Index.Term as Stage2
 import Stage2.Scope (Declaration, Environment (..), Global, Pattern, SimplePattern)
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage4.Shift (Category (..), Functor (..))
 import Prelude hiding (Functor, map)
 
 data Index scopes where
@@ -44,27 +41,6 @@ from = \case
   Stage2.Shift index -> Shift (from index)
   Stage2.Global global local -> Global global local
 
-data Category scope scope' where
-  Lift :: Shift.Category scope scope' -> Category scope scope'
-  Over :: Category scopes scopes' -> Category (scope1 ':+ scopes) (scope1 ':+ scopes')
-  ReplaceWildcard :: Category (Pattern ':+ scope) (Declaration ':+ scope)
-  SimplifyPattern :: Int -> Category (Pattern ':+ scope) (Pattern ':+ Pattern ':+ scope)
-  RenamePattern :: (Int -> Int) -> Category (Pattern ':+ scope) (Pattern ':+ scope)
-  SimplifyList :: Category (Pattern ':+ scope) (Pattern ':+ scope)
-  LetPattern :: Category (Pattern ':+ scope) (Pattern ':+ Declaration ':+ scope)
-  FinishPattern :: Category (Pattern ':+ scope) (SimplePattern ':+ scope)
-
-general :: Category scope scope' -> Shift.Category scope scope'
-general = \case
-  Lift category -> category
-  Over category -> Shift.Over (general category)
-  ReplaceWildcard -> Shift.Unshift (error "bad unshift") Shift.:. Shift.Over Shift.Shift
-  SimplifyPattern _ -> Shift.Shift
-  RenamePattern _ -> Shift.Id
-  SimplifyList -> Shift.Id
-  LetPattern -> Shift.Over Shift.Shift
-  FinishPattern -> Shift.Unshift (error "bad unshift") Shift.:. Shift.Over Shift.Shift
-
 instance Shift Index where
   shift = shiftDefault
 
@@ -78,12 +54,6 @@ instance Shift.Functor Index where
   map (after Shift.:. before) index = Shift.map after (Shift.map before index)
   map (Shift.Unshift _) (Shift index) = index
   map (Shift.Unshift abort) _ = absurd abort
-
-class (Shift.Functor term) => Functor term where
-  map ::
-    Category scope scope' ->
-    term scope ->
-    term scope'
 
 instance Functor Index where
   map (Lift category) index = Shift.map category index
@@ -120,6 +90,3 @@ instance Functor Index where
     Pattern (Select index At) -> SimplePattern index
     Pattern _ -> error "bad finish pattern"
     Shift index -> Shift index
-
-mapDefault :: (Functor term) => Shift.Category scope scope' -> term scope -> term scope'
-mapDefault = map . Lift

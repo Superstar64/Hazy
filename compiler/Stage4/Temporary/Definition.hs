@@ -5,7 +5,7 @@ import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Definition as Stage3 (Definition (..))
-import qualified Stage4.Index.Term as Term
+import qualified Stage4.Shift as Shift2
 import Stage4.Temporary.Function (Function)
 import qualified Stage4.Temporary.Function as Function
 import Stage4.Tree.Expression (Expression)
@@ -26,18 +26,18 @@ instance Shift Definition where
   shift = shiftDefault
 
 instance Shift.Functor Definition where
-  map = Term.mapDefault
+  map = Shift2.mapDefault
 
-instance Term.Functor Definition where
+instance Shift2.Functor Definition where
   map category = \case
     Alternative {definition, alternative} ->
       Alternative
-        { definition = Term.map category definition,
-          alternative = Term.map category alternative
+        { definition = Shift2.map category definition,
+          alternative = Shift2.map category alternative
         }
     Definition {definition} ->
       Definition
-        { definition = Term.map category definition
+        { definition = Shift2.map category definition
         }
 
 instance Semigroup (Definition scope) where

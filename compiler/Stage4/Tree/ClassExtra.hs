@@ -6,8 +6,7 @@ import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Definition as Stage3
-import Stage4.Index.Term (mapDefault)
-import qualified Stage4.Index.Term as Term
+import qualified Stage4.Shift as Shift2
 import Stage4.Tree.Expression (Expression)
 import qualified Stage4.Tree.Expression as Expression
 import qualified Stage4.Tree.Statements as Statements
@@ -21,12 +20,12 @@ instance Shift ClassExtra where
   shift = shiftDefault
 
 instance Shift.Functor ClassExtra where
-  map = mapDefault
+  map = Shift2.mapDefault
 
-instance Term.Functor ClassExtra where
+instance Shift2.Functor ClassExtra where
   map category ClassExtra {defaults} =
     ClassExtra
-      { defaults = Term.map (Term.Over (Term.Over category)) <$> defaults
+      { defaults = Shift2.map (Shift2.Over (Shift2.Over category)) <$> defaults
       }
 
 simplify :: Strict.Vector (Strict.Maybe (Stage3.Definition (Local ':+ (Local ':+ scope)))) -> ClassExtra scope

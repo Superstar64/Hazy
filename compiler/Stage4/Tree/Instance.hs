@@ -6,7 +6,7 @@ import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (Shift (shift), shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Instance as Stage3
-import qualified Stage4.Index.Term as Term
+import qualified Stage4.Shift as Shift2
 import Stage4.Tree.Evidence (Evidence)
 import Stage4.Tree.Expression (Expression)
 import qualified Stage4.Tree.Expression as Expression
@@ -24,15 +24,15 @@ instance Shift Instance where
   shift = shiftDefault
 
 instance Shift.Functor Instance where
-  map = Term.mapDefault
+  map = Shift2.mapDefault
 
-instance Term.Functor Instance where
+instance Shift2.Functor Instance where
   map category Instance {evidence, prerequisitesCount, memberConstraintCounts, members} =
     Instance
-      { evidence = Term.map (Term.Over category) <$> evidence,
+      { evidence = Shift2.map (Shift2.Over category) <$> evidence,
         prerequisitesCount,
         memberConstraintCounts,
-        members = Term.map (Term.Over (Term.Over category)) <$> members
+        members = Shift2.map (Shift2.Over (Shift2.Over category)) <$> members
       }
 
 simplify :: Stage3.Instance scope -> Instance scope

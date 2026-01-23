@@ -7,7 +7,7 @@ import Stage2.Scope (Environment)
 import Stage2.Shift (Shift)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Declarations as Stage3
-import qualified Stage4.Index.Term as Term
+import qualified Stage4.Shift as Shift2
 
 type role Declarations nominal
 
@@ -20,6 +20,6 @@ instance Shift Declarations
 
 instance Shift.Functor Declarations
 
-instance Term.Functor Declarations
+instance Shift2.Functor Declarations
 
 simplify :: Stage3.Declarations scope -> Declarations scope

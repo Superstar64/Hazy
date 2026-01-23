@@ -21,6 +21,7 @@ import qualified Stage3.Tree.Expression as Stage3 (Expression (..))
 import qualified Stage3.Tree.ExpressionField as Stage3 (Field (Field))
 import qualified Stage3.Tree.ExpressionField as Stage3.Field
 import qualified Stage4.Index.Term as Term
+import qualified Stage4.Shift as Shift2
 import {-# SOURCE #-} Stage4.Temporary.Definition (Definition (Definition))
 import {-# SOURCE #-} qualified Stage4.Temporary.Definition as Definition
 import Stage4.Temporary.Function (Function (..))
@@ -78,30 +79,30 @@ instance Shift Expression where
   shift = shiftDefault
 
 instance Shift.Functor Expression where
-  map = Term.mapDefault
+  map = Shift2.mapDefault
 
-instance Term.Functor Expression where
+instance Shift2.Functor Expression where
   map category
-    | general <- Term.general category = \case
+    | general <- Shift2.general category = \case
         Variable {variable, instanciation} ->
           Variable
-            { variable = Term.map category variable,
+            { variable = Shift2.map category variable,
               instanciation = Shift.map general instanciation
             }
         Selector {selector, argument} ->
           Selector
             { selector = Shift.map general selector,
-              argument = Term.map category argument
+              argument = Shift2.map category argument
             }
         Constructor {constructor, arguments} ->
           Constructor
             { constructor = Shift.map general constructor,
-              arguments = Term.map category <$> arguments
+              arguments = Shift2.map category <$> arguments
             }
         Method {method, evidence, instanciation} ->
           Method
             { method = Shift.map general method,
-              evidence = Term.map category evidence,
+              evidence = Shift2.map category evidence,
               instanciation = Shift.map general instanciation
             }
         Integer {integer} ->
@@ -114,21 +115,21 @@ instance Term.Functor Expression where
             }
         Let {declarations, letBody} ->
           Let
-            { declarations = Term.map (Term.Over category) declarations,
-              letBody = Term.map (Term.Over category) letBody
+            { declarations = Shift2.map (Shift2.Over category) declarations,
+              letBody = Shift2.map (Shift2.Over category) letBody
             }
         Lambda {body} ->
           Lambda
-            { body = Term.map (Term.Over category) body
+            { body = Shift2.map (Shift2.Over category) body
             }
         Call {function, argument} ->
           Call
-            { function = Term.map category function,
-              argument = Term.map category argument
+            { function = Shift2.map category function,
+              argument = Shift2.map category argument
             }
         Join {statements} ->
           Join
-            { statements = Term.map category statements
+            { statements = Shift2.map category statements
             }
 
 monoVariable :: Term.Index scope -> Expression scope

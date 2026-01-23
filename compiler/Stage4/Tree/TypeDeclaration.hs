@@ -6,7 +6,7 @@ import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Method as Solved.Method
 import qualified Stage3.Tree.TypeDeclaration as Solved
-import qualified Stage4.Index.Term as Term
+import qualified Stage4.Shift as Shift2
 import Stage4.Tree.Class (Class)
 import qualified Stage4.Tree.Class as Class
 import qualified Stage4.Tree.Constraint as Constraint
@@ -59,8 +59,8 @@ instance Shift.Functor TypeDeclaration where
           definition = Shift.map (Shift.Over category) definition
         }
 
-instance Term.Functor TypeDeclaration where
-  map category = Shift.map (Term.general category)
+instance Shift2.Functor TypeDeclaration where
+  map category = Shift.map (Shift2.general category)
 
 simplify :: Solved.TypeDeclaration scope -> TypeDeclaration scope
 simplify = \case

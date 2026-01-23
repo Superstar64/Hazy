@@ -8,7 +8,7 @@ import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Pattern as Stage3
 import qualified Stage3.Tree.PatternField as Stage3.Field
-import qualified Stage4.Index.Term as Term
+import qualified Stage4.Shift as Shift2
 
 data Pattern scope
   = Wildcard
@@ -42,8 +42,8 @@ instance Shift.Functor Pattern where
           irrefutable
         }
 
-instance Term.Functor Pattern where
-  map category = Shift.map (Term.general category)
+instance Shift2.Functor Pattern where
+  map category = Shift.map (Shift2.general category)
 
 instance Shift Bindings where
   shift = shiftDefault

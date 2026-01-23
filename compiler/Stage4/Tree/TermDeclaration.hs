@@ -6,7 +6,7 @@ import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.TermDeclaration as Stage3
-import qualified Stage4.Index.Term as Term
+import qualified Stage4.Shift as Shift2
 import Stage4.Tree.Expression (Expression)
 import qualified Stage4.Tree.Expression as Expression
 import Stage4.Tree.Scheme (Scheme)
@@ -23,14 +23,14 @@ instance Shift TermDeclaration where
   shift = shiftDefault
 
 instance Shift.Functor TermDeclaration where
-  map = Term.mapDefault
+  map = Shift2.mapDefault
 
-instance Term.Functor TermDeclaration where
+instance Shift2.Functor TermDeclaration where
   map category Definition {name, definition, typex} =
     Definition
       { name,
-        definition = Term.map (Term.Over category) definition,
-        typex = Term.map category typex
+        definition = Shift2.map (Shift2.Over category) definition,
+        typex = Shift2.map category typex
       }
 
 simplify :: Stage3.TermDeclaration scope -> TermDeclaration scope
