@@ -112,7 +112,7 @@ check context declarations = do
                 context <- pure $ localBindings declarations context
                 let Functor.Annotated {content} = types Vector.! index
                 proper <- content
-                TypeDeclarationExtra.check context proper declaration
+                TypeDeclarationExtra.check context (Type.Declaration index) proper declaration
             )
           go6 _ declaration =
             ( cyclicalTypeChecking $ Stage2.Instance.startPosition declaration,

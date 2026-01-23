@@ -1,8 +1,9 @@
 module Default where
 
 class Default a where
-  method :: a -> Int
+  method, more :: a -> Int
   method _ = method ()
+  more = method
 
 instance Default () where
   method () = 0

@@ -116,7 +116,7 @@ check modules =
                       Functor.Annotated {content} = types Vector.! local
                   proper <- content
                   let context = globalBindings moduleSet
-                  TypeDeclarationExtra.check context proper declaration
+                  TypeDeclarationExtra.check context (Type.Global global local) proper declaration
               )
             go6 _ _ declaration =
               ( cyclicalTypeChecking $ Stage2.Instance.startPosition declaration,

@@ -5,6 +5,8 @@ import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import Data.Traversable (for)
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
+import qualified Stage2.Index.Type as Type
+import qualified Stage2.Index.Type2 as Type2
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (shift)
 import qualified Stage2.Tree.Method as Stage2 (Method (..))
@@ -17,6 +19,7 @@ import Stage3.Tree.Definition (Definition)
 import Stage3.Tree.Method (Method (..))
 import Stage3.Tree.TypeDeclaration (TypeDeclaration)
 import qualified Stage3.Tree.TypeDeclaration as TypeDeclaration
+import qualified Stage4.Tree.Constraint as Simple (Constraint (..))
 import qualified Stage4.Tree.Constraint as Simple.Constraint
 import qualified Stage4.Tree.Scheme as Simple (Scheme (..))
 import qualified Stage4.Tree.SchemeOver as Simple (SchemeOver (..))
@@ -32,20 +35,27 @@ data TypeDeclarationExtra scope
 
 check ::
   Context s scope ->
+  Type.Index scope ->
   TypeDeclaration scope ->
   Stage2.TypeDeclaration scope ->
   ST s (TypeDeclarationExtra scope)
-check context proper = \case
+check context classx proper = \case
   Stage2.ADT {} -> pure ADT
   Stage2.Synonym {} -> pure Synonym
   Stage2.GADT {} -> pure GADT
   Stage2.Class {position, methods} -> case proper of
-    TypeDeclaration.Class {parameter, constraints, methods = base} -> do
+    TypeDeclaration.Class {parameter, methods = base} -> do
       context <-
         augment
           position
           (Strict.Vector.singleton parameter)
-          (Simple.Constraint.simplify <$> constraints)
+          ( Strict.Vector.singleton
+              Simple.Constraint
+                { classx = Type2.Index classx,
+                  head = 0,
+                  arguments = Strict.Vector.empty
+                }
+          )
           context
       let go
             Method {annotation' = Simple.Scheme scheme@Simple.SchemeOver {result}}
