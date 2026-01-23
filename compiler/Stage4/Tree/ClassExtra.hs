@@ -8,7 +8,6 @@ import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Definition as Stage3
 import Stage4.Index.Term (mapDefault)
 import qualified Stage4.Index.Term as Term
-import qualified Stage4.Temporary.Definition as Definition
 import Stage4.Tree.Expression (Expression)
 import qualified Stage4.Tree.Expression as Expression
 import qualified Stage4.Tree.Statements as Statements
@@ -34,5 +33,5 @@ simplify :: Strict.Vector (Strict.Maybe (Stage3.Definition (Local ':+ (Local ':+
 simplify defaults = ClassExtra {defaults = go <$> defaults}
   where
     go = \case
-      Strict.Just expression -> Definition.desugar $ Definition.simplify expression
+      Strict.Just statements -> Expression.simplify statements
       Strict.Nothing -> Expression.Join {statements = Statements.Bottom}

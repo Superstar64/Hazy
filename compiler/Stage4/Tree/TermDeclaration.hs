@@ -7,8 +7,8 @@ import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.TermDeclaration as Stage3
 import qualified Stage4.Index.Term as Term
-import qualified Stage4.Temporary.Definition as Definition
 import Stage4.Tree.Expression (Expression)
+import qualified Stage4.Tree.Expression as Expression
 import Stage4.Tree.Scheme (Scheme)
 import qualified Stage4.Tree.Scheme as Scheme
 
@@ -37,12 +37,12 @@ simplify :: Stage3.TermDeclaration scope -> TermDeclaration scope
 simplify Stage3.Manual {name, definition, typex} =
   Definition
     { name,
-      definition = Definition.desugar $ Definition.simplify definition,
+      definition = Expression.simplify definition,
       typex
     }
 simplify Stage3.Auto {name, definitionAuto, typeAuto} =
   Definition
     { name,
-      definition = shift $ Definition.desugar $ Definition.simplify definitionAuto,
+      definition = shift $ Expression.simplify definitionAuto,
       typex = Scheme.mono typeAuto
     }

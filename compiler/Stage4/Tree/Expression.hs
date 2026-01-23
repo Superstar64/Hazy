@@ -16,6 +16,7 @@ import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage2.Tree.Selector as Selector (Uniform (..))
+import qualified Stage3.Tree.Definition as Stage3 (Definition)
 import qualified Stage3.Tree.Expression as Stage3 (Expression (..))
 import qualified Stage3.Tree.ExpressionField as Stage3 (Field (Field))
 import qualified Stage3.Tree.ExpressionField as Stage3.Field
@@ -151,8 +152,14 @@ guard left done =
         right = Statements.Done {done}
       }
 
-simplify :: Stage3.Expression scope -> Expression scope
-simplify expression = simplifyWith expression []
+class Simplify source where
+  simplify :: source scope -> Expression scope
+
+instance Simplify Stage3.Expression where
+  simplify expression = simplifyWith expression []
+
+instance Simplify Stage3.Definition where
+  simplify = Definition.desugar . Definition.simplify
 
 simplifyConstructor ::
   Constructor.Index scope ->

@@ -7,7 +7,6 @@ import Stage2.Shift (Shift (shift), shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Instance as Stage3
 import qualified Stage4.Index.Term as Term
-import qualified Stage4.Temporary.Definition as Definition
 import Stage4.Tree.Evidence (Evidence)
 import Stage4.Tree.Expression (Expression)
 import qualified Stage4.Tree.Expression as Expression
@@ -46,5 +45,5 @@ simplify Stage3.Instance {evidence, prerequisitesCount, memberConstraintCounts, 
     }
   where
     go = \case
-      Strict.Just expression -> Definition.desugar $ Definition.simplify expression
+      Strict.Just expression -> Expression.simplify expression
       Strict.Nothing -> Expression.Join {statements = Statements.Bottom}
