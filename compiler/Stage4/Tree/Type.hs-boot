@@ -28,9 +28,4 @@ instance Shift Type
 instance Shift.Functor Type
 
 smallType :: Type scope
-substitute ::
-  (Local.Index scope1 -> Type scope2) ->
-  (Type2.Index scope1 -> Type scope2) ->
-  Type scope1 ->
-  Type scope2
 simplify :: Stage3.Type scope -> Type scope

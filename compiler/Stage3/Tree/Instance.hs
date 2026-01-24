@@ -3,6 +3,7 @@ module Stage3.Tree.Instance where
 import Control.Monad.ST (ST)
 import qualified Data.Strict.Maybe as Strict (Maybe)
 import Data.Traversable (for)
+import qualified Data.Vector as Vector
 import Data.Vector.Strict (zipWithM)
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Stage2.Index.Local as Local
@@ -10,6 +11,7 @@ import qualified Stage2.Index.Table.Type as Table.Type
 import qualified Stage2.Index.Type2 as Type2
 import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (shift)
+import qualified Stage2.Shift as Shift
 import qualified Stage2.Tree.Instance as Stage2
 import Stage3.Check.Context (Context (..))
 import Stage3.Check.InstanceAnnotation (InstanceAnnotation (InstanceAnnotation))
@@ -29,7 +31,7 @@ import qualified Stage4.Tree.Evidence as Simple (Evidence)
 import qualified Stage4.Tree.Scheme as Simple (Scheme (..))
 import qualified Stage4.Tree.Scheme as Simple.Scheme (constraintCount)
 import qualified Stage4.Tree.SchemeOver as Simple (SchemeOver (..))
-import qualified Stage4.Tree.Type as Simple.Type (Type (..), substitute)
+import qualified Stage4.Tree.Type as Simple.Type (Category (..), Functor (..), Type (..))
 import Stage4.Tree.TypeDeclaration (assumeClass)
 
 data Instance scope = Instance
@@ -83,13 +85,10 @@ check
         Unify.solveEvidence startPosition evidence
     let check scheme member = for member $ \member -> do
           context <- Simple.Scheme.augment' startPosition scheme context
-          let Simple.Scheme Simple.SchemeOver {result} = scheme
-              replace = \case
-                Local.Shift (Local.Local index)
-                  | 0 <- index -> shift base
-                  | otherwise -> error "bad replace"
-                index -> Simple.Type.Variable index
-          result <- pure $ Simple.Type.lift $ Simple.Type.substitute replace Simple.Type.Constructor result
+          let replacements = Vector.singleton base
+              Simple.Scheme Simple.SchemeOver {result} = scheme
+              category = Simple.Type.Over (Simple.Type.Substitute Shift.Shift replacements)
+          result <- pure $ Simple.Type.lift $ Simple.Type.map category result
           Unsolved.Definition.check context result member
     members <- zipWithM check methods (fmap shift <$> members)
     members <- traverse (traverse Unsolved.Definition.solve) members
