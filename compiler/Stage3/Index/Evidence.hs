@@ -12,7 +12,11 @@ data Index scope
   = Index !(Evidence0.Index scope)
   | Class !(Type.Index scope) !(Type2.Index scope)
   | Data !(Type2.Index scope) (Type.Index scope)
-  | NumInteger
+  | Builtin !Builtin
+  deriving (Eq, Show)
+
+data Builtin
+  = NumInteger
   | NumInt
   | EnumBool
   | EnumChar
@@ -35,16 +39,7 @@ instance Shift.Functor Index where
     Index index -> Index (Shift.map category index)
     Class classx head -> Class (Shift.map category classx) (Shift.map category head)
     Data classx head -> Data (Shift.map category classx) (Shift.map category head)
-    NumInteger -> NumInteger
-    NumInt -> NumInt
-    EnumBool -> EnumBool
-    EnumChar -> EnumChar
-    EnumInteger -> EnumInteger
-    EnumInt -> EnumInt
-    EqBool -> EqBool
-    EqChar -> EqChar
-    EqInt -> EqInt
-    EqInteger -> EqInteger
+    Builtin builtin -> Builtin builtin
 
 instance Shift.PartialUnshift Index where
   partialUnshift fail = \case
@@ -57,14 +52,4 @@ instance Shift.PartialUnshift Index where
       Data
         <$> Shift.partialUnshift fail classx
         <*> Shift.partialUnshift fail head
-    e -> pure $ case e of
-      NumInteger -> NumInteger
-      NumInt -> NumInt
-      EnumBool -> EnumBool
-      EnumChar -> EnumChar
-      EnumInteger -> EnumInteger
-      EnumInt -> EnumInt
-      EqBool -> EqBool
-      EqChar -> EqChar
-      EqInt -> EqInt
-      EqInteger -> EqInteger
+    Builtin builtin -> pure $ Builtin builtin

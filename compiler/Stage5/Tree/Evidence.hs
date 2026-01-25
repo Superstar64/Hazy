@@ -5,7 +5,7 @@ import Data.Foldable (toList)
 import qualified Data.Map as Map
 import qualified Javascript.Tree.Expression as Javacript
 import qualified Javascript.Tree.Expression as Javascript
-import qualified Stage3.Index.Evidence as Evidence (Index (..))
+import qualified Stage3.Index.Evidence as Evidence (Builtin (..), Index (..))
 import Stage4.Tree.Evidence (Evidence (..))
 import qualified Stage5.Generate.Binding.Evidence as Evidence (Binding (..))
 import qualified Stage5.Generate.Binding.Type as Type
@@ -32,7 +32,7 @@ generate context = \case
     Evidence.Index index
       | Evidence.Binding name <- context Context.!~ index ->
           pure Javascript.Variable {name}
-    evidence -> pure Javacript.Variable {name}
+    Evidence.Builtin evidence -> pure Javacript.Variable {name}
       where
         Mangle.Builtin
           { numInt,

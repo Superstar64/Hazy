@@ -564,25 +564,25 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
       [Type s scope] ->
       ST s (Evidence s scope)
     constrainWith _ Type2.Num (Constructor Type2.Integer) [] =
-      pure $ Variable' Evidence.NumInteger
+      pure $ Variable' $ Evidence.Builtin Evidence.NumInteger
     constrainWith _ Type2.Num (Constructor Type2.Int) [] =
-      pure $ Variable' Evidence.NumInt
+      pure $ Variable' $ Evidence.Builtin Evidence.NumInt
     constrainWith _ Type2.Enum (Constructor Type2.Bool) [] =
-      pure $ Variable' Evidence.EnumBool
+      pure $ Variable' $ Evidence.Builtin Evidence.EnumBool
     constrainWith _ Type2.Enum (Constructor Type2.Char) [] =
-      pure $ Variable' Evidence.EnumChar
+      pure $ Variable' $ Evidence.Builtin Evidence.EnumChar
     constrainWith _ Type2.Enum (Constructor Type2.Integer) [] =
-      pure $ Variable' Evidence.EnumInteger
+      pure $ Variable' $ Evidence.Builtin Evidence.EnumInteger
     constrainWith _ Type2.Enum (Constructor Type2.Int) [] =
-      pure $ Variable' Evidence.EnumInt
+      pure $ Variable' $ Evidence.Builtin Evidence.EnumInt
     constrainWith _ Type2.Eq (Constructor Type2.Bool) [] =
-      pure $ Variable' Evidence.EqBool
+      pure $ Variable' $ Evidence.Builtin Evidence.EqBool
     constrainWith _ Type2.Eq (Constructor Type2.Char) [] =
-      pure $ Variable' Evidence.EqChar
+      pure $ Variable' $ Evidence.Builtin Evidence.EqChar
     constrainWith _ Type2.Eq (Constructor Type2.Integer) [] =
-      pure $ Variable' Evidence.EqInteger
+      pure $ Variable' $ Evidence.Builtin Evidence.EqInteger
     constrainWith _ Type2.Eq (Constructor Type2.Int) [] =
-      pure $ Variable' Evidence.EqInt
+      pure $ Variable' $ Evidence.Builtin Evidence.EqInt
     constrainWith context@Context {typeEnvironment} classx term@(Logical reference) arguments =
       readSTRef reference >>= \case
         Solved term -> constrainWith context classx term arguments
