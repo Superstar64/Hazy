@@ -65,7 +65,8 @@ constraint :: Type s scope
 small :: Type s scope
 large :: Type s scope
 universe :: Type s scope
-proof :: Evidence.Index scope -> Strict.Vector (Evidence s scope) -> Evidence s scope
+variable' :: Evidence.Index scope -> Evidence s scope
+call' :: Evidence s scope -> Strict.Vector (Evidence s scope) -> Evidence s scope
 super :: Evidence s scope -> Int -> Evidence s scope
 fresh :: Type s scope -> ST s (Type s scope)
 unify :: Context s scope -> Position -> Type s scope -> Type s scope -> ST s ()

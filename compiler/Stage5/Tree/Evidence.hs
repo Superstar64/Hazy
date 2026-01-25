@@ -16,60 +16,55 @@ import qualified Stage5.Generate.Mangle as Mangle
 
 generate :: Context s scope -> Evidence scope -> ST s Javascript.Expression
 generate context = \case
-  Proof {proof, arguments} ->
-    if null arguments
-      then
-        base
-      else do
-        function <- base
-        arguments <- traverse (generate context) (toList arguments)
-        pure $
-          Javacript.Call
-            { function,
-              arguments
-            }
-    where
-      base = case proof of
-        Evidence.Class index target
-          | Type.Binding {classInstances} <- context !=. index,
-            Just binding <- Map.lookup target classInstances -> do
-              name <- Context.symbol context binding
-              pure Javascript.Variable {name}
-          | otherwise -> error "bad evidence"
-        Evidence.Data target index
-          | Type.Binding {dataInstances} <- context !=. index,
-            Just binding <- Map.lookup target dataInstances -> do
-              name <- Context.symbol context binding
-              pure Javascript.Variable {name}
-          | otherwise -> error "bad evidence"
-        Evidence.Index index
-          | Evidence.Binding name <- context Context.!~ index ->
-              pure Javascript.Variable {name}
-        evidence -> pure Javacript.Variable {name}
-          where
-            Mangle.Builtin
-              { numInt,
-                numInteger,
-                enumBool,
-                enumChar,
-                enumInt,
-                enumInteger,
-                eqBool,
-                eqChar,
-                eqInteger,
-                eqInt
-              } = Context.builtin context
-            name = case evidence of
-              Evidence.NumInt -> numInt
-              Evidence.NumInteger -> numInteger
-              Evidence.EnumBool -> enumBool
-              Evidence.EnumChar -> enumChar
-              Evidence.EnumInt -> enumInt
-              Evidence.EnumInteger -> enumInteger
-              Evidence.EqBool -> eqBool
-              Evidence.EqChar -> eqChar
-              Evidence.EqInt -> eqInt
-              Evidence.EqInteger -> eqInteger
+  Variable {variable} -> case variable of
+    Evidence.Class index target
+      | Type.Binding {classInstances} <- context !=. index,
+        Just binding <- Map.lookup target classInstances -> do
+          name <- Context.symbol context binding
+          pure Javascript.Variable {name}
+      | otherwise -> error "bad evidence"
+    Evidence.Data target index
+      | Type.Binding {dataInstances} <- context !=. index,
+        Just binding <- Map.lookup target dataInstances -> do
+          name <- Context.symbol context binding
+          pure Javascript.Variable {name}
+      | otherwise -> error "bad evidence"
+    Evidence.Index index
+      | Evidence.Binding name <- context Context.!~ index ->
+          pure Javascript.Variable {name}
+    evidence -> pure Javacript.Variable {name}
+      where
+        Mangle.Builtin
+          { numInt,
+            numInteger,
+            enumBool,
+            enumChar,
+            enumInt,
+            enumInteger,
+            eqBool,
+            eqChar,
+            eqInteger,
+            eqInt
+          } = Context.builtin context
+        name = case evidence of
+          Evidence.NumInt -> numInt
+          Evidence.NumInteger -> numInteger
+          Evidence.EnumBool -> enumBool
+          Evidence.EnumChar -> enumChar
+          Evidence.EnumInt -> enumInt
+          Evidence.EnumInteger -> enumInteger
+          Evidence.EqBool -> eqBool
+          Evidence.EqChar -> eqChar
+          Evidence.EqInt -> eqInt
+          Evidence.EqInteger -> eqInteger
+  Call {function, arguments} -> do
+    function <- generate context function
+    arguments <- traverse (generate context) (toList arguments)
+    pure $
+      Javacript.Call
+        { function,
+          arguments
+        }
   Super {base, index} -> do
     base <- generate context base
     pure

@@ -7,8 +7,11 @@ import qualified Stage3.Index.Evidence as Evidence
 import qualified Stage4.Shift as Shift2
 
 data Evidence scope
-  = Proof
-      { proof :: !(Evidence.Index scope),
+  = Variable
+      { variable :: !(Evidence.Index scope)
+      }
+  | Call
+      { function :: !(Evidence scope),
         arguments :: !(Strict.Vector (Evidence scope))
       }
   | Super
@@ -25,10 +28,14 @@ instance Shift.Functor Evidence where
 
 instance Shift2.Functor Evidence where
   map category = \case
-    Proof {proof, arguments} ->
-      Proof
-        { proof = Shift2.map category proof,
-          arguments = fmap (Shift2.map category) arguments
+    Variable {variable} ->
+      Variable
+        { variable = Shift2.map category variable
+        }
+    Call {function, arguments} ->
+      Call
+        { function = Shift2.map category function,
+          arguments = Shift2.map category <$> arguments
         }
     Super {base, index} ->
       Super

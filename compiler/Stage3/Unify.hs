@@ -30,7 +30,8 @@ module Stage3.Unify
     universe,
     constraint,
     function,
-    proof,
+    variable',
+    call',
     super,
     fresh,
     unify,
@@ -99,7 +100,8 @@ import qualified Stage3.Simple.Type as Simple (instanciate, lift)
 import {-# SOURCE #-} qualified Stage4.Tree.Builtin as Builtin
 import qualified Stage4.Tree.Constraint as Simple (argument)
 import qualified Stage4.Tree.Constraint as Simple.Constraint
-import qualified Stage4.Tree.Evidence as Simple (Evidence (..))
+import qualified Stage4.Tree.Evidence as Simple (Evidence)
+import qualified Stage4.Tree.Evidence as Simple.Evidence (Evidence (..))
 import qualified Stage4.Tree.Instanciation as Simple (Instanciation (..))
 import qualified Stage4.Tree.Type as Simple (Type (..))
 import {-# SOURCE #-} Stage4.Tree.TypeDeclaration (assumeData)
@@ -141,7 +143,8 @@ data Constraint s scope = Constraint'
   }
 
 data Evidence s scope where
-  Proof :: !(Evidence.Index scope) -> !(Strict.Vector (Evidence s scope)) -> Evidence s scope
+  Variable' :: !(Evidence.Index scope) -> Evidence s scope
+  Call' :: !(Evidence s scope) -> !(Strict.Vector (Evidence s scope)) -> Evidence s scope
   Super :: !(Evidence s scope) -> !Int -> Evidence s scope
   Logical' :: !(STRef s (Box' s scope)) -> Evidence s scope
   Shift' :: Evidence s scopes -> Evidence s (scope ':+ scopes)
@@ -289,8 +292,11 @@ infixr 9 `function`
 function :: Type s scope -> Type s scope -> Type s scope
 function = Function
 
-proof :: Evidence.Index scope -> Strict.Vector (Evidence s scope) -> Evidence s scope
-proof = Proof
+variable' :: Evidence.Index scope -> Evidence s scope
+variable' = Variable'
+
+call' :: Evidence s scope -> Strict.Vector (Evidence s scope) -> Evidence s scope
+call' = Call'
 
 super :: Evidence s scope -> Int -> Evidence s scope
 super = Super
@@ -432,9 +438,11 @@ unifyEvidence evidence (Logical' reference') =
   readSTRef reference' >>= \case
     Solved' evidence' -> unifyEvidence evidence evidence'
     Unsolved' -> writeSTRef reference' (Solved' evidence)
-unifyEvidence (Proof index arguments) (Proof index' arguments')
-  | index == index' =
-      sequence_ $ Strict.Vector.zipWith unifyEvidence arguments arguments'
+unifyEvidence (Variable' index) (Variable' index')
+  | index == index' = pure ()
+unifyEvidence (Call' function arguments) (Call' function' arguments') = do
+  unifyEvidence function function'
+  sequence_ $ Strict.Vector.zipWith unifyEvidence arguments arguments'
 unifyEvidence (Shift' evidence) evidence' = do
   evidence' <- unshiftEvidence evidence'
   unifyEvidence evidence evidence'
@@ -556,25 +564,25 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
       [Type s scope] ->
       ST s (Evidence s scope)
     constrainWith _ Type2.Num (Constructor Type2.Integer) [] =
-      pure $ Proof Evidence.NumInteger Strict.Vector.empty
+      pure $ Variable' Evidence.NumInteger
     constrainWith _ Type2.Num (Constructor Type2.Int) [] =
-      pure $ Proof Evidence.NumInt Strict.Vector.empty
+      pure $ Variable' Evidence.NumInt
     constrainWith _ Type2.Enum (Constructor Type2.Bool) [] =
-      pure $ Proof Evidence.EnumBool Strict.Vector.empty
+      pure $ Variable' Evidence.EnumBool
     constrainWith _ Type2.Enum (Constructor Type2.Char) [] =
-      pure $ Proof Evidence.EnumChar Strict.Vector.empty
+      pure $ Variable' Evidence.EnumChar
     constrainWith _ Type2.Enum (Constructor Type2.Integer) [] =
-      pure $ Proof Evidence.EnumInteger Strict.Vector.empty
+      pure $ Variable' Evidence.EnumInteger
     constrainWith _ Type2.Enum (Constructor Type2.Int) [] =
-      pure $ Proof Evidence.EnumInt Strict.Vector.empty
+      pure $ Variable' Evidence.EnumInt
     constrainWith _ Type2.Eq (Constructor Type2.Bool) [] =
-      pure $ Proof Evidence.EqBool Strict.Vector.empty
+      pure $ Variable' Evidence.EqBool
     constrainWith _ Type2.Eq (Constructor Type2.Char) [] =
-      pure $ Proof Evidence.EqChar Strict.Vector.empty
+      pure $ Variable' Evidence.EqChar
     constrainWith _ Type2.Eq (Constructor Type2.Integer) [] =
-      pure $ Proof Evidence.EqInteger Strict.Vector.empty
+      pure $ Variable' Evidence.EqInteger
     constrainWith _ Type2.Eq (Constructor Type2.Int) [] =
-      pure $ Proof Evidence.EqInt Strict.Vector.empty
+      pure $ Variable' Evidence.EqInt
     constrainWith context@Context {typeEnvironment} classx term@(Logical reference) arguments =
       readSTRef reference >>= \case
         Solved term -> constrainWith context classx term arguments
@@ -634,7 +642,7 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
                     (Strict.Vector.fromList arguments)
                     (Simple.argument constraint) -> do
                   constrain context position classx argument
-          pure (Proof (Evidence.Class classx index) arguments)
+          pure (proof (Evidence.Class classx index) arguments)
     constrainWith context@Context {typeEnvironment} classx (Constructor (Type2.Index index)) arguments
       | TypeBinding {dataInstances} <- typeEnvironment Type.Table.! index,
         Just instancex <- Map.lookup classx dataInstances = do
@@ -646,7 +654,7 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
                     (Strict.Vector.fromList arguments)
                     (Simple.argument constraint) -> do
                   constrain context position classx argument
-          pure (Proof (Evidence.Data classx index) arguments)
+          pure (proof (Evidence.Data classx index) arguments)
     constrainWith context classx (Call function argument) arguments =
       constrainWith context classx function (argument : arguments)
     constrainWith context classx (Function argument result) arguments = do
@@ -655,6 +663,11 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
       constrainWith context classx (arrow `Call` argument `Call` result) arguments
     constrainWith _ _ _ _ =
       abort position (Constrain context_ classx_ term_ arguments_)
+
+    proof :: forall scope s. Evidence.Index scope -> Strict.Vector (Evidence s scope) -> Evidence s scope
+    proof variable arguments
+      | null arguments = Variable' variable
+      | otherwise = Call' (Variable' variable) arguments
 
 reconstrain :: Context s scope -> Position -> Map (Type2.Index scope) (Delay s scope) -> Type s scope -> ST s ()
 reconstrain context position constraints term =
@@ -711,10 +724,13 @@ unshift context position typex = unshift typex
 
 unshiftEvidence :: Evidence s (scope ':+ scopes) -> ST s (Evidence s scopes)
 unshiftEvidence = \case
-  Proof index arguments -> do
-    arguments <- traverse unshiftEvidence arguments
+  Variable' variable -> do
     let fail = error "unshift can't fail"
-    pure $ Proof (Shift.map (Shift.Unshift fail) index) arguments
+    pure $ Variable' (Shift.map (Shift.Unshift fail) variable)
+  Call' function arguments -> do
+    function <- unshiftEvidence function
+    arguments <- traverse unshiftEvidence arguments
+    pure $ Call' function arguments
   Logical' reference -> do
     readSTRef reference >>= \case
       Solved' evidence -> unshiftEvidence evidence
@@ -801,12 +817,14 @@ solve position = solve
 
 solveEvidence :: Position -> Evidence s scope -> ST s (Simple.Evidence scope)
 solveEvidence position = \case
-  Proof proof arguments -> do
+  Variable' variable -> pure Simple.Evidence.Variable {variable}
+  Call' function arguments -> do
+    function <- solveEvidence position function
     arguments <- traverse (solveEvidence position) arguments
-    pure $ Simple.Proof {proof, arguments}
+    pure Simple.Evidence.Call {function, arguments}
   Super base index -> do
     base <- solveEvidence position base
-    pure $ Simple.Super {base, index}
+    pure $ Simple.Evidence.Super {base, index}
   Shift' evidence -> shift <$> solveEvidence position evidence
   Logical' reference ->
     readSTRef reference >>= \case

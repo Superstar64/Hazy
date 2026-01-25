@@ -78,7 +78,7 @@ augmentNamed name position parameters constraints Context {termEnvironment, loca
                     }
             pure $ (shift classx, root) : concat children
           collect Constraint {classx, head, arguments} = do
-            let evidence = Evidence.Proof {proof = Evidence.assumed head, arguments = Strict.Vector.empty}
+            let evidence = Evidence.Variable {variable = Evidence.assumed head}
             entail <- entailed classx arguments evidence
             pure (head, entail)
       collected <- traverse collect (toList constraints)

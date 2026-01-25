@@ -5,5 +5,6 @@ import Stage4.Tree.Evidence (Evidence (..))
 
 lift :: Evidence scope -> Unify.Evidence s scope
 lift = \case
-  Proof {proof, arguments} -> Unify.proof proof (fmap lift arguments)
+  Variable {variable} -> Unify.variable' variable
+  Call {function, arguments} -> Unify.call' (lift function) (lift <$> arguments)
   Super {base, index} -> Unify.super (lift base) index
