@@ -34,36 +34,39 @@ instance Shift Pattern where
   shift = shiftDefault
 
 instance Shift.Functor Pattern where
+  map = Shift2.mapDefault
+
+instance Shift2.Functor Pattern where
   map category = \case
     Wildcard -> Wildcard
     Match {match, irrefutable} ->
       Match
-        { match = Shift.map category match,
+        { match = Shift2.map category match,
           irrefutable
         }
-
-instance Shift2.Functor Pattern where
-  map category = Shift.map (Shift2.general category)
 
 instance Shift Bindings where
   shift = shiftDefault
 
 instance Shift.Functor Bindings where
+  map = Shift2.mapDefault
+
+instance Shift2.Functor Bindings where
   map category = \case
     Constructor {constructor, patterns} ->
       Constructor
-        { constructor = Shift.map category constructor,
-          patterns = Shift.map category <$> patterns
+        { constructor = Shift2.map category constructor,
+          patterns = Shift2.map category <$> patterns
         }
     Record {constructor, fields, fieldCount} ->
       Record
-        { constructor = Shift.map category constructor,
-          fields = Shift.map category <$> fields,
+        { constructor = Shift2.map category constructor,
+          fields = Shift2.map category <$> fields,
           fieldCount
         }
     List {items} ->
       List
-        { items = Shift.map category <$> items
+        { items = Shift2.map category <$> items
         }
     Character {character} -> Character {character}
     String {text} -> String {text}
@@ -72,7 +75,10 @@ instance Shift Field where
   shift = shiftDefault
 
 instance Shift.Functor Field where
-  map category (Field index patternx) = Field index (Shift.map category patternx)
+  map = Shift2.mapDefault
+
+instance Shift2.Functor Field where
+  map category (Field index patternx) = Field index (Shift2.map category patternx)
 
 data Field scope = Field !Int !(Pattern scope)
   deriving (Show)

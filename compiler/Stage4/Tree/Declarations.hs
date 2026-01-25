@@ -32,17 +32,16 @@ instance Shift.Functor Declarations where
   map = Shift2.mapDefault
 
 instance Shift2.Functor Declarations where
-  map category Declarations {terms, types, typeExtras, classInstances, dataInstances}
-    | general <- Shift2.general category =
-        Declarations
-          { terms = Shift2.map category <$> terms,
-            types = Shift2.map category <$> types,
-            typeExtras = Shift2.map category <$> typeExtras,
-            classInstances =
-              Shift.mapmap general . fmap (Shift2.map category) <$> classInstances,
-            dataInstances =
-              Shift.mapmap general . fmap (Shift2.map category) <$> dataInstances
-          }
+  map category Declarations {terms, types, typeExtras, classInstances, dataInstances} =
+    Declarations
+      { terms = Shift2.map category <$> terms,
+        types = Shift2.map category <$> types,
+        typeExtras = Shift2.map category <$> typeExtras,
+        classInstances =
+          Shift2.mapInstances category . fmap (Shift2.map category) <$> classInstances,
+        dataInstances =
+          Shift2.mapInstances category . fmap (Shift2.map category) <$> dataInstances
+      }
 
 simplify :: Stage3.Declarations scope -> Declarations scope
 simplify

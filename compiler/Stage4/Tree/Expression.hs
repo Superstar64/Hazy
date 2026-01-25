@@ -82,55 +82,54 @@ instance Shift.Functor Expression where
   map = Shift2.mapDefault
 
 instance Shift2.Functor Expression where
-  map category
-    | general <- Shift2.general category = \case
-        Variable {variable, instanciation} ->
-          Variable
-            { variable = Shift2.map category variable,
-              instanciation = Shift.map general instanciation
-            }
-        Selector {selector, argument} ->
-          Selector
-            { selector = Shift.map general selector,
-              argument = Shift2.map category argument
-            }
-        Constructor {constructor, arguments} ->
-          Constructor
-            { constructor = Shift.map general constructor,
-              arguments = Shift2.map category <$> arguments
-            }
-        Method {method, evidence, instanciation} ->
-          Method
-            { method = Shift.map general method,
-              evidence = Shift2.map category evidence,
-              instanciation = Shift.map general instanciation
-            }
-        Integer {integer} ->
-          Integer
-            { integer
-            }
-        Character {character} ->
-          Character
-            { character
-            }
-        Let {declarations, letBody} ->
-          Let
-            { declarations = Shift2.map (Shift2.Over category) declarations,
-              letBody = Shift2.map (Shift2.Over category) letBody
-            }
-        Lambda {body} ->
-          Lambda
-            { body = Shift2.map (Shift2.Over category) body
-            }
-        Call {function, argument} ->
-          Call
-            { function = Shift2.map category function,
-              argument = Shift2.map category argument
-            }
-        Join {statements} ->
-          Join
-            { statements = Shift2.map category statements
-            }
+  map category = \case
+    Variable {variable, instanciation} ->
+      Variable
+        { variable = Shift2.map category variable,
+          instanciation = Shift2.map category instanciation
+        }
+    Selector {selector, argument} ->
+      Selector
+        { selector = Shift2.map category selector,
+          argument = Shift2.map category argument
+        }
+    Constructor {constructor, arguments} ->
+      Constructor
+        { constructor = Shift2.map category constructor,
+          arguments = Shift2.map category <$> arguments
+        }
+    Method {method, evidence, instanciation} ->
+      Method
+        { method = Shift2.map category method,
+          evidence = Shift2.map category evidence,
+          instanciation = Shift2.map category instanciation
+        }
+    Integer {integer} ->
+      Integer
+        { integer
+        }
+    Character {character} ->
+      Character
+        { character
+        }
+    Let {declarations, letBody} ->
+      Let
+        { declarations = Shift2.map (Shift2.Over category) declarations,
+          letBody = Shift2.map (Shift2.Over category) letBody
+        }
+    Lambda {body} ->
+      Lambda
+        { body = Shift2.map (Shift2.Over category) body
+        }
+    Call {function, argument} ->
+      Call
+        { function = Shift2.map category function,
+          argument = Shift2.map category argument
+        }
+    Join {statements} ->
+      Join
+        { statements = Shift2.map category statements
+        }
 
 monoVariable :: Term.Index scope -> Expression scope
 monoVariable variable =

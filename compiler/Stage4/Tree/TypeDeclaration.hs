@@ -42,25 +42,25 @@ instance Shift TypeDeclaration where
   shift = shiftDefault
 
 instance Shift.Functor TypeDeclaration where
+  map = Shift2.mapDefault
+
+instance Shift2.Functor TypeDeclaration where
   map category = \case
     Data {name, datax} ->
       Data
         { name,
-          datax = Shift.map category datax
+          datax = Shift2.map category datax
         }
     Class {name, classx} ->
       Class
         { name,
-          classx = Shift.map category classx
+          classx = Shift2.map category classx
         }
     Synonym {name, definition} ->
       Synonym
         { name,
-          definition = Shift.map (Shift.Over category) definition
+          definition = Shift2.map (Shift2.Over category) definition
         }
-
-instance Shift2.Functor TypeDeclaration where
-  map category = Shift.map (Shift2.general category)
 
 simplify :: Solved.TypeDeclaration scope -> TypeDeclaration scope
 simplify = \case

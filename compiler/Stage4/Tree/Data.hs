@@ -5,6 +5,7 @@ import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Tree.Selector (Selector)
+import qualified Stage4.Shift as Shift2
 import Stage4.Tree.Constructor (Constructor)
 import Stage4.Tree.Type (Type)
 import qualified Stage4.Tree.Type as Type
@@ -20,10 +21,13 @@ instance Shift Data where
   shift = shiftDefault
 
 instance Shift.Functor Data where
+  map = Shift2.mapDefault
+
+instance Shift2.Functor Data where
   map category Data {parameters, constructors, selectors} =
     Data
-      { parameters = Shift.map category <$> parameters,
-        constructors = Shift.map (Shift.Over category) <$> constructors,
+      { parameters = Shift2.map category <$> parameters,
+        constructors = Shift2.map (Shift2.Over category) <$> constructors,
         selectors
       }
 

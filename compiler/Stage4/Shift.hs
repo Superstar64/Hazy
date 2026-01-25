@@ -1,7 +1,15 @@
-module Stage4.Shift where
+module Stage4.Shift (Category (..), Functor (..), mapDefault, mapInstances) where
 
+import qualified Data.Map as Map
+import qualified Stage2.Index.Constructor as Constructor
+import qualified Stage2.Index.Local as Local
+import qualified Stage2.Index.Method as Method
+import qualified Stage2.Index.Selector as Selector
+import qualified Stage2.Index.Type as Type
+import qualified Stage2.Index.Type2 as Type2
 import Stage2.Scope (Declaration, Environment (..), Pattern, SimplePattern)
 import qualified Stage2.Shift as Stage2
+import qualified Stage3.Index.Evidence as Evidence
 import Prelude hiding (Functor, map)
 
 data Category scope scope' where
@@ -30,6 +38,33 @@ class (Stage2.Functor term) => Functor term where
     Category scope scope' ->
     term scope ->
     term scope'
+
+instance Functor Local.Index where
+  map = Stage2.map . general
+
+instance Functor Type.Index where
+  map = Stage2.map . general
+
+instance Functor Type2.Index where
+  map = Stage2.map . general
+
+instance Functor Constructor.Index where
+  map = Stage2.map . general
+
+instance Functor Selector.Index where
+  map = Stage2.map . general
+
+instance Functor Method.Index where
+  map = Stage2.map . general
+
+instance Functor Evidence.Index where
+  map = Stage2.map . general
+
+mapInstances ::
+  Category scope scope' ->
+  Map.Map (Type2.Index scope) a ->
+  Map.Map (Type2.Index scope') a
+mapInstances category = Map.mapKeysMonotonic (map category)
 
 mapDefault :: (Functor term) => Stage2.Category scope scope' -> term scope -> term scope'
 mapDefault = map . Lift

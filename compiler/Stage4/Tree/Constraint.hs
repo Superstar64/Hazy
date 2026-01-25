@@ -7,6 +7,7 @@ import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Constraint as Solved
+import qualified Stage4.Shift as Shift2
 import Stage4.Tree.Type (Type (Call, Variable))
 
 data Constraint scope = Constraint
@@ -20,11 +21,14 @@ instance Shift Constraint where
   shift = shiftDefault
 
 instance Shift.Functor Constraint where
+  map = Shift2.mapDefault
+
+instance Shift2.Functor Constraint where
   map category Constraint {classx, head, arguments} =
     Constraint
-      { classx = Shift.map category classx,
+      { classx = Shift2.map category classx,
         head,
-        arguments = Shift.map (Shift.Over category) <$> arguments
+        arguments = Shift2.map (Shift2.Over category) <$> arguments
       }
 
 argument :: Constraint scope -> Type (Local ':+ scope)

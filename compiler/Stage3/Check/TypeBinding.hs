@@ -50,8 +50,8 @@ instance Shift.Functor (TypeBinding s) where
         synonym = fmap (fmap (Shift.map (Shift.Over category))) synonym,
         content = fmap (Shift.map category) content,
         extra = fmap (Shift.map category) extra,
-        dataInstances = Map.map (fmap $ Shift.map category) $ Shift.mapmap category dataInstances,
-        classInstances = Map.map (fmap $ Shift.map category) $ Shift.mapmap category classInstances
+        dataInstances = Map.map (fmap $ Shift.map category) $ Shift.mapInstances category dataInstances,
+        classInstances = Map.map (fmap $ Shift.map category) $ Shift.mapInstances category classInstances
       }
 
 rigid ::

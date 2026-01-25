@@ -10,7 +10,8 @@ import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Type as Solved
-import Stage4.Substitute (Category (Substitute), map)
+import qualified Stage4.Shift as Shift2
+import Stage4.Substitute (Category (..), map)
 import qualified Stage4.Substitute as Substitute
 import Prelude hiding (Functor, map)
 
@@ -36,16 +37,19 @@ instance Shift Type where
   shift = shiftDefault
 
 instance Shift.Functor Type where
-  map = map . Substitute.Lift
+  map = Shift2.mapDefault
 
 instance Scope.Show Type where
   showsPrec = showsPrec
+
+instance Shift2.Functor Type where
+  map = Substitute.mapDefault
 
 instance Substitute.Functor Type where
   map (Substitute lift replacements) (Variable index) = case index of
     Local index -> replacements Vector.! index
     Shift index -> Variable (Shift.map lift index)
-  map (Substitute.Lift category) (Variable index) = Variable $ Shift.map category index
+  map (Substitute.Lift category) (Variable index) = Variable $ Shift2.map category index
   map Substitute.Over {} (Variable (Local.Local index)) = Variable (Local.Local index)
   map (Substitute.Over category) (Variable (Local.Shift index)) = shift $ map category (Variable index)
   map category typex = case typex of

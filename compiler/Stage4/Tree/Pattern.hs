@@ -17,13 +17,13 @@ instance Shift Pattern where
   shift = shiftDefault
 
 instance Shift.Functor Pattern where
+  map = Shift2.mapDefault
+
+instance Shift2.Functor Pattern where
   map category = \case
     Constructor {constructor, patterns} ->
       Constructor
-        { constructor = Shift.map category constructor,
+        { constructor = Shift2.map category constructor,
           patterns
         }
     Character {character} -> Character {character}
-
-instance Shift2.Functor Pattern where
-  map category = Shift.map (Shift2.general category)

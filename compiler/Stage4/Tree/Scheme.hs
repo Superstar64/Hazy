@@ -21,10 +21,10 @@ instance Shift Scheme where
   shift = shiftDefault
 
 instance Shift.Functor Scheme where
-  map category (Scheme scheme) = Scheme (Shift.map category scheme)
+  map = Shift2.mapDefault
 
 instance Shift2.Functor Scheme where
-  map category = Shift.map (Shift2.general category)
+  map category (Scheme scheme) = Scheme (Shift2.map category scheme)
 
 instance Scope.Show Scheme where
   showsPrec = showsPrec

@@ -54,8 +54,8 @@ instance Shift.Functor Declarations where
         { terms = fmap (Shift.map category) terms,
           types = fmap (Shift.map category) types,
           shared = fmap (Shift.map category) shared,
-          dataInstances = fmap (Shift.mapmap category . fmap (Shift.map category)) dataInstances,
-          classInstances = fmap (Shift.mapmap category . fmap (Shift.map category)) classInstances
+          dataInstances = fmap (Shift.mapInstances category . fmap (Shift.map category)) dataInstances,
+          classInstances = fmap (Shift.mapInstances category . fmap (Shift.map category)) classInstances
         }
 
 resolve ::

@@ -17,6 +17,6 @@ instance Shift Binding where
 instance Shift.Functor Binding where
   map category Binding {classInstances, dataInstances} =
     Binding
-      { classInstances = Shift.mapmap category $ fmap (Shift.map category) classInstances,
-        dataInstances = Shift.mapmap category $ fmap (Shift.map category) dataInstances
+      { classInstances = Shift.mapInstances category $ fmap (Shift.map category) classInstances,
+        dataInstances = Shift.mapInstances category $ fmap (Shift.map category) dataInstances
       }
