@@ -23,6 +23,8 @@ import qualified Stage3.Temporary.Definition as Unsolved.Definition
 import Stage3.Tree.Definition (Definition)
 import qualified Stage3.Tree.Scheme as Scheme
 import qualified Stage3.Unify as Unify
+import Stage4.Substitute (Category (Substitute))
+import qualified Stage4.Substitute as Substitute
 import {-# SOURCE #-} qualified Stage4.Tree.Builtin as Builtin
 import {-# SOURCE #-} qualified Stage4.Tree.Class as Simple.Class
 import qualified Stage4.Tree.Constraint as Simple (Constraint (Constraint))
@@ -31,7 +33,7 @@ import qualified Stage4.Tree.Evidence as Simple (Evidence)
 import qualified Stage4.Tree.Scheme as Simple (Scheme (..))
 import qualified Stage4.Tree.Scheme as Simple.Scheme (constraintCount)
 import qualified Stage4.Tree.SchemeOver as Simple (SchemeOver (..))
-import qualified Stage4.Tree.Type as Simple.Type (Category (..), Functor (..), Type (..))
+import qualified Stage4.Tree.Type as Simple.Type (Type (..))
 import Stage4.Tree.TypeDeclaration (assumeClass)
 
 data Instance scope = Instance
@@ -87,8 +89,8 @@ check
           context <- Simple.Scheme.augment' startPosition scheme context
           let replacements = Vector.singleton base
               Simple.Scheme Simple.SchemeOver {result} = scheme
-              category = Simple.Type.Over (Simple.Type.Substitute Shift.Shift replacements)
-          result <- pure $ Simple.Type.lift $ Simple.Type.map category result
+              category = Substitute.Over (Substitute Shift.Shift replacements)
+          result <- pure $ Simple.Type.lift $ Substitute.map category result
           Unsolved.Definition.check context result member
     members <- zipWithM check methods (fmap shift <$> members)
     members <- traverse (traverse Unsolved.Definition.solve) members

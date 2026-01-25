@@ -1,18 +1,17 @@
 module Stage4.Tree.Type where
 
 import qualified Data.Strict.Maybe as Strict (Maybe (..))
-import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import qualified Stage2.Index.Constructor as Constructor
 import Stage2.Index.Local (Index (Local, Shift))
 import qualified Stage2.Index.Local as Local
-import qualified Stage2.Index.Type as Type (Index (..), unlocal)
 import qualified Stage2.Index.Type2 as Type2
-import Stage2.Scope (Environment (..), Local)
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Type as Solved
+import Stage4.Substitute (Category (Substitute), map)
+import qualified Stage4.Substitute as Substitute
 import Prelude hiding (Functor, map)
 
 data Type scope
@@ -37,35 +36,18 @@ instance Shift Type where
   shift = shiftDefault
 
 instance Shift.Functor Type where
-  map category = map (Lift category)
+  map = map . Substitute.Lift
 
 instance Scope.Show Type where
   showsPrec = showsPrec
 
-data Category scope1 scope2 where
-  Lift :: Shift.Category scope1 scope2 -> Category scope1 scope2
-  Over :: Category scopes scopes' -> Category (scope1 ':+ scopes) (scope1 ':+ scopes')
-  Substitute :: Shift.Category scope scope' -> Vector (Type scope') -> Category (Local ':+ scope) scope'
-
-class (Shift.Functor typex) => Functor typex where
-  map :: Category scope1 scope2 -> typex scope1 -> typex scope2
-
-instance Functor Type.Index where
-  map (Lift category) index = Shift.map category index
-  map (Substitute category _) index = Shift.map category $ Type.unlocal index
-  map (Over category) (Type.Shift index) = Type.Shift $ map category index
-  map Over {} (Type.Declaration index) = Type.Declaration index
-
-instance Functor Type2.Index where
-  map = Type2.map . map
-
-instance Functor Type where
+instance Substitute.Functor Type where
   map (Substitute lift replacements) (Variable index) = case index of
     Local index -> replacements Vector.! index
     Shift index -> Variable (Shift.map lift index)
-  map (Lift category) (Variable index) = Variable $ Shift.map category index
-  map Over {} (Variable (Local.Local index)) = Variable (Local.Local index)
-  map (Over category) (Variable (Local.Shift index)) = shift $ map category (Variable index)
+  map (Substitute.Lift category) (Variable index) = Variable $ Shift.map category index
+  map Substitute.Over {} (Variable (Local.Local index)) = Variable (Local.Local index)
+  map (Substitute.Over category) (Variable (Local.Shift index)) = shift $ map category (Variable index)
   map category typex = case typex of
     Constructor index -> Constructor (map category index)
     Call function argument -> Call (map category function) (map category argument)
