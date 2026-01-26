@@ -1,4 +1,4 @@
-module Main where
+module Main (main) where
 
 import Control.Exception (catch)
 import Data.Char (toUpper)
@@ -8,6 +8,7 @@ import Data.List.Reverse (List (..))
 import qualified Data.Map as Map
 import Data.Text (Text, pack)
 import qualified Data.Text.IO as Text.IO (hGetContents)
+import qualified Data.Text.Lazy as Lazy.Text
 import qualified Data.Text.Lazy.Builder as Builder
 import qualified Data.Text.Lazy.IO as Text.Lazy.IO
 import Data.Vector (Vector)
@@ -24,13 +25,14 @@ import Stage1.Lexer
 import qualified Stage1.Parser as Parser (parse)
 import Stage1.Position (Position)
 import qualified Stage1.Tree.Module as Module (parse)
-import qualified Stage1.Tree.Module as Stage1 (Module, assumeName)
+import qualified Stage1.Tree.Module as Stage1 (Module, assumeName, name)
+import qualified Stage1.Variable as Variable
 import qualified Stage2.Tree.Module as Module (resolve)
-import qualified Stage2.Tree.Module as Stage2 (Module)
+import qualified Stage2.Tree.Module as Stage2 (Module, name)
 import qualified Stage3.Tree.Module as Module (check)
-import qualified Stage3.Tree.Module as Stage3 (Module)
+import qualified Stage3.Tree.Module as Stage3 (Module, name)
 import qualified Stage4.Tree.Module as Module (simplify)
-import qualified Stage4.Tree.Module as Stage4
+import qualified Stage4.Tree.Module as Stage4 (Module, name)
 import qualified Stage5.Generate.Mangle as Mangle
 import qualified Stage5.Tree.Module as Module (generate)
 import System.Console.GetOpt (ArgDescr (..), ArgOrder (..), OptDescr (..), getOpt)
@@ -88,36 +90,58 @@ loadModules path = Vector.fromList <$> loadModules [] path
 loadAllModules :: [FilePath] -> IO (Vector Loaded)
 loadAllModules paths = fold <$> traverse loadModules paths
 
-stage1 :: Verbose -> Vector Loaded -> IO (Vector (Stage1.Module Position))
+stage1 :: Debug -> Vector Loaded -> IO (Vector (Stage1.Module Position))
 stage1 verbose = case verbose of
-  Loud -> runVerbose . traverse parse
-  Quiet -> pure . runIdentity . traverse parse
+  Debug -> runVerbose . traverse parse
+  Normal -> pure . runIdentity . traverse parse
   where
     parse Root {name, contents} = Parser.parse Module.parse name contents
     parse Inner {path, name, contents} = Stage1.assumeName path <$> Parser.parse Module.parse name contents
 
-stage2 :: Verbose -> Vector (Stage1.Module Position) -> IO (Vector Stage2.Module)
+stage2 :: Debug -> Vector (Stage1.Module Position) -> IO (Vector Stage2.Module)
 stage2 verbose = case verbose of
-  Loud -> runVerbose . Module.resolve
-  Quiet -> pure . runIdentity . Module.resolve
+  Debug -> runVerbose . Module.resolve
+  Normal -> pure . runIdentity . Module.resolve
 
-stage3 :: Verbose -> Vector Stage2.Module -> IO (Vector Stage3.Module)
+stage3 :: Debug -> Vector Stage2.Module -> IO (Vector Stage3.Module)
 stage3 _ = pure . Module.check
 
-stage4 :: Verbose -> Vector Stage3.Module -> IO (Vector Stage4.Module)
+stage4 :: Debug -> Vector Stage3.Module -> IO (Vector Stage4.Module)
 stage4 _ = pure . fmap Module.simplify
 
-stage5 :: Verbose -> Vector Stage4.Module -> IO (Vector (FullQualifiers, [Javascript.Statement 'False]))
+stage5 :: Debug -> Vector Stage4.Module -> IO (Vector (FullQualifiers, [Javascript.Statement 'False]))
 stage5 _ = pure . Module.generate
 
-forceModules :: (Foldable t, Prelude.Show a) => t a -> ()
-forceModules = foldr (seq . length . Prelude.show) ()
+message :: String -> Int -> Int -> FullQualifiers -> IO ()
+message stage index total name =
+  putStrLn $
+    mconcat
+      [ "[",
+        Prelude.show index,
+        " of ",
+        Prelude.show total,
+        "] ",
+        stage,
+        " ",
+        Lazy.Text.unpack $ Builder.toLazyText $ Variable.print' name
+      ]
 
-forceModulesM :: (Foldable t, Prelude.Show a) => Show -> t a -> IO ()
-forceModulesM NoShow modules = do
-  () <- pure $ forceModules modules
-  pure ()
-forceModulesM Show modules = traverse_ print modules
+forceModules :: (Foldable t, Prelude.Show a) => String -> Show -> Verbose -> (a -> FullQualifiers) -> t a -> IO ()
+forceModules stage show verbose name modules = traverse_ go $ zip [1 ..] (toList modules)
+  where
+    total = length modules
+    go (index, modulex) = do
+      case verbose of
+        Loud -> message stage index total (name modulex)
+        Quiet -> pure ()
+      case show of
+        NoShow -> do
+          -- todo, implement deepseq
+          -- this is a horrible hack
+          () <- pure $ seq (length (Prelude.show modulex)) ()
+          pure ()
+        Show -> do
+          print modulex
 
 data Mode
   = Parse
@@ -129,6 +153,10 @@ data Mode
 data Verbose
   = Quiet
   | Loud
+
+data Debug
+  = Normal
+  | Debug
 
 data Show
   = Show
@@ -143,6 +171,7 @@ data Execute = Execute
     modules :: List String,
     mode :: !Mode,
     verbose :: !Verbose,
+    debug :: !Debug,
     failure :: !Failure,
     show :: !Show
   }
@@ -153,7 +182,8 @@ defaultx =
     { include = Nil,
       modules = Nil,
       mode = Check,
-      verbose = Quiet,
+      verbose = Loud,
+      debug = Normal,
       failure = Attempt,
       show = NoShow
     }
@@ -170,10 +200,11 @@ options =
     Option [] ["check"] (NoArg check) "Check source file",
     Option [] ["simplify"] (NoArg simplify) "Simplify source",
     Option ['o'] ["generate"] (ReqArg generate "PATH") "Generate Javascript from source file",
-    Option [] ["debug"] (NoArg verbose) "Debug verbosity",
-    Option [] ["show"] (NoArg show) "Show Internal AST",
+    Option [] ["debug-message"] (NoArg debug) "Show debug messages",
+    Option [] ["debug-show"] (NoArg show) "Show Internal AST",
     Option [] ["fail"] (ReqArg fail "ERROR") "Except failure",
-    Option ['I'] [] (ReqArg include "PATH") "Include path"
+    Option ['I'] [] (ReqArg include "PATH") "Include path",
+    Option ['q'] [] (NoArg quiet) "Don't show messages when compiling"
   ]
   where
     parse execute = execute {mode = Parse}
@@ -181,10 +212,11 @@ options =
     check execute = execute {mode = Check}
     simplify execute = execute {mode = Simplify}
     generate path execute = execute {mode = Generate path}
-    verbose execute = execute {verbose = Loud}
+    debug execute = execute {debug = Debug}
     fail error execute = execute {failure = Expect error}
     include path execute@Execute {include} = execute {include = include :> path}
     show execute = execute {show = Show}
+    quiet execute = execute {verbose = Quiet}
 
 main :: IO ()
 main = getArgs >>= main''
@@ -199,7 +231,7 @@ main'' args = case getOpt order options args of
     exitFailure
   (_, _ : _, _) -> error "flags not processed"
   (flags, [], []) -> do
-    let Execute {include, modules, mode, verbose, failure, show} =
+    let Execute {include, modules, mode, verbose, debug, failure, show} =
           foldl (flip id) defaultx flags
     include <- loadAllModules (toList include)
     modules <- loadAllModules (toList modules)
@@ -207,30 +239,35 @@ main'' args = case getOpt order options args of
         all = include <> modules
         run = case mode of
           Parse -> do
-            all <- stage1 verbose all
-            forceModulesM show (Vector.drop split all)
+            all <- stage1 debug all
+            forceModules "Parsing" show verbose Stage1.name (Vector.drop split all)
           Resolve -> do
-            all <- stage1 verbose all
-            all <- stage2 verbose all
-            forceModulesM show (Vector.drop split all)
+            all <- stage1 debug all
+            all <- stage2 debug all
+            forceModules "Resolving" show verbose Stage2.name (Vector.drop split all)
           Check -> do
-            all <- stage1 verbose all
-            all <- stage2 verbose all
-            all <- stage3 verbose all
-            forceModulesM show (Vector.drop split all)
+            all <- stage1 debug all
+            all <- stage2 debug all
+            all <- stage3 debug all
+            forceModules "Checking" show verbose Stage3.name (Vector.drop split all)
           Simplify -> do
-            all <- stage1 verbose all
-            all <- stage2 verbose all
-            all <- stage3 verbose all
-            all <- stage4 verbose all
-            forceModulesM show (Vector.drop split all)
+            all <- stage1 debug all
+            all <- stage2 debug all
+            all <- stage3 debug all
+            all <- stage4 debug all
+            forceModules "Simplifying" show verbose Stage4.name (Vector.drop split all)
           Generate target -> do
-            all <- stage1 verbose all
-            all <- stage2 verbose all
-            all <- stage3 verbose all
-            all <- stage4 verbose all
-            all <- stage5 verbose all
-            for_ (Vector.drop split all) $ \(name, statements) -> do
+            all <- stage1 debug all
+            all <- stage2 debug all
+            all <- stage3 debug all
+            all <- stage4 debug all
+            all <- stage5 debug all
+            let code = Vector.drop split all
+                total = length code
+            for_ (zip [1 ..] $ toList code) $ \(index, (name, statements)) -> do
+              case verbose of
+                Loud -> message "Compiling" index total name
+                Quiet -> pure ()
               let file = target </> Mangle.path name
               createDirectoryIfMissing True (dropFileName file)
               let javascript = Javascript.print $ Module.print statements
@@ -241,8 +278,8 @@ main'' args = case getOpt order options args of
           exitFailure
     case failure of
       Attempt
-        | Quiet <- verbose -> catch run Error.fail
-        | Loud <- verbose -> run
+        | Normal <- debug -> catch run Error.fail
+        | Debug <- debug -> run
       Expect error
         | Just typex <- Map.lookup error Error.types ->
             catch (run >> noFail) (Error.allow typex)
