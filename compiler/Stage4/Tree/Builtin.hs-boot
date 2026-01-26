@@ -4,6 +4,7 @@ import qualified Stage2.Index.Constructor as Constructor
 import qualified Stage2.Index.Type as Type
 import qualified Stage2.Index.Type2 as Type2
 import {-# SOURCE #-} Stage4.Tree.Class (Class)
+import {-# SOURCE #-} Stage4.Tree.ClassExtra (ClassExtra)
 import {-# SOURCE #-} Stage4.Tree.Data (Data)
 import Stage4.Tree.Type (Type)
 
@@ -24,3 +25,5 @@ class Builtin builtin where
 instance Builtin Data
 
 instance Builtin Class
+
+instance Builtin ClassExtra

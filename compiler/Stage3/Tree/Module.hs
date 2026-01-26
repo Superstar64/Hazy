@@ -8,7 +8,6 @@ import Error (cyclicalTypeChecking)
 import Stage1.Variable (FullQualifiers)
 import qualified Stage2.Index.Term0 as Term0
 import qualified Stage2.Index.Type as Type
-import qualified Stage2.Index.Type2 as Type2
 import Stage2.Scope (Global)
 import qualified Stage2.Tree.Instance as Stage2.Instance
 import qualified Stage2.Tree.Module as Stage2 (Module (..))
@@ -130,13 +129,13 @@ check modules =
                   case key of
                     Instance.Key.Data {index, classKey} -> do
                       let Functor.Annotated {meta} = dataInstances Vector.! index Map.! classKey
-                          dataKey = Type2.Index $ Type.Global global index
+                          key = Instance.Data {index1 = classKey, head1 = Type.Global global index}
                       annotation <- meta
-                      Instance.check (globalBindings moduleSet) classKey dataKey annotation declaration
+                      Instance.check (globalBindings moduleSet) key annotation declaration
                     Instance.Key.Class {index, dataKey} -> do
                       let Functor.Annotated {meta} = classInstances Vector.! index Map.! dataKey
-                          classKey = Type2.Index $ Type.Global global index
+                          key = Instance.Class {index2 = Type.Global global index, head2 = dataKey}
                       annotation <- meta
-                      Instance.check (globalBindings moduleSet) classKey dataKey annotation declaration
+                      Instance.check (globalBindings moduleSet) key annotation declaration
               )
          in mapWithKey go1 go2 go3 go4 go5 go6 go7 (Functor.ModuleSet $ fmap fromStage2 modules)

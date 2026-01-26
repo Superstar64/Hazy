@@ -15,6 +15,10 @@ data TypeDeclarationExtra scope
   | GADT
   deriving (Show)
 
+assumeClass :: TypeDeclarationExtra scope -> ClassExtra scope
+assumeClass (Class extra) = extra
+assumeClass _ = error "bad class extra assumption"
+
 simplify :: Stage3.TypeDeclarationExtra scope -> TypeDeclarationExtra scope
 simplify = \case
   Stage3.ADT -> ADT

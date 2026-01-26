@@ -1,17 +1,15 @@
 module Stage4.Tree.Instance where
 
-import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import qualified Data.Vector.Strict as Strict (Vector)
 import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (Shift (shift), shiftDefault)
 import qualified Stage2.Shift as Shift
-import qualified Stage3.Tree.Instance as Stage3
+import qualified Stage3.Tree.Instance as Stage3 (Instance (..))
+import qualified Stage3.Tree.InstanceMethod as Stage3 (InstanceMethod (..))
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
 import Stage4.Tree.Evidence (Evidence)
 import Stage4.Tree.Expression (Expression)
-import qualified Stage4.Tree.Expression as Expression
-import qualified Stage4.Tree.Statements as Statements
 
 data Instance scope = Instance
   { evidence :: !(Strict.Vector (Evidence (Local ':+ scope))),
@@ -45,9 +43,5 @@ simplify Stage3.Instance {evidence, prerequisitesCount, memberConstraintCounts, 
     { evidence,
       prerequisitesCount,
       memberConstraintCounts,
-      members = go <$> members
+      members = Stage3.definition' <$> members
     }
-  where
-    go = \case
-      Strict.Just expression -> Expression.simplify expression
-      Strict.Nothing -> Expression.Join {statements = Statements.Bottom}

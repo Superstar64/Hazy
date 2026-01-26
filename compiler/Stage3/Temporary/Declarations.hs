@@ -125,14 +125,14 @@ check context declarations = do
                 case key of
                   Instance.Key.Data {index, classKey} -> do
                     let Functor.Annotated {meta} = dataInstances Vector.! index Map.! classKey
-                        dataKey = Type2.Index $ Type.Declaration index
+                        key = Instance.Data {index1 = classKey, head1 = Type.Declaration index}
                     annotation <- meta
-                    Instance.check (localBindings declarations context) classKey dataKey annotation declaration
+                    Instance.check (localBindings declarations context) key annotation declaration
                   Instance.Key.Class {index, dataKey} -> do
                     let Functor.Annotated {meta} = classInstances Vector.! index Map.! dataKey
-                        classKey = Type2.Index $ Type.Declaration index
+                        key = Instance.Class {index2 = Type.Declaration index, head2 = dataKey}
                     annotation <- meta
-                    Instance.check (localBindings declarations context) classKey dataKey annotation declaration
+                    Instance.check (localBindings declarations context) key annotation declaration
             )
        in mapWithKey go1 go2 go3 go4 go5 go6 go7 $ Functor.fromStage2 Local declarations
   pure (localBindings (heptamap pure (const ()) pure pure pure pure pure functor) context, fromFunctor functor)

@@ -356,11 +356,6 @@ instance Hidden Usage where
   private = Usage
 ```
 
-### Class default methods are ignored
-
-The default methods in a type class are ignored. This effectively means that
-all methods must be defined in an instance.
-
 ## Intentional
 These are deviations that are unlikely to be fixed in the the near future.
 

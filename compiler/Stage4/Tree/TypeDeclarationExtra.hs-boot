@@ -16,3 +16,4 @@ instance Shift TypeDeclarationExtra
 instance Shift.Functor TypeDeclarationExtra
 
 simplify :: Stage3.TypeDeclarationExtra scope -> TypeDeclarationExtra scope
+assumeClass :: TypeDeclarationExtra scope -> ClassExtra scope
