@@ -10,6 +10,7 @@ import Stage1.Parser
     betweenParens,
     position,
     token,
+    try,
   )
 import Stage1.Position (Position)
 import Stage1.Tree.Scheme (Scheme)
@@ -36,8 +37,8 @@ data Entry
 parse :: Parser (Scheme Position) -> Parser Entry
 parse scheme =
   asum
-    [ lazy <$> betweenParens Scheme.parse,
-      lazy <$> scheme,
+    [ try $ lazy <$> scheme,
+      lazy <$> betweenParens Scheme.parse,
       strict
         <$> (position <* token "!")
         <*> asum
