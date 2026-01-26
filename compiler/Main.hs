@@ -35,7 +35,7 @@ import qualified Stage4.Tree.Module as Module (simplify)
 import qualified Stage4.Tree.Module as Stage4 (Module, name)
 import qualified Stage5.Generate.Mangle as Mangle
 import qualified Stage5.Tree.Module as Module (generate)
-import System.Console.GetOpt (ArgDescr (..), ArgOrder (..), OptDescr (..), getOpt)
+import System.Console.GetOpt (ArgDescr (..), ArgOrder (..), OptDescr (..), getOpt, usageInfo)
 import System.Directory (createDirectoryIfMissing, listDirectory)
 import System.Environment (getArgs)
 import System.Exit (exitFailure)
@@ -144,7 +144,8 @@ forceModules stage show verbose name modules = traverse_ go $ zip [1 ..] (toList
           print modulex
 
 data Mode
-  = Parse
+  = Help
+  | Parse
   | Resolve
   | Check
   | Simplify
@@ -195,7 +196,8 @@ order = ReturnInOrder wrap
 
 options :: [OptDescr (Execute -> Execute)]
 options =
-  [ Option [] ["parse"] (NoArg parse) "Parse source",
+  [ Option [] ["help"] (NoArg help) "Help",
+    Option [] ["parse"] (NoArg parse) "Parse source",
     Option [] ["resolve"] (NoArg resolve) "Resolve source",
     Option [] ["check"] (NoArg check) "Check source file",
     Option [] ["simplify"] (NoArg simplify) "Simplify source",
@@ -207,6 +209,7 @@ options =
     Option ['q'] [] (NoArg quiet) "Don't show messages when compiling"
   ]
   where
+    help execute = execute {mode = Help}
     parse execute = execute {mode = Parse}
     resolve execute = execute {mode = Resolve}
     check execute = execute {mode = Check}
@@ -237,7 +240,10 @@ main'' args = case getOpt order options args of
     modules <- loadAllModules (toList modules)
     let split = length include
         all = include <> modules
+        help = putStr $ usageInfo "hazy [options] folders..." options
         run = case mode of
+          _ | null modules -> help
+          Help -> help
           Parse -> do
             all <- stage1 debug all
             forceModules "Parsing" show verbose Stage1.name (Vector.drop split all)
