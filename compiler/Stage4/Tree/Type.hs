@@ -46,7 +46,7 @@ instance Shift2.Functor Type where
   map = Substitute.mapDefault
 
 instance Substitute.Functor Type where
-  map (Substitute lift replacements) (Variable index) = case index of
+  map (Substitute lift replacements _) (Variable index) = case index of
     Local index -> replacements Vector.! index
     Shift index -> Variable (Shift.map lift index)
   map (Substitute.Lift category) (Variable index) = Variable $ Shift2.map category index
@@ -68,7 +68,9 @@ simplify typex = simplifyWith typex []
 
 simplifyWith :: Solved.Type scope -> [Type scope] -> Type scope
 simplifyWith Solved.Constructor {constructor, synonym} arguments = case synonym of
-  Strict.Just synonym -> map (Substitute Shift.Id $ Vector.fromList arguments) synonym
+  Strict.Just synonym -> map category synonym
+    where
+      category = Substitute Shift.Id (Vector.fromList arguments) (error "no evidence")
   Strict.Nothing -> foldl Call (Constructor constructor) arguments
 simplifyWith Solved.Call {function, argument} arguments =
   simplifyWith function (simplify argument : arguments)

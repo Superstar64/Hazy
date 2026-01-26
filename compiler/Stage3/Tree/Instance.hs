@@ -89,7 +89,7 @@ check
           context <- Simple.Scheme.augment' startPosition scheme context
           let replacements = Vector.singleton base
               Simple.Scheme Simple.SchemeOver {result} = scheme
-              category = Substitute.Over (Substitute Shift.Shift replacements)
+              category = Substitute.Over $ Substitute Shift.Shift replacements (error "no evidence")
           result <- pure $ Simple.Type.lift $ Substitute.map category result
           Unsolved.Definition.check context result member
     members <- zipWithM check methods (fmap shift <$> members)
