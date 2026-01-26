@@ -7,6 +7,7 @@ import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Method as Solved.Method
 import qualified Stage3.Tree.TypeDeclaration as Solved
 import qualified Stage4.Shift as Shift2
+import qualified Stage4.Substitute as Substitute
 import Stage4.Tree.Class (Class)
 import qualified Stage4.Tree.Class as Class
 import qualified Stage4.Tree.Constraint as Constraint
@@ -45,21 +46,24 @@ instance Shift.Functor TypeDeclaration where
   map = Shift2.mapDefault
 
 instance Shift2.Functor TypeDeclaration where
+  map = Substitute.mapDefault
+
+instance Substitute.Functor TypeDeclaration where
   map category = \case
     Data {name, datax} ->
       Data
         { name,
-          datax = Shift2.map category datax
+          datax = Substitute.map category datax
         }
     Class {name, classx} ->
       Class
         { name,
-          classx = Shift2.map category classx
+          classx = Substitute.map category classx
         }
     Synonym {name, definition} ->
       Synonym
         { name,
-          definition = Shift2.map (Shift2.Over category) definition
+          definition = Substitute.map (Substitute.Over category) definition
         }
 
 simplify :: Solved.TypeDeclaration scope -> TypeDeclaration scope

@@ -22,6 +22,7 @@ import qualified Stage3.Tree.ExpressionField as Stage3 (Field (Field))
 import qualified Stage3.Tree.ExpressionField as Stage3.Field
 import qualified Stage4.Index.Term as Term
 import qualified Stage4.Shift as Shift2
+import qualified Stage4.Substitute as Substitute
 import {-# SOURCE #-} Stage4.Temporary.Definition (Definition (Definition))
 import {-# SOURCE #-} qualified Stage4.Temporary.Definition as Definition
 import Stage4.Temporary.Function (Function (..))
@@ -82,27 +83,30 @@ instance Shift.Functor Expression where
   map = Shift2.mapDefault
 
 instance Shift2.Functor Expression where
+  map = Substitute.mapDefault
+
+instance Substitute.Functor Expression where
   map category = \case
     Variable {variable, instanciation} ->
       Variable
-        { variable = Shift2.map category variable,
-          instanciation = Shift2.map category instanciation
+        { variable = Substitute.map category variable,
+          instanciation = Substitute.map category instanciation
         }
     Selector {selector, argument} ->
       Selector
-        { selector = Shift2.map category selector,
-          argument = Shift2.map category argument
+        { selector = Substitute.map category selector,
+          argument = Substitute.map category argument
         }
     Constructor {constructor, arguments} ->
       Constructor
-        { constructor = Shift2.map category constructor,
-          arguments = Shift2.map category <$> arguments
+        { constructor = Substitute.map category constructor,
+          arguments = Substitute.map category <$> arguments
         }
     Method {method, evidence, instanciation} ->
       Method
-        { method = Shift2.map category method,
-          evidence = Shift2.map category evidence,
-          instanciation = Shift2.map category instanciation
+        { method = Substitute.map category method,
+          evidence = Substitute.map category evidence,
+          instanciation = Substitute.map category instanciation
         }
     Integer {integer} ->
       Integer
@@ -114,21 +118,21 @@ instance Shift2.Functor Expression where
         }
     Let {declarations, letBody} ->
       Let
-        { declarations = Shift2.map (Shift2.Over category) declarations,
-          letBody = Shift2.map (Shift2.Over category) letBody
+        { declarations = Substitute.map (Substitute.Over category) declarations,
+          letBody = Substitute.map (Substitute.Over category) letBody
         }
     Lambda {body} ->
       Lambda
-        { body = Shift2.map (Shift2.Over category) body
+        { body = Substitute.map (Substitute.Over category) body
         }
     Call {function, argument} ->
       Call
-        { function = Shift2.map category function,
-          argument = Shift2.map category argument
+        { function = Substitute.map category function,
+          argument = Substitute.map category argument
         }
     Join {statements} ->
       Join
-        { statements = Shift2.map category statements
+        { statements = Substitute.map category statements
         }
 
 monoVariable :: Term.Index scope -> Expression scope

@@ -5,6 +5,7 @@ import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (Shift (shift), shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage4.Shift as Shift2
+import qualified Stage4.Substitute as Substitute
 import Stage4.Tree.Constraint (Constraint)
 import Stage4.Tree.Scheme (Scheme)
 import Stage4.Tree.Type (Type)
@@ -24,11 +25,14 @@ instance Shift.Functor Class where
   map = Shift2.mapDefault
 
 instance Shift2.Functor Class where
+  map = Substitute.mapDefault
+
+instance Substitute.Functor Class where
   map category Class {parameter, constraints, methods} =
     Class
-      { parameter = Shift2.map category parameter,
-        constraints = Shift2.map category <$> constraints,
-        methods = Shift2.map (Shift2.Over category) <$> methods
+      { parameter = Substitute.map category parameter,
+        constraints = Substitute.map category <$> constraints,
+        methods = Substitute.map (Substitute.Over category) <$> methods
       }
 
 kind :: Class scope -> Type scope

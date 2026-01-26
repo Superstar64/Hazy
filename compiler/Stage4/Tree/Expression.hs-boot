@@ -11,6 +11,7 @@ import qualified Stage3.Tree.Definition as Stage3
 import {-# SOURCE #-} qualified Stage3.Tree.Expression as Stage3
 import qualified Stage4.Index.Term as Term
 import qualified Stage4.Shift as Shift2
+import qualified Stage4.Substitute as Substitute
 
 type role Expression nominal
 
@@ -22,6 +23,8 @@ instance Shift Expression
 instance Shift.Functor Expression
 
 instance Shift2.Functor Expression
+
+instance Substitute.Functor Expression
 
 instance Show (Expression scope)
 

@@ -4,6 +4,7 @@ import qualified Stage2.Index.Constructor as Constructor
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage4.Shift as Shift2
+import qualified Stage4.Substitute as Substitute
 
 data Pattern scope
   = Constructor
@@ -20,10 +21,13 @@ instance Shift.Functor Pattern where
   map = Shift2.mapDefault
 
 instance Shift2.Functor Pattern where
+  map = Substitute.mapDefault
+
+instance Substitute.Functor Pattern where
   map category = \case
     Constructor {constructor, patterns} ->
       Constructor
-        { constructor = Shift2.map category constructor,
+        { constructor = Substitute.map category constructor,
           patterns
         }
     Character {character} -> Character {character}

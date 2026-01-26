@@ -14,6 +14,7 @@ import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Statements as Stage3
 import qualified Stage4.Index.Term as Term
 import qualified Stage4.Shift as Shift2
+import qualified Stage4.Substitute as Substitute
 import Stage4.Temporary.Pattern (Pattern)
 import qualified Stage4.Temporary.Pattern as Pattern
 import {-# SOURCE #-} Stage4.Tree.Declarations (Declarations)
@@ -57,31 +58,34 @@ instance Shift.Functor Statements where
   map = Shift2.mapDefault
 
 instance Shift2.Functor Statements where
+  map = Substitute.mapDefault
+
+instance Substitute.Functor Statements where
   map category = \case
     Done {done} ->
       Done
-        { done = Shift2.map category done
+        { done = Substitute.map category done
         }
     Bind {patternx, check, thenx} ->
       Bind
-        { patternx = Shift2.map category patternx,
-          check = Shift2.map category check,
-          thenx = Shift2.map (Shift2.Over category) thenx
+        { patternx = Substitute.map category patternx,
+          check = Substitute.map category check,
+          thenx = Substitute.map (Substitute.Over category) thenx
         }
     LetOne {declaration, body} ->
       LetOne
-        { declaration = Shift2.map category declaration,
-          body = Shift2.map (Shift2.Over category) body
+        { declaration = Substitute.map category declaration,
+          body = Substitute.map (Substitute.Over category) body
         }
     Let {declarations, letBody} ->
       Let
-        { declarations = Shift2.map (Shift2.Over category) declarations,
-          letBody = Shift2.map (Shift2.Over category) letBody
+        { declarations = Substitute.map (Substitute.Over category) declarations,
+          letBody = Substitute.map (Substitute.Over category) letBody
         }
     Branch {left, right} ->
       Branch
-        { left = Shift2.map category left,
-          right = Shift2.map category right
+        { left = Substitute.map category left,
+          right = Substitute.map category right
         }
     Bottom -> Bottom
 

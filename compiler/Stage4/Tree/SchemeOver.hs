@@ -7,6 +7,7 @@ import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift (..), shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage4.Shift as Shift2
+import qualified Stage4.Substitute as Substitute
 import Stage4.Tree.Constraint (Constraint)
 import Stage4.Tree.Type (Type)
 
@@ -47,6 +48,14 @@ instance (Shift2.Functor typex) => Shift2.Functor (SchemeOver typex) where
       { parameters = fmap (Shift2.map category) parameters,
         constraints = fmap (Shift2.map category) constraints,
         result = Shift2.map (Shift2.Over category) result
+      }
+
+instance (Substitute.Functor typex) => Substitute.Functor (SchemeOver typex) where
+  map category SchemeOver {parameters, constraints, result} =
+    SchemeOver
+      { parameters = fmap (Substitute.map category) parameters,
+        constraints = fmap (Substitute.map category) constraints,
+        result = Substitute.map (Substitute.Over category) result
       }
 
 mono :: (Shift typex) => typex scope -> SchemeOver typex scope

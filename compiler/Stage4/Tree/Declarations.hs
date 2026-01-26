@@ -7,6 +7,7 @@ import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Declarations as Stage3
 import qualified Stage4.Shift as Shift2
+import qualified Stage4.Substitute as Substitute
 import Stage4.Tree.Instance (Instance)
 import qualified Stage4.Tree.Instance as Instance
 import Stage4.Tree.TermDeclaration (TermDeclaration)
@@ -32,15 +33,18 @@ instance Shift.Functor Declarations where
   map = Shift2.mapDefault
 
 instance Shift2.Functor Declarations where
+  map = Substitute.mapDefault
+
+instance Substitute.Functor Declarations where
   map category Declarations {terms, types, typeExtras, classInstances, dataInstances} =
     Declarations
-      { terms = Shift2.map category <$> terms,
-        types = Shift2.map category <$> types,
-        typeExtras = Shift2.map category <$> typeExtras,
+      { terms = Substitute.map category <$> terms,
+        types = Substitute.map category <$> types,
+        typeExtras = Substitute.map category <$> typeExtras,
         classInstances =
-          Shift2.mapInstances category . fmap (Shift2.map category) <$> classInstances,
+          Substitute.mapInstances category . fmap (Substitute.map category) <$> classInstances,
         dataInstances =
-          Shift2.mapInstances category . fmap (Shift2.map category) <$> dataInstances
+          Substitute.mapInstances category . fmap (Substitute.map category) <$> dataInstances
       }
 
 simplify :: Stage3.Declarations scope -> Declarations scope

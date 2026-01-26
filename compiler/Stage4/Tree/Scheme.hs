@@ -6,6 +6,7 @@ import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Scheme as Solved
 import qualified Stage3.Tree.TypePattern as Solved.TypePattern
 import qualified Stage4.Shift as Shift2
+import qualified Stage4.Substitute as Substitute
 import qualified Stage4.Tree.Constraint as Constraint
 import Stage4.Tree.SchemeOver (SchemeOver (..))
 import qualified Stage4.Tree.SchemeOver as SchemeOver
@@ -24,7 +25,10 @@ instance Shift.Functor Scheme where
   map = Shift2.mapDefault
 
 instance Shift2.Functor Scheme where
-  map category (Scheme scheme) = Scheme (Shift2.map category scheme)
+  map = Substitute.mapDefault
+
+instance Substitute.Functor Scheme where
+  map category (Scheme scheme) = Scheme (Substitute.map category scheme)
 
 instance Scope.Show Scheme where
   showsPrec = showsPrec
