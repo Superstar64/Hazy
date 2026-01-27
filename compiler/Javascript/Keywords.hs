@@ -4,21 +4,20 @@ import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.Text (Text, pack)
 
+-- | Keywords include:
+-- * Proper reserved words
+-- * Contexually disallowed keywords
+-- * `arguments` and `eval`
 keywords :: Set Text
 keywords =
   Set.fromList $
     map
       pack
-      [ "abstract",
-        "arguments",
-        "async",
+      [ "arguments",
         "await",
-        "boolean",
         "break",
-        "byte",
         "case",
         "catch",
-        "char",
         "class",
         "const",
         "continue",
@@ -26,30 +25,22 @@ keywords =
         "default",
         "delete",
         "do",
-        "double",
         "else",
         "enum",
         "eval",
         "export",
         "extends",
         "false",
-        "final",
         "finally",
-        "float",
         "for",
         "function",
-        "goto",
         "if",
         "implements",
-        "function",
         "import",
         "in",
         "instanceof",
-        "int",
         "interface",
         "let",
-        "long",
-        "native",
         "new",
         "null",
         "package",
@@ -57,22 +48,16 @@ keywords =
         "protected",
         "public",
         "return",
-        "short",
         "static",
         "super",
         "switch",
-        "synchronized",
         "this",
         "throw",
-        "throws",
-        "transient",
         "true",
         "try",
         "typeof",
-        "using",
         "var",
         "void",
-        "volatile",
         "while",
         "with",
         "yield"
