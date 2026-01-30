@@ -7,7 +7,6 @@ import qualified Data.Vector as Vector
 import qualified Javascript.Tree.Expression as Javascript (Expression (..))
 import qualified Javascript.Tree.Statement as Javascript (Statement (..))
 import qualified Stage2.Index.Constructor as Constructor
-import Stage4.Tree.Pattern (Pattern (..))
 import Stage4.Tree.Statements (Statements (..))
 import Stage5.Generate.Context (Context (..), fresh, localBindings)
 import qualified Stage5.Generate.Context as Context
@@ -42,35 +41,33 @@ attempt context target label = \case
     assign <- Expression.generateInto context target done
     let break = Javascript.Break label
     pure $ assign ++ [break]
-  Bind {patternx, check, thenx} -> do
+  Bind {constructor = Constructor.Index {constructorIndex}, patterns, check, thenx} -> do
     (prelude, check) <- Expression.generate context check
-    case patternx of
-      Constructor {constructor = Constructor.Index {constructorIndex}, patterns} -> do
-        names <- Vector.replicateM patterns (Context.fresh context)
-        context <- pure $ Context.patternBindings names context
-        thenx <- attempt context target label thenx
-        let ifx = Javascript.If condition (bind ++ thenx)
-            condition =
-              Javascript.Equal
-                { left =
-                    Javascript.Member
-                      { object = check,
-                        field = head Mangle.fields
-                      },
-                  right =
-                    Javascript.Number
-                      { number = constructorIndex
-                      }
-                }
-            bind = do
-              (field, name) <- zip (tail Mangle.fields) (toList names)
-              let member =
-                    Javascript.Member
-                      { object = check,
-                        field
-                      }
-              pure $ Javascript.Const name member
-        pure $ prelude ++ [ifx]
+    names <- Vector.replicateM patterns (Context.fresh context)
+    context <- pure $ Context.patternBindings names context
+    thenx <- attempt context target label thenx
+    let ifx = Javascript.If condition (bind ++ thenx)
+        condition =
+          Javascript.Equal
+            { left =
+                Javascript.Member
+                  { object = check,
+                    field = head Mangle.fields
+                  },
+              right =
+                Javascript.Number
+                  { number = constructorIndex
+                  }
+            }
+        bind = do
+          (field, name) <- zip (tail Mangle.fields) (toList names)
+          let member =
+                Javascript.Member
+                  { object = check,
+                    field
+                  }
+          pure $ Javascript.Const name member
+    pure $ prelude ++ [ifx]
   Let {declarations, letBody} -> do
     (context, declarations) <- Declarations.generate context declarations
     result <- attempt context target label letBody

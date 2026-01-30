@@ -21,12 +21,12 @@ import {-# SOURCE #-} Stage4.Tree.Declarations (Declarations)
 import {-# SOURCE #-} qualified Stage4.Tree.Declarations as Declarations
 import {-# SOURCE #-} Stage4.Tree.Expression (Expression)
 import {-# SOURCE #-} qualified Stage4.Tree.Expression as Expression
-import qualified Stage4.Tree.Pattern as Real.Pattern
 
 data Statements scope
   = Done {done :: !(Expression scope)}
   | Bind
-      { patternx :: !(Real.Pattern.Pattern scope),
+      { constructor :: !(Constructor.Index scope),
+        patterns :: !Int,
         check :: !(Expression scope),
         thenx :: !(Statements (Scope.SimplePattern ':+ scope))
       }
@@ -66,9 +66,10 @@ instance Substitute.Functor Statements where
       Done
         { done = Substitute.map category done
         }
-    Bind {patternx, check, thenx} ->
+    Bind {constructor, patterns, check, thenx} ->
       Bind
-        { patternx = Substitute.map category patternx,
+        { constructor = Substitute.map category constructor,
+          patterns,
           check = Substitute.map category check,
           thenx = Substitute.map (Substitute.Over category) thenx
         }
@@ -196,11 +197,8 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
       | Pattern.Constructor {constructor, patterns} <- match,
         all wildcard patterns =
           Bind
-            { patternx =
-                Real.Pattern.Constructor
-                  { constructor,
-                    patterns = length patterns
-                  },
+            { constructor,
+              patterns = length patterns,
               check,
               thenx = Shift2.map Shift2.FinishPattern thenx
             }
@@ -243,9 +241,10 @@ simplify = \case
 call :: Statements scope -> Expression scope -> Statements scope
 call statements argument = case statements of
   Done {done} -> Done {done = Expression.call done argument}
-  Bind {patternx, check, thenx} ->
+  Bind {constructor, patterns, check, thenx} ->
     Bind
-      { patternx,
+      { constructor,
+        patterns,
         check,
         thenx = call thenx (shift argument)
       }
