@@ -3,7 +3,6 @@ module Stage5.Tree.Statements (generate) where
 import Control.Monad.ST (ST)
 import Data.Foldable (toList)
 import Data.Text (Text)
-import qualified Data.Text as Text
 import qualified Data.Vector as Vector
 import qualified Javascript.Tree.Expression as Javascript (Expression (..))
 import qualified Javascript.Tree.Statement as Javascript (Statement (..))
@@ -71,20 +70,6 @@ attempt context target label = \case
                         field
                       }
               pure $ Javascript.Const name member
-        pure $ prelude ++ [ifx]
-      Character {character} -> do
-        let names = Vector.empty
-        context <- pure $ Context.patternBindings names context
-        thenx <- attempt context target label thenx
-        let ifx = Javascript.If condition thenx
-            condition =
-              Javascript.Equal
-                { left = check,
-                  right =
-                    Javascript.String
-                      { string = Text.singleton character
-                      }
-                }
         pure $ prelude ++ [ifx]
   Let {declarations, letBody} -> do
     (context, declarations) <- Declarations.generate context declarations

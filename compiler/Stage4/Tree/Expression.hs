@@ -16,6 +16,7 @@ import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage2.Tree.Selector as Selector (Uniform (..))
+import qualified Stage3.Index.Evidence as Index.Evidence
 import qualified Stage3.Tree.Definition as Stage3 (Definition)
 import qualified Stage3.Tree.Expression as Stage3 (Expression (..))
 import qualified Stage3.Tree.ExpressionField as Stage3 (Field (Field))
@@ -32,6 +33,7 @@ import qualified Stage4.Temporary.RightHandSide as RightHandSide
 import {-# SOURCE #-} Stage4.Tree.Declarations (Declarations)
 import {-# SOURCE #-} qualified Stage4.Tree.Declarations as Declarations
 import Stage4.Tree.Evidence (Evidence)
+import qualified Stage4.Tree.Evidence as Evidence
 import Stage4.Tree.Instanciation (Instanciation (..))
 import Stage4.Tree.Statements (Statements)
 import qualified Stage4.Tree.Statements as Statements
@@ -142,11 +144,32 @@ monoVariable variable =
       instanciation = Instanciation Strict.Vector.empty
     }
 
-call :: Expression scope -> Expression scope -> Expression scope
-call function argument = Call {function, argument}
-
 lambdaVariable :: Expression (Scope.Declaration ':+ scopes)
 lambdaVariable = monoVariable $ Term.Declaration 0
+
+patternVariable :: Expression (Scope.Pattern ':+ scope)
+patternVariable = monoVariable $ Term.Pattern Term.At
+
+character_ :: Char -> Expression scope
+character_ character = Character {character}
+
+eqChar :: Expression scope -> Expression scope -> Expression scope
+eqChar left right =
+  Method
+    { method = Method.equal,
+      evidence =
+        Evidence.Variable
+          { variable = Index.Evidence.Builtin Index.Evidence.EqChar
+          },
+      instanciation = Instanciation Strict.Vector.empty
+    }
+    `call` left
+    `call` right
+
+infixl 9 `call`
+
+call :: Expression scope -> Expression scope -> Expression scope
+call function argument = Call {function, argument}
 
 guard :: Statements scope -> Expression scope -> Expression scope
 guard left done =

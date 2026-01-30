@@ -8,10 +8,9 @@ import qualified Stage4.Substitute as Substitute
 
 data Pattern scope
   = Constructor
-      { constructor :: !(Constructor.Index scope),
-        patterns :: !Int
-      }
-  | Character {character :: !Char}
+  { constructor :: !(Constructor.Index scope),
+    patterns :: !Int
+  }
   deriving (Show)
 
 instance Shift Pattern where
@@ -30,4 +29,3 @@ instance Substitute.Functor Pattern where
         { constructor = Substitute.map category constructor,
           patterns
         }
-    Character {character} -> Character {character}

@@ -30,6 +30,9 @@ instance Show (Expression scope)
 
 monoVariable :: Term.Index scope -> Expression scope
 lambdaVariable :: Expression (Scope.Declaration ':+ scopes)
+patternVariable :: Expression (Scope.Pattern ':+ scopes)
+character_ :: Char -> Expression scope
+eqChar :: Expression scope -> Expression scope -> Expression scope
 call :: Expression scope -> Expression scope -> Expression scope
 
 class Simplify source where

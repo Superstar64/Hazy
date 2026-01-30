@@ -165,9 +165,12 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
             },
       patternx <- Pattern.Match {match, irrefutable} ->
         bind patternx check thenx
-  Pattern.Character {}
-    | patternx <- Pattern.Match {match, irrefutable} ->
-        expand patternx check thenx
+  Pattern.Character {character} ->
+    -- expand patternx check thenx
+    bind Pattern.Wildcard check $
+      bind true equal (shift thenx)
+    where
+      equal = Expression.eqChar Expression.patternVariable (Expression.character_ character)
   where
     -- todo deal with irrefutable cases
     expand ::
@@ -201,31 +204,29 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
               check,
               thenx = Shift2.map Shift2.FinishPattern thenx
             }
-      | Pattern.Character {character} <- match =
-          Bind
-            { patternx = Real.Pattern.Character {character},
-              check,
-              thenx = Shift2.map Shift2.FinishPattern thenx
-            }
       where
         wildcard Pattern.Wildcard {} = True
         wildcard _ = False
     finish _ _ _ = error "bad finish"
+
+true :: Pattern scope
+true =
+  ( Pattern.Match
+      { match =
+          Pattern.Constructor
+            { constructor = Constructor2.true,
+              patterns = Strict.Vector.empty
+            },
+        irrefutable = False
+      }
+  )
 
 simplify :: Stage3.Statements scope -> Statements scope
 simplify = \case
   Stage3.Done {done} -> Done {done = Expression.simplify done}
   Stage3.Run {check, after} ->
     bind
-      ( Pattern.Match
-          { match =
-              Pattern.Constructor
-                { constructor = Constructor2.true,
-                  patterns = Strict.Vector.empty
-                },
-            irrefutable = False
-          }
-      )
+      true
       (Expression.simplify check)
       (shift $ simplify after)
   Stage3.Bind {patternx, check, thenx} ->
