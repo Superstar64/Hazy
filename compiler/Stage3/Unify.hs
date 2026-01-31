@@ -36,6 +36,9 @@ module Stage3.Unify
     fresh,
     unify,
     constrain,
+    Generalize (..),
+    generalizeOver,
+    generalize,
     solve,
     solveEvidence,
     solveInstanciation,
@@ -51,6 +54,7 @@ import qualified Data.Kind
 import Data.List (nub)
 import Data.Map (Map)
 import qualified Data.Map as Map
+import Data.Maybe (catMaybes)
 import Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 import qualified Data.Text as Text
 import Data.Traversable (for)
@@ -171,6 +175,8 @@ data Box' s scope
 
 class Algebra typex where
   substitute :: Strict.Vector (Type s scope) -> typex s (Scope.Local ':+ scope) -> typex s scope
+  collect :: typex s scopes -> ST s [Collected s scopes]
+  zonk :: typex s scope -> ST s (typex s scope)
 
 instance Algebra Type where
   substitute replacements = \case
@@ -188,6 +194,49 @@ instance Algebra Type where
     Small -> Small
     Large -> Large
     Universe -> Universe
+  collect = \case
+    Logical reference ->
+      readSTRef reference >>= \case
+        Solved typex -> collect typex
+        Unsolved {} -> pure [Collect reference]
+    Shift typex -> fmap Reach <$> collect typex
+    Variable {} -> pure []
+    Constructor {} -> pure []
+    Call function argument -> do
+      function <- collect function
+      argument <- collect argument
+      pure (function ++ argument)
+    Function argument result -> do
+      argument <- collect argument
+      result <- collect result
+      pure $ argument ++ result
+    Type universe -> do
+      collect universe
+    Constraint -> pure []
+    Small -> pure []
+    Large -> pure []
+    Universe -> pure []
+  zonk = \case
+    Logical reference ->
+      readSTRef reference >>= \case
+        Solved solved -> zonk solved
+        Unsolved {} -> pure $ Logical reference
+    Shift typex -> Shift <$> zonk typex
+    Variable index -> pure $ Variable index
+    Constructor index -> pure $ Constructor index
+    Call function argument -> do
+      function <- zonk function
+      argument <- zonk argument
+      pure $ Call function argument
+    Function parameter result -> do
+      parameter <- zonk parameter
+      result <- zonk result
+      pure $ Function parameter result
+    Type universe -> Type <$> zonk universe
+    Constraint -> pure Constraint
+    Small -> pure Small
+    Large -> pure Large
+    Universe -> pure Universe
 
 scheme ::
   Strict.Vector.Vector (Type s scope) ->
@@ -787,6 +836,70 @@ instanciateOver context position SchemeOver {parameters, constraints, result} = 
     constrainWith context position classx head arguments
   pure $ (substitute fresh result, Instanciation evidence)
 
+newtype Generalize typex s scopes = Generalize
+  { runGeneralize :: forall scope. ST s (typex s (scope ':+ scopes))
+  }
+
+generalizeOver ::
+  forall typex s scopes.
+  (Algebra typex) =>
+  Generalize typex s scopes ->
+  ST s (SchemeOver typex s scopes)
+generalizeOver (Generalize run) = do
+  wobbly <- run
+  candidates <- collect wobbly
+  traverse_ shiftUnwanted candidates
+  boxes <- nub . catMaybes <$> traverse selectBox candidates
+  parameters <- Strict.Vector.fromList <$> traverse parameter boxes
+  zipWithM_ writeVariable [0 ..] boxes
+  result <- zonk wobbly
+  pure
+    SchemeOver
+      { parameters,
+        constraints = Strict.Vector.empty,
+        result
+      }
+  where
+    shiftUnwanted :: Collected s (scope ':+ scopes) -> ST s ()
+    shiftUnwanted = \case
+      Collect reference ->
+        readSTRef reference >>= \case
+          Unsolved {kindx, constraintsx}
+            | null constraintsx -> do
+                _ <- unshift fail fail kindx
+                pure ()
+            | otherwise -> do
+                _ <- unshift fail fail $ Logical reference
+                pure ()
+            where
+              fail :: a
+              fail = error "unsink can't fail"
+          Solved {} -> pure ()
+      Reach {} -> pure ()
+    selectBox :: Collected s (scope ':+ scopes) -> ST s (Maybe (STRef s (Box s (scope ':+ scopes))))
+    selectBox = \case
+      Collect reference ->
+        readSTRef reference >>= \case
+          Unsolved {constraintsx}
+            | null constraintsx -> pure $ Just reference
+            | otherwise -> error "select box with unsolved"
+          Solved {} -> pure Nothing
+      Reach {} -> pure Nothing
+    parameter :: STRef s (Box s (scope' ':+ scope)) -> ST s (Type s scope)
+    parameter reference =
+      readSTRef reference >>= \case
+        Unsolved {kindx} -> unshift fail fail kindx
+          where
+            fail :: a
+            fail = error "parameter can't fail"
+        Solved {} -> error "bad kind"
+    writeVariable :: Int -> STRef s (Box s (Scope.Local ':+ scopes)) -> ST s ()
+    writeVariable variable reference =
+      writeSTRef reference $ Solved $ Variable $ Local.Local variable
+
+generalize :: Generalize Type s scopes -> ST s (Scheme s scopes)
+generalize = fmap Scheme . generalizeOver
+
 solve :: Position -> Type s scope -> ST s (Simple.Type scope)
 solve position = solve
   where
@@ -973,27 +1086,3 @@ instance Eq (Collected s scopes) where
   Collect left == Collect right = left == right
   Reach left == Reach right = left == right
   _ == _ = False
-
-collect :: Type s scopes -> ST s [Collected s scopes]
-collect = \case
-  Logical reference ->
-    readSTRef reference >>= \case
-      Solved typex -> collect typex
-      Unsolved {} -> pure [Collect reference]
-  Shift typex -> fmap Reach <$> collect typex
-  Variable {} -> pure []
-  Constructor {} -> pure []
-  Call function argument -> do
-    function <- collect function
-    argument <- collect argument
-    pure (function ++ argument)
-  Function argument result -> do
-    argument <- collect argument
-    result <- collect result
-    pure $ argument ++ result
-  Type universe -> do
-    collect universe
-  Constraint -> pure []
-  Small -> pure []
-  Large -> pure []
-  Universe -> pure []
