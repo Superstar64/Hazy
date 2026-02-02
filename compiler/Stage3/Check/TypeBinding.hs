@@ -60,8 +60,8 @@ rigid ::
     (ST s (KindAnnotation scope))
     (ST s (TypeDeclaration scope)) ->
   ST s (TypeDeclarationExtra scope) ->
-  Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) (ST s b)) ->
-  Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) (ST s d)) ->
+  Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) b) ->
+  Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) d) ->
   TypeBinding s scope
 rigid
   Functor.Annotated

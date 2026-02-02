@@ -76,7 +76,7 @@ localBindings ::
     (ST s (TypeDeclaration (Declaration ':+ scope)))
     (ST s (TypeDeclarationExtra (Declaration ':+ scope)))
     (ST s (InstanceAnnotation (Declaration ':+ scope)))
-    (ST s i) ->
+    i ->
   Context s scope ->
   Context s (Declaration ':+ scope)
 localBindings

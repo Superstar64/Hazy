@@ -1,4 +1,4 @@
-module Stage3.Temporary.Declarations where
+module Stage3.Temporary.Declarations (Declarations (..), check, solve) where
 
 import Control.Monad.ST (ST)
 import Data.Acyclic (loebST7)
@@ -15,12 +15,18 @@ import qualified Stage2.Index.Type2 as Type2
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import qualified Stage2.Tree.Declarations as Stage2 (Declarations (..))
+import qualified Stage2.Tree.Instance as Stage2 (Instance)
 import qualified Stage2.Tree.Instance as Stage2.Instance
+import qualified Stage2.Tree.TermDeclaration as Stage2 (TermDeclaration)
 import qualified Stage2.Tree.TermDeclaration as Stage2.TermDeclaration
+import qualified Stage2.Tree.TypeDeclaration as Stage2 (TypeDeclaration)
 import qualified Stage2.Tree.TypeDeclaration as Stage2.TypeDeclaration
 import Stage3.Check.Context (Context (..), localBindings)
+import Stage3.Check.InstanceAnnotation (InstanceAnnotation)
 import qualified Stage3.Check.InstanceAnnotation as InstanceAnnotation
+import Stage3.Check.KindAnnotation (KindAnnotation)
 import qualified Stage3.Check.KindAnnotation as KindAnnotation
+import Stage3.Check.TypeAnnotation (TypeAnnotation)
 import qualified Stage3.Check.TypeAnnotation as TypeAnnotation
 import qualified Stage3.Functor.Annotated as Functor (Annotated (..), content)
 import Stage3.Functor.Declarations (mapWithKey)
@@ -36,6 +42,7 @@ import qualified Stage3.Tree.TypeDeclaration as TypeDeclaration
 import Stage3.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 import qualified Stage3.Tree.TypeDeclarationExtra as TypeDeclarationExtra
 import qualified Stage3.Unify as Unify
+import Prelude hiding (Functor)
 
 data Declarations s scope = Declarations
   { terms :: !(Vector (TermDeclaration s scope)),
@@ -44,6 +51,17 @@ data Declarations s scope = Declarations
     classInstances :: !(Vector (Map (Type2.Index scope) (Instance scope))),
     dataInstances :: !(Vector (Map (Type2.Index scope) (Instance scope)))
   }
+
+type Functor s scope =
+  Functor.Declarations
+    (Scope.Declaration ':+ scope)
+    (ST s (TypeAnnotation (Unify.Type s (Scope.Declaration ':+ scope)) (Scope.Declaration ':+ scope)))
+    (ST s (TermDeclaration s (Scope.Declaration ':+ scope)))
+    (ST s (KindAnnotation (Scope.Declaration ':+ scope)))
+    (ST s (TypeDeclaration (Scope.Declaration ':+ scope)))
+    (ST s (TypeDeclarationExtra (Scope.Declaration ':+ scope)))
+    (ST s (InstanceAnnotation (Scope.Declaration ':+ scope)))
+    (ST s (Instance (Scope.Declaration ':+ scope)))
 
 fromFunctor ::
   Functor.Declarations
@@ -66,7 +84,6 @@ fromFunctor Functor.Declarations {terms, types, typeExtras, classInstances, data
     }
 
 check ::
-  forall s scope.
   Context s scope ->
   Stage2.Declarations (Scope.Declaration ':+ scope) ->
   ST
@@ -76,66 +93,146 @@ check ::
     )
 check context declarations = do
   functor <-
-    loebST7 $
-      let go1 index declaration =
-            ( cyclicalTypeChecking $ Stage2.TermDeclaration.position declaration,
-              \declarations -> do
-                context <- pure $ localBindings declarations context
-                typex <- Unify.fresh Unify.typex
-                TypeAnnotation.check (Term0.Declaration index) typex context declaration
-            )
-          go2 index declaration =
-            ( cyclicalTypeChecking $ Stage2.TermDeclaration.position declaration,
-              \declarations@Functor.Declarations {terms} -> do
-                context <- pure $ localBindings declarations context
-                let Functor.Annotated {meta} = terms Vector.! index
-                annotation <- meta
-                TermDeclaration.check context annotation declaration
-            )
-          go3 _ declaration =
-            ( cyclicalTypeChecking $ Stage2.TypeDeclaration.position declaration,
-              \declarations -> do
-                context <- pure $ localBindings declarations context
-                KindAnnotation.check context declaration
-            )
-          go4 index declaration =
-            ( cyclicalTypeChecking $ Stage2.TypeDeclaration.position declaration,
-              \declarations@Functor.Declarations {types} -> do
-                context <- pure $ localBindings declarations context
-                let Functor.Annotated {meta} = types Vector.! index
-                annotation <- meta
-                TypeDeclaration.check context annotation declaration
-            )
-          go5 index declaration =
-            ( cyclicalTypeChecking $ Stage2.TypeDeclaration.position declaration,
-              \declarations@Functor.Declarations {types} -> do
-                context <- pure $ localBindings declarations context
-                let Functor.Annotated {content} = types Vector.! index
-                proper <- content
-                TypeDeclarationExtra.check context (Type.Declaration index) proper declaration
-            )
-          go6 _ declaration =
-            ( cyclicalTypeChecking $ Stage2.Instance.startPosition declaration,
-              \declarations -> InstanceAnnotation.check (localBindings declarations context) declaration
-            )
-          go7 key declaration =
-            ( cyclicalTypeChecking $ Stage2.Instance.startPosition declaration,
-              \declarations -> do
-                let Functor.Declarations {dataInstances, classInstances} = declarations
-                case key of
-                  Instance.Key.Data {index, classKey} -> do
-                    let Functor.Annotated {meta} = dataInstances Vector.! index Map.! classKey
-                        key = Instance.Data {index1 = classKey, head1 = Type.Declaration index}
-                    annotation <- meta
-                    Instance.check (localBindings declarations context) key annotation declaration
-                  Instance.Key.Class {index, dataKey} -> do
-                    let Functor.Annotated {meta} = classInstances Vector.! index Map.! dataKey
-                        key = Instance.Class {index2 = Type.Declaration index, head2 = dataKey}
-                    annotation <- meta
-                    Instance.check (localBindings declarations context) key annotation declaration
-            )
-       in mapWithKey go1 go2 go3 go4 go5 go6 go7 $ Functor.fromStage2 Local declarations
-  pure (localBindings (heptamap pure (const ()) pure pure pure pure pure functor) context, fromFunctor functor)
+    loebST7
+      $ mapWithKey
+        (checkTermAnnotation context)
+        (checkTermDeclaration context)
+        (checkTypeAnnotation context)
+        (checkTypeDeclaration context)
+        (checkTypeDeclarationExtra context)
+        (checkInstanceAnnotation context)
+        (checkInstanceDeclaration context)
+      $ Functor.fromStage2 Local declarations
+  let lifted =
+        heptamap
+          pure
+          (const ())
+          pure
+          pure
+          pure
+          pure
+          (const ())
+          functor
+  pure (localBindings lifted context, fromFunctor functor)
+
+checkTermAnnotation ::
+  Context s scope ->
+  Int ->
+  Stage2.TermDeclaration (Scope.Declaration ':+ scope) ->
+  ( a,
+    Functor s scope ->
+    ST s (TypeAnnotation (Unify.Type s scope') (Scope.Declaration ':+ scope))
+  )
+checkTermAnnotation context index declaration =
+  ( cyclicalTypeChecking $ Stage2.TermDeclaration.position declaration,
+    \declarations -> do
+      context <- pure $ localBindings declarations context
+      typex <- Unify.fresh Unify.typex
+      TypeAnnotation.check (Term0.Declaration index) typex context declaration
+  )
+
+checkTermDeclaration ::
+  Context s scope ->
+  Int ->
+  Stage2.TermDeclaration (Scope.Declaration ':+ scope) ->
+  ( a,
+    Functor s scope -> ST s (TermDeclaration s (Scope.Declaration ':+ scope))
+  )
+checkTermDeclaration context index declaration =
+  ( cyclicalTypeChecking $ Stage2.TermDeclaration.position declaration,
+    \declarations@Functor.Declarations {terms} -> do
+      context <- pure $ localBindings declarations context
+      let Functor.Annotated {meta} = terms Vector.! index
+      annotation <- meta
+      TermDeclaration.check context annotation declaration
+  )
+
+checkTypeAnnotation ::
+  Context s scope ->
+  p ->
+  Stage2.TypeDeclaration (Scope.Declaration ':+ scope) ->
+  ( a,
+    Functor s scope ->
+    ST s (KindAnnotation (Scope.Declaration ':+ scope))
+  )
+checkTypeAnnotation context _ declaration =
+  ( cyclicalTypeChecking $ Stage2.TypeDeclaration.position declaration,
+    \declarations -> do
+      context <- pure $ localBindings declarations context
+      KindAnnotation.check context declaration
+  )
+
+checkTypeDeclaration ::
+  Context s scope ->
+  Int ->
+  Stage2.TypeDeclaration (Scope.Declaration ':+ scope) ->
+  ( a,
+    Functor s scope ->
+    ST s (TypeDeclaration (Scope.Declaration ':+ scope))
+  )
+checkTypeDeclaration context index declaration =
+  ( cyclicalTypeChecking $ Stage2.TypeDeclaration.position declaration,
+    \declarations@Functor.Declarations {types} -> do
+      context <- pure $ localBindings declarations context
+      let Functor.Annotated {meta} = types Vector.! index
+      annotation <- meta
+      TypeDeclaration.check context annotation declaration
+  )
+
+checkTypeDeclarationExtra ::
+  Context s scope ->
+  Int ->
+  Stage2.TypeDeclaration (Scope.Declaration ':+ scope) ->
+  ( a,
+    Functor s scope ->
+    ST s (TypeDeclarationExtra (Scope.Declaration ':+ scope))
+  )
+checkTypeDeclarationExtra context index declaration =
+  ( cyclicalTypeChecking $ Stage2.TypeDeclaration.position declaration,
+    \declarations@Functor.Declarations {types} -> do
+      context <- pure $ localBindings declarations context
+      let Functor.Annotated {content} = types Vector.! index
+      proper <- content
+      TypeDeclarationExtra.check context (Type.Declaration index) proper declaration
+  )
+
+checkInstanceAnnotation ::
+  Context s scope ->
+  p ->
+  Stage2.Instance.Instance (Scope.Declaration ':+ scope) ->
+  ( a,
+    Functor s scope ->
+    ST s (InstanceAnnotation (Scope.Declaration ':+ scope))
+  )
+checkInstanceAnnotation context _ declaration =
+  ( cyclicalTypeChecking $ Stage2.Instance.startPosition declaration,
+    \declarations -> InstanceAnnotation.check (localBindings declarations context) declaration
+  )
+
+checkInstanceDeclaration ::
+  Context s scope ->
+  Instance.Key.Key (Scope.Declaration ':+ scope) ->
+  Stage2.Instance (Scope.Declaration ':+ scope) ->
+  ( a,
+    Functor s scope ->
+    ST s (Instance (Scope.Declaration ':+ scope))
+  )
+checkInstanceDeclaration context key declaration =
+  ( cyclicalTypeChecking $ Stage2.Instance.startPosition declaration,
+    \declarations -> do
+      let Functor.Declarations {dataInstances, classInstances} = declarations
+      case key of
+        Instance.Key.Data {index, classKey} -> do
+          let Functor.Annotated {meta} = dataInstances Vector.! index Map.! classKey
+              key = Instance.Data {index1 = classKey, head1 = Type.Declaration index}
+          annotation <- meta
+          Instance.check (localBindings declarations context) key annotation declaration
+        Instance.Key.Class {index, dataKey} -> do
+          let Functor.Annotated {meta} = classInstances Vector.! index Map.! dataKey
+              key = Instance.Class {index2 = Type.Declaration index, head2 = dataKey}
+          annotation <- meta
+          Instance.check (localBindings declarations context) key annotation declaration
+  )
 
 solve :: Declarations s scope -> ST s (Solved.Declarations scope)
 solve Declarations {terms, types, typeExtras, dataInstances, classInstances} = do
