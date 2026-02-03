@@ -8,8 +8,7 @@ import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope (Local)
 import qualified Stage2.Tree.TermDeclaration as Stage2 (TermDeclaration (..))
 import Stage3.Check.Context (Context (..))
-import Stage3.Check.TypeAnnotation (TypeAnnotation)
-import qualified Stage3.Check.TypeAnnotation as TypeAnnotation
+import Stage3.Check.TypeAnnotation (Annotation (..), AnyAnnotation (..))
 import Stage3.Simple.Type (lift)
 import Stage3.Temporary.Definition (Definition)
 import qualified Stage3.Temporary.Definition as Definition
@@ -38,31 +37,35 @@ data TermDeclaration s scope
 
 check ::
   Context s scope ->
-  TypeAnnotation (Unify.Type s scope) scope ->
+  AnyAnnotation s scope ->
   Stage2.TermDeclaration scope ->
   ST s (TermDeclaration s scope)
-check context annotation Stage2.Auto {position, definitionAuto, name}
-  | TypeAnnotation.Inferred typeAuto <- annotation = do
-      definitionAuto <- Definition.check context typeAuto definitionAuto
-      pure Auto {position, name, definitionAuto, typeAuto}
-  | otherwise = error "bad type annotation"
-check context annotation Stage2.Manual {position, definition, name}
-  | TypeAnnotation.Annotation
+check context annotation Stage2.Auto {position, definitionAuto, name} = case annotation of
+  Global -> do
+    typeAuto <- Unify.fresh Unify.typex
+    definitionAuto <- Definition.check context typeAuto definitionAuto
+    pure Auto {position, name, definitionAuto, typeAuto}
+  Local typeAuto -> do
+    definitionAuto <- Definition.check context typeAuto definitionAuto
+    pure Auto {position, name, definitionAuto, typeAuto}
+  _ -> error "bad type annotation"
+check context annotation Stage2.Manual {position, definition, name} = case annotation of
+  AnyAnnotation
+    Annotation
       { annotation =
           annotation@Solved.Scheme
             { parameters,
               constraints,
               result
             }
-      } <-
-      annotation =
+      } ->
       do
         let simple = Simple.simplify result
         context <- Solved.Scheme.augment position parameters constraints context
         definition <- Definition.check context (lift simple) definition
         let typex = Simple.Scheme.simplify annotation
         pure Manual {position, name, definition, annotation, typex}
-  | otherwise = error "bad type annotation"
+  _ -> error "bad type annotation"
 check _ _ Stage2.Share {position} = unsupportedFeaturePatternLetBinds position
 
 solve :: TermDeclaration s scope -> ST s (Solved.TermDeclaration scope)

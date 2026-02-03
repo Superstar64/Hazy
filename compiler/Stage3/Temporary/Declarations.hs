@@ -9,7 +9,6 @@ import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Error (cyclicalTypeChecking)
 import Stage1.Variable (Qualifiers (Local))
-import qualified Stage2.Index.Term0 as Term0
 import qualified Stage2.Index.Type as Type
 import qualified Stage2.Index.Type2 as Type2
 import Stage2.Scope (Environment (..))
@@ -26,7 +25,7 @@ import Stage3.Check.InstanceAnnotation (InstanceAnnotation)
 import qualified Stage3.Check.InstanceAnnotation as InstanceAnnotation
 import Stage3.Check.KindAnnotation (KindAnnotation)
 import qualified Stage3.Check.KindAnnotation as KindAnnotation
-import Stage3.Check.TypeAnnotation (TypeAnnotation)
+import Stage3.Check.TypeAnnotation (LocalTypeAnnotation)
 import qualified Stage3.Check.TypeAnnotation as TypeAnnotation
 import qualified Stage3.Functor.Annotated as Functor (Annotated (..), content)
 import Stage3.Functor.Declarations (mapWithKey)
@@ -41,7 +40,6 @@ import Stage3.Tree.TypeDeclaration (TypeDeclaration)
 import qualified Stage3.Tree.TypeDeclaration as TypeDeclaration
 import Stage3.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 import qualified Stage3.Tree.TypeDeclarationExtra as TypeDeclarationExtra
-import qualified Stage3.Unify as Unify
 import Prelude hiding (Functor)
 
 data Declarations s scope = Declarations
@@ -55,7 +53,7 @@ data Declarations s scope = Declarations
 type Functor s scope =
   Functor.Declarations
     (Scope.Declaration ':+ scope)
-    (ST s (TypeAnnotation (Unify.Type s (Scope.Declaration ':+ scope)) (Scope.Declaration ':+ scope)))
+    (ST s (LocalTypeAnnotation s (Scope.Declaration ':+ scope)))
     (ST s (TermDeclaration s (Scope.Declaration ':+ scope)))
     (ST s (KindAnnotation (Scope.Declaration ':+ scope)))
     (ST s (TypeDeclaration (Scope.Declaration ':+ scope)))
@@ -117,18 +115,17 @@ check context declarations = do
 
 checkTermAnnotation ::
   Context s scope ->
-  Int ->
+  p ->
   Stage2.TermDeclaration (Scope.Declaration ':+ scope) ->
   ( a,
     Functor s scope ->
-    ST s (TypeAnnotation (Unify.Type s scope') (Scope.Declaration ':+ scope))
+    ST s (LocalTypeAnnotation s (Scope.Declaration ':+ scope))
   )
-checkTermAnnotation context index declaration =
+checkTermAnnotation context _ declaration =
   ( cyclicalTypeChecking $ Stage2.TermDeclaration.position declaration,
     \declarations -> do
       context <- pure $ localBindings declarations context
-      typex <- Unify.fresh Unify.typex
-      TypeAnnotation.check (Term0.Declaration index) typex context declaration
+      TypeAnnotation.checkLocal context declaration
   )
 
 checkTermDeclaration ::
@@ -144,7 +141,8 @@ checkTermDeclaration context index declaration =
       context <- pure $ localBindings declarations context
       let Functor.Annotated {meta} = terms Vector.! index
       annotation <- meta
-      TermDeclaration.check context annotation declaration
+      let any = TypeAnnotation.local annotation
+      TermDeclaration.check context any declaration
   )
 
 checkTypeAnnotation ::

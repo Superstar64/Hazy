@@ -7,7 +7,6 @@ import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Error (cyclicalTypeChecking)
 import Stage1.Variable (FullQualifiers)
-import qualified Stage2.Index.Term0 as Term0
 import qualified Stage2.Index.Type as Type
 import Stage2.Scope (Global)
 import qualified Stage2.Tree.Instance as Stage2.Instance
@@ -20,7 +19,7 @@ import Stage3.Check.InstanceAnnotation (InstanceAnnotation)
 import qualified Stage3.Check.InstanceAnnotation as InstanceAnnotation
 import Stage3.Check.KindAnnotation (KindAnnotation)
 import qualified Stage3.Check.KindAnnotation as KindAnnotation
-import Stage3.Check.TypeAnnotation (TypeAnnotation)
+import Stage3.Check.TypeAnnotation (GlobalTypeAnnotation)
 import qualified Stage3.Check.TypeAnnotation as TypeAnnotation
 import qualified Stage3.Functor.Annotated as Functor (Annotated (..))
 import qualified Stage3.Functor.Declarations as Functor (Declarations (..))
@@ -49,7 +48,7 @@ data Module = Module
 
 type Functor s =
   Functor.ModuleSet
-    (ST s (TypeAnnotation () Global))
+    (ST s (GlobalTypeAnnotation Global))
     (ST s (TermDeclaration Global))
     (ST s (KindAnnotation Global))
     (ST s (TypeDeclaration Global))
@@ -101,14 +100,14 @@ check modules =
           (Functor.ModuleSet $ fmap fromStage2 modules)
 
 checkTermAnnotation ::
-  Int ->
-  Int ->
+  p1 ->
+  p2 ->
   Stage2.TermDeclaration Global ->
-  (a, Functor s -> ST s (TypeAnnotation () Global))
-checkTermAnnotation global local declaration =
+  (a, Functor s -> ST s (GlobalTypeAnnotation Global))
+checkTermAnnotation _ _ declaration =
   ( cyclicalTypeChecking $ Stage2.TermDeclaration.position declaration,
     \modules ->
-      TypeAnnotation.check (Term0.Global global local) () (globalBindings modules) declaration
+      TypeAnnotation.checkGlobal (globalBindings modules) declaration
   )
 
 checkTermDeclaration ::
@@ -124,9 +123,9 @@ checkTermDeclaration global local declaration =
           Functor.Annotated {meta} = terms Vector.! local
       annotation <- meta
       let context = globalBindings moduleSet
-      -- todo, augment context with self to allow basic recursive inference
-      annotation <- TypeAnnotation.instanciate annotation
-      unsolved <- TermDeclaration.Unsolved.check context annotation declaration
+          -- todo, augment context with self to allow basic recursive inference
+          any = TypeAnnotation.global annotation
+      unsolved <- TermDeclaration.Unsolved.check context any declaration
       TermDeclaration.Unsolved.solve unsolved
   )
 

@@ -15,7 +15,7 @@ import Stage3.Check.LocalBinding (LocalBinding)
 import qualified Stage3.Check.LocalBinding as LocalBinding
 import Stage3.Check.TermBinding (TermBinding)
 import qualified Stage3.Check.TermBinding as TermBinding
-import {-# SOURCE #-} Stage3.Check.TypeAnnotation (TypeAnnotation)
+import {-# SOURCE #-} Stage3.Check.TypeAnnotation (GlobalTypeAnnotation, LocalTypeAnnotation)
 import Stage3.Check.TypeBinding (TypeBinding)
 import qualified Stage3.Check.TypeBinding as TypeBinding
 import qualified Stage3.Functor.Declarations as Functor (Declarations (..))
@@ -24,7 +24,6 @@ import qualified Stage3.Functor.ModuleSet as Functor (ModuleSet (..))
 import {-# SOURCE #-} Stage3.Tree.TermDeclaration (TermDeclaration)
 import {-# SOURCE #-} Stage3.Tree.TypeDeclaration (TypeDeclaration)
 import {-# SOURCE #-} Stage3.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
-import {-# SOURCE #-} qualified Stage3.Unify as Unify
 
 type Context :: Data.Kind.Type -> Environment -> Data.Kind.Type
 data Context s scope = Context
@@ -45,7 +44,7 @@ instance Shift.Unshift (Context s) where
 
 globalBindings ::
   Functor.ModuleSet
-    (ST s (TypeAnnotation () Global))
+    (ST s (GlobalTypeAnnotation Global))
     (ST s (TermDeclaration Global))
     (ST s (KindAnnotation Global))
     (ST s (TypeDeclaration Global))
@@ -70,7 +69,7 @@ globalBindings (Functor.ModuleSet modules) =
 localBindings ::
   Functor.Declarations
     (Declaration ':+ scope)
-    (ST s (TypeAnnotation (Unify.Type s (Declaration ':+ scope)) (Declaration ':+ scope)))
+    (ST s (LocalTypeAnnotation s (Declaration ':+ scope)))
     b
     (ST s (KindAnnotation (Declaration ':+ scope)))
     (ST s (TypeDeclaration (Declaration ':+ scope)))
