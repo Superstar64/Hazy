@@ -6,10 +6,12 @@ import {-# SOURCE #-} qualified Stage4.Tree.Expression as Simple (Expression)
 
 data InstanceMethod scope
   = Definition
-      { definition :: !(Definition (Local ':+ Local ':+ scope)),
+      { constraintCount :: !Int,
+        definition :: !(Definition (Local ':+ Local ':+ scope)),
         definition' :: !(Simple.Expression (Local ':+ Local ':+ scope))
       }
   | Default
-      { definition' :: !(Simple.Expression (Local ':+ Local ':+ scope))
+      { constraintCount :: !Int,
+        definition' :: !(Simple.Expression (Local ':+ Local ':+ scope))
       }
   deriving (Show)

@@ -5,17 +5,16 @@ import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (Shift (shift), shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Instance as Stage3 (Instance (..))
-import qualified Stage3.Tree.InstanceMethod as Stage3 (InstanceMethod (..))
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
 import Stage4.Tree.Evidence (Evidence)
-import Stage4.Tree.Expression (Expression)
+import Stage4.Tree.InstanceMethod (InstanceMethod)
+import qualified Stage4.Tree.InstanceMethod as InstanceMethod
 
 data Instance scope = Instance
   { evidence :: !(Strict.Vector (Evidence (Local ':+ scope))),
     prerequisitesCount :: !Int,
-    memberConstraintCounts :: !(Strict.Vector Int),
-    members :: !(Strict.Vector (Expression (Local ':+ Local ':+ scope)))
+    members :: !(Strict.Vector (InstanceMethod scope))
   }
   deriving (Show)
 
@@ -29,19 +28,17 @@ instance Shift2.Functor Instance where
   map = Substitute.mapDefault
 
 instance Substitute.Functor Instance where
-  map category Instance {evidence, prerequisitesCount, memberConstraintCounts, members} =
+  map category Instance {evidence, prerequisitesCount, members} =
     Instance
       { evidence = Substitute.map (Substitute.Over category) <$> evidence,
         prerequisitesCount,
-        memberConstraintCounts,
-        members = Substitute.map (Substitute.Over (Substitute.Over category)) <$> members
+        members = Substitute.map category <$> members
       }
 
 simplify :: Stage3.Instance scope -> Instance scope
-simplify Stage3.Instance {evidence, prerequisitesCount, memberConstraintCounts, members} =
+simplify Stage3.Instance {evidence, prerequisitesCount, members} =
   Instance
     { evidence,
       prerequisitesCount,
-      memberConstraintCounts,
-      members = Stage3.definition' <$> members
+      members = InstanceMethod.simplify <$> members
     }

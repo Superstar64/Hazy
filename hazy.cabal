@@ -354,6 +354,7 @@ executable hazy
     Stage4.Tree.Evidence
     Stage4.Tree.Expression
     Stage4.Tree.Instance
+    Stage4.Tree.InstanceMethod
     Stage4.Tree.Instanciation
     Stage4.Tree.Module
     Stage4.Tree.Scheme

@@ -68,7 +68,6 @@ head = \case
 data Instance scope = Instance
   { evidence :: !(Strict.Vector (Simple.Evidence (Local ':+ scope))),
     prerequisitesCount :: !Int,
-    memberConstraintCounts :: !(Strict.Vector Int),
     members :: !(Strict.Vector (InstanceMethod scope))
   }
   deriving (Show)
@@ -125,7 +124,6 @@ check
                           Class {index2, head2} -> Evidence.Class index2 head2
                       }
         context <- Scheme.augment startPosition parameters prerequisites context
-        let memberConstraintCounts = Simple.Scheme.constraintCount <$> methods
         {-
           instances where the constraints contain the variable in the non head part
           should not kind check, so we should be able to safely ignore them
@@ -150,13 +148,18 @@ check
               pure
                 Definition
                   { definition,
-                    definition'
+                    definition',
+                    constraintCount = Simple.Scheme.constraintCount scheme
                   }
-            check index _ Strict.Nothing | defaultx <- defaults Strict.Vector.! index = do
+            check index scheme Strict.Nothing | defaultx <- defaults Strict.Vector.! index = do
               let typeReplacements = Vector.singleton base
                   evidenceReplacements = Vector.singleton self
                   category = Substitute.Over $ Substitute Shift.Shift typeReplacements evidenceReplacements
                   definition' = Substitute.map category defaultx
-              pure Default {definition'}
+              pure
+                Default
+                  { definition',
+                    constraintCount = Simple.Scheme.constraintCount scheme
+                  }
         members <- izipWithM check methods (fmap shift <$> members)
-        pure Instance {evidence, prerequisitesCount, memberConstraintCounts, members}
+        pure Instance {evidence, prerequisitesCount, members}
