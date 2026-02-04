@@ -764,7 +764,7 @@ toggles =
     pragma = string (pack "{-#") *> many space *> body
     body = (++) <$> known <*> toggles <|> ncommentBody *> toggles
     known = symbol *> toggle
-    symbol = stringIgnoreCase (pack "LANGUAGE_HAZY") <|> stringIgnoreCase (pack "LANGUAGE")
+    symbol = stringIgnoreCase (pack "language_hazy") <|> stringIgnoreCase (pack "language")
     toggle =
       asum
         [ space *> toggle,
@@ -802,9 +802,9 @@ premarked =
     body = known <|> const <$ ncommentBody <*> premarked
     known =
       asum
-        [ record <$> (stringIgnoreCase (pack "UNORDEREDRECORDS") *> position) <*> premarked,
-          fields <$> (stringIgnoreCase (pack "CONSTRUCTORFIELDS") *> position) <*> premarked,
-          builtin <$> (stringIgnoreCase (pack "BUILTIN") *> position) <*> premarked
+        [ record <$> (stringIgnoreCase (pack "unorderedrecords") *> position) <*> premarked,
+          fields <$> (stringIgnoreCase (pack "constructorfields") *> position) <*> premarked,
+          builtin <$> (stringIgnoreCase (pack "builtin") *> position) <*> premarked
         ]
     record position' premarked position = Premark position Unordered position' premarked
     builtin position' premarked position = Premark position Builtin position' premarked

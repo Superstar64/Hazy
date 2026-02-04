@@ -252,9 +252,10 @@ string key = satifyBind (fromString (show key)) $ \Stream {location, stream} ->
         else Fail
 
 stringIgnoreCase :: Text -> Parser Stream Text
+stringIgnoreCase key | Text.toLower key /= key = error "bad key case"
 stringIgnoreCase key = satifyBind (fromString (show key)) $ \Stream {location, stream} ->
   let size = fromIntegral $ Text.length key
-   in if Text.toLower key == Text.toLower (Text.take size stream)
+   in if key == Text.toLower (Text.take size stream)
         then Parse key Stream {location = Text.foldl step location key, stream = Text.drop size stream}
         else Fail
 
