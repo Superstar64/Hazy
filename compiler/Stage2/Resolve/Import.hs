@@ -69,6 +69,7 @@ import Stage2.Resolve.Functor.Core (Core (..))
 import qualified Stage2.Resolve.Functor.Core as Core
 import Stage2.Resolve.Functor.Same (Same (..))
 import Stage2.Resolve.Stability (Stability (..))
+import qualified Stage2.Scope as Scope
 
 newtype Algebra3A f a b c = Algebra3A
   { runAlgebra3A :: forall m. (Monad m) => f (m a) (m b) (m c) -> m a
@@ -210,7 +211,7 @@ contramap (Contramap map) (Dependency dependency) =
 reselectTerm ::
   Position ->
   Variable ->
-  Functor.Term.Binding () ->
+  Functor.Term.Binding x ->
   Functor.Term.Binding (Void, Algebra3A (Bindings stability) a b c)
 reselectTerm position name = fmap $ const (cyclicalImports position, algebra)
   where
@@ -219,7 +220,7 @@ reselectTerm position name = fmap $ const (cyclicalImports position, algebra)
 reselectConstructor ::
   Position ->
   Variable.Constructor ->
-  Functor.Constructor.Binding () ->
+  Functor.Constructor.Binding x ->
   Functor.Constructor.Binding (Void, Algebra3B (Bindings stability) a b c)
 reselectConstructor position name = fmap $ const (cyclicalImports position, algebra)
   where
@@ -228,7 +229,7 @@ reselectConstructor position name = fmap $ const (cyclicalImports position, alge
 reselectType ::
   Position ->
   ConstructorIdentifier ->
-  Functor.Type.Binding () ->
+  Functor.Type.Binding x ->
   Functor.Type.Binding (Void, Algebra3C (Bindings stability) a b c)
 reselectType position name = fmap $ const (cyclicalImports position, algebra)
   where
@@ -262,7 +263,7 @@ pickData ::
   Position ->
   ConstructorIdentifier ->
   Fields ->
-  m (Bindings stability () () ()) ->
+  m (Bindings stability a b c) ->
   m (Dependency () (Bindings ()) scope)
 pickData position name AllFields request = do
   Bindings {terms, constructors, types} <- request
@@ -372,7 +373,7 @@ pickData position name Fields {picks} _ = pure $ Dependency acyclic
 pickSymbol ::
   (Monad m) =>
   Stage1.Import.Symbol ->
-  m (Bindings stability () () ()) ->
+  m (Bindings stability a b c) ->
   m (Dependency () (Bindings ()) scope)
 pickSymbol Stage1.Import.Definition {variable = startPosition :@ variable} _ =
   pickTerm startPosition variable
@@ -458,7 +459,7 @@ pickPrelude' ::
   (Monad m) =>
   Position ->
   [Stage1.Import Position] ->
-  Map FullQualifiers (m (Bindings () () () ())) ->
+  Map FullQualifiers (m (Bindings () a b c)) ->
   Map Qualifiers (m (Dependency Stability Canonical scope))
 pickPrelude' position declarations request = case not $ any isPrelude declarations of
   True
@@ -495,7 +496,7 @@ pickImports' ::
   (Monad m) =>
   StableImports ->
   [Stage1.Import Position] ->
-  Map FullQualifiers (m (Bindings () () () ())) ->
+  Map FullQualifiers (m (Bindings () a b c)) ->
   Map Qualifiers (m (Dependency Stability Canonical scope))
 pickImports' (StableImports stableImports) declarations request = Map.fromListWith (liftM2 (<>)) $ do
   Stage1.Import
@@ -576,7 +577,7 @@ pickExports ::
   (Monad m) =>
   Regular.Bindings () scope ->
   Stage1.Exports ->
-  Map Qualifiers (m (Bindings Stability () () ())) ->
+  Map Qualifiers (m (Bindings Stability a b c)) ->
   m (Dependency () (Core ()) scope)
 pickExports _ Stage1.Exports {exports} request = do
   let pick export = case export of
@@ -607,49 +608,54 @@ pickExports _ Stage1.Exports {exports} request = do
 pickExports _ Stage1.Builtin _ = pure $ constant' builtin
 pickExports defaultx Stage1.Default _ = pure $ constant' defaultx
 
-data Module scope = Module
+data Module = Module
   { modulePosition :: Position,
     extensions :: Stage1.Extensions,
     imports :: [Stage1.Import Position],
     exports :: Stage1.Exports,
-    base :: Regular.Bindings () scope
+    base :: Regular.Bindings () Scope.Global
   }
 
-pickModules :: forall scope. Map FullQualifiers (Module scope) -> Regular.Canonical scope
+pickModule ::
+  (Monad m) =>
+  FullQualifiers ->
+  Module ->
+  ( Void,
+    Map FullQualifiers (m (Bindings () a b c)) ->
+    m (Dependency () Canonical Scope.Global)
+  )
+pickModule (root :.. name) Module {modulePosition, extensions, exports, imports, base} =
+  (cyclicalImports modulePosition, algebra)
+  where
+    Extensions {implicitPrelude, stableImports} = extensions
+    algebra modules = do
+      let regular = base
+          update = Bindings.updateStability (Stable [modulePosition])
+      base <- pure $ update $ Regular.Bindings.toFunctor base
+      let pick ::
+            (Monad m) =>
+            Map FullQualifiers (m (Bindings () a b c)) ->
+            Map Qualifiers (m (Dependency Stability Canonical Scope.Global))
+          pick request =
+            let base = pickImports' (StableImports stableImports) imports request
+                prelude =
+                  if implicitPrelude
+                    then pickPrelude' modulePosition imports request
+                    else Map.empty
+                combined = Map.unionWith (liftM2 (<>)) base prelude
+                shadower = pure <$> shadow
+             in Map.unionWith (liftM2 prefer) shadower combined
+          shadow = Map.fromList [(Local, constant base), (root :. name, constant base)]
+      let imports = pick modules
+      exports <- pickExports regular exports (fmap runDependency <$> imports)
+      let go = Contramap (Core.updateStability () . pickStrict (dimapIdentity pick))
+          bindings = contramap go exports
+      pure bindings
+
+pickModules :: Map FullQualifiers Module -> Regular.Canonical Scope.Global
 pickModules modules =
-  Regular.Canonical.fromFunctor $
-    loeb3 $
-      Loeb3 $
-        Canonical $
-          loeb $
-            Loeb $
-              let ignore :: Bindings s a b c -> Bindings s () () ()
-                  ignore = trimap (const ()) (const ()) (const ())
-                  go (root :.. name) Module {modulePosition, extensions, exports, imports, base} =
-                    (cyclicalImports modulePosition, algebra)
-                    where
-                      Extensions {implicitPrelude, stableImports} = extensions
-                      algebra modules = do
-                        let regular = base
-                            update = Bindings.updateStability (Stable [modulePosition])
-                        base <- pure $ update $ Regular.Bindings.toFunctor base
-                        let pick ::
-                              (Monad m) =>
-                              Map FullQualifiers (m (Bindings () () () ())) ->
-                              Map Qualifiers (m (Dependency Stability Canonical scope))
-                            pick request =
-                              let base = pickImports' (StableImports stableImports) imports request
-                                  prelude =
-                                    if implicitPrelude
-                                      then pickPrelude' modulePosition imports request
-                                      else Map.empty
-                                  combined = Map.unionWith (liftM2 (<>)) base prelude
-                                  shadower = pure <$> shadow
-                               in Map.unionWith (liftM2 prefer) shadower combined
-                            shadow = Map.fromList [(Local, constant base), (root :. name, constant base)]
-                        let imports = pick (fmap ignore <$> modules)
-                        exports <- pickExports regular exports (fmap (ignore . runDependency) <$> imports)
-                        let go = Contramap (Core.updateStability () . pickStrict (dimapIdentity pick))
-                            bindings = runDependency $ contramap go exports
-                        pure $ trimap (fmap runAlgebra3A) (fmap runAlgebra3B) (fmap runAlgebra3C) bindings
-               in Map.mapWithKey go modules
+  Regular.Canonical.fromFunctor $ loeb3 $ Loeb3 $ Canonical $ loeb $ Loeb $ Map.mapWithKey pick modules
+  where
+    pick path modulex =
+      let (fail, run) = pickModule path modulex
+       in (fail, fmap (trimap (fmap runAlgebra3A) (fmap runAlgebra3B) (fmap runAlgebra3C) . runDependency) . run)
