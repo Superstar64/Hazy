@@ -32,14 +32,13 @@ import qualified Stage3.Temporary.Type as Type (check, solve)
 import qualified Stage3.Tree.Constraint as Solved
 import qualified Stage3.Unify as Unify
 import {-# SOURCE #-} qualified Stage4.Tree.Builtin as Builtin
-import qualified Stage4.Tree.Type as Simple (simplify)
 import {-# SOURCE #-} Stage4.Tree.TypeDeclaration (assumeData)
 import Prelude hiding (head)
 
 data Constraint s scope = Constraint
   { classx :: !(Type2.Index scope),
     head :: !Int,
-    arguments :: Strict.Vector (Type s (Local ':+ scope))
+    arguments :: !(Strict.Vector (Type s (Local ':+ scope)))
   }
 
 check ::
@@ -95,11 +94,9 @@ check
 solve :: Synonym.Context s (Local ':+ scope) -> Constraint s scope -> ST s (Solved.Constraint scope)
 solve context Constraint {classx, head, arguments} = do
   arguments <- traverse (Type.solve context) arguments
-  let arguments' = fmap Simple.simplify arguments
   pure
     Solved.Constraint
       { classx,
         head,
-        arguments,
-        arguments'
+        arguments
       }

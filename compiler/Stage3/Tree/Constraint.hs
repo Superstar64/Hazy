@@ -4,12 +4,10 @@ import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Stage2.Index.Type2 as Type2
 import Stage2.Scope (Environment ((:+)), Local)
 import Stage3.Tree.Type (Type)
-import qualified Stage4.Tree.Type as Simple
 
 data Constraint scope = Constraint
   { classx :: !(Type2.Index scope),
     head :: !Int,
-    arguments :: !(Strict.Vector (Type (Local ':+ scope))),
-    arguments' :: !(Strict.Vector (Simple.Type (Local ':+ scope)))
+    arguments :: !(Strict.Vector (Type (Local ':+ scope)))
   }
   deriving (Show)

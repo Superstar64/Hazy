@@ -10,6 +10,7 @@ import qualified Stage3.Tree.Constraint as Solved
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
 import Stage4.Tree.Type (Type (Call, Variable))
+import qualified Stage4.Tree.Type as Type
 
 data Constraint scope = Constraint
   { classx :: !(Type2.Index scope),
@@ -40,9 +41,9 @@ argument Constraint {head, arguments} =
   foldl Call (Variable (Local.Local head)) arguments
 
 simplify :: Solved.Constraint scope -> Constraint scope
-simplify Solved.Constraint {classx, head, arguments'} = do
+simplify Solved.Constraint {classx, head, arguments} = do
   Constraint
     { classx,
       head,
-      arguments = arguments'
+      arguments = Type.simplify <$> arguments
     }
