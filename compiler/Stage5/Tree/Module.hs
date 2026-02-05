@@ -16,7 +16,6 @@ import qualified Stage2.Index.Type2 as Type2
 import qualified Stage2.Scope as Scope
 import Stage4.Tree.Declarations (Declarations (..))
 import Stage4.Tree.Module (Module (..))
-import qualified Stage4.Tree.Scheme as Scheme
 import Stage4.Tree.TermDeclaration (TermDeclaration (Definition))
 import qualified Stage4.Tree.TermDeclaration as TermDeclaration
 import qualified Stage4.Tree.TypeDeclaration as TypeDeclaration
@@ -96,23 +95,15 @@ generate'
       dataInstances
     } = do
     context <- Context.start precontext
-    statements <-
-      for (zip [0 ..] (toList terms)) $
-        \( termIndex,
-           Definition
-             { typex,
-               definition
-             }
-           ) ->
-            do
-              let count = Scheme.constraintCount typex
-              thunk <- Expression.declaration context count definition
-              source <- Context.fresh context
-              let Global {name} = termNames Vector.! moduleIndex Vector.! termIndex
-              pure
-                [ Javascript.Const source thunk,
-                  Javascript.Export source name
-                ]
+    statements <- for (zip [0 ..] (toList terms)) $ \(termIndex, Definition {definition}) ->
+      do
+        thunk <- Expression.declaration context definition
+        source <- Context.fresh context
+        let Global {name} = termNames Vector.! moduleIndex Vector.! termIndex
+        pure
+          [ Javascript.Const source thunk,
+            Javascript.Export source name
+          ]
     classStatements <- for
       (zip [0 ..] $ toList classInstances)
       $ \(typeIndex, classInstances) ->

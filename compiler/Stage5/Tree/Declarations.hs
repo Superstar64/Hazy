@@ -9,7 +9,6 @@ import qualified Javascript.Tree.Statement as Javascript
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage4.Tree.Declarations (Declarations (..))
-import qualified Stage4.Tree.Scheme as Scheme
 import Stage4.Tree.TermDeclaration (TermDeclaration (Definition))
 import qualified Stage4.Tree.TermDeclaration as TermDeclaration
 import Stage5.Generate.Context (Context)
@@ -32,9 +31,8 @@ generate context Declarations {terms, classInstances, dataInstances} = do
         LocalType {classInstances, dataInstances}
   context <- pure $ Context.localBindings variables instances context
   statements <- for (zip (toList variables) (toList terms)) $
-    \(name, Definition {definition, typex}) -> do
-      let count = Scheme.constraintCount typex
-      thunk <- Expression.declaration context count definition
+    \(name, Definition {definition}) -> do
+      thunk <- Expression.declaration context definition
       pure $ Javascript.Const name thunk
   classStatements <-
     for (zip (toList classVariables) (toList classInstances)) $

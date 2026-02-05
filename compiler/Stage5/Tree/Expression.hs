@@ -10,9 +10,10 @@ import qualified Javascript.Tree.Statement as Javascript (Statement (..))
 import qualified Stage2.Index.Constructor as Constructor
 import qualified Stage2.Index.Method as Method
 import qualified Stage2.Index.Selector as Selector
-import Stage2.Scope (Environment (..), Local)
 import Stage4.Tree.Expression (Expression (..))
 import Stage4.Tree.Instanciation (Instanciation (Instanciation))
+import Stage4.Tree.SchemeOver (SchemeOver (..))
+import qualified Stage4.Tree.SchemeOver as SchemeOver
 import Stage5.Generate.Context (Context, fresh, localBindings, symbol, (!-))
 import qualified Stage5.Generate.Context as Context
 import qualified Stage5.Generate.Mangle as Mangle
@@ -187,8 +188,9 @@ thunk context value = do
         ]
   pure Javascript.Object {fields}
 
-declaration :: Context s scope -> Int -> Expression (Local ':+ scope) -> ST s Javascript.Expression
-declaration context constraintCount expression = do
+declaration :: Context s scope -> SchemeOver Expression scope -> ST s Javascript.Expression
+declaration context scheme@SchemeOver {result = expression} = do
+  let constraintCount = SchemeOver.constraintCount scheme
   fresh <- Vector.replicateM constraintCount (Context.fresh context)
   context <- pure $ Context.evidenceBindings fresh context
   if

@@ -38,7 +38,6 @@ import qualified Stage4.Tree.Evidence as Simple (Evidence)
 import qualified Stage4.Tree.Evidence as Simple.Evidence
 import {-# SOURCE #-} qualified Stage4.Tree.Expression as Simple.Expression
 import qualified Stage4.Tree.Scheme as Simple (Scheme (..))
-import qualified Stage4.Tree.Scheme as Simple.Scheme (constraintCount)
 import qualified Stage4.Tree.SchemeOver as Simple (SchemeOver (..))
 import qualified Stage4.Tree.Type as Simple.Type (Type (..))
 import Stage4.Tree.TypeDeclaration (assumeClass)
@@ -104,24 +103,18 @@ check
                 variables = [Simple.Type.Variable $ Local.Local i | i <- [0 .. length parameters - 1]]
             self
               | null prerequisites = root
-              | otherwise =
-                  Simple.Evidence.Call
-                    { function = root,
-                      arguments =
-                        Strict.Vector.fromList $ do
-                          i <- [0 .. length prerequisites]
-                          pure
-                            Simple.Evidence.Variable
-                              { variable = Evidence.Index (Evidence0.Assumed i)
-                              }
-                    }
+              | otherwise = Simple.Evidence.Call {function, arguments}
               where
-                root =
-                  shift
+                root@function = shift Simple.Evidence.Variable {variable}
+                  where
+                    variable = case key of
+                      Data {index1, head1} -> Evidence.Data index1 head1
+                      Class {index2, head2} -> Evidence.Class index2 head2
+                arguments = Strict.Vector.fromList $ do
+                  i <- [0 .. length prerequisites]
+                  pure
                     Simple.Evidence.Variable
-                      { variable = case key of
-                          Data {index1, head1} -> Evidence.Data index1 head1
-                          Class {index2, head2} -> Evidence.Class index2 head2
+                      { variable = Evidence.Index (Evidence0.Assumed i)
                       }
         context <- Scheme.augment startPosition parameters prerequisites context
         {-
@@ -130,6 +123,18 @@ check
           For example:
           > instance (F a (a)) => G (H a)
         -}
+        methods <-
+          pure $
+            let replacements = Vector.singleton base
+                category = Substitute.Over $ Substitute Shift.Shift replacements (error "no evidence")
+                substitute (Simple.Scheme Simple.SchemeOver {parameters, constraints, result}) =
+                  Simple.Scheme
+                    Simple.SchemeOver
+                      { parameters,
+                        constraints,
+                        result = Substitute.map category result
+                      }
+             in substitute <$> methods
 
         evidence <- for constraints $
           \Simple.Constraint {classx, arguments} -> do
@@ -137,29 +142,21 @@ check
             evidence <- Unify.constrain context startPosition (shift classx) (Simple.Type.lift parameter)
             Unify.solveEvidence startPosition evidence
         let check _ scheme (Strict.Just member) = do
+              let Simple.Scheme Simple.SchemeOver {parameters, constraints, result} = scheme
+              result <- pure $ Simple.Type.lift result
               context <- Simple.Scheme.augment' startPosition scheme context
-              let replacements = Vector.singleton base
-                  Simple.Scheme Simple.SchemeOver {result} = scheme
-                  category = Substitute.Over $ Substitute Shift.Shift replacements (error "no evidence")
-              result <- pure $ Simple.Type.lift $ Substitute.map category result
               definition <- Unsolved.Definition.check context result member
               definition <- Unsolved.Definition.solve definition
-              let definition' = Simple.Expression.simplify definition
-              pure
-                Definition
-                  { definition,
-                    definition',
-                    constraintCount = Simple.Scheme.constraintCount scheme
-                  }
+              let result = Simple.Expression.simplify definition
+                  definition' = Simple.SchemeOver {parameters, constraints, result}
+              pure Definition {definition, definition'}
             check index scheme Strict.Nothing | defaultx <- defaults Strict.Vector.! index = do
               let typeReplacements = Vector.singleton base
                   evidenceReplacements = Vector.singleton self
                   category = Substitute.Over $ Substitute Shift.Shift typeReplacements evidenceReplacements
-                  definition' = Substitute.map category defaultx
-              pure
-                Default
-                  { definition',
-                    constraintCount = Simple.Scheme.constraintCount scheme
-                  }
+                  Simple.Scheme Simple.SchemeOver {parameters, constraints} = scheme
+                  result = Substitute.map category defaultx
+                  definition' = Simple.SchemeOver {parameters, constraints, result}
+              pure Default {definition'}
         members <- izipWithM check methods (fmap shift <$> members)
         pure Instance {evidence, prerequisitesCount, members}

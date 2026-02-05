@@ -7,10 +7,10 @@ import qualified Stage3.Tree.InstanceMethod as Stage3
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
 import {-# SOURCE #-} Stage4.Tree.Expression (Expression)
+import Stage4.Tree.SchemeOver (SchemeOver)
 
-data InstanceMethod scope = Definition
-  { constraintCount :: !Int,
-    definition :: !(Expression (Local ':+ Local ':+ scope))
+newtype InstanceMethod scope = Definition
+  { definition :: SchemeOver Expression (Local ':+ scope)
   }
   deriving (Show)
 
@@ -24,15 +24,13 @@ instance Shift2.Functor InstanceMethod where
   map = Substitute.mapDefault
 
 instance Substitute.Functor InstanceMethod where
-  map category Definition {constraintCount, definition} =
+  map category Definition {definition} =
     Definition
-      { constraintCount,
-        definition = Substitute.map (Substitute.Over $ Substitute.Over category) definition
+      { definition = Substitute.map (Substitute.Over category) definition
       }
 
 simplify :: Stage3.InstanceMethod scope -> InstanceMethod scope
 simplify method =
   Definition
-    { constraintCount = Stage3.constraintCount method,
-      definition = Stage3.definition' method
+    { definition = Stage3.definition' method
     }

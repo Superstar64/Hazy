@@ -78,6 +78,9 @@ data Expression scope
       }
   deriving (Show)
 
+instance Scope.Show Expression where
+  showsPrec = showsPrec
+
 instance Shift Expression where
   shift = shiftDefault
 

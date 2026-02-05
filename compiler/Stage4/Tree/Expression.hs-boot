@@ -28,6 +28,8 @@ instance Substitute.Functor Expression
 
 instance Show (Expression scope)
 
+instance Scope.Show Expression
+
 monoVariable :: Term.Index scope -> Expression scope
 lambdaVariable :: Expression (Scope.Declaration ':+ scopes)
 patternVariable :: Expression (Scope.Pattern ':+ scopes)
