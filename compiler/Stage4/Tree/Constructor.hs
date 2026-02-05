@@ -9,6 +9,7 @@ import qualified Stage3.Tree.Field as Solved.Field
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
 import Stage4.Tree.Type (Type)
+import qualified Stage4.Tree.Type as Type (simplify)
 
 newtype Constructor scope = Constructor
   { entries :: Strict.Vector (Type scope)
@@ -34,9 +35,9 @@ simplify :: Solved.Constructor scope -> Constructor scope
 simplify = \case
   Solved.Constructor {entries} ->
     Constructor
-      { entries = Solved.Entry.entry' <$> entries
+      { entries = Type.simplify . Solved.Entry.entry <$> entries
       }
   Solved.Record {fields} ->
     Constructor
-      { entries = Solved.Entry.entry' . Solved.Field.entry <$> fields
+      { entries = Type.simplify . Solved.Entry.entry . Solved.Field.entry <$> fields
       }

@@ -11,7 +11,6 @@ import Stage3.Temporary.Type (Type)
 import qualified Stage3.Temporary.Type as Type
 import qualified Stage3.Tree.Entry as Solved
 import qualified Stage3.Unify as Unify
-import qualified Stage4.Tree.Type as Simple
 
 data Entry s scope = Entry
   { entry :: !(Type s scope),
@@ -31,10 +30,8 @@ check context Stage2.Entry {startPosition, entry = Stage2.Scheme {result}, stric
 solve :: Synonym.Context s scope -> Entry s scope -> ST s (Solved.Entry scope)
 solve context Entry {entry, strict} = do
   entry <- Type.solve context entry
-  let entry' = Simple.simplify entry
   pure
     Solved.Entry
       { entry,
-        entry',
         strict
       }
