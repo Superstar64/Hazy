@@ -5,7 +5,6 @@ module Stage3.Unify
     Constraint,
     Evidence,
     Instanciation,
-    Algebra,
     scheme,
     schemeOver,
     constraintx,
@@ -36,14 +35,16 @@ module Stage3.Unify
     fresh,
     unify,
     constrain,
+    Generalizable,
     Generalize (..),
     generalizeOver,
     generalize,
     solve,
     solveEvidence,
     solveInstanciation,
-    instanciate,
+    Instantiatable,
     instanciateOver,
+    instanciate,
   )
 where
 
@@ -172,71 +173,6 @@ data Delay s scope = Delay
 data Box' s scope
   = Solved' (Evidence s scope)
   | Unsolved' {}
-
-class Algebra typex where
-  substitute :: Strict.Vector (Type s scope) -> typex s (Scope.Local ':+ scope) -> typex s scope
-  collect :: typex s scopes -> ST s [Collected s scopes]
-  zonk :: typex s scope -> ST s (typex s scope)
-
-instance Algebra Type where
-  substitute replacements = \case
-    Logical _ -> error "logic variables can not be under a scheme"
-    Shift typex -> typex
-    Variable (Local.Local index) -> replacements Strict.Vector.! index
-    Variable (Local.Shift index) -> Variable index
-    Constructor index -> Constructor (Type2.map Type.unlocal index)
-    Call function argument ->
-      Call (substitute replacements function) (substitute replacements argument)
-    Function parameter result ->
-      Function (substitute replacements parameter) (substitute replacements result)
-    Type universe -> Type (substitute replacements universe)
-    Constraint -> Constraint
-    Small -> Small
-    Large -> Large
-    Universe -> Universe
-  collect = \case
-    Logical reference ->
-      readSTRef reference >>= \case
-        Solved typex -> collect typex
-        Unsolved {} -> pure [Collect reference]
-    Shift typex -> fmap Reach <$> collect typex
-    Variable {} -> pure []
-    Constructor {} -> pure []
-    Call function argument -> do
-      function <- collect function
-      argument <- collect argument
-      pure (function ++ argument)
-    Function argument result -> do
-      argument <- collect argument
-      result <- collect result
-      pure $ argument ++ result
-    Type universe -> do
-      collect universe
-    Constraint -> pure []
-    Small -> pure []
-    Large -> pure []
-    Universe -> pure []
-  zonk = \case
-    Logical reference ->
-      readSTRef reference >>= \case
-        Solved solved -> zonk solved
-        Unsolved {} -> pure $ Logical reference
-    Shift typex -> Shift <$> zonk typex
-    Variable index -> pure $ Variable index
-    Constructor index -> pure $ Constructor index
-    Call function argument -> do
-      function <- zonk function
-      argument <- zonk argument
-      pure $ Call function argument
-    Function parameter result -> do
-      parameter <- zonk parameter
-      result <- zonk result
-      pure $ Function parameter result
-    Type universe -> Type <$> zonk universe
-    Constraint -> pure Constraint
-    Small -> pure Small
-    Large -> pure Large
-    Universe -> pure Universe
 
 scheme ::
   Strict.Vector.Vector (Type s scope) ->
@@ -818,12 +754,28 @@ defaultUniverse position constraints universe = case universe of
     | otherwise -> error "unexpected kind constraints"
   _ -> error "unexpected universe kind"
 
-instanciate :: Context s scope -> Position -> Scheme s scope -> ST s (Type s scope, Instanciation s scope)
-instanciate context position Scheme {runScheme} =
-  instanciateOver context position runScheme
+class Instantiatable typex where
+  substitute :: Strict.Vector (Type s scope) -> typex s (Scope.Local ':+ scope) -> typex s scope
+
+instance Instantiatable Type where
+  substitute replacements = \case
+    Logical _ -> error "logic variables can not be under a scheme"
+    Shift typex -> typex
+    Variable (Local.Local index) -> replacements Strict.Vector.! index
+    Variable (Local.Shift index) -> Variable index
+    Constructor index -> Constructor (Type2.map Type.unlocal index)
+    Call function argument ->
+      Call (substitute replacements function) (substitute replacements argument)
+    Function parameter result ->
+      Function (substitute replacements parameter) (substitute replacements result)
+    Type universe -> Type (substitute replacements universe)
+    Constraint -> Constraint
+    Small -> Small
+    Large -> Large
+    Universe -> Universe
 
 instanciateOver ::
-  (Algebra typex) =>
+  (Instantiatable typex) =>
   Context s scope ->
   Position ->
   SchemeOver typex s scope ->
@@ -836,13 +788,71 @@ instanciateOver context position SchemeOver {parameters, constraints, result} = 
     constrainWith context position classx head arguments
   pure $ (substitute fresh result, Instanciation evidence)
 
+instanciate :: Context s scope -> Position -> Scheme s scope -> ST s (Type s scope, Instanciation s scope)
+instanciate context position Scheme {runScheme} =
+  instanciateOver context position runScheme
+
+type Zonk :: (Data.Kind.Type -> Environment -> Data.Kind.Type) -> Data.Kind.Constraint
+class Zonk typex where
+  zonk :: typex s scope -> ST s (typex s scope)
+
+instance Zonk Type where
+  zonk = \case
+    Logical reference ->
+      readSTRef reference >>= \case
+        Solved solved -> zonk solved
+        Unsolved {} -> pure $ Logical reference
+    Shift typex -> Shift <$> zonk typex
+    Variable index -> pure $ Variable index
+    Constructor index -> pure $ Constructor index
+    Call function argument -> do
+      function <- zonk function
+      argument <- zonk argument
+      pure $ Call function argument
+    Function parameter result -> do
+      parameter <- zonk parameter
+      result <- zonk result
+      pure $ Function parameter result
+    Type universe -> Type <$> zonk universe
+    Constraint -> pure Constraint
+    Small -> pure Small
+    Large -> pure Large
+    Universe -> pure Universe
+
+class (Zonk typex) => Generalizable typex where
+  collect :: typex s scopes -> ST s [Collected s scopes]
+
+instance Generalizable Type where
+  collect = \case
+    Logical reference ->
+      readSTRef reference >>= \case
+        Solved typex -> collect typex
+        Unsolved {} -> pure [Collect reference]
+    Shift typex -> fmap Reach <$> collect typex
+    Variable {} -> pure []
+    Constructor {} -> pure []
+    Call function argument -> do
+      function <- collect function
+      argument <- collect argument
+      pure (function ++ argument)
+    Function argument result -> do
+      argument <- collect argument
+      result <- collect result
+      pure $ argument ++ result
+    Type universe -> do
+      collect universe
+    Constraint -> pure []
+    Small -> pure []
+    Large -> pure []
+    Universe -> pure []
+
 newtype Generalize typex s scopes = Generalize
   { runGeneralize :: forall scope. ST s (typex s (scope ':+ scopes))
   }
 
 generalizeOver ::
   forall typex s scopes.
-  (Algebra typex) =>
+  (Generalizable typex) =>
   Generalize typex s scopes ->
   ST s (SchemeOver typex s scopes)
 generalizeOver (Generalize run) = do
