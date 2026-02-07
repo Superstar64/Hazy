@@ -44,8 +44,6 @@ module Stage3.Unify
     solve,
     solveEvidence,
     solveInstanciation,
-    Instantiatable,
-    instanciateOver,
     instanciate,
   )
 where
@@ -692,16 +690,15 @@ defaultUniverse position constraints universe = case universe of
     | otherwise -> error "unexpected kind constraints"
   _ -> error "unexpected universe kind"
 
+data Substitute s scope scope' where
+  Substitute :: !(Strict.Vector (Type s scope)) -> Substitute s (Scope.Local ':+ scope) scope
+
 class Instantiatable typex where
-  substitute :: Strict.Vector (Type s scope) -> typex s (Scope.Local ':+ scope) -> typex s scope
+  substitute :: Substitute s scope scope' -> typex s scope -> typex s scope'
 
 instance Instantiatable Type where
   substitute replacements = \case
     Logical _ -> error "logic variables can not be under a scheme"
-    Shift typex -> typex
-    Variable (Local.Local index) -> replacements Strict.Vector.! index
-    Variable (Local.Shift index) -> Variable index
-    Constructor index -> Constructor (Type2.map Type.unlocal index)
     Call function argument ->
       Call (substitute replacements function) (substitute replacements argument)
     Function parameter result ->
@@ -711,6 +708,12 @@ instance Instantiatable Type where
     Small -> Small
     Large -> Large
     Universe -> Universe
+    typex -> case replacements of
+      Substitute replacements -> case typex of
+        Shift typex -> typex
+        Variable (Local.Local index) -> replacements Strict.Vector.! index
+        Variable (Local.Shift index) -> Variable index
+        Constructor index -> Constructor (Type2.map Type.unlocal index)
 
 instanciateOver ::
   (Instantiatable typex) =>
@@ -722,9 +725,9 @@ instanciateOver context position SchemeOver {parameters, constraints, result} = 
   fresh <- traverse fresh parameters
   evidence <- for constraints $ \Constraint' {classx, head, arguments} -> do
     head <- pure $ fresh Strict.Vector.! head
-    arguments <- pure $ toList $ fmap (substitute fresh) arguments
+    arguments <- pure $ toList $ fmap (substitute $ Substitute fresh) arguments
     constrainWith context position classx head arguments
-  pure $ (substitute fresh result, Instanciation evidence)
+  pure $ (substitute (Substitute fresh) result, Instanciation evidence)
 
 instanciate :: Context s scope -> Position -> Scheme s scope -> ST s (Type s scope, Instanciation s scope)
 instanciate context position Scheme {runScheme} =
