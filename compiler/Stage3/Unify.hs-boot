@@ -1,6 +1,6 @@
 {-# LANGUAGE RoleAnnotations #-}
 
-module Stage3.Unify where
+module Stage3.Unify (module Stage3.Unify, Evidence) where
 
 import Control.Monad.ST (ST)
 import qualified Data.Kind as Kind (Type)
@@ -15,6 +15,7 @@ import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift)
 import {-# SOURCE #-} Stage3.Check.Context (Context)
 import qualified Stage3.Index.Evidence as Evidence
+import Stage3.Unify.Evidence (Evidence)
 import {-# SOURCE #-} qualified Stage4.Tree.Type as Simple
 
 type role Type nominal nominal
@@ -37,11 +38,6 @@ type role Constraint nominal nominal
 
 type Constraint :: Kind.Type -> Environment -> Kind.Type
 data Constraint s scope
-
-type role Evidence nominal nominal
-
-type Evidence :: Kind.Type -> Environment -> Kind.Type
-data Evidence s scope
 
 type role Instanciation nominal nominal
 

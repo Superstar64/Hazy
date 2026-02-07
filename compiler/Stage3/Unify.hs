@@ -1,3 +1,5 @@
+-- |
+-- Unification public api
 module Stage3.Unify
   ( Type,
     Scheme (..),
@@ -98,15 +100,16 @@ import qualified Stage3.Check.DataInstance as DataInstance
 import qualified Stage3.Check.LocalBinding as Local (Constraint (..), LocalBinding (..))
 import Stage3.Check.TypeBinding (TypeBinding (TypeBinding))
 import qualified Stage3.Check.TypeBinding as TypeBinding
-import qualified Stage3.Index.Evidence as Evidence
+import qualified Stage3.Index.Evidence as Evidence (Builtin (..), Index (..))
 import qualified Stage3.Simple.Data as Simple.Data
 import qualified Stage3.Simple.Evidence as Simple.Evidence (lift)
 import qualified Stage3.Simple.Type as Simple (instanciate, lift)
+import Stage3.Unify.Evidence (Evidence)
+import qualified Stage3.Unify.Evidence as Evidence (Box (..), Evidence (..), solve, unify, unshift)
 import {-# SOURCE #-} qualified Stage4.Tree.Builtin as Builtin
 import qualified Stage4.Tree.Constraint as Simple (argument)
 import qualified Stage4.Tree.Constraint as Simple.Constraint
 import qualified Stage4.Tree.Evidence as Simple (Evidence)
-import qualified Stage4.Tree.Evidence as Simple.Evidence (Evidence (..))
 import qualified Stage4.Tree.Instanciation as Simple (Instanciation (..))
 import qualified Stage4.Tree.Type as Simple (Type (..))
 import {-# SOURCE #-} Stage4.Tree.TypeDeclaration (assumeData)
@@ -147,13 +150,6 @@ data Constraint s scope = Constraint'
     arguments :: !(Strict.Vector (Type s (Scope.Local ':+ scope)))
   }
 
-data Evidence s scope where
-  Variable' :: !(Evidence.Index scope) -> Evidence s scope
-  Call' :: !(Evidence s scope) -> !(Strict.Vector (Evidence s scope)) -> Evidence s scope
-  Super :: !(Evidence s scope) -> !Int -> Evidence s scope
-  Logical' :: !(STRef s (Box' s scope)) -> Evidence s scope
-  Shift' :: Evidence s scopes -> Evidence s (scope ':+ scopes)
-
 data Box s scope
   = Unsolved
       { kindx :: !(Type s scope),
@@ -169,10 +165,6 @@ data Delay s scope = Delay
   { arguments' :: [Type s scope],
     evidence :: Evidence s scope
   }
-
-data Box' s scope
-  = Solved' (Evidence s scope)
-  | Unsolved' {}
 
 scheme ::
   Strict.Vector.Vector (Type s scope) ->
@@ -278,13 +270,13 @@ function :: Type s scope -> Type s scope -> Type s scope
 function = Function
 
 variable' :: Evidence.Index scope -> Evidence s scope
-variable' = Variable'
+variable' = Evidence.Variable
 
 call' :: Evidence s scope -> Strict.Vector (Evidence s scope) -> Evidence s scope
-call' = Call'
+call' = Evidence.Call
 
 super :: Evidence s scope -> Int -> Evidence s scope
-super = Super
+super = Evidence.Super
 
 fresh :: Type s scope -> ST s (Type s scope)
 fresh kindx = do
@@ -340,7 +332,7 @@ unify context_ position term1_ term2_ = unifyWith context_ term1_ term2_
                         if length arguments1 == length arguments2
                           then traverse_ (uncurry unify) (zip arguments1 arguments2)
                           else error "different parameter length"
-                        unifyEvidence evidence1 evidence2
+                        Evidence.unify evidence1 evidence2
                         pure left =
                     do
                       Stage3.Unify.unify context position kind1 kind2
@@ -402,39 +394,6 @@ unify context_ position term1_ term2_ = unifyWith context_ term1_ term2_
 
     mismatch :: ST s ()
     mismatch = abort position (Unify context_ term1_ term2_)
-
--- unification between evidence should never fail
-unifyEvidence :: Evidence s scope -> Evidence s scope -> ST s ()
-unifyEvidence (Logical' reference) (Logical' reference')
-  | reference == reference' = pure ()
-  | otherwise = do
-      box <- readSTRef reference
-      box' <- readSTRef reference'
-      combine box box'
-  where
-    combine (Solved' evidence) (Solved' evidence') = unifyEvidence evidence evidence'
-    combine Unsolved' evidence' = writeSTRef reference evidence'
-    combine evidence Unsolved' = writeSTRef reference' evidence
-unifyEvidence (Logical' reference) evidence' =
-  readSTRef reference >>= \case
-    Solved' evidence -> unifyEvidence evidence evidence'
-    Unsolved' -> writeSTRef reference (Solved' evidence')
-unifyEvidence evidence (Logical' reference') =
-  readSTRef reference' >>= \case
-    Solved' evidence' -> unifyEvidence evidence evidence'
-    Unsolved' -> writeSTRef reference' (Solved' evidence)
-unifyEvidence (Variable' index) (Variable' index')
-  | index == index' = pure ()
-unifyEvidence (Call' function arguments) (Call' function' arguments') = do
-  unifyEvidence function function'
-  sequence_ $ Strict.Vector.zipWith unifyEvidence arguments arguments'
-unifyEvidence (Shift' evidence) evidence' = do
-  evidence' <- unshiftEvidence evidence'
-  unifyEvidence evidence evidence'
-unifyEvidence evidence (Shift' evidence') = do
-  evidence <- unshiftEvidence evidence
-  unifyEvidence evidence evidence'
-unifyEvidence _ _ = error "unify evidence can't fail"
 
 -- todo merge this with Stage3.Temporary.Type checking somehow
 typeCheck :: Context s scope -> Position -> Type s scope -> Type s scope -> ST s ()
@@ -549,25 +508,25 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
       [Type s scope] ->
       ST s (Evidence s scope)
     constrainWith _ Type2.Num (Constructor Type2.Integer) [] =
-      pure $ Variable' $ Evidence.Builtin Evidence.NumInteger
+      pure $ Evidence.Variable $ Evidence.Builtin Evidence.NumInteger
     constrainWith _ Type2.Num (Constructor Type2.Int) [] =
-      pure $ Variable' $ Evidence.Builtin Evidence.NumInt
+      pure $ Evidence.Variable $ Evidence.Builtin Evidence.NumInt
     constrainWith _ Type2.Enum (Constructor Type2.Bool) [] =
-      pure $ Variable' $ Evidence.Builtin Evidence.EnumBool
+      pure $ Evidence.Variable $ Evidence.Builtin Evidence.EnumBool
     constrainWith _ Type2.Enum (Constructor Type2.Char) [] =
-      pure $ Variable' $ Evidence.Builtin Evidence.EnumChar
+      pure $ Evidence.Variable $ Evidence.Builtin Evidence.EnumChar
     constrainWith _ Type2.Enum (Constructor Type2.Integer) [] =
-      pure $ Variable' $ Evidence.Builtin Evidence.EnumInteger
+      pure $ Evidence.Variable $ Evidence.Builtin Evidence.EnumInteger
     constrainWith _ Type2.Enum (Constructor Type2.Int) [] =
-      pure $ Variable' $ Evidence.Builtin Evidence.EnumInt
+      pure $ Evidence.Variable $ Evidence.Builtin Evidence.EnumInt
     constrainWith _ Type2.Eq (Constructor Type2.Bool) [] =
-      pure $ Variable' $ Evidence.Builtin Evidence.EqBool
+      pure $ Evidence.Variable $ Evidence.Builtin Evidence.EqBool
     constrainWith _ Type2.Eq (Constructor Type2.Char) [] =
-      pure $ Variable' $ Evidence.Builtin Evidence.EqChar
+      pure $ Evidence.Variable $ Evidence.Builtin Evidence.EqChar
     constrainWith _ Type2.Eq (Constructor Type2.Integer) [] =
-      pure $ Variable' $ Evidence.Builtin Evidence.EqInteger
+      pure $ Evidence.Variable $ Evidence.Builtin Evidence.EqInteger
     constrainWith _ Type2.Eq (Constructor Type2.Int) [] =
-      pure $ Variable' $ Evidence.Builtin Evidence.EqInt
+      pure $ Evidence.Variable $ Evidence.Builtin Evidence.EqInt
     constrainWith context@Context {typeEnvironment} classx term@(Logical reference) arguments =
       readSTRef reference >>= \case
         Solved term -> constrainWith context classx term arguments
@@ -595,10 +554,10 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
               unify context position (function target constraint) real
 
               typeCheck context position target (foldl Call term arguments)
-              logical <- newSTRef Unsolved' {}
-              let delay = Delay {arguments' = arguments, evidence = Logical' logical}
+              logical <- newSTRef Evidence.Unsolved {}
+              let delay = Delay {arguments' = arguments, evidence = Evidence.Logical logical}
               writeSTRef reference $! Unsolved {kindx, constraintsx = Map.insert classx delay constraintsx}
-              pure $ Logical' logical
+              pure $ Evidence.Logical logical
             Just Delay {arguments', evidence}
               | length arguments == length arguments' -> do
                   zipWithM_ (unify context position) arguments arguments'
@@ -608,7 +567,7 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
       arguments <- traverse (unshift context position) arguments
       let quit = abort position $ Unshift context (Constructor classx)
       classx <- Shift.partialUnshift quit classx
-      Shift' <$> constrainWith (Shift.unshift context) classx term arguments
+      Evidence.Shift <$> constrainWith (Shift.unshift context) classx term arguments
     constrainWith context@Context {localEnvironment} classx (Variable index) arguments
       | Local.Rigid {constraints} <- localEnvironment Local.Table.! index,
         Just Local.Constraint {arguments = arguments', evidence} <- Map.lookup classx constraints,
@@ -651,14 +610,14 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
 
     proof :: forall scope s. Evidence.Index scope -> Strict.Vector (Evidence s scope) -> Evidence s scope
     proof variable arguments
-      | null arguments = Variable' variable
-      | otherwise = Call' (Variable' variable) arguments
+      | null arguments = Evidence.Variable variable
+      | otherwise = Evidence.Call (Evidence.Variable variable) arguments
 
 reconstrain :: Context s scope -> Position -> Map (Type2.Index scope) (Delay s scope) -> Type s scope -> ST s ()
 reconstrain context position constraints term =
   for_ (Map.toList constraints) $ \(classx, Delay {arguments', evidence}) -> do
     evidence' <- constrainWith context position classx term arguments'
-    unifyEvidence evidence evidence'
+    Evidence.unify evidence evidence'
 
 unshift ::
   forall s scope scopes.
@@ -675,7 +634,7 @@ unshift context position typex = unshift typex
             let unshiftDelay (key, Delay {arguments', evidence}) = do
                   key <- Shift.partialUnshift misshift key
                   arguments' <- traverse unshift arguments'
-                  evidence <- unshiftEvidence evidence
+                  evidence <- Evidence.unshift evidence
                   pure (key, Delay {arguments', evidence})
             kindx <- unshift kindx
             -- todo
@@ -706,27 +665,6 @@ unshift context position typex = unshift typex
       Universe -> pure Universe
     misshift = do
       abort position $ Unshift context typex
-
-unshiftEvidence :: Evidence s (scope ':+ scopes) -> ST s (Evidence s scopes)
-unshiftEvidence = \case
-  Variable' variable -> do
-    let fail = error "unshift can't fail"
-    pure $ Variable' (Shift.map (Shift.Unshift fail) variable)
-  Call' function arguments -> do
-    function <- unshiftEvidence function
-    arguments <- traverse unshiftEvidence arguments
-    pure $ Call' function arguments
-  Logical' reference -> do
-    readSTRef reference >>= \case
-      Solved' evidence -> unshiftEvidence evidence
-      Unsolved' -> do
-        box <- newSTRef $! Unsolved'
-        writeSTRef reference (Solved' $ Shift' $ Logical' box)
-        pure $ Logical' box
-  Shift' evidence -> pure evidence
-  Super evidence index -> do
-    evidence <- unshiftEvidence evidence
-    pure $ Super evidence index
 
 defaultFrom,
   defaultUniverse ::
@@ -939,20 +877,7 @@ solve position = solve
       Universe -> pure $ Simple.Universe
 
 solveEvidence :: Position -> Evidence s scope -> ST s (Simple.Evidence scope)
-solveEvidence position = \case
-  Variable' variable -> pure Simple.Evidence.Variable {variable}
-  Call' function arguments -> do
-    function <- solveEvidence position function
-    arguments <- traverse (solveEvidence position) arguments
-    pure Simple.Evidence.Call {function, arguments}
-  Super base index -> do
-    base <- solveEvidence position base
-    pure $ Simple.Evidence.Super {base, index}
-  Shift' evidence -> shift <$> solveEvidence position evidence
-  Logical' reference ->
-    readSTRef reference >>= \case
-      Solved' evidence -> solveEvidence position evidence
-      Unsolved' -> ambiguousType position
+solveEvidence = Evidence.solve
 
 solveInstanciation :: Position -> Instanciation s scope -> ST s (Simple.Instanciation scope)
 solveInstanciation position (Instanciation instanciation) = do
