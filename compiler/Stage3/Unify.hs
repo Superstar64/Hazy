@@ -37,7 +37,8 @@ module Stage3.Unify
     fresh,
     unify,
     constrain,
-    Generalizable,
+    Zonk (..),
+    Generalizable (..),
     Generalize (..),
     generalizeOver,
     generalize,
@@ -733,59 +734,83 @@ instanciate :: Context s scope -> Position -> Scheme s scope -> ST s (Type s sco
 instanciate context position Scheme {runScheme} =
   instanciateOver context position runScheme
 
+-- |
+-- This type used to help make sure zonks are type safe.
+--
+-- Conceptually, zonks could, in theory, be fully solving an AST while still
+-- leaving it in the unsolved AST format. In which case, the state token would
+-- be transformed into a fictional `Void` token
+--
+-- This isn't done at the moment however, hence the single Refl constructor.
+--
+-- Additionally, this also stops outside use of zonk.
+data Zonker s s' where
+  Zonker :: Zonker s s
+
 type Zonk :: (Data.Kind.Type -> Environment -> Data.Kind.Type) -> Data.Kind.Constraint
 class Zonk typex where
-  zonk :: typex s scope -> ST s (typex s scope)
+  zonk :: Zonker s s' -> typex s scope -> ST s (typex s' scope)
 
 instance Zonk Type where
-  zonk = \case
-    Logical reference ->
-      readSTRef reference >>= \case
-        Solved solved -> zonk solved
-        Unsolved {} -> pure $ Logical reference
-    Shift typex -> Shift <$> zonk typex
-    Variable index -> pure $ Variable index
-    Constructor index -> pure $ Constructor index
-    Call function argument -> do
-      function <- zonk function
-      argument <- zonk argument
-      pure $ Call function argument
-    Function parameter result -> do
-      parameter <- zonk parameter
-      result <- zonk result
-      pure $ Function parameter result
-    Type universe -> Type <$> zonk universe
-    Constraint -> pure Constraint
-    Small -> pure Small
-    Large -> pure Large
-    Universe -> pure Universe
+  zonk Zonker = zonk
+    where
+      zonk :: Type s scope -> ST s (Type s scope)
+      zonk = \case
+        Logical reference ->
+          readSTRef reference >>= \case
+            Solved solved -> zonk solved
+            Unsolved {} -> pure $ Logical reference
+        Shift typex -> Shift <$> zonk typex
+        Variable index -> pure $ Variable index
+        Constructor index -> pure $ Constructor index
+        Call function argument -> do
+          function <- zonk function
+          argument <- zonk argument
+          pure $ Call function argument
+        Function parameter result -> do
+          parameter <- zonk parameter
+          result <- zonk result
+          pure $ Function parameter result
+        Type universe -> Type <$> zonk universe
+        Constraint -> pure Constraint
+        Small -> pure Small
+        Large -> pure Large
+        Universe -> pure Universe
+
+-- |
+-- See rational of Zonker
+data Collector s s' where
+  Collector :: Collector s s
 
 class (Zonk typex) => Generalizable typex where
-  collect :: typex s scopes -> ST s [Collected s scopes]
+  collect :: Collector s s' -> typex s scopes -> ST s [Collected s' scopes]
 
 instance Generalizable Type where
-  collect = \case
-    Logical reference ->
-      readSTRef reference >>= \case
-        Solved typex -> collect typex
-        Unsolved {} -> pure [Collect reference]
-    Shift typex -> fmap Reach <$> collect typex
-    Variable {} -> pure []
-    Constructor {} -> pure []
-    Call function argument -> do
-      function <- collect function
-      argument <- collect argument
-      pure (function ++ argument)
-    Function argument result -> do
-      argument <- collect argument
-      result <- collect result
-      pure $ argument ++ result
-    Type universe -> do
-      collect universe
-    Constraint -> pure []
-    Small -> pure []
-    Large -> pure []
-    Universe -> pure []
+  collect Collector = collect
+    where
+      collect :: Type s scopes -> ST s [Collected s scopes]
+      collect = \case
+        Logical reference ->
+          readSTRef reference >>= \case
+            Solved typex -> collect typex
+            Unsolved {} -> pure [Collect reference]
+        Shift typex -> fmap Reach <$> collect typex
+        Variable {} -> pure []
+        Constructor {} -> pure []
+        Call function argument -> do
+          function <- collect function
+          argument <- collect argument
+          pure (function ++ argument)
+        Function argument result -> do
+          argument <- collect argument
+          result <- collect result
+          pure $ argument ++ result
+        Type universe -> do
+          collect universe
+        Constraint -> pure []
+        Small -> pure []
+        Large -> pure []
+        Universe -> pure []
 
 newtype Generalize typex s scopes = Generalize
   { runGeneralize :: forall scope. ST s (typex s (scope ':+ scopes))
@@ -798,12 +823,12 @@ generalizeOver ::
   ST s (SchemeOver typex s scopes)
 generalizeOver (Generalize run) = do
   wobbly <- run
-  candidates <- collect wobbly
+  candidates <- collect Collector wobbly
   traverse_ shiftUnwanted candidates
   boxes <- nub . catMaybes <$> traverse selectBox candidates
   parameters <- Strict.Vector.fromList <$> traverse parameter boxes
   zipWithM_ writeVariable [0 ..] boxes
-  result <- zonk wobbly
+  result <- zonk Zonker wobbly
   pure
     SchemeOver
       { parameters,
@@ -887,6 +912,9 @@ solveInstanciation position (Instanciation instanciation) = do
   instanciation <- traverse (solveEvidence position) instanciation
   pure $ Simple.Instanciation instanciation
 
+collect' :: Type s scopes -> ST s [Collected s scopes]
+collect' = collect Collector
+
 data Error s where
   Unify :: Context s scope -> Type s scope -> Type s scope -> Error s
   Occurs :: Context s scope -> STRef s (Box s scope) -> Type s scope -> Error s
@@ -896,14 +924,14 @@ data Error s where
 abort :: Position -> Error s -> ST s a
 abort position = \case
   Unify context term1 term2 -> do
-    unsolved <- nub <$> liftM2 (++) (collect term1) (collect term2)
+    unsolved <- nub <$> liftM2 (++) (collect' term1) (collect' term2)
     let labeled = zip unsolved [Local.Local i | i <- [0 ..]]
         temporary = temporaries (length unsolved) context
     term1 <- Stage1.build . Stage1.print . Stage2.label temporary <$> fabricate Shift.Shift labeled term1
     term2 <- Stage1.build . Stage1.print . Stage2.label temporary <$> fabricate Shift.Shift labeled term2
     unificationError position term1 term2
   Occurs context reference term -> do
-    unsolved <- nub <$> collect term
+    unsolved <- nub <$> collect' term
     let labeled = zip unsolved [Local.Local i | i <- [0 ..]]
         temporary = temporaries (length unsolved) context
         infinite = case lookup (Collect reference) labeled of
@@ -914,7 +942,7 @@ abort position = \case
     term <- Stage1.build . Stage1.print . Stage2.label temporary <$> fabricate Shift.Shift labeled term
     occurenceError position infinite term
   Constrain context classx constructor arguments -> do
-    unsolved <- nub . concat <$> traverse collect (constructor : arguments)
+    unsolved <- nub . concat <$> traverse collect' (constructor : arguments)
     let labeled = zip unsolved [Local.Local i | i <- [0 ..]]
         temporary = temporaries (length unsolved) context
     fabricated <- fmap (Stage2.label temporary) <$> traverse (fabricate Shift.Shift labeled) arguments
@@ -935,7 +963,7 @@ abort position = \case
         term = Stage1.build $ Stage1.print $ foldl call head fabricated
     constraintError position term
   Unshift context term -> do
-    unsolved <- nub <$> collect term
+    unsolved <- nub <$> collect' term
     let labeled = zip unsolved [Local.Local i | i <- [0 ..]]
         temporary = temporaries (length unsolved) context
     term <- Stage1.build . Stage1.print . Stage2.label temporary <$> fabricate Shift.Shift labeled term
