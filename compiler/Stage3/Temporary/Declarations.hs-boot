@@ -9,11 +9,14 @@ import qualified Stage2.Scope as Scope
 import qualified Stage2.Tree.Declarations as Stage2 (Declarations)
 import Stage3.Check.Context (Context)
 import qualified Stage3.Tree.Declarations as Solved
+import qualified Stage3.Unify as Unify
 
 type role Declarations nominal nominal
 
 type Declarations :: Type -> Environment -> Type
 data Declarations s scope
+
+instance Unify.Zonk Declarations
 
 check ::
   Context s scope ->

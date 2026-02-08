@@ -3,7 +3,7 @@
 module Stage3.Unify (module Stage3.Unify, Evidence) where
 
 import Control.Monad.ST (ST)
-import qualified Data.Kind as Kind (Type)
+import qualified Data.Kind as Kind (Constraint, Type)
 import qualified Data.Vector.Strict as Strict
 import Stage1.Position (Position)
 import qualified Stage2.Index.Constructor as Constructor
@@ -43,6 +43,9 @@ type role Instanciation nominal nominal
 
 type Instanciation :: Kind.Type -> Environment -> Kind.Type
 data Instanciation s scope
+
+type Zonk :: (Kind.Type -> Environment -> Kind.Type) -> Kind.Constraint
+class Zonk typex
 
 variable :: Local.Index scope -> Type s scope
 constructor :: Type2.Index scope -> Type s scope

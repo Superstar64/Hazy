@@ -22,6 +22,16 @@ data Lambda s scope
         body :: Lambda s (Scope.Pattern ':+ scope)
       }
 
+instance Unify.Zonk Lambda where
+  zonk zonker = \case
+    Plain {plain} -> do
+      plain <- Unify.zonk zonker plain
+      pure Plain {plain}
+    Bound {parameter, body} -> do
+      parameter <- Unify.zonk zonker parameter
+      body <- Unify.zonk zonker body
+      pure Bound {parameter, body}
+
 check :: Context s scope -> Unify.Type s scope -> Stage2.Lambda scope -> ST s (Lambda s scope)
 check context typex = \case
   Stage2.Plain {plain} -> do

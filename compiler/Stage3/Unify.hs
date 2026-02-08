@@ -45,6 +45,8 @@ module Stage3.Unify
     solve,
     solveEvidence,
     solveInstanciation,
+    Solve (..),
+    solveSchemeOver,
     instanciate,
   )
 where
@@ -78,7 +80,10 @@ import qualified Stage1.Tree.Type as Stage1 (Type (Call, argument, function, sta
 import qualified Stage2.Index.Constructor as Constructor
 import qualified Stage2.Index.Local as Local (Index (Local, Shift))
 import qualified Stage2.Index.Table.Local as Local.Table
+import qualified Stage2.Index.Table.Local as Table.Local
+import qualified Stage2.Index.Table.Term as Table.Term
 import qualified Stage2.Index.Table.Term as Term.Table
+import qualified Stage2.Index.Table.Type as Table.Type
 import qualified Stage2.Index.Table.Type as Type ((!))
 import qualified Stage2.Index.Table.Type as Type.Table
 import qualified Stage2.Index.Type as Type (Index, unlocal)
@@ -106,10 +111,11 @@ import qualified Stage3.Simple.Type as Simple (instanciate, lift)
 import Stage3.Unify.Evidence (Evidence)
 import qualified Stage3.Unify.Evidence as Evidence (Box (..), Evidence (..), solve, unify, unshift)
 import {-# SOURCE #-} qualified Stage4.Tree.Builtin as Builtin
-import qualified Stage4.Tree.Constraint as Simple (argument)
+import qualified Stage4.Tree.Constraint as Simple (Constraint, argument)
 import qualified Stage4.Tree.Constraint as Simple.Constraint
 import qualified Stage4.Tree.Evidence as Simple (Evidence)
 import qualified Stage4.Tree.Instanciation as Simple (Instanciation (..))
+import qualified Stage4.Tree.SchemeOver as Simple (SchemeOver (..))
 import qualified Stage4.Tree.Type as Simple (Type (..))
 import {-# SOURCE #-} Stage4.Tree.TypeDeclaration (assumeData)
 import Prelude hiding (head)
@@ -174,6 +180,7 @@ scheme parameters constraints result =
   Scheme
     (schemeOver parameters constraints result)
 
+-- todo, this function isn't safe
 schemeOver ::
   Strict.Vector (Type s scope) ->
   Strict.Vector (Constraint s scope) ->
@@ -777,6 +784,39 @@ instance Zonk Type where
         Large -> pure Large
         Universe -> pure Universe
 
+instance Zonk Constraint where
+  zonk zonker Constraint' {classx, head, arguments} = do
+    arguments <- traverse (zonk zonker) arguments
+    pure Constraint' {classx, head, arguments}
+
+instance Zonk Instanciation where
+  zonk zonker (Instanciation instanciation) = do
+    instanciation <- traverse (zonk zonker) instanciation
+    pure $ Instanciation instanciation
+
+instance Zonk Evidence where
+  zonk Zonker = \case
+    Evidence.Variable variable -> pure $ Evidence.Variable variable
+    Evidence.Call function arguments -> do
+      function <- zonk Zonker function
+      arguments <- traverse (zonk Zonker) arguments
+      pure $ Evidence.Call function arguments
+    Evidence.Super evidence index -> do
+      evidence <- zonk Zonker evidence
+      pure $ Evidence.Super evidence index
+    Evidence.Logical box ->
+      readSTRef box >>= \case
+        Evidence.Solved evidence -> zonk Zonker evidence
+        Evidence.Unsolved {} -> pure $ Evidence.Logical box
+    Evidence.Shift evidence -> Evidence.Shift <$> zonk Zonker evidence
+
+instance (Zonk typex) => Zonk (SchemeOver typex) where
+  zonk zonker SchemeOver {parameters, constraints, result} = do
+    parameters <- traverse (zonk zonker) parameters
+    constraints <- traverse (zonk zonker) constraints
+    result <- zonk zonker result
+    pure SchemeOver {parameters, constraints, result}
+
 -- |
 -- See rational of Zonker
 data Collector s s' where
@@ -813,16 +853,26 @@ instance Generalizable Type where
         Universe -> pure []
 
 newtype Generalize typex s scopes = Generalize
-  { runGeneralize :: forall scope. ST s (typex s (scope ':+ scopes))
+  { runGeneralize ::
+      forall scope.
+      Context s (scope ':+ scopes) ->
+      ST s (typex s (scope ':+ scopes))
   }
 
 generalizeOver ::
   forall typex s scopes.
   (Generalizable typex) =>
+  Context s scopes ->
   Generalize typex s scopes ->
   ST s (SchemeOver typex s scopes)
-generalizeOver (Generalize run) = do
-  wobbly <- run
+generalizeOver context (Generalize run) = do
+  wobbly <- run $ case context of
+    Context {termEnvironment, localEnvironment, typeEnvironment} ->
+      Context
+        { termEnvironment = Table.Term.Local termEnvironment,
+          localEnvironment = Table.Local.Local Vector.empty localEnvironment,
+          typeEnvironment = Table.Type.Local typeEnvironment
+        }
   candidates <- collect Collector wobbly
   traverse_ shiftUnwanted candidates
   boxes <- nub . catMaybes <$> traverse selectBox candidates
@@ -873,8 +923,8 @@ generalizeOver (Generalize run) = do
     writeVariable variable reference =
       writeSTRef reference $ Solved $ Variable $ Local.Local variable
 
-generalize :: Generalize Type s scopes -> ST s (Scheme s scopes)
-generalize = fmap Scheme . generalizeOver
+generalize :: Context s scopes -> Generalize Type s scopes -> ST s (Scheme s scopes)
+generalize context = fmap Scheme . generalizeOver context
 
 solve :: Position -> Type s scope -> ST s (Simple.Type scope)
 solve position = solve
@@ -911,6 +961,37 @@ solveInstanciation :: Position -> Instanciation s scope -> ST s (Simple.Instanci
 solveInstanciation position (Instanciation instanciation) = do
   instanciation <- traverse (solveEvidence position) instanciation
   pure $ Simple.Instanciation instanciation
+
+solveConstraint :: Position -> Constraint s scope -> ST s (Simple.Constraint scope)
+solveConstraint position Constraint' {classx, head, arguments} = do
+  arguments <- traverse (solve position) arguments
+  pure $
+    Simple.Constraint.Constraint
+      { classx,
+        head,
+        arguments
+      }
+
+type Solve :: (Data.Kind.Type -> Environment -> Data.Kind.Type) -> (Environment -> Data.Kind.Type) -> Data.Kind.Type
+newtype Solve source target = Solve
+  { runSolve :: forall s scope. Position -> source s scope -> ST s (target scope)
+  }
+
+solveSchemeOver ::
+  Solve source target ->
+  Position ->
+  SchemeOver source s scope ->
+  ST s (Simple.SchemeOver target scope)
+solveSchemeOver (Solve go) position SchemeOver {parameters, constraints, result} = do
+  parameters <- traverse (solve position) parameters
+  constraints <- traverse (solveConstraint position) constraints
+  result <- go position result
+  pure $
+    Simple.SchemeOver
+      { parameters,
+        constraints,
+        result
+      }
 
 collect' :: Type s scopes -> ST s [Collected s scopes]
 collect' = collect Collector

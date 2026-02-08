@@ -18,6 +18,12 @@ data RightHandSide s scope
       !(Body s (Scope.Declaration ':+ scope))
       !(Declarations s (Scope.Declaration ':+ scope))
 
+instance Unify.Zonk RightHandSide where
+  zonk zonker (RightHandSide body declarations) = do
+    body <- Unify.zonk zonker body
+    declarations <- Unify.zonk zonker declarations
+    pure $ RightHandSide body declarations
+
 check :: Context s scope -> Unify.Type s scope -> Stage2.RightHandSide scope -> ST s (RightHandSide s scope)
 check context typex (Stage2.RightHandSide body declarations) = do
   (context, declarations) <- Declarations.check context declarations

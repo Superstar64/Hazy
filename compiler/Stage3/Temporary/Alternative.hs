@@ -19,6 +19,13 @@ data Alternative s scope
     rightHandSide :: !(RightHandSide s (Scope.Pattern ':+ scope))
   }
 
+instance Unify.Zonk Alternative where
+  zonk zonker = \case
+    Alternative {parameter, rightHandSide} -> do
+      parameter <- Unify.zonk zonker parameter
+      rightHandSide <- Unify.zonk zonker rightHandSide
+      pure Alternative {parameter, rightHandSide}
+
 check ::
   Context s scope ->
   Unify.Type s scope ->

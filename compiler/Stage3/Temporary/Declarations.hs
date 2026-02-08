@@ -40,6 +40,7 @@ import Stage3.Tree.TypeDeclaration (TypeDeclaration)
 import qualified Stage3.Tree.TypeDeclaration as TypeDeclaration
 import Stage3.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 import qualified Stage3.Tree.TypeDeclarationExtra as TypeDeclarationExtra
+import qualified Stage3.Unify as Unify
 import Prelude hiding (Functor)
 
 data Declarations s scope = Declarations
@@ -49,6 +50,11 @@ data Declarations s scope = Declarations
     classInstances :: !(Vector (Map (Type2.Index scope) (Instance scope))),
     dataInstances :: !(Vector (Map (Type2.Index scope) (Instance scope)))
   }
+
+instance Unify.Zonk Declarations where
+  zonk zonker Declarations {terms, types, typeExtras, classInstances, dataInstances} = do
+    terms <- traverse (Unify.zonk zonker) terms
+    pure Declarations {terms, types, typeExtras, classInstances, dataInstances}
 
 type Functor s scope =
   Functor.Declarations

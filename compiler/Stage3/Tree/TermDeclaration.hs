@@ -1,29 +1,41 @@
 module Stage3.Tree.TermDeclaration where
 
 import Stage1.Variable (Variable)
-import Stage2.Scope (Environment ((:+)))
-import qualified Stage2.Scope as Scope (Local)
+import qualified Stage2.Scope as Scope (Show (..))
 import Stage3.Tree.Definition (Definition)
 import Stage3.Tree.Scheme (Scheme)
-import qualified Stage4.Tree.Scheme as Simple (Scheme, mono)
+import qualified Stage4.Tree.Scheme as Simple (Scheme (Scheme))
+import qualified Stage4.Tree.SchemeOver as Simple (SchemeOver (..))
 import qualified Stage4.Tree.Type as Simple (Type)
 import Prelude hiding (Maybe (Just))
 
 data TermDeclaration scope
   = Manual
       { name :: !Variable,
-        definition :: !(Definition (Scope.Local ':+ scope)),
-        annotation :: !(Scheme scope),
-        typex :: !(Simple.Scheme scope)
+        body :: !(Simple.SchemeOver Body scope),
+        annotation :: !(Scheme scope)
       }
   | Auto
       { name :: !Variable,
-        definitionAuto :: !(Definition scope),
-        typeAuto :: !(Simple.Type scope)
+        body :: !(Simple.SchemeOver Body scope)
       }
   deriving (Show)
 
+data Body scope = Body
+  { definition :: !(Definition scope),
+    typex :: !(Simple.Type scope)
+  }
+  deriving (Show)
+
+instance Scope.Show Body where
+  showsPrec = showsPrec
+
 simple :: TermDeclaration scope -> Simple.Scheme scope
-simple = \case
-  Auto {typeAuto} -> Simple.mono typeAuto
-  Manual {typex} -> typex
+simple declaration = case body declaration of
+  Simple.SchemeOver {parameters, constraints, result = Body {typex}} ->
+    Simple.Scheme
+      Simple.SchemeOver
+        { parameters,
+          constraints,
+          result = typex
+        }

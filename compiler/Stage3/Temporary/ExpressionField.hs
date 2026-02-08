@@ -14,6 +14,11 @@ data Field s scope
     expression :: !(Expression s scope)
   }
 
+instance Unify.Zonk Field where
+  zonk zonker Field {index, expression} = do
+    expression <- Unify.zonk zonker expression
+    pure Field {index, expression}
+
 check ::
   Context s scope ->
   (Int -> Unify.Type s scope) ->

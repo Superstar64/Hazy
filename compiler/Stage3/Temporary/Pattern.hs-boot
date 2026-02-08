@@ -17,6 +17,8 @@ type role Pattern nominal nominal
 type Pattern :: Type -> Environment -> Type
 data Pattern s scope
 
+instance Unify.Zonk Pattern
+
 augmentPattern :: Pattern s scopes -> Term.Bound (TermBinding s) (scope ':+ scopes)
 check :: Context s scope -> Unify.Type s scope -> Stage2.Pattern scope -> ST s (Pattern s scope)
 solve :: Pattern s scope -> ST s (Solved.Pattern scope)

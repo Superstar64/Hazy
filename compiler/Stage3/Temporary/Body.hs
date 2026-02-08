@@ -15,6 +15,13 @@ data Body s scope
   = Body !(Expression s scope)
   | Guards !(Strict.Vector1 (Statements s scope))
 
+instance Unify.Zonk Body where
+  zonk zonker = \case
+    Body expression -> Body <$> Unify.zonk zonker expression
+    Guards statements -> do
+      statements <- traverse (Unify.zonk zonker) statements
+      pure $ Guards statements
+
 check :: Context s scope -> Unify.Type s scope -> Stage2.Body scope -> ST s (Body s scope)
 check context typex = \case
   Stage2.Body expression1 -> Body <$> Expression.check context typex expression1

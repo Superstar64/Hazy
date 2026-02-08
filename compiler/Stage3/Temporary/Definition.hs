@@ -12,6 +12,16 @@ data Definition s scope
   = Alternative !(Function s scope) !(Definition s scope)
   | Definition !(Function s scope)
 
+instance Unify.Zonk Definition where
+  zonk zonker = \case
+    Alternative function definition -> do
+      function <- Unify.zonk zonker function
+      definition <- Unify.zonk zonker definition
+      pure $ Alternative function definition
+    Definition function -> do
+      function <- Unify.zonk zonker function
+      pure $ Definition function
+
 check :: Context s scope -> Unify.Type s scope -> Stage2.Definition scope -> ST s (Definition s scope)
 check context typex = \case
   Stage2.Alternative function1 definitions ->

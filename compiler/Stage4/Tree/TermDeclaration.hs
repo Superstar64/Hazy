@@ -9,9 +9,7 @@ import qualified Stage4.Substitute as Substitute
 import Stage4.Tree.Expression (Expression)
 import qualified Stage4.Tree.Expression as Expression
 import Stage4.Tree.Scheme (Scheme (Scheme))
-import qualified Stage4.Tree.Scheme as Scheme
 import Stage4.Tree.SchemeOver (SchemeOver (..))
-import qualified Stage4.Tree.SchemeOver as SchemeOver
 
 data TermDeclaration scope = Definition
   { name :: !Variable,
@@ -38,26 +36,25 @@ instance Substitute.Functor TermDeclaration where
       }
 
 simplify :: Stage3.TermDeclaration scope -> TermDeclaration scope
-simplify
-  Stage3.Manual
-    { name,
-      definition,
-      typex =
-        typex@(Scheme SchemeOver {parameters, constraints})
-    } =
-    Definition
-      { name,
-        definition =
-          SchemeOver
-            { parameters,
-              constraints,
-              result = Expression.simplify definition
-            },
-        typex
-      }
-simplify Stage3.Auto {name, definitionAuto, typeAuto} =
-  Definition
-    { name,
-      definition = SchemeOver.mono (Expression.simplify definitionAuto),
-      typex = Scheme.mono typeAuto
-    }
+simplify declaration = case Stage3.body declaration of
+  SchemeOver
+    { parameters,
+      constraints,
+      result = Stage3.Body {definition, typex}
+    } ->
+      Definition
+        { name = Stage3.name declaration,
+          definition =
+            SchemeOver
+              { parameters,
+                constraints,
+                result = Expression.simplify definition
+              },
+          typex =
+            Scheme
+              SchemeOver
+                { parameters,
+                  constraints,
+                  result = typex
+                }
+        }

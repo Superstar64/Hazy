@@ -60,6 +60,33 @@ data Bindings s scope
   | String {string :: !Text}
   | List {items :: !(Strict.Vector1 (Pattern s scope))}
 
+instance Unify.Zonk Pattern where
+  zonk zonker (At match typex) = do
+    match <- Unify.zonk zonker match
+    typex <- Unify.zonk zonker typex
+    pure $ At match typex
+
+instance Unify.Zonk Match where
+  zonk zonker = \case
+    Wildcard -> pure Wildcard
+    Match {match, irrefutable} -> do
+      match <- Unify.zonk zonker match
+      pure Match {match, irrefutable}
+
+instance Unify.Zonk Bindings where
+  zonk zonker = \case
+    Constructor {constructor, patterns} -> do
+      patterns <- traverse (Unify.zonk zonker) patterns
+      pure Constructor {constructor, patterns}
+    Record {constructor, fields, fieldCount} -> do
+      fields <- traverse (Unify.zonk zonker) fields
+      pure Record {constructor, fields, fieldCount}
+    Character {character} -> pure Character {character}
+    String {string} -> pure String {string}
+    List {items} -> do
+      items <- traverse (Unify.zonk zonker) items
+      pure List {items}
+
 augment :: Pattern s scope -> Context s scope -> Context s (Scope.Pattern ':+ scope)
 augment patternx Context {termEnvironment, localEnvironment, typeEnvironment} =
   Context

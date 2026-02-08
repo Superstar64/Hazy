@@ -73,7 +73,7 @@ data Expression s scope
       }
   | Selector
       { selector :: !(Selector.Index scope),
-        uniform :: !(Redirect.Uniform)
+        uniform :: !Redirect.Uniform
       }
   | Method
       { methodPosition :: !Position,
@@ -123,6 +123,56 @@ data Expression s scope
   | MultiwayIf
       { branches :: !(Strict.Vector1 (RightHandSide s scope))
       }
+
+instance Unify.Zonk Expression where
+  zonk zonker = \case
+    Variable {variablePosition, variable, instanciation} -> do
+      instanciation <- Unify.zonk zonker instanciation
+      pure Variable {variablePosition, variable, instanciation}
+    Constructor {constructor, parameters} -> pure Constructor {constructor, parameters}
+    Selector {selector, uniform} -> pure Selector {selector, uniform}
+    Method {methodPosition, method, evidence, instanciation} -> do
+      evidence <- Unify.zonk zonker evidence
+      instanciation <- Unify.zonk zonker instanciation
+      pure Method {methodPosition, method, evidence, instanciation}
+    Integer {startPosition, integer, evidence} -> do
+      evidence <- Unify.zonk zonker evidence
+      pure Integer {startPosition, integer, evidence}
+    Character {character} -> pure Character {character}
+    String {string} -> pure String {string}
+    Tuple {elements} -> do
+      elements <- traverse (Unify.zonk zonker) elements
+      pure Tuple {elements}
+    List {items} -> do
+      items <- traverse (Unify.zonk zonker) items
+      pure List {items}
+    Record {constructor, parameters, fields} -> do
+      fields <- traverse (Unify.zonk zonker) fields
+      pure Record {constructor, parameters, fields}
+    Call {function, argument} -> do
+      function <- Unify.zonk zonker function
+      argument <- Unify.zonk zonker argument
+      pure Call {function, argument}
+    Let {declarations, letBody} -> do
+      declarations <- Unify.zonk zonker declarations
+      letBody <- Unify.zonk zonker letBody
+      pure Let {declarations, letBody}
+    If {conditionx, thenx, elsex} -> do
+      conditionx <- Unify.zonk zonker conditionx
+      thenx <- Unify.zonk zonker thenx
+      elsex <- Unify.zonk zonker elsex
+      pure If {conditionx, thenx, elsex}
+    Case {scrutinee, cases} -> do
+      scrutinee <- Unify.zonk zonker scrutinee
+      cases <- traverse (Unify.zonk zonker) cases
+      pure Case {scrutinee, cases}
+    Lambda {parameter, body} -> do
+      parameter <- Unify.zonk zonker parameter
+      body <- Unify.zonk zonker body
+      pure Lambda {parameter, body}
+    MultiwayIf {branches} -> do
+      branches <- traverse (Unify.zonk zonker) branches
+      pure MultiwayIf {branches}
 
 check :: Context s scope -> Unify.Type s scope -> Stage2.Expression scope -> ST s (Expression s scope)
 check context@Context {termEnvironment} typex Stage2.Variable {variablePosition, variable} = do

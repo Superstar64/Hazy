@@ -15,5 +15,7 @@ type role Expression nominal nominal
 type Expression :: Type -> Environment -> Type
 data Expression s scope
 
+instance Unify.Zonk Expression
+
 check :: Context s scope -> Unify.Type s scope -> Stage2.Expression scope -> ST s (Expression s scope)
 solve :: Expression s scope -> ST s (Solved.Expression scope)

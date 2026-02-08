@@ -15,5 +15,7 @@ type role Statements nominal nominal
 type Statements :: Type -> Environment -> Type
 data Statements s scope
 
+instance Unify.Zonk Statements
+
 check :: Context s scope -> Unify.Type s scope -> Stage2.Statements scope -> ST s (Statements s scope)
 solve :: Statements s scope -> ST s (Solved.Statements scope)

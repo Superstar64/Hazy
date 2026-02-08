@@ -16,6 +16,11 @@ data Field s scope = Field
     patternx :: !(Pattern s scope)
   }
 
+instance Unify.Zonk Field where
+  zonk zonker Field {index, patternx} = do
+    patternx <- Unify.zonk zonker patternx
+    pure Field {index, patternx}
+
 augmentField :: Field s scopes -> Term.Bound (TermBinding s) (scope ':+ scopes)
 augmentField Field {patternx} = Pattern.augmentPattern patternx
 

@@ -318,11 +318,37 @@ These are deviations that will are planned to get fixed at some point.
 ### Newtypes are plain data
 Newtype declarations are treated as normal data declarations.
 
-### No implicit generalization
-All polymorphic types must be given an annotation.
+### No binding groups
+Hazy does not generalize bindings groups. Unannotated declarations that form a
+cycle are errors.
 
-Basically, this means that all type level definitions must be given a type annotation and
-that `MonoLocalBinds` is enabled.
+For example, this would be rejected:
+```haskell
+f a b = g a b
+g a b = f a b
+```
+However, this would be okay:
+```haskell
+f a b = a b
+g a b = f a b
+```
+
+### Universal monomorphic restriction
+Hazy applies the monomorphism restriction to all declarations. This means that
+only type variables without constraints are generalized.
+
+Consider these two examples:
+```haskell
+f a = a      -- #1
+f' a = a + 1 -- #2
+```
+Here, `#1` is polymorphic over an unconstrainted type variable so it gets
+properly generalized to `f :: a -> a`. However, `#2` is rejected because it
+would have the type `f' :: Num a => a -> a`.
+
+### MonoLocalBinds Only
+All local bindings are monomorphic. This is nearly equivalent to GHC's
+`MonoLocalBinds` extension.
 
 ### Constraints must have unique typeclass variable pairs
 Constraints must not have overlapping typeclass / rigid variable pairs.

@@ -21,6 +21,23 @@ data Statements s scope
   | Bind !(Pattern s scope) !(Expression s scope) !(Statements s (Scope.Pattern ':+ scope))
   | Let !(Declarations s (Scope.Declaration ':+ scope)) !(Statements s (Scope.Declaration ':+ scope))
 
+instance Unify.Zonk Statements where
+  zonk zonker = \case
+    Done expression -> Done <$> Unify.zonk zonker expression
+    Run expression statements -> do
+      expression <- Unify.zonk zonker expression
+      statements <- Unify.zonk zonker statements
+      pure $ Run expression statements
+    Bind patternx expression statements -> do
+      patternx <- Unify.zonk zonker patternx
+      expression <- Unify.zonk zonker expression
+      statements <- Unify.zonk zonker statements
+      pure $ Bind patternx expression statements
+    Let declarations statements -> do
+      declarations <- Unify.zonk zonker declarations
+      statements <- Unify.zonk zonker statements
+      pure $ Let declarations statements
+
 check :: Context s scope -> Unify.Type s scope -> Stage2.Statements scope -> ST s (Statements s scope)
 check context typex = \case
   Stage2.Done expression -> Done <$> Expression.check context typex expression
