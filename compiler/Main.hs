@@ -200,13 +200,13 @@ options =
     Option [] ["parse"] (NoArg parse) "Parse source",
     Option [] ["resolve"] (NoArg resolve) "Resolve source",
     Option [] ["check"] (NoArg check) "Check source file",
-    Option [] ["simplify"] (NoArg simplify) "Simplify source",
     Option ['o'] ["generate"] (ReqArg generate "PATH") "Generate Javascript from source file",
+    Option ['I'] [] (ReqArg include "PATH") "Include path",
+    Option ['q'] [] (NoArg quiet) "Don't show messages when compiling",
+    Option [] ["debug-simplify"] (NoArg simplify) "Simplify source",
     Option [] ["debug-message"] (NoArg debug) "Show debug messages",
     Option [] ["debug-show"] (NoArg show) "Show internal AST",
-    Option [] ["fail"] (ReqArg fail "ERROR") "Expect failure",
-    Option ['I'] [] (ReqArg include "PATH") "Include path",
-    Option ['q'] [] (NoArg quiet) "Don't show messages when compiling"
+    Option [] ["debug-fail"] (ReqArg fail "ERROR") "Expect failure"
   ]
   where
     help execute = execute {mode = Help}

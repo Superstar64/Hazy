@@ -34,14 +34,14 @@ callCommandVerbose command = do
 parse = do
   bad <- find "test/bad/parse"
   for_ bad $ \bad -> do
-    callProcessVerbose "hazy" ["--fail", "Expected", "--parse", bad]
+    callProcessVerbose "hazy" ["--debug-fail", "Expected", "--parse", bad]
 
 resolve = do
   bad <- find "test/bad/resolve"
   for_ bad $ \bad -> do
     let (base, _) = splitExtension bad
     fail <- head . lines <$> readFile (base ++ ".test")
-    callProcessVerbose "hazy" ["--fail", fail, "--resolve", bad, "-I", "library/runtime", "-I", "library/base"]
+    callProcessVerbose "hazy" ["--debug-fail", fail, "--resolve", bad, "-I", "library/runtime", "-I", "library/base"]
 
 library = do
   callProcessVerbose "hazy" ["--check", "-I", "library/runtime", "library/base"]
@@ -50,12 +50,12 @@ check = do
   bad <- find "test/bad/check"
   for_ bad $ \bad -> do
     fail <- head . lines <$> readFile (bad -<.> ".test")
-    callProcessVerbose "hazy" ["--fail", fail, "--check", bad, "-I", "library/runtime", "-I", "library/base"]
+    callProcessVerbose "hazy" ["--debug-fail", fail, "--check", bad, "-I", "library/runtime", "-I", "library/base"]
 
 good = do
   good <- find "test/good"
   for_ good $ \good ->
-    callProcessVerbose "hazy" ["--simplify", good, "-I", "library/runtime", "-I", "library/base"]
+    callProcessVerbose "hazy" ["--debug-simplify", good, "-I", "library/runtime", "-I", "library/base"]
 
 run = do
   dirty <- doesDirectoryExist ".build"
