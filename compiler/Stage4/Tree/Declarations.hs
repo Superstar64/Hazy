@@ -10,16 +10,16 @@ import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
 import Stage4.Tree.Instance (Instance)
 import qualified Stage4.Tree.Instance as Instance
-import Stage4.Tree.TermDeclaration (TermDeclaration)
+import Stage4.Tree.TermDeclaration (LazyTermDeclaration)
 import qualified Stage4.Tree.TermDeclaration as TermDeclaration
-import Stage4.Tree.TypeDeclaration (TypeDeclaration)
+import Stage4.Tree.TypeDeclaration (LazyTypeDeclaration)
 import qualified Stage4.Tree.TypeDeclaration as TypeDeclaration
 import Stage4.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 import qualified Stage4.Tree.TypeDeclarationExtra as TypeDeclarationExtra
 
 data Declarations scope = Declarations
-  { terms :: !(Vector (TermDeclaration scope)),
-    types :: !(Vector (TypeDeclaration scope)),
+  { terms :: !(Vector (LazyTermDeclaration scope)),
+    types :: !(Vector (LazyTypeDeclaration scope)),
     typeExtras :: !(Vector (TypeDeclarationExtra scope)),
     classInstances :: !(Vector (Map (Type2.Index scope) (Instance scope))),
     dataInstances :: !(Vector (Map (Type2.Index scope) (Instance scope)))

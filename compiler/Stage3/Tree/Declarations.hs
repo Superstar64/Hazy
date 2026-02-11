@@ -6,13 +6,13 @@ import qualified Stage2.Index.Type2 as Type2
 import qualified Stage3.Functor.Annotated as Functor (Annotated (..))
 import qualified Stage3.Functor.Declarations as Functor (Declarations (..))
 import {-# SOURCE #-} Stage3.Tree.Instance (Instance)
-import Stage3.Tree.TermDeclaration (TermDeclaration)
-import Stage3.Tree.TypeDeclaration (TypeDeclaration)
+import Stage3.Tree.TermDeclaration (LazyTermDeclaration)
+import Stage3.Tree.TypeDeclaration (LazyTypeDeclaration)
 import Stage3.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 
 data Declarations scope = Declarations
-  { terms :: !(Vector (TermDeclaration scope)),
-    types :: !(Vector (TypeDeclaration scope)),
+  { terms :: !(Vector (LazyTermDeclaration scope)),
+    types :: !(Vector (LazyTypeDeclaration scope)),
     typeExtras :: !(Vector (TypeDeclarationExtra scope)),
     classInstances :: !(Vector (Map (Type2.Index scope) (Instance scope))),
     dataInstances :: !(Vector (Map (Type2.Index scope) (Instance scope)))
@@ -23,9 +23,9 @@ fromFunctor ::
   Functor.Declarations
     scope
     a
-    (TermDeclaration scope)
+    (LazyTermDeclaration scope)
     b
-    (TypeDeclaration scope)
+    (LazyTypeDeclaration scope)
     (TypeDeclarationExtra scope)
     e
     (Instance scope) ->

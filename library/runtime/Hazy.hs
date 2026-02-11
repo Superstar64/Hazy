@@ -3,15 +3,19 @@ module Hazy (module Hazy.Builtin, module Hazy) where
 
 import Hazy.Builtin
 
+-- The usage of 'missing' variable is deliberate. It's not a special compiler
+-- builtin, but rather the compiler doesn't bother doing symbol resolution on
+-- definitions it doesn't need.
+
 placeholder :: a
-placeholder = placeholder
+placeholder = missing
 
 data Text
 
 pack :: [Char] -> Text
-pack = placeholder
+pack = missing
 
 data IO a
 
 putStrLn :: Text -> IO ()
-putStrLn = placeholder
+putStrLn = missing

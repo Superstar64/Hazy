@@ -9,6 +9,11 @@ import qualified Stage4.Tree.SchemeOver as Simple (SchemeOver (..))
 import qualified Stage4.Tree.Type as Simple (Type)
 import Prelude hiding (Maybe (Just))
 
+data LazyTermDeclaration scope = !Variable :^ TermDeclaration scope
+  deriving (Show)
+
+infix 4 :^
+
 data TermDeclaration scope
   = Manual
       { name :: !Variable,
@@ -20,6 +25,8 @@ data TermDeclaration scope
         body :: !(Simple.SchemeOver Body scope)
       }
   deriving (Show)
+
+strict declaration = name declaration :^ declaration
 
 data Body scope = Body
   { definition :: !(Definition scope),

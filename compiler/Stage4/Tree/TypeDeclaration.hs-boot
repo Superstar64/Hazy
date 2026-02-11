@@ -9,6 +9,10 @@ import {-# SOURCE #-} Stage4.Tree.Class (Class)
 import {-# SOURCE #-} Stage4.Tree.Data (Data)
 import {-# SOURCE #-} Stage4.Tree.Type (Type)
 
+data LazyTypeDeclaration scope = !ConstructorIdentifier :^ TypeDeclaration scope
+
+infix 4 :^
+
 data TypeDeclaration scope
   = Data
       { name :: !ConstructorIdentifier,
@@ -30,4 +34,4 @@ instance Shift TypeDeclaration
 
 instance Shift.Functor TypeDeclaration
 
-simplify :: Solved.TypeDeclaration scope -> TypeDeclaration scope
+simplify' :: Solved.TypeDeclaration scope -> TypeDeclaration scope

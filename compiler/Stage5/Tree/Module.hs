@@ -11,14 +11,14 @@ import qualified Data.Vector as Vector
 import qualified Javascript.Tree.Statement as Javascript (Statement (..))
 import Stage1.Lexer (FullQualifiers)
 import Stage1.Variable (FullyQualifiedConstructorIdentifier ((:.=.)))
-import qualified Stage2.Index.Type as Type
+import qualified Stage2.Index.Type as Type (Index (..))
 import qualified Stage2.Index.Type2 as Type2
 import qualified Stage2.Scope as Scope
 import Stage4.Tree.Declarations (Declarations (..))
 import Stage4.Tree.Module (Module (..))
 import Stage4.Tree.TermDeclaration (TermDeclaration (Definition))
-import qualified Stage4.Tree.TermDeclaration as TermDeclaration
-import qualified Stage4.Tree.TypeDeclaration as TypeDeclaration
+import qualified Stage4.Tree.TermDeclaration as Term
+import qualified Stage4.Tree.TypeDeclaration as Type (LazyTypeDeclaration (..))
 import qualified Stage5.Generate.Context as Context
 import Stage5.Generate.Global (Global (Global))
 import qualified Stage5.Generate.Global as Global
@@ -47,7 +47,7 @@ precontext modules =
   where
     names Module {name = path, declarations = Declarations {terms}} = generate <$> terms
       where
-        generate Definition {name} =
+        generate (name Term.:^ _) =
           Global
             { path,
               name = Mangle.mangle name
@@ -59,7 +59,7 @@ precontext modules =
         } = Vector.zipWith3 generate types classInstances dataInstances
         where
           global name = Global {path, name}
-          generate typex classInstances dataInstances =
+          generate (name Type.:^ _) classInstances dataInstances =
             GlobalType
               { classInstances =
                   let go key _ = global $ single Mangle.Class key
@@ -69,7 +69,6 @@ precontext modules =
                    in Map.mapWithKey go dataInstances
               }
             where
-              name = TypeDeclaration.name typex
               single :: Mangle.Brand -> Type2.Index Scope.Global -> Text
               single brand = Mangle.mangleInstance target brand name
               target :: Type.Index Scope.Global -> FullyQualifiedConstructorIdentifier
@@ -79,7 +78,7 @@ precontext modules =
                     { name = targetPath,
                       declarations = Declarations {types}
                     } = modules Vector.! global
-                  targetName = TypeDeclaration.name $ types Vector.! local
+                  targetName Type.:^ _ = types Vector.! local
 
 generate' :: Precontext -> FullQualifiers -> Int -> Declarations Scope.Global -> ST s [Javascript.Statement 'False]
 generate'
@@ -95,7 +94,7 @@ generate'
       dataInstances
     } = do
     context <- Context.start precontext
-    statements <- for (zip [0 ..] (toList terms)) $ \(termIndex, Definition {definition}) ->
+    statements <- for (zip [0 ..] (toList terms)) $ \(termIndex, _ Term.:^ Definition {definition}) ->
       do
         thunk <- Expression.declaration context definition
         source <- Context.fresh context

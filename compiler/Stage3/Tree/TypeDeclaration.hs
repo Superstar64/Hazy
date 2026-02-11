@@ -35,6 +35,11 @@ import Stage3.Tree.Type (Type)
 import qualified Stage3.Unify as Unify
 import qualified Stage4.Tree.Type as Simple (Type)
 
+data LazyTypeDeclaration scope = !ConstructorIdentifier :^ TypeDeclaration scope
+  deriving (Show)
+
+infix 4 :^
+
 data TypeDeclaration scope
   = ADT
       { name :: !ConstructorIdentifier,
@@ -61,6 +66,8 @@ data TypeDeclaration scope
         definition' :: !(Simple.Type (Scope.Local ':+ scope))
       }
   deriving (Show)
+
+strict declaration = name declaration :^ declaration
 
 kind'_ :: TypeDeclaration scope -> Simple.Type scope
 kind'_ = kind'

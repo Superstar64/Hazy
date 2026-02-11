@@ -9,6 +9,7 @@ import Error (cyclicalTypeChecking)
 import Stage1.Variable (FullQualifiers)
 import qualified Stage2.Index.Type as Type
 import Stage2.Scope (Global)
+import qualified Stage2.Tree.Declarations as Stage2.Declarations
 import qualified Stage2.Tree.Instance as Stage2.Instance
 import qualified Stage2.Tree.Module as Stage2 (Module (..))
 import qualified Stage2.Tree.TermDeclaration as Stage2 (TermDeclaration)
@@ -33,8 +34,9 @@ import Stage3.Tree.Declarations (Declarations)
 import qualified Stage3.Tree.Declarations as Declarations
 import Stage3.Tree.Instance (Instance)
 import qualified Stage3.Tree.Instance as Instance
-import Stage3.Tree.TermDeclaration (TermDeclaration)
-import Stage3.Tree.TypeDeclaration (TypeDeclaration)
+import Stage3.Tree.TermDeclaration (LazyTermDeclaration, TermDeclaration)
+import qualified Stage3.Tree.TermDeclaration as TermDeclaration
+import Stage3.Tree.TypeDeclaration (LazyTypeDeclaration, TypeDeclaration)
 import qualified Stage3.Tree.TypeDeclaration as TypeDeclaration
 import Stage3.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 import qualified Stage3.Tree.TypeDeclarationExtra as TypeDeclarationExtra
@@ -59,9 +61,9 @@ type Functor s =
 fromFunctor ::
   Functor.Module
     a
-    (TermDeclaration Global)
+    (LazyTermDeclaration Global)
     b
-    (TypeDeclaration Global)
+    (LazyTypeDeclaration Global)
     (TypeDeclarationExtra Global)
     e
     (Instance Global) ->
@@ -75,9 +77,9 @@ fromFunctor (Functor.Module {name, declarations}) =
 fromFunctors ::
   Functor.ModuleSet
     a
-    (TermDeclaration Global)
+    (LazyTermDeclaration Global)
     b
-    (TypeDeclaration Global)
+    (LazyTypeDeclaration Global)
     (TypeDeclarationExtra Global)
     e
     (Instance Global) ->
@@ -86,18 +88,43 @@ fromFunctors (Functor.ModuleSet modules) = fmap fromFunctor modules
 
 check :: Vector Stage2.Module -> Vector Module
 check modules =
-  fromFunctors $
-    loeb7 $
-      Loeb7 $
-        mapWithKey
-          checkTermAnnotation
-          checkTermDeclaration
-          checkTypeAnnotation
-          checkTypeDeclaration
-          checkTypeDeclarationExtra
-          checkInstanceAnnotation
-          checkInstanceDeclaration
-          (Functor.ModuleSet $ fmap fromStage2 modules)
+  fromFunctors
+    $ mapWithKey
+      pass
+      term
+      pass
+      typex
+      pass
+      pass
+      pass
+    $ loeb7
+    $ Loeb7
+    $ mapWithKey
+      checkTermAnnotation
+      checkTermDeclaration
+      checkTypeAnnotation
+      checkTypeDeclaration
+      checkTypeDeclarationExtra
+      checkInstanceAnnotation
+      checkInstanceDeclaration
+      (Functor.ModuleSet $ fmap fromStage2 modules)
+  where
+    pass :: a -> b -> c -> c
+    pass = const $ const id
+
+    term modulex term declaration
+      | modulex <- modules Vector.! modulex,
+        declarations <- Stage2.declarations modulex,
+        terms <- Stage2.Declarations.terms declarations,
+        term <- terms Vector.! term =
+          Stage2.TermDeclaration.name term TermDeclaration.:^ declaration
+
+    typex modulex typex declaration
+      | modulex <- modules Vector.! modulex,
+        declarations <- Stage2.declarations modulex,
+        types <- Stage2.Declarations.types declarations,
+        typex <- types Vector.! typex =
+          Stage2.TypeDeclaration.name typex TypeDeclaration.:^ declaration
 
 checkTermAnnotation ::
   p1 ->

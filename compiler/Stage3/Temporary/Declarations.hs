@@ -36,7 +36,9 @@ import qualified Stage3.Temporary.TermDeclaration as TermDeclaration
 import qualified Stage3.Tree.Declarations as Solved
 import Stage3.Tree.Instance (Instance)
 import qualified Stage3.Tree.Instance as Instance
+import qualified Stage3.Tree.TermDeclaration as Solved.TermDeclaration
 import Stage3.Tree.TypeDeclaration (TypeDeclaration)
+import qualified Stage3.Tree.TypeDeclaration as Solved.TypeDeclaration
 import qualified Stage3.Tree.TypeDeclaration as TypeDeclaration
 import Stage3.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 import qualified Stage3.Tree.TypeDeclarationExtra as TypeDeclarationExtra
@@ -243,8 +245,8 @@ solve Declarations {terms, types, typeExtras, dataInstances, classInstances} = d
   terms <- traverse TermDeclaration.solve terms
   pure
     Solved.Declarations
-      { terms,
-        types,
+      { terms = Solved.TermDeclaration.strict <$> terms,
+        types = Solved.TypeDeclaration.strict <$> types,
         typeExtras,
         dataInstances,
         classInstances

@@ -16,6 +16,23 @@ import Stage4.Tree.Data (Data)
 import qualified Stage4.Tree.Data as Data
 import Stage4.Tree.Type (Type)
 
+data LazyTypeDeclaration scope = !ConstructorIdentifier :^ TypeDeclaration scope
+  deriving (Show)
+
+infix 4 :^
+
+instance Shift LazyTypeDeclaration where
+  shift = shiftDefault
+
+instance Shift.Functor LazyTypeDeclaration where
+  map = Shift2.mapDefault
+
+instance Shift2.Functor LazyTypeDeclaration where
+  map = Substitute.mapDefault
+
+instance Substitute.Functor LazyTypeDeclaration where
+  map category (name :^ declaration) = name :^ Substitute.map category declaration
+
 data TypeDeclaration scope
   = Data
       { name :: !ConstructorIdentifier,
@@ -66,8 +83,11 @@ instance Substitute.Functor TypeDeclaration where
           definition = Substitute.map (Substitute.Over category) definition
         }
 
-simplify :: Solved.TypeDeclaration scope -> TypeDeclaration scope
-simplify = \case
+simplify :: Solved.LazyTypeDeclaration scope -> LazyTypeDeclaration scope
+simplify (name Solved.:^ declaration) = name :^ simplify' declaration
+
+simplify' :: Solved.TypeDeclaration scope -> TypeDeclaration scope
+simplify' = \case
   Solved.ADT {name, parameters, constructors, selectors} ->
     Data
       { name,
