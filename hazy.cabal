@@ -23,6 +23,9 @@ executable hazy
     Data.Hexafunctor
     Data.Hexatraversable
     Data.List.Reverse
+    Data.Octafoldable
+    Data.Octafunctor
+    Data.Octatraversable
     Data.Pentafoldable
     Data.Pentafunctor
     Data.Pentatraversable
