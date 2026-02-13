@@ -1,10 +1,10 @@
 module Stage3.Temporary.Declarations (Declarations (..), check, solve) where
 
 import Control.Monad.ST (ST)
-import Data.Acyclic (loebST7)
-import Data.Heptafunctor (heptamap)
+import Data.Acyclic (loebST8)
 import Data.Map (Map)
 import qualified Data.Map as Map
+import Data.Octafunctor (octamap)
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Error (cyclicalTypeChecking)
@@ -16,6 +16,8 @@ import qualified Stage2.Scope as Scope
 import qualified Stage2.Tree.Declarations as Stage2 (Declarations (..))
 import qualified Stage2.Tree.Instance as Stage2 (Instance)
 import qualified Stage2.Tree.Instance as Stage2.Instance
+import qualified Stage2.Tree.Shared as Stage2 (Shared (..))
+import qualified Stage2.Tree.Shared as Stage2.Shared
 import qualified Stage2.Tree.TermDeclaration as Stage2 (TermDeclaration)
 import qualified Stage2.Tree.TermDeclaration as Stage2.TermDeclaration
 import qualified Stage2.Tree.TypeDeclaration as Stage2 (TypeDeclaration)
@@ -31,6 +33,8 @@ import qualified Stage3.Functor.Annotated as Functor (Annotated (..), content)
 import Stage3.Functor.Declarations (mapWithKey)
 import qualified Stage3.Functor.Declarations as Functor (Declarations (..), fromStage2)
 import qualified Stage3.Functor.Instance.Key as Instance.Key
+import Stage3.Temporary.Shared (Shared)
+import qualified Stage3.Temporary.Shared as Shared
 import Stage3.Temporary.TermDeclaration (TermDeclaration)
 import qualified Stage3.Temporary.TermDeclaration as TermDeclaration
 import qualified Stage3.Tree.Declarations as Solved
@@ -48,21 +52,41 @@ import Prelude hiding (Functor)
 data Declarations s scope = Declarations
   { terms :: !(Vector (TermDeclaration s scope)),
     types :: !(Vector (TypeDeclaration scope)),
+    shared :: !(Vector (Shared s scope)),
     typeExtras :: !(Vector (TypeDeclarationExtra scope)),
     classInstances :: !(Vector (Map (Type2.Index scope) (Instance scope))),
     dataInstances :: !(Vector (Map (Type2.Index scope) (Instance scope)))
   }
 
 instance Unify.Zonk Declarations where
-  zonk zonker Declarations {terms, types, typeExtras, classInstances, dataInstances} = do
-    terms <- traverse (Unify.zonk zonker) terms
-    pure Declarations {terms, types, typeExtras, classInstances, dataInstances}
+  zonk
+    zonker
+    Declarations
+      { terms,
+        types,
+        shared,
+        typeExtras,
+        classInstances,
+        dataInstances
+      } = do
+      terms <- traverse (Unify.zonk zonker) terms
+      shared <- traverse (Unify.zonk zonker) shared
+      pure
+        Declarations
+          { terms,
+            shared,
+            types,
+            typeExtras,
+            classInstances,
+            dataInstances
+          }
 
 type Functor s scope =
   Functor.Declarations
     (Scope.Declaration ':+ scope)
     (ST s (LocalTypeAnnotation s (Scope.Declaration ':+ scope)))
     (ST s (TermDeclaration s (Scope.Declaration ':+ scope)))
+    (ST s (Shared s (Scope.Declaration ':+ scope)))
     (ST s (KindAnnotation (Scope.Declaration ':+ scope)))
     (ST s (TypeDeclaration (Scope.Declaration ':+ scope)))
     (ST s (TypeDeclarationExtra (Scope.Declaration ':+ scope)))
@@ -74,20 +98,30 @@ fromFunctor ::
     scope
     a
     (TermDeclaration s scope)
+    (Shared s scope)
     c
     (TypeDeclaration scope)
     (TypeDeclarationExtra scope)
     e
     (Instance scope) ->
   Declarations s scope
-fromFunctor Functor.Declarations {terms, types, typeExtras, classInstances, dataInstances} =
-  Declarations
-    { terms = Functor.content <$> terms,
-      types = Functor.content <$> types,
+fromFunctor
+  Functor.Declarations
+    { terms,
+      types,
+      shared,
       typeExtras,
-      dataInstances = fmap (fmap Functor.content) dataInstances,
-      classInstances = fmap (fmap Functor.content) classInstances
-    }
+      classInstances,
+      dataInstances
+    } =
+    Declarations
+      { terms = Functor.content <$> terms,
+        types = Functor.content <$> types,
+        shared,
+        typeExtras,
+        dataInstances = fmap (fmap Functor.content) dataInstances,
+        classInstances = fmap (fmap Functor.content) classInstances
+      }
 
 check ::
   Context s scope ->
@@ -99,10 +133,11 @@ check ::
     )
 check context declarations = do
   functor <-
-    loebST7
+    loebST8
       $ mapWithKey
         (checkTermAnnotation context)
         (checkTermDeclaration context)
+        (checkShared context)
         (checkTypeAnnotation context)
         (checkTypeDeclaration context)
         (checkTypeDeclarationExtra context)
@@ -110,8 +145,9 @@ check context declarations = do
         (checkInstanceDeclaration context)
       $ Functor.fromStage2 Local declarations
   let lifted =
-        heptamap
+        octamap
           pure
+          (const ())
           (const ())
           pure
           pure
@@ -151,6 +187,22 @@ checkTermDeclaration context index declaration =
       annotation <- meta
       let any = TypeAnnotation.local annotation
       TermDeclaration.check context any declaration
+  )
+
+checkShared ::
+  Context s scope ->
+  p ->
+  Stage2.Shared (Scope.Declaration ':+ scope) ->
+  ( a,
+    Functor s scope ->
+    ST s (Shared s (Scope.Declaration ':+ scope))
+  )
+checkShared context _ declaration =
+  ( cyclicalTypeChecking $ Stage2.Shared.equalPosition declaration,
+    \declarations -> do
+      context <- pure $ localBindings declarations context
+      typex <- Unify.fresh Unify.typex
+      Shared.check context (Just typex) declaration
   )
 
 checkTypeAnnotation ::
@@ -241,13 +293,23 @@ checkInstanceDeclaration context key declaration =
   )
 
 solve :: Declarations s scope -> ST s (Solved.Declarations scope)
-solve Declarations {terms, types, typeExtras, dataInstances, classInstances} = do
-  terms <- traverse TermDeclaration.solve terms
-  pure
-    Solved.Declarations
-      { terms = Solved.TermDeclaration.strict <$> terms,
-        types = Solved.TypeDeclaration.strict <$> types,
-        typeExtras,
-        dataInstances,
-        classInstances
-      }
+solve
+  Declarations
+    { terms,
+      types,
+      shared,
+      typeExtras,
+      dataInstances,
+      classInstances
+    } = do
+    terms <- traverse TermDeclaration.solve terms
+    shared <- traverse Shared.solve shared
+    pure
+      Solved.Declarations
+        { terms = Solved.TermDeclaration.strict <$> terms,
+          types = Solved.TypeDeclaration.strict <$> types,
+          shared,
+          typeExtras,
+          dataInstances,
+          classInstances
+        }

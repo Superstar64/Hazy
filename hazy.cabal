@@ -307,6 +307,7 @@ executable hazy
     Stage3.Temporary.RightHandSide
     Stage3.Temporary.Scheme
     Stage3.Temporary.Select
+    Stage3.Temporary.Shared
     Stage3.Temporary.Statements
     Stage3.Temporary.TermDeclaration
     Stage3.Temporary.Type
@@ -331,6 +332,7 @@ executable hazy
     Stage3.Tree.PatternField
     Stage3.Tree.RightHandSide
     Stage3.Tree.Scheme
+    Stage3.Tree.Shared
     Stage3.Tree.Statements
     Stage3.Tree.TermDeclaration
     Stage3.Tree.Type

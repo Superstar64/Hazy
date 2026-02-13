@@ -6,6 +6,7 @@ import qualified Stage2.Index.Type2 as Type2
 import qualified Stage3.Functor.Annotated as Functor (Annotated (..))
 import qualified Stage3.Functor.Declarations as Functor (Declarations (..))
 import {-# SOURCE #-} Stage3.Tree.Instance (Instance)
+import Stage3.Tree.Shared (Shared)
 import Stage3.Tree.TermDeclaration (LazyTermDeclaration)
 import Stage3.Tree.TypeDeclaration (LazyTypeDeclaration)
 import Stage3.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
@@ -13,6 +14,7 @@ import Stage3.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 data Declarations scope = Declarations
   { terms :: !(Vector (LazyTermDeclaration scope)),
     types :: !(Vector (LazyTypeDeclaration scope)),
+    shared :: !(Vector (Shared scope)),
     typeExtras :: !(Vector (TypeDeclarationExtra scope)),
     classInstances :: !(Vector (Map (Type2.Index scope) (Instance scope))),
     dataInstances :: !(Vector (Map (Type2.Index scope) (Instance scope)))
@@ -24,16 +26,18 @@ fromFunctor ::
     scope
     a
     (LazyTermDeclaration scope)
-    b
+    (Shared scope)
+    c
     (LazyTypeDeclaration scope)
     (TypeDeclarationExtra scope)
     e
     (Instance scope) ->
   Declarations scope
-fromFunctor (Functor.Declarations {terms, types, typeExtras, dataInstances, classInstances}) =
+fromFunctor (Functor.Declarations {terms, types, shared, typeExtras, dataInstances, classInstances}) =
   Declarations
     { terms = Functor.content <$> terms,
       types = Functor.content <$> types,
+      shared,
       typeExtras,
       dataInstances = fmap (fmap Functor.content) dataInstances,
       classInstances = fmap (fmap Functor.content) classInstances

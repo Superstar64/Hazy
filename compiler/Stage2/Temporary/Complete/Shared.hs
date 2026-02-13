@@ -8,6 +8,7 @@ import Stage1.Tree.Declaration as Stage1 (Declaration (..))
 import qualified Stage1.Tree.LeftHandSide as Stage1 (LeftHandSide (Pattern))
 import qualified Stage1.Tree.Marked as Marked
 import qualified Stage1.Tree.Pattern as Stage1 (Pattern (..))
+import qualified Stage1.Tree.RightHandSide as Stage1.RightHandSide
 import qualified Stage2.Tree.Pattern as Pattern (resolve)
 import qualified Stage2.Tree.RightHandSide as RightHandSide (resolve)
 import qualified Stage2.Tree.Shared as Real
@@ -29,7 +30,8 @@ resolve context (Stage1.Definition {leftHandSide = Stage1.Pattern pattern1, righ
         { bindings,
           share =
             Real.Shared
-              { patternx,
+              { equalPosition = Stage1.RightHandSide.equalPosition rightHandSide,
+                patternx,
                 definition
               }
         }

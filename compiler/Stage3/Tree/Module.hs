@@ -1,7 +1,7 @@
 module Stage3.Tree.Module (Module (..), check) where
 
 import Control.Monad.ST (ST)
-import Data.Acyclic (Loeb7 (..), loeb7)
+import Data.Acyclic (Loeb8 (..), loeb8)
 import qualified Data.Map as Map
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
@@ -12,6 +12,7 @@ import Stage2.Scope (Global)
 import qualified Stage2.Tree.Declarations as Stage2.Declarations
 import qualified Stage2.Tree.Instance as Stage2.Instance
 import qualified Stage2.Tree.Module as Stage2 (Module (..))
+import qualified Stage2.Tree.Shared as Stage2.Shared
 import qualified Stage2.Tree.TermDeclaration as Stage2 (TermDeclaration)
 import qualified Stage2.Tree.TermDeclaration as Stage2.TermDeclaration
 import qualified Stage2.Tree.TypeDeclaration as Stage2.TypeDeclaration
@@ -29,11 +30,13 @@ import Stage3.Functor.Module (fromStage2)
 import qualified Stage3.Functor.Module as Functor (Module (..))
 import Stage3.Functor.ModuleSet (mapWithKey)
 import qualified Stage3.Functor.ModuleSet as Functor (ModuleSet (..))
+import qualified Stage3.Temporary.Shared as Shared
 import qualified Stage3.Temporary.TermDeclaration as TermDeclaration.Unsolved
 import Stage3.Tree.Declarations (Declarations)
 import qualified Stage3.Tree.Declarations as Declarations
 import Stage3.Tree.Instance (Instance)
 import qualified Stage3.Tree.Instance as Instance
+import Stage3.Tree.Shared (Shared)
 import Stage3.Tree.TermDeclaration (LazyTermDeclaration, TermDeclaration)
 import qualified Stage3.Tree.TermDeclaration as TermDeclaration
 import Stage3.Tree.TypeDeclaration (LazyTypeDeclaration, TypeDeclaration)
@@ -52,6 +55,7 @@ type Functor s =
   Functor.ModuleSet
     (ST s (GlobalTypeAnnotation Global))
     (ST s (TermDeclaration Global))
+    (ST s (Shared Global))
     (ST s (KindAnnotation Global))
     (ST s (TypeDeclaration Global))
     (ST s (TypeDeclarationExtra Global))
@@ -62,7 +66,8 @@ fromFunctor ::
   Functor.Module
     a
     (LazyTermDeclaration Global)
-    b
+    (Shared Global)
+    c
     (LazyTypeDeclaration Global)
     (TypeDeclarationExtra Global)
     e
@@ -78,7 +83,8 @@ fromFunctors ::
   Functor.ModuleSet
     a
     (LazyTermDeclaration Global)
-    b
+    (Shared Global)
+    c
     (LazyTypeDeclaration Global)
     (TypeDeclarationExtra Global)
     e
@@ -93,15 +99,17 @@ check modules =
       pass
       term
       pass
+      pass
       typex
       pass
       pass
       pass
-    $ loeb7
-    $ Loeb7
+    $ loeb8
+    $ Loeb8
     $ mapWithKey
       checkTermAnnotation
       checkTermDeclaration
+      checkShared
       checkTypeAnnotation
       checkTypeDeclaration
       checkTypeDeclarationExtra
@@ -154,6 +162,20 @@ checkTermDeclaration global local declaration =
           any = TypeAnnotation.global annotation
       unsolved <- TermDeclaration.Unsolved.check context any declaration
       TermDeclaration.Unsolved.solve unsolved
+  )
+
+checkShared ::
+  p1 ->
+  p2 ->
+  Stage2.Shared.Shared Global ->
+  ( a,
+    Functor s -> ST s (Shared Global)
+  )
+checkShared _ _ declaration =
+  ( cyclicalTypeChecking $ Stage2.Shared.equalPosition declaration,
+    \modules -> do
+      shared <- Shared.check (globalBindings modules) Nothing declaration
+      Shared.solve shared
   )
 
 checkTypeAnnotation ::

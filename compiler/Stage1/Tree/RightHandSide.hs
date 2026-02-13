@@ -4,7 +4,7 @@
 -- Parser syntax tree for right hand sides
 module Stage1.Tree.RightHandSide where
 
-import Stage1.Parser (Parser, asum, token)
+import Stage1.Parser (Parser, asum, position, token)
 import Stage1.Position (Position)
 import Stage1.Tree.Body (Body)
 import qualified Stage1.Tree.Body as Body
@@ -16,7 +16,8 @@ data RightHandSide position
     -- > x = e
     -- >   ^^^
     RightHandSide
-    { body :: !(Body position),
+    { equalPosition :: !position,
+      body :: !(Body position),
       declarations :: !(Declarations position)
     }
   deriving (Show)
@@ -24,14 +25,16 @@ data RightHandSide position
 parse :: Parser () -> Parser (RightHandSide Position)
 parse equal =
   rightHandSide
-    <$> Body.parse equal
+    <$> position
+    <*> Body.parse equal
     <*> asum
       [ token "where" *> Declarations.parse,
         pure Declarations.empty
       ]
   where
-    rightHandSide body declarations =
+    rightHandSide equalPosition body declarations =
       RightHandSide
-        { body,
+        { equalPosition,
+          body,
           declarations
         }
