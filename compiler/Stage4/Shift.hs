@@ -7,7 +7,7 @@ import qualified Stage2.Index.Method as Method
 import qualified Stage2.Index.Selector as Selector
 import qualified Stage2.Index.Type as Type
 import qualified Stage2.Index.Type2 as Type2
-import Stage2.Scope (Declaration, Environment (..), Pattern, SimplePattern)
+import Stage2.Scope (Environment (..), Pattern, SimpleDeclaration, SimplePattern)
 import qualified Stage2.Shift as Stage2
 import qualified Stage3.Index.Evidence as Evidence
 import Prelude hiding (Functor, map)
@@ -15,11 +15,11 @@ import Prelude hiding (Functor, map)
 data Category scope scope' where
   Lift :: Stage2.Category scope scope' -> Category scope scope'
   Over :: Category scopes scopes' -> Category (scope1 ':+ scopes) (scope1 ':+ scopes')
-  ReplaceWildcard :: Category (Pattern ':+ scope) (Declaration ':+ scope)
+  ReplaceWildcard :: Category (Pattern ':+ scope) (SimpleDeclaration ':+ scope)
   SimplifyPattern :: Int -> Category (Pattern ':+ scope) (Pattern ':+ Pattern ':+ scope)
   RenamePattern :: (Int -> Int) -> Category (Pattern ':+ scope) (Pattern ':+ scope)
   SimplifyList :: Category (Pattern ':+ scope) (Pattern ':+ scope)
-  LetPattern :: Category (Pattern ':+ scope) (Pattern ':+ Declaration ':+ scope)
+  LetPattern :: Category (Pattern ':+ scope) (Pattern ':+ SimpleDeclaration ':+ scope)
   FinishPattern :: Category (Pattern ':+ scope) (SimplePattern ':+ scope)
 
 general :: Category scope scope' -> Stage2.Category scope scope'

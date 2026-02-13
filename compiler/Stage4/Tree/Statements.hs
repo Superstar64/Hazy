@@ -36,7 +36,7 @@ data Statements scope
       }
   | LetOne
       { declaration :: !(Expression scope),
-        body :: !(Statements (Scope.Declaration ':+ scope))
+        body :: !(Statements (Scope.SimpleDeclaration ':+ scope))
       }
   | Branch
       { left :: !(Statements scope),

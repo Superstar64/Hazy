@@ -14,7 +14,7 @@ import Stage4.Tree.Expression (Expression (..))
 import Stage4.Tree.Instanciation (Instanciation (Instanciation))
 import Stage4.Tree.SchemeOver (SchemeOver (..))
 import qualified Stage4.Tree.SchemeOver as SchemeOver
-import Stage5.Generate.Context (Context, fresh, localBindings, symbol, (!-))
+import Stage5.Generate.Context (Context, fresh, singleBinding, symbol, (!-))
 import qualified Stage5.Generate.Context as Context
 import qualified Stage5.Generate.Mangle as Mangle
 import {-# SOURCE #-} qualified Stage5.Tree.Declarations as Declarations
@@ -110,7 +110,7 @@ generateInto context target = \case
     pure $ declarations ++ result
   Lambda {body} -> do
     name <- fresh context
-    context <- pure $ localBindings (Vector.singleton name) Vector.empty context
+    context <- pure $ singleBinding name context
     (statements, result) <- generate context body
     let returnx = Javascript.Return result
     pure

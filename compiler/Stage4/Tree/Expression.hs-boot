@@ -31,7 +31,7 @@ instance Show (Expression scope)
 instance Scope.Show Expression
 
 monoVariable :: Term.Index scope -> Expression scope
-lambdaVariable :: Expression (Scope.Declaration ':+ scopes)
+lambdaVariable :: Expression (Scope.SimpleDeclaration ':+ scopes)
 patternVariable :: Expression (Scope.Pattern ':+ scopes)
 character_ :: Char -> Expression scope
 eqChar :: Expression scope -> Expression scope -> Expression scope

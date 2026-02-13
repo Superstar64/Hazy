@@ -66,7 +66,7 @@ etaExpandable = \case
   Alternative {definition, alternative} ->
     Function.etaExpandable definition || etaExpandable alternative
 
-etaExpand :: Definition scope -> Definition (Scope.Declaration ':+ scope)
+etaExpand :: Definition scope -> Definition (Scope.SimpleDeclaration ':+ scope)
 etaExpand = \case
   Definition {definition} -> Definition {definition = Function.etaExpand definition}
   Alternative {definition, alternative} ->

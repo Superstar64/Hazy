@@ -91,8 +91,8 @@ etaExpandable Plain {} = False
 etaExpandable Bound {} = True
 etaExpandable Bind {thenx} = etaExpandable thenx
 
-etaExpand :: Function scope -> Function (Scope.Declaration ':+ scope)
-etaExpand = etaExpand Shift.Shift (Term.Declaration 0)
+etaExpand :: Function scope -> Function (Scope.SimpleDeclaration ':+ scope)
+etaExpand = etaExpand Shift.Shift Term.SimpleDeclaration
   where
     etaExpand :: Shift.Category scope1 scope2 -> Term.Index scope2 -> Function scope1 -> Function scope2
     etaExpand category argument = \case

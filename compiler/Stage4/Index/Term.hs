@@ -8,7 +8,7 @@ where
 import Data.Void (absurd)
 import Stage2.Index.Term (Bound (..))
 import qualified Stage2.Index.Term as Stage2
-import Stage2.Scope (Declaration, Environment (..), Global, Pattern, SimplePattern)
+import Stage2.Scope (Declaration, Environment (..), Global, Pattern, SimpleDeclaration, SimplePattern)
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage4.Shift (Category (..), Functor (..))
@@ -20,6 +20,7 @@ data Index scopes where
   Shift :: !(Index scopes) -> Index (scope ':+ scopes)
   Global :: !Int -> !Int -> Index Global
   SimplePattern :: !Int -> Index (SimplePattern ':+ scopes)
+  SimpleDeclaration :: Index (SimpleDeclaration ':+ scopes)
 
 instance Show (Index scope) where
   showsPrec d = \case
@@ -33,6 +34,7 @@ instance Show (Index scope) where
           . showString " "
           . showsPrec 11 local
     SimplePattern local -> showParen (d > 10) $ showString "SimplePattern " . showsPrec 11 local
+    SimpleDeclaration -> showString "SimpleDeclaration"
 
 from :: Stage2.Index scope -> Index scope
 from = \case
@@ -51,6 +53,7 @@ instance Shift.Functor Index where
   map (Shift.Over _) (Declaration index) = Declaration index
   map (Shift.Over _) (Pattern bound) = Pattern bound
   map (Shift.Over _) (SimplePattern index) = SimplePattern index
+  map (Shift.Over _) SimpleDeclaration = SimpleDeclaration
   map (after Shift.:. before) index = Shift.map after (Shift.map before index)
   map (Shift.Unshift _) (Shift index) = index
   map (Shift.Unshift abort) _ = absurd abort
@@ -61,8 +64,9 @@ instance Functor Index where
   map (Over _) (Declaration index) = Declaration index
   map (Over _) (Pattern bound) = Pattern bound
   map (Over _) (SimplePattern index) = SimplePattern index
+  map (Over _) SimpleDeclaration = SimpleDeclaration
   map ReplaceWildcard index = case index of
-    Pattern At -> Declaration 0
+    Pattern At -> SimpleDeclaration
     Pattern _ -> error "bad wildcard bind"
     Shift index -> Shift index
   map (SimplifyPattern target) index = case index of
@@ -82,7 +86,7 @@ instance Functor Index where
       Pattern (Select 1 (Select (index - 1) bound))
     Shift index -> Shift index
   map LetPattern index = case index of
-    Pattern At -> Shift $ Declaration 0
+    Pattern At -> Shift SimpleDeclaration
     Pattern (Select index bound) ->
       Pattern (Select index bound)
     Shift index -> Shift (Shift index)

@@ -8,6 +8,7 @@ import Stage2.Scope
     Global,
     Local,
     Pattern,
+    SimpleDeclaration,
     SimplePattern,
   )
 import Stage2.Shift (Shift (..))
@@ -20,6 +21,7 @@ data Table value scope where
   Pattern :: Table value scopes -> Table value (Pattern ':+ scopes)
   Global :: Table value Global
   SimplePattern :: Table value scopes -> Table value (SimplePattern ':+ scopes)
+  SimpleDeclaration :: Table value scopes -> Table value (SimpleDeclaration ':+ scopes)
 
 (!) :: (Shift value) => Table value scope -> Index scope -> value scope
 table ! Index.Assumed index | Assumed values _ <- table = values Vector.! index
@@ -27,3 +29,4 @@ Assumed _ table ! Index.Shift index = shift $ table ! index
 Declaration table ! Index.Shift index = shift $ table ! index
 Pattern table ! Index.Shift index = shift $ table ! index
 SimplePattern table ! Index.Shift index = shift $ table ! index
+SimpleDeclaration table ! Index.Shift index = shift $ table ! index

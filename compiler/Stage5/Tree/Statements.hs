@@ -8,7 +8,7 @@ import qualified Javascript.Tree.Expression as Javascript (Expression (..))
 import qualified Javascript.Tree.Statement as Javascript (Statement (..))
 import qualified Stage2.Index.Constructor as Constructor
 import Stage4.Tree.Statements (Statements (..))
-import Stage5.Generate.Context (Context (..), fresh, localBindings)
+import Stage5.Generate.Context (Context (..), fresh, singleBinding)
 import qualified Stage5.Generate.Context as Context
 import qualified Stage5.Generate.Mangle as Mangle
 import {-# SOURCE #-} qualified Stage5.Tree.Declarations as Declarations
@@ -76,7 +76,7 @@ attempt context target label = \case
     thunk <- Expression.thunk context declaration
     name <- fresh context
     let declaration = Javascript.Const name thunk
-    body <- attempt (localBindings (Vector.singleton name) Vector.empty context) target label body
+    body <- attempt (singleBinding name context) target label body
     pure $ declaration : body
   Branch {left, right} -> do
     left <- attempt context target label left

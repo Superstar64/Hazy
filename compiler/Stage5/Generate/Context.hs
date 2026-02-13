@@ -82,6 +82,17 @@ localBindings names instances Context {terms, evidence, types, unique, used, bui
           dataInstances = Map.map Term.Binding.Local dataInstances
         }
 
+singleBinding :: Text -> Context s scope -> Context s (Scope.SimpleDeclaration ':+ scope)
+singleBinding name Context {terms, evidence, types, unique, used, builtin} =
+  Context
+    { terms = Term.SimpleDeclaration (Term.Binding.Local name) terms,
+      evidence = Evidence0.SimpleDeclaration evidence,
+      types = Type.SimpleDeclaration types,
+      unique,
+      used,
+      builtin
+    }
+
 patternBindings ::
   Vector Text ->
   Context s scope ->

@@ -5,6 +5,7 @@ module Stage2.Scope
     Declaration,
     Pattern,
     SimplePattern,
+    SimpleDeclaration,
     Global,
     Show (..),
     shows,
@@ -27,6 +28,7 @@ data Scope
   | Declaration
   | Pattern
   | SimplePattern
+  | SimpleDeclaration
 
 type Local = 'Local
 
@@ -35,6 +37,8 @@ type Declaration = 'Declaration
 type Pattern = 'Pattern
 
 type SimplePattern = 'SimplePattern
+
+type SimpleDeclaration = 'SimpleDeclaration
 
 type Show :: (Environment -> Type) -> Constraint
 class Show typex where

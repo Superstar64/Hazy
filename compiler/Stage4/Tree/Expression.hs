@@ -67,7 +67,7 @@ data Expression scope
         letBody :: !(Expression (Scope.Declaration ':+ scope))
       }
   | Lambda
-      { body :: !(Expression (Scope.Declaration ':+ scope))
+      { body :: !(Expression (Scope.SimpleDeclaration ':+ scope))
       }
   | Call
       { function :: !(Expression scope),
@@ -147,8 +147,8 @@ monoVariable variable =
       instanciation = Instanciation Strict.Vector.empty
     }
 
-lambdaVariable :: Expression (Scope.Declaration ':+ scopes)
-lambdaVariable = monoVariable $ Term.Declaration 0
+lambdaVariable :: Expression (Scope.SimpleDeclaration ':+ scopes)
+lambdaVariable = monoVariable $ Term.SimpleDeclaration
 
 patternVariable :: Expression (Scope.Pattern ':+ scope)
 patternVariable = monoVariable $ Term.Pattern Term.At
