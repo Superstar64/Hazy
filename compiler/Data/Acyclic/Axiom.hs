@@ -1,7 +1,9 @@
 -- |
--- This module implement a special version of Löb with cycle checking.
+-- This module implements a special version of Löb with cycle checking. This is
+-- also loosely based on depth first sort topological sorting.
 --
 -- See this article on vanilla loeb: https://github.com/quchen/articles/blob/master/loeb-moeb.md
+-- Also see standard topological sort: https://en.wikipedia.org/wiki/Topological_sorting#Depth-first_search
 module Data.Acyclic.Axiom
   ( loeb,
     Loeb (..),
