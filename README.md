@@ -429,7 +429,7 @@ Left sections are treated as function application and are not eta expanded.
 This follows GHC's `PostfixOperators` extension.
 
 # Copyright
-Copyright © 2026 Freddy "Superstar64" Cubas
+Copyright © 2026 Freddy Angel Cubas "superstar64"
 
 The compiler and all other components is licensed under GPL3 only. See `LICENSE`
 for more information. The standard library and runtime (everything under the
