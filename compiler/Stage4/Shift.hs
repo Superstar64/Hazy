@@ -21,6 +21,9 @@ data Category scope scope' where
   SimplifyList :: Category (Pattern ':+ scope) (Pattern ':+ scope)
   LetPattern :: Category (Pattern ':+ scope) (Pattern ':+ SimpleDeclaration ':+ scope)
   FinishPattern :: Category (Pattern ':+ scope) (SimplePattern ':+ scope)
+  ReplaceIrrefutable ::
+    Int ->
+    Category (SimplePattern ':+ scope) (SimplePattern ':+ (SimpleDeclaration ':+ scope))
 
 general :: Category scope scope' -> Stage2.Category scope scope'
 general = \case
@@ -32,6 +35,7 @@ general = \case
   SimplifyList -> Stage2.Id
   LetPattern -> Stage2.Over Stage2.Shift
   FinishPattern -> Stage2.Unshift (error "bad unshift") Stage2.:. Stage2.Over Stage2.Shift
+  ReplaceIrrefutable _ -> Stage2.Over Stage2.Shift
 
 class (Stage2.Functor term) => Functor term where
   map ::

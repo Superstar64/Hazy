@@ -153,8 +153,14 @@ lambdaVariable = monoVariable $ Term.SimpleDeclaration
 patternVariable :: Expression (Scope.Pattern ':+ scope)
 patternVariable = monoVariable $ Term.Pattern Term.At
 
+patternVariableAt :: Int -> Expression (Scope.SimplePattern ':+ scope)
+patternVariableAt index = monoVariable $ Term.SimplePattern index
+
 character_ :: Char -> Expression scope
 character_ character = Character {character}
+
+join_ :: Statements scope -> Expression scope
+join_ statements = Join {statements}
 
 eqChar :: Expression scope -> Expression scope -> Expression scope
 eqChar left right =

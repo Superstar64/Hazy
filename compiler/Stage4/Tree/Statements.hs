@@ -102,7 +102,7 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
       -- todo this is `O(n^2)`
       go -1
         | patternx <- Pattern.Match {match, irrefutable} =
-            expand patternx check thenx
+            expand irrefutable patternx check thenx
       go index = case patterns Strict.Vector.! index of
         Pattern.Wildcard -> go (index - 1)
         target
@@ -121,7 +121,7 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
           patternx <- Pattern.Match {match, irrefutable},
           fields <- (\(Pattern.Field field _) -> field) <$> fields,
           thenx <- Shift2.map (Shift2.RenamePattern (fields Strict.Vector.!)) thenx =
-            expand patternx check thenx
+            expand irrefutable patternx check thenx
       go index = case fields Strict.Vector.! index of
         Pattern.Field field patternx -> case patternx of
           Pattern.Wildcard -> go (index - 1)
@@ -173,39 +173,72 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
     where
       equal = Expression.eqChar Expression.patternVariable (Expression.character_ character)
   where
-    -- todo deal with irrefutable cases
     expand ::
+      Bool ->
       Pattern scope ->
       Expression scope ->
       Statements (Scope.Pattern ':+ scope) ->
       Statements scope
-    expand patternx check thenx =
+    expand irrefutable patternx check thenx =
       LetOne
         { declaration = check,
           body =
             finish
+              irrefutable
               (shift patternx)
               Expression.lambdaVariable
               (Shift2.map Shift2.LetPattern thenx)
         }
+    replace ::
+      Constructor2.Index scope ->
+      Int ->
+      Expression scope ->
+      Statements (Scope.SimplePattern ':+ scope) ->
+      Int ->
+      Statements scope
+    replace _ _ _ thenx -1 = Shift2.map (Shift2.Lift $ Shift.Unshift fail) thenx
+      where
+        fail = error "bad irrefutable replace"
+    replace constructor patterns check thenx n =
+      LetOne
+        { declaration =
+            Expression.join_
+              Bind
+                { constructor,
+                  patterns,
+                  check,
+                  thenx =
+                    Done
+                      { done = Expression.patternVariableAt n
+                      }
+                },
+          body =
+            replace
+              (shift constructor)
+              patterns
+              (shift check)
+              (Shift2.map (Shift2.ReplaceIrrefutable n) thenx)
+              (n - 1)
+        }
     finish ::
+      forall scope.
+      Bool ->
       Pattern scope ->
       Expression scope ->
       Statements (Scope.Pattern ':+ scope) ->
       Statements scope
-    finish Pattern.Match {match} check thenx
+    finish irrefutable Pattern.Match {match} check thenx
       | Pattern.Constructor {constructor, patterns} <- match,
-        all wildcard patterns =
-          Bind
-            { constructor,
-              patterns = length patterns,
-              check,
-              thenx = Shift2.map Shift2.FinishPattern thenx
-            }
+        all wildcard patterns,
+        patterns <- length patterns,
+        thenx <- Shift2.map Shift2.FinishPattern thenx =
+          if irrefutable
+            then replace constructor patterns check thenx (patterns - 1)
+            else Bind {constructor, patterns, check, thenx}
       where
         wildcard Pattern.Wildcard {} = True
         wildcard _ = False
-    finish _ _ _ = error "bad finish"
+    finish _ _ _ _ = error "bad finish"
 
 true :: Pattern scope
 true =

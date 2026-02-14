@@ -12,6 +12,7 @@ import {-# SOURCE #-} qualified Stage3.Tree.Expression as Stage3
 import qualified Stage4.Index.Term as Term
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
+import {-# SOURCE #-} Stage4.Tree.Statements (Statements)
 
 type role Expression nominal
 
@@ -33,7 +34,9 @@ instance Scope.Show Expression
 monoVariable :: Term.Index scope -> Expression scope
 lambdaVariable :: Expression (Scope.SimpleDeclaration ':+ scopes)
 patternVariable :: Expression (Scope.Pattern ':+ scopes)
+patternVariableAt :: Int -> Expression (Scope.SimplePattern ':+ scope)
 character_ :: Char -> Expression scope
+join_ :: Statements scope -> Expression scope
 eqChar :: Expression scope -> Expression scope -> Expression scope
 call :: Expression scope -> Expression scope -> Expression scope
 
