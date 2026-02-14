@@ -28,7 +28,7 @@ where
 
 import qualified Control.Applicative as Applicative (some)
 import Control.Arrow (first)
-import Data.Char (chr, isDigit, isLower, isPrint, isSpace, isUpper)
+import Data.Char (chr, isAlphaNum, isLower, isPrint, isSpace, isUpper)
 import qualified Data.Char as Char (isSymbol)
 import Data.List (sortOn)
 import Data.Map (Map)
@@ -556,10 +556,8 @@ reserved = keys <|> syms
 legalChar :: Char -> Bool
 legalChar letter =
   or
-    [ isLower letter,
+    [ isAlphaNum letter,
       letter == '_',
-      isUpper letter,
-      isDigit letter,
       letter == '\''
     ]
 
