@@ -10,6 +10,7 @@ import Stage2.Scope (Environment (..))
 import Stage2.Shift (shift)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Index.Evidence as Evidence
+import Stage3.Unify.Class (Zonk (..), Zonker (..))
 import qualified Stage4.Tree.Evidence as Simple (Evidence (..))
 
 data Evidence s scope where
@@ -18,6 +19,22 @@ data Evidence s scope where
   Super :: !(Evidence s scope) -> !Int -> Evidence s scope
   Logical :: !(STRef s (Box s scope)) -> Evidence s scope
   Shift :: !(Evidence s scopes) -> Evidence s (scope ':+ scopes)
+
+instance Zonk Evidence where
+  zonk Zonker = \case
+    Variable variable -> pure $ Variable variable
+    Call function arguments -> do
+      function <- zonk Zonker function
+      arguments <- traverse (zonk Zonker) arguments
+      pure $ Call function arguments
+    Super evidence index -> do
+      evidence <- zonk Zonker evidence
+      pure $ Super evidence index
+    Logical box ->
+      readSTRef box >>= \case
+        Solved evidence -> zonk Zonker evidence
+        Unsolved {} -> pure $ Logical box
+    Shift evidence -> Shift <$> zonk Zonker evidence
 
 data Box s scope
   = Solved !(Evidence s scope)
