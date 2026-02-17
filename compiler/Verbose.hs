@@ -15,8 +15,9 @@ import qualified Data.Text.Lazy.IO as Text.IO
 import System.IO.Unsafe (unsafeInterleaveIO)
 
 -- |
--- Monad with debugging verbosity. This is a nondeterministic monad. So the
--- following law must hold modulo printing statements:
+-- Monad with debugging verbosity. This is monad that allows for debug printing
+-- statements. So the only observable side effect should be printing and nothing
+-- else. The following law must hold modulo printing statements:
 -- > a >> b = b
 class (MonadFix m) => Debug m where
   parsing :: Builder -> a -> m a
