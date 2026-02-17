@@ -54,8 +54,9 @@ newtype Loeb t a
   = Loeb
       (forall s. t (Void, t (ST s a) -> ST s a))
 
--- | Applicative representing lazy side effects ala the R language.
--- This following law holds:
+-- |
+-- Applicative representing lazy side effects ala the R language. This
+-- following law holds:
 -- > a *> b = b
 newtype LazyIO a = LazyIO {runLazyIO :: IO a}
 
