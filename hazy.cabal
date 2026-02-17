@@ -22,7 +22,6 @@ executable hazy
     Data.Hexafoldable
     Data.Hexafunctor
     Data.Hexatraversable
-    Data.IO.Lazy
     Data.List.Reverse
     Data.Pentafoldable
     Data.Pentafunctor

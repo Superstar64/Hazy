@@ -11,11 +11,11 @@ module Data.Acyclic.Axiom
   )
 where
 
+import Control.Applicative (liftA)
 import Control.Monad.ST (ST, runST, stToIO)
-import Data.IO.Lazy (LazyIO (..))
 import Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 import Data.Void (Void, absurd)
-import System.IO.Unsafe (unsafePerformIO)
+import System.IO.Unsafe (unsafeInterleaveIO, unsafePerformIO)
 import Prelude hiding (fail)
 
 data Mark s f a
@@ -53,6 +53,22 @@ visit spreadsheet = table
 newtype Loeb t a
   = Loeb
       (forall s. t (Void, t (ST s a) -> ST s a))
+
+-- | Applicative representing lazy side effects ala the R language.
+-- This following law holds:
+-- > a *> b = b
+newtype LazyIO a = LazyIO {runLazyIO :: IO a}
+
+instance Functor LazyIO where
+  fmap = liftA
+
+instance Applicative LazyIO where
+  pure a = LazyIO (pure a)
+  LazyIO f <*> LazyIO m =
+    LazyIO $ do
+      f <- unsafeInterleaveIO f
+      m <- unsafeInterleaveIO m
+      pure (f m)
 
 -- |
 -- Cycle tracking version of Löb

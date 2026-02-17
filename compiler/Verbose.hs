@@ -9,14 +9,14 @@ where
 import Control.Monad (ap, liftM)
 import Control.Monad.Fix (MonadFix (..))
 import Data.Functor.Identity (Identity)
-import Data.IO.Lazy (LazyIO (LazyIO, runLazyIO))
 import qualified Data.Text.Lazy as Lazy
 import Data.Text.Lazy.Builder (Builder, fromLazyText, fromString, toLazyText)
 import qualified Data.Text.Lazy.IO as Text.IO
+import System.IO.Unsafe (unsafeInterleaveIO)
 
 -- |
--- Monad with debugging verbosity
--- This is a nondeterministic monad. So the following law much hold:
+-- Monad with debugging verbosity This is a nondeterministic monad. So the
+-- following law must hold modulo printing statements:
 -- > a >> b = b
 class (MonadFix m) => Debug m where
   parsing :: Builder -> a -> m a
@@ -28,12 +28,10 @@ instance Debug Identity where
   creatingIndexes _ = id
   resolving _ = pure
 
--- It's important that this is nondeterministic
--- Debugging should try to change how code behaves as much as possible
-newtype Verbose a = Verbose {runVerbose' :: Lazy.Text -> LazyIO a}
+newtype Verbose a = Verbose {runVerbose' :: Lazy.Text -> IO a}
 
 runVerbose :: Verbose a -> IO a
-runVerbose (Verbose v) = runLazyIO (v (Lazy.pack ""))
+runVerbose (Verbose v) = v (Lazy.pack "")
 
 instance Functor Verbose where
   fmap = liftM
@@ -44,7 +42,7 @@ instance Applicative Verbose where
 
 instance Monad Verbose where
   Verbose run >>= after = Verbose $ \path -> do
-    a <- run path
+    a <- unsafeInterleaveIO $ run path
     runVerbose' (after a) path
 
 instance MonadFix Verbose where
@@ -65,7 +63,7 @@ message :: Builder -> Verbose ()
 message text = Verbose $ \path ->
   do
     let message = toLazyText $ fromLazyText path <> text
-    LazyIO $ Text.IO.putStrLn message
+    Text.IO.putStrLn message
 
 with :: Verbose () -> a -> Verbose a
 with print a = seq <$> print <*> pure a
