@@ -18,16 +18,20 @@ import qualified Stage2.Index.Table.Term as Table.Term
 import qualified Stage2.Index.Table.Type as Table.Type
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
+import Stage2.Shift (Shift (..))
 import Stage3.Check.Context (Context (..))
 import Stage3.Unify.Class
   ( Collected (..),
     Collector (..),
+    Functor (..),
     Generalizable (..),
     Instantiatable (..),
     Substitute (..),
     Zonk (..),
     Zonker (..),
+    shiftDefault,
   )
+import qualified Stage3.Unify.Class as Class
 import Stage3.Unify.Constraint (Constraint (..))
 import qualified Stage3.Unify.Constraint as Constraint
 import Stage3.Unify.Instanciation (Instanciation (..))
@@ -40,6 +44,7 @@ import Stage3.Unify.Type
   )
 import qualified Stage3.Unify.Type as Type
 import qualified Stage4.Tree.SchemeOver as Simple (SchemeOver (..))
+import Prelude hiding (Functor, map)
 
 data SchemeOver typex s scope = SchemeOver
   { parameters :: !(Strict.Vector (Type s scope)),
@@ -53,6 +58,17 @@ instance (Zonk typex) => Zonk (SchemeOver typex) where
     constraints <- traverse (zonk zonker) constraints
     result <- zonk zonker result
     pure SchemeOver {parameters, constraints, result}
+
+instance (Functor (typex s)) => Shift (SchemeOver typex s) where
+  shift = shiftDefault
+
+instance (Functor (typex s)) => Functor (SchemeOver typex s) where
+  map category SchemeOver {parameters, constraints, result} =
+    SchemeOver
+      { parameters = Class.map category <$> parameters,
+        constraints = Class.map category <$> constraints,
+        result = Class.map (Class.Over category) result
+      }
 
 instanciateOver ::
   (Instantiatable typex) =>

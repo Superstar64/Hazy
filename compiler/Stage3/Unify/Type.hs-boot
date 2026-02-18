@@ -7,8 +7,9 @@ import qualified Data.Kind as Kind
 import Stage1.Position (Position)
 import Stage2.Scope (Environment)
 import Stage2.Shift (Shift)
-import {-# SOURCE #-} Stage3.Unify.Class (Zonk)
+import {-# SOURCE #-} Stage3.Unify.Class (Functor, Zonk)
 import qualified Stage4.Tree.Type as Simple
+import Prelude hiding (Functor)
 
 type role Type nominal nominal
 
@@ -18,6 +19,8 @@ data Type s scope
 instance Shift (Type s)
 
 instance Zonk Type
+
+instance Functor (Type s)
 
 type role Box nominal nominal
 

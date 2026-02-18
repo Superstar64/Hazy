@@ -49,6 +49,8 @@ module Stage3.Unify
     Solve (..),
     solveSchemeOver,
     instanciate,
+    Functor (..),
+    Category,
   )
 where
 
@@ -66,7 +68,9 @@ import Stage2.Shift (Shift (..))
 import Stage3.Check.Context (Context (..))
 import qualified Stage3.Index.Evidence as Evidence (Index (..))
 import Stage3.Unify.Class
-  ( Generalizable (collect),
+  ( Category,
+    Functor (..),
+    Generalizable (collect),
     Zonk (..),
     Zonker (..),
   )
@@ -89,11 +93,14 @@ import qualified Stage4.Tree.Constraint as Simple (Constraint)
 import qualified Stage4.Tree.Evidence as Simple (Evidence)
 import qualified Stage4.Tree.Instanciation as Simple (Instanciation)
 import qualified Stage4.Tree.SchemeOver as Simple (SchemeOver)
-import Prelude hiding (head)
+import Prelude hiding (Functor, head)
 
 newtype Scheme s scope = Scheme
   { runScheme :: SchemeOver Type s scope
   }
+
+instance Shift (Scheme s) where
+  shift (Scheme scheme) = Scheme (shift scheme)
 
 variable :: Local.Index scope -> Type s scope
 variable = Variable

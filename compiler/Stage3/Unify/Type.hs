@@ -37,12 +37,14 @@ import qualified Stage3.Simple.Type as Simple (instanciate, lift)
 import Stage3.Unify.Class
   ( Collected (..),
     Collector (..),
+    Functor (..),
     Generalizable (..),
     Instantiatable (..),
     Substitute (..),
     Zonk (..),
     Zonker (..),
   )
+import qualified Stage3.Unify.Class as Class
 import {-# SOURCE #-} Stage3.Unify.Error (Error (..), abort)
 import Stage3.Unify.Evidence (Evidence)
 import qualified Stage3.Unify.Evidence as Evidence (Box (..), Evidence (..), unify, unshift)
@@ -51,7 +53,7 @@ import qualified Stage4.Tree.Constraint as Simple (argument)
 import qualified Stage4.Tree.Constraint as Simple.Constraint
 import qualified Stage4.Tree.Type as Simple (Type (..))
 import {-# SOURCE #-} Stage4.Tree.TypeDeclaration (assumeData)
-import Prelude hiding (head)
+import Prelude hiding (Functor, head, map)
 
 type Type :: Data.Kind.Type -> Environment -> Data.Kind.Type
 data Type s scopes where
@@ -83,6 +85,21 @@ data Delay s scope = Delay
 
 instance Shift (Type s) where
   shift = Shift
+
+instance Functor (Type s) where
+  map Class.Shift typex = Shift typex
+  map (Class.Over category) (Shift typex) = Shift (Class.map category typex)
+  map (Class.Over _) (Logical _) = error "can't map over logical"
+  map category typex = case typex of
+    Variable index -> Variable (Shift.map (Class.general category) index)
+    Constructor index -> Constructor (Shift.map (Class.general category) index)
+    Call function argument -> Call (Class.map category function) (Class.map category argument)
+    Function parameter result -> Function (Class.map category parameter) (Class.map category result)
+    Type universe -> Type (Class.map category universe)
+    Constraint -> Constraint
+    Small -> Small
+    Large -> Large
+    Universe -> Universe
 
 instance Zonk Type where
   zonk Zonker = zonk
