@@ -55,6 +55,17 @@ import qualified Stage4.Tree.Type as Simple (Type (..))
 import {-# SOURCE #-} Stage4.Tree.TypeDeclaration (assumeData)
 import Prelude hiding (Functor, head, map)
 
+{-
+todo:
+
+There are two ways to shift types without logical variables:
+> Shift (Variable (Local x))
+> Variable (Local (Local.Shift x))
+
+These redundent states should be elimated at some point and instead there should
+only be a shift constructor for logical variables only.
+-}
+
 type Type :: Data.Kind.Type -> Environment -> Data.Kind.Type
 data Type s scopes where
   Logical :: !(STRef s (Box s scopes)) -> Type s scopes
