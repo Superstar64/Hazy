@@ -428,6 +428,7 @@ executable hazy
     -Werror=unused-pattern-binds
     -Werror=unused-matches
     -Werror=incomplete-patterns
+    -Werror=missing-fields
 
 test-suite hazy-test
   type: exitcode-stdio-1.0
