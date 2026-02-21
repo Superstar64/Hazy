@@ -92,7 +92,6 @@ module Error
     unsupportedFeatureRecordUpdate,
     unsupportedFeatureListComprehension,
     unsupportedFeatureConstraintedTypeDefaulting,
-    unsupportedFeaturePatternLetBinds,
     unsupportedFeatureStrictFunctions,
     unsupportedFeatureIntegerLiteralPatterns,
     unsupportedFeatureFloatingPointLiterals,
@@ -550,8 +549,6 @@ gadts = fromString "GADTs"
 
 polymorphicComponents = fromString "PolymorphicComponents"
 
-patternLetBinds = fromString "patternLetBinds"
-
 constraintedTypeDefaulting = fromString "constrained type defaulting"
 
 recordUpdate = fromString "record update"
@@ -600,10 +597,6 @@ unsupportedFeatureListComprehension =
 unsupportedFeatureConstraintedTypeDefaulting :: Position -> a
 unsupportedFeatureConstraintedTypeDefaulting =
   unsupportedFeature constraintedTypeDefaulting
-
-unsupportedFeaturePatternLetBinds :: Position -> a
-unsupportedFeaturePatternLetBinds =
-  unsupportedFeature patternLetBinds
 
 unsupportedFeatureStrictFunctions :: Position -> a
 unsupportedFeatureStrictFunctions =

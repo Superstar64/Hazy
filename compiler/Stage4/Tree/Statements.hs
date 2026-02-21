@@ -267,7 +267,7 @@ simplify = \case
       (simplify thenx)
   Stage3.Let {declarations, body} ->
     Let
-      { declarations = Declarations.simplify declarations,
+      { declarations = Declarations.simplify Term.Declaration declarations,
         letBody = simplify body
       }
 

@@ -1,5 +1,6 @@
 module Stage4.Tree.SchemeOver where
 
+import qualified Data.Kind
 import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
 import Stage2.Scope (Environment (..), Local)
@@ -68,3 +69,14 @@ mono result =
 
 constraintCount :: SchemeOver typex scope -> Int
 constraintCount SchemeOver {constraints} = length constraints
+
+type Map :: (Environment -> Data.Kind.Type) -> (Environment -> Data.Kind.Type) -> Data.Kind.Type
+newtype Map typex typex' = Map (forall scope. typex scope -> typex' scope)
+
+map :: Map typex typex' -> SchemeOver typex scope -> SchemeOver typex' scope
+map (Map map) SchemeOver {parameters, constraints, result} =
+  SchemeOver
+    { parameters,
+      constraints,
+      result = map result
+    }

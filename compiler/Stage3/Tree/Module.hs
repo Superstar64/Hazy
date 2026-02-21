@@ -30,19 +30,23 @@ import Stage3.Functor.Module (fromStage2)
 import qualified Stage3.Functor.Module as Functor (Module (..))
 import Stage3.Functor.ModuleSet (mapWithKey)
 import qualified Stage3.Functor.ModuleSet as Functor (ModuleSet (..))
-import qualified Stage3.Temporary.Shared as Shared
+import qualified Stage3.Simple.Scheme as Scheme
+import qualified Stage3.Temporary.Shared as Temporary.Shared
 import qualified Stage3.Temporary.TermDeclaration as TermDeclaration.Unsolved
 import Stage3.Tree.Declarations (Declarations)
 import qualified Stage3.Tree.Declarations as Declarations
 import Stage3.Tree.Instance (Instance)
 import qualified Stage3.Tree.Instance as Instance
-import Stage3.Tree.Shared (Shared)
+import Stage3.Tree.Shared (Shared (..))
+import qualified Stage3.Tree.Shared as Shared
 import Stage3.Tree.TermDeclaration (LazyTermDeclaration, TermDeclaration)
 import qualified Stage3.Tree.TermDeclaration as TermDeclaration
 import Stage3.Tree.TypeDeclaration (LazyTypeDeclaration, TypeDeclaration)
 import qualified Stage3.Tree.TypeDeclaration as TypeDeclaration
 import Stage3.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 import qualified Stage3.Tree.TypeDeclarationExtra as TypeDeclarationExtra
+import Stage4.Tree.Scheme (Scheme (Scheme))
+import qualified Stage4.Tree.SchemeOver as SchemeOver
 import Prelude hiding (Functor)
 
 data Module = Module
@@ -154,13 +158,16 @@ checkTermDeclaration global local declaration =
   ( cyclicalTypeChecking $ Stage2.TermDeclaration.position declaration,
     \moduleSet@(Functor.ModuleSet modules) -> do
       let Functor.Module {declarations} = modules Vector.! global
-          Functor.Declarations {terms} = declarations
+          Functor.Declarations {terms, shared} = declarations
           Functor.Annotated {meta} = terms Vector.! local
       annotation <- meta
       let context = globalBindings moduleSet
           -- todo, augment context with self to allow basic recursive inference
           any = TypeAnnotation.global annotation
-      unsolved <- TermDeclaration.Unsolved.check context any declaration
+          share index = do
+            Shared {body} <- shared Vector.! index
+            pure $ Scheme.lift $ Scheme $ SchemeOver.map (SchemeOver.Map Shared.typex) body
+      unsolved <- TermDeclaration.Unsolved.check context share any declaration
       TermDeclaration.Unsolved.solve unsolved
   )
 
@@ -174,8 +181,8 @@ checkShared ::
 checkShared _ _ declaration =
   ( cyclicalTypeChecking $ Stage2.Shared.equalPosition declaration,
     \modules -> do
-      shared <- Shared.check (globalBindings modules) Nothing declaration
-      Shared.solve shared
+      shared <- Temporary.Shared.check (globalBindings modules) Nothing declaration
+      Temporary.Shared.solve shared
   )
 
 checkTypeAnnotation ::

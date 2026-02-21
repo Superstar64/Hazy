@@ -21,6 +21,7 @@ import Stage1.Variable (ConstructorIdentifier, FullyQualifiedConstructorIdentifi
 import qualified Stage2.Index.Constructor as Constructor
 import qualified Stage2.Index.Type as Type
 import qualified Stage2.Index.Type2 as Type2
+import Stage4.Tree.TermDeclaration (Name (..))
 import System.FilePath ((</>))
 
 names :: [Text]
@@ -34,10 +35,11 @@ data Brand
   = Class
   | Data
 
-mangle :: Variable -> Text
+mangle :: Name -> Text
 mangle = \case
-  VariableIdentifier name -> runVariableIdentifier name
-  VariableSymbol name -> runVariableSymbol name
+  Name (VariableIdentifier name) -> runVariableIdentifier name
+  Name (VariableSymbol name) -> runVariableSymbol name
+  Unnamed index -> pack $ show index
 
 mangleInstance ::
   (Type.Index scope -> FullyQualifiedConstructorIdentifier) ->

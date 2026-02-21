@@ -3,7 +3,7 @@
 module Stage3.Check.TypeAnnotation where
 
 import Control.Monad.ST (ST)
-import Error (unsupportedFeaturePatternLetBinds)
+import qualified Data.Strict.Maybe as Strict
 import Stage1.Position (Position)
 import qualified Stage2.Tree.Scheme as Stage2 (Scheme (..))
 import qualified Stage2.Tree.TermDeclaration as Stage2 (TermDeclaration (..))
@@ -54,7 +54,9 @@ checkGlobal :: Context s scope -> Stage2.TermDeclaration scope -> ST s (GlobalTy
 checkGlobal context Stage2.Manual {annotation} =
   GlobalAnnotation <$> checkAnnotation context annotation
 checkGlobal _ Stage2.Auto {} = pure GlobalInferred
-checkGlobal _ Stage2.Share {position} = unsupportedFeaturePatternLetBinds position
+checkGlobal context Stage2.Share {annotationShare} = case annotationShare of
+  Strict.Nothing -> pure GlobalInferred
+  Strict.Just annotation -> GlobalAnnotation <$> checkAnnotation context annotation
 
 checkLocal :: Context s scope -> Stage2.TermDeclaration scope -> ST s (LocalTypeAnnotation s scope)
 checkLocal context Stage2.Manual {annotation} =
@@ -62,4 +64,8 @@ checkLocal context Stage2.Manual {annotation} =
 checkLocal _ Stage2.Auto {} = do
   typex <- Unify.fresh Unify.typex
   pure $ LocalInferred typex
-checkLocal _ Stage2.Share {position} = unsupportedFeaturePatternLetBinds position
+checkLocal context Stage2.Share {annotationShare} = case annotationShare of
+  Strict.Nothing -> do
+    typex <- Unify.fresh Unify.typex
+    pure $ LocalInferred typex
+  Strict.Just annotation -> LocalAnnotation <$> checkAnnotation context annotation

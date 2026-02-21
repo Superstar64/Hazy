@@ -21,6 +21,7 @@ import qualified Stage3.Tree.Definition as Stage3 (Definition)
 import qualified Stage3.Tree.Expression as Stage3 (Expression (..))
 import qualified Stage3.Tree.ExpressionField as Stage3 (Field (Field))
 import qualified Stage3.Tree.ExpressionField as Stage3.Field
+import qualified Stage3.Tree.RightHandSide as Stage3 (RightHandSide)
 import qualified Stage4.Index.Term as Term
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
@@ -197,6 +198,13 @@ instance Simplify Stage3.Expression where
 instance Simplify Stage3.Definition where
   simplify = Definition.desugar . Definition.simplify
 
+instance Simplify Stage3.RightHandSide where
+  simplify rightHandSide =
+    Join
+      { statements =
+          RightHandSide.desugar $ RightHandSide.simplify rightHandSide
+      }
+
 simplifyConstructor ::
   Constructor.Index scope ->
   Int ->
@@ -310,7 +318,7 @@ simplifyWith expression [] = case expression of
     foldr (cons . simplify) nil items
   Stage3.Let {declarations, letBody} ->
     Let
-      { declarations = Declarations.simplify declarations,
+      { declarations = Declarations.simplify Term.Declaration declarations,
         letBody = simplify letBody
       }
   Stage3.If {condition, thenx, elsex} ->

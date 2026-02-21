@@ -33,7 +33,7 @@ import qualified Stage3.Functor.Annotated as Functor (Annotated (..), content)
 import Stage3.Functor.Declarations (mapWithKey)
 import qualified Stage3.Functor.Declarations as Functor (Declarations (..), fromStage2)
 import qualified Stage3.Functor.Instance.Key as Instance.Key
-import Stage3.Temporary.Shared (Shared)
+import Stage3.Temporary.Shared (Shared (..))
 import qualified Stage3.Temporary.Shared as Shared
 import Stage3.Temporary.TermDeclaration (TermDeclaration)
 import qualified Stage3.Temporary.TermDeclaration as TermDeclaration
@@ -181,12 +181,15 @@ checkTermDeclaration ::
   )
 checkTermDeclaration context index declaration =
   ( cyclicalTypeChecking $ Stage2.TermDeclaration.position declaration,
-    \declarations@Functor.Declarations {terms} -> do
+    \declarations@Functor.Declarations {terms, shared} -> do
       context <- pure $ localBindings declarations context
       let Functor.Annotated {meta} = terms Vector.! index
       annotation <- meta
       let any = TypeAnnotation.local annotation
-      TermDeclaration.check context any declaration
+      let share index = do
+            Shared {body} <- shared Vector.! index
+            pure $ Unify.Scheme $ Unify.mapScheme (Unify.MapScheme Shared.typex) body
+      TermDeclaration.check context share any declaration
   )
 
 checkShared ::

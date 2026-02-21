@@ -2,6 +2,7 @@ module Stage3.Temporary.PatternField where
 
 import Control.Monad.ST (ST)
 import qualified Stage2.Index.Table.Term as Term
+import Stage2.Index.Term (Bound)
 import Stage2.Scope (Environment ((:+)))
 import qualified Stage2.Tree.PatternField as Stage2
 import Stage3.Check.Context (Context)
@@ -20,6 +21,9 @@ instance Unify.Zonk Field where
   zonk zonker Field {index, patternx} = do
     patternx <- Unify.zonk zonker patternx
     pure Field {index, patternx}
+
+(!) :: Field s scope -> Bound -> Unify.Type s scope
+Field {patternx} ! bound = patternx Pattern.! bound
 
 augmentField :: Field s scopes -> Term.Bound (TermBinding s) (scope ':+ scopes)
 augmentField Field {patternx} = Pattern.augmentPattern patternx

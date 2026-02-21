@@ -61,7 +61,7 @@ instance Simplify Stage3.RightHandSide where
           foldr1 Statements.Branch (Statements.simplify <$> guards) =
         RightHandSide
           { letBody,
-            declarations = Declarations.simplify declarations
+            declarations = Declarations.simplify Term.Declaration declarations
           }
 
 instance Simplify Stage3.Expression where

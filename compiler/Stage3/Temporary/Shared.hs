@@ -12,7 +12,7 @@ import qualified Stage3.Unify as Unify
 
 data Shared s scope = Shared
   { equalPosition :: !Position,
-    body :: Unify.SchemeOver Body s scope
+    body :: !(Unify.SchemeOver Body s scope)
   }
 
 instance Unify.Zonk Shared where

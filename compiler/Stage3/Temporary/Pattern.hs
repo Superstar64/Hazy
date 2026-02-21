@@ -2,6 +2,7 @@ module Stage3.Temporary.Pattern where
 
 import Control.Monad (when)
 import Control.Monad.ST (ST)
+import Data.Strict.Vector1 (toVector)
 import qualified Data.Strict.Vector1 as Strict (Vector1)
 import qualified Data.Strict.Vector1 as Strict.Vector1
 import Data.Text (Text)
@@ -16,6 +17,8 @@ import qualified Stage2.Index.Constructor as Constructor
 import qualified Stage2.Index.Table.Local as Local
 import qualified Stage2.Index.Table.Term as Term
 import qualified Stage2.Index.Table.Type as Type
+import Stage2.Index.Term (Bound)
+import qualified Stage2.Index.Term as Bound (Bound (..))
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift (..))
@@ -86,6 +89,16 @@ instance Unify.Zonk Bindings where
     List {items} -> do
       items <- traverse (Unify.zonk zonker) items
       pure List {items}
+
+(!) :: Pattern s scope -> Bound -> Unify.Type s scope
+At _ typex ! Bound.At = typex
+At Match {match} _ ! Bound.Select index bound = case match of
+  Constructor {patterns} -> patterns Strict.Vector.! index ! bound
+  Record {fields} -> fields Strict.Vector.! index Field.! bound
+  List {items} -> toVector items Strict.Vector.! index ! bound
+  Character {} -> error "bad index"
+  String {} -> error "bad index"
+At Wildcard _ ! Bound.Select {} = error "bad index"
 
 augment :: Pattern s scope -> Context s scope -> Context s (Scope.Pattern ':+ scope)
 augment patternx Context {termEnvironment, localEnvironment, typeEnvironment} =
