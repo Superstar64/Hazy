@@ -4,8 +4,9 @@ type Peano :: *
 data Peano = Zero | Succ Peano
 
 length :: Peano -> String
-length (Succ peano) = '+' : length peano
-length Zero = ""
+length = \case
+  Succ peano -> '+' : length peano
+  Zero -> ""
 
 class Double a where
   double :: a -> a

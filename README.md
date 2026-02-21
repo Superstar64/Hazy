@@ -40,7 +40,6 @@ node output/index.mjs
 - Constrained Type Defaulting
 - List Comprehensions
 - Do notation
-- Lambda Case
 - Record Updates
 - Right Sections
 - Type Annotation Expressions

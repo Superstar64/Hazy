@@ -71,6 +71,9 @@ data Expression scope
       { parameter :: !(Pattern scope),
         body :: !(Lambda (Scope.Pattern ':+ scope))
       }
+  | LambdaCase
+      { cases :: !(Strict.Vector (Alternative scope))
+      }
   | MultiwayIf
       { branches :: !(Strict.Vector1 (RightHandSide scope))
       }

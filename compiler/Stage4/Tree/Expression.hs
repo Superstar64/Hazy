@@ -359,6 +359,17 @@ simplifyWith expression [] = case expression of
                 foldr1 (<>) (Definition . Function.simplify <$> toList cases),
             argument = simplify scrutinee
           }
+  Stage3.LambdaCase {cases}
+    | null cases ->
+        Lambda
+          { body =
+              Join
+                { statements = Statements.Bottom
+                }
+          }
+    | otherwise ->
+        Definition.desugar $
+          foldr1 (<>) (Definition . Function.simplify <$> toList cases)
   Stage3.Lambda {parameter, body} ->
     let definition =
           Bound

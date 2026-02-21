@@ -12,7 +12,6 @@ import Error
   ( unsupportedFeatureDoNotation,
     unsupportedFeatureExpressionAnnotation,
     unsupportedFeatureFloatingPointLiterals,
-    unsupportedFeatureLambdaCase,
     unsupportedFeatureListComprehension,
     unsupportedFeatureRecordUpdate,
     unsupportedFeatureRightSection,
@@ -120,6 +119,9 @@ data Expression s scope
       { parameter :: !(Pattern s scope),
         body :: !(Lambda s (Scope.Pattern ':+ scope))
       }
+  | LambdaCase
+      { cases :: !(Strict.Vector (Alternative s scope))
+      }
   | MultiwayIf
       { branches :: !(Strict.Vector1 (RightHandSide s scope))
       }
@@ -170,6 +172,9 @@ instance Unify.Zonk Expression where
       parameter <- Unify.zonk zonker parameter
       body <- Unify.zonk zonker body
       pure Lambda {parameter, body}
+    LambdaCase {cases} -> do
+      cases <- traverse (Unify.zonk zonker) cases
+      pure LambdaCase {cases}
     MultiwayIf {branches} -> do
       branches <- traverse (Unify.zonk zonker) branches
       pure MultiwayIf {branches}
@@ -319,8 +324,12 @@ check context typex Stage2.Lambda {startPosition, parameter, body} = do
   body <- Lambda.check (Pattern.augment parameter context) (shift resultType) body
   Unify.unify context startPosition typex (Unify.function parameterType resultType)
   pure Lambda {parameter, body}
-check _ _ Stage2.LambdaCase {startPosition} =
-  unsupportedFeatureLambdaCase startPosition
+check context typex Stage2.LambdaCase {startPosition, cases} = do
+  parameterType <- Unify.fresh Unify.typex
+  resultType <- Unify.fresh Unify.typex
+  cases <- traverse (Alternative.check context resultType parameterType) cases
+  Unify.unify context startPosition typex (Unify.function parameterType resultType)
+  pure LambdaCase {cases}
 check _ _ Stage2.RightSectionVariable {operatorPosition} =
   unsupportedFeatureRightSection operatorPosition
 check _ _ Stage2.RightSectionMethod {operatorPosition} =
@@ -383,6 +392,9 @@ solve = \case
     parameter <- Pattern.solve parameter
     body <- Lambda.solve body
     pure $ Solved.Lambda {parameter, body}
+  LambdaCase {cases} -> do
+    cases <- traverse Alternative.solve cases
+    pure Solved.LambdaCase {cases}
   MultiwayIf branches -> do
     branches <- traverse RightHandSide.solve branches
     pure $ Solved.MultiwayIf branches
