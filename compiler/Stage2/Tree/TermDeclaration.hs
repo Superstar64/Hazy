@@ -12,6 +12,7 @@ import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Tree.Definition (Definition)
+import Stage2.Tree.Pattern (Pattern)
 import Stage2.Tree.Scheme (Scheme)
 import Prelude hiding (Either (Left, Right))
 
@@ -35,6 +36,7 @@ data TermDeclaration scope
         fixity :: !Fixity,
         shareIndex :: !Int,
         bound :: !Term.Bound,
+        patternx :: Pattern scope,
         annotationShare :: !(Strict.Maybe (Scheme Position scope))
       }
   deriving (Show)
@@ -59,13 +61,14 @@ instance Shift.Functor TermDeclaration where
           fixity,
           definitionAuto = Shift.map category definitionAuto
         }
-    Share {position, name, fixity, shareIndex, bound, annotationShare} ->
+    Share {position, name, fixity, shareIndex, bound, patternx, annotationShare} ->
       Share
         { position,
           name,
           fixity,
           shareIndex,
           bound,
+          patternx = Shift.map category patternx,
           annotationShare = fmap (Shift.map category) annotationShare
         }
 

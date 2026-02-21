@@ -111,7 +111,8 @@ merge entries@(entry :| _) =
             ( position,
               More.Shared
                 { shareIndex,
-                  bound
+                  bound,
+                  patternx
                 }
               ) <-
             share ->
@@ -124,6 +125,7 @@ merge entries@(entry :| _) =
                         fixity,
                         shareIndex,
                         bound,
+                        patternx,
                         annotationShare
                       }
         | otherwise -> error "no entry"

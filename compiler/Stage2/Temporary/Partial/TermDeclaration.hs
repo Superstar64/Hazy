@@ -60,7 +60,7 @@ data TermDeclaration scope
   | Shared
       { position :: !Position,
         name :: !Variable,
-        share :: !More.Shared
+        share :: !(More.Shared scope)
       }
   | Method
       { position :: !Position,
@@ -110,7 +110,8 @@ resolve
                 share =
                   More.Shared
                     { shareIndex,
-                      bound
+                      bound,
+                      patternx
                     }
               }
           )
