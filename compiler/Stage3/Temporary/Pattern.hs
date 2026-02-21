@@ -11,14 +11,15 @@ import qualified Data.Vector.Strict as Strict.Vector
 import Error
   ( mismatchedConstructorArguments,
     unsupportedFeatureFloatingPointLiterals,
-    unsupportedFeatureIntegerLiteralPatterns,
   )
+import Stage1.Position (Position)
 import qualified Stage2.Index.Constructor as Constructor
 import qualified Stage2.Index.Table.Local as Local
 import qualified Stage2.Index.Table.Term as Term
 import qualified Stage2.Index.Table.Type as Type
 import Stage2.Index.Term (Bound)
 import qualified Stage2.Index.Term as Bound (Bound (..))
+import qualified Stage2.Index.Type2 as Type2
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift (..))
@@ -57,6 +58,12 @@ data Bindings s scope
         fields :: !(Strict.Vector (Field s scope)),
         fieldCount :: !Int
       }
+  | Integer
+      { startPosition :: !Position,
+        integer :: !Integer,
+        evidence :: !(Unify.Evidence s scope),
+        equal :: !(Unify.Evidence s scope)
+      }
   | Character
       { character :: !Char
       }
@@ -84,6 +91,10 @@ instance Unify.Zonk Bindings where
     Record {constructor, fields, fieldCount} -> do
       fields <- traverse (Unify.zonk zonker) fields
       pure Record {constructor, fields, fieldCount}
+    Integer {startPosition, integer, evidence, equal} -> do
+      evidence <- Unify.zonk zonker evidence
+      equal <- Unify.zonk zonker equal
+      pure Integer {startPosition, integer, evidence, equal}
     Character {character} -> pure Character {character}
     String {string} -> pure String {string}
     List {items} -> do
@@ -96,6 +107,7 @@ At Match {match} _ ! Bound.Select index bound = case match of
   Constructor {patterns} -> patterns Strict.Vector.! index ! bound
   Record {fields} -> fields Strict.Vector.! index Field.! bound
   List {items} -> toVector items Strict.Vector.! index ! bound
+  Integer {} -> error "bad index"
   Character {} -> error "bad index"
   String {} -> error "bad index"
 At Wildcard _ ! Bound.Select {} = error "bad index"
@@ -121,6 +133,7 @@ augmentMatch match = case match of
     List items -> Strict.Vector.map augmentPattern $ Strict.Vector1.toVector items
     Constructor {patterns} -> fmap augmentPattern patterns
     Record {fields} -> fmap Field.augmentField fields
+    Integer {} -> Strict.Vector.empty
     Character {} -> Strict.Vector.empty
     String {} -> Strict.Vector.empty
 
@@ -183,8 +196,10 @@ check context@Context {typeEnvironment} typex (Stage2.At {match}) =
       Stage2.String {startPosition, string} -> do
         Unify.unify context startPosition typex (Unify.listWith Unify.char)
         pure $ String string
-      Stage2.Integer {startPosition} ->
-        unsupportedFeatureIntegerLiteralPatterns startPosition
+      Stage2.Integer {startPosition, integer} -> do
+        evidence <- Unify.constrain context startPosition Type2.Num typex
+        equal <- Unify.constrain context startPosition Type2.Eq typex
+        pure Integer {startPosition, integer, evidence, equal}
       Stage2.Float {startPosition} ->
         unsupportedFeatureFloatingPointLiterals startPosition
 
@@ -202,6 +217,10 @@ solveMatch Match {match, irrefutable} = do
       fields <- traverse Field.solve fields
       pure Solved.Record {constructor, fields, fieldCount}
     List items -> Solved.List <$> traverse solve items
+    Integer {startPosition, integer, evidence, equal} -> do
+      evidence <- Unify.solveEvidence startPosition evidence
+      equal <- Unify.solveEvidence startPosition equal
+      pure Solved.Integer {integer, evidence, equal}
     Character {character} -> pure $ Solved.Character {character}
     String string -> pure $ Solved.String string
   pure Solved.Match {match, irrefutable}

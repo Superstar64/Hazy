@@ -12,6 +12,7 @@ import {-# SOURCE #-} qualified Stage3.Tree.Expression as Stage3
 import qualified Stage4.Index.Term as Term
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
+import Stage4.Tree.Evidence (Evidence)
 import {-# SOURCE #-} Stage4.Tree.Statements (Statements)
 
 type role Expression nominal
@@ -37,7 +38,9 @@ patternVariable :: Expression (Scope.Pattern ':+ scopes)
 patternVariableAt :: Int -> Expression (Scope.SimplePattern ':+ scope)
 character_ :: Char -> Expression scope
 join_ :: Statements scope -> Expression scope
+eq :: Evidence scope -> Expression scope -> Expression scope -> Expression scope
 eqChar :: Expression scope -> Expression scope -> Expression scope
+integer_ :: Integer -> Evidence scope -> Expression scope
 call :: Expression scope -> Expression scope -> Expression scope
 
 class Simplify source where

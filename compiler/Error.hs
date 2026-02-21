@@ -93,7 +93,6 @@ module Error
     unsupportedFeatureListComprehension,
     unsupportedFeatureConstraintedTypeDefaulting,
     unsupportedFeatureStrictFunctions,
-    unsupportedFeatureIntegerLiteralPatterns,
     unsupportedFeatureFloatingPointLiterals,
     unsupportedFeaturePolymorphicComponents,
     unsupportedFeatureGADTs,
@@ -539,8 +538,6 @@ mismatchedConstructorArguments position =
 
 listComprehension = fromString "list comprehension"
 
-integerLiteralPatterns = fromString "integer literal patterns"
-
 floatingPointLiterals = fromString "floating point literals"
 
 strictFunctions = fromString "strict functions"
@@ -601,10 +598,6 @@ unsupportedFeatureConstraintedTypeDefaulting =
 unsupportedFeatureStrictFunctions :: Position -> a
 unsupportedFeatureStrictFunctions =
   unsupportedFeature strictFunctions
-
-unsupportedFeatureIntegerLiteralPatterns :: Position -> a
-unsupportedFeatureIntegerLiteralPatterns =
-  unsupportedFeature integerLiteralPatterns
 
 unsupportedFeatureFloatingPointLiterals :: Position -> a
 unsupportedFeatureFloatingPointLiterals =

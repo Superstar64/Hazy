@@ -36,7 +36,6 @@ node output/index.mjs
 
 # Missing
 
-- Integer Literal Patterns
 - Floating Point Literals
 - Constrained Type Defaulting
 - List Comprehensions

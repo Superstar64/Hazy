@@ -164,17 +164,33 @@ join_ :: Statements scope -> Expression scope
 join_ statements = Join {statements}
 
 eqChar :: Expression scope -> Expression scope -> Expression scope
-eqChar left right =
+eqChar =
+  eq
+    Evidence.Variable
+      { variable = Index.Evidence.Builtin Index.Evidence.EqChar
+      }
+
+eq :: Evidence scope -> Expression scope -> Expression scope -> Expression scope
+eq evidence left right =
   Method
     { method = Method.equal,
-      evidence =
-        Evidence.Variable
-          { variable = Index.Evidence.Builtin Index.Evidence.EqChar
-          },
+      evidence,
       instanciation = Instanciation Strict.Vector.empty
     }
     `call` left
     `call` right
+
+integer_ :: Integer -> Evidence scope -> Expression scope
+integer_ integer evidence =
+  Call
+    { function =
+        Method
+          { method = Method.fromInteger,
+            evidence,
+            instanciation = Instanciation Strict.Vector.empty
+          },
+      argument = Integer {integer}
+    }
 
 infixl 9 `call`
 
@@ -299,16 +315,7 @@ simplifyWith expression [] = case expression of
             [] -> Join {statements = Statements.Bottom}
             fields -> simplify $ last fields
       }
-  Stage3.Integer {integer, evidence} ->
-    Call
-      { function =
-          Method
-            { method = Method.fromInteger,
-              evidence,
-              instanciation = Instanciation Strict.Vector.empty
-            },
-        argument = Integer {integer}
-      }
+  Stage3.Integer {integer, evidence} -> integer_ integer evidence
   Stage3.Tuple {elements} ->
     Constructor
       { constructor = Constructor.tuple (length elements),

@@ -9,6 +9,7 @@ import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Pattern as Stage3
 import qualified Stage3.Tree.PatternField as Stage3.Field
 import qualified Stage4.Shift as Shift2
+import Stage4.Tree.Evidence (Evidence)
 
 data Pattern scope
   = Wildcard
@@ -24,6 +25,11 @@ data Bindings scope
       { constructor :: !(Constructor.Index scope),
         fields :: !(Strict.Vector (Field scope)),
         fieldCount :: !Int
+      }
+  | Integer
+      { integer :: !Integer,
+        evidence :: !(Evidence scope),
+        equal :: !(Evidence scope)
       }
   | List {items :: !(Strict.Vector1 (Pattern scope))}
   | Character {character :: !Char}
@@ -68,6 +74,12 @@ instance Shift2.Functor Bindings where
       List
         { items = Shift2.map category <$> items
         }
+    Integer {integer, evidence, equal} ->
+      Integer
+        { integer,
+          evidence = Shift2.map category evidence,
+          equal = Shift2.map category equal
+        }
     Character {character} -> Character {character}
     String {text} -> String {text}
 
@@ -108,6 +120,12 @@ simplifyBindings = \case
   Stage3.List {items} ->
     List
       { items = simplify <$> items
+      }
+  Stage3.Integer {integer, evidence, equal} ->
+    Integer
+      { integer,
+        evidence,
+        equal
       }
   Stage3.Character {character} -> Character {character}
   Stage3.String {text} -> String {text}

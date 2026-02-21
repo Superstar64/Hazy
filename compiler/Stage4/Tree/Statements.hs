@@ -167,11 +167,19 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
       patternx <- Pattern.Match {match, irrefutable} ->
         bind patternx check thenx
   Pattern.Character {character} ->
-    -- expand patternx check thenx
     bind Pattern.Wildcard check $
       bind true equal (shift thenx)
     where
       equal = Expression.eqChar Expression.patternVariable (Expression.character_ character)
+  Pattern.Integer {integer, evidence, equal} ->
+    bind Pattern.Wildcard check $
+      bind true equal' (shift thenx)
+    where
+      equal' =
+        Expression.eq
+          (shift equal)
+          Expression.patternVariable
+          (Expression.integer_ integer $ shift evidence)
   where
     expand ::
       Bool ->
