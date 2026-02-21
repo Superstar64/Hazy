@@ -51,10 +51,13 @@ module Stage3.Unify
     instanciate,
     Functor (..),
     Category,
+    MapScheme (..),
+    mapScheme,
   )
 where
 
 import Control.Monad.ST (ST)
+import qualified Data.Kind
 import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
 import Stage1.Position (Position)
@@ -101,6 +104,20 @@ newtype Scheme s scope = Scheme
 
 instance Shift (Scheme s) where
   shift (Scheme scheme) = Scheme (shift scheme)
+
+type MapScheme ::
+  (Data.Kind.Type -> Environment -> Data.Kind.Type) ->
+  (Data.Kind.Type -> Environment -> Data.Kind.Type) ->
+  Data.Kind.Type
+newtype MapScheme typex typex' = MapScheme (forall s scope. typex s scope -> typex' s scope)
+
+mapScheme :: MapScheme typex typex' -> SchemeOver typex s scope -> SchemeOver typex' s scope
+mapScheme (MapScheme map) SchemeOver {parameters, constraints, result} =
+  SchemeOver
+    { parameters,
+      constraints,
+      result = map result
+    }
 
 variable :: Local.Index scope -> Type s scope
 variable = Variable
