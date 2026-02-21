@@ -47,6 +47,7 @@ node output/index.mjs
 - GADTs
 - Polymorphic Components
 - Strict Functions
+- Default Methods for Builtin Type Classes
 
 # Milestones Checklist
 
