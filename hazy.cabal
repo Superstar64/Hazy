@@ -416,7 +416,10 @@ executable hazy
     StandaloneKindSignatures
     TypeOperators
 
-  hs-source-dirs: compiler
+  hs-source-dirs:
+    compiler
+    utility
+
   default-language: Haskell2010
   ghc-options:
     -Wno-unrecognised-pragmas
