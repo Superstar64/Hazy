@@ -85,7 +85,10 @@ loadModules path = Vector.fromList <$> loadModules [] path
               _ -> do
                 contents <- loadModule file
                 pure [Root {name = pack file, contents}]
-      _ -> pure []
+      ".hs-boot" -> pure []
+      extension -> do
+        putStrLn $ "Unknown file extension (" ++ extension ++ "): " ++ file
+        exitFailure
 
 loadAllModules :: [FilePath] -> IO (Vector Loaded)
 loadAllModules paths = fold <$> traverse loadModules paths
