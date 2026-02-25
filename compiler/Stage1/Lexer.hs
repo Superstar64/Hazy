@@ -23,6 +23,10 @@ module Stage1.Lexer
     runConstructorSymbol,
     Category,
     lex,
+    Toggle,
+    toggles,
+    toggle,
+    extend,
   )
 where
 
@@ -45,7 +49,7 @@ import Data.Text.Lazy.Builder (Builder, fromString, fromText)
 import qualified Data.Text.Lazy.Builder as Builder
 import Error (cannotTurnoffExtension)
 import qualified Error as Strings
-import Stage1.Extensions (Extensions (..), haskell2010, hazy)
+import Stage1.Extensions (Extensions (..), haskell2010)
 import Stage1.ParserCombinator
   ( Bind (Fail, Parse),
     Parser,
@@ -183,8 +187,8 @@ data Toggle
   | NoExtension !Position !Extension
   deriving (Show)
 
-toggle :: Extensions -> Toggle -> Extensions
-toggle extension = \case
+extend :: Extensions -> Toggle -> Extensions
+extend extension = \case
   Language _ language -> case language of
     Haskell2010 -> haskell2010
   Extension _ additional -> case additional of
@@ -749,41 +753,46 @@ ncommentBody = finish <|> nested <|> pass
     pass = single *> ncommentBody
     finish = () <$ string (pack "-}")
 
-toggles :: Parser Stream [Toggle]
-toggles =
+header :: Parser Stream [Toggle]
+header =
   asum
-    [ space *> toggles,
-      comment *> toggles,
+    [ space *> header,
+      comment *> header,
       pragma,
-      ncomment *> toggles,
+      ncomment *> header,
       pure []
     ]
   where
     pragma = string (pack "{-#") *> many space *> body
-    body = (++) <$> known <*> toggles <|> ncommentBody *> toggles
-    known = symbol *> toggle
+    body = (++) <$> known <*> header <|> ncommentBody *> header
+    known = symbol *> toggles <* string (pack "#-}")
     symbol = stringIgnoreCase (pack "language_hazy") <|> stringIgnoreCase (pack "language")
-    toggle =
-      asum
-        [ space *> toggle,
-          (:) <$> single <*> next
-        ]
+
+toggles :: Parser Stream [Toggle]
+toggles =
+  asum
+    [ space *> toggles,
+      (:) <$> toggle <*> next
+    ]
+  where
     next =
       asum
         [ space *> next,
-          string (pack ",") *> toggle,
-          done
+          string (pack ",") *> toggles,
+          pure []
         ]
-    single =
-      asum
-        [ Language <$> position <*> language,
-          Extension <$> position <*> extension,
-          NoExtension <$> position <*> noExtension
-        ]
+
+toggle :: Parser Stream Toggle
+toggle =
+  asum
+    [ Language <$> position <*> language,
+      Extension <$> position <*> extension,
+      NoExtension <$> position <*> noExtension
+    ]
+  where
     language = asum [token <$ string text | (text, token) <- languageRelation]
     extension = asum [token <$ string text | (text, token) <- extensionRelation]
     noExtension = asum [token <$ string text | (text, token) <- noExtensionRelation]
-    done = [] <$ string (pack "#-}")
 
 premarked :: Parser Stream Premarked
 premarked =
@@ -972,10 +981,10 @@ layout ms (Done position True) =
     (Lex position CloseBrace (layout ms (Done position False)) (ErrorBrace position))
     (ErrorBrace position)
 
-lexer :: Parser Stream (Extensions, Lexer)
-lexer = do
-  extensions <- toggles
+lexer :: Extensions -> Parser Stream (Lexer, Extensions)
+lexer baseline = do
+  extensions <- header
   premark <- premarked
   let marked = mark premark
       rendered = layout [] marked
-  pure (foldl toggle hazy extensions, rendered)
+  pure (rendered, foldl extend baseline extensions)

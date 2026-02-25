@@ -151,8 +151,8 @@ sepEndBy1Semicolon = (`sepEndBy1` token ";")
 sepEndByComma :: Parser a -> Parser [a]
 sepEndByComma = (`sepEndBy` token ",")
 
-parse :: Parser (Extensions -> a) -> Text -> Text -> a
-parse parser name file =
+parse :: Extensions -> Parser (Extensions -> a) -> Text -> Text -> a
+parse baseline parser name file =
   let stream = startStream name file
-      (extensions, lexer) = ParserCombinator.parse Lexer.lexer stream
+      (lexer, extensions) = ParserCombinator.parse (Lexer.lexer baseline) stream
    in ParserCombinator.parse (flip seq <$> parser <*> eof) lexer extensions

@@ -17,6 +17,7 @@ import qualified Error (allow, fail, types)
 import qualified Javascript.Printer.Lexer as Javascript (print, run)
 import qualified Javascript.Tree.Module as Module (print)
 import qualified Javascript.Tree.Statement as Javascript (Statement)
+import Stage1.Extensions (hazy)
 import Stage1.Lexer
   ( FullQualifiers (..),
     Qualifiers (..),
@@ -98,8 +99,8 @@ stage1 verbose = case verbose of
   Debug -> runVerbose . traverse parse
   Normal -> pure . runIdentity . traverse parse
   where
-    parse Root {name, contents} = Parser.parse Module.parse name contents
-    parse Inner {path, name, contents} = Stage1.assumeName path <$> Parser.parse Module.parse name contents
+    parse Root {name, contents} = Parser.parse hazy Module.parse name contents
+    parse Inner {path, name, contents} = Stage1.assumeName path <$> Parser.parse hazy Module.parse name contents
 
 stage2 :: Debug -> Vector (Stage1.Module Position) -> IO (Vector Stage2.Module)
 stage2 verbose = case verbose of
