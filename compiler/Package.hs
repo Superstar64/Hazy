@@ -87,7 +87,7 @@ white = do
 
 meta :: Parser Stream Meta
 meta = do
-  toggles <- Lexer.toggles
+  toggles <- Lexer.toggles <|> pure []
   char ';'
   paths <- many (white *> path')
   pure Meta {toggles, paths}

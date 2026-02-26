@@ -1,6 +1,7 @@
 module Main (main) where
 
 import Control.Exception (catch)
+import Control.Monad (zipWithM_)
 import Data.Char (toUpper)
 import Data.Foldable (for_, toList, traverse_)
 import Data.Functor.Identity (Identity (..))
@@ -186,9 +187,10 @@ data Failure
   = Attempt
   | Expect String
 
-data Partial
+data Format
   = Full
   | Partial
+  | Pack
 
 data Execute = Execute
   { include :: List String,
@@ -199,7 +201,7 @@ data Execute = Execute
     debug :: !Debug,
     failure :: !Failure,
     show :: !Show,
-    partial :: !Partial
+    format :: !Format
   }
 
 defaultx :: Execute
@@ -213,7 +215,7 @@ defaultx =
       debug = Normal,
       failure = Attempt,
       show = NoShow,
-      partial = Full
+      format = Full
     }
 
 order :: ArgOrder (Execute -> Execute)
@@ -231,7 +233,8 @@ options =
     Option ['I'] [] (ReqArg include "PATH") "Add directory to search path",
     Option [] ["package"] (ReqArg package "PATH") "Load package",
     Option ['c'] [] (NoArg partial) "Don't include package artifacts",
-    Option ['q'] [] (NoArg quiet) "Don't show messages when compiling",
+    Option [] ["pack"] (NoArg pack) "Emit package",
+    Option ['q'] [""] (NoArg quiet) "Don't show messages when compiling",
     Option [] ["debug-simplify"] (NoArg simplify) "Simplify source",
     Option [] ["debug-message"] (NoArg debug) "Show debug messages",
     Option [] ["debug-show"] (NoArg show) "Show internal AST",
@@ -250,7 +253,8 @@ options =
     package path execute@Execute {packages} = execute {packages = packages :> path}
     show execute = execute {show = Show}
     quiet execute = execute {verbose = Quiet}
-    partial execute = execute {partial = Partial}
+    partial execute = execute {format = Partial}
+    pack execute = execute {format = Pack}
 
 main :: IO ()
 main = getArgs >>= main''
@@ -274,7 +278,7 @@ main'' args = case getOpt order options args of
             debug,
             failure,
             show,
-            partial
+            format
           } =
             foldl (flip id) defaultx flags
     packages <- traverse Package.load (toList packages)
@@ -314,24 +318,46 @@ main'' args = case getOpt order options args of
             all <- stage5 debug all
             let code = Vector.drop split all
                 total = length code
-            case partial of
-              Partial -> pure ()
+            out <- case format of
+              Partial -> pure target
               Full -> do
                 case verbose of
                   Loud -> putStrLn "Copying Artifacts"
                   Quiet -> pure ()
                 for_ packages $ \Package {modules} ->
                   for_ modules $ \Package.Module {target = subtarget, artifact} -> do
-                    Text.IO.writeFile (target </> subtarget) artifact
+                    let file = target </> subtarget
+                    createDirectoryIfMissing True (dropFileName file)
+                    Text.IO.writeFile file artifact
+                pure target
+              Pack -> pure $ target </> "artifact"
             for_ (zip [1 ..] $ toList code) $ \(index, (name, statements)) -> do
               case verbose of
                 Loud -> message "Compiling" index total name
                 Quiet -> pure ()
-              let file = target </> Mangle.path name
+              let file = out </> (Mangle.pathSys name ++ ".mjs")
               createDirectoryIfMissing True (dropFileName file)
               let javascript = Javascript.print $ Module.print statements
               let text = Builder.toLazyText $ Javascript.run javascript
               Text.Lazy.IO.writeFile file text
+            case format of
+              Pack -> do
+                case verbose of
+                  Loud -> putStrLn "Copying Headers Files"
+                  Quiet -> pure ()
+                let copy (path, _) loaded = do
+                      let file = target </> "header" </> Mangle.pathSys path ++ ".hs"
+                      createDirectoryIfMissing True (dropFileName file)
+                      Text.IO.writeFile file (contents loaded)
+                zipWithM_ copy (toList code) (toList modules)
+                case verbose of
+                  Loud -> putStrLn "Writing Package Meta"
+                  Quiet -> pure ()
+                let format (path, _) = pack "\n" <> Mangle.pathJS path <> pack ".hs"
+                    files = foldMap format code
+                    meta = pack ";" <> files
+                Text.IO.writeFile (target </> "package") meta
+              _ -> pure ()
         noFail = do
           putStrLn "Code didn't fail"
           exitFailure

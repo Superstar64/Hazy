@@ -104,8 +104,8 @@ supers = [pack ("$" ++ show i) | i <- [0 ..]]
 fields :: [Text]
 fields = names
 
-path :: FullQualifiers -> FilePath
-path = (++ ".mjs") . foldr1 (</>) . fmap unpack . path'
+pathSys :: FullQualifiers -> FilePath
+pathSys = foldr1 (</>) . fmap unpack . path'
 
 pathJS :: FullQualifiers -> Text
 pathJS = foldr1 (\x y -> x <> pack "/" <> y) . path'
