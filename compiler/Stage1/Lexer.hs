@@ -27,6 +27,7 @@ module Stage1.Lexer
     toggles,
     toggle,
     extend,
+    legalChar,
   )
 where
 

@@ -2,12 +2,12 @@ module Main (main) where
 
 import Control.Exception (catch)
 import Data.Char (toUpper)
-import Data.Foldable (fold, for_, toList, traverse_)
+import Data.Foldable (for_, toList, traverse_)
 import Data.Functor.Identity (Identity (..))
 import Data.List.Reverse (List (..))
 import qualified Data.Map as Map
 import Data.Text (Text, pack)
-import qualified Data.Text.IO as Text.IO (hGetContents)
+import qualified Data.Text.IO as Text.IO
 import qualified Data.Text.Lazy as Lazy.Text
 import qualified Data.Text.Lazy.Builder as Builder
 import qualified Data.Text.Lazy.IO as Text.Lazy.IO
@@ -17,11 +17,14 @@ import qualified Error (allow, fail, types)
 import qualified Javascript.Printer.Lexer as Javascript (print, run)
 import qualified Javascript.Tree.Module as Module (print)
 import qualified Javascript.Tree.Statement as Javascript (Statement)
-import Stage1.Extensions (hazy)
+import Package as X (Module (Module), Package (Package))
+import qualified Package
+import Stage1.Extensions (Extensions, hazy)
 import Stage1.Lexer
   ( FullQualifiers (..),
     Qualifiers (..),
     constructorIdentifier,
+    extend,
   )
 import qualified Stage1.Parser as Parser (parse)
 import Stage1.Position (Position)
@@ -49,11 +52,13 @@ import qualified Prelude
 
 data Loaded
   = Root
-      { name :: !Text,
+      { extensions :: !Extensions,
+        name :: !Text,
         contents :: Text
       }
   | Inner
-      { path :: !FullQualifiers,
+      { extensions :: !Extensions,
+        path :: !FullQualifiers,
         name :: !Text,
         contents :: Text
       }
@@ -64,8 +69,8 @@ loadModule file = unsafeInterleaveIO $ do
   hSetEncoding handle utf8
   Text.IO.hGetContents handle
 
-loadModules :: FilePath -> IO (Vector Loaded)
-loadModules path = Vector.fromList <$> loadModules [] path
+loadModules :: Extensions -> FilePath -> IO [Loaded]
+loadModules extensions = loadModules []
   where
     loadModules :: [FilePath] -> FilePath -> IO [Loaded]
     loadModules modulePath file = case takeExtension file of
@@ -82,25 +87,35 @@ loadModules path = Vector.fromList <$> loadModules [] path
               (modulePath :. moduleName)
                 | path <- modulePath :.. moduleName -> do
                     contents <- loadModule file
-                    pure [Inner {path, name = pack file, contents}]
+                    pure [Inner {extensions, path, name = pack file, contents}]
               _ -> do
                 contents <- loadModule file
-                pure [Root {name = pack file, contents}]
+                pure [Root {extensions, name = pack file, contents}]
       ".hs-boot" -> pure []
       extension -> do
         putStrLn $ "Unknown file extension (" ++ extension ++ "): " ++ file
         exitFailure
 
-loadAllModules :: [FilePath] -> IO (Vector Loaded)
-loadAllModules paths = fold <$> traverse loadModules paths
+loadPackage :: Package -> [Loaded]
+loadPackage Package {extensions, modules} = map loadModule modules
+  where
+    loadModule Module {path, name, header} =
+      Inner
+        { extensions = foldl extend hazy extensions,
+          path,
+          name,
+          contents = header
+        }
 
 stage1 :: Debug -> Vector Loaded -> IO (Vector (Stage1.Module Position))
 stage1 verbose = case verbose of
   Debug -> runVerbose . traverse parse
   Normal -> pure . runIdentity . traverse parse
   where
-    parse Root {name, contents} = Parser.parse hazy Module.parse name contents
-    parse Inner {path, name, contents} = Stage1.assumeName path <$> Parser.parse hazy Module.parse name contents
+    parse Root {extensions, name, contents} = Parser.parse extensions Module.parse name contents
+    parse Inner {extensions, path, name, contents} =
+      Stage1.assumeName path
+        <$> Parser.parse extensions Module.parse name contents
 
 stage2 :: Debug -> Vector (Stage1.Module Position) -> IO (Vector Stage2.Module)
 stage2 verbose = case verbose of
@@ -171,14 +186,20 @@ data Failure
   = Attempt
   | Expect String
 
+data Partial
+  = Full
+  | Partial
+
 data Execute = Execute
   { include :: List String,
     modules :: List String,
+    packages :: List String,
     mode :: !Mode,
     verbose :: !Verbose,
     debug :: !Debug,
     failure :: !Failure,
-    show :: !Show
+    show :: !Show,
+    partial :: !Partial
   }
 
 defaultx :: Execute
@@ -186,11 +207,13 @@ defaultx =
   Execute
     { include = Nil,
       modules = Nil,
+      packages = Nil,
       mode = Check,
       verbose = Loud,
       debug = Normal,
       failure = Attempt,
-      show = NoShow
+      show = NoShow,
+      partial = Full
     }
 
 order :: ArgOrder (Execute -> Execute)
@@ -206,6 +229,8 @@ options =
     Option [] ["check"] (NoArg check) "Typecheck source",
     Option ['o'] ["generate"] (ReqArg generate "PATH") "Generate Javascript from source",
     Option ['I'] [] (ReqArg include "PATH") "Add directory to search path",
+    Option [] ["package"] (ReqArg package "PATH") "Load package",
+    Option ['c'] [] (NoArg partial) "Don't include package artifacts",
     Option ['q'] [] (NoArg quiet) "Don't show messages when compiling",
     Option [] ["debug-simplify"] (NoArg simplify) "Simplify source",
     Option [] ["debug-message"] (NoArg debug) "Show debug messages",
@@ -222,8 +247,10 @@ options =
     debug execute = execute {debug = Debug}
     fail error execute = execute {failure = Expect error}
     include path execute@Execute {include} = execute {include = include :> path}
+    package path execute@Execute {packages} = execute {packages = packages :> path}
     show execute = execute {show = Show}
     quiet execute = execute {verbose = Quiet}
+    partial execute = execute {partial = Partial}
 
 main :: IO ()
 main = getArgs >>= main''
@@ -238,12 +265,25 @@ main'' args = case getOpt order options args of
     exitFailure
   (_, _ : _, _) -> error "flags not processed"
   (flags, [], []) -> do
-    let Execute {include, modules, mode, verbose, debug, failure, show} =
-          foldl (flip id) defaultx flags
-    include <- loadAllModules (toList include)
-    modules <- loadAllModules (toList modules)
-    let split = length include
-        all = include <> modules
+    let Execute
+          { include,
+            modules,
+            packages,
+            mode,
+            verbose,
+            debug,
+            failure,
+            show,
+            partial
+          } =
+            foldl (flip id) defaultx flags
+    packages <- traverse Package.load (toList packages)
+    let system = Vector.fromList $ concatMap loadPackage packages
+    include <- Vector.fromList . concat <$> traverse (loadModules hazy) (toList include)
+    modules <- Vector.fromList . concat <$> traverse (loadModules hazy) (toList modules)
+    let headers = system <> include
+        split = length headers
+        all = headers <> modules
         help = putStr $ usageInfo "hazy [options] folders..." options
         run = case mode of
           _ | null modules -> help
@@ -274,6 +314,15 @@ main'' args = case getOpt order options args of
             all <- stage5 debug all
             let code = Vector.drop split all
                 total = length code
+            case partial of
+              Partial -> pure ()
+              Full -> do
+                case verbose of
+                  Loud -> putStrLn "Copying Artifacts"
+                  Quiet -> pure ()
+                for_ packages $ \Package {modules} ->
+                  for_ modules $ \Package.Module {target = subtarget, artifact} -> do
+                    Text.IO.writeFile (target </> subtarget) artifact
             for_ (zip [1 ..] $ toList code) $ \(index, (name, statements)) -> do
               case verbose of
                 Loud -> message "Compiling" index total name

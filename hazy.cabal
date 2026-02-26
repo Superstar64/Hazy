@@ -113,6 +113,7 @@ executable hazy
     Javascript.Tree.Module
     Javascript.Tree.Statement
     Order
+    Package
     Stage1.Extensions
     Stage1.FreeTypeVariables
     Stage1.Lexer
