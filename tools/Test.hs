@@ -6,7 +6,15 @@ import Control.Exception (IOException, catch)
 import Control.Monad (unless, when)
 import Data.Foldable (for_)
 import Data.Traversable (for)
-import System.Directory (doesDirectoryExist, listDirectory)
+import System.Directory
+  ( copyFile,
+    createDirectory,
+    createDirectoryIfMissing,
+    doesDirectoryExist,
+    findExecutable,
+    listDirectory,
+    removeDirectoryRecursive,
+  )
 import System.Exit (exitFailure)
 import System.FilePath (splitExtension, (-<.>), (</>))
 import System.Process (callCommand, callProcess)
@@ -34,48 +42,90 @@ callCommandVerbose command = do
 parse = do
   bad <- find "test/bad/parse"
   for_ bad $ \bad -> do
-    callProcessVerbose "hazy" ["--debug-fail", "Expected", "--parse", bad]
+    callProcessVerbose "hazy" ["--bare", "--debug-fail", "Expected", "--parse", bad]
 
 resolve = do
   bad <- find "test/bad/resolve"
   for_ bad $ \bad -> do
     let (base, _) = splitExtension bad
     fail <- head . lines <$> readFile (base ++ ".test")
-    callProcessVerbose "hazy" ["--debug-fail", fail, "--resolve", bad, "-I", "library/runtime", "-I", "library/base"]
+    callProcessVerbose
+      "hazy"
+      [ "--bare",
+        "--debug-fail",
+        fail,
+        "--resolve",
+        bad,
+        "-I",
+        "library/runtime/header",
+        "-I",
+        "library/base"
+      ]
 
 library = do
-  callProcessVerbose "hazy" ["--check", "-I", "library/runtime", "library/base"]
+  callProcessVerbose
+    "hazy"
+    [ "--bare",
+      "--check",
+      "-I",
+      "library/runtime/header",
+      "library/base"
+    ]
 
 check = do
   bad <- find "test/bad/check"
   for_ bad $ \bad -> do
     fail <- head . lines <$> readFile (bad -<.> ".test")
-    callProcessVerbose "hazy" ["--debug-fail", fail, "--check", bad, "-I", "library/runtime", "-I", "library/base"]
+    callProcessVerbose
+      "hazy"
+      [ "--bare",
+        "--debug-fail",
+        fail,
+        "--check",
+        bad,
+        "-I",
+        "library/runtime/header",
+        "-I",
+        "library/base"
+      ]
 
 good = do
   good <- find "test/good"
   for_ good $ \good ->
-    callProcessVerbose "hazy" ["--debug-simplify", good, "-I", "library/runtime", "-I", "library/base"]
-
-run = do
-  dirty <- doesDirectoryExist ".build"
-  when dirty $ callProcessVerbose "rm" ["-r", ".build"]
-  callProcessVerbose "mkdir" [".build"]
-  callProcessVerbose "cp" ["-R", "runtime", ".build/base"]
-  callProcessVerbose "hazy" ["-I", "library/runtime", "library/base", "-o", ".build/base"]
-  run <- listDirectory "test/run"
-  for_ run $ \run -> do
-    callProcessVerbose "cp" ["-R", ".build/base", ".build/" ++ run]
     callProcessVerbose
       "hazy"
-      [ "-I",
-        "library/runtime",
+      [ "--bare",
+        "--debug-simplify",
+        good,
         "-I",
-        "library/base",
-        "test/run/" ++ run ++ "/source",
-        "-o",
-        ".build/" ++ run
+        "library/runtime/header",
+        "-I",
+        "library/base"
       ]
+
+run = do
+  Just hazy <- findExecutable "hazy"
+  dirty <- doesDirectoryExist ".build"
+  when dirty $ removeDirectoryRecursive ".build"
+  createDirectoryIfMissing False ".build"
+  createDirectory ".build/dist"
+  createDirectory ".build/dist/bin"
+  createDirectory ".build/dist/packages"
+  copyFile hazy ".build/dist/bin/hazy"
+  -- todo, use proper recursive copy in Haskell
+  callProcess "cp" ["-R", "library/runtime/", ".build/dist/packages/runtime"]
+  callProcessVerbose
+    ".build/dist/bin/hazy"
+    [ "--bare-runtime",
+      "--pack",
+      "library/base",
+      "-o",
+      ".build/dist/packages/base"
+    ]
+
+  run <- listDirectory "test/run"
+  for_ run $ \run -> do
+    callProcessVerbose ".build/dist/bin/hazy" ["test/run/" ++ run ++ "/source", "-o", ".build/" ++ run]
     callCommandVerbose $ "node .build/" ++ run ++ "/index.mjs > .build/" ++ run ++ "/result"
     callProcessVerbose "diff" ["test/run/" ++ run ++ "/result", ".build/" ++ run ++ "/result"]
 

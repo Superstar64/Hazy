@@ -42,9 +42,9 @@ import qualified Stage5.Generate.Mangle as Mangle
 import qualified Stage5.Tree.Module as Module (generate)
 import System.Console.GetOpt (ArgDescr (..), ArgOrder (..), OptDescr (..), getOpt, usageInfo)
 import System.Directory (createDirectoryIfMissing, listDirectory)
-import System.Environment (getArgs)
+import System.Environment (getArgs, getExecutablePath)
 import System.Exit (exitFailure)
-import System.FilePath (dropExtension, dropFileName, takeExtension, (</>))
+import System.FilePath (dropExtension, dropFileName, takeDirectory, takeExtension, (</>))
 import System.IO (IOMode (..), hSetEncoding, openFile, utf8)
 import System.IO.Unsafe (unsafeInterleaveIO)
 import Verbose (runVerbose)
@@ -192,6 +192,11 @@ data Format
   | Partial
   | Pack
 
+data Bare
+  = Standard
+  | Runtime
+  | Bare
+
 data Execute = Execute
   { include :: List String,
     modules :: List String,
@@ -201,7 +206,8 @@ data Execute = Execute
     debug :: !Debug,
     failure :: !Failure,
     show :: !Show,
-    format :: !Format
+    format :: !Format,
+    bare :: !Bare
   }
 
 defaultx :: Execute
@@ -215,7 +221,8 @@ defaultx =
       debug = Normal,
       failure = Attempt,
       show = NoShow,
-      format = Full
+      format = Full,
+      bare = Standard
     }
 
 order :: ArgOrder (Execute -> Execute)
@@ -235,6 +242,8 @@ options =
     Option ['c'] [] (NoArg partial) "Don't include package artifacts",
     Option [] ["pack"] (NoArg pack) "Emit package",
     Option ['q'] [""] (NoArg quiet) "Don't show messages when compiling",
+    Option [] ["bare"] (NoArg bare) "Don't include runtime and base package",
+    Option [] ["bare-runtime"] (NoArg bareRuntime) "Don't include base package",
     Option [] ["debug-simplify"] (NoArg simplify) "Simplify source",
     Option [] ["debug-message"] (NoArg debug) "Show debug messages",
     Option [] ["debug-show"] (NoArg show) "Show internal AST",
@@ -255,6 +264,8 @@ options =
     quiet execute = execute {verbose = Quiet}
     partial execute = execute {format = Partial}
     pack execute = execute {format = Pack}
+    bare execute = execute {bare = Bare}
+    bareRuntime execute = execute {bare = Runtime}
 
 main :: IO ()
 main = getArgs >>= main''
@@ -278,10 +289,27 @@ main'' args = case getOpt order options args of
             debug,
             failure,
             show,
-            format
+            format,
+            bare
           } =
             foldl (flip id) defaultx flags
-    packages <- traverse Package.load (toList packages)
+    builtin <- case bare of
+      Bare -> pure []
+      Standard -> do
+        exe <- getExecutablePath
+        let root = takeDirectory (takeDirectory exe)
+        pure
+          [ root </> "packages" </> "runtime",
+            root </> "packages" </> "base"
+          ]
+      Runtime -> do
+        exe <- getExecutablePath
+        let root = takeDirectory (takeDirectory exe)
+        pure
+          [ root </> "packages" </> "runtime"
+          ]
+
+    packages <- traverse Package.load (builtin ++ toList packages)
     let system = Vector.fromList $ concatMap loadPackage packages
     include <- Vector.fromList . concat <$> traverse (loadModules hazy) (toList include)
     modules <- Vector.fromList . concat <$> traverse (loadModules hazy) (toList modules)
@@ -329,6 +357,8 @@ main'' args = case getOpt order options args of
                     let file = target </> subtarget
                     createDirectoryIfMissing True (dropFileName file)
                     Text.IO.writeFile file artifact
+                let index = pack "import{main as a}from\"./Main.mjs\";(a.a?a.b():a.b)();"
+                Text.IO.writeFile (target </> "index.mjs") index
                 pure target
               Pack -> pure $ target </> "artifact"
             for_ (zip [1 ..] $ toList code) $ \(index, (name, statements)) -> do
