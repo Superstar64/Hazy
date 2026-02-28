@@ -7,7 +7,7 @@ import Data.Foldable (for_, toList, traverse_)
 import Data.Functor.Identity (Identity (..))
 import Data.List.Reverse (List (..))
 import qualified Data.Map as Map
-import Data.Text (Text, pack)
+import Data.Text (Text, intercalate, pack)
 import qualified Data.Text.IO as Text.IO
 import qualified Data.Text.Lazy as Lazy.Text
 import qualified Data.Text.Lazy.Builder as Builder
@@ -27,7 +27,9 @@ import Stage1.Lexer
     constructorIdentifier,
     extend,
   )
+import qualified Stage1.Lexer as Lexer
 import qualified Stage1.Parser as Parser (parse)
+import Stage1.ParserCombinator (internal, parse, startStream)
 import Stage1.Position (Position)
 import qualified Stage1.Tree.Module as Module (parse)
 import qualified Stage1.Tree.Module as Stage1 (Module, assumeName, name)
@@ -201,6 +203,7 @@ data Execute = Execute
   { include :: List String,
     modules :: List String,
     packages :: List String,
+    language :: List String,
     mode :: !Mode,
     verbose :: !Verbose,
     debug :: !Debug,
@@ -216,6 +219,7 @@ defaultx =
     { include = Nil,
       modules = Nil,
       packages = Nil,
+      language = Nil,
       mode = Check,
       verbose = Loud,
       debug = Normal,
@@ -241,6 +245,7 @@ options =
     Option [] ["package"] (ReqArg package "PATH") "Load package",
     Option ['c'] [] (NoArg partial) "Don't include package artifacts",
     Option [] ["pack"] (NoArg pack) "Emit package",
+    Option ['X'] [] (ReqArg extension "EXTENSION") "Enable extension",
     Option ['q'] [""] (NoArg quiet) "Don't show messages when compiling",
     Option [] ["bare"] (NoArg bare) "Don't include runtime and base package",
     Option [] ["bare-runtime"] (NoArg bareRuntime) "Don't include base package",
@@ -266,6 +271,7 @@ options =
     pack execute = execute {format = Pack}
     bare execute = execute {bare = Bare}
     bareRuntime execute = execute {bare = Runtime}
+    extension extension execute@Execute {language} = execute {language = language :> extension}
 
 main :: IO ()
 main = getArgs >>= main''
@@ -290,9 +296,14 @@ main'' args = case getOpt order options args of
             failure,
             show,
             format,
-            bare
+            bare,
+            language
           } =
             foldl (flip id) defaultx flags
+    language <- pure $ pack <$> toList language
+    let extensions = foldl extend hazy toggles
+          where
+            toggles = parse Lexer.toggle . startStream internal <$> language
     builtin <- case bare of
       Bare -> pure []
       Standard -> do
@@ -311,8 +322,8 @@ main'' args = case getOpt order options args of
 
     packages <- traverse Package.load (builtin ++ toList packages)
     let system = Vector.fromList $ concatMap loadPackage packages
-    include <- Vector.fromList . concat <$> traverse (loadModules hazy) (toList include)
-    modules <- Vector.fromList . concat <$> traverse (loadModules hazy) (toList modules)
+    include <- Vector.fromList . concat <$> traverse (loadModules extensions) (toList include)
+    modules <- Vector.fromList . concat <$> traverse (loadModules extensions) (toList modules)
     let headers = system <> include
         split = length headers
         all = headers <> modules
@@ -385,7 +396,8 @@ main'' args = case getOpt order options args of
                   Quiet -> pure ()
                 let format (path, _) = pack "\n" <> Mangle.pathJS path <> pack ".hs"
                     files = foldMap format code
-                    meta = pack ";" <> files
+                    extensions = intercalate (pack ",") language
+                    meta = extensions <> pack ";" <> files
                 Text.IO.writeFile (target </> "package") meta
               _ -> pure ()
         noFail = do

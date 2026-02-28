@@ -26,7 +26,7 @@ cp $(cabal list-bin hazy) .dist/bin/hazy
 cp -R library/runtime .dist/packages/runtime
 
 # Compile base
-.dist/bin/hazy --pack --bare-runtime library/base -o .dist/packages/base
+.dist/bin/hazy --pack --bare-runtime library/base/source -o .dist/packages/base $(cat library/base/flags)
 ```
 Finally, `.dist/bin` contains the executable to be added to your path. 
 that the compiler will try to auto load `.../packages/runtime` and
