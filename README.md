@@ -7,43 +7,6 @@ As of now the project is in a very early stages. The compiler currently unable
 to bootstrap itself, the standard library isn't implemented yet, some major
 Haskell features are missing, only a test Javascript backend is implemented.
 
-# Building
-
-Ensure that GHC 9.12 and Cabal are downloaded.
-Then run the following:
-
-```sh
-# Setup the distribution
-mkdir .dist
-mkdir .dist/bin
-mkdir .dist/packages
-
-# Compile the compiler
-cabal build hazy
-cp $(cabal list-bin hazy) .dist/bin/hazy
-
-# Copy the runtime
-cp -R library/runtime .dist/packages/runtime
-
-# Compile base
-.dist/bin/hazy --pack --bare-runtime library/base/source -o .dist/packages/base $(cat library/base/flags)
-```
-Finally, `.dist/bin` contains the executable to be added to your path. 
-that the compiler will try to auto load `.../packages/runtime` and
-`.../packages/base` so their exact name are import.
-
-## Compiling Hello World
-```
-# Compile hello world
-.dist/bin/hazy test/run/hello/source -o output
-
-# Optionally, Format the generated Javascript
-prettier -w output
-
-# Run hello world
-node output/index.mjs
-```
-
 # TODOs
 
 - Use `UnorderedRecords` all throughout compiler
@@ -68,6 +31,82 @@ node output/index.mjs
 
 - [ ] Standard Library
 - [ ] Bootstrapping
+
+# Building
+
+Ensure that GHC 9.12 and Cabal are downloaded.
+
+## Building the Compiler and Base
+
+The following builds Hazy alongside it's base into a specified directory. Here
+`.../bin` stores the actual compiler executable while `.../packages` contains
+the runtime and base packages that it loads by default.
+
+```sh
+DIST=.dist
+
+# Setup the distribution
+mkdir $DIST
+mkdir $DIST/bin
+mkdir $DIST/packages
+
+# Compile the compiler
+cabal build hazy
+cp $(cabal list-bin hazy) $DIST/bin/hazy
+
+# Copy the runtime
+cp -R library/runtime $DIST/packages/runtime
+
+# Compile base
+$DIST/bin/hazy --pack --bare-runtime library/base/source -o $DIST/packages/base $(cat library/base/flags)
+
+# Add the compiler to the path for testing
+export PATH=$PATH:$DIST/bin
+```
+
+## Compiling Hello World
+
+Now that the compiler is built, hello world is as simple as running it and
+launching node to run the program.
+
+```sh
+HELLO=.hello
+
+# Compile hello world
+hazy test/run/hello/source -o $HELLO
+
+# Run hello world
+node $HELLO/index.mjs
+```
+
+# Packages
+
+Hazy has a bare minimum package system at the moment. A package is a folder with
+three subfiles:
+* `$PACKAGE/package`: This contains the package metadata. As of now, it only
+   includes the default extensions and the list of Haskell files in the package.
+* `$PACKAGE/header`: This contains the compiler generated header files that are
+   not looked at for code generation. As of now, these files are just copies of
+   their original source files.
+* `$PACKAGE/artifacts`: This contains the generated Javascript that Hazy needs
+   to copy when generating a final executable.
+
+To generate a package, just compile a set of modules and pass `--pack`.
+For example:
+```sh
+hazy Module.hs modules/ -o mypackage --pack
+```
+
+To load a package, pass `--package $PATH`. For example:
+```
+hazy --package mypackage -o program
+```
+This causes of all of the packages modules to be added to the module list and,
+when generating a full executable, causes the package's Javascript to be copied
+to the final program.
+
+By default hazy will load `runtime` and `base` from it's `packages` folder.
+Other packages aren't special cased and any path can be loaded with `--package`.
 
 # Extensions
 Hazy implements original extensions alongside some GHC extensions.
