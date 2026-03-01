@@ -22,6 +22,7 @@ where
 import Data.Char (Char)
 import Data.Int (Int)
 import Data.String (String)
+import Hazy (placeholder)
 import Text.ParserCombinators.ReadP (ReadP)
 import Text.Read (ReadS)
 import Prelude (error)
@@ -31,46 +32,46 @@ data ReadPrec a
 type Prec = Int
 
 minPrec :: Prec
-minPrec = error "todo"
+minPrec = placeholder
 
 lift :: ReadP a -> ReadPrec a
-lift = error "todo"
+lift = placeholder
 
 prec :: Prec -> ReadPrec a -> ReadPrec a
-prec = error "todo"
+prec = placeholder
 
 step :: ReadPrec a -> ReadPrec a
-step = error "todo"
+step = placeholder
 
 reset :: ReadPrec a -> ReadPrec a
-reset = error "todo"
+reset = placeholder
 
 get :: ReadPrec Char
-get = error "todo"
+get = placeholder
 
 look :: ReadPrec String
-look = error "todo"
+look = placeholder
 
 (+++) :: ReadPrec a -> ReadPrec a -> ReadPrec a
-(+++) = error "todo"
+(+++) = placeholder
 
 (<++) :: ReadPrec a -> ReadPrec a -> ReadPrec a
-(<++) = error "todo"
+(<++) = placeholder
 
 pfail :: ReadPrec a
-pfail = error "todo"
+pfail = placeholder
 
 choice :: [ReadPrec a] -> ReadPrec a
-choice = error "todo"
+choice = placeholder
 
 readPrec_to_P :: ReadPrec a -> Int -> ReadP a
-readPrec_to_P = error "todo"
+readPrec_to_P = placeholder
 
 readP_to_Prec :: (Int -> ReadP a) -> ReadPrec a
-readP_to_Prec = error "todo"
+readP_to_Prec = placeholder
 
 readPrec_to_S :: ReadPrec a -> Int -> ReadS a
-readPrec_to_S = error "todo"
+readPrec_to_S = placeholder
 
 readS_to_Prec :: (Int -> ReadS a) -> ReadPrec a
-readS_to_Prec = error "todo"
+readS_to_Prec = placeholder

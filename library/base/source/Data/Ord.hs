@@ -8,6 +8,7 @@ module Data.Ord
 where
 
 import Data.Bool (Bool)
+import Hazy (placeholder)
 import Prelude (Eq, error)
 
 class (Eq a) => Ord a where
@@ -27,7 +28,7 @@ newtype Down a = Down
   }
 
 comparing :: (Ord a) => (b -> a) -> b -> b -> Ordering
-comparing = error "todo"
+comparing = placeholder
 
 clamp :: (Ord a) => (a, a) -> a -> a
-clamp = error "todo"
+clamp = placeholder

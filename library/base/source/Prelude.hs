@@ -397,47 +397,47 @@ class (RealFrac a, Floating a) => RealFloat a where
   atan2 :: a -> a -> a
 
 subtract :: (Num a) => a -> a -> a
-subtract = error "todo"
+subtract = placeholder
 
 even :: (Integral a) => a -> Bool
-even = error "todo"
+even = placeholder
 
 odd :: (Integral a) => a -> Bool
-odd = error "todo"
+odd = placeholder
 
 gcd :: (Integral a) => a -> a -> a
-gcd = error "todo"
+gcd = placeholder
 
 lcm :: (Integral a) => a -> a -> a
-lcm = error "todo"
+lcm = placeholder
 
 infixr 8 ^
 
 (^) :: (Num a, Integral b) => a -> b -> a
-(^) = error "todo"
+(^) = placeholder
 
 infixr 8 ^^
 
 (^^) :: (Fractional a, Integral b) => a -> b -> a
-(^^) = error "todo"
+(^^) = placeholder
 
 fromIntegral :: (Integral a, Num b) => a -> b
-fromIntegral = error "todo"
+fromIntegral = placeholder
 
 realToFrac :: (Real a, Fractional b) => a -> b
-realToFrac = error "todo"
+realToFrac = placeholder
 
 until :: (a -> Bool) -> (a -> a) -> a -> a
-until = error "todo"
+until = placeholder
 
 asTypeOf :: a -> a -> a
-asTypeOf = error "todo"
+asTypeOf = placeholder
 
 error :: [Char] -> a
 error message = Hazy.error (Hazy.pack message)
 
 errorWithoutStackTrace :: [Char] -> a
-errorWithoutStackTrace = error "todo"
+errorWithoutStackTrace = placeholder
 
 undefined :: a
 undefined = error "bottom"
@@ -445,17 +445,17 @@ undefined = error "bottom"
 infixr 0 `seq`
 
 seq :: a -> b -> b
-seq = error "todo"
+seq = placeholder
 
 infixr 0 $!
 
 ($!) :: (a -> b) -> a -> b
-($!) = error "todo"
+($!) = placeholder
 
 data IOError
 
 ioError :: IOError -> IO a
-ioError = error "todo"
+ioError = placeholder
 
 userError :: String -> IOError
-userError = error "todo"
+userError = placeholder

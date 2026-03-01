@@ -1,15 +1,16 @@
 module Control.Monad.ST.Unsafe where
 
 import Control.Monad.ST (ST)
+import Hazy (placeholder)
 
 unsafeInterleaveST :: ST s a -> ST s a
-unsafeInterleaveST = error "todo"
+unsafeInterleaveST = placeholder
 
 unsafeDupableInterleaveST :: ST s a -> ST s a
-unsafeDupableInterleaveST = error "todo"
+unsafeDupableInterleaveST = placeholder
 
 unsafeIOToST :: IO a -> ST s a
-unsafeIOToST = error "todo"
+unsafeIOToST = placeholder
 
 unsafeSTToIO :: ST s a -> IO a
-unsafeSTToIO = error "todo"
+unsafeSTToIO = placeholder

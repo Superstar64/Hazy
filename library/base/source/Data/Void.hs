@@ -5,10 +5,12 @@ module Data.Void
   )
 where
 
+import Hazy (placeholder)
+
 data Void
 
 absurd :: Void -> a
-absurd = error "todo"
+absurd = placeholder
 
 vacuous :: (Functor f) => f Void -> f a
-vacuous = error "todo"
+vacuous = placeholder

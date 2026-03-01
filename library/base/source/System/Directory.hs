@@ -60,41 +60,43 @@ module System.Directory
   )
 where
 
+import Hazy (placeholder)
+
 createDirectory :: FilePath -> IO ()
-createDirectory = error "todo"
+createDirectory = placeholder
 
 createDirectoryIfMissing :: Bool -> FilePath -> IO ()
-createDirectoryIfMissing = error "todo"
+createDirectoryIfMissing = placeholder
 
 removeDirectory :: FilePath -> IO ()
-removeDirectory = error "todo"
+removeDirectory = placeholder
 
 removeDirectoryRecursive :: FilePath -> IO ()
-removeDirectoryRecursive = error "todo"
+removeDirectoryRecursive = placeholder
 
 removePathForcibly :: FilePath -> IO ()
-removePathForcibly = error "todo"
+removePathForcibly = placeholder
 
 renameDirectory :: FilePath -> FilePath -> IO ()
-renameDirectory = error "todo"
+renameDirectory = placeholder
 
 listDirectory :: FilePath -> IO [FilePath]
-listDirectory = error "todo"
+listDirectory = placeholder
 
 getDirectoryContents :: FilePath -> IO [FilePath]
-getDirectoryContents = error "todo"
+getDirectoryContents = placeholder
 
 getCurrentDirectory :: IO FilePath
-getCurrentDirectory = error "todo"
+getCurrentDirectory = placeholder
 
 setCurrentDirectory :: FilePath -> IO ()
-setCurrentDirectory = error "todo"
+setCurrentDirectory = placeholder
 
 withCurrentDirectory :: FilePath -> IO a -> IO a
-withCurrentDirectory = error "todo"
+withCurrentDirectory = placeholder
 
 getHomeDirectory :: IO FilePath
-getHomeDirectory = error "todo"
+getHomeDirectory = placeholder
 
 data XdgDirectory
   = XdgData
@@ -103,136 +105,136 @@ data XdgDirectory
   | XdgState
 
 getXdgDirectory :: XdgDirectory -> FilePath -> IO FilePath
-getXdgDirectory = error "todo"
+getXdgDirectory = placeholder
 
 data XdgDirectoryList
   = XdgDataDirs
   | XdgConfigDirs
 
 getXdgDirectoryList :: XdgDirectoryList -> IO [FilePath]
-getXdgDirectoryList = error "todo"
+getXdgDirectoryList = placeholder
 
 getAppUserDataDirectory :: FilePath -> IO FilePath
-getAppUserDataDirectory = error "todo"
+getAppUserDataDirectory = placeholder
 
 getUserDocumentsDirectory :: IO FilePath
-getUserDocumentsDirectory = error "todo"
+getUserDocumentsDirectory = placeholder
 
 getTemporaryDirectory :: IO FilePath
-getTemporaryDirectory = error "todo"
+getTemporaryDirectory = placeholder
 
 removeFile :: FilePath -> IO ()
-removeFile = error "todo"
+removeFile = placeholder
 
 renameFile :: FilePath -> FilePath -> IO ()
-renameFile = error "todo"
+renameFile = placeholder
 
 renamePath :: FilePath -> FilePath -> IO ()
-renamePath = error "todo"
+renamePath = placeholder
 
 copyFile :: FilePath -> FilePath -> IO ()
-copyFile = error "todo"
+copyFile = placeholder
 
 copyFileWithMetadata :: FilePath -> FilePath -> IO ()
-copyFileWithMetadata = error "todo"
+copyFileWithMetadata = placeholder
 
 getFileSize :: FilePath -> IO Integer
-getFileSize = error "todo"
+getFileSize = placeholder
 
 canonicalizePath :: FilePath -> IO FilePath
-canonicalizePath = error "todo"
+canonicalizePath = placeholder
 
 makeAbsolute :: FilePath -> IO FilePath
-makeAbsolute = error "todo"
+makeAbsolute = placeholder
 
 makeRelativeToCurrentDirectory :: FilePath -> IO FilePath
-makeRelativeToCurrentDirectory = error "todo"
+makeRelativeToCurrentDirectory = placeholder
 
 doesPathExist :: FilePath -> IO Bool
-doesPathExist = error "todo"
+doesPathExist = placeholder
 
 doesFileExist :: FilePath -> IO Bool
-doesFileExist = error "todo"
+doesFileExist = placeholder
 
 doesDirectoryExist :: FilePath -> IO Bool
-doesDirectoryExist = error "todo"
+doesDirectoryExist = placeholder
 
 findExecutable :: String -> IO (Maybe FilePath)
-findExecutable = error "todo"
+findExecutable = placeholder
 
 findExecutables :: String -> IO [FilePath]
-findExecutables = error "todo"
+findExecutables = placeholder
 
 findExecutablesInDirectories :: [FilePath] -> String -> IO [FilePath]
-findExecutablesInDirectories = error "todo"
+findExecutablesInDirectories = placeholder
 
 findFile :: [FilePath] -> String -> IO (Maybe FilePath)
-findFile = error "todo"
+findFile = placeholder
 
 findFiles :: [FilePath] -> String -> IO [FilePath]
-findFiles = error "todo"
+findFiles = placeholder
 
 findFileWith :: (FilePath -> IO Bool) -> [FilePath] -> String -> IO (Maybe FilePath)
-findFileWith = error "todo"
+findFileWith = placeholder
 
 findFilesWith :: (FilePath -> IO Bool) -> [FilePath] -> String -> IO [FilePath]
-findFilesWith = error "todo"
+findFilesWith = placeholder
 
 exeExtension :: String
-exeExtension = error "todo"
+exeExtension = placeholder
 
 createFileLink :: FilePath -> FilePath -> IO ()
-createFileLink = error "todo"
+createFileLink = placeholder
 
 createDirectoryLink :: FilePath -> FilePath -> IO ()
-createDirectoryLink = error "todo"
+createDirectoryLink = placeholder
 
 removeDirectoryLink :: FilePath -> IO ()
-removeDirectoryLink = error "todo"
+removeDirectoryLink = placeholder
 
 pathIsSymbolicLink :: FilePath -> IO Bool
-pathIsSymbolicLink = error "todo"
+pathIsSymbolicLink = placeholder
 
 getSymbolicLinkTarget :: FilePath -> IO FilePath
-getSymbolicLinkTarget = error "todo"
+getSymbolicLinkTarget = placeholder
 
 data Permissions
 
 emptyPermissions :: Permissions
-emptyPermissions = error "todo"
+emptyPermissions = placeholder
 
 readable :: Permissions -> Bool
-readable = error "todo"
+readable = placeholder
 
 writable :: Permissions -> Bool
-writable = error "todo"
+writable = placeholder
 
 executable :: Permissions -> Bool
-executable = error "todo"
+executable = placeholder
 
 searchable :: Permissions -> Bool
-searchable = error "todo"
+searchable = placeholder
 
 setOwnerReadable :: Bool -> Permissions -> Permissions
-setOwnerReadable = error "todo"
+setOwnerReadable = placeholder
 
 setOwnerWritable :: Bool -> Permissions -> Permissions
-setOwnerWritable = error "todo"
+setOwnerWritable = placeholder
 
 setOwnerExecutable :: Bool -> Permissions -> Permissions
-setOwnerExecutable = error "todo"
+setOwnerExecutable = placeholder
 
 setOwnerSearchable :: Bool -> Permissions -> Permissions
-setOwnerSearchable = error "todo"
+setOwnerSearchable = placeholder
 
 getPermissions :: FilePath -> IO Permissions
-getPermissions = error "todo"
+getPermissions = placeholder
 
 setPermissions :: FilePath -> Permissions -> IO ()
-setPermissions = error "todo"
+setPermissions = placeholder
 
 copyPermissions :: FilePath -> FilePath -> IO ()
-copyPermissions = error "todo"
+copyPermissions = placeholder
 
 isSymbolicLink :: FilePath -> IO Bool
-isSymbolicLink = error "todo"
+isSymbolicLink = placeholder

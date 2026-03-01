@@ -25,6 +25,7 @@ import Data.Int (Int)
 import Data.Maybe (Maybe)
 import Data.Ratio (Rational)
 import Data.String (String)
+import Hazy (placeholder)
 import Text.ParserCombinators.ReadP (ReadP)
 import Prelude (Integer, Num, error)
 
@@ -40,43 +41,43 @@ data Lexeme
 data Number
 
 numberToInteger :: Number -> Maybe Integer
-numberToInteger = error "todo"
+numberToInteger = placeholder
 
 numberToFixed :: Integer -> Number -> Maybe (Integer, Integer)
-numberToFixed = error "todo"
+numberToFixed = placeholder
 
 numberToRational :: Number -> Rational
-numberToRational = error "todo"
+numberToRational = placeholder
 
 numberToRangedRational :: (Int, Int) -> Number -> Maybe Rational
-numberToRangedRational = error "todo"
+numberToRangedRational = placeholder
 
 lex :: ReadP Lexeme
-lex = error "todo"
+lex = placeholder
 
 expect :: Lexeme -> ReadP ()
-expect = error "todo"
+expect = placeholder
 
 hsLex :: ReadP String
-hsLex = error "todo"
+hsLex = placeholder
 
 lexChar :: ReadP Char
-lexChar = error "todo"
+lexChar = placeholder
 
 readBinP :: (Eq a, Num a) => ReadP a
-readBinP = error "todo"
+readBinP = placeholder
 
 readIntP :: (Num a) => a -> (Char -> Bool) -> (Char -> Int) -> ReadP a
-readIntP = error "todo"
+readIntP = placeholder
 
 readOctP :: (Eq a, Num a) => ReadP a
-readOctP = error "todo"
+readOctP = placeholder
 
 readDecP :: (Eq a, Num a) => ReadP a
-readDecP = error "todo"
+readDecP = placeholder
 
 readHexP :: (Eq a, Num a) => ReadP a
-readHexP = error "todo"
+readHexP = placeholder
 
 isSymbolChar :: Char -> Bool
-isSymbolChar = error "todo"
+isSymbolChar = placeholder

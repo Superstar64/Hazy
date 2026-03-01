@@ -7,12 +7,12 @@ module Control.Monad.ST
   )
 where
 
-import Hazy (ST, runST)
+import Hazy (ST, placeholder, runST)
 
 fixST :: (a -> ST s a) -> ST s a
-fixST = error "todo"
+fixST = placeholder
 
 data RealWorld
 
 stToIO :: ST RealWorld a -> IO a
-stToIO = error "todo"
+stToIO = placeholder

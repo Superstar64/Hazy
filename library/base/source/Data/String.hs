@@ -9,6 +9,7 @@ module Data.String
 where
 
 import Data.Char (Char)
+import Hazy (placeholder)
 import Prelude (error)
 
 type String = [Char]
@@ -17,13 +18,13 @@ class IsString a where
   fromString :: String -> a
 
 lines :: String -> [String]
-lines = error "todo"
+lines = placeholder
 
 words :: String -> [String]
-words = error "todo"
+words = placeholder
 
 unlines :: [String] -> String
-unlines = error "todo"
+unlines = placeholder
 
 unwords :: [String] -> String
-unwords = error "todo"
+unwords = placeholder

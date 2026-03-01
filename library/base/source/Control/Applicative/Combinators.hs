@@ -29,66 +29,67 @@ module Control.Applicative.Combinators
 where
 
 import Control.Applicative (Alternative (empty, many, some, (<|>)), optional)
+import Hazy (placeholder)
 
 between :: (Applicative m) => m open -> m close -> m a -> m a
-between = error "todo"
+between = placeholder
 
 choice :: (Foldable f, Alternative m) => f (m a) -> m a
-choice = error "todo"
+choice = placeholder
 
 count :: (Applicative m) => Int -> m a -> m [a]
-count = error "todo"
+count = placeholder
 
 count' :: (Alternative m) => Int -> Int -> m a -> m [a]
-count' = error "todo"
+count' = placeholder
 
 eitherP :: (Alternative m) => m a -> m b -> m (Either a b)
-eitherP = error "todo"
+eitherP = placeholder
 
 endBy :: (Alternative m) => m a -> m sep -> m [a]
-endBy = error "todo"
+endBy = placeholder
 
 endBy1 :: (Alternative m) => m a -> m sep -> m [a]
-endBy1 = error "todo"
+endBy1 = placeholder
 
 manyTill :: (Alternative m) => m a -> m end -> m [a]
-manyTill = error "todo"
+manyTill = placeholder
 
 manyTill_ :: (Alternative m) => m a -> m end -> m ([a], end)
-manyTill_ = error "todo"
+manyTill_ = placeholder
 
 someTill :: (Alternative m) => m a -> m end -> m [a]
-someTill = error "todo"
+someTill = placeholder
 
 someTill_ :: (Alternative m) => m a -> m end -> m ([a], end)
-someTill_ = error "todo"
+someTill_ = placeholder
 
 option :: (Alternative m) => a -> m a -> m a
-option = error "todo"
+option = placeholder
 
 sepBy :: (Alternative m) => m a -> m sep -> m [a]
-sepBy = error "todo"
+sepBy = placeholder
 
 sepBy1 :: (Alternative m) => m a -> m sep -> m [a]
-sepBy1 = error "todo"
+sepBy1 = placeholder
 
 sepEndBy :: (Alternative m) => m a -> m sep -> m [a]
-sepEndBy = error "todo"
+sepEndBy = placeholder
 
 sepEndBy1 :: (Alternative m) => m a -> m sep -> m [a]
-sepEndBy1 = error "todo"
+sepEndBy1 = placeholder
 
 skipMany :: (Alternative m) => m a -> m ()
-skipMany = error "todo"
+skipMany = placeholder
 
 skipSome :: (Alternative m) => m a -> m ()
-skipSome = error "todo"
+skipSome = placeholder
 
 skipCount :: (Applicative m) => Int -> m a -> m ()
-skipCount = error "todo"
+skipCount = placeholder
 
 skipManyTill :: (Alternative m) => m a -> m end -> m end
-skipManyTill = error "todo"
+skipManyTill = placeholder
 
 skipSomeTill :: (Alternative m) => m a -> m end -> m end
-skipSomeTill = error "todo"
+skipSomeTill = placeholder

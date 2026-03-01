@@ -166,275 +166,276 @@ import Data.Traversable
   ( mapAccumL,
     mapAccumR,
   )
+import Hazy (placeholder)
 import Prelude (Integral, Num, error)
 
 infixr 5 ++
 
 (++) :: [a] -> [a] -> [a]
-(++) = error "todo"
+(++) = placeholder
 
 head :: [a] -> a
-head = error "todo"
+head = placeholder
 
 last :: [a] -> a
-last = error "todo"
+last = placeholder
 
 tail :: [a] -> [a]
-tail = error "todo"
+tail = placeholder
 
 init :: [a] -> [a]
-init = error "todo"
+init = placeholder
 
 uncons :: [a] -> Maybe (a, [a])
-uncons = error "todo"
+uncons = placeholder
 
 singleton :: a -> [a]
-singleton = error "todo"
+singleton = placeholder
 
 map :: (a -> b) -> [a] -> [b]
-map = error "todo"
+map = placeholder
 
 reverse :: [a] -> [a]
-reverse = error "todo"
+reverse = placeholder
 
 intersperse :: a -> [a] -> [a]
-intersperse = error "todo"
+intersperse = placeholder
 
 intercalate :: [a] -> [[a]] -> [a]
-intercalate = error "todo"
+intercalate = placeholder
 
 transpose :: [[a]] -> [[a]]
-transpose = error "todo"
+transpose = placeholder
 
 subsequences :: [a] -> [[a]]
-subsequences = error "todo"
+subsequences = placeholder
 
 permutations :: [a] -> [[a]]
-permutations = error "todo"
+permutations = placeholder
 
 scanl :: (b -> a -> b) -> b -> [a] -> [b]
-scanl = error "todo"
+scanl = placeholder
 
 scanl' :: (b -> a -> b) -> b -> [a] -> [b]
-scanl' = error "todo"
+scanl' = placeholder
 
 scanl1 :: (a -> a -> a) -> [a] -> [a]
-scanl1 = error "todo"
+scanl1 = placeholder
 
 scanr :: (a -> b -> b) -> b -> [a] -> [b]
-scanr = error "todo"
+scanr = placeholder
 
 scanr1 :: (a -> a -> a) -> [a] -> [a]
-scanr1 = error "todo"
+scanr1 = placeholder
 
 iterate :: (a -> a) -> a -> [a]
-iterate = error "todo"
+iterate = placeholder
 
 iterate' :: (a -> a) -> a -> [a]
-iterate' = error "todo"
+iterate' = placeholder
 
 repeat :: a -> [a]
-repeat = error "todo"
+repeat = placeholder
 
 replicate :: Int -> a -> [a]
-replicate = error "todo"
+replicate = placeholder
 
 cycle :: [a] -> [a]
-cycle = error "todo"
+cycle = placeholder
 
 unfoldr :: (b -> Maybe (a, b)) -> b -> [a]
-unfoldr = error "todo"
+unfoldr = placeholder
 
 take :: Int -> [a] -> [a]
-take = error "todo"
+take = placeholder
 
 drop :: Int -> [a] -> [a]
-drop = error "todo"
+drop = placeholder
 
 splitAt :: Int -> [a] -> ([a], [a])
-splitAt = error "todo"
+splitAt = placeholder
 
 takeWhile :: (a -> Bool) -> [a] -> [a]
-takeWhile = error "todo"
+takeWhile = placeholder
 
 dropWhile :: (a -> Bool) -> [a] -> [a]
-dropWhile = error "todo"
+dropWhile = placeholder
 
 dropWhileEnd :: (a -> Bool) -> [a] -> [a]
-dropWhileEnd = error "todo"
+dropWhileEnd = placeholder
 
 span :: (a -> Bool) -> [a] -> ([a], [a])
-span = error "todo"
+span = placeholder
 
 break :: (a -> Bool) -> [a] -> ([a], [a])
-break = error "todo"
+break = placeholder
 
 stripPrefix :: (Eq a) => [a] -> [a] -> Maybe [a]
-stripPrefix = error "todo"
+stripPrefix = placeholder
 
 group :: (Eq a) => [a] -> [[a]]
-group = error "todo"
+group = placeholder
 
 inits :: [a] -> [[a]]
-inits = error "todo"
+inits = placeholder
 
 tails :: [a] -> [[a]]
-tails = error "todo"
+tails = placeholder
 
 isPrefixOf :: (Eq a) => [a] -> [a] -> Bool
-isPrefixOf = error "todo"
+isPrefixOf = placeholder
 
 isSuffixOf :: (Eq a) => [a] -> [a] -> Bool
-isSuffixOf = error "todo"
+isSuffixOf = placeholder
 
 isInfixOf :: (Eq a) => [a] -> [a] -> Bool
-isInfixOf = error "todo"
+isInfixOf = placeholder
 
 isSubsequenceOf :: (Eq a) => [a] -> [a] -> Bool
-isSubsequenceOf = error "todo"
+isSubsequenceOf = placeholder
 
 lookup :: (Eq a) => a -> [(a, b)] -> Maybe b
-lookup = error "todo"
+lookup = placeholder
 
 filter :: (a -> Bool) -> [a] -> [a]
-filter = error "todo"
+filter = placeholder
 
 partition :: (a -> Bool) -> [a] -> ([a], [a])
-partition = error "todo"
+partition = placeholder
 
 (!!) :: [a] -> Int -> a
-(!!) = error "todo"
+(!!) = placeholder
 
 elemIndex :: (Eq a) => a -> [a] -> Maybe Int
-elemIndex = error "todo"
+elemIndex = placeholder
 
 elemIndices :: (Eq a) => a -> [a] -> [Int]
-elemIndices = error "todo"
+elemIndices = placeholder
 
 findIndex :: (a -> Bool) -> [a] -> Maybe Int
-findIndex = error "todo"
+findIndex = placeholder
 
 findIndices :: (a -> Bool) -> [a] -> [Int]
-findIndices = error "todo"
+findIndices = placeholder
 
 zip :: [a] -> [b] -> [(a, b)]
-zip = error "todo"
+zip = placeholder
 
 zip3 :: [a] -> [b] -> [c] -> [(a, b, c)]
-zip3 = error "todo"
+zip3 = placeholder
 
 zip4 :: [a] -> [b] -> [c] -> [d] -> [(a, b, c, d)]
-zip4 = error "todo"
+zip4 = placeholder
 
 zip5 :: [a] -> [b] -> [c] -> [d] -> [e] -> [(a, b, c, d, e)]
-zip5 = error "todo"
+zip5 = placeholder
 
 zip6 :: [a] -> [b] -> [c] -> [d] -> [e] -> [f] -> [(a, b, c, d, e, f)]
-zip6 = error "todo"
+zip6 = placeholder
 
 zip7 :: [a] -> [b] -> [c] -> [d] -> [e] -> [f] -> [g] -> [(a, b, c, d, e, f, g)]
-zip7 = error "todo"
+zip7 = placeholder
 
 zipWith :: (a -> b -> c) -> [a] -> [b] -> [c]
-zipWith = error "todo"
+zipWith = placeholder
 
 zipWith3 :: (a -> b -> c -> d) -> [a] -> [b] -> [c] -> [d]
-zipWith3 = error "todo"
+zipWith3 = placeholder
 
 zipWith4 :: (a -> b -> c -> d -> e) -> [a] -> [b] -> [c] -> [d] -> [e]
-zipWith4 = error "todo"
+zipWith4 = placeholder
 
 zipWith5 :: (a -> b -> c -> d -> e -> f) -> [a] -> [b] -> [c] -> [d] -> [e] -> [f]
-zipWith5 = error "todo"
+zipWith5 = placeholder
 
 zipWith6 :: (a -> b -> c -> d -> e -> f -> g) -> [a] -> [b] -> [c] -> [d] -> [e] -> [f] -> [g]
-zipWith6 = error "todo"
+zipWith6 = placeholder
 
 zipWith7 :: (a -> b -> c -> d -> e -> f -> g -> h) -> [a] -> [b] -> [c] -> [d] -> [e] -> [f] -> [g] -> [h]
-zipWith7 = error "todo"
+zipWith7 = placeholder
 
 unzip :: [(a, b)] -> ([a], [b])
-unzip = error "todo"
+unzip = placeholder
 
 unzip3 :: [(a, b, c)] -> ([a], [b], [c])
-unzip3 = error "todo"
+unzip3 = placeholder
 
 unzip4 :: [(a, b, c, d)] -> ([a], [b], [c], [d])
-unzip4 = error "todo"
+unzip4 = placeholder
 
 unzip5 :: [(a, b, c, d, e)] -> ([a], [b], [c], [d], [e])
-unzip5 = error "todo"
+unzip5 = placeholder
 
 unzip6 :: [(a, b, c, d, e, f)] -> ([a], [b], [c], [d], [e], [f])
-unzip6 = error "todo"
+unzip6 = placeholder
 
 unzip7 :: [(a, b, c, d, e, f, g)] -> ([a], [b], [c], [d], [e], [f], [g])
-unzip7 = error "todo"
+unzip7 = placeholder
 
 nub :: (Eq a) => [a] -> [a]
-nub = error "todo"
+nub = placeholder
 
 delete :: (Eq a) => a -> [a] -> [a]
-delete = error "todo"
+delete = placeholder
 
 infix 5 \\
 
 (\\) :: (Eq a) => [a] -> [a] -> [a]
-(\\) = error "todo"
+(\\) = placeholder
 
 union :: (Eq a) => [a] -> [a] -> [a]
-union = error "todo"
+union = placeholder
 
 intersect :: (Eq a) => [a] -> [a] -> [a]
-intersect = error "todo"
+intersect = placeholder
 
 sort :: (Ord a) => [a] -> [a]
-sort = error "todo"
+sort = placeholder
 
 sortOn :: (Ord b) => (a -> b) -> [a] -> [a]
-sortOn = error "todo"
+sortOn = placeholder
 
 insert :: (Ord a) => a -> [a] -> [a]
-insert = error "todo"
+insert = placeholder
 
 nubBy :: (a -> a -> Bool) -> [a] -> [a]
-nubBy = error "todo"
+nubBy = placeholder
 
 deleteBy :: (a -> a -> Bool) -> a -> [a] -> [a]
-deleteBy = error "todo"
+deleteBy = placeholder
 
 deleteFirstsBy :: (a -> a -> Bool) -> [a] -> [a] -> [a]
-deleteFirstsBy = error "todo"
+deleteFirstsBy = placeholder
 
 unionBy :: (a -> a -> Bool) -> [a] -> [a] -> [a]
-unionBy = error "todo"
+unionBy = placeholder
 
 intersectBy :: (a -> a -> Bool) -> [a] -> [a] -> [a]
-intersectBy = error "todo"
+intersectBy = placeholder
 
 groupBy :: (a -> a -> Bool) -> [a] -> [[a]]
-groupBy = error "todo"
+groupBy = placeholder
 
 sortBy :: (a -> a -> Ordering) -> [a] -> [a]
-sortBy = error "todo"
+sortBy = placeholder
 
 insertBy :: (a -> a -> Ordering) -> a -> [a] -> [a]
-insertBy = error "todo"
+insertBy = placeholder
 
 genericLength :: (Num i) => [a] -> i
-genericLength = error "todo"
+genericLength = placeholder
 
 genericTake :: (Integral i) => i -> [a] -> [a]
-genericTake = error "todo"
+genericTake = placeholder
 
 genericDrop :: (Integral i) => i -> [a] -> [a]
-genericDrop = error "todo"
+genericDrop = placeholder
 
 genericSplitAt :: (Integral i) => i -> [a] -> ([a], [a])
-genericSplitAt = error "todo"
+genericSplitAt = placeholder
 
 genericIndex :: (Integral i) => [a] -> i -> a
-genericIndex = error "todo"
+genericIndex = placeholder
 
 genericReplicate :: (Integral i) => i -> a -> [a]
-genericReplicate = error "todo"
+genericReplicate = placeholder

@@ -15,39 +15,39 @@ module Data.Text.IO
 where
 
 import Data.Text (Text)
-import Hazy (putStrLn)
+import Hazy (placeholder, putStrLn)
 import System.IO (Handle)
 import Prelude (FilePath, IO, error)
 
 readFile :: FilePath -> IO Text
-readFile = error "todo"
+readFile = placeholder
 
 writeFile :: FilePath -> Text -> IO ()
-writeFile = error "todo"
+writeFile = placeholder
 
 appendFile :: FilePath -> Text -> IO ()
-appendFile = error "todo"
+appendFile = placeholder
 
 hGetContents :: Handle -> IO Text
-hGetContents = error "todo"
+hGetContents = placeholder
 
 hGetLine :: Handle -> IO Text
-hGetLine = error "todo"
+hGetLine = placeholder
 
 hPutStr :: Handle -> Text -> IO ()
-hPutStr = error "todo"
+hPutStr = placeholder
 
 hPutStrLn :: Handle -> Text -> IO ()
-hPutStrLn = error "todo"
+hPutStrLn = placeholder
 
 interact :: (Text -> Text) -> IO ()
-interact = error "todo"
+interact = placeholder
 
 getContents :: IO Text
-getContents = error "todo"
+getContents = placeholder
 
 getLine :: IO Text
-getLine = error "todo"
+getLine = placeholder
 
 putStr :: Text -> IO ()
-putStr = error "todo"
+putStr = placeholder

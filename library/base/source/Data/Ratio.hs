@@ -8,6 +8,8 @@ module Data.Ratio
   )
 where
 
+import Hazy (placeholder)
+
 data Ratio a
 
 type Rational = Ratio Integer
@@ -15,13 +17,13 @@ type Rational = Ratio Integer
 infixl 7 %
 
 (%) :: (Integral a) => a -> a -> Ratio a
-(%) = error "todo"
+(%) = placeholder
 
 numerator :: Ratio a -> a
-numerator = error "todo"
+numerator = placeholder
 
 denominator :: Ratio a -> a
-denominator = error "todo"
+denominator = placeholder
 
 approxRational :: (RealFrac a) => a -> a -> Rational
-approxRational = error "todo"
+approxRational = placeholder

@@ -131,167 +131,168 @@ where
 
 import Data.Semigroup (Arg)
 import Data.Set (Set)
+import Hazy (placeholder)
 
 data Map k a
 
 empty :: Map k a
-empty = error "todo"
+empty = placeholder
 
 singleton :: k -> a -> Map k a
-singleton = error "todo"
+singleton = placeholder
 
 fromSet :: (k -> a) -> Set k -> Map k a
-fromSet = error "todo"
+fromSet = placeholder
 
 fromArgSet :: Set (Arg k a) -> Map k a
-fromArgSet = error "todo"
+fromArgSet = placeholder
 
 fromList :: (Ord k) => [(k, a)] -> Map k a
-fromList = error "todo"
+fromList = placeholder
 
 fromListWith :: (Ord k) => (a -> a -> a) -> [(k, a)] -> Map k a
-fromListWith = error "todo"
+fromListWith = placeholder
 
 fromListWithKey :: (Ord k) => (k -> a -> a -> a) -> [(k, a)] -> Map k a
-fromListWithKey = error "todo"
+fromListWithKey = placeholder
 
 fromAscList :: (Eq k) => [(k, a)] -> Map k a
-fromAscList = error "todo"
+fromAscList = placeholder
 
 fromAscListWith :: (Eq k) => (a -> a -> a) -> [(k, a)] -> Map k a
-fromAscListWith = error "todo"
+fromAscListWith = placeholder
 
 fromAscListWithKey :: (Eq k) => (k -> a -> a -> a) -> [(k, a)] -> Map k a
-fromAscListWithKey = error "todo"
+fromAscListWithKey = placeholder
 
 fromDistinctAscList :: [(k, a)] -> Map k a
-fromDistinctAscList = error "todo"
+fromDistinctAscList = placeholder
 
 fromDescList :: (Eq k) => [(k, a)] -> Map k a
-fromDescList = error "todo"
+fromDescList = placeholder
 
 fromDescListWith :: (Eq k) => (a -> a -> a) -> [(k, a)] -> Map k a
-fromDescListWith = error "todo"
+fromDescListWith = placeholder
 
 fromDescListWithKey :: (Eq k) => (k -> a -> a -> a) -> [(k, a)] -> Map k a
-fromDescListWithKey = error "todo"
+fromDescListWithKey = placeholder
 
 fromDistinctDescList :: [(k, a)] -> Map k a
-fromDistinctDescList = error "todo"
+fromDistinctDescList = placeholder
 
 insert :: (Ord k) => k -> a -> Map k a -> Map k a
-insert = error "todo"
+insert = placeholder
 
 insertWith :: (Ord k) => (a -> a -> a) -> k -> a -> Map k a -> Map k a
-insertWith = error "todo"
+insertWith = placeholder
 
 insertWithKey :: (Ord k) => (k -> a -> a -> a) -> k -> a -> Map k a -> Map k a
-insertWithKey = error "todo"
+insertWithKey = placeholder
 
 insertLookupWithKey :: (Ord k) => (k -> a -> a -> a) -> k -> a -> Map k a -> (Maybe a, Map k a)
-insertLookupWithKey = error "todo"
+insertLookupWithKey = placeholder
 
 delete :: (Ord k) => k -> Map k a -> Map k a
-delete = error "todo"
+delete = placeholder
 
 adjust :: (Ord k) => (a -> a) -> k -> Map k a -> Map k a
-adjust = error "todo"
+adjust = placeholder
 
 adjustWithKey :: (Ord k) => (k -> a -> a) -> k -> Map k a -> Map k a
-adjustWithKey = error "todo"
+adjustWithKey = placeholder
 
 update :: (Ord k) => (a -> Maybe a) -> k -> Map k a -> Map k a
-update = error "todo"
+update = placeholder
 
 updateWithKey :: (Ord k) => (k -> a -> Maybe a) -> k -> Map k a -> Map k a
-updateWithKey = error "todo"
+updateWithKey = placeholder
 
 updateLookupWithKey :: (Ord k) => (k -> a -> Maybe a) -> k -> Map k a -> (Maybe a, Map k a)
-updateLookupWithKey = error "todo"
+updateLookupWithKey = placeholder
 
 alter :: (Ord k) => (Maybe a -> Maybe a) -> k -> Map k a -> Map k a
-alter = error "todo"
+alter = placeholder
 
 alterF :: (Functor f, Ord k) => (Maybe a -> f (Maybe a)) -> k -> Map k a -> f (Map k a)
-alterF = error "todo"
+alterF = placeholder
 
 lookup :: (Ord k) => k -> Map k a -> Maybe a
-lookup = error "todo"
+lookup = placeholder
 
 (!?) :: (Ord k) => Map k a -> k -> Maybe a
-(!?) = error "todo"
+(!?) = placeholder
 
 (!) :: (Ord k) => Map k a -> k -> a
-(!) = error "todo"
+(!) = placeholder
 
 findWithDefault :: (Ord k) => a -> k -> Map k a -> a
-findWithDefault = error "todo"
+findWithDefault = placeholder
 
 member :: (Ord k) => k -> Map k a -> Bool
-member = error "todo"
+member = placeholder
 
 notMember :: (Ord k) => k -> Map k a -> Bool
-notMember = error "todo"
+notMember = placeholder
 
 lookupLT :: (Ord k) => k -> Map k v -> Maybe (k, v)
-lookupLT = error "todo"
+lookupLT = placeholder
 
 lookupGT :: (Ord k) => k -> Map k v -> Maybe (k, v)
-lookupGT = error "todo"
+lookupGT = placeholder
 
 lookupLE :: (Ord k) => k -> Map k v -> Maybe (k, v)
-lookupLE = error "todo"
+lookupLE = placeholder
 
 lookupGE :: (Ord k) => k -> Map k v -> Maybe (k, v)
-lookupGE = error "todo"
+lookupGE = placeholder
 
 null :: Map k a -> Bool
-null = error "todo"
+null = placeholder
 
 size :: Map k a -> Int
-size = error "todo"
+size = placeholder
 
 union :: (Ord k) => Map k a -> Map k a -> Map k a
-union = error "todo"
+union = placeholder
 
 unionWith :: (Ord k) => (a -> a -> a) -> Map k a -> Map k a -> Map k a
-unionWith = error "todo"
+unionWith = placeholder
 
 unionWithKey :: (Ord k) => (k -> a -> a -> a) -> Map k a -> Map k a -> Map k a
-unionWithKey = error "todo"
+unionWithKey = placeholder
 
 unions :: (Foldable f, Ord k) => f (Map k a) -> Map k a
-unions = error "todo"
+unions = placeholder
 
 unionsWith :: (Foldable f, Ord k) => (a -> a -> a) -> f (Map k a) -> Map k a
-unionsWith = error "todo"
+unionsWith = placeholder
 
 difference :: (Ord k) => Map k a -> Map k b -> Map k a
-difference = error "todo"
+difference = placeholder
 
 (\\) :: (Ord k) => Map k a -> Map k b -> Map k a
-(\\) = error "todo"
+(\\) = placeholder
 
 differenceWith :: (Ord k) => (a -> b -> Maybe a) -> Map k a -> Map k b -> Map k a
-differenceWith = error "todo"
+differenceWith = placeholder
 
 differenceWithKey :: (Ord k) => (k -> a -> b -> Maybe a) -> Map k a -> Map k b -> Map k a
-differenceWithKey = error "todo"
+differenceWithKey = placeholder
 
 intersection :: (Ord k) => Map k a -> Map k b -> Map k a
-intersection = error "todo"
+intersection = placeholder
 
 intersectionWith :: (Ord k) => (a -> b -> c) -> Map k a -> Map k b -> Map k c
-intersectionWith = error "todo"
+intersectionWith = placeholder
 
 intersectionWithKey :: (Ord k) => (k -> a -> b -> c) -> Map k a -> Map k b -> Map k c
-intersectionWithKey = error "todo"
+intersectionWithKey = placeholder
 
 disjoint :: (Ord k) => Map k a -> Map k b -> Bool
-disjoint = error "todo"
+disjoint = placeholder
 
 compose :: (Ord b) => Map b c -> Map a b -> Map a c
-compose = error "todo"
+compose = placeholder
 
 mergeWithKey ::
   (Ord k) =>
@@ -301,220 +302,220 @@ mergeWithKey ::
   Map k a ->
   Map k b ->
   Map k c
-mergeWithKey = error "todo"
+mergeWithKey = placeholder
 
 map :: (a -> b) -> Map k a -> Map k b
-map = error "todo"
+map = placeholder
 
 mapWithKey :: (k -> a -> b) -> Map k a -> Map k b
-mapWithKey = error "todo"
+mapWithKey = placeholder
 
 traverseWithKey :: (Applicative t) => (k -> a -> t b) -> Map k a -> t (Map k b)
-traverseWithKey = error "todo"
+traverseWithKey = placeholder
 
 traverseMaybeWithKey :: (Applicative f) => (k -> a -> f (Maybe b)) -> Map k a -> f (Map k b)
-traverseMaybeWithKey = error "todo"
+traverseMaybeWithKey = placeholder
 
 mapAccum :: (a -> b -> (a, c)) -> a -> Map k b -> (a, Map k c)
-mapAccum = error "todo"
+mapAccum = placeholder
 
 mapAccumWithKey :: (a -> k -> b -> (a, c)) -> a -> Map k b -> (a, Map k c)
-mapAccumWithKey = error "todo"
+mapAccumWithKey = placeholder
 
 mapAccumRWithKey :: (a -> k -> b -> (a, c)) -> a -> Map k b -> (a, Map k c)
-mapAccumRWithKey = error "todo"
+mapAccumRWithKey = placeholder
 
 mapKeys :: (Ord k2) => (k1 -> k2) -> Map k1 a -> Map k2 a
-mapKeys = error "todo"
+mapKeys = placeholder
 
 mapKeysWith :: (Ord k2) => (a -> a -> a) -> (k1 -> k2) -> Map k1 a -> Map k2 a
-mapKeysWith = error "todo"
+mapKeysWith = placeholder
 
 mapKeysMonotonic :: (k1 -> k2) -> Map k1 a -> Map k2 a
-mapKeysMonotonic = error "todo"
+mapKeysMonotonic = placeholder
 
 foldr :: (a -> b -> b) -> b -> Map k a -> b
-foldr = error "todo"
+foldr = placeholder
 
 foldl :: (a -> b -> a) -> a -> Map k b -> a
-foldl = error "todo"
+foldl = placeholder
 
 foldrWithKey :: (k -> a -> b -> b) -> b -> Map k a -> b
-foldrWithKey = error "todo"
+foldrWithKey = placeholder
 
 foldlWithKey :: (a -> k -> b -> a) -> a -> Map k b -> a
-foldlWithKey = error "todo"
+foldlWithKey = placeholder
 
 foldMapWithKey :: (Monoid m) => (k -> a -> m) -> Map k a -> m
-foldMapWithKey = error "todo"
+foldMapWithKey = placeholder
 
 foldr' :: (a -> b -> b) -> b -> Map k a -> b
-foldr' = error "todo"
+foldr' = placeholder
 
 foldl' :: (a -> b -> a) -> a -> Map k b -> a
-foldl' = error "todo"
+foldl' = placeholder
 
 foldrWithKey' :: (k -> a -> b -> b) -> b -> Map k a -> b
-foldrWithKey' = error "todo"
+foldrWithKey' = placeholder
 
 foldlWithKey' :: (a -> k -> b -> a) -> a -> Map k b -> a
-foldlWithKey' = error "todo"
+foldlWithKey' = placeholder
 
 elems :: Map k a -> [a]
-elems = error "todo"
+elems = placeholder
 
 keys :: Map k a -> [k]
-keys = error "todo"
+keys = placeholder
 
 assocs :: Map k a -> [(k, a)]
-assocs = error "todo"
+assocs = placeholder
 
 keysSet :: Map k a -> Set k
-keysSet = error "todo"
+keysSet = placeholder
 
 argSet :: Map k a -> Set (Arg k a)
-argSet = error "todo"
+argSet = placeholder
 
 toList :: Map k a -> [(k, a)]
-toList = error "todo"
+toList = placeholder
 
 toAscList :: Map k a -> [(k, a)]
-toAscList = error "todo"
+toAscList = placeholder
 
 toDescList :: Map k a -> [(k, a)]
-toDescList = error "todo"
+toDescList = placeholder
 
 filter :: (a -> Bool) -> Map k a -> Map k a
-filter = error "todo"
+filter = placeholder
 
 filterWithKey :: (k -> a -> Bool) -> Map k a -> Map k a
-filterWithKey = error "todo"
+filterWithKey = placeholder
 
 restrictKeys :: (Ord k) => Map k a -> Set k -> Map k a
-restrictKeys = error "todo"
+restrictKeys = placeholder
 
 withoutKeys :: (Ord k) => Map k a -> Set k -> Map k a
-withoutKeys = error "todo"
+withoutKeys = placeholder
 
 partition :: (a -> Bool) -> Map k a -> (Map k a, Map k a)
-partition = error "todo"
+partition = placeholder
 
 partitionWithKey :: (k -> a -> Bool) -> Map k a -> (Map k a, Map k a)
-partitionWithKey = error "todo"
+partitionWithKey = placeholder
 
 takeWhileAntitone :: (k -> Bool) -> Map k a -> Map k a
-takeWhileAntitone = error "todo"
+takeWhileAntitone = placeholder
 
 dropWhileAntitone :: (k -> Bool) -> Map k a -> Map k a
-dropWhileAntitone = error "todo"
+dropWhileAntitone = placeholder
 
 spanAntitone :: (k -> Bool) -> Map k a -> (Map k a, Map k a)
-spanAntitone = error "todo"
+spanAntitone = placeholder
 
 mapMaybe :: (a -> Maybe b) -> Map k a -> Map k b
-mapMaybe = error "todo"
+mapMaybe = placeholder
 
 mapMaybeWithKey :: (k -> a -> Maybe b) -> Map k a -> Map k b
-mapMaybeWithKey = error "todo"
+mapMaybeWithKey = placeholder
 
 mapEither :: (a -> Either b c) -> Map k a -> (Map k b, Map k c)
-mapEither = error "todo"
+mapEither = placeholder
 
 mapEitherWithKey :: (k -> a -> Either b c) -> Map k a -> (Map k b, Map k c)
-mapEitherWithKey = error "todo"
+mapEitherWithKey = placeholder
 
 split :: (Ord k) => k -> Map k a -> (Map k a, Map k a)
-split = error "todo"
+split = placeholder
 
 splitLookup :: (Ord k) => k -> Map k a -> (Map k a, Maybe a, Map k a)
-splitLookup = error "todo"
+splitLookup = placeholder
 
 splitRoot :: Map k b -> [Map k b]
-splitRoot = error "todo"
+splitRoot = placeholder
 
 isSubmapOf :: (Ord k, Eq a) => Map k a -> Map k a -> Bool
-isSubmapOf = error "todo"
+isSubmapOf = placeholder
 
 isSubmapOfBy :: (Ord k) => (a -> b -> Bool) -> Map k a -> Map k b -> Bool
-isSubmapOfBy = error "todo"
+isSubmapOfBy = placeholder
 
 isProperSubmapOf :: (Ord k, Eq a) => Map k a -> Map k a -> Bool
-isProperSubmapOf = error "todo"
+isProperSubmapOf = placeholder
 
 isProperSubmapOfBy :: (Ord k) => (a -> b -> Bool) -> Map k a -> Map k b -> Bool
-isProperSubmapOfBy = error "todo"
+isProperSubmapOfBy = placeholder
 
 lookupIndex :: (Ord k) => k -> Map k a -> Maybe Int
-lookupIndex = error "todo"
+lookupIndex = placeholder
 
 findIndex :: (Ord k) => k -> Map k a -> Int
-findIndex = error "todo"
+findIndex = placeholder
 
 elemAt :: Int -> Map k a -> (k, a)
-elemAt = error "todo"
+elemAt = placeholder
 
 updateAt :: (k -> a -> Maybe a) -> Int -> Map k a -> Map k a
-updateAt = error "todo"
+updateAt = placeholder
 
 deleteAt :: Int -> Map k a -> Map k a
-deleteAt = error "todo"
+deleteAt = placeholder
 
 take :: Int -> Map k a -> Map k a
-take = error "todo"
+take = placeholder
 
 drop :: Int -> Map k a -> Map k a
-drop = error "todo"
+drop = placeholder
 
 splitAt :: Int -> Map k a -> (Map k a, Map k a)
-splitAt = error "todo"
+splitAt = placeholder
 
 lookupMin :: Map k a -> Maybe (k, a)
-lookupMin = error "todo"
+lookupMin = placeholder
 
 lookupMax :: Map k a -> Maybe (k, a)
-lookupMax = error "todo"
+lookupMax = placeholder
 
 findMin :: Map k a -> (k, a)
-findMin = error "todo"
+findMin = placeholder
 
 findMax :: Map k a -> (k, a)
-findMax = error "todo"
+findMax = placeholder
 
 deleteMin :: Map k a -> Map k a
-deleteMin = error "todo"
+deleteMin = placeholder
 
 deleteMax :: Map k a -> Map k a
-deleteMax = error "todo"
+deleteMax = placeholder
 
 deleteFindMin :: Map k a -> ((k, a), Map k a)
-deleteFindMin = error "todo"
+deleteFindMin = placeholder
 
 deleteFindMax :: Map k a -> ((k, a), Map k a)
-deleteFindMax = error "todo"
+deleteFindMax = placeholder
 
 updateMin :: (a -> Maybe a) -> Map k a -> Map k a
-updateMin = error "todo"
+updateMin = placeholder
 
 updateMax :: (a -> Maybe a) -> Map k a -> Map k a
-updateMax = error "todo"
+updateMax = placeholder
 
 updateMinWithKey :: (k -> a -> Maybe a) -> Map k a -> Map k a
-updateMinWithKey = error "todo"
+updateMinWithKey = placeholder
 
 updateMaxWithKey :: (k -> a -> Maybe a) -> Map k a -> Map k a
-updateMaxWithKey = error "todo"
+updateMaxWithKey = placeholder
 
 minView :: Map k a -> Maybe (a, Map k a)
-minView = error "todo"
+minView = placeholder
 
 maxView :: Map k a -> Maybe (a, Map k a)
-maxView = error "todo"
+maxView = placeholder
 
 minViewWithKey :: Map k a -> Maybe ((k, a), Map k a)
-minViewWithKey = error "todo"
+minViewWithKey = placeholder
 
 maxViewWithKey :: Map k a -> Maybe ((k, a), Map k a)
-maxViewWithKey = error "todo"
+maxViewWithKey = placeholder
 
 valid :: (Ord k) => Map k a -> Bool
-valid = error "todo"
+valid = placeholder

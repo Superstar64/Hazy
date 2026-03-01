@@ -13,6 +13,7 @@ import Data.Bool (Bool)
 import Data.Char (Char)
 import Data.Int (Int)
 import Data.String (String)
+import Hazy (placeholder)
 import Prelude (error)
 
 type ShowS = String -> String
@@ -23,16 +24,16 @@ class Show a where
   showList :: [a] -> ShowS
 
 shows :: (Show a) => a -> ShowS
-shows = error "todo"
+shows = placeholder
 
 showChar :: Char -> ShowS
-showChar = error "todo"
+showChar = placeholder
 
 showString :: String -> ShowS
-showString = error "todo"
+showString = placeholder
 
 showParen :: Bool -> ShowS -> ShowS
-showParen = error "todo"
+showParen = placeholder
 
 showListWith :: (a -> ShowS) -> [a] -> ShowS
-showListWith = error "todo"
+showListWith = placeholder

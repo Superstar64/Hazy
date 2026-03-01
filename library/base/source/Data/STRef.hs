@@ -9,20 +9,21 @@ module Data.STRef
 where
 
 import Control.Monad.ST (ST)
+import Hazy (placeholder)
 
 data STRef s a
 
 newSTRef :: a -> ST s (STRef s a)
-newSTRef = error "todo"
+newSTRef = placeholder
 
 readSTRef :: STRef s a -> ST s a
-readSTRef = error "todo"
+readSTRef = placeholder
 
 writeSTRef :: STRef s a -> a -> ST s ()
-writeSTRef = error "todo"
+writeSTRef = placeholder
 
 modifySTRef :: STRef s a -> (a -> a) -> ST s ()
-modifySTRef = error "todo"
+modifySTRef = placeholder
 
 modifySTRef' :: STRef s a -> (a -> a) -> ST s ()
-modifySTRef' = error "todo"
+modifySTRef' = placeholder

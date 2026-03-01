@@ -7,6 +7,7 @@ module Data.Functor
   )
 where
 
+import Hazy (placeholder)
 import Prelude (error)
 
 class Functor f where
@@ -17,17 +18,17 @@ class Functor f where
 infixl 4 $>
 
 ($>) :: (Functor f) => f a -> b -> f b
-($>) = error "todo"
+($>) = placeholder
 
 infixl 4 <$>
 
 (<$>) :: (Functor f) => (a -> b) -> f a -> f b
-(<$>) = error "todo"
+(<$>) = placeholder
 
 infixl 1 <&>
 
 (<&>) :: (Functor f) => f a -> (a -> b) -> f b
-(<&>) = error "todo"
+(<&>) = placeholder
 
 void :: (Functor f) => f a -> f ()
-void = error "todo"
+void = placeholder

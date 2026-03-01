@@ -13,35 +13,37 @@ module System.Environment
   )
 where
 
+import Hazy (placeholder)
+
 getArgs :: IO [String]
-getArgs = error "todo"
+getArgs = placeholder
 
 getProgName :: IO String
-getProgName = error "todo"
+getProgName = placeholder
 
 executablePath :: Maybe (IO (Maybe FilePath))
-executablePath = error "todo"
+executablePath = placeholder
 
 getExecutablePath :: IO FilePath
-getExecutablePath = error "todo"
+getExecutablePath = placeholder
 
 getEnv :: String -> IO String
-getEnv = error "todo"
+getEnv = placeholder
 
 lookupEnv :: String -> IO (Maybe String)
-lookupEnv = error "todo"
+lookupEnv = placeholder
 
 setEnv :: String -> String -> IO ()
-setEnv = error "todo"
+setEnv = placeholder
 
 unsetEnv :: String -> IO ()
-unsetEnv = error "todo"
+unsetEnv = placeholder
 
 withArgs :: [String] -> IO a -> IO a
-withArgs = error "todo"
+withArgs = placeholder
 
 withProgName :: String -> IO a -> IO a
-withProgName = error "todo"
+withProgName = placeholder
 
 getEnvironment :: IO [(String, String)]
-getEnvironment = error "todo"
+getEnvironment = placeholder

@@ -18,6 +18,7 @@ where
 import Data.Foldable (asum)
 import Data.Functor (Functor, (<$), (<$>))
 import Data.Maybe (Maybe)
+import Hazy (placeholder)
 import Prelude (error)
 
 class (Functor f) => Applicative f where
@@ -54,13 +55,13 @@ newtype ZipList a = ZipList
 infixl 4 <**>
 
 (<**>) :: (Applicative f) => f a -> f (a -> b) -> f b
-(<**>) = error "todo"
+(<**>) = placeholder
 
 liftA :: (Applicative f) => (a -> b) -> f a -> f b
-liftA = error "todo"
+liftA = placeholder
 
 liftA3 :: (Applicative f) => (a -> b -> c -> d) -> f a -> f b -> f c -> f d
-liftA3 = error "todo"
+liftA3 = placeholder
 
 optional :: (Alternative f) => f a -> f (Maybe a)
-optional = error "todo"
+optional = placeholder

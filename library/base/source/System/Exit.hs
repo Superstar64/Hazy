@@ -1,17 +1,19 @@
 module System.Exit where
 
+import Hazy (placeholder)
+
 data ExitCode
   = ExitSuccess
   | ExitFailure Int
 
 exitWith :: ExitCode -> IO a
-exitWith = error "todo"
+exitWith = placeholder
 
 exitFailure :: IO a
-exitFailure = error "todo"
+exitFailure = placeholder
 
 exitSuccess :: IO a
-exitSuccess = error "todo"
+exitSuccess = placeholder
 
 die :: String -> IO a
-die = error "todo"
+die = placeholder

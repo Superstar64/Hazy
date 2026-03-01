@@ -55,164 +55,166 @@ module System.FilePath
   )
 where
 
+import Hazy (placeholder)
+
 pathSeparator :: Char
-pathSeparator = error "todo"
+pathSeparator = placeholder
 
 pathSeparators :: [Char]
-pathSeparators = error "todo"
+pathSeparators = placeholder
 
 isPathSeparator :: Char -> Bool
-isPathSeparator = error "todo"
+isPathSeparator = placeholder
 
 searchPathSeparator :: Char
-searchPathSeparator = error "todo"
+searchPathSeparator = placeholder
 
 isSearchPathSeparator :: Char -> Bool
-isSearchPathSeparator = error "todo"
+isSearchPathSeparator = placeholder
 
 extSeparator :: Char
-extSeparator = error "todo"
+extSeparator = placeholder
 
 isExtSeparator :: Char -> Bool
-isExtSeparator = error "todo"
+isExtSeparator = placeholder
 
 splitSearchPath :: String -> [FilePath]
-splitSearchPath = error "todo"
+splitSearchPath = placeholder
 
 getSearchPath :: IO [FilePath]
-getSearchPath = error "todo"
+getSearchPath = placeholder
 
 splitExtension :: FilePath -> (String, String)
-splitExtension = error "todo"
+splitExtension = placeholder
 
 takeExtension :: FilePath -> String
-takeExtension = error "todo"
+takeExtension = placeholder
 
 replaceExtension :: FilePath -> String -> FilePath
-replaceExtension = error "todo"
+replaceExtension = placeholder
 
 infixr 7 -<.>
 
 (-<.>) :: FilePath -> String -> FilePath
-(-<.>) = error "todo"
+(-<.>) = placeholder
 
 dropExtension :: FilePath -> FilePath
-dropExtension = error "todo"
+dropExtension = placeholder
 
 addExtension :: FilePath -> String -> FilePath
-addExtension = error "todo"
+addExtension = placeholder
 
 hasExtension :: FilePath -> Bool
-hasExtension = error "todo"
+hasExtension = placeholder
 
 infixr 7 <.>
 
 (<.>) :: FilePath -> String -> FilePath
-(<.>) = error "todo"
+(<.>) = placeholder
 
 splitExtensions :: FilePath -> (FilePath, String)
-splitExtensions = error "todo"
+splitExtensions = placeholder
 
 dropExtensions :: FilePath -> FilePath
-dropExtensions = error "todo"
+dropExtensions = placeholder
 
 takeExtensions :: FilePath -> String
-takeExtensions = error "todo"
+takeExtensions = placeholder
 
 replaceExtensions :: FilePath -> String -> FilePath
-replaceExtensions = error "todo"
+replaceExtensions = placeholder
 
 isExtensionOf :: String -> FilePath -> Bool
-isExtensionOf = error "todo"
+isExtensionOf = placeholder
 
 stripExtension :: String -> FilePath -> Maybe FilePath
-stripExtension = error "todo"
+stripExtension = placeholder
 
 splitFileName :: FilePath -> (String, String)
-splitFileName = error "todo"
+splitFileName = placeholder
 
 takeFileName :: FilePath -> FilePath
-takeFileName = error "todo"
+takeFileName = placeholder
 
 replaceFileName :: FilePath -> String -> FilePath
-replaceFileName = error "todo"
+replaceFileName = placeholder
 
 dropFileName :: FilePath -> FilePath
-dropFileName = error "todo"
+dropFileName = placeholder
 
 takeBaseName :: FilePath -> String
-takeBaseName = error "todo"
+takeBaseName = placeholder
 
 replaceBaseName :: FilePath -> String -> FilePath
-replaceBaseName = error "todo"
+replaceBaseName = placeholder
 
 takeDirectory :: FilePath -> FilePath
-takeDirectory = error "todo"
+takeDirectory = placeholder
 
 replaceDirectory :: FilePath -> String -> FilePath
-replaceDirectory = error "todo"
+replaceDirectory = placeholder
 
 combine :: FilePath -> FilePath -> FilePath
-combine = error "todo"
+combine = placeholder
 
 infixr 5 </>
 
 (</>) :: FilePath -> FilePath -> FilePath
-(</>) = error "todo"
+(</>) = placeholder
 
 splitPath :: FilePath -> [FilePath]
-splitPath = error "todo"
+splitPath = placeholder
 
 joinPath :: [FilePath] -> FilePath
-joinPath = error "todo"
+joinPath = placeholder
 
 splitDirectories :: FilePath -> [FilePath]
-splitDirectories = error "todo"
+splitDirectories = placeholder
 
 splitDrive :: FilePath -> (FilePath, FilePath)
-splitDrive = error "todo"
+splitDrive = placeholder
 
 joinDrive :: FilePath -> FilePath -> FilePath
-joinDrive = error "todo"
+joinDrive = placeholder
 
 takeDrive :: FilePath -> FilePath
-takeDrive = error "todo"
+takeDrive = placeholder
 
 hasDrive :: FilePath -> Bool
-hasDrive = error "todo"
+hasDrive = placeholder
 
 dropDrive :: FilePath -> FilePath
-dropDrive = error "todo"
+dropDrive = placeholder
 
 isDrive :: FilePath -> Bool
-isDrive = error "todo"
+isDrive = placeholder
 
 hasTrailingPathSeparator :: FilePath -> Bool
-hasTrailingPathSeparator = error "todo"
+hasTrailingPathSeparator = placeholder
 
 addTrailingPathSeparator :: FilePath -> FilePath
-addTrailingPathSeparator = error "todo"
+addTrailingPathSeparator = placeholder
 
 dropTrailingPathSeparator :: FilePath -> FilePath
-dropTrailingPathSeparator = error "todo"
+dropTrailingPathSeparator = placeholder
 
 normalise :: FilePath -> FilePath
-normalise = error "todo"
+normalise = placeholder
 
 equalFilePath :: FilePath -> FilePath -> Bool
-equalFilePath = error "todo"
+equalFilePath = placeholder
 
 makeRelative :: FilePath -> FilePath -> FilePath
-makeRelative = error "todo"
+makeRelative = placeholder
 
 isRelative :: FilePath -> Bool
-isRelative = error "todo"
+isRelative = placeholder
 
 isAbsolute :: FilePath -> Bool
-isAbsolute = error "todo"
+isAbsolute = placeholder
 
 isValid :: FilePath -> Bool
-isValid = error "todo"
+isValid = placeholder
 
 makeValid :: FilePath -> FilePath
-makeValid = error "todo"
+makeValid = placeholder

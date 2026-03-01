@@ -26,71 +26,73 @@ module Numeric
   )
 where
 
+import Hazy (placeholder)
+
 showSigned :: (Real a) => (a -> ShowS) -> Int -> a -> ShowS
-showSigned = error "todo"
+showSigned = placeholder
 
 showIntAtBase :: (Integral a) => a -> (Int -> Char) -> a -> ShowS
-showIntAtBase = error "todo"
+showIntAtBase = placeholder
 
 showInt :: (Integral a) => a -> ShowS
-showInt = error "todo"
+showInt = placeholder
 
 showBin :: (Integral a) => a -> ShowS
-showBin = error "todo"
+showBin = placeholder
 
 showHex :: (Integral a) => a -> ShowS
-showHex = error "todo"
+showHex = placeholder
 
 showOct :: (Integral a) => a -> ShowS
-showOct = error "todo"
+showOct = placeholder
 
 showEFloat :: (RealFloat a) => Maybe Int -> a -> ShowS
-showEFloat = error "todo"
+showEFloat = placeholder
 
 showFFloat :: (RealFloat a) => Maybe Int -> a -> ShowS
-showFFloat = error "todo"
+showFFloat = placeholder
 
 showGFloat :: (RealFloat a) => Maybe Int -> a -> ShowS
-showGFloat = error "todo"
+showGFloat = placeholder
 
 showFFloatAlt :: (RealFloat a) => Maybe Int -> a -> ShowS
-showFFloatAlt = error "todo"
+showFFloatAlt = placeholder
 
 showGFloatAlt :: (RealFloat a) => Maybe Int -> a -> ShowS
-showGFloatAlt = error "todo"
+showGFloatAlt = placeholder
 
 showFloat :: (RealFloat a) => a -> ShowS
-showFloat = error "todo"
+showFloat = placeholder
 
 showHFloat :: (RealFloat a) => a -> ShowS
-showHFloat = error "todo"
+showHFloat = placeholder
 
 floatToDigits :: (RealFloat a) => Integer -> a -> ([Int], Int)
-floatToDigits = error "todo"
+floatToDigits = placeholder
 
 readSigned :: (Real a) => ReadS a -> ReadS a
-readSigned = error "todo"
+readSigned = placeholder
 
 readInt :: (Num a) => a -> (Char -> Bool) -> (Char -> Int) -> ReadS a
-readInt = error "todo"
+readInt = placeholder
 
 readBin :: (Eq a, Num a) => ReadS a
-readBin = error "todo"
+readBin = placeholder
 
 readDec :: (Eq a, Num a) => ReadS a
-readDec = error "todo"
+readDec = placeholder
 
 readOct :: (Eq a, Num a) => ReadS a
-readOct = error "todo"
+readOct = placeholder
 
 readHex :: (Eq a, Num a) => ReadS a
-readHex = error "todo"
+readHex = placeholder
 
 readFloat :: (RealFrac a) => ReadS a
-readFloat = error "todo"
+readFloat = placeholder
 
 lexDigits :: ReadS String
-lexDigits = error "todo"
+lexDigits = placeholder
 
 fromRat :: (RealFloat a) => Rational -> a
-fromRat = error "todo"
+fromRat = placeholder

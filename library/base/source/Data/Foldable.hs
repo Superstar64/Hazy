@@ -31,6 +31,7 @@ import Data.Int (Int)
 import Data.Maybe (Maybe)
 import Data.Monoid (Monoid)
 import Data.Ord (Ord, Ordering)
+import Hazy (placeholder)
 import Prelude (Num, error)
 
 class Foldable t where
@@ -53,61 +54,61 @@ class Foldable t where
   product :: (Num a) => t a -> a
 
 foldrM :: (Foldable t, Monad m) => (a -> b -> m b) -> b -> t a -> m b
-foldrM = error "todo"
+foldrM = placeholder
 
 foldlM :: (Foldable t, Monad m) => (b -> a -> m b) -> b -> t a -> m b
-foldlM = error "todo"
+foldlM = placeholder
 
 traverse_ :: (Foldable t, Applicative f) => (a -> f b) -> t a -> f ()
-traverse_ = error "todo"
+traverse_ = placeholder
 
 for_ :: (Foldable t, Applicative f) => t a -> (a -> f b) -> f ()
-for_ = error "todo"
+for_ = placeholder
 
 sequenceA_ :: (Foldable t, Applicative f) => t (f a) -> f ()
-sequenceA_ = error "todo"
+sequenceA_ = placeholder
 
 asum :: (Foldable t, Alternative f) => t (f a) -> f a
-asum = error "todo"
+asum = placeholder
 
 mapM_ :: (Foldable t, Monad m) => (a -> m b) -> t a -> m ()
-mapM_ = error "todo"
+mapM_ = placeholder
 
 forM_ :: (Foldable t, Monad m) => t a -> (a -> m b) -> m ()
-forM_ = error "todo"
+forM_ = placeholder
 
 sequence_ :: (Foldable t, Monad m) => t (m a) -> m ()
-sequence_ = error "todo"
+sequence_ = placeholder
 
 msum :: (Foldable t, MonadPlus m) => t (m a) -> m a
-msum = error "todo"
+msum = placeholder
 
 concat :: (Foldable t) => t [a] -> [a]
-concat = error "todo"
+concat = placeholder
 
 concatMap :: (Foldable t) => (a -> [b]) -> t a -> [b]
-concatMap = error "todo"
+concatMap = placeholder
 
 and :: (Foldable t) => t Bool -> Bool
-and = error "todo"
+and = placeholder
 
 or :: (Foldable t) => t Bool -> Bool
-or = error "todo"
+or = placeholder
 
 any :: (Foldable t) => (a -> Bool) -> t a -> Bool
-any = error "todo"
+any = placeholder
 
 all :: (Foldable t) => (a -> Bool) -> t a -> Bool
-all = error "todo"
+all = placeholder
 
 maximumBy :: (Foldable t) => (a -> a -> Ordering) -> t a -> a
-maximumBy = error "todo"
+maximumBy = placeholder
 
 minimumBy :: (Foldable t) => (a -> a -> Ordering) -> t a -> a
-minimumBy = error "todo"
+minimumBy = placeholder
 
 notElem :: (Foldable t, Eq a) => a -> t a -> Bool
-notElem = error "todo"
+notElem = placeholder
 
 find :: (Foldable t) => (a -> Bool) -> t a -> Maybe a
-find = error "todo"
+find = placeholder

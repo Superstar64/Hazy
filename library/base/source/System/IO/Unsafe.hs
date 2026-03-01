@@ -6,17 +6,18 @@ module System.IO.Unsafe
   )
 where
 
+import Hazy (placeholder)
 import System.IO (IO)
 import Prelude (error)
 
 unsafePerformIO :: IO a -> a
-unsafePerformIO = error "todo"
+unsafePerformIO = placeholder
 
 unsafeDupablePerformIO :: IO a -> a
-unsafeDupablePerformIO = error "todo"
+unsafeDupablePerformIO = placeholder
 
 unsafeInterleaveIO :: IO a -> IO a
-unsafeInterleaveIO = error "todo"
+unsafeInterleaveIO = placeholder
 
 unsafeFixIO :: (a -> IO a) -> IO a
-unsafeFixIO = error "todo"
+unsafeFixIO = placeholder

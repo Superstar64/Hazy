@@ -1,6 +1,7 @@
 module Data.Bifoldable where
 
 import Control.Applicative (Alternative)
+import Hazy (placeholder)
 
 class Bifoldable p where
   bifold :: (Monoid m) => p m m -> m
@@ -9,97 +10,97 @@ class Bifoldable p where
   bifoldl :: (c -> a -> c) -> (c -> b -> c) -> c -> p a b -> c
 
 bifoldr' :: (Bifoldable t) => (a -> c -> c) -> (b -> c -> c) -> c -> t a b -> c
-bifoldr' = error "todo"
+bifoldr' = placeholder
 
 bifoldr1 :: (Bifoldable t) => (a -> a -> a) -> t a a -> a
-bifoldr1 = error "todo"
+bifoldr1 = placeholder
 
 bifoldrM :: (Bifoldable t, Monad m) => (a -> c -> m c) -> (b -> c -> m c) -> c -> t a b -> m c
-bifoldrM = error "todo"
+bifoldrM = placeholder
 
 bifoldl' :: (Bifoldable t) => (a -> b -> a) -> (a -> c -> a) -> a -> t b c -> a
-bifoldl' = error "todo"
+bifoldl' = placeholder
 
 bifoldl1 :: (Bifoldable t) => (a -> a -> a) -> t a a -> a
-bifoldl1 = error "todo"
+bifoldl1 = placeholder
 
 bifoldlM :: (Bifoldable t, Monad m) => (a -> b -> m a) -> (a -> c -> m a) -> a -> t b c -> m a
-bifoldlM = error "todo"
+bifoldlM = placeholder
 
 bitraverse_ :: (Bifoldable t, Applicative f) => (a -> f c) -> (b -> f d) -> t a b -> f ()
-bitraverse_ = error "todo"
+bitraverse_ = placeholder
 
 bifor_ :: (Bifoldable t, Applicative f) => t a b -> (a -> f c) -> (b -> f d) -> f ()
-bifor_ = error "todo"
+bifor_ = placeholder
 
 bimapM_ :: (Bifoldable t, Applicative f) => (a -> f c) -> (b -> f d) -> t a b -> f ()
-bimapM_ = error "todo"
+bimapM_ = placeholder
 
 biforM_ :: (Bifoldable t, Applicative f) => t a b -> (a -> f c) -> (b -> f d) -> f ()
-biforM_ = error "todo"
+biforM_ = placeholder
 
 bimsum :: (Bifoldable t, Alternative f) => t (f a) (f a) -> f a
-bimsum = error "todo"
+bimsum = placeholder
 
 bisequenceA_ :: (Bifoldable t, Applicative f) => t (f a) (f b) -> f ()
-bisequenceA_ = error "todo"
+bisequenceA_ = placeholder
 
 bisequence_ :: (Bifoldable t, Applicative f) => t (f a) (f b) -> f ()
-bisequence_ = error "todo"
+bisequence_ = placeholder
 
 biasum :: (Bifoldable t, Alternative f) => t (f a) (f a) -> f a
-biasum = error "todo"
+biasum = placeholder
 
 biList :: (Bifoldable t) => t a a -> [a]
-biList = error "todo"
+biList = placeholder
 
 binull :: (Bifoldable t) => t a b -> Bool
-binull = error "todo"
+binull = placeholder
 
 bilength :: (Bifoldable t) => t a b -> Int
-bilength = error "todo"
+bilength = placeholder
 
 bielem :: (Bifoldable t, Eq a) => a -> t a a -> Bool
-bielem = error "todo"
+bielem = placeholder
 
 bimaximum :: forall t a. (Bifoldable t, Ord a) => t a a -> a
-bimaximum = error "todo"
+bimaximum = placeholder
 
 biminimum :: forall t a. (Bifoldable t, Ord a) => t a a -> a
-biminimum = error "todo"
+biminimum = placeholder
 
 bisum :: (Bifoldable t, Num a) => t a a -> a
-bisum = error "todo"
+bisum = placeholder
 
 biproduct :: (Bifoldable t, Num a) => t a a -> a
-biproduct = error "todo"
+biproduct = placeholder
 
 biconcat :: (Bifoldable t) => t [a] [a] -> [a]
-biconcat = error "todo"
+biconcat = placeholder
 
 biconcatMap :: (Bifoldable t) => (a -> [c]) -> (b -> [c]) -> t a b -> [c]
-biconcatMap = error "todo"
+biconcatMap = placeholder
 
 biand :: (Bifoldable t) => t Bool Bool -> Bool
-biand = error "todo"
+biand = placeholder
 
 bior :: (Bifoldable t) => t Bool Bool -> Bool
-bior = error "todo"
+bior = placeholder
 
 biany :: (Bifoldable t) => (a -> Bool) -> (b -> Bool) -> t a b -> Bool
-biany = error "todo"
+biany = placeholder
 
 biall :: (Bifoldable t) => (a -> Bool) -> (b -> Bool) -> t a b -> Bool
-biall = error "todo"
+biall = placeholder
 
 bimaximumBy :: (Bifoldable t) => (a -> a -> Ordering) -> t a a -> a
-bimaximumBy = error "todo"
+bimaximumBy = placeholder
 
 biminimumBy :: (Bifoldable t) => (a -> a -> Ordering) -> t a a -> a
-biminimumBy = error "todo"
+biminimumBy = placeholder
 
 binotElem :: (Bifoldable t, Eq a) => a -> t a a -> Bool
-binotElem = error "todo"
+binotElem = placeholder
 
 bifind :: (Bifoldable t) => (a -> Bool) -> t a a -> Maybe a
-bifind = error "todo"
+bifind = placeholder

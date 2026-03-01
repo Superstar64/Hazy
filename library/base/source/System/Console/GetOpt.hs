@@ -1,13 +1,15 @@
 module System.Console.GetOpt where
 
+import Hazy (placeholder)
+
 getOpt :: ArgOrder a -> [OptDescr a] -> [String] -> ([a], [String], [String])
-getOpt = error "todo"
+getOpt = placeholder
 
 getOpt' :: ArgOrder a -> [OptDescr a] -> [String] -> ([a], [String], [String], [String])
-getOpt' = error "todo"
+getOpt' = placeholder
 
 usageInfo :: String -> [OptDescr a] -> String
-usageInfo = error "todo"
+usageInfo = placeholder
 
 data ArgOrder a
   = RequireOrder

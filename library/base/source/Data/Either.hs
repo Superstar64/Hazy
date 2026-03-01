@@ -12,6 +12,7 @@ module Data.Either
 where
 
 import Data.Bool (Bool)
+import Hazy (placeholder)
 import Prelude (error)
 
 data Either a b
@@ -19,25 +20,25 @@ data Either a b
   | Right b
 
 either :: (a -> c) -> (b -> c) -> Either a b -> c
-either = error "todo"
+either = placeholder
 
 lefts :: [Either a b] -> [a]
-lefts = error "todo"
+lefts = placeholder
 
 rights :: [Either a b] -> [b]
-rights = error "todo"
+rights = placeholder
 
 isLeft :: Either a b -> Bool
-isLeft = error "todo"
+isLeft = placeholder
 
 isRight :: Either a b -> Bool
-isRight = error "todo"
+isRight = placeholder
 
 fromLeft :: a -> Either a b -> a
-fromLeft = error "todo"
+fromLeft = placeholder
 
 fromRight :: b -> Either a b -> b
-fromRight = error "todo"
+fromRight = placeholder
 
 partitionEithers :: [Either a b] -> ([a], [b])
-partitionEithers = error "todo"
+partitionEithers = placeholder

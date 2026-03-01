@@ -13,6 +13,7 @@ module Data.Maybe
 where
 
 import Data.Bool (Bool)
+import Hazy (placeholder)
 import Prelude (error)
 
 data Maybe a
@@ -20,28 +21,28 @@ data Maybe a
   | Just a
 
 maybe :: b -> (a -> b) -> Maybe a -> b
-maybe = error "todo"
+maybe = placeholder
 
 isJust :: Maybe a -> Bool
-isJust = error "todo"
+isJust = placeholder
 
 isNothing :: Maybe a -> Bool
-isNothing = error "todo"
+isNothing = placeholder
 
 fromJust :: Maybe a -> a
-fromJust = error "todo"
+fromJust = placeholder
 
 fromMaybe :: a -> Maybe a -> a
-fromMaybe = error "todo"
+fromMaybe = placeholder
 
 listToMaybe :: [a] -> Maybe a
-listToMaybe = error "todo"
+listToMaybe = placeholder
 
 maybeToList :: Maybe a -> [a]
-maybeToList = error "todo"
+maybeToList = placeholder
 
 catMaybes :: [Maybe a] -> [a]
-catMaybes = error "todo"
+catMaybes = placeholder
 
 mapMaybe :: (a -> Maybe b) -> [a] -> [b]
-mapMaybe = error "todo"
+mapMaybe = placeholder

@@ -103,31 +103,31 @@ import Data.String (String)
 import Data.Text (pack)
 import qualified Data.Text.IO as Text
 import Foreign.Ptr (Ptr)
-import Hazy (IO)
+import Hazy (IO, placeholder)
 import Text.Show (Show)
 import Prelude (Integer, Read, error)
 
 type FilePath = String
 
 fixIO :: (a -> IO a) -> IO a
-fixIO = error "todo"
+fixIO = placeholder
 
 data Handle
 
 stdin :: Handle
-stdin = error "todo"
+stdin = placeholder
 
 stdout :: Handle
-stdout = error "todo"
+stdout = placeholder
 
 stderr :: Handle
-stderr = error "todo"
+stderr = placeholder
 
 withFile :: FilePath -> IOMode -> (Handle -> IO r) -> IO r
-withFile = error "todo"
+withFile = placeholder
 
 openFile :: FilePath -> IOMode -> IO Handle
-openFile = error "todo"
+openFile = placeholder
 
 data IOMode
   = ReadMode
@@ -136,31 +136,31 @@ data IOMode
   | ReadWriteMode
 
 hClose :: Handle -> IO ()
-hClose = error "todo"
+hClose = placeholder
 
 readFile :: FilePath -> IO String
-readFile = error "todo"
+readFile = placeholder
 
 readFile' :: FilePath -> IO String
-readFile' = error "todo"
+readFile' = placeholder
 
 writeFile :: FilePath -> String -> IO ()
-writeFile = error "todo"
+writeFile = placeholder
 
 appendFile :: FilePath -> String -> IO ()
-appendFile = error "todo"
+appendFile = placeholder
 
 hFileSize :: Handle -> IO Integer
-hFileSize = error "todo"
+hFileSize = placeholder
 
 hSetFileSize :: Handle -> Integer -> IO ()
-hSetFileSize = error "todo"
+hSetFileSize = placeholder
 
 hIsEOF :: Handle -> IO Bool
-hIsEOF = error "todo"
+hIsEOF = placeholder
 
 isEOF :: IO Bool
-isEOF = error "todo"
+isEOF = placeholder
 
 data BufferMode
   = NoBuffering
@@ -168,24 +168,24 @@ data BufferMode
   | BlockBuffering (Maybe Int)
 
 hSetBuffering :: Handle -> BufferMode -> IO ()
-hSetBuffering = error "todo"
+hSetBuffering = placeholder
 
 hGetBuffering :: Handle -> IO BufferMode
-hGetBuffering = error "todo"
+hGetBuffering = placeholder
 
 hFlush :: Handle -> IO ()
-hFlush = error "todo"
+hFlush = placeholder
 
 hGetPosn :: Handle -> IO HandlePosn
-hGetPosn = error "todo"
+hGetPosn = placeholder
 
 hSetPosn :: HandlePosn -> IO ()
-hSetPosn = error "todo"
+hSetPosn = placeholder
 
 data HandlePosn
 
 hSeek :: Handle -> SeekMode -> Integer -> IO ()
-hSeek = error "todo"
+hSeek = placeholder
 
 data SeekMode
   = AbsoluteSeek
@@ -193,190 +193,190 @@ data SeekMode
   | SeekFromEnd
 
 hTell :: Handle -> IO Integer
-hTell = error "todo"
+hTell = placeholder
 
 hIsOpen :: Handle -> IO Bool
-hIsOpen = error "todo"
+hIsOpen = placeholder
 
 hIsClosed :: Handle -> IO Bool
-hIsClosed = error "todo"
+hIsClosed = placeholder
 
 hIsReadable :: Handle -> IO Bool
-hIsReadable = error "todo"
+hIsReadable = placeholder
 
 hIsWritable :: Handle -> IO Bool
-hIsWritable = error "todo"
+hIsWritable = placeholder
 
 hIsSeekable :: Handle -> IO Bool
-hIsSeekable = error "todo"
+hIsSeekable = placeholder
 
 hIsTerminalDevice :: Handle -> IO Bool
-hIsTerminalDevice = error "todo"
+hIsTerminalDevice = placeholder
 
 hSetEcho :: Handle -> Bool -> IO ()
-hSetEcho = error "todo"
+hSetEcho = placeholder
 
 hGetEcho :: Handle -> IO Bool
-hGetEcho = error "todo"
+hGetEcho = placeholder
 
 hShow :: Handle -> IO String
-hShow = error "todo"
+hShow = placeholder
 
 hWaitForInput :: Handle -> Int -> IO Bool
-hWaitForInput = error "todo"
+hWaitForInput = placeholder
 
 hReady :: Handle -> IO Bool
-hReady = error "todo"
+hReady = placeholder
 
 hGetChar :: Handle -> IO Char
-hGetChar = error "todo"
+hGetChar = placeholder
 
 hGetLine :: Handle -> IO String
-hGetLine = error "todo"
+hGetLine = placeholder
 
 hLookAhead :: Handle -> IO Char
-hLookAhead = error "todo"
+hLookAhead = placeholder
 
 hGetContents :: Handle -> IO String
-hGetContents = error "todo"
+hGetContents = placeholder
 
 hGetContents' :: Handle -> IO String
-hGetContents' = error "todo"
+hGetContents' = placeholder
 
 hPutChar :: Handle -> Char -> IO ()
-hPutChar = error "todo"
+hPutChar = placeholder
 
 hPutStr :: Handle -> String -> IO ()
-hPutStr = error "todo"
+hPutStr = placeholder
 
 hPutStrLn :: Handle -> String -> IO ()
-hPutStrLn = error "todo"
+hPutStrLn = placeholder
 
 hPrint :: (Show a) => Handle -> a -> IO ()
-hPrint = error "todo"
+hPrint = placeholder
 
 interact :: (String -> String) -> IO ()
-interact = error "todo"
+interact = placeholder
 
 putChar :: Char -> IO ()
-putChar = error "todo"
+putChar = placeholder
 
 putStr :: String -> IO ()
-putStr = error "todo"
+putStr = placeholder
 
 putStrLn :: String -> IO ()
 putStrLn string = Text.putStrLn (pack string)
 
 print :: (Show a) => a -> IO ()
-print = error "todo"
+print = placeholder
 
 getChar :: IO Char
-getChar = error "todo"
+getChar = placeholder
 
 getLine :: IO String
-getLine = error "todo"
+getLine = placeholder
 
 getContents :: IO String
-getContents = error "todo"
+getContents = placeholder
 
 readIO :: (Read a) => String -> IO a
-readIO = error "todo"
+readIO = placeholder
 
 readLn :: (Read a) => IO a
-readLn = error "todo"
+readLn = placeholder
 
 getContents' :: IO String
-getContents' = error "todo"
+getContents' = placeholder
 
 withBinaryFile :: FilePath -> IOMode -> (Handle -> IO r) -> IO r
-withBinaryFile = error "todo"
+withBinaryFile = placeholder
 
 openBinaryFile :: FilePath -> IOMode -> IO Handle
-openBinaryFile = error "todo"
+openBinaryFile = placeholder
 
 hSetBinaryMode :: Handle -> Bool -> IO ()
-hSetBinaryMode = error "todo"
+hSetBinaryMode = placeholder
 
 hPutBuf :: Handle -> Ptr a -> Int -> IO ()
-hPutBuf = error "todo"
+hPutBuf = placeholder
 
 hGetBuf :: Handle -> Ptr a -> Int -> IO Int
-hGetBuf = error "todo"
+hGetBuf = placeholder
 
 hGetBufSome :: Handle -> Ptr a -> Int -> IO Int
-hGetBufSome = error "todo"
+hGetBufSome = placeholder
 
 hPutBufNonBlocking :: Handle -> Ptr a -> Int -> IO Int
-hPutBufNonBlocking = error "todo"
+hPutBufNonBlocking = placeholder
 
 hGetBufNonBlocking :: Handle -> Ptr a -> Int -> IO Int
-hGetBufNonBlocking = error "todo"
+hGetBufNonBlocking = placeholder
 
 openTempFile :: FilePath -> String -> IO (FilePath, Handle)
-openTempFile = error "todo"
+openTempFile = placeholder
 
 openBinaryTempFile :: FilePath -> String -> IO (FilePath, Handle)
-openBinaryTempFile = error "todo"
+openBinaryTempFile = placeholder
 
 openTempFileWithDefaultPermissions :: FilePath -> String -> IO (FilePath, Handle)
-openTempFileWithDefaultPermissions = error "todo"
+openTempFileWithDefaultPermissions = placeholder
 
 openBinaryTempFileWithDefaultPermissions :: FilePath -> String -> IO (FilePath, Handle)
-openBinaryTempFileWithDefaultPermissions = error "todo"
+openBinaryTempFileWithDefaultPermissions = placeholder
 
 hSetEncoding :: Handle -> TextEncoding -> IO ()
-hSetEncoding = error "todo"
+hSetEncoding = placeholder
 
 hGetEncoding :: Handle -> IO (Maybe TextEncoding)
-hGetEncoding = error "todo"
+hGetEncoding = placeholder
 
 data TextEncoding
 
 latin1 :: TextEncoding
-latin1 = error "todo"
+latin1 = placeholder
 
 utf8 :: TextEncoding
-utf8 = error "todo"
+utf8 = placeholder
 
 utf8_bom :: TextEncoding
-utf8_bom = error "todo"
+utf8_bom = placeholder
 
 utf16 :: TextEncoding
-utf16 = error "todo"
+utf16 = placeholder
 
 utf16le :: TextEncoding
-utf16le = error "todo"
+utf16le = placeholder
 
 utf16be :: TextEncoding
-utf16be = error "todo"
+utf16be = placeholder
 
 utf32 :: TextEncoding
-utf32 = error "todo"
+utf32 = placeholder
 
 utf32le :: TextEncoding
-utf32le = error "todo"
+utf32le = placeholder
 
 utf32be :: TextEncoding
-utf32be = error "todo"
+utf32be = placeholder
 
 localeEncoding :: TextEncoding
-localeEncoding = error "todo"
+localeEncoding = placeholder
 
 char8 :: TextEncoding
-char8 = error "todo"
+char8 = placeholder
 
 mkTextEncoding :: String -> IO TextEncoding
-mkTextEncoding = error "todo"
+mkTextEncoding = placeholder
 
 hSetNewlineMode :: Handle -> NewlineMode -> IO ()
-hSetNewlineMode = error "todo"
+hSetNewlineMode = placeholder
 
 data Newline
   = LF
   | CRLF
 
 nativeNewline :: Newline
-nativeNewline = error "todo"
+nativeNewline = placeholder
 
 data NewlineMode = NewlineMode
   { inputNL :: Newline,
@@ -384,10 +384,10 @@ data NewlineMode = NewlineMode
   }
 
 noNewlineTranslation :: NewlineMode
-noNewlineTranslation = error "todo"
+noNewlineTranslation = placeholder
 
 universalNewlineMode :: NewlineMode
-universalNewlineMode = error "todo"
+universalNewlineMode = placeholder
 
 nativeNewlineMode :: NewlineMode
-nativeNewlineMode = error "todo"
+nativeNewlineMode = placeholder

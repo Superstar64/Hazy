@@ -9,18 +9,19 @@ where
 
 import Control.Applicative (Alternative)
 import Data.List.NonEmpty (NonEmpty)
+import Hazy (placeholder)
 
 some :: (Alternative m) => m a -> m (NonEmpty a)
-some = error "todo"
+some = placeholder
 
 endBy1 :: (Alternative m) => m a -> m sep -> m (NonEmpty a)
-endBy1 = error "todo"
+endBy1 = placeholder
 
 someTill :: (Alternative m) => m a -> m end -> m (NonEmpty a)
-someTill = error "todo"
+someTill = placeholder
 
 sepBy1 :: (Alternative m) => m a -> m sep -> m (NonEmpty a)
-sepBy1 = error "todo"
+sepBy1 = placeholder
 
 sepEndBy1 :: (Alternative m) => m a -> m sep -> m (NonEmpty a)
-sepEndBy1 = error "todo"
+sepEndBy1 = placeholder

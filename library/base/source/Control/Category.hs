@@ -5,6 +5,7 @@ module Control.Category
   )
 where
 
+import Hazy (placeholder)
 import Prelude hiding (id, (.))
 
 class Category cat where
@@ -15,9 +16,9 @@ class Category cat where
 infixr 1 <<<
 
 (<<<) :: (Category cat) => cat b c -> cat a b -> cat a c
-(<<<) = error "todo"
+(<<<) = placeholder
 
 infixr 1 >>>
 
 (>>>) :: (Category cat) => cat a b -> cat b c -> cat a c
-(>>>) = error "todo"
+(>>>) = placeholder

@@ -103,303 +103,303 @@ module Data.Text
   )
 where
 
-import Hazy (Text, pack)
+import Hazy (Text, pack, placeholder)
 
 unpack :: Text -> String
-unpack = error "todo"
+unpack = placeholder
 
 singleton :: Char -> Text
-singleton = error "todo"
+singleton = placeholder
 
 empty :: Text
-empty = error "todo"
+empty = placeholder
 
 infixr 5 `cons`
 
 cons :: Char -> Text -> Text
-cons = error "todo"
+cons = placeholder
 
 snoc :: Text -> Char -> Text
-snoc = error "todo"
+snoc = placeholder
 
 append :: Text -> Text -> Text
-append = error "todo"
+append = placeholder
 
 uncons :: Text -> Maybe (Char, Text)
-uncons = error "todo"
+uncons = placeholder
 
 unsnoc :: Text -> Maybe (Text, Char)
-unsnoc = error "todo"
+unsnoc = placeholder
 
 head :: Text -> Char
-head = error "todo"
+head = placeholder
 
 last :: Text -> Char
-last = error "todo"
+last = placeholder
 
 tail :: Text -> Text
-tail = error "todo"
+tail = placeholder
 
 init :: Text -> Text
-init = error "todo"
+init = placeholder
 
 null :: Text -> Bool
-null = error "todo"
+null = placeholder
 
 length :: Text -> Int
-length = error "todo"
+length = placeholder
 
 compareLength :: Text -> Int -> Ordering
-compareLength = error "todo"
+compareLength = placeholder
 
 map :: (Char -> Char) -> Text -> Text
-map = error "todo"
+map = placeholder
 
 intercalate :: Text -> [Text] -> Text
-intercalate = error "todo"
+intercalate = placeholder
 
 intersperse :: Char -> Text -> Text
-intersperse = error "todo"
+intersperse = placeholder
 
 transpose :: [Text] -> [Text]
-transpose = error "todo"
+transpose = placeholder
 
 reverse :: Text -> Text
-reverse = error "todo"
+reverse = placeholder
 
 replace :: Text -> Text -> Text -> Text
-replace = error "todo"
+replace = placeholder
 
 toCaseFold :: Text -> Text
-toCaseFold = error "todo"
+toCaseFold = placeholder
 
 toLower :: Text -> Text
-toLower = error "todo"
+toLower = placeholder
 
 toUpper :: Text -> Text
-toUpper = error "todo"
+toUpper = placeholder
 
 toTitle :: Text -> Text
-toTitle = error "todo"
+toTitle = placeholder
 
 justifyLeft :: Int -> Char -> Text -> Text
-justifyLeft = error "todo"
+justifyLeft = placeholder
 
 justifyRight :: Int -> Char -> Text -> Text
-justifyRight = error "todo"
+justifyRight = placeholder
 
 center :: Int -> Char -> Text -> Text
-center = error "todo"
+center = placeholder
 
 foldl :: (a -> Char -> a) -> a -> Text -> a
-foldl = error "todo"
+foldl = placeholder
 
 foldl' :: (a -> Char -> a) -> a -> Text -> a
-foldl' = error "todo"
+foldl' = placeholder
 
 foldl1 :: (Char -> Char -> Char) -> Text -> Char
-foldl1 = error "todo"
+foldl1 = placeholder
 
 foldl1' :: (Char -> Char -> Char) -> Text -> Char
-foldl1' = error "todo"
+foldl1' = placeholder
 
 foldr :: (Char -> a -> a) -> a -> Text -> a
-foldr = error "todo"
+foldr = placeholder
 
 foldr' :: (Char -> a -> a) -> a -> Text -> a
-foldr' = error "todo"
+foldr' = placeholder
 
 foldr1 :: (Char -> Char -> Char) -> Text -> Char
-foldr1 = error "todo"
+foldr1 = placeholder
 
 concat :: [Text] -> Text
-concat = error "todo"
+concat = placeholder
 
 concatMap :: (Char -> Text) -> Text -> Text
-concatMap = error "todo"
+concatMap = placeholder
 
 any :: (Char -> Bool) -> Text -> Bool
-any = error "todo"
+any = placeholder
 
 all :: (Char -> Bool) -> Text -> Bool
-all = error "todo"
+all = placeholder
 
 maximum :: Text -> Char
-maximum = error "todo"
+maximum = placeholder
 
 minimum :: Text -> Char
-minimum = error "todo"
+minimum = placeholder
 
 isAscii :: Text -> Bool
-isAscii = error "todo"
+isAscii = placeholder
 
 scanl :: (Char -> Char -> Char) -> Char -> Text -> Text
-scanl = error "todo"
+scanl = placeholder
 
 scanl1 :: (Char -> Char -> Char) -> Text -> Text
-scanl1 = error "todo"
+scanl1 = placeholder
 
 scanr :: (Char -> Char -> Char) -> Char -> Text -> Text
-scanr = error "todo"
+scanr = placeholder
 
 scanr1 :: (Char -> Char -> Char) -> Text -> Text
-scanr1 = error "todo"
+scanr1 = placeholder
 
 mapAccumL :: (a -> Char -> (a, Char)) -> a -> Text -> (a, Text)
-mapAccumL = error "todo"
+mapAccumL = placeholder
 
 mapAccumR :: (a -> Char -> (a, Char)) -> a -> Text -> (a, Text)
-mapAccumR = error "todo"
+mapAccumR = placeholder
 
 replicate :: Int -> Text -> Text
-replicate = error "todo"
+replicate = placeholder
 
 unfoldr :: (a -> Maybe (Char, a)) -> a -> Text
-unfoldr = error "todo"
+unfoldr = placeholder
 
 unfoldrN :: Int -> (a -> Maybe (Char, a)) -> a -> Text
-unfoldrN = error "todo"
+unfoldrN = placeholder
 
 take :: Int -> Text -> Text
-take = error "todo"
+take = placeholder
 
 takeEnd :: Int -> Text -> Text
-takeEnd = error "todo"
+takeEnd = placeholder
 
 drop :: Int -> Text -> Text
-drop = error "todo"
+drop = placeholder
 
 dropEnd :: Int -> Text -> Text
-dropEnd = error "todo"
+dropEnd = placeholder
 
 takeWhile :: (Char -> Bool) -> Text -> Text
-takeWhile = error "todo"
+takeWhile = placeholder
 
 takeWhileEnd :: (Char -> Bool) -> Text -> Text
-takeWhileEnd = error "todo"
+takeWhileEnd = placeholder
 
 dropWhile :: (Char -> Bool) -> Text -> Text
-dropWhile = error "todo"
+dropWhile = placeholder
 
 dropWhileEnd :: (Char -> Bool) -> Text -> Text
-dropWhileEnd = error "todo"
+dropWhileEnd = placeholder
 
 dropAround :: (Char -> Bool) -> Text -> Text
-dropAround = error "todo"
+dropAround = placeholder
 
 strip :: Text -> Text
-strip = error "todo"
+strip = placeholder
 
 stripStart :: Text -> Text
-stripStart = error "todo"
+stripStart = placeholder
 
 stripEnd :: Text -> Text
-stripEnd = error "todo"
+stripEnd = placeholder
 
 splitAt :: Int -> Text -> (Text, Text)
-splitAt = error "todo"
+splitAt = placeholder
 
 breakOn :: Text -> Text -> (Text, Text)
-breakOn = error "todo"
+breakOn = placeholder
 
 breakOnEnd :: Text -> Text -> (Text, Text)
-breakOnEnd = error "todo"
+breakOnEnd = placeholder
 
 break :: (Char -> Bool) -> Text -> (Text, Text)
-break = error "todo"
+break = placeholder
 
 span :: (Char -> Bool) -> Text -> (Text, Text)
-span = error "todo"
+span = placeholder
 
 spanM :: (Monad m) => (Char -> m Bool) -> Text -> m (Text, Text)
-spanM = error "todo"
+spanM = placeholder
 
 spanEndM :: (Monad m) => (Char -> m Bool) -> Text -> m (Text, Text)
-spanEndM = error "todo"
+spanEndM = placeholder
 
 group :: Text -> [Text]
-group = error "todo"
+group = placeholder
 
 groupBy :: (Char -> Char -> Bool) -> Text -> [Text]
-groupBy = error "todo"
+groupBy = placeholder
 
 inits :: Text -> [Text]
-inits = error "todo"
+inits = placeholder
 
 tails :: Text -> [Text]
-tails = error "todo"
+tails = placeholder
 
 splitOn :: Text -> Text -> [Text]
-splitOn = error "todo"
+splitOn = placeholder
 
 split :: (Char -> Bool) -> Text -> [Text]
-split = error "todo"
+split = placeholder
 
 chunksOf :: Int -> Text -> [Text]
-chunksOf = error "todo"
+chunksOf = placeholder
 
 lines :: Text -> [Text]
-lines = error "todo"
+lines = placeholder
 
 words :: Text -> [Text]
-words = error "todo"
+words = placeholder
 
 unlines :: [Text] -> Text
-unlines = error "todo"
+unlines = placeholder
 
 unwords :: [Text] -> Text
-unwords = error "todo"
+unwords = placeholder
 
 isPrefixOf :: Text -> Text -> Bool
-isPrefixOf = error "todo"
+isPrefixOf = placeholder
 
 isSuffixOf :: Text -> Text -> Bool
-isSuffixOf = error "todo"
+isSuffixOf = placeholder
 
 isInfixOf :: Text -> Text -> Bool
-isInfixOf = error "todo"
+isInfixOf = placeholder
 
 stripPrefix :: Text -> Text -> Maybe Text
-stripPrefix = error "todo"
+stripPrefix = placeholder
 
 stripSuffix :: Text -> Text -> Maybe Text
-stripSuffix = error "todo"
+stripSuffix = placeholder
 
 commonPrefixes :: Text -> Text -> Maybe (Text, Text, Text)
-commonPrefixes = error "todo"
+commonPrefixes = placeholder
 
 filter :: (Char -> Bool) -> Text -> Text
-filter = error "todo"
+filter = placeholder
 
 breakOnAll :: Text -> Text -> [(Text, Text)]
-breakOnAll = error "todo"
+breakOnAll = placeholder
 
 find :: (Char -> Bool) -> Text -> Maybe Char
-find = error "todo"
+find = placeholder
 
 elem :: Char -> Text -> Bool
-elem = error "todo"
+elem = placeholder
 
 partition :: (Char -> Bool) -> Text -> (Text, Text)
-partition = error "todo"
+partition = placeholder
 
 index :: Text -> Int -> Char
-index = error "todo"
+index = placeholder
 
 findIndex :: (Char -> Bool) -> Text -> Maybe Int
-findIndex = error "todo"
+findIndex = placeholder
 
 count :: Text -> Text -> Int
-count = error "todo"
+count = placeholder
 
 zip :: Text -> Text -> [(Char, Char)]
-zip = error "todo"
+zip = placeholder
 
 zipWith :: (Char -> Char -> Char) -> Text -> Text -> Text
-zipWith = error "todo"
+zipWith = placeholder
 
 copy :: Text -> Text
-copy = error "todo"
+copy = placeholder
 
 measureOff :: Int -> Text -> Int
-measureOff = error "todo"
+measureOff = placeholder

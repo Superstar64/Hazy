@@ -6,14 +6,16 @@ module Data.Containers.ListUtils
   )
 where
 
+import Hazy (placeholder)
+
 nubOrd :: (Ord a) => [a] -> [a]
-nubOrd = error "todo"
+nubOrd = placeholder
 
 nubOrdOn :: (Ord b) => (a -> b) -> [a] -> [a]
-nubOrdOn = error "todo"
+nubOrdOn = placeholder
 
 nubInt :: [Int] -> [Int]
-nubInt = error "todo"
+nubInt = placeholder
 
 nubIntOn :: (a -> Int) -> [a] -> [a]
-nubIntOn = error "todo"
+nubIntOn = placeholder

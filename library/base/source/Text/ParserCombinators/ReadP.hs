@@ -41,110 +41,111 @@ import Data.Bool (Bool)
 import Data.Char (Char)
 import Data.Int (Int)
 import Data.String (String)
+import Hazy (placeholder)
 import Text.Read (ReadS)
 import Prelude (error)
 
 data ReadP a
 
 get :: ReadP Char
-get = error "todo"
+get = placeholder
 
 look :: ReadP String
-look = error "todo"
+look = placeholder
 
 infixr 5 +++
 
 (+++) :: ReadP a -> ReadP a -> ReadP a
-(+++) = error "todo"
+(+++) = placeholder
 
 infixr 5 <++
 
 (<++) :: ReadP a -> ReadP a -> ReadP a
-(<++) = error "todo"
+(<++) = placeholder
 
 gather :: ReadP a -> ReadP (String, a)
-gather = error "todo"
+gather = placeholder
 
 pfail :: ReadP a
-pfail = error "todo"
+pfail = placeholder
 
 eof :: ReadP ()
-eof = error "todo"
+eof = placeholder
 
 satisfy :: (Char -> Bool) -> ReadP Char
-satisfy = error "todo"
+satisfy = placeholder
 
 char :: Char -> ReadP Char
-char = error "todo"
+char = placeholder
 
 string :: String -> ReadP String
-string = error "todo"
+string = placeholder
 
 munch :: (Char -> Bool) -> ReadP String
-munch = error "todo"
+munch = placeholder
 
 munch1 :: (Char -> Bool) -> ReadP String
-munch1 = error "todo"
+munch1 = placeholder
 
 skipSpaces :: ReadP ()
-skipSpaces = error "todo"
+skipSpaces = placeholder
 
 choice :: [ReadP a] -> ReadP a
-choice = error "todo"
+choice = placeholder
 
 count :: Int -> ReadP a -> ReadP [a]
-count = error "todo"
+count = placeholder
 
 between :: ReadP open -> ReadP close -> ReadP a -> ReadP a
-between = error "todo"
+between = placeholder
 
 option :: a -> ReadP a -> ReadP a
-option = error "todo"
+option = placeholder
 
 optional :: ReadP a -> ReadP ()
-optional = error "todo"
+optional = placeholder
 
 many :: ReadP a -> ReadP [a]
-many = error "todo"
+many = placeholder
 
 many1 :: ReadP a -> ReadP [a]
-many1 = error "todo"
+many1 = placeholder
 
 skipMany :: ReadP a -> ReadP ()
-skipMany = error "todo"
+skipMany = placeholder
 
 skipMany1 :: ReadP a -> ReadP ()
-skipMany1 = error "todo"
+skipMany1 = placeholder
 
 sepBy :: ReadP a -> ReadP sep -> ReadP [a]
-sepBy = error "todo"
+sepBy = placeholder
 
 sepBy1 :: ReadP a -> ReadP sep -> ReadP [a]
-sepBy1 = error "todo"
+sepBy1 = placeholder
 
 endBy :: ReadP a -> ReadP sep -> ReadP [a]
-endBy = error "todo"
+endBy = placeholder
 
 endBy1 :: ReadP a -> ReadP sep -> ReadP [a]
-endBy1 = error "todo"
+endBy1 = placeholder
 
 chainr :: ReadP a -> ReadP (a -> a -> a) -> a -> ReadP a
-chainr = error "todo"
+chainr = placeholder
 
 chainl :: ReadP a -> ReadP (a -> a -> a) -> a -> ReadP a
-chainl = error "todo"
+chainl = placeholder
 
 chainl1 :: ReadP a -> ReadP (a -> a -> a) -> ReadP a
-chainl1 = error "todo"
+chainl1 = placeholder
 
 chainr1 :: ReadP a -> ReadP (a -> a -> a) -> ReadP a
-chainr1 = error "todo"
+chainr1 = placeholder
 
 manyTill :: ReadP a -> ReadP end -> ReadP [a]
-manyTill = error "todo"
+manyTill = placeholder
 
 readP_to_S :: ReadP a -> ReadS a
-readP_to_S = error "todo"
+readP_to_S = placeholder
 
 readS_to_P :: ReadS a -> ReadP a
-readS_to_P = error "todo"
+readS_to_P = placeholder

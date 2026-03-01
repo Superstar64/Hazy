@@ -26,6 +26,7 @@ where
 import Data.Bool (Bool)
 import Data.List.NonEmpty (NonEmpty)
 import Data.Monoid (Monoid)
+import Hazy (placeholder)
 import Prelude (Integral, error)
 
 class Semigroup a where
@@ -35,16 +36,16 @@ class Semigroup a where
   stimes :: (Integral b) => b -> a -> a
 
 stimesMonoid :: (Integral b, Monoid a) => b -> a -> a
-stimesMonoid = error "todo"
+stimesMonoid = placeholder
 
 stimesIdempotent :: (Integral b) => b -> a -> a
-stimesIdempotent = error "todo"
+stimesIdempotent = placeholder
 
 stimesIdempotentMonoid :: (Integral b, Monoid a) => b -> a -> a
-stimesIdempotentMonoid = error "todo"
+stimesIdempotentMonoid = placeholder
 
 mtimesDefault :: (Integral b, Monoid a) => b -> a -> a
-mtimesDefault = error "todo"
+mtimesDefault = placeholder
 
 newtype Min a = Min
   { getMin :: a
@@ -91,10 +92,10 @@ newtype Product a = Product
   }
 
 diff :: (Semigroup m) => m -> Endo m
-diff = error "todo"
+diff = placeholder
 
 cycle1 :: (Semigroup m) => m -> m
-cycle1 = error "todo"
+cycle1 = placeholder
 
 data Arg a b = Arg a b
 

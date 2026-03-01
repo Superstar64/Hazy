@@ -20,6 +20,7 @@ import Control.Category
     (<<<),
     (>>>),
   )
+import Hazy (placeholder)
 import Prelude hiding (id, (.))
 
 class (Category a) => Arrow a where
@@ -36,27 +37,27 @@ newtype Kleisli m a b = Kleisli
   }
 
 returnA :: (Arrow a) => a b b
-returnA = error "todo"
+returnA = placeholder
 
 infixr 1 ^>>
 
 (^>>) :: (Arrow a) => (b -> c) -> a c d -> a b d
-(^>>) = error "todo"
+(^>>) = placeholder
 
 infixr 1 >>^
 
 (>>^) :: (Arrow a) => a b c -> (c -> d) -> a b d
-(>>^) = error "todo"
+(>>^) = placeholder
 
 infixr 1 <<^
 
 (<<^) :: (Arrow a) => a c d -> (b -> c) -> a b d
-(<<^) = error "todo"
+(<<^) = placeholder
 
 infixr 1 ^<<
 
 (^<<) :: (Arrow a) => (c -> d) -> a b c -> a b d
-(^<<) = error "todo"
+(^<<) = placeholder
 
 class (Arrow a) => ArrowZero a where
   zeroArrow :: a b c
@@ -78,7 +79,7 @@ class (Arrow a) => ArrowApply a where
 newtype ArrowMonad a b = ArrowMonad (a () b)
 
 leftApp :: (ArrowApply a) => a b c -> a (Either b d) (Either c d)
-leftApp = error "todo"
+leftApp = placeholder
 
 class (Arrow a) => ArrowLoop a where
   loop :: a (b, d) (c, d) -> a b c

@@ -8,22 +8,23 @@ module Data.IORef
   )
 where
 
+import Hazy (placeholder)
 import System.IO (IO)
 import Prelude (error)
 
 data IORef a
 
 newIORef :: a -> IO (IORef a)
-newIORef = error "todo"
+newIORef = placeholder
 
 readIORef :: IORef a -> IO a
-readIORef = error "todo"
+readIORef = placeholder
 
 writeIORef :: IORef a -> a -> IO ()
-writeIORef = error "todo"
+writeIORef = placeholder
 
 modifyIORef :: IORef a -> (a -> a) -> IO ()
-modifyIORef = error "todo"
+modifyIORef = placeholder
 
 modifyIORef' :: IORef a -> (a -> a) -> IO ()
-modifyIORef' = error "todo"
+modifyIORef' = placeholder

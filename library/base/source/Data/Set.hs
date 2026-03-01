@@ -71,208 +71,210 @@ module Data.Set
   )
 where
 
+import Hazy (placeholder)
+
 data Set a
 
 empty :: Set a
-empty = error "todo"
+empty = placeholder
 
 singleton :: a -> Set a
-singleton = error "todo"
+singleton = placeholder
 
 fromList :: (Ord a) => [a] -> Set a
-fromList = error "todo"
+fromList = placeholder
 
 fromAscList :: (Eq a) => [a] -> Set a
-fromAscList = error "todo"
+fromAscList = placeholder
 
 fromDescList :: (Eq a) => [a] -> Set a
-fromDescList = error "todo"
+fromDescList = placeholder
 
 fromDistinctAscList :: [a] -> Set a
-fromDistinctAscList = error "todo"
+fromDistinctAscList = placeholder
 
 fromDistinctDescList :: [a] -> Set a
-fromDistinctDescList = error "todo"
+fromDistinctDescList = placeholder
 
 powerSet :: Set a -> Set (Set a)
-powerSet = error "todo"
+powerSet = placeholder
 
 insert :: (Ord a) => a -> Set a -> Set a
-insert = error "todo"
+insert = placeholder
 
 delete :: (Ord a) => a -> Set a -> Set a
-delete = error "todo"
+delete = placeholder
 
 alterF :: (Ord a, Functor f) => (Bool -> f Bool) -> a -> Set a -> f (Set a)
-alterF = error "todo"
+alterF = placeholder
 
 member :: (Ord a) => a -> Set a -> Bool
-member = error "todo"
+member = placeholder
 
 notMember :: (Ord a) => a -> Set a -> Bool
-notMember = error "todo"
+notMember = placeholder
 
 lookupLT :: (Ord a) => a -> Set a -> Maybe a
-lookupLT = error "todo"
+lookupLT = placeholder
 
 lookupGT :: (Ord a) => a -> Set a -> Maybe a
-lookupGT = error "todo"
+lookupGT = placeholder
 
 lookupLE :: (Ord a) => a -> Set a -> Maybe a
-lookupLE = error "todo"
+lookupLE = placeholder
 
 lookupGE :: (Ord a) => a -> Set a -> Maybe a
-lookupGE = error "todo"
+lookupGE = placeholder
 
 null :: Set a -> Bool
-null = error "todo"
+null = placeholder
 
 size :: Set a -> Int
-size = error "todo"
+size = placeholder
 
 isSubsetOf :: (Ord a) => Set a -> Set a -> Bool
-isSubsetOf = error "todo"
+isSubsetOf = placeholder
 
 isProperSubsetOf :: (Ord a) => Set a -> Set a -> Bool
-isProperSubsetOf = error "todo"
+isProperSubsetOf = placeholder
 
 disjoint :: (Ord a) => Set a -> Set a -> Bool
-disjoint = error "todo"
+disjoint = placeholder
 
 union :: (Ord a) => Set a -> Set a -> Set a
-union = error "todo"
+union = placeholder
 
 unions :: (Foldable f, Ord a) => f (Set a) -> Set a
-unions = error "todo"
+unions = placeholder
 
 difference :: (Ord a) => Set a -> Set a -> Set a
-difference = error "todo"
+difference = placeholder
 
 (\\) :: (Ord a) => Set a -> Set a -> Set a
-(\\) = error "todo"
+(\\) = placeholder
 
 intersection :: (Ord a) => Set a -> Set a -> Set a
-intersection = error "todo"
+intersection = placeholder
 
 cartesianProduct :: Set a -> Set b -> Set (a, b)
-cartesianProduct = error "todo"
+cartesianProduct = placeholder
 
 disjointUnion :: Set a -> Set b -> Set (Either a b)
-disjointUnion = error "todo"
+disjointUnion = placeholder
 
 filter :: (a -> Bool) -> Set a -> Set a
-filter = error "todo"
+filter = placeholder
 
 takeWhileAntitone :: (a -> Bool) -> Set a -> Set a
-takeWhileAntitone = error "todo"
+takeWhileAntitone = placeholder
 
 dropWhileAntitone :: (a -> Bool) -> Set a -> Set a
-dropWhileAntitone = error "todo"
+dropWhileAntitone = placeholder
 
 spanAntitone :: (a -> Bool) -> Set a -> (Set a, Set a)
-spanAntitone = error "todo"
+spanAntitone = placeholder
 
 partition :: (a -> Bool) -> Set a -> (Set a, Set a)
-partition = error "todo"
+partition = placeholder
 
 split :: (Ord a) => a -> Set a -> (Set a, Set a)
-split = error "todo"
+split = placeholder
 
 splitMember :: (Ord a) => a -> Set a -> (Set a, Bool, Set a)
-splitMember = error "todo"
+splitMember = placeholder
 
 splitRoot :: Set a -> [Set a]
-splitRoot = error "todo"
+splitRoot = placeholder
 
 lookupIndex :: (Ord a) => a -> Set a -> Maybe Int
-lookupIndex = error "todo"
+lookupIndex = placeholder
 
 findIndex :: (Ord a) => a -> Set a -> Int
-findIndex = error "todo"
+findIndex = placeholder
 
 elemAt :: Int -> Set a -> a
-elemAt = error "todo"
+elemAt = placeholder
 
 deleteAt :: Int -> Set a -> Set a
-deleteAt = error "todo"
+deleteAt = placeholder
 
 take :: Int -> Set a -> Set a
-take = error "todo"
+take = placeholder
 
 drop :: Int -> Set a -> Set a
-drop = error "todo"
+drop = placeholder
 
 splitAt :: Int -> Set a -> (Set a, Set a)
-splitAt = error "todo"
+splitAt = placeholder
 
 map :: (Ord b) => (a -> b) -> Set a -> Set b
-map = error "todo"
+map = placeholder
 
 mapMonotonic :: (a -> b) -> Set a -> Set b
-mapMonotonic = error "todo"
+mapMonotonic = placeholder
 
 foldr :: (a -> b -> b) -> b -> Set a -> b
-foldr = error "todo"
+foldr = placeholder
 
 foldl :: (a -> b -> a) -> a -> Set b -> a
-foldl = error "todo"
+foldl = placeholder
 
 foldr' :: (a -> b -> b) -> b -> Set a -> b
-foldr' = error "todo"
+foldr' = placeholder
 
 foldl' :: (a -> b -> a) -> a -> Set b -> a
-foldl' = error "todo"
+foldl' = placeholder
 
 fold :: (a -> b -> b) -> b -> Set a -> b
-fold = error "todo"
+fold = placeholder
 
 lookupMin :: Set a -> Maybe a
-lookupMin = error "todo"
+lookupMin = placeholder
 
 lookupMax :: Set a -> Maybe a
-lookupMax = error "todo"
+lookupMax = placeholder
 
 findMin :: Set a -> a
-findMin = error "todo"
+findMin = placeholder
 
 findMax :: Set a -> a
-findMax = error "todo"
+findMax = placeholder
 
 deleteMin :: Set a -> Set a
-deleteMin = error "todo"
+deleteMin = placeholder
 
 deleteMax :: Set a -> Set a
-deleteMax = error "todo"
+deleteMax = placeholder
 
 deleteFindMin :: Set a -> (a, Set a)
-deleteFindMin = error "todo"
+deleteFindMin = placeholder
 
 deleteFindMax :: Set a -> (a, Set a)
-deleteFindMax = error "todo"
+deleteFindMax = placeholder
 
 maxView :: Set a -> Maybe (a, Set a)
-maxView = error "todo"
+maxView = placeholder
 
 minView :: Set a -> Maybe (a, Set a)
-minView = error "todo"
+minView = placeholder
 
 elems :: Set a -> [a]
-elems = error "todo"
+elems = placeholder
 
 toList :: Set a -> [a]
-toList = error "todo"
+toList = placeholder
 
 toAscList :: Set a -> [a]
-toAscList = error "todo"
+toAscList = placeholder
 
 toDescList :: Set a -> [a]
-toDescList = error "todo"
+toDescList = placeholder
 
 showTree :: (Show a) => Set a -> String
-showTree = error "todo"
+showTree = placeholder
 
 showTreeWith :: (Show a) => Bool -> Bool -> Set a -> String
-showTreeWith = error "todo"
+showTreeWith = placeholder
 
 valid :: (Ord a) => Set a -> Bool
-valid = error "todo"
+valid = placeholder

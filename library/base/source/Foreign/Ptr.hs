@@ -20,52 +20,54 @@ module Foreign.Ptr
   )
 where
 
+import Hazy (placeholder)
+
 data Ptr a
 
 nullPtr :: Ptr a
-nullPtr = error "todo"
+nullPtr = placeholder
 
 castPtr :: Ptr a -> Ptr b
-castPtr = error "todo"
+castPtr = placeholder
 
 plusPtr :: Ptr a -> Int -> Ptr b
-plusPtr = error "todo"
+plusPtr = placeholder
 
 alignPtr :: Ptr a -> Int -> Ptr a
-alignPtr = error "todo"
+alignPtr = placeholder
 
 minusPtr :: Ptr a -> Ptr b -> Int
-minusPtr = error "todo"
+minusPtr = placeholder
 
 data FunPtr a
 
 nullFunPtr :: FunPtr a
-nullFunPtr = error "todo"
+nullFunPtr = placeholder
 
 castFunPtr :: FunPtr a -> FunPtr b
-castFunPtr = error "todo"
+castFunPtr = placeholder
 
 castFunPtrToPtr :: FunPtr a -> Ptr b
-castFunPtrToPtr = error "todo"
+castFunPtrToPtr = placeholder
 
 castPtrToFunPtr :: Ptr a -> FunPtr b
-castPtrToFunPtr = error "todo"
+castPtrToFunPtr = placeholder
 
 freeHaskellFunPtr :: FunPtr a -> IO ()
-freeHaskellFunPtr = error "todo"
+freeHaskellFunPtr = placeholder
 
 newtype IntPtr = IntPtr Int
 
 ptrToIntPtr :: Ptr a -> IntPtr
-ptrToIntPtr = error "todo"
+ptrToIntPtr = placeholder
 
 intPtrToPtr :: IntPtr -> Ptr a
-intPtrToPtr = error "todo"
+intPtrToPtr = placeholder
 
 newtype WordPtr = WordPtr Word
 
 ptrToWordPtr :: Ptr a -> WordPtr
-ptrToWordPtr = error "todo"
+ptrToWordPtr = placeholder
 
 wordPtrToPtr :: WordPtr -> Ptr a
-wordPtrToPtr = error "todo"
+wordPtrToPtr = placeholder

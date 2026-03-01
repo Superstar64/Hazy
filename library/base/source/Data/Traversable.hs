@@ -12,6 +12,7 @@ where
 import Control.Applicative (Applicative)
 import Control.Monad (Monad)
 import Data.Monoid (Monoid)
+import Hazy (placeholder)
 import Prelude (Foldable, Functor, error)
 
 class (Functor t, Foldable t) => Traversable t where
@@ -21,19 +22,19 @@ class (Functor t, Foldable t) => Traversable t where
   sequence :: (Monad m) => t (m a) -> m (t a)
 
 for :: (Traversable t, Applicative f) => t a -> (a -> f b) -> f (t b)
-for = error "todo"
+for = placeholder
 
 forM :: (Traversable t, Monad m) => t a -> (a -> m b) -> m (t b)
-forM = error "todo"
+forM = placeholder
 
 mapAccumL :: (Traversable t) => (s -> a -> (s, b)) -> s -> t a -> (s, t b)
-mapAccumL = error "todo"
+mapAccumL = placeholder
 
 mapAccumR :: (Traversable t) => (s -> a -> (s, b)) -> s -> t a -> (s, t b)
-mapAccumR = error "todo"
+mapAccumR = placeholder
 
 fmapDefault :: (Traversable t) => (a -> b) -> t a -> t b
-fmapDefault = error "todo"
+fmapDefault = placeholder
 
 foldMapDefault :: (Traversable t, Monoid m) => (a -> m) -> t a -> m
-foldMapDefault = error "todo"
+foldMapDefault = placeholder

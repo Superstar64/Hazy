@@ -47,6 +47,7 @@ import Data.Functor
 import Data.Int (Int)
 import Data.String (String)
 import Data.Traversable (Traversable, mapM, sequence)
+import Hazy (placeholder)
 import Prelude (error)
 
 class (Applicative m) => Monad m where
@@ -63,96 +64,96 @@ class (Alternative m, Monad m) => MonadPlus m where
   mplus :: m a -> m a -> m a
 
 mapM_ :: (Foldable t, Monad m) => (a -> m b) -> t a -> m ()
-mapM_ = error "todo"
+mapM_ = placeholder
 
 forM :: (Traversable t, Monad m) => t a -> (a -> m b) -> m (t b)
-forM = error "todo"
+forM = placeholder
 
 sequence_ :: (Foldable t, Monad m) => t (m a) -> m ()
-sequence_ = error "todo"
+sequence_ = placeholder
 
 forM_ :: (Foldable t, Monad m) => t a -> (a -> m b) -> m ()
-forM_ = error "todo"
+forM_ = placeholder
 
 infixr 1 =<<
 
 (=<<) :: (Monad m) => (a -> m b) -> m a -> m b
-(=<<) = error "todo"
+(=<<) = placeholder
 
 infixr 1 >=>
 
 (>=>) :: (Monad m) => (a -> m b) -> (b -> m c) -> a -> m c
-(>=>) = error "todo"
+(>=>) = placeholder
 
 infixr 1 <=<
 
 (<=<) :: (Monad m) => (b -> m c) -> (a -> m b) -> a -> m c
-(<=<) = error "todo"
+(<=<) = placeholder
 
 forever :: (Applicative f) => f a -> f b
-forever = error "todo"
+forever = placeholder
 
 void :: (Functor f) => f a -> f ()
-void = error "todo"
+void = placeholder
 
 join :: (Monad m) => m (m a) -> m a
-join = error "todo"
+join = placeholder
 
 mfilter :: (MonadPlus m) => (a -> Bool) -> m a -> m a
-mfilter = error "todo"
+mfilter = placeholder
 
 filterM :: (Applicative m) => (a -> m Bool) -> [a] -> m [a]
-filterM = error "todo"
+filterM = placeholder
 
 mapAndUnzipM :: (Applicative m) => (a -> m (b, c)) -> [a] -> m ([b], [c])
-mapAndUnzipM = error "todo"
+mapAndUnzipM = placeholder
 
 zipWithM :: (Applicative m) => (a -> b -> m c) -> [a] -> [b] -> m [c]
-zipWithM = error "todo"
+zipWithM = placeholder
 
 zipWithM_ :: (Applicative m) => (a -> b -> m c) -> [a] -> [b] -> m ()
-zipWithM_ = error "todo"
+zipWithM_ = placeholder
 
 foldM :: (Foldable t, Monad m) => (b -> a -> m b) -> b -> t a -> m b
-foldM = error "todo"
+foldM = placeholder
 
 foldM_ :: (Foldable t, Monad m) => (b -> a -> m b) -> b -> t a -> m ()
-foldM_ = error "todo"
+foldM_ = placeholder
 
 replicateM :: (Applicative m) => Int -> m a -> m [a]
-replicateM = error "todo"
+replicateM = placeholder
 
 replicateM_ :: (Applicative m) => Int -> m a -> m ()
-replicateM_ = error "todo"
+replicateM_ = placeholder
 
 guard :: (Alternative f) => Bool -> f ()
-guard = error "todo"
+guard = placeholder
 
 when :: (Applicative f) => Bool -> f () -> f ()
-when = error "todo"
+when = placeholder
 
 unless :: (Applicative f) => Bool -> f () -> f ()
-unless = error "todo"
+unless = placeholder
 
 liftM :: (Monad m) => (a1 -> r) -> m a1 -> m r
-liftM = error "todo"
+liftM = placeholder
 
 liftM2 :: (Monad m) => (a1 -> a2 -> r) -> m a1 -> m a2 -> m r
-liftM2 = error "todo"
+liftM2 = placeholder
 
 liftM3 :: (Monad m) => (a1 -> a2 -> a3 -> r) -> m a1 -> m a2 -> m a3 -> m r
-liftM3 = error "todo"
+liftM3 = placeholder
 
 liftM4 :: (Monad m) => (a1 -> a2 -> a3 -> a4 -> r) -> m a1 -> m a2 -> m a3 -> m a4 -> m r
-liftM4 = error "todo"
+liftM4 = placeholder
 
 liftM5 :: (Monad m) => (a1 -> a2 -> a3 -> a4 -> a5 -> r) -> m a1 -> m a2 -> m a3 -> m a4 -> m a5 -> m r
-liftM5 = error "todo"
+liftM5 = placeholder
 
 ap :: (Monad m) => m (a -> b) -> m a -> m b
-ap = error "todo"
+ap = placeholder
 
 infixl 4 <$!>
 
 (<$!>) :: (Monad m) => (a -> b) -> m a -> m b
-(<$!>) = error "todo"
+(<$!>) = placeholder

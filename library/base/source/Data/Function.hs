@@ -10,36 +10,37 @@ module Data.Function
   )
 where
 
+import Hazy (placeholder)
 import Prelude (error)
 
 id :: a -> a
-id = error "todo"
+id = placeholder
 
 const :: a -> b -> a
-const = error "todo"
+const = placeholder
 
 infixr 9 .
 
 (.) :: (b -> c) -> (a -> b) -> a -> c
-(.) = error "todo"
+(.) = placeholder
 
 flip :: (a -> b -> c) -> b -> a -> c
-flip = error "todo"
+flip = placeholder
 
 infixr 0 $
 
 ($) :: (a -> b) -> a -> b
-($) = error "todo"
+($) = placeholder
 
 infixl 1 &
 
 (&) :: a -> (a -> b) -> b
-(&) = error "todo"
+(&) = placeholder
 
 fix :: (a -> a) -> a
-fix = error "todo"
+fix = placeholder
 
 infixl 0 `on`
 
 on :: (b -> b -> c) -> (a -> b) -> a -> a -> c
-on = error "todo"
+on = placeholder

@@ -64,189 +64,190 @@ module Data.List.NonEmpty
 where
 
 import Control.Applicative (Alternative (..))
+import Hazy (placeholder)
 
 infixr 5 :|
 
 data NonEmpty a = a :| [a]
 
 map :: (a -> b) -> NonEmpty a -> NonEmpty b
-map = error "todo"
+map = placeholder
 
 intersperse :: a -> NonEmpty a -> NonEmpty a
-intersperse = error "todo"
+intersperse = placeholder
 
 scanl :: (Foldable f) => (b -> a -> b) -> b -> f a -> NonEmpty b
-scanl = error "todo"
+scanl = placeholder
 
 scanr :: (Foldable f) => (a -> b -> b) -> b -> f a -> NonEmpty b
-scanr = error "todo"
+scanr = placeholder
 
 scanl1 :: (a -> a -> a) -> NonEmpty a -> NonEmpty a
-scanl1 = error "todo"
+scanl1 = placeholder
 
 scanr1 :: (a -> a -> a) -> NonEmpty a -> NonEmpty a
-scanr1 = error "todo"
+scanr1 = placeholder
 
 transpose :: NonEmpty (NonEmpty a) -> NonEmpty (NonEmpty a)
-transpose = error "todo"
+transpose = placeholder
 
 sortBy :: (a -> a -> Ordering) -> NonEmpty a -> NonEmpty a
-sortBy = error "todo"
+sortBy = placeholder
 
 sortWith :: (Ord o) => (a -> o) -> NonEmpty a -> NonEmpty a
-sortWith = error "todo"
+sortWith = placeholder
 
 length :: NonEmpty a -> Int
-length = error "todo"
+length = placeholder
 
 head :: NonEmpty a -> a
-head = error "todo"
+head = placeholder
 
 tail :: NonEmpty a -> [a]
-tail = error "todo"
+tail = placeholder
 
 last :: NonEmpty a -> a
-last = error "todo"
+last = placeholder
 
 init :: NonEmpty a -> [a]
-init = error "todo"
+init = placeholder
 
 singleton :: a -> NonEmpty a
-singleton = error "todo"
+singleton = placeholder
 
 infixr 5 <|
 
 (<|) :: a -> NonEmpty a -> NonEmpty a
-(<|) = error "todo"
+(<|) = placeholder
 
 cons :: a -> NonEmpty a -> NonEmpty a
-cons = error "todo"
+cons = placeholder
 
 uncons :: NonEmpty a -> (a, Maybe (NonEmpty a))
-uncons = error "todo"
+uncons = placeholder
 
 unfoldr :: (a -> (b, Maybe a)) -> a -> NonEmpty b
-unfoldr = error "todo"
+unfoldr = placeholder
 
 sort :: (Ord a) => NonEmpty a -> NonEmpty a
-sort = error "todo"
+sort = placeholder
 
 reverse :: NonEmpty a -> NonEmpty a
-reverse = error "todo"
+reverse = placeholder
 
 inits :: (Foldable f) => f a -> NonEmpty [a]
-inits = error "todo"
+inits = placeholder
 
 tails :: (Foldable f) => f a -> NonEmpty [a]
-tails = error "todo"
+tails = placeholder
 
 append :: NonEmpty a -> NonEmpty a -> NonEmpty a
-append = error "todo"
+append = placeholder
 
 appendList :: NonEmpty a -> [a] -> NonEmpty a
-appendList = error "todo"
+appendList = placeholder
 
 prependList :: [a] -> NonEmpty a -> NonEmpty a
-prependList = error "todo"
+prependList = placeholder
 
 iterate :: (a -> a) -> a -> NonEmpty a
-iterate = error "todo"
+iterate = placeholder
 
 repeat :: a -> NonEmpty a
-repeat = error "todo"
+repeat = placeholder
 
 cycle :: NonEmpty a -> NonEmpty a
-cycle = error "todo"
+cycle = placeholder
 
 unfold :: (a -> (b, Maybe a)) -> a -> NonEmpty b
-unfold = error "todo"
+unfold = placeholder
 
 insert :: (Foldable f, Ord a) => a -> f a -> NonEmpty a
-insert = error "todo"
+insert = placeholder
 
 some1 :: (Alternative f) => f a -> f (NonEmpty a)
-some1 = error "todo"
+some1 = placeholder
 
 take :: Int -> NonEmpty a -> [a]
-take = error "todo"
+take = placeholder
 
 drop :: Int -> NonEmpty a -> [a]
-drop = error "todo"
+drop = placeholder
 
 splitAt :: Int -> NonEmpty a -> ([a], [a])
-splitAt = error "todo"
+splitAt = placeholder
 
 takeWhile :: (a -> Bool) -> NonEmpty a -> [a]
-takeWhile = error "todo"
+takeWhile = placeholder
 
 dropWhile :: (a -> Bool) -> NonEmpty a -> [a]
-dropWhile = error "todo"
+dropWhile = placeholder
 
 span :: (a -> Bool) -> NonEmpty a -> ([a], [a])
-span = error "todo"
+span = placeholder
 
 break :: (a -> Bool) -> NonEmpty a -> ([a], [a])
-break = error "todo"
+break = placeholder
 
 filter :: (a -> Bool) -> NonEmpty a -> [a]
-filter = error "todo"
+filter = placeholder
 
 partition :: (a -> Bool) -> NonEmpty a -> ([a], [a])
-partition = error "todo"
+partition = placeholder
 
 group :: (Foldable f, Eq a) => f a -> [NonEmpty a]
-group = error "todo"
+group = placeholder
 
 groupBy :: (Foldable f) => (a -> a -> Bool) -> f a -> [NonEmpty a]
-groupBy = error "todo"
+groupBy = placeholder
 
 groupWith :: (Foldable f, Eq b) => (a -> b) -> f a -> [NonEmpty a]
-groupWith = error "todo"
+groupWith = placeholder
 
 groupAllWith :: (Ord b) => (a -> b) -> [a] -> [NonEmpty a]
-groupAllWith = error "todo"
+groupAllWith = placeholder
 
 group1 :: (Eq a) => NonEmpty a -> NonEmpty (NonEmpty a)
-group1 = error "todo"
+group1 = placeholder
 
 groupBy1 :: (a -> a -> Bool) -> NonEmpty a -> NonEmpty (NonEmpty a)
-groupBy1 = error "todo"
+groupBy1 = placeholder
 
 groupWith1 :: (Eq b) => (a -> b) -> NonEmpty a -> NonEmpty (NonEmpty a)
-groupWith1 = error "todo"
+groupWith1 = placeholder
 
 groupAllWith1 :: (Ord b) => (a -> b) -> NonEmpty a -> NonEmpty (NonEmpty a)
-groupAllWith1 = error "todo"
+groupAllWith1 = placeholder
 
 isPrefixOf :: (Eq a) => [a] -> NonEmpty a -> Bool
-isPrefixOf = error "todo"
+isPrefixOf = placeholder
 
 nub :: (Eq a) => NonEmpty a -> NonEmpty a
-nub = error "todo"
+nub = placeholder
 
 nubBy :: (a -> a -> Bool) -> NonEmpty a -> NonEmpty a
-nubBy = error "todo"
+nubBy = placeholder
 
 (!!) :: NonEmpty a -> Int -> a
-(!!) = error "todo"
+(!!) = placeholder
 
 zip :: NonEmpty a -> NonEmpty b -> NonEmpty (a, b)
-zip = error "todo"
+zip = placeholder
 
 zipWith :: (a -> b -> c) -> NonEmpty a -> NonEmpty b -> NonEmpty c
-zipWith = error "todo"
+zipWith = placeholder
 
 unzip :: (Functor f) => f (a, b) -> (f a, f b)
-unzip = error "todo"
+unzip = placeholder
 
 fromList :: [a] -> NonEmpty a
-fromList = error "todo"
+fromList = placeholder
 
 toList :: NonEmpty a -> [a]
-toList = error "todo"
+toList = placeholder
 
 nonEmpty :: [a] -> Maybe (NonEmpty a)
-nonEmpty = error "todo"
+nonEmpty = placeholder
 
 xor :: NonEmpty Bool -> Bool
-xor = error "todo"
+xor = placeholder

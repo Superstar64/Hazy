@@ -22,6 +22,7 @@ import Data.Either (Either)
 import Data.Int (Int)
 import Data.Maybe (Maybe)
 import Data.String (String)
+import Hazy (placeholder)
 import Text.ParserCombinators.ReadPrec (ReadPrec)
 import Text.Read.Lex (Lexeme (..))
 import Prelude (error)
@@ -35,31 +36,31 @@ class Read a where
 type ReadS a = String -> [(a, String)]
 
 reads :: (Read a) => ReadS a
-reads = error "todo"
+reads = placeholder
 
 read :: (Read a) => String -> a
-read = error "todo"
+read = placeholder
 
 readParen :: Bool -> ReadS a -> ReadS a
-readParen = error "todo"
+readParen = placeholder
 
 lex :: ReadS String
-lex = error "todo"
+lex = placeholder
 
 lexP :: ReadPrec Lexeme
-lexP = error "todo"
+lexP = placeholder
 
 parens :: ReadPrec a -> ReadPrec a
-parens = error "todo"
+parens = placeholder
 
 readListDefault :: (Read a) => ReadS [a]
-readListDefault = error "todo"
+readListDefault = placeholder
 
 readListPrecDefault :: (Read a) => ReadPrec [a]
-readListPrecDefault = error "todo"
+readListPrecDefault = placeholder
 
 readEither :: (Read a) => String -> Either String a
-readEither = error "todo"
+readEither = placeholder
 
 readMaybe :: (Read a) => String -> Maybe a
-readMaybe = error "todo"
+readMaybe = placeholder

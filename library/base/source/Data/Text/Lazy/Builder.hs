@@ -12,26 +12,27 @@ where
 
 import Data.Text (Text)
 import qualified Data.Text.Lazy as Lazy (Text)
+import Hazy (placeholder)
 
 data Builder
 
 toLazyText :: Builder -> Lazy.Text
-toLazyText = error "todo"
+toLazyText = placeholder
 
 toLazyTextWith :: Int -> Builder -> Lazy.Text
-toLazyTextWith = error "todo"
+toLazyTextWith = placeholder
 
 singleton :: Char -> Builder
-singleton = error "todo"
+singleton = placeholder
 
 fromText :: Text -> Builder
-fromText = error "todo"
+fromText = placeholder
 
 fromLazyText :: Lazy.Text -> Builder
-fromLazyText = error "todo"
+fromLazyText = placeholder
 
 fromString :: String -> Builder
-fromString = error "todo"
+fromString = placeholder
 
 flush :: Builder
-flush = error "todo"
+flush = placeholder

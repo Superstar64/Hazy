@@ -1,260 +1,261 @@
 module Data.Vector.Strict where
 
 import qualified Data.Vector as Lazy
+import Hazy (placeholder)
 
 data Vector a
 
 length :: Vector a -> Int
-length = error "todo"
+length = placeholder
 
 null :: Vector a -> Bool
-null = error "todo"
+null = placeholder
 
 (!) :: Vector a -> Int -> a
-(!) = error "todo"
+(!) = placeholder
 
 (!?) :: Vector a -> Int -> Maybe a
-(!?) = error "todo"
+(!?) = placeholder
 
 head :: Vector a -> a
-head = error "todo"
+head = placeholder
 
 last :: Vector a -> a
-last = error "todo"
+last = placeholder
 
 unsafeIndex :: Vector a -> Int -> a
-unsafeIndex = error "todo"
+unsafeIndex = placeholder
 
 unsafeHead :: Vector a -> a
-unsafeHead = error "todo"
+unsafeHead = placeholder
 
 unsafeLast :: Vector a -> a
-unsafeLast = error "todo"
+unsafeLast = placeholder
 
 indexM :: (Monad m) => Vector a -> Int -> m a
-indexM = error "todo"
+indexM = placeholder
 
 headM :: (Monad m) => Vector a -> m a
-headM = error "todo"
+headM = placeholder
 
 lastM :: (Monad m) => Vector a -> m a
-lastM = error "todo"
+lastM = placeholder
 
 unsafeIndexM :: (Monad m) => Vector a -> Int -> m a
-unsafeIndexM = error "todo"
+unsafeIndexM = placeholder
 
 unsafeHeadM :: (Monad m) => Vector a -> m a
-unsafeHeadM = error "todo"
+unsafeHeadM = placeholder
 
 unsafeLastM :: (Monad m) => Vector a -> m a
-unsafeLastM = error "todo"
+unsafeLastM = placeholder
 
 slice :: Int -> Int -> Vector a -> Vector a
-slice = error "todo"
+slice = placeholder
 
 init :: Vector a -> Vector a
-init = error "todo"
+init = placeholder
 
 tail :: Vector a -> Vector a
-tail = error "todo"
+tail = placeholder
 
 take :: Int -> Vector a -> Vector a
-take = error "todo"
+take = placeholder
 
 drop :: Int -> Vector a -> Vector a
-drop = error "todo"
+drop = placeholder
 
 splitAt :: Int -> Vector a -> (Vector a, Vector a)
-splitAt = error "todo"
+splitAt = placeholder
 
 uncons :: Vector a -> Maybe (a, Vector a)
-uncons = error "todo"
+uncons = placeholder
 
 unsnoc :: Vector a -> Maybe (Vector a, a)
-unsnoc = error "todo"
+unsnoc = placeholder
 
 unsafeSlice :: Int -> Int -> Vector a -> Vector a
-unsafeSlice = error "todo"
+unsafeSlice = placeholder
 
 unsafeInit :: Vector a -> Vector a
-unsafeInit = error "todo"
+unsafeInit = placeholder
 
 unsafeTail :: Vector a -> Vector a
-unsafeTail = error "todo"
+unsafeTail = placeholder
 
 unsafeTake :: Int -> Vector a -> Vector a
-unsafeTake = error "todo"
+unsafeTake = placeholder
 
 unsafeDrop :: Int -> Vector a -> Vector a
-unsafeDrop = error "todo"
+unsafeDrop = placeholder
 
 empty :: Vector a
-empty = error "todo"
+empty = placeholder
 
 singleton :: a -> Vector a
-singleton = error "todo"
+singleton = placeholder
 
 replicate :: Int -> a -> Vector a
-replicate = error "todo"
+replicate = placeholder
 
 generate :: Int -> (Int -> a) -> Vector a
-generate = error "todo"
+generate = placeholder
 
 iterateN :: Int -> (a -> a) -> a -> Vector a
-iterateN = error "todo"
+iterateN = placeholder
 
 replicateM :: (Monad m) => Int -> m a -> m (Vector a)
-replicateM = error "todo"
+replicateM = placeholder
 
 generateM :: (Monad m) => Int -> (Int -> m a) -> m (Vector a)
-generateM = error "todo"
+generateM = placeholder
 
 iterateNM :: (Monad m) => Int -> (a -> m a) -> a -> m (Vector a)
-iterateNM = error "todo"
+iterateNM = placeholder
 
 unfoldr :: (b -> Maybe (a, b)) -> b -> Vector a
-unfoldr = error "todo"
+unfoldr = placeholder
 
 unfoldrN :: Int -> (b -> Maybe (a, b)) -> b -> Vector a
-unfoldrN = error "todo"
+unfoldrN = placeholder
 
 unfoldrExactN :: Int -> (b -> (a, b)) -> b -> Vector a
-unfoldrExactN = error "todo"
+unfoldrExactN = placeholder
 
 unfoldrM :: (Monad m) => (b -> m (Maybe (a, b))) -> b -> m (Vector a)
-unfoldrM = error "todo"
+unfoldrM = placeholder
 
 unfoldrNM :: (Monad m) => Int -> (b -> m (Maybe (a, b))) -> b -> m (Vector a)
-unfoldrNM = error "todo"
+unfoldrNM = placeholder
 
 unfoldrExactNM :: (Monad m) => Int -> (b -> m (a, b)) -> b -> m (Vector a)
-unfoldrExactNM = error "todo"
+unfoldrExactNM = placeholder
 
 constructN :: Int -> (Vector a -> a) -> Vector a
-constructN = error "todo"
+constructN = placeholder
 
 constructrN :: Int -> (Vector a -> a) -> Vector a
-constructrN = error "todo"
+constructrN = placeholder
 
 enumFromN :: (Num a) => a -> Int -> Vector a
-enumFromN = error "todo"
+enumFromN = placeholder
 
 enumFromStepN :: (Num a) => a -> a -> Int -> Vector a
-enumFromStepN = error "todo"
+enumFromStepN = placeholder
 
 enumFromTo :: (Enum a) => a -> a -> Vector a
-enumFromTo = error "todo"
+enumFromTo = placeholder
 
 enumFromThenTo :: (Enum a) => a -> a -> a -> Vector a
-enumFromThenTo = error "todo"
+enumFromThenTo = placeholder
 
 cons :: a -> Vector a -> Vector a
-cons = error "todo"
+cons = placeholder
 
 snoc :: Vector a -> a -> Vector a
-snoc = error "todo"
+snoc = placeholder
 
 (++) :: Vector a -> Vector a -> Vector a
-(++) = error "todo"
+(++) = placeholder
 
 concat :: [Vector a] -> Vector a
-concat = error "todo"
+concat = placeholder
 
 force :: Vector a -> Vector a
-force = error "todo"
+force = placeholder
 
 (//) :: Vector a -> [(Int, a)] -> Vector a
-(//) = error "todo"
+(//) = placeholder
 
 update :: Vector a -> Vector (Int, a) -> Vector a
-update = error "todo"
+update = placeholder
 
 update_ :: Vector a -> Vector Int -> Vector a -> Vector a
-update_ = error "todo"
+update_ = placeholder
 
 unsafeUpd :: Vector a -> [(Int, a)] -> Vector a
-unsafeUpd = error "todo"
+unsafeUpd = placeholder
 
 unsafeUpdate :: Vector a -> Vector (Int, a) -> Vector a
-unsafeUpdate = error "todo"
+unsafeUpdate = placeholder
 
 unsafeUpdate_ :: Vector a -> Vector Int -> Vector a -> Vector a
-unsafeUpdate_ = error "todo"
+unsafeUpdate_ = placeholder
 
 accum :: (a -> b -> a) -> Vector a -> [(Int, b)] -> Vector a
-accum = error "todo"
+accum = placeholder
 
 accumulate :: (a -> b -> a) -> Vector a -> Vector (Int, b) -> Vector a
-accumulate = error "todo"
+accumulate = placeholder
 
 accumulate_ :: (a -> b -> a) -> Vector a -> Vector Int -> Vector b -> Vector a
-accumulate_ = error "todo"
+accumulate_ = placeholder
 
 unsafeAccum :: (a -> b -> a) -> Vector a -> [(Int, b)] -> Vector a
-unsafeAccum = error "todo"
+unsafeAccum = placeholder
 
 unsafeAccumulate :: (a -> b -> a) -> Vector a -> Vector (Int, b) -> Vector a
-unsafeAccumulate = error "todo"
+unsafeAccumulate = placeholder
 
 unsafeAccumulate_ :: (a -> b -> a) -> Vector a -> Vector Int -> Vector b -> Vector a
-unsafeAccumulate_ = error "todo"
+unsafeAccumulate_ = placeholder
 
 reverse :: Vector a -> Vector a
-reverse = error "todo"
+reverse = placeholder
 
 backpermute :: Vector a -> Vector Int -> Vector a
-backpermute = error "todo"
+backpermute = placeholder
 
 unsafeBackpermute :: Vector a -> Vector Int -> Vector a
-unsafeBackpermute = error "todo"
+unsafeBackpermute = placeholder
 
 indexed :: Vector a -> Vector (Int, a)
-indexed = error "todo"
+indexed = placeholder
 
 map :: (a -> b) -> Vector a -> Vector b
-map = error "todo"
+map = placeholder
 
 imap :: (Int -> a -> b) -> Vector a -> Vector b
-imap = error "todo"
+imap = placeholder
 
 concatMap :: (a -> Vector b) -> Vector a -> Vector b
-concatMap = error "todo"
+concatMap = placeholder
 
 mapM :: (Monad m) => (a -> m b) -> Vector a -> m (Vector b)
-mapM = error "todo"
+mapM = placeholder
 
 imapM :: (Monad m) => (Int -> a -> m b) -> Vector a -> m (Vector b)
-imapM = error "todo"
+imapM = placeholder
 
 mapM_ :: (Monad m) => (a -> m b) -> Vector a -> m ()
-mapM_ = error "todo"
+mapM_ = placeholder
 
 imapM_ :: (Monad m) => (Int -> a -> m b) -> Vector a -> m ()
-imapM_ = error "todo"
+imapM_ = placeholder
 
 forM :: (Monad m) => Vector a -> (a -> m b) -> m (Vector b)
-forM = error "todo"
+forM = placeholder
 
 forM_ :: (Monad m) => Vector a -> (a -> m b) -> m ()
-forM_ = error "todo"
+forM_ = placeholder
 
 iforM :: (Monad m) => Vector a -> (Int -> a -> m b) -> m (Vector b)
-iforM = error "todo"
+iforM = placeholder
 
 iforM_ :: (Monad m) => Vector a -> (Int -> a -> m b) -> m ()
-iforM_ = error "todo"
+iforM_ = placeholder
 
 zipWith :: (a -> b -> c) -> Vector a -> Vector b -> Vector c
-zipWith = error "todo"
+zipWith = placeholder
 
 zipWith3 :: (a -> b -> c -> d) -> Vector a -> Vector b -> Vector c -> Vector d
-zipWith3 = error "todo"
+zipWith3 = placeholder
 
 zipWith4 :: (a -> b -> c -> d -> e) -> Vector a -> Vector b -> Vector c -> Vector d -> Vector e
-zipWith4 = error "todo"
+zipWith4 = placeholder
 
 zipWith5 :: (a -> b -> c -> d -> e -> f) -> Vector a -> Vector b -> Vector c -> Vector d -> Vector e -> Vector f
-zipWith5 = error "todo"
+zipWith5 = placeholder
 
 zipWith6 ::
   (a -> b -> c -> d -> e -> f -> g) ->
@@ -265,19 +266,19 @@ zipWith6 ::
   Vector e ->
   Vector f ->
   Vector g
-zipWith6 = error "todo"
+zipWith6 = placeholder
 
 izipWith :: (Int -> a -> b -> c) -> Vector a -> Vector b -> Vector c
-izipWith = error "todo"
+izipWith = placeholder
 
 izipWith3 :: (Int -> a -> b -> c -> d) -> Vector a -> Vector b -> Vector c -> Vector d
-izipWith3 = error "todo"
+izipWith3 = placeholder
 
 izipWith4 :: (Int -> a -> b -> c -> d -> e) -> Vector a -> Vector b -> Vector c -> Vector d -> Vector e
-izipWith4 = error "todo"
+izipWith4 = placeholder
 
 izipWith5 :: (Int -> a -> b -> c -> d -> e -> f) -> Vector a -> Vector b -> Vector c -> Vector d -> Vector e -> Vector f
-izipWith5 = error "todo"
+izipWith5 = placeholder
 
 izipWith6 ::
   (Int -> a -> b -> c -> d -> e -> f -> g) ->
@@ -288,343 +289,343 @@ izipWith6 ::
   Vector e ->
   Vector f ->
   Vector g
-izipWith6 = error "todo"
+izipWith6 = placeholder
 
 zip :: Vector a -> Vector b -> Vector (a, b)
-zip = error "todo"
+zip = placeholder
 
 zip3 :: Vector a -> Vector b -> Vector c -> Vector (a, b, c)
-zip3 = error "todo"
+zip3 = placeholder
 
 zip4 :: Vector a -> Vector b -> Vector c -> Vector d -> Vector (a, b, c, d)
-zip4 = error "todo"
+zip4 = placeholder
 
 zip5 :: Vector a -> Vector b -> Vector c -> Vector d -> Vector e -> Vector (a, b, c, d, e)
-zip5 = error "todo"
+zip5 = placeholder
 
 zip6 :: Vector a -> Vector b -> Vector c -> Vector d -> Vector e -> Vector f -> Vector (a, b, c, d, e, f)
-zip6 = error "todo"
+zip6 = placeholder
 
 zipWithM :: (Monad m) => (a -> b -> m c) -> Vector a -> Vector b -> m (Vector c)
-zipWithM = error "todo"
+zipWithM = placeholder
 
 izipWithM :: (Monad m) => (Int -> a -> b -> m c) -> Vector a -> Vector b -> m (Vector c)
-izipWithM = error "todo"
+izipWithM = placeholder
 
 zipWithM_ :: (Monad m) => (a -> b -> m c) -> Vector a -> Vector b -> m ()
-zipWithM_ = error "todo"
+zipWithM_ = placeholder
 
 izipWithM_ :: (Monad m) => (Int -> a -> b -> m c) -> Vector a -> Vector b -> m ()
-izipWithM_ = error "todo"
+izipWithM_ = placeholder
 
 unzip :: Vector (a, b) -> (Vector a, Vector b)
-unzip = error "todo"
+unzip = placeholder
 
 unzip3 :: Vector (a, b, c) -> (Vector a, Vector b, Vector c)
-unzip3 = error "todo"
+unzip3 = placeholder
 
 unzip4 :: Vector (a, b, c, d) -> (Vector a, Vector b, Vector c, Vector d)
-unzip4 = error "todo"
+unzip4 = placeholder
 
 unzip5 :: Vector (a, b, c, d, e) -> (Vector a, Vector b, Vector c, Vector d, Vector e)
-unzip5 = error "todo"
+unzip5 = placeholder
 
 unzip6 :: Vector (a, b, c, d, e, f) -> (Vector a, Vector b, Vector c, Vector d, Vector e, Vector f)
-unzip6 = error "todo"
+unzip6 = placeholder
 
 filter :: (a -> Bool) -> Vector a -> Vector a
-filter = error "todo"
+filter = placeholder
 
 ifilter :: (Int -> a -> Bool) -> Vector a -> Vector a
-ifilter = error "todo"
+ifilter = placeholder
 
 filterM :: (Monad m) => (a -> m Bool) -> Vector a -> m (Vector a)
-filterM = error "todo"
+filterM = placeholder
 
 uniq :: (Eq a) => Vector a -> Vector a
-uniq = error "todo"
+uniq = placeholder
 
 mapMaybe :: (a -> Maybe b) -> Vector a -> Vector b
-mapMaybe = error "todo"
+mapMaybe = placeholder
 
 imapMaybe :: (Int -> a -> Maybe b) -> Vector a -> Vector b
-imapMaybe = error "todo"
+imapMaybe = placeholder
 
 mapMaybeM :: (Monad m) => (a -> m (Maybe b)) -> Vector a -> m (Vector b)
-mapMaybeM = error "todo"
+mapMaybeM = placeholder
 
 imapMaybeM :: (Monad m) => (Int -> a -> m (Maybe b)) -> Vector a -> m (Vector b)
-imapMaybeM = error "todo"
+imapMaybeM = placeholder
 
 catMaybes :: Vector (Maybe a) -> Vector a
-catMaybes = error "todo"
+catMaybes = placeholder
 
 takeWhile :: (a -> Bool) -> Vector a -> Vector a
-takeWhile = error "todo"
+takeWhile = placeholder
 
 dropWhile :: (a -> Bool) -> Vector a -> Vector a
-dropWhile = error "todo"
+dropWhile = placeholder
 
 partition :: (a -> Bool) -> Vector a -> (Vector a, Vector a)
-partition = error "todo"
+partition = placeholder
 
 unstablePartition :: (a -> Bool) -> Vector a -> (Vector a, Vector a)
-unstablePartition = error "todo"
+unstablePartition = placeholder
 
 partitionWith :: (a -> Either b c) -> Vector a -> (Vector b, Vector c)
-partitionWith = error "todo"
+partitionWith = placeholder
 
 span :: (a -> Bool) -> Vector a -> (Vector a, Vector a)
-span = error "todo"
+span = placeholder
 
 break :: (a -> Bool) -> Vector a -> (Vector a, Vector a)
-break = error "todo"
+break = placeholder
 
 spanR :: (a -> Bool) -> Vector a -> (Vector a, Vector a)
-spanR = error "todo"
+spanR = placeholder
 
 breakR :: (a -> Bool) -> Vector a -> (Vector a, Vector a)
-breakR = error "todo"
+breakR = placeholder
 
 groupBy :: (a -> a -> Bool) -> Vector a -> [Vector a]
-groupBy = error "todo"
+groupBy = placeholder
 
 group :: (Eq a) => Vector a -> [Vector a]
-group = error "todo"
+group = placeholder
 
 elem :: (Eq a) => a -> Vector a -> Bool
-elem = error "todo"
+elem = placeholder
 
 notElem :: (Eq a) => a -> Vector a -> Bool
-notElem = error "todo"
+notElem = placeholder
 
 find :: (a -> Bool) -> Vector a -> Maybe a
-find = error "todo"
+find = placeholder
 
 findIndex :: (a -> Bool) -> Vector a -> Maybe Int
-findIndex = error "todo"
+findIndex = placeholder
 
 findIndexR :: (a -> Bool) -> Vector a -> Maybe Int
-findIndexR = error "todo"
+findIndexR = placeholder
 
 findIndices :: (a -> Bool) -> Vector a -> Vector Int
-findIndices = error "todo"
+findIndices = placeholder
 
 elemIndex :: (Eq a) => a -> Vector a -> Maybe Int
-elemIndex = error "todo"
+elemIndex = placeholder
 
 elemIndices :: (Eq a) => a -> Vector a -> Vector Int
-elemIndices = error "todo"
+elemIndices = placeholder
 
 foldl :: (a -> b -> a) -> a -> Vector b -> a
-foldl = error "todo"
+foldl = placeholder
 
 foldl1 :: (a -> a -> a) -> Vector a -> a
-foldl1 = error "todo"
+foldl1 = placeholder
 
 foldl' :: (a -> b -> a) -> a -> Vector b -> a
-foldl' = error "todo"
+foldl' = placeholder
 
 foldl1' :: (a -> a -> a) -> Vector a -> a
-foldl1' = error "todo"
+foldl1' = placeholder
 
 foldr :: (a -> b -> b) -> b -> Vector a -> b
-foldr = error "todo"
+foldr = placeholder
 
 foldr1 :: (a -> a -> a) -> Vector a -> a
-foldr1 = error "todo"
+foldr1 = placeholder
 
 foldr' :: (a -> b -> b) -> b -> Vector a -> b
-foldr' = error "todo"
+foldr' = placeholder
 
 foldr1' :: (a -> a -> a) -> Vector a -> a
-foldr1' = error "todo"
+foldr1' = placeholder
 
 ifoldl :: (a -> Int -> b -> a) -> a -> Vector b -> a
-ifoldl = error "todo"
+ifoldl = placeholder
 
 ifoldl' :: (a -> Int -> b -> a) -> a -> Vector b -> a
-ifoldl' = error "todo"
+ifoldl' = placeholder
 
 ifoldr :: (Int -> a -> b -> b) -> b -> Vector a -> b
-ifoldr = error "todo"
+ifoldr = placeholder
 
 ifoldr' :: (Int -> a -> b -> b) -> b -> Vector a -> b
-ifoldr' = error "todo"
+ifoldr' = placeholder
 
 foldMap :: (Monoid m) => (a -> m) -> Vector a -> m
-foldMap = error "todo"
+foldMap = placeholder
 
 foldMap' :: (Monoid m) => (a -> m) -> Vector a -> m
-foldMap' = error "todo"
+foldMap' = placeholder
 
 all :: (a -> Bool) -> Vector a -> Bool
-all = error "todo"
+all = placeholder
 
 any :: (a -> Bool) -> Vector a -> Bool
-any = error "todo"
+any = placeholder
 
 and :: Vector Bool -> Bool
-and = error "todo"
+and = placeholder
 
 or :: Vector Bool -> Bool
-or = error "todo"
+or = placeholder
 
 sum :: (Num a) => Vector a -> a
-sum = error "todo"
+sum = placeholder
 
 product :: (Num a) => Vector a -> a
-product = error "todo"
+product = placeholder
 
 maximum :: (Ord a) => Vector a -> a
-maximum = error "todo"
+maximum = placeholder
 
 maximumBy :: (a -> a -> Ordering) -> Vector a -> a
-maximumBy = error "todo"
+maximumBy = placeholder
 
 maximumOn :: (Ord b) => (a -> b) -> Vector a -> a
-maximumOn = error "todo"
+maximumOn = placeholder
 
 minimum :: (Ord a) => Vector a -> a
-minimum = error "todo"
+minimum = placeholder
 
 minimumBy :: (a -> a -> Ordering) -> Vector a -> a
-minimumBy = error "todo"
+minimumBy = placeholder
 
 minimumOn :: (Ord b) => (a -> b) -> Vector a -> a
-minimumOn = error "todo"
+minimumOn = placeholder
 
 minIndex :: (Ord a) => Vector a -> Int
-minIndex = error "todo"
+minIndex = placeholder
 
 minIndexBy :: (a -> a -> Ordering) -> Vector a -> Int
-minIndexBy = error "todo"
+minIndexBy = placeholder
 
 maxIndex :: (Ord a) => Vector a -> Int
-maxIndex = error "todo"
+maxIndex = placeholder
 
 maxIndexBy :: (a -> a -> Ordering) -> Vector a -> Int
-maxIndexBy = error "todo"
+maxIndexBy = placeholder
 
 foldM :: (Monad m) => (a -> b -> m a) -> a -> Vector b -> m a
-foldM = error "todo"
+foldM = placeholder
 
 ifoldM :: (Monad m) => (a -> Int -> b -> m a) -> a -> Vector b -> m a
-ifoldM = error "todo"
+ifoldM = placeholder
 
 foldM' :: (Monad m) => (a -> b -> m a) -> a -> Vector b -> m a
-foldM' = error "todo"
+foldM' = placeholder
 
 ifoldM' :: (Monad m) => (a -> Int -> b -> m a) -> a -> Vector b -> m a
-ifoldM' = error "todo"
+ifoldM' = placeholder
 
 fold1M :: (Monad m) => (a -> a -> m a) -> Vector a -> m a
-fold1M = error "todo"
+fold1M = placeholder
 
 fold1M' :: (Monad m) => (a -> a -> m a) -> Vector a -> m a
-fold1M' = error "todo"
+fold1M' = placeholder
 
 foldM_ :: (Monad m) => (a -> b -> m a) -> a -> Vector b -> m ()
-foldM_ = error "todo"
+foldM_ = placeholder
 
 ifoldM_ :: (Monad m) => (a -> Int -> b -> m a) -> a -> Vector b -> m ()
-ifoldM_ = error "todo"
+ifoldM_ = placeholder
 
 foldM'_ :: (Monad m) => (a -> b -> m a) -> a -> Vector b -> m ()
-foldM'_ = error "todo"
+foldM'_ = placeholder
 
 ifoldM'_ :: (Monad m) => (a -> Int -> b -> m a) -> a -> Vector b -> m ()
-ifoldM'_ = error "todo"
+ifoldM'_ = placeholder
 
 fold1M_ :: (Monad m) => (a -> a -> m a) -> Vector a -> m ()
-fold1M_ = error "todo"
+fold1M_ = placeholder
 
 fold1M'_ :: (Monad m) => (a -> a -> m a) -> Vector a -> m ()
-fold1M'_ = error "todo"
+fold1M'_ = placeholder
 
 sequence :: (Monad m) => Vector (m a) -> m (Vector a)
-sequence = error "todo"
+sequence = placeholder
 
 sequence_ :: (Monad m) => Vector (m a) -> m ()
-sequence_ = error "todo"
+sequence_ = placeholder
 
 prescanl :: (a -> b -> a) -> a -> Vector b -> Vector a
-prescanl = error "todo"
+prescanl = placeholder
 
 prescanl' :: (a -> b -> a) -> a -> Vector b -> Vector a
-prescanl' = error "todo"
+prescanl' = placeholder
 
 postscanl :: (a -> b -> a) -> a -> Vector b -> Vector a
-postscanl = error "todo"
+postscanl = placeholder
 
 postscanl' :: (a -> b -> a) -> a -> Vector b -> Vector a
-postscanl' = error "todo"
+postscanl' = placeholder
 
 scanl :: (a -> b -> a) -> a -> Vector b -> Vector a
-scanl = error "todo"
+scanl = placeholder
 
 scanl' :: (a -> b -> a) -> a -> Vector b -> Vector a
-scanl' = error "todo"
+scanl' = placeholder
 
 scanl1 :: (a -> a -> a) -> Vector a -> Vector a
-scanl1 = error "todo"
+scanl1 = placeholder
 
 scanl1' :: (a -> a -> a) -> Vector a -> Vector a
-scanl1' = error "todo"
+scanl1' = placeholder
 
 iscanl :: (Int -> a -> b -> a) -> a -> Vector b -> Vector a
-iscanl = error "todo"
+iscanl = placeholder
 
 iscanl' :: (Int -> a -> b -> a) -> a -> Vector b -> Vector a
-iscanl' = error "todo"
+iscanl' = placeholder
 
 prescanr :: (a -> b -> b) -> b -> Vector a -> Vector b
-prescanr = error "todo"
+prescanr = placeholder
 
 prescanr' :: (a -> b -> b) -> b -> Vector a -> Vector b
-prescanr' = error "todo"
+prescanr' = placeholder
 
 postscanr :: (a -> b -> b) -> b -> Vector a -> Vector b
-postscanr = error "todo"
+postscanr = placeholder
 
 postscanr' :: (a -> b -> b) -> b -> Vector a -> Vector b
-postscanr' = error "todo"
+postscanr' = placeholder
 
 scanr :: (a -> b -> b) -> b -> Vector a -> Vector b
-scanr = error "todo"
+scanr = placeholder
 
 scanr' :: (a -> b -> b) -> b -> Vector a -> Vector b
-scanr' = error "todo"
+scanr' = placeholder
 
 scanr1 :: (a -> a -> a) -> Vector a -> Vector a
-scanr1 = error "todo"
+scanr1 = placeholder
 
 scanr1' :: (a -> a -> a) -> Vector a -> Vector a
-scanr1' = error "todo"
+scanr1' = placeholder
 
 iscanr :: (Int -> a -> b -> b) -> b -> Vector a -> Vector b
-iscanr = error "todo"
+iscanr = placeholder
 
 iscanr' :: (Int -> a -> b -> b) -> b -> Vector a -> Vector b
-iscanr' = error "todo"
+iscanr' = placeholder
 
 eqBy :: (a -> b -> Bool) -> Vector a -> Vector b -> Bool
-eqBy = error "todo"
+eqBy = placeholder
 
 cmpBy :: (a -> b -> Ordering) -> Vector a -> Vector b -> Ordering
-cmpBy = error "todo"
+cmpBy = placeholder
 
 toList :: Vector a -> [a]
-toList = error "todo"
+toList = placeholder
 
 fromList :: [a] -> Vector a
-fromList = error "todo"
+fromList = placeholder
 
 fromListN :: Int -> [a] -> Vector a
-fromListN = error "todo"
+fromListN = placeholder
 
 toLazy :: Vector a -> Lazy.Vector a
-toLazy = error "todo"
+toLazy = placeholder
 
 fromLazy :: Lazy.Vector a -> Vector a
-fromLazy = error "todo"
+fromLazy = placeholder

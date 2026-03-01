@@ -38,69 +38,69 @@ where
 import Data.Bool (Bool)
 import Data.Int (Int)
 import Data.String (String)
-import Hazy (Char)
+import Hazy (Char, placeholder)
 import Text.Show (ShowS)
 import Prelude (ReadS, error)
 
 isControl :: Char -> Bool
-isControl = error "todo"
+isControl = placeholder
 
 isSpace :: Char -> Bool
-isSpace = error "todo"
+isSpace = placeholder
 
 isLower :: Char -> Bool
-isLower = error "todo"
+isLower = placeholder
 
 isUpper :: Char -> Bool
-isUpper = error "todo"
+isUpper = placeholder
 
 isAlpha :: Char -> Bool
-isAlpha = error "todo"
+isAlpha = placeholder
 
 isAlphaNum :: Char -> Bool
-isAlphaNum = error "todo"
+isAlphaNum = placeholder
 
 isPrint :: Char -> Bool
-isPrint = error "todo"
+isPrint = placeholder
 
 isDigit :: Char -> Bool
-isDigit = error "todo"
+isDigit = placeholder
 
 isOctDigit :: Char -> Bool
-isOctDigit = error "todo"
+isOctDigit = placeholder
 
 isHexDigit :: Char -> Bool
-isHexDigit = error "todo"
+isHexDigit = placeholder
 
 isLetter :: Char -> Bool
-isLetter = error "todo"
+isLetter = placeholder
 
 isMark :: Char -> Bool
-isMark = error "todo"
+isMark = placeholder
 
 isNumber :: Char -> Bool
-isNumber = error "todo"
+isNumber = placeholder
 
 isPunctuation :: Char -> Bool
-isPunctuation = error "todo"
+isPunctuation = placeholder
 
 isSymbol :: Char -> Bool
-isSymbol = error "todo"
+isSymbol = placeholder
 
 isSeparator :: Char -> Bool
-isSeparator = error "todo"
+isSeparator = placeholder
 
 isAscii :: Char -> Bool
-isAscii = error "todo"
+isAscii = placeholder
 
 isLatin1 :: Char -> Bool
-isLatin1 = error "todo"
+isLatin1 = placeholder
 
 isAsciiUpper :: Char -> Bool
-isAsciiUpper = error "todo"
+isAsciiUpper = placeholder
 
 isAsciiLower :: Char -> Bool
-isAsciiLower = error "todo"
+isAsciiLower = placeholder
 
 data GeneralCategory
   = UppercaseLetter
@@ -135,34 +135,34 @@ data GeneralCategory
   | NotAssigned
 
 generalCategory :: Char -> GeneralCategory
-generalCategory = error "todo"
+generalCategory = placeholder
 
 toUpper :: Char -> Char
-toUpper = error "todo"
+toUpper = placeholder
 
 toLower :: Char -> Char
-toLower = error "todo"
+toLower = placeholder
 
 toTitle :: Char -> Char
-toTitle = error "todo"
+toTitle = placeholder
 
 digitToInt :: Char -> Int
-digitToInt = error "todo"
+digitToInt = placeholder
 
 intToDigit :: Int -> Char
-intToDigit = error "todo"
+intToDigit = placeholder
 
 ord :: Char -> Int
-ord = error "todo"
+ord = placeholder
 
 chr :: Int -> Char
-chr = error "todo"
+chr = placeholder
 
 showLitChar :: Char -> ShowS
-showLitChar = error "todo"
+showLitChar = placeholder
 
 lexLitChar :: ReadS String
-lexLitChar = error "todo"
+lexLitChar = placeholder
 
 readLitChar :: ReadS Char
-readLitChar = error "todo"
+readLitChar = placeholder
