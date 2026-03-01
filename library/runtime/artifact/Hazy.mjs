@@ -80,6 +80,13 @@ export const eqInt = eqChar;
 
 export const eqInteger = eqChar;
 
+export const error = {
+  a: 0,
+  b: (message) => {
+    throw new Error(force(message));
+  },
+};
+
 // todo perform replacement on invalid scalar values
 export const pack = {
   a: 0,

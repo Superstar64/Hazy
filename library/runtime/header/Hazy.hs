@@ -12,6 +12,9 @@ placeholder = missing
 
 data Text
 
+error :: Text -> a
+error = missing
+
 pack :: [Char] -> Text
 pack = missing
 

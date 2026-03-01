@@ -290,12 +290,13 @@ import Data.Tuple
     snd,
     uncurry,
   )
-import Hazy
+import Hazy as Builtin
   ( Enum (..),
     Integer,
     Num (..),
     placeholder,
   )
+import qualified Hazy
 import System.IO
   ( FilePath,
     IO,
@@ -433,13 +434,13 @@ asTypeOf :: a -> a -> a
 asTypeOf = error "todo"
 
 error :: [Char] -> a
-error _ = placeholder
+error message = Hazy.error (Hazy.pack message)
 
 errorWithoutStackTrace :: [Char] -> a
 errorWithoutStackTrace = error "todo"
 
 undefined :: a
-undefined = placeholder
+undefined = error "bottom"
 
 infixr 0 `seq`
 
