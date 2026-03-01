@@ -2,21 +2,6 @@ function force(thunk) {
   return thunk.a ? thunk.b() : thunk.b;
 }
 
-function strict(b) {
-  return {
-    a: 0,
-    b,
-  };
-}
-
-function strict1(f) {
-  return strict((x) => f(force(x)));
-}
-
-function strict2(f) {
-  return strict((x) => (y) => f(force(x), force(y)));
-}
-
 function boolean(b) {
   return { a: b ? 1 : 0 };
 }
@@ -43,13 +28,25 @@ export const numInt = {
 };
 
 export const numInteger = {
-  a: strict2((x, y) => x + y),
-  b: strict2((x, y) => x - y),
-  c: strict2((x, y) => x * y),
-  d: strict2((x) => -x),
-  e: strict1((x) => (x >= 0n ? x : -x)),
-  f: strict1((x) => (x == 0n ? 0n : x > 0n ? 1n : -1n)),
-  g: strict1((x) => x),
+  a: { a: 0, b: (x) => (y) => force(x) + force(y) },
+  b: { a: 0, b: (x) => (y) => force(x) - force(y) },
+  c: { a: 0, b: (x) => (y) => force(x) * force(y) },
+  d: { a: 0, b: (x) => -force(x) },
+  e: {
+    a: 0,
+    b: (x) => {
+      x = force(x);
+      return x >= 0n ? x : -x;
+    },
+  },
+  f: {
+    a: 0,
+    b: (x) => {
+      x = force(x);
+      return x == 0n ? 0n : x > 0n ? 1n : -1n;
+    },
+  },
+  g: { a: 0, b: (x) => force(x) },
 };
 
 export const enumInt = {
@@ -70,13 +67,13 @@ export const enumBool = enumInt;
 export const enumChar = enumInt;
 
 export const eqBool = {
-  a: strict((x, y) => boolean(x.a === y.a)),
-  b: strict((x, y) => boolean(x.a === y.a)),
+  a: { a: 0, b: (x) => (y) => boolean(force(x).a === force(y).a) },
+  b: { a: 0, b: (x) => (y) => boolean(force(x).a !== force(y).a) },
 };
 
 export const eqChar = {
-  a: strict2((x, y) => boolean(x === y)),
-  b: strict2((x, y) => boolean(x !== y)),
+  a: { a: 0, b: (x) => (y) => boolean(force(x) === force(y)) },
+  b: { a: 0, b: (x) => (y) => boolean(force(x) !== force(y)) },
 };
 
 export const eqInt = eqChar;
@@ -84,16 +81,22 @@ export const eqInt = eqChar;
 export const eqInteger = eqChar;
 
 // todo perform replacement on invalid scalar values
-export const pack = strict((list) => {
-  let buffer = "";
-  let current = force(list);
-  while (current.a) {
-    buffer += force(current.b);
-    current = force(current.c);
-  }
-  return buffer;
-});
+export const pack = {
+  a: 0,
+  b: (list) => {
+    let buffer = "";
+    let current = force(list);
+    while (current.a) {
+      buffer += force(current.b);
+      current = force(current.c);
+    }
+    return buffer;
+  },
+};
 
-export const putStrLn = strict((thunk) => () => {
-  console.log(force(thunk));
-});
+export const putStrLn = {
+  a: 0,
+  b: (thunk) => () => {
+    console.log(force(thunk));
+  },
+};
