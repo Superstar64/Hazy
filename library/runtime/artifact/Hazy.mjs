@@ -94,7 +94,7 @@ export const pack = {
     let buffer = "";
     let current = force(list);
     while (current.a) {
-      buffer += force(current.b);
+      buffer += String.fromCodePoint(force(current.b));
       current = force(current.c);
     }
     return buffer;

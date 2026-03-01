@@ -1,8 +1,8 @@
 module Stage5.Tree.Expression where
 
 import Control.Monad.ST (ST)
+import Data.Char (ord)
 import Data.Foldable (toList)
-import qualified Data.Text as Text
 import qualified Data.Vector as Vector
 import qualified Javascript.Tree.Expression as Javascript (Expression (..))
 import qualified Javascript.Tree.Field as Javascript (Field (..))
@@ -78,7 +78,7 @@ generateInto context target = \case
         object = Javascript.Object {fields}
     pure [done object]
   Character {character} -> do
-    let string = Javascript.String {string = Text.singleton character}
+    let string = Javascript.Number {number = ord character}
     pure [done string]
   Method
     { method = Method.Index {methodIndex},
