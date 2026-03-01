@@ -8,14 +8,17 @@ import qualified Javascript.Tree.Expression as Javascript (Expression (..))
 import qualified Javascript.Tree.Field as Javascript (Field (..))
 import qualified Javascript.Tree.Statement as Javascript (Statement (..))
 import qualified Stage2.Index.Constructor as Constructor
+import Stage2.Index.Method (Enum (..), Eq (..), Num (..))
 import qualified Stage2.Index.Method as Method
 import qualified Stage2.Index.Selector as Selector
 import Stage4.Tree.Expression (Expression (..))
+import Stage4.Tree.Hook (Hook (..))
 import Stage4.Tree.Instanciation (Instanciation (Instanciation))
 import Stage4.Tree.SchemeOver (SchemeOver (..))
 import qualified Stage4.Tree.SchemeOver as SchemeOver
-import Stage5.Generate.Context (Context, fresh, singleBinding, symbol, (!-))
+import Stage5.Generate.Context (Context (..), fresh, singleBinding, symbol, (!-))
 import qualified Stage5.Generate.Context as Context
+import Stage5.Generate.Mangle (Builtin (..))
 import qualified Stage5.Generate.Mangle as Mangle
 import {-# SOURCE #-} qualified Stage5.Tree.Declarations as Declarations
 import qualified Stage5.Tree.Evidence as Evidence
@@ -138,6 +141,70 @@ generateInto context target = \case
             { bigInt = integer
             }
       ]
+  Hook {hook} -> do
+    let Context {builtin} = context
+        Builtin
+          { defaultPlus,
+            defaultMinus,
+            defaultMultiply,
+            defaultNegate,
+            defaultAbs,
+            defaultSignum,
+            defaultFromInteger,
+            defaultSucc,
+            defaultPred,
+            defaultToEnum,
+            defaultFromEnum,
+            defaultEnumFrom,
+            defaultEnumFromThen,
+            defaultEnumFromTo,
+            defaultEnumFromThenTo,
+            defaultEqual,
+            defaultNotEqual
+          } = builtin
+    expression <- case hook of
+      DefaultNum {evidence, num} -> do
+        evidence <- Evidence.generate context evidence
+        let name = case num of
+              Plus -> defaultPlus
+              Minus -> defaultMinus
+              Multiply -> defaultMultiply
+              Negate -> defaultNegate
+              Abs -> defaultAbs
+              Signum -> defaultSignum
+              FromInteger -> defaultFromInteger
+        pure
+          Javascript.Call
+            { function = Javascript.Variable {name},
+              arguments = [evidence]
+            }
+      DefaultEnum {evidence, enum} -> do
+        evidence <- Evidence.generate context evidence
+        let name = case enum of
+              Succ -> defaultSucc
+              Pred -> defaultPred
+              ToEnum -> defaultToEnum
+              FromEnum -> defaultFromEnum
+              EnumFrom -> defaultEnumFrom
+              EnumFromThen -> defaultEnumFromThen
+              EnumFromTo -> defaultEnumFromTo
+              EnumFromThenTo -> defaultEnumFromThenTo
+        pure
+          Javascript.Call
+            { function = Javascript.Variable {name},
+              arguments = [evidence]
+            }
+      DefaultEq {evidence, eq} -> do
+        evidence <- Evidence.generate context evidence
+        let name = case eq of
+              Equal -> defaultEqual
+              NotEqual -> defaultNotEqual
+        pure
+          Javascript.Call
+            { function = Javascript.Variable {name},
+              arguments = [evidence]
+            }
+    pure [done expression]
   where
     done value =
       Javascript.Expression

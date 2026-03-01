@@ -7,16 +7,19 @@ import qualified Stage2.Index.Local as Local
 import qualified Stage2.Index.Method as Method
 import qualified Stage2.Index.Type as Type (Index)
 import qualified Stage2.Index.Type2 as Type2
+import qualified Stage3.Index.Evidence as Evidence
+import qualified Stage3.Index.Evidence0 as Evidence0
 import Stage4.Tree.Class (Class (Class))
 import qualified Stage4.Tree.Class as Class
 import Stage4.Tree.ClassExtra (ClassExtra (..))
 import Stage4.Tree.Constructor (Constructor (..))
 import Stage4.Tree.Data (Data (Data))
 import qualified Stage4.Tree.Data as Data
-import Stage4.Tree.Expression (Expression)
-import qualified Stage4.Tree.Expression as Expression
+import Stage4.Tree.Evidence (Evidence (Variable, variable))
+import Stage4.Tree.Expression (Expression (Hook, hook))
+import Stage4.Tree.Hook (Hook (DefaultEnum, DefaultEq, DefaultNum))
+import qualified Stage4.Tree.Hook
 import qualified Stage4.Tree.Scheme as Scheme
-import qualified Stage4.Tree.Statements as Statements
 import Stage4.Tree.Type (Type)
 import qualified Stage4.Tree.Type as Type (Type (..), smallType)
 
@@ -146,9 +149,10 @@ numExtra =
   where
     set = map go [minBound .. maxBound]
       where
-        -- todo proper defaults for num
-        go :: Method.Num -> Expression scope
-        go _ = Expression.Join {statements = Statements.Bottom}
+        go num =
+          Hook {hook = DefaultNum {num, evidence = Variable {variable}}}
+          where
+            variable = Evidence.Index $ Evidence0.Shift $ Evidence0.Assumed 0
 
 enum :: Class scope
 enum =
@@ -183,9 +187,10 @@ enumExtra =
   where
     set = map go [minBound .. maxBound]
       where
-        -- todo proper defaults for enum
-        go :: Method.Enum -> Expression scope
-        go _ = Expression.Join {statements = Statements.Bottom}
+        go enum =
+          Hook {hook = DefaultEnum {enum, evidence = Variable {variable}}}
+          where
+            variable = Evidence.Index $ Evidence0.Shift $ Evidence0.Assumed 0
 
 eq :: Class scope
 eq =
@@ -209,6 +214,7 @@ eqExtra =
   where
     set = map go [minBound .. maxBound]
       where
-        -- todo proper defaults for num
-        go :: Method.Eq -> Expression scope
-        go _ = Expression.Join {statements = Statements.Bottom}
+        go eq =
+          Hook {hook = DefaultEq {eq, evidence = Variable {variable}}}
+          where
+            variable = Evidence.Index $ Evidence0.Shift $ Evidence0.Assumed 0

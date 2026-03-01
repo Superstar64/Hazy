@@ -35,6 +35,7 @@ import {-# SOURCE #-} Stage4.Tree.Declarations (Declarations)
 import {-# SOURCE #-} qualified Stage4.Tree.Declarations as Declarations
 import Stage4.Tree.Evidence (Evidence)
 import qualified Stage4.Tree.Evidence as Evidence
+import Stage4.Tree.Hook (Hook)
 import Stage4.Tree.Instanciation (Instanciation (..))
 import Stage4.Tree.Statements (Statements)
 import qualified Stage4.Tree.Statements as Statements
@@ -76,6 +77,9 @@ data Expression scope
       }
   | Join
       { statements :: !(Statements scope)
+      }
+  | Hook
+      { hook :: !(Hook scope)
       }
   deriving (Show)
 
@@ -139,6 +143,10 @@ instance Substitute.Functor Expression where
     Join {statements} ->
       Join
         { statements = Substitute.map category statements
+        }
+    Hook {hook} ->
+      Hook
+        { hook = Substitute.map category hook
         }
 
 monoVariable :: Term.Index scope -> Expression scope

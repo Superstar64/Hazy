@@ -24,7 +24,7 @@ data Num
   | Abs
   | Signum
   | FromInteger
-  deriving (Prelude.Enum, Bounded)
+  deriving (Prelude.Enum, Bounded, Show)
 
 plus = Index Type2.Num $ Prelude.fromEnum Plus
 
@@ -49,7 +49,7 @@ data Enum
   | EnumFromThen
   | EnumFromTo
   | EnumFromThenTo
-  deriving (Prelude.Enum, Bounded)
+  deriving (Prelude.Enum, Bounded, Show)
 
 succ = Index Type2.Enum $ Prelude.fromEnum Succ
 
@@ -70,7 +70,7 @@ enumFromThenTo = Index Type2.Enum $ Prelude.fromEnum EnumFromThenTo
 data Eq
   = Equal
   | NotEqual
-  deriving (Prelude.Enum, Bounded)
+  deriving (Prelude.Enum, Bounded, Show)
 
 equal = Index Type2.Eq $ Prelude.fromEnum Equal
 

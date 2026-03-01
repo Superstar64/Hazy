@@ -80,6 +80,28 @@ export const eqInt = eqChar;
 
 export const eqInteger = eqChar;
 
+const placeholderDefault = (_evidence) => {
+  throw new Exception("Placeholder");
+};
+
+export const defaultPlus = placeholderDefault;
+export const defaultMinus = placeholderDefault;
+export const defaultMultiply = placeholderDefault;
+export const defaultNegate = placeholderDefault;
+export const defaultAbs = placeholderDefault;
+export const defaultSignum = placeholderDefault;
+export const defaultFromInteger = placeholderDefault;
+export const defaultSucc = placeholderDefault;
+export const defaultPred = placeholderDefault;
+export const defaultToEnum = placeholderDefault;
+export const defaultFromEnum = placeholderDefault;
+export const defaultEnumFrom = placeholderDefault;
+export const defaultEnumFromThen = placeholderDefault;
+export const defaultEnumFromTo = placeholderDefault;
+export const defaultEnumFromThenTo = placeholderDefault;
+export const defaultEqual = placeholderDefault;
+export const defaultNotEqual = placeholderDefault;
+
 export const error = {
   a: 0,
   b: (message) => {

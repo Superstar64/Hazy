@@ -136,7 +136,24 @@ data Builtin a = Builtin
     eqBool,
     eqChar,
     eqInt,
-    eqInteger ::
+    eqInteger,
+    defaultPlus,
+    defaultMinus,
+    defaultMultiply,
+    defaultNegate,
+    defaultAbs,
+    defaultSignum,
+    defaultFromInteger,
+    defaultSucc,
+    defaultPred,
+    defaultToEnum,
+    defaultFromEnum,
+    defaultEnumFrom,
+    defaultEnumFromThen,
+    defaultEnumFromTo,
+    defaultEnumFromThenTo,
+    defaultEqual,
+    defaultNotEqual ::
       a
   }
 
@@ -144,19 +161,36 @@ instance Functor Builtin where
   fmap = liftA
 
 instance Applicative Builtin where
-  pure abort@numInt@numInteger@enumBool@enumChar@enumInt@enumInteger@eqBool@eqChar@eqInt@eqInteger =
+  pure a =
     Builtin
-      { abort,
-        numInt,
-        numInteger,
-        enumBool,
-        enumChar,
-        enumInt,
-        enumInteger,
-        eqBool,
-        eqChar,
-        eqInt,
-        eqInteger
+      { abort = a,
+        numInt = a,
+        numInteger = a,
+        enumBool = a,
+        enumChar = a,
+        enumInt = a,
+        enumInteger = a,
+        eqBool = a,
+        eqChar = a,
+        eqInt = a,
+        eqInteger = a,
+        defaultPlus = a,
+        defaultMinus = a,
+        defaultMultiply = a,
+        defaultNegate = a,
+        defaultAbs = a,
+        defaultSignum = a,
+        defaultFromInteger = a,
+        defaultSucc = a,
+        defaultPred = a,
+        defaultToEnum = a,
+        defaultFromEnum = a,
+        defaultEnumFrom = a,
+        defaultEnumFromThen = a,
+        defaultEnumFromTo = a,
+        defaultEnumFromThenTo = a,
+        defaultEqual = a,
+        defaultNotEqual = a
       }
   function <*> argument =
     Builtin
@@ -170,11 +204,28 @@ instance Applicative Builtin where
         eqBool = eqBool function (eqBool argument),
         eqChar = eqChar function (eqChar argument),
         eqInt = eqInt function (eqInt argument),
-        eqInteger = eqInteger function (eqInteger argument)
+        eqInteger = eqInteger function (eqInteger argument),
+        defaultPlus = defaultPlus function (defaultPlus argument),
+        defaultMinus = defaultMinus function (defaultMinus argument),
+        defaultMultiply = defaultMultiply function (defaultMultiply argument),
+        defaultNegate = defaultNegate function (defaultNegate argument),
+        defaultAbs = defaultAbs function (defaultAbs argument),
+        defaultSignum = defaultSignum function (defaultSignum argument),
+        defaultFromInteger = defaultFromInteger function (defaultFromInteger argument),
+        defaultSucc = defaultSucc function (defaultSucc argument),
+        defaultPred = defaultPred function (defaultPred argument),
+        defaultToEnum = defaultToEnum function (defaultToEnum argument),
+        defaultFromEnum = defaultFromEnum function (defaultFromEnum argument),
+        defaultEnumFrom = defaultEnumFrom function (defaultEnumFrom argument),
+        defaultEnumFromThen = defaultEnumFromThen function (defaultEnumFromThen argument),
+        defaultEnumFromTo = defaultEnumFromTo function (defaultEnumFromTo argument),
+        defaultEnumFromThenTo = defaultEnumFromThenTo function (defaultEnumFromThenTo argument),
+        defaultEqual = defaultEqual function (defaultEqual argument),
+        defaultNotEqual = defaultNotEqual function (defaultNotEqual argument)
       }
 
 instance Foldable Builtin where
-  toList (Builtin a b c d e f g h i j k) =
+  toList (Builtin a b c d e f g h i j k l m n o p q r s t u v w x y z aa ab) =
     [ a,
       b,
       c,
@@ -185,7 +236,24 @@ instance Foldable Builtin where
       h,
       i,
       j,
-      k
+      k,
+      l,
+      m,
+      n,
+      o,
+      p,
+      q,
+      r,
+      s,
+      t,
+      u,
+      v,
+      w,
+      x,
+      y,
+      z,
+      aa,
+      ab
     ]
   foldMap go = foldMap go . toList
 
@@ -202,7 +270,24 @@ canonical =
       eqBool = pack "eqBool",
       eqChar = pack "eqChar",
       eqInt = pack "eqInt",
-      eqInteger = pack "eqInteger"
+      eqInteger = pack "eqInteger",
+      defaultPlus = pack "defaultPlus",
+      defaultMinus = pack "defaultMinus",
+      defaultMultiply = pack "defaultMultiply",
+      defaultNegate = pack "defaultNegate",
+      defaultAbs = pack "defaultAbs",
+      defaultSignum = pack "defaultSignum",
+      defaultFromInteger = pack "defaultFromInteger",
+      defaultSucc = pack "defaultSucc",
+      defaultPred = pack "defaultPred",
+      defaultToEnum = pack "defaultToEnum",
+      defaultFromEnum = pack "defaultFromEnum",
+      defaultEnumFrom = pack "defaultEnumFrom",
+      defaultEnumFromThen = pack "defaultEnumFromThen",
+      defaultEnumFromTo = pack "defaultEnumFromTo",
+      defaultEnumFromThenTo = pack "defaultEnumFromThenTo",
+      defaultEqual = pack "defaultEqual",
+      defaultNotEqual = pack "defaultNotEqual"
     }
 
 builtin :: Builtin Text
@@ -219,6 +304,23 @@ unique :: [Text]
     : eqChar
     : eqInt
     : eqInteger
+    : defaultPlus
+    : defaultMinus
+    : defaultMultiply
+    : defaultNegate
+    : defaultAbs
+    : defaultSignum
+    : defaultFromInteger
+    : defaultSucc
+    : defaultPred
+    : defaultToEnum
+    : defaultFromEnum
+    : defaultEnumFrom
+    : defaultEnumFromThen
+    : defaultEnumFromTo
+    : defaultEnumFromThenTo
+    : defaultEqual
+    : defaultNotEqual
     : unique -> (builtins, unique)
       where
         builtins =
@@ -233,6 +335,23 @@ unique :: [Text]
               eqBool,
               eqChar,
               eqInt,
-              eqInteger
+              eqInteger,
+              defaultPlus,
+              defaultMinus,
+              defaultMultiply,
+              defaultNegate,
+              defaultAbs,
+              defaultSignum,
+              defaultFromInteger,
+              defaultSucc,
+              defaultPred,
+              defaultToEnum,
+              defaultFromEnum,
+              defaultEnumFrom,
+              defaultEnumFromThen,
+              defaultEnumFromTo,
+              defaultEnumFromThenTo,
+              defaultEqual,
+              defaultNotEqual
             }
   _ -> error "bad names"
