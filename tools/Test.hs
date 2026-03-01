@@ -65,22 +65,22 @@ good hazy = do
 run hazy = do
   run <- listDirectory "test/run"
   for_ run $ \run -> do
-    callProcessVerbose hazy ["test/run/" ++ run ++ "/source", "-o", ".build/" ++ run]
-    callCommandVerbose $ "node .build/" ++ run ++ "/index.mjs > .build/" ++ run ++ "/result"
-    callProcessVerbose "diff" ["test/run/" ++ run ++ "/result", ".build/" ++ run ++ "/result"]
+    callProcessVerbose hazy ["test/run/" ++ run ++ "/source", "-o", ".test/" ++ run]
+    callCommandVerbose $ "node .test/" ++ run ++ "/index.mjs > .test/" ++ run ++ "/result"
+    callProcessVerbose "diff" ["test/run/" ++ run ++ "/result", ".test/" ++ run ++ "/result"]
 
 main = do
   Just source <- findExecutable "hazy"
-  let hazy = ".build/dist/bin/hazy"
-  dirty <- doesDirectoryExist ".build"
-  when dirty $ removeDirectoryRecursive ".build"
-  createDirectoryIfMissing False ".build"
-  createDirectory ".build/dist"
-  createDirectory ".build/dist/bin"
-  createDirectory ".build/dist/packages"
+  let hazy = ".test/dist/bin/hazy"
+  dirty <- doesDirectoryExist ".test"
+  when dirty $ removeDirectoryRecursive ".test"
+  createDirectoryIfMissing False ".test"
+  createDirectory ".test/dist"
+  createDirectory ".test/dist/bin"
+  createDirectory ".test/dist/packages"
   copyFile source hazy
   -- todo, use proper recursive copy in Haskell
-  callProcess "cp" ["-R", "library/runtime/", ".build/dist/packages/runtime"]
+  callProcess "cp" ["-R", "library/runtime/", ".test/dist/packages/runtime"]
   flags <- readFile "library/base/flags"
   callProcessVerbose
     hazy
@@ -88,7 +88,7 @@ main = do
         "--pack",
         "library/base/source",
         "-o",
-        ".build/dist/packages/base"
+        ".test/dist/packages/base"
       ]
       ++ words flags
   parse hazy
