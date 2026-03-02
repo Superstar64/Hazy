@@ -16,7 +16,7 @@ import System.Directory
     removeDirectoryRecursive,
   )
 import System.Exit (exitFailure)
-import System.FilePath (splitExtension, (-<.>), (</>))
+import System.FilePath (splitExtension, takeFileName, (-<.>), (</>))
 import System.Process (callCommand, callProcess)
 
 find :: String -> IO [String]
@@ -71,7 +71,7 @@ run hazy = do
 
 main = do
   Just source <- findExecutable "hazy"
-  let hazy = ".test/dist/bin/hazy"
+  let hazy = ".test/dist/bin/" ++ takeFileName source
   dirty <- doesDirectoryExist ".test"
   when dirty $ removeDirectoryRecursive ".test"
   createDirectoryIfMissing False ".test"

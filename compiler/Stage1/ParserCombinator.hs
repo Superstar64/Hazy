@@ -75,18 +75,12 @@ instance Show Position where
   showsPrec fixity position = showParen (fixity > 10) $ showString "at " . showsPrec 11 (locate position)
 
 at :: Text -> Position
-at = parse at . startStream internal
+at position = Position file line column
   where
-    at :: Parser Stream Position
-    at = parse <$> section <*> char ':' <*> number <*> char ':' <*> number <*> eof
-      where
-        parse file _ line _ column ()
-          | file <- pack file,
-            line <- read line,
-            column <- read column =
-              Position file line column
-        section = many (satify Strings.pathCharacter (/= ':'))
-        number = many digit
+    file = Text.intercalate (pack ":") $ init $ init sections
+    line = read $ Text.unpack $ last $ init sections
+    column = read $ Text.unpack $ last sections
+    sections = Text.splitOn (pack ":") position
 
 step :: Position -> Char -> Position
 step (Position file line _) '\n' = Position file (line + 1) 1
@@ -102,9 +96,7 @@ data Stream = Stream
 startStream :: Text -> Text -> Stream
 startStream file stream = Stream {location, stream}
   where
-    location
-      | not $ ':' `Text.elem` file = Position file 1 1
-      | otherwise = error "unexpected colon in position"
+    location = Position file 1 1
 
 internal :: Text
 internal = pack "<internal>"
