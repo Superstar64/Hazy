@@ -187,6 +187,10 @@ executable hazy
     Stage2.Resolve.Binding.Type
     Stage2.Resolve.Bindings
     Stage2.Resolve.Builtin
+    Stage2.Resolve.Builtin.Bool
+    Stage2.Resolve.Builtin.Enum
+    Stage2.Resolve.Builtin.Eq
+    Stage2.Resolve.Builtin.Num
     Stage2.Resolve.Canonical
     Stage2.Resolve.Context
     Stage2.Resolve.Core
@@ -357,6 +361,12 @@ executable hazy
     Stage4.Temporary.Pattern
     Stage4.Temporary.RightHandSide
     Stage4.Tree.Builtin
+    Stage4.Tree.Builtin.Bool
+    Stage4.Tree.Builtin.Enum
+    Stage4.Tree.Builtin.Eq
+    Stage4.Tree.Builtin.List
+    Stage4.Tree.Builtin.Num
+    Stage4.Tree.Builtin.Tuple
     Stage4.Tree.Class
     Stage4.Tree.ClassExtra
     Stage4.Tree.Constraint
