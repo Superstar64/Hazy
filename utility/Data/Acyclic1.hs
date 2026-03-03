@@ -4,7 +4,7 @@
 --
 -- See this article on vanilla loeb: https://github.com/quchen/articles/blob/master/loeb-moeb.md
 -- Also see standard topological sort: https://en.wikipedia.org/wiki/Topological_sorting#Depth-first_search
-module Data.Acyclic.Axiom
+module Data.Acyclic1
   ( loeb,
     Loeb (..),
     loebST,

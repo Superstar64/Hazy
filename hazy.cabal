@@ -15,7 +15,14 @@ executable hazy
   main-is: Main.hs
   other-modules:
     Data.Acyclic
-    Data.Acyclic.Axiom
+    Data.Acyclic1
+    Data.Acyclic2
+    Data.Acyclic3
+    Data.Acyclic4
+    Data.Acyclic5
+    Data.Acyclic6
+    Data.Acyclic7
+    Data.Acyclic8
     Data.Heptafoldable
     Data.Heptafunctor
     Data.Heptatraversable
