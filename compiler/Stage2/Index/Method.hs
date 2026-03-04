@@ -7,7 +7,9 @@ import Prelude hiding (Enum, Eq)
 import qualified Prelude
 
 data Index scope = Index
-  {typeIndex :: !(Type2.Index scope), methodIndex :: !Int}
+  { typeIndex :: !(Type2.Index scope),
+    methodIndex :: !Int
+  }
   deriving (Show, Prelude.Eq, Ord)
 
 instance Shift Index where
@@ -75,3 +77,48 @@ data Eq
 equal = Index Type2.Eq $ Prelude.fromEnum Equal
 
 notEqual = Index Type2.Eq $ Prelude.fromEnum NotEqual
+
+data Functor
+  = Fmap
+  | Fconst
+  deriving (Prelude.Enum, Bounded, Show)
+
+fmap = Index Type2.Functor $ Prelude.fromEnum Fmap
+
+fconst = Index Type2.Functor $ Prelude.fromEnum Fconst
+
+data Applicative
+  = Pure
+  | Ap
+  | LiftA2
+  | DiscardLeft
+  | DiscardRight
+  deriving (Prelude.Enum, Bounded, Show)
+
+pure = Index Type2.Applicative $ Prelude.fromEnum Pure
+
+ap = Index Type2.Applicative $ Prelude.fromEnum Ap
+
+liftA2 = Index Type2.Applicative $ Prelude.fromEnum LiftA2
+
+discardLeft = Index Type2.Applicative $ Prelude.fromEnum DiscardLeft
+
+discardRight = Index Type2.Applicative $ Prelude.fromEnum DiscardRight
+
+data Monad
+  = Bind
+  | Then
+  | Return
+  deriving (Prelude.Enum, Bounded, Show)
+
+bind = Index Type2.Monad $ Prelude.fromEnum Bind
+
+thenx = Index Type2.Monad $ Prelude.fromEnum Then
+
+return = Index Type2.Monad $ Prelude.fromEnum Return
+
+data MonadFail
+  = Fail
+  deriving (Prelude.Enum, Bounded, Show)
+
+fail = Index Type2.MonadFail $ Prelude.fromEnum Fail

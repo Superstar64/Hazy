@@ -18,16 +18,8 @@ where
 import Data.Foldable (asum)
 import Data.Functor (Functor, (<$), (<$>))
 import Data.Maybe (Maybe)
-import Hazy (placeholder)
+import Hazy (Applicative (..), placeholder)
 import Prelude (error)
-
-class (Functor f) => Applicative f where
-  pure :: a -> f a
-  infixl 4 <*>, *>, <*
-  (<*>) :: f (a -> b) -> f a -> f b
-  liftA2 :: (a -> b -> c) -> f a -> f b -> f c
-  (*>) :: f a -> f b -> f b
-  (<*) :: f a -> f b -> f a
 
 class (Applicative f) => Alternative f where
   empty :: f a

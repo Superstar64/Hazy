@@ -7,13 +7,8 @@ module Data.Functor
   )
 where
 
-import Hazy (placeholder)
+import Hazy (Functor (..), placeholder)
 import Prelude (error)
-
-class Functor f where
-  fmap :: (a -> b) -> f a -> f b
-  infixl 4 <$
-  (<$) :: a -> f b -> f a
 
 infixl 4 $>
 

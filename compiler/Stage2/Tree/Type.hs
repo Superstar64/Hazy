@@ -370,21 +370,6 @@ label context = \case
             { startPosition = (),
               count
             }
-    Type2.Bool ->
-      Stage1.Constructor
-        { startPosition = (),
-          constructor = () :@ hazy :=. constructorIdentifier (pack "Bool")
-        }
-    Type2.Char ->
-      Stage1.Constructor
-        { startPosition = (),
-          constructor = () :@ hazy :=. constructorIdentifier (pack "Char")
-        }
-    Type2.ST ->
-      Stage1.Constructor
-        { startPosition = (),
-          constructor = () :@ hazy :=. constructorIdentifier (pack "ST")
-        }
     Type2.Arrow ->
       Stage1.Arrow
         { startPosition = ()
@@ -398,30 +383,22 @@ label context = \case
         { startPosition = (),
           count
         }
-    Type2.Integer ->
-      Stage1.Constructor
+    Type2.Bool -> builtin "Bool"
+    Type2.Char -> builtin "Char"
+    Type2.ST -> builtin "ST"
+    Type2.Integer -> builtin "Integer"
+    Type2.Int -> builtin "Int"
+    Type2.Num -> builtin "Num"
+    Type2.Enum ->builtin "Enum"
+    Type2.Eq -> builtin "Eq"
+    Type2.Functor -> builtin "Functor"
+    Type2.Applicative ->builtin "Applicative"
+    Type2.Monad ->builtin "Monad"
+    Type2.MonadFail ->builtin "MonadFail"
+    where
+      builtin name = Stage1.Constructor
         { startPosition = (),
-          constructor = () :@ hazy :=. constructorIdentifier (pack "Integer")
-        }
-    Type2.Int ->
-      Stage1.Constructor
-        { startPosition = (),
-          constructor = () :@ hazy :=. constructorIdentifier (pack "Int")
-        }
-    Type2.Num ->
-      Stage1.Constructor
-        { startPosition = (),
-          constructor = () :@ hazy :=. constructorIdentifier (pack "Num")
-        }
-    Type2.Enum ->
-      Stage1.Constructor
-        { startPosition = (),
-          constructor = () :@ hazy :=. constructorIdentifier (pack "Enum")
-        }
-    Type2.Eq ->
-      Stage1.Constructor
-        { startPosition = (),
-          constructor = () :@ hazy :=. constructorIdentifier (pack "Eq")
+          constructor = () :@ hazy :=. constructorIdentifier (pack name)
         }
   List {element} ->
     Stage1.List

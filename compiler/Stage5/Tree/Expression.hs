@@ -8,7 +8,7 @@ import qualified Javascript.Tree.Expression as Javascript (Expression (..))
 import qualified Javascript.Tree.Field as Javascript (Field (..))
 import qualified Javascript.Tree.Statement as Javascript (Statement (..))
 import qualified Stage2.Index.Constructor as Constructor
-import Stage2.Index.Method (Enum (..), Eq (..), Num (..))
+import Stage2.Index.Method (Applicative (..), Enum (..), Eq (..), Functor (..), Monad (..), MonadFail (..), Num (..))
 import qualified Stage2.Index.Method as Method
 import qualified Stage2.Index.Selector as Selector
 import Stage4.Tree.Expression (Expression (..))
@@ -160,50 +160,63 @@ generateInto context target = \case
             defaultEnumFromTo,
             defaultEnumFromThenTo,
             defaultEqual,
-            defaultNotEqual
+            defaultNotEqual,
+            defaultFmap,
+            defaultFconst,
+            defaultPure,
+            defaultAp,
+            defaultLiftA2,
+            defaultDiscardLeft,
+            defaultDiscordRight,
+            defaultBind,
+            defaultThen,
+            defaultReturn,
+            defaultFail
           } = builtin
+        defaultx evidence name = do
+          evidence <- Evidence.generate context evidence
+          pure
+            Javascript.Call
+              { function = Javascript.Variable {name},
+                arguments = [evidence]
+              }
     expression <- case hook of
-      DefaultNum {evidence, num} -> do
-        evidence <- Evidence.generate context evidence
-        let name = case num of
-              Plus -> defaultPlus
-              Minus -> defaultMinus
-              Multiply -> defaultMultiply
-              Negate -> defaultNegate
-              Abs -> defaultAbs
-              Signum -> defaultSignum
-              FromInteger -> defaultFromInteger
-        pure
-          Javascript.Call
-            { function = Javascript.Variable {name},
-              arguments = [evidence]
-            }
-      DefaultEnum {evidence, enum} -> do
-        evidence <- Evidence.generate context evidence
-        let name = case enum of
-              Succ -> defaultSucc
-              Pred -> defaultPred
-              ToEnum -> defaultToEnum
-              FromEnum -> defaultFromEnum
-              EnumFrom -> defaultEnumFrom
-              EnumFromThen -> defaultEnumFromThen
-              EnumFromTo -> defaultEnumFromTo
-              EnumFromThenTo -> defaultEnumFromThenTo
-        pure
-          Javascript.Call
-            { function = Javascript.Variable {name},
-              arguments = [evidence]
-            }
-      DefaultEq {evidence, eq} -> do
-        evidence <- Evidence.generate context evidence
-        let name = case eq of
-              Equal -> defaultEqual
-              NotEqual -> defaultNotEqual
-        pure
-          Javascript.Call
-            { function = Javascript.Variable {name},
-              arguments = [evidence]
-            }
+      DefaultNum {evidence, num} -> defaultx evidence $ case num of
+        Plus -> defaultPlus
+        Minus -> defaultMinus
+        Multiply -> defaultMultiply
+        Negate -> defaultNegate
+        Abs -> defaultAbs
+        Signum -> defaultSignum
+        FromInteger -> defaultFromInteger
+      DefaultEnum {evidence, enum} -> defaultx evidence $ case enum of
+        Succ -> defaultSucc
+        Pred -> defaultPred
+        ToEnum -> defaultToEnum
+        FromEnum -> defaultFromEnum
+        EnumFrom -> defaultEnumFrom
+        EnumFromThen -> defaultEnumFromThen
+        EnumFromTo -> defaultEnumFromTo
+        EnumFromThenTo -> defaultEnumFromThenTo
+      DefaultEq {evidence, eq} -> defaultx evidence $ case eq of
+        Equal -> defaultEqual
+        NotEqual -> defaultNotEqual
+      DefaultFunctor {evidence, functor} -> defaultx evidence $ case functor of
+        Fmap -> defaultFmap
+        Fconst -> defaultFconst
+      DefaultApplicative {evidence, applicative} -> defaultx evidence $ case applicative of
+        Pure -> defaultPure
+        Ap -> defaultAp
+        LiftA2 -> defaultLiftA2
+        DiscardLeft -> defaultDiscardLeft
+        DiscardRight -> defaultDiscordRight
+      DefaultMonad {evidence, monad} -> defaultx evidence $ case monad of
+        Bind -> defaultBind
+        Then -> defaultThen
+        Return -> defaultReturn
+      DefaultMonadFail {evidence, monadFail} -> defaultx evidence $ case monadFail of
+        Fail -> defaultFail
+
     pure [done expression]
   where
     done value =

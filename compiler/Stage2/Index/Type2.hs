@@ -22,6 +22,10 @@ data Index scope
   | Num
   | Enum
   | Eq
+  | Functor
+  | Applicative
+  | Monad
+  | MonadFail
   deriving (Show, Eq, Ord)
 
 instance Shift Index where
@@ -40,17 +44,22 @@ traverse :: (Applicative m) => (Type1.Index scope -> m (Type1.Index scope')) -> 
 traverse run = \case
   Index index -> Index <$> run index
   Lifted index -> Lifted <$> Constructor.traverse run index
-  Bool -> pure Bool
-  Char -> pure Char
-  ST -> pure ST
-  Arrow -> pure Arrow
-  List -> pure List
-  Tuple count -> pure (Tuple count)
-  Integer -> pure Integer
-  Int -> pure Int
-  Num -> pure Num
-  Enum -> pure Enum
-  Eq -> pure Eq
+  typex -> pure $ case typex of
+    Bool -> Bool
+    Char -> Char
+    ST -> ST
+    Arrow -> Arrow
+    List -> List
+    Tuple count -> Tuple count
+    Integer -> Integer
+    Int -> Int
+    Num -> Num
+    Enum -> Enum
+    Eq -> Eq
+    Functor -> Functor
+    Applicative -> Applicative
+    Monad -> Monad
+    MonadFail -> MonadFail
 
 unlocal :: Index (Local ':+ scope) -> Index scope
 unlocal = map Type1.unlocal

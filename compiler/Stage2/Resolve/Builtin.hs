@@ -15,6 +15,14 @@ import Stage2.Resolve.Binding.Term (Selector (Normal))
 import qualified Stage2.Resolve.Binding.Term as Term
 import qualified Stage2.Resolve.Binding.Type as Type
 import Stage2.Resolve.Bindings (Bindings (..))
+import Stage2.Resolve.Builtin.Applicative
+  ( ap,
+    applicative,
+    discardLeft,
+    discardRight,
+    liftA2,
+    pure,
+  )
 import Stage2.Resolve.Builtin.Bool (bool, false, true)
 import Stage2.Resolve.Builtin.Enum
   ( enum,
@@ -28,6 +36,9 @@ import Stage2.Resolve.Builtin.Enum
     toEnum,
   )
 import Stage2.Resolve.Builtin.Eq (eq, equal, notEqual)
+import Stage2.Resolve.Builtin.Functor (fconst, fmap, functor)
+import Stage2.Resolve.Builtin.Monad (bind, monad, return, thenx)
+import Stage2.Resolve.Builtin.MonadFail (fail, monadFail)
 import Stage2.Resolve.Builtin.Num
   ( abs,
     fromInteger,
@@ -45,10 +56,15 @@ import Prelude hiding
     enumFromThen,
     enumFromThenTo,
     enumFromTo,
+    fail,
+    fmap,
     fromEnum,
     fromInteger,
+    liftA2,
     negate,
     pred,
+    pure,
+    return,
     signum,
     succ,
     toEnum,
@@ -206,7 +222,18 @@ builtin =
             enumFromThenTo,
             equal,
             notEqual,
-            runST
+            runST,
+            fmap,
+            fconst,
+            pure,
+            ap,
+            liftA2,
+            discardLeft,
+            discardRight,
+            bind,
+            thenx,
+            return,
+            fail
           ],
       constructors = Map.fromListWith undefined [false, true],
       types =
@@ -224,7 +251,11 @@ builtin =
             int,
             num,
             enum,
-            eq
+            eq,
+            functor,
+            applicative,
+            monad,
+            monadFail
           ],
       stability = ()
     }

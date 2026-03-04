@@ -1,3 +1,4 @@
+{-# LANGUAGE_HAZY UnorderedRecords #-}
 module Stage5.Generate.Mangle where
 
 import Control.Applicative (liftA)
@@ -79,6 +80,10 @@ mangleInstance run brand name target = Text.Lazy.toStrict $ Builder.toLazyText b
       Type2.Num -> fromString "Hazy.Num"
       Type2.Enum -> fromString "Hazy.Enum"
       Type2.Eq -> fromString "Hazy.Eq"
+      Type2.Functor -> fromString "Hazy.Functor"
+      Type2.Applicative -> fromString "Hazy.Applicative"
+      Type2.Monad -> fromString "Hazy.Monad"
+      Type2.MonadFail -> fromString "Hazy.MonadFail"
     qualify :: FullyQualifiedConstructorIdentifier -> Builder
     qualify (Local :.. root :.=. name) =
       mconcat
@@ -153,7 +158,18 @@ data Builtin a = Builtin
     defaultEnumFromTo,
     defaultEnumFromThenTo,
     defaultEqual,
-    defaultNotEqual ::
+    defaultNotEqual,
+    defaultFmap,
+    defaultFconst,
+    defaultPure,
+    defaultAp,
+    defaultLiftA2,
+    defaultDiscardLeft,
+    defaultDiscordRight,
+    defaultBind,
+    defaultThen,
+    defaultReturn,
+    defaultFail ::
       a
   }
 
@@ -190,7 +206,18 @@ instance Applicative Builtin where
         defaultEnumFromTo = a,
         defaultEnumFromThenTo = a,
         defaultEqual = a,
-        defaultNotEqual = a
+        defaultNotEqual = a,
+        defaultFmap = a,
+        defaultFconst = a,
+        defaultPure = a,
+        defaultAp = a,
+        defaultLiftA2 = a,
+        defaultDiscardLeft = a,
+        defaultDiscordRight = a,
+        defaultBind = a,
+        defaultThen = a,
+        defaultReturn = a,
+        defaultFail = a
       }
   function <*> argument =
     Builtin
@@ -221,40 +248,103 @@ instance Applicative Builtin where
         defaultEnumFromTo = defaultEnumFromTo function (defaultEnumFromTo argument),
         defaultEnumFromThenTo = defaultEnumFromThenTo function (defaultEnumFromThenTo argument),
         defaultEqual = defaultEqual function (defaultEqual argument),
-        defaultNotEqual = defaultNotEqual function (defaultNotEqual argument)
+        defaultNotEqual = defaultNotEqual function (defaultNotEqual argument),
+        defaultFmap = defaultFmap function (defaultFmap argument),
+        defaultFconst = defaultFconst function (defaultFconst argument),
+        defaultPure = defaultPure function (defaultPure argument),
+        defaultAp = defaultAp function (defaultAp argument),
+        defaultLiftA2 = defaultLiftA2 function (defaultLiftA2 argument),
+        defaultDiscardLeft = defaultDiscardLeft function (defaultDiscardLeft argument),
+        defaultDiscordRight = defaultDiscordRight function (defaultDiscordRight argument),
+        defaultBind = defaultBind function (defaultBind argument),
+        defaultThen = defaultThen function (defaultThen argument),
+        defaultReturn = defaultReturn function (defaultReturn argument),
+        defaultFail = defaultFail function (defaultFail argument)
       }
 
 instance Foldable Builtin where
-  toList (Builtin a b c d e f g h i j k l m n o p q r s t u v w x y z aa ab) =
-    [ a,
-      b,
-      c,
-      d,
-      e,
-      f,
-      g,
-      h,
-      i,
-      j,
-      k,
-      l,
-      m,
-      n,
-      o,
-      p,
-      q,
-      r,
-      s,
-      t,
-      u,
-      v,
-      w,
-      x,
-      y,
-      z,
-      aa,
-      ab
-    ]
+  toList
+    Builtin
+      { abort,
+        numInt,
+        numInteger,
+        enumBool,
+        enumChar,
+        enumInt,
+        enumInteger,
+        eqBool,
+        eqChar,
+        eqInt,
+        eqInteger,
+        defaultPlus,
+        defaultMinus,
+        defaultMultiply,
+        defaultNegate,
+        defaultAbs,
+        defaultSignum,
+        defaultFromInteger,
+        defaultSucc,
+        defaultPred,
+        defaultToEnum,
+        defaultFromEnum,
+        defaultEnumFrom,
+        defaultEnumFromThen,
+        defaultEnumFromTo,
+        defaultEnumFromThenTo,
+        defaultEqual,
+        defaultNotEqual,
+        defaultFmap,
+        defaultFconst,
+        defaultPure,
+        defaultAp,
+        defaultLiftA2,
+        defaultDiscardLeft,
+        defaultDiscordRight,
+        defaultBind,
+        defaultThen,
+        defaultReturn,
+        defaultFail
+      } =
+      [ abort,
+        numInt,
+        numInteger,
+        enumBool,
+        enumChar,
+        enumInt,
+        enumInteger,
+        eqBool,
+        eqChar,
+        eqInt,
+        eqInteger,
+        defaultPlus,
+        defaultMinus,
+        defaultMultiply,
+        defaultNegate,
+        defaultAbs,
+        defaultSignum,
+        defaultFromInteger,
+        defaultSucc,
+        defaultPred,
+        defaultToEnum,
+        defaultFromEnum,
+        defaultEnumFrom,
+        defaultEnumFromThen,
+        defaultEnumFromTo,
+        defaultEnumFromThenTo,
+        defaultEqual,
+        defaultNotEqual,
+        defaultFmap,
+        defaultFconst,
+        defaultPure,
+        defaultAp,
+        defaultLiftA2,
+        defaultDiscardLeft,
+        defaultDiscordRight,
+        defaultBind,
+        defaultThen,
+        defaultReturn,
+        defaultFail
+      ]
   foldMap go = foldMap go . toList
 
 canonical :: Builtin Text
@@ -287,7 +377,18 @@ canonical =
       defaultEnumFromTo = pack "defaultEnumFromTo",
       defaultEnumFromThenTo = pack "defaultEnumFromThenTo",
       defaultEqual = pack "defaultEqual",
-      defaultNotEqual = pack "defaultNotEqual"
+      defaultNotEqual = pack "defaultNotEqual",
+      defaultFmap = pack "defaultFmap",
+      defaultFconst = pack "defaultFconst",
+      defaultPure = pack "defaultPure",
+      defaultAp = pack "defaultAp",
+      defaultLiftA2 = pack "defaultLiftA2",
+      defaultDiscardLeft = pack "defaultDiscardLeft",
+      defaultDiscordRight = pack "defaultDiscordRight",
+      defaultBind = pack "defaultBind",
+      defaultThen = pack "defaultThen",
+      defaultReturn = pack "defaultReturn",
+      defaultFail = pack "defaultFail"
     }
 
 builtin :: Builtin Text
@@ -321,6 +422,17 @@ unique :: [Text]
     : defaultEnumFromThenTo
     : defaultEqual
     : defaultNotEqual
+    : defaultFmap
+    : defaultFconst
+    : defaultPure
+    : defaultAp
+    : defaultLiftA2
+    : defaultDiscardLeft
+    : defaultDiscordRight
+    : defaultBind
+    : defaultThen
+    : defaultReturn
+    : defaultFail
     : unique -> (builtins, unique)
       where
         builtins =
@@ -352,6 +464,17 @@ unique :: [Text]
               defaultEnumFromTo,
               defaultEnumFromThenTo,
               defaultEqual,
-              defaultNotEqual
+              defaultNotEqual,
+              defaultFmap,
+              defaultFconst,
+              defaultPure,
+              defaultAp,
+              defaultLiftA2,
+              defaultDiscardLeft,
+              defaultDiscordRight,
+              defaultBind,
+              defaultThen,
+              defaultReturn,
+              defaultFail
             }
   _ -> error "bad names"

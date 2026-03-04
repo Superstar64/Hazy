@@ -23,6 +23,22 @@ data Hook scope
       { evidence :: !(Evidence scope),
         eq :: !Method.Eq
       }
+  | DefaultFunctor
+      { evidence :: !(Evidence scope),
+        functor :: !Method.Functor
+      }
+  | DefaultApplicative
+      { evidence :: !(Evidence scope),
+        applicative :: !Method.Applicative
+      }
+  | DefaultMonad
+      { evidence :: !(Evidence scope),
+        monad :: !Method.Monad
+      }
+  | DefaultMonadFail
+      { evidence :: !(Evidence scope),
+        monadFail :: !Method.MonadFail
+      }
   deriving (Show)
 
 instance Shift Hook where
@@ -50,4 +66,24 @@ instance Substitute.Functor Hook where
       DefaultEq
         { evidence = Substitute.map category evidence,
           eq
+        }
+    DefaultFunctor {evidence, functor} ->
+      DefaultFunctor
+        { evidence = Substitute.map category evidence,
+          functor
+        }
+    DefaultApplicative {evidence, applicative} ->
+      DefaultApplicative
+        { evidence = Substitute.map category evidence,
+          applicative
+        }
+    DefaultMonad {evidence, monad} ->
+      DefaultMonad
+        { evidence = Substitute.map category evidence,
+          monad
+        }
+    DefaultMonadFail {evidence, monadFail} ->
+      DefaultMonadFail
+        { evidence = Substitute.map category evidence,
+          monadFail
         }

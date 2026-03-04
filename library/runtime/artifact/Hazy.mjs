@@ -101,6 +101,17 @@ export const defaultEnumFromTo = placeholderDefault;
 export const defaultEnumFromThenTo = placeholderDefault;
 export const defaultEqual = placeholderDefault;
 export const defaultNotEqual = placeholderDefault;
+export const defaultFmap = placeholderDefault;
+export const defaultFconst = placeholderDefault;
+export const defaultPure = placeholderDefault;
+export const defaultAp = placeholderDefault;
+export const defaultLiftA2 = placeholderDefault;
+export const defaultDiscardLeft = placeholderDefault;
+export const defaultDiscordRight = placeholderDefault;
+export const defaultBind = placeholderDefault;
+export const defaultThen = placeholderDefault;
+export const defaultReturn = placeholderDefault;
+export const defaultFail = placeholderDefault;
 
 export const error = {
   a: 0,

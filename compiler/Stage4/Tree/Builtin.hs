@@ -3,10 +3,14 @@ module Stage4.Tree.Builtin where
 import qualified Stage2.Index.Constructor as Constructor
 import qualified Stage2.Index.Type as Type (Index)
 import qualified Stage2.Index.Type2 as Type2
+import Stage4.Tree.Builtin.Applicative (applicative, applicativeExtra)
 import Stage4.Tree.Builtin.Bool (bool)
 import Stage4.Tree.Builtin.Enum (enum, enumExtra)
 import Stage4.Tree.Builtin.Eq (eq, eqExtra)
+import Stage4.Tree.Builtin.Functor (functor, functorExtra)
 import Stage4.Tree.Builtin.List (list)
+import Stage4.Tree.Builtin.Monad (monad, monadExtra)
+import Stage4.Tree.Builtin.MonadFail (monadFail, monadFailExtra)
 import Stage4.Tree.Builtin.Num (num, numExtra)
 import Stage4.Tree.Builtin.Tuple (tuple)
 import Stage4.Tree.Class (Class)
@@ -38,6 +42,10 @@ kind pure typex constructor = \case
     Type2.Num -> classKind
     Type2.Enum -> classKind
     Type2.Eq -> classKind
+    Type2.Functor -> classKind
+    Type2.Applicative -> classKind
+    Type2.Monad -> classKind
+    Type2.MonadFail -> classKind
     where
       dataKind = Data.kind $ index id (error "bad index") real
       classKind = Class.kind $ index id (error "bad index") real
@@ -63,6 +71,10 @@ instance Builtin Class where
     Type2.Num -> pure num
     Type2.Enum -> pure enum
     Type2.Eq -> pure eq
+    Type2.Functor -> pure functor
+    Type2.Applicative -> pure applicative
+    Type2.Monad -> pure monad
+    Type2.MonadFail -> pure monadFail
     _ -> error "bad class index"
 
 instance Builtin ClassExtra where
@@ -71,4 +83,8 @@ instance Builtin ClassExtra where
     Type2.Num -> pure numExtra
     Type2.Enum -> pure enumExtra
     Type2.Eq -> pure eqExtra
+    Type2.Functor -> pure functorExtra
+    Type2.Applicative -> pure applicativeExtra
+    Type2.Monad -> pure monadExtra
+    Type2.MonadFail -> pure monadFailExtra
     _ -> error "bad class index"
