@@ -17,7 +17,6 @@ Haskell features are missing, only a test Javascript backend is implemented.
 - Floating Point Literals
 - Constrained Type Defaulting
 - List Comprehensions
-- Do notation
 - Record Updates
 - Right Sections
 - Type Annotation Expressions

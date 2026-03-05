@@ -4,7 +4,7 @@
 -- Parser syntax tree for statements and guards
 module Stage1.Tree.Statement where
 
-import Stage1.Parser (Parser, asum, token, try)
+import Stage1.Parser (Parser, asum, position, token, try)
 import Stage1.Position (Position)
 import Stage1.Tree.Declarations (Declarations)
 import qualified Stage1.Tree.Declarations as Declarations
@@ -14,24 +14,33 @@ import Stage1.Tree.Pattern (Pattern)
 import qualified Stage1.Tree.Pattern as Pattern
 
 data Statement position
-  = Run !(Expression position)
+  = Run
+      { startPosition :: !position,
+        expression :: !(Expression position)
+      }
   | -- |
     -- > x <- e
     Bind
-      { patternx :: !(Pattern position),
+      { startPosition :: !position,
+        patternx :: !(Pattern position),
         expression :: !(Expression position)
       }
   | -- |
     -- > let x = e
-    Let !(Declarations position)
+    Let
+      { startPosition :: !position,
+        declarations :: !(Declarations position)
+      }
   deriving (Show)
 
 parse :: Parser (Statement Position)
 parse =
   asum
-    [ bind <$> try (Pattern.parse <* token "<-") <*> Expression.parse,
-      Run <$> try Expression.parse,
-      Let <$> (token "let" *> Declarations.parse)
+    [ bind <$> position <*> try (Pattern.parse <* token "<-") <*> Expression.parse,
+      run <$> position <*> try Expression.parse,
+      letx <$> position <*> (token "let" *> Declarations.parse)
     ]
   where
-    bind patternx expression = Bind {patternx, expression}
+    bind startPosition patternx expression = Bind {startPosition, patternx, expression}
+    run startPosition expression = Run {startPosition, expression}
+    letx startPosition declarations = Let {startPosition, declarations}

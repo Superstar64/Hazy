@@ -87,7 +87,6 @@ module Error
     unsupportedFeatureExpressionAnnotation,
     unsupportedFeatureRunST,
     unsupportedFeatureRightSection,
-    unsupportedFeatureDoNotation,
     unsupportedFeatureRecordUpdate,
     unsupportedFeatureListComprehension,
     unsupportedFeatureConstraintedTypeDefaulting,
@@ -549,8 +548,6 @@ constraintedTypeDefaulting = fromString "constrained type defaulting"
 
 recordUpdate = fromString "record update"
 
-doNotation = fromString "do notation"
-
 rightSection = fromString "right section"
 
 runST = fromString "runST"
@@ -571,10 +568,6 @@ unsupportedFeatureExpressionAnnotation =
 unsupportedFeatureRightSection :: Position -> a
 unsupportedFeatureRightSection =
   unsupportedFeature rightSection
-
-unsupportedFeatureDoNotation :: Position -> a
-unsupportedFeatureDoNotation =
-  unsupportedFeature doNotation
 
 unsupportedFeatureRecordUpdate :: Position -> a
 unsupportedFeatureRecordUpdate =

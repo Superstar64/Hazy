@@ -40,20 +40,20 @@ instance Unify.Zonk Statements where
 
 check :: Context s scope -> Unify.Type s scope -> Stage2.Statements scope -> ST s (Statements s scope)
 check context typex = \case
-  Stage2.Done expression -> Done <$> Expression.check context typex expression
-  Stage2.Run expression statements -> do
-    expression <- Expression.check context Unify.bool expression
-    statements <- check context typex statements
+  Stage2.Done {done} -> Done <$> Expression.check context typex done
+  Stage2.Run {effect, after} -> do
+    expression <- Expression.check context Unify.bool effect
+    statements <- check context typex after
     pure $ Run expression statements
-  Stage2.Bind patternx expression statements -> do
+  Stage2.Bind {patternx, effect, thenx} -> do
     binder <- Unify.fresh Unify.typex
     patternx <- Pattern.check context binder patternx
-    expression <- Expression.check context binder expression
-    statements <- check (Pattern.augment patternx context) (shift typex) statements
-    pure $ Bind patternx expression statements
-  Stage2.Let declarations statements -> do
+    effect <- Expression.check context binder effect
+    afeter <- check (Pattern.augment patternx context) (shift typex) thenx
+    pure $ Bind patternx effect afeter
+  Stage2.Let {declarations, body} -> do
     (context, declarations) <- Declarations.check context declarations
-    letBody <- check context (shift typex) statements
+    letBody <- check context (shift typex) body
     pure (Let declarations letBody)
 
 solve :: Statements s scope -> ST s (Solved.Statements scope)

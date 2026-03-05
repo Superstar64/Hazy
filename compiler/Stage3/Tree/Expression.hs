@@ -13,6 +13,7 @@ import qualified Stage2.Scope as Scope
 import qualified Stage2.Tree.Selector as Selector (Uniform)
 import Stage3.Tree.Alternative (Alternative)
 import Stage3.Tree.Declarations (Declarations)
+import Stage3.Tree.Do (Do)
 import Stage3.Tree.ExpressionField (Field)
 import Stage3.Tree.Lambda (Lambda)
 import Stage3.Tree.Pattern (Pattern)
@@ -79,4 +80,7 @@ data Expression scope
       }
   | Character {character :: !Char}
   | String {string :: !Text}
+  | Do
+      { statements :: !(Do scope)
+      }
   deriving (Show)

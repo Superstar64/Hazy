@@ -18,10 +18,25 @@ import Stage2.Tree.Pattern (Pattern)
 import qualified Stage2.Tree.Pattern as Pattern (augment, resolve)
 
 data Statements scope
-  = Done !(Expression scope)
-  | Run !(Expression scope) !(Statements scope)
-  | Bind !(Pattern scope) !(Expression scope) !(Statements (Scope.Pattern ':+ scope))
-  | Let !(Declarations (Scope.Declaration ':+ scope)) !(Statements (Scope.Declaration ':+ scope))
+  = Done
+      { done :: !(Expression scope)
+      }
+  | Run
+      { startPosition :: !Position,
+        effect :: !(Expression scope),
+        after :: !(Statements scope)
+      }
+  | Bind
+      { startPosition :: !Position,
+        patternx :: !(Pattern scope),
+        effect :: !(Expression scope),
+        thenx :: !(Statements (Scope.Pattern ':+ scope))
+      }
+  | Let
+      { startPosition :: !Position,
+        declarations :: !(Declarations (Scope.Declaration ':+ scope)),
+        body :: !(Statements (Scope.Declaration ':+ scope))
+      }
   deriving (Show)
 
 instance Shift Statements where
@@ -29,33 +44,57 @@ instance Shift Statements where
 
 instance Shift.Functor Statements where
   map category = \case
-    Done expression -> Done (Shift.map category expression)
-    Run expression statements ->
-      Run (Shift.map category expression) (Shift.map category statements)
-    Bind patternx expression statements ->
+    Done {done} ->
+      Done
+        { done = Shift.map category done
+        }
+    Run {startPosition, effect, after} ->
+      Run
+        { startPosition,
+          effect = Shift.map category effect,
+          after = Shift.map category after
+        }
+    Bind {startPosition, patternx, effect, thenx} ->
       Bind
-        (Shift.map category patternx)
-        (Shift.map category expression)
-        (Shift.map (Shift.Over category) statements)
-    Let declarations statements ->
-      Let (Shift.map (Shift.Over category) declarations) (Shift.map (Shift.Over category) statements)
+        { startPosition,
+          patternx = Shift.map category patternx,
+          effect = Shift.map category effect,
+          thenx = Shift.map (Shift.Over category) thenx
+        }
+    Let {startPosition, declarations, body} ->
+      Let
+        { startPosition,
+          declarations = Shift.map (Shift.Over category) declarations,
+          body = Shift.map (Shift.Over category) body
+        }
 
 resolve :: Context scope -> Stage1.Statements Position -> Statements scope
 resolve context Stage1.Statements {body, done} = statements context (toList body) done
   where
     statements :: Context scope -> [Stage1.Statement Position] -> Stage1.Expression Position -> Statements scope
-    statements context [] done = Done (Expression.resolve context done)
-    statements context (Stage1.Run run : remaining) done =
+    statements context [] done =
+      Done
+        { done = Expression.resolve context done
+        }
+    statements context (Stage1.Run {startPosition, expression} : remaining) done =
       Run
-        (Expression.resolve context run)
-        (statements context remaining done)
-    statements context (Stage1.Bind {patternx, expression} : remaining) done =
+        { startPosition,
+          effect = Expression.resolve context expression,
+          after = statements context remaining done
+        }
+    statements context (Stage1.Bind {startPosition, patternx, expression} : remaining) done =
       Bind
-        pattern'
-        (Expression.resolve context expression)
-        (statements (Pattern.augment pattern' context) remaining done)
+        { startPosition,
+          patternx = pattern',
+          effect = Expression.resolve context expression,
+          thenx = statements (Pattern.augment pattern' context) remaining done
+        }
       where
         pattern' = Pattern.resolve context patternx
-    statements context (Stage1.Let declarations : remaining) done
-      | (context, locals) <- Declarations.resolve context declarations =
-          Let locals (statements context remaining done)
+    statements context (Stage1.Let {startPosition, declarations} : remaining) done
+      | (context, declarations) <- Declarations.resolve context declarations =
+          Let
+            { startPosition,
+              declarations,
+              body = statements context remaining done
+            }

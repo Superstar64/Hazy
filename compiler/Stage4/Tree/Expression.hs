@@ -18,6 +18,8 @@ import qualified Stage2.Shift as Shift
 import qualified Stage2.Tree.Selector as Selector (Uniform (..))
 import qualified Stage3.Index.Evidence as Index.Evidence
 import qualified Stage3.Tree.Definition as Stage3 (Definition)
+import qualified Stage3.Tree.Do as Stage3 (Do)
+import qualified Stage3.Tree.Do as Stage3.Do
 import qualified Stage3.Tree.Expression as Stage3 (Expression (..))
 import qualified Stage3.Tree.ExpressionField as Stage3 (Field (Field))
 import qualified Stage3.Tree.ExpressionField as Stage3.Field
@@ -27,7 +29,7 @@ import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
 import {-# SOURCE #-} Stage4.Temporary.Definition (Definition (Definition))
 import {-# SOURCE #-} qualified Stage4.Temporary.Definition as Definition
-import Stage4.Temporary.Function (Function (..))
+import Stage4.Temporary.Function (Function (Bound))
 import qualified Stage4.Temporary.Function as Function
 import qualified Stage4.Temporary.Pattern as Pattern
 import qualified Stage4.Temporary.RightHandSide as RightHandSide
@@ -39,6 +41,7 @@ import Stage4.Tree.Hook (Hook)
 import Stage4.Tree.Instanciation (Instanciation (..))
 import Stage4.Tree.Statements (Statements)
 import qualified Stage4.Tree.Statements as Statements
+import Prelude hiding (fail)
 
 data Expression scope
   = Variable
@@ -188,6 +191,41 @@ eq evidence left right =
     `call` left
     `call` right
 
+run :: Evidence scope -> Expression scope -> Expression scope -> Expression scope
+run evidence ignore thenx =
+  Method
+    { method = Method.thenx,
+      evidence,
+      instanciation = Instanciation Strict.Vector.empty
+    }
+    `call` ignore
+    `call` thenx
+
+bind :: Bool -> Evidence scope -> Expression scope -> Expression scope -> Expression scope
+bind fail evidence input output =
+  Method
+    { method = Method.bind,
+      evidence =
+        if fail
+          then Evidence.Super {base = evidence, index = 0}
+          else evidence,
+      instanciation = Instanciation Strict.Vector.empty
+    }
+    `call` input
+    `call` output
+
+failx :: Evidence scope -> Expression scope
+failx evidence =
+  Method
+    { method = Method.fail,
+      evidence,
+      instanciation = Instanciation Strict.Vector.empty
+    }
+    `call` Constructor
+      { constructor = Constructor.nil,
+        arguments = Strict.Vector.empty
+      }
+
 integer_ :: Integer -> Evidence scope -> Expression scope
 integer_ integer evidence =
   Call
@@ -228,6 +266,39 @@ instance Simplify Stage3.RightHandSide where
       { statements =
           RightHandSide.desugar $ RightHandSide.simplify rightHandSide
       }
+
+instance Simplify Stage3.Do where
+  simplify = \case
+    Stage3.Do.Done {done} -> simplify done
+    Stage3.Do.Let {declarations, letBody} ->
+      Let
+        { declarations = Declarations.simplify Term.Declaration declarations,
+          letBody = simplify letBody
+        }
+    Stage3.Do.Run {evidence, effect, after} ->
+      run evidence (simplify effect) (simplify after)
+    Stage3.Do.Bind {patternx, evidence, effect, thenx, fail} ->
+      bind fail evidence (simplify effect) $
+        Definition.desugar $
+          if fail
+            then Definition.Alternative {definition, alternative}
+            else Definition.Definition {definition}
+      where
+        definition =
+          Bound
+            { patternx = Pattern.simplify patternx,
+              body = Function.Plain {plain = RightHandSide.Done {done = simplify thenx}}
+            }
+        alternative =
+          Definition
+            { definition =
+                Function.Plain
+                  { plain =
+                      RightHandSide.Done
+                        { done = failx evidence
+                        }
+                  }
+            }
 
 simplifyConstructor ::
   Constructor.Index scope ->
@@ -396,6 +467,7 @@ simplifyWith expression [] = case expression of
     Character {character}
   Stage3.String {string} ->
     foldr (cons . Character) nil (unpack string)
+  Stage3.Do {statements} -> simplify statements
   where
     cons head tail =
       Constructor

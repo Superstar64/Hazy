@@ -9,8 +9,7 @@ import Data.Traversable (for)
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
 import Error
-  ( unsupportedFeatureDoNotation,
-    unsupportedFeatureExpressionAnnotation,
+  ( unsupportedFeatureExpressionAnnotation,
     unsupportedFeatureFloatingPointLiterals,
     unsupportedFeatureListComprehension,
     unsupportedFeatureRecordUpdate,
@@ -46,6 +45,8 @@ import Stage3.Temporary.Alternative (Alternative)
 import qualified Stage3.Temporary.Alternative as Alternative
 import Stage3.Temporary.Declarations (Declarations)
 import qualified Stage3.Temporary.Declarations as Declarations
+import Stage3.Temporary.Do (Do)
+import qualified Stage3.Temporary.Do as Do
 import Stage3.Temporary.ExpressionField (Field)
 import qualified Stage3.Temporary.ExpressionField as Field
 import Stage3.Temporary.Lambda (Lambda)
@@ -125,6 +126,9 @@ data Expression s scope
   | MultiwayIf
       { branches :: !(Strict.Vector1 (RightHandSide s scope))
       }
+  | Do
+      { statements :: !(Do s scope)
+      }
 
 instance Unify.Zonk Expression where
   zonk zonker = \case
@@ -178,6 +182,9 @@ instance Unify.Zonk Expression where
     MultiwayIf {branches} -> do
       branches <- traverse (Unify.zonk zonker) branches
       pure MultiwayIf {branches}
+    Do {statements} -> do
+      statements <- Unify.zonk zonker statements
+      pure Do {statements}
 
 check :: Context s scope -> Unify.Type s scope -> Stage2.Expression scope -> ST s (Expression s scope)
 check context@Context {termEnvironment} typex Stage2.Variable {variablePosition, variable} = do
@@ -315,8 +322,9 @@ check context typex Stage2.Case {scrutinee, cases} = do
   scrutinee <- check context binder scrutinee
   cases <- traverse (Alternative.check context typex binder) cases
   pure Case {scrutinee, cases}
-check _ _ Stage2.Do {startPosition} =
-  unsupportedFeatureDoNotation startPosition
+check context typex Stage2.Do {statements} = do
+  statements <- Do.check context typex statements
+  pure Do {statements}
 check context typex Stage2.Lambda {startPosition, parameter, body} = do
   parameterType <- Unify.fresh Unify.typex
   parameter <- Pattern.check context parameterType parameter
@@ -406,3 +414,6 @@ solve = \case
   Tuple {elements} -> do
     elements <- traverse solve elements
     pure $ Solved.Tuple {elements}
+  Do {statements} -> do
+    statements <- Do.solve statements
+    pure Solved.Do {statements}

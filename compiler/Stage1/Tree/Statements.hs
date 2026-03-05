@@ -4,10 +4,9 @@
 -- Parser syntax tree for statment groups
 module Stage1.Tree.Statements (Statements (..), parseComprehension, parseDo) where
 
-import Data.Foldable (toList)
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
-import Stage1.Parser (Parser, asum, optional, sepByComma, token, try)
+import Stage1.Parser (Parser, asum, optional, position, sepByComma, token, try)
 import Stage1.Position (Position)
 import qualified Stage1.Tree.Declarations as Declarations
 import {-# SOURCE #-} Stage1.Tree.Expression (Expression)
@@ -43,16 +42,18 @@ parseDo' =
   asum
     [ statement
         <$> try
-          ((bind <$> try (Pattern.parse <* token "<-") <*> Expression.parse) <* token ";")
+          ((bind <$> position <*> try (Pattern.parse <* token "<-") <*> Expression.parse) <* token ";")
         <*> parseDo',
-      statement' <$> try (try Expression.parse <* token ";") <*> optional parseDo',
-      statement <$> try ((Let <$> (token "let" *> Declarations.parse)) <* token ";") <*> parseDo',
+      statement' <$> position <*> try (Expression.parse <* token ";") <*> optional parseDo',
+      statement <$> try ((letx <$> position <*> (token "let" *> Declarations.parse)) <* token ";") <*> parseDo',
       Statements' [] <$> Expression.parse
     ]
   where
-    bind patternx expression = Bind {patternx, expression}
+    bind startPosition patternx expression = Bind {startPosition, patternx, expression}
+    letx startPosition declarations = Let {startPosition, declarations}
     statement statement1 (Statements' statements expression) =
-      Statements' (statement1 : toList statements) expression
-    statement' expression Nothing = Statements' [] expression
-    statement' expression (Just (Statements' statements expression')) =
-      Statements' (Run expression : statements) expression'
+      Statements' (statement1 : statements) expression
+    statement' startPosition expression = \case
+      Nothing -> Statements' [] expression
+      Just (Statements' statements expression') ->
+        Statements' (Run {startPosition, expression} : statements) expression'
