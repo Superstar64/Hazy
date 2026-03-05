@@ -38,7 +38,8 @@ data ConstructorDeclaration = Constructor
     fields :: !(Map Variable Int),
     selections :: !(Strict.Vector (Strict.Maybe Int)),
     unordered :: !Bool,
-    fielded :: !Bool
+    fielded :: !Bool,
+    single :: !Bool
   }
   deriving (Show)
 
@@ -57,7 +58,8 @@ merge ~Extensions {unorderedRecords, constructorFields} entries@(entry :| _) =
       fields,
       selections,
       unordered,
-      fielded
+      fielded,
+      single
     }
   where
     position = Source.position entry
@@ -70,7 +72,7 @@ merge ~Extensions {unorderedRecords, constructorFields} entries@(entry :| _) =
         fixity = \case
           Source.Fixity {position, fixity} -> Just (position, fixity)
           _ -> Nothing
-    More.Constructor {typeIndex, constructorIndex, selections, fields} =
+    More.Constructor {typeIndex, constructorIndex, selections, fields, single} =
       case mapMaybe index (toList entries) of
         [] -> missingConstructorDeclaration position
         [(_, constructor)] -> constructor
@@ -111,7 +113,8 @@ bindings index constructors = Map.map constructorIndex (indexes constructors)
           fields,
           selections,
           unordered,
-          fielded
+          fielded,
+          single
         }
       where
         Constructor
@@ -122,5 +125,6 @@ bindings index constructors = Map.map constructorIndex (indexes constructors)
             unordered,
             typeIndex,
             constructorIndex,
-            fielded
+            fielded,
+            single
           } = constructors Strict.Vector.! vectorIndex

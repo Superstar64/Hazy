@@ -15,7 +15,8 @@ data Binding scope = Binding
     fields :: !(Map Variable Int),
     selections :: !(Strict.Vector (Strict.Maybe Int)),
     unordered :: !Bool,
-    fielded :: !Bool
+    fielded :: !Bool,
+    single :: !Bool
   }
 
 instance Same (Binding scope) where

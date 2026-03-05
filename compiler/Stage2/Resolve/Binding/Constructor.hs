@@ -21,7 +21,8 @@ data Binding scope = Binding
     -- redirect a selector index into an entry index
     selections :: !(Strict.Vector (Strict.Maybe Int)),
     unordered :: !Bool,
-    fielded :: !Bool
+    fielded :: !Bool,
+    single :: !Bool
   }
   deriving (Show)
 
@@ -35,7 +36,7 @@ instance Shift Binding where
   shift = shiftDefault
 
 instance Shift.Functor Binding where
-  map category Binding {position, index, fixity, fields, selections, unordered, fielded} =
+  map category Binding {position, index, fixity, fields, selections, unordered, fielded, single} =
     Binding
       { position,
         index = Shift.map category index,
@@ -43,7 +44,8 @@ instance Shift.Functor Binding where
         fields,
         selections,
         unordered,
-        fielded
+        fielded,
+        single
       }
 
 fromFunctor :: Functor.Binding (Detail.Binding scope) -> Binding scope
@@ -57,7 +59,8 @@ fromFunctor
             fields,
             selections,
             unordered,
-            fielded
+            fielded,
+            single
           }
     } =
     Binding
@@ -67,7 +70,8 @@ fromFunctor
         fields,
         selections,
         unordered,
-        fielded
+        fielded,
+        single
       }
 
 toFunctor :: Binding scope -> Functor.Binding (Detail.Binding scope)
@@ -79,7 +83,8 @@ toFunctor
       fields,
       selections,
       unordered,
-      fielded
+      fielded,
+      single
     } =
     Functor.Binding
       { position,
@@ -90,6 +95,7 @@ toFunctor
               fields,
               selections,
               unordered,
-              fielded
+              fielded,
+              single
             }
       }

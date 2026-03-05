@@ -37,11 +37,12 @@ import Stage1.Variable
     Qualifiers (..),
     VariableIdentifier,
   )
-import qualified Stage2.Index.Constructor as Constructor
+import qualified Stage2.Index.Constructor as Constructor (Index)
 import qualified Stage2.Index.Local as Local
 import qualified Stage2.Index.Selector as Selector
 import qualified Stage2.Index.Term2 as Term2
 import qualified Stage2.Index.Type3 as Type3
+import qualified Stage2.Resolve.Binding.Constructor as Constructor (Binding)
 import Stage2.Resolve.Bindings (Bindings)
 import Stage2.Resolve.Canonical (Canonical)
 import qualified Stage2.Resolve.Canonical as Canonical
@@ -120,8 +121,10 @@ infixl 3 !, !-, !-%, !-*, !=., !=.*, !=, !=~, !=*, !=*~, !$
 (!=.*) :: Context scope -> Marked QualifiedConstructorIdentifier Position -> Type3.Index scope
 (!=.*) = (Core.!=.*) . core
 
+(!=) :: Context scope -> Marked QualifiedConstructor Position -> Constructor.Binding scope
 (!=) = (Core.!=) . core
 
+(!=~) :: Context scope -> Marked QualifiedConstructor Position -> Constructor.Binding scope
 (!=~) = (Core.!=~) . core
 
 (!=*) :: Context scope -> Marked QualifiedConstructor Position -> Constructor.Index scope

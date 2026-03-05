@@ -23,4 +23,5 @@ instance Shift Pattern
 instance Shift.Functor Pattern
 
 variable :: Position -> Variable -> Pattern scope
+neverFails :: Pattern scope -> Bool
 resolve :: Context scope -> Stage1.Pattern Position -> Pattern scope

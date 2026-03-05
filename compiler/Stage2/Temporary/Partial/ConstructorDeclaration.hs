@@ -75,7 +75,8 @@ resolve lookup entry = case entry of
                       { typeIndex,
                         constructorIndex,
                         selections,
-                        fields = Map.fromList map
+                        fields = Map.fromList map,
+                        single = length constructors == 1
                       }
         Complete.TypeDeclaration {constructors = Complete.GADT gadtConstructors} ->
           zipWith entry [0 ..] $ toList gadtConstructors
@@ -95,7 +96,8 @@ resolve lookup entry = case entry of
                       { typeIndex,
                         constructorIndex,
                         selections,
-                        fields
+                        fields,
+                        single = length gadtConstructors == 1
                       }
         _ -> error "constructor from non data"
   _ -> []

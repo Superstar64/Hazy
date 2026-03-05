@@ -31,7 +31,8 @@ false =
         fields = Map.empty,
         selections = Strict.Vector.empty,
         unordered = False,
-        fielded = False
+        fielded = False,
+        single = False
       }
   )
 
@@ -44,7 +45,8 @@ true =
         fields = Map.empty,
         selections = Strict.Vector.empty,
         unordered = False,
-        fielded = False
+        fielded = False,
+        single = False
       }
   )
 

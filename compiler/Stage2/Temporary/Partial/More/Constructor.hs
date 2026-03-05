@@ -9,5 +9,6 @@ data Constructor = Constructor
   { typeIndex :: !Int,
     constructorIndex :: !Int,
     fields :: !(Map Variable Int),
-    selections :: !(Strict.Vector (Strict.Maybe Int))
+    selections :: !(Strict.Vector (Strict.Maybe Int)),
+    single :: !Bool
   }

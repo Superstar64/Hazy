@@ -15,7 +15,7 @@ import Stage2.Resolve.Context (Context (..), (!-%))
 import Stage2.Shift (Shift (shift), shiftDefault)
 import qualified Stage2.Shift as Shift
 import {-# SOURCE #-} Stage2.Tree.Pattern (Pattern)
-import {-# SOURCE #-} qualified Stage2.Tree.Pattern as Pattern (resolve, variable)
+import {-# SOURCE #-} qualified Stage2.Tree.Pattern as Pattern (neverFails, resolve, variable)
 
 data Field scope = Field
   { index :: !Int,
@@ -29,6 +29,9 @@ instance Shift Field where
 instance Shift.Functor Field where
   map category = \case
     Field index patternx -> Field index (Shift.map category patternx)
+
+neverFails :: Field scope -> Bool
+neverFails Field {patternx} = Pattern.neverFails patternx
 
 resolve ::
   Context scope ->

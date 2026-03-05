@@ -29,7 +29,7 @@ import qualified Stage2.Resolve.Bindings as Bindings
 import Stage2.Resolve.Context
   ( Context (..),
     (!=),
-    (!=*~),
+    (!=~),
   )
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope (Pattern)
@@ -37,8 +37,9 @@ import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import {-# SOURCE #-} qualified Stage2.Temporary.PatternInfix as Infix (fix, resolve)
 import Stage2.Tree.PatternField (Field (..))
-import qualified Stage2.Tree.PatternField as Field (resolve)
+import qualified Stage2.Tree.PatternField as Field (neverFails, resolve)
 import Prelude hiding (Bool (False, True), Either (Left, Right), head, tail)
+import qualified Prelude
 
 data Pattern scope = At
   { names :: !(Map Variable Position),
@@ -75,12 +76,14 @@ data Bindings scope
   = Constructor
       { constructorPosition :: !Position,
         constructor :: !(Constructor.Index scope),
-        patterns :: !(Strict.Vector (Pattern scope))
+        patterns :: !(Strict.Vector (Pattern scope)),
+        single :: !Prelude.Bool
       }
   | Record
       { constructorPosition :: !Position,
         constructor :: !(Constructor.Index scope),
-        fields :: !(Strict.Vector (Field scope))
+        fields :: !(Strict.Vector (Field scope)),
+        single :: !Prelude.Bool
       }
   | Integer
       { startPosition :: !Position,
@@ -109,17 +112,19 @@ instance Shift Bindings where
 
 instance Shift.Functor Bindings where
   map category = \case
-    Constructor {constructorPosition, constructor, patterns} ->
+    Constructor {constructorPosition, constructor, patterns, single} ->
       Constructor
         { constructorPosition,
           constructor = Shift.map category constructor,
-          patterns = fmap (Shift.map category) patterns
+          patterns = fmap (Shift.map category) patterns,
+          single
         }
-    Record {constructorPosition, constructor, fields} ->
+    Record {constructorPosition, constructor, fields, single} ->
       Record
         { constructorPosition,
           constructor = Shift.map category constructor,
-          fields = fmap (Shift.map category) fields
+          fields = fmap (Shift.map category) fields,
+          single
         }
     Integer {startPosition, integer} -> Integer {startPosition, integer}
     Float {startPosition, float} -> Float {startPosition, float}
@@ -189,6 +194,19 @@ selections patternx = Map.map single (selections patternx)
           String {} -> select []
           List {items} -> select (toList items)
 
+neverFails :: Pattern scope -> Prelude.Bool
+neverFails At {match} = case match of
+  Wildcard -> Prelude.True
+  Irrefutable {} -> Prelude.True
+  Match bindings -> case bindings of
+    Constructor {single, patterns} -> single && all neverFails patterns
+    Record {single, fields} -> single && all Field.neverFails fields
+    Integer {} -> Prelude.False
+    Float {} -> Prelude.False
+    Character {} -> Prelude.False
+    String {} -> Prelude.False
+    List {} -> Prelude.False
+
 resolve :: Context scope -> Stage1.Pattern Position -> Pattern scope
 resolve context = \case
   Stage1.Variable {variable = position :@ name} -> variable position name
@@ -230,22 +248,25 @@ resolve context = \case
     where
       match = Match $ case pattern1 of
         Stage1.Constructor {startPosition, constructor, patterns} ->
-          case context !=*~ startPosition :@ constructor of
-            constructor ->
+          case context !=~ startPosition :@ constructor of
+            Constructor.Binding {index = constructor, single} ->
               Constructor
                 { constructorPosition = startPosition,
                   constructor,
-                  patterns = fmap (resolve context) patterns
+                  patterns = fmap (resolve context) patterns,
+                  single
                 }
         Stage1.Record {startPosition, constructor, fields} ->
           case context != startPosition :@ constructor of
             binding@Constructor.Binding
-              { index = constructor
+              { index = constructor,
+                single
               } ->
                 Record
                   { constructorPosition = startPosition,
                     constructor,
-                    fields = fmap (Field.resolve context binding) fields
+                    fields = fmap (Field.resolve context binding) fields,
+                    single
                   }
         Stage1.Integer {startPosition, integer} ->
           Integer
@@ -267,20 +288,23 @@ resolve context = \case
           Constructor
             { constructorPosition = startPosition,
               constructor = Constructor.tuple 0,
-              patterns = Strict.Vector.empty
+              patterns = Strict.Vector.empty,
+              single = Prelude.True
             }
         Stage1.Tuple {startPosition, elements} ->
           Constructor
             { constructorPosition = startPosition,
               constructor = Constructor.tuple (length elements),
-              patterns = resolve context <$> Strict.Vector2.toVector elements
+              patterns = resolve context <$> Strict.Vector2.toVector elements,
+              single = Prelude.True
             }
         Stage1.List {startPosition, items}
           | null items ->
               Constructor
                 { constructorPosition = startPosition,
                   constructor = Constructor.nil,
-                  patterns = Strict.Vector.empty
+                  patterns = Strict.Vector.empty,
+                  single = Prelude.False
                 }
           | otherwise ->
               List
@@ -291,7 +315,8 @@ resolve context = \case
           Constructor
             { constructorPosition = startPosition,
               constructor = Constructor.cons,
-              patterns = Strict.Vector.fromList [resolve context head, resolve context tail]
+              patterns = Strict.Vector.fromList [resolve context head, resolve context tail],
+              single = Prelude.False
             }
 
 variable :: Position -> Variable -> Pattern scope

@@ -43,7 +43,7 @@ fixWith = Infix.fixWith position fixity operators
       Constructor _ Constructor.Binding {fixity} -> fixity
       Cons _ -> Fixity {associativity = Right, precedence = 5}
     operators pattern1 index pattern2 = case index of
-      Constructor position Constructor.Binding {index} ->
+      Constructor position Constructor.Binding {index, single} ->
         At
           { names = Map.empty,
             match =
@@ -51,7 +51,8 @@ fixWith = Infix.fixWith position fixity operators
                 Pattern.Constructor
                   { constructorPosition = position,
                     constructor = index,
-                    patterns = Strict.Vector.fromList [pattern1, pattern2]
+                    patterns = Strict.Vector.fromList [pattern1, pattern2],
+                    single
                   }
           }
       Cons constructorPosition ->
@@ -62,7 +63,8 @@ fixWith = Infix.fixWith position fixity operators
                 Pattern.Constructor
                   { constructorPosition,
                     constructor = Constructor.cons,
-                    patterns = Strict.Vector.fromList [pattern1, pattern2]
+                    patterns = Strict.Vector.fromList [pattern1, pattern2],
+                    single = False
                   }
           }
 
