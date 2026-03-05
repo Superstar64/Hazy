@@ -37,7 +37,11 @@ monadFail =
         SchemeOver
           { parameters = Strict.Vector.singleton Type.smallType,
             constraints = Strict.Vector.empty,
-            result = a `Type.Function` f `Type.Call` a
+            result =
+              Type.Constructor Type2.List
+                `Type.Call` Type.Constructor Type2.Char
+                `Type.Function` f
+                `Type.Call` a
           }
 
 monadFailExtra =

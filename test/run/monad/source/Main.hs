@@ -27,6 +27,9 @@ instance Monad (Except) where
   Valid _ >> m = m
   return = pure
 
+instance MonadFail Except where
+  fail = Abort
+
 valid :: String
 valid = case Valid (\x -> x) <*> Valid "abc" of
   Abort message -> 'a' : message
@@ -37,9 +40,14 @@ abort = case Abort "def" <*> Valid "abc" of
   Abort message -> 'a' : message
   Valid message -> 'v' : message
 
+bad :: String
+bad = case do { True <- Valid False; pure "def"} of
+  Abort message -> 'a' : message
+  Valid message -> 'v' : message
+
 combine :: String -> String -> String
 combine [] ys = ys
 combine (x : xs) ys = x : combine xs ys
 
 main :: IO ()
-main = putStrLn (combine valid abort)
+main = putStrLn (valid `combine` abort `combine` bad)

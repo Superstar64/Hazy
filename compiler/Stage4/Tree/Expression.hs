@@ -292,10 +292,14 @@ instance Simplify Stage3.Do where
         alternative =
           Definition
             { definition =
-                Function.Plain
-                  { plain =
-                      RightHandSide.Done
-                        { done = failx evidence
+                Function.Bound
+                  { patternx = Pattern.Wildcard,
+                    body =
+                      Function.Plain
+                        { plain =
+                            RightHandSide.Done
+                              { done = failx (shift evidence)
+                              }
                         }
                   }
             }
