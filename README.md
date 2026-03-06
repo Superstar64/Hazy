@@ -31,51 +31,22 @@ Haskell features are missing, only a test Javascript backend is implemented.
 - [ ] Standard Library
 - [ ] Bootstrapping
 
-# Building
+# Quickstart
 
 Ensure that GHC 9.12 and Cabal are downloaded.
 
-## Building the Compiler and Base
-
-The following builds Hazy alongside it's base into a specified directory. Here
-`.../bin` stores the actual compiler executable while `.../packages` contains
-the runtime and base packages that it loads by default.
-
 ```sh
-DIST=.dist
-
-# Setup the distribution
-mkdir $DIST
-mkdir $DIST/bin
-mkdir $DIST/packages
-
-# Compile the compiler
-cabal build hazy
-cp $(cabal list-bin hazy) $DIST/bin/hazy
-
-# Copy the runtime
-cp -R library/runtime $DIST/packages/runtime
-
-# Compile base
-$DIST/bin/hazy --pack --bare-runtime library/base/source -o $DIST/packages/base $(cat library/base/flags)
+# Run the build script
+tools/build.sh .dist
 
 # Add the compiler to the path for testing
-export PATH=$PATH:$DIST/bin
-```
-
-## Compiling Hello World
-
-Now that the compiler is built, hello world is as simple as running it and
-launching node to run the program.
-
-```sh
-HELLO=.hello
+export PATH=.dist/bin:$PATH
 
 # Compile hello world
-hazy test/run/hello/source -o $HELLO
+hazy test/run/hello/source -o .hello
 
 # Run hello world
-node $HELLO/index.mjs
+node .hello/index.mjs
 ```
 
 # Packages
