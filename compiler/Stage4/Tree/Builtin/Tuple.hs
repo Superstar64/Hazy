@@ -7,6 +7,7 @@ import qualified Stage2.Index.Local as Local
 import Stage4.Tree.Constructor (Constructor (..))
 import Stage4.Tree.Data (Data (Data))
 import qualified Stage4.Tree.Data as Data
+import Stage4.Tree.Entry (Entry (..))
 import qualified Stage4.Tree.Type as Type (Type (..), smallType)
 
 tuple :: Int -> Data scope
@@ -20,5 +21,9 @@ tuple n =
     set = map go [minBound .. maxBound]
     go Constructor.Tuple =
       Constructor
-        { entries = Strict.Vector.generate n $ Type.Variable . Local.Local
+        { entries = Strict.Vector.generate n $ \n ->
+            Entry
+              { entry = Type.Variable (Local.Local n),
+                strict = False
+              }
         }

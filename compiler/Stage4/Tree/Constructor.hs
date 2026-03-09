@@ -4,15 +4,14 @@ import qualified Data.Vector.Strict as Strict
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Constructor as Solved
-import qualified Stage3.Tree.Entry as Solved.Entry
 import qualified Stage3.Tree.Field as Solved.Field
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
-import Stage4.Tree.Type (Type)
-import qualified Stage4.Tree.Type as Type (simplify)
+import Stage4.Tree.Entry (Entry)
+import qualified Stage4.Tree.Entry as Entry
 
 newtype Constructor scope = Constructor
-  { entries :: Strict.Vector (Type scope)
+  { entries :: Strict.Vector (Entry scope)
   }
   deriving (Show)
 
@@ -35,9 +34,9 @@ simplify :: Solved.Constructor scope -> Constructor scope
 simplify = \case
   Solved.Constructor {entries} ->
     Constructor
-      { entries = Type.simplify . Solved.Entry.entry <$> entries
+      { entries = Entry.simplify <$> entries
       }
   Solved.Record {fields} ->
     Constructor
-      { entries = Type.simplify . Solved.Entry.entry . Solved.Field.entry <$> fields
+      { entries = Entry.simplify . Solved.Field.entry <$> fields
       }

@@ -5,7 +5,6 @@ module Stage3.Temporary.Type where
 import Control.Monad.ST (ST)
 import qualified Data.Strict.Vector1 as Strict (Vector1)
 import qualified Data.Strict.Vector2 as Strict (Vector2)
-import qualified Data.Vector.Strict as Strict.Vector
 import Error (uncheckable, universeMustBeSmall, unsupportedFeatureStrictFunctions)
 import Stage1.Position (Position)
 import qualified Stage2.Index.Constructor as Constructor
@@ -15,10 +14,7 @@ import qualified Stage2.Index.Table.Type as Type
 import qualified Stage2.Index.Table.Type as Type.Table
 import qualified Stage2.Index.Type2 as Type2
 import qualified Stage2.Tree.Type as Stage2 (Type (..))
-import Stage3.Check.ConstructorInstance (ConstructorInstance (ConstructorInstance))
-import qualified Stage3.Check.ConstructorInstance as ConstructorInstance
 import Stage3.Check.Context (Context (..))
-import Stage3.Check.DataInstance (DataInstance (DataInstance))
 import qualified Stage3.Check.DataInstance as DataInstance
 import qualified Stage3.Check.LocalBinding as LocalBinding (LocalBinding (..))
 import Stage3.Check.TypeBinding (TypeBinding (TypeBinding))
@@ -65,7 +61,7 @@ check context@Context {localEnvironment, typeEnvironment} kind = \case
       Unify.unify context startPosition kind wobbly
       pure Variable {variable}
   Stage2.Constructor {constructorPosition, constructor} -> do
-    kind' <- Builtin.kind (pure . lift) indexType indexConstructor constructor
+    kind' <- Builtin.kind (pure . lift) indexType indexLift constructor
     Unify.unify context constructorPosition kind kind'
     pure Constructor {constructor}
     where
@@ -73,18 +69,12 @@ check context@Context {localEnvironment, typeEnvironment} kind = \case
         | TypeBinding {kind = kind'} <- typeEnvironment Type.Table.! constructor =
             do
               lift <$> kind'
-      indexConstructor constructor = do
-        let Constructor.Index {typeIndex, constructorIndex} = constructor
+      indexLift constructor@Constructor.Index {typeIndex} = do
         datax <- do
           let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
-          Builtin.index pure get typeIndex
-        DataInstance {types, constructors} <-
+          datax <- Builtin.index pure get typeIndex
           Simple.Data.instanciate datax
-        let root = Unify.constructor typeIndex
-            base = foldl Unify.call root types
-            ConstructorInstance {entries} =
-              constructors Strict.Vector.! constructorIndex
-        pure $ foldr Unify.function base entries
+        pure $ DataInstance.constructorFunction datax constructor
   Stage2.Tuple {startPosition, elements} -> do
     elements <- traverse (check context Unify.typex) elements
     Unify.unify context startPosition kind Unify.typex

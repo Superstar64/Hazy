@@ -6,6 +6,7 @@ import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Stage2.Index.Constructor as Constructor
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage3.Tree.ConstructorInfo (ConstructorInfo)
 import qualified Stage3.Tree.Pattern as Stage3
 import qualified Stage3.Tree.PatternField as Stage3.Field
 import qualified Stage4.Shift as Shift2
@@ -24,7 +25,7 @@ data Bindings scope
   | Record
       { constructor :: !(Constructor.Index scope),
         fields :: !(Strict.Vector (Field scope)),
-        fieldCount :: !Int
+        constructorInfo :: !ConstructorInfo
       }
   | Integer
       { integer :: !Integer,
@@ -64,11 +65,11 @@ instance Shift2.Functor Bindings where
         { constructor = Shift2.map category constructor,
           patterns = Shift2.map category <$> patterns
         }
-    Record {constructor, fields, fieldCount} ->
+    Record {constructor, fields, constructorInfo} ->
       Record
         { constructor = Shift2.map category constructor,
           fields = Shift2.map category <$> fields,
-          fieldCount
+          constructorInfo
         }
     List {items} ->
       List
@@ -111,11 +112,11 @@ simplifyBindings = \case
       { constructor,
         patterns = simplify <$> patterns
       }
-  Stage3.Record {constructor, fields, fieldCount} ->
+  Stage3.Record {constructor, fields, constructorInfo} ->
     Record
       { constructor,
         fields = resolveField <$> fields,
-        fieldCount
+        constructorInfo
       }
   Stage3.List {items} ->
     List

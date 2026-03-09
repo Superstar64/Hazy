@@ -8,6 +8,7 @@ import qualified Stage2.Index.Type2 as Type2
 import Stage4.Tree.Constructor (Constructor (..))
 import Stage4.Tree.Data (Data (Data))
 import qualified Stage4.Tree.Data as Data
+import Stage4.Tree.Entry (Entry (..))
 import qualified Stage4.Tree.Type as Type (Type (..), smallType)
 
 list :: Data scope
@@ -23,5 +24,13 @@ list =
         go Constructor.Nil = Constructor {entries = Strict.Vector.empty}
         go Constructor.Cons = Constructor {entries = Strict.Vector.fromList [head, tail]}
           where
-            head = Type.Variable $ Local.Local 0
-            tail = Type.Constructor Type2.List `Type.Call` Type.Variable (Local.Local 0)
+            head =
+              Entry
+                { entry = Type.Variable $ Local.Local 0,
+                  strict = False
+                }
+            tail =
+              Entry
+                { entry = Type.Constructor Type2.List `Type.Call` Type.Variable (Local.Local 0),
+                  strict = False
+                }

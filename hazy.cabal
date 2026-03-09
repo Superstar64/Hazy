@@ -282,6 +282,7 @@ executable hazy
     Stage3.Check.ConstructorInstance
     Stage3.Check.Context
     Stage3.Check.DataInstance
+    Stage3.Check.EntryInstance
     Stage3.Check.InstanceAnnotation
     Stage3.Check.KindAnnotation
     Stage3.Check.LocalBinding
@@ -333,6 +334,7 @@ executable hazy
     Stage3.Tree.Body
     Stage3.Tree.Constraint
     Stage3.Tree.Constructor
+    Stage3.Tree.ConstructorInfo
     Stage3.Tree.Declarations
     Stage3.Tree.Definition
     Stage3.Tree.Do
@@ -390,6 +392,7 @@ executable hazy
     Stage4.Tree.Constructor
     Stage4.Tree.Data
     Stage4.Tree.Declarations
+    Stage4.Tree.Entry
     Stage4.Tree.Evidence
     Stage4.Tree.Expression
     Stage4.Tree.Hook

@@ -12,6 +12,7 @@ import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import qualified Stage2.Tree.Selector as Selector (Uniform)
 import Stage3.Tree.Alternative (Alternative)
+import Stage3.Tree.ConstructorInfo (ConstructorInfo)
 import Stage3.Tree.Declarations (Declarations)
 import Stage3.Tree.Do (Do)
 import Stage3.Tree.ExpressionField (Field)
@@ -29,7 +30,7 @@ data Expression scope
       }
   | Constructor
       { constructor :: !(Constructor.Index scope),
-        parameters :: !Int
+        constructorInfo :: !ConstructorInfo
       }
   | Selector
       { selector :: !(Selector.Index scope),
@@ -42,7 +43,7 @@ data Expression scope
       }
   | Record
       { constructor :: !(Constructor.Index scope),
-        parameters :: !Int,
+        constructorInfo :: !ConstructorInfo,
         fields :: !(Strict.Vector (Field scope))
       }
   | Integer

@@ -24,7 +24,6 @@ import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift (..))
 import qualified Stage2.Tree.Pattern as Stage2
-import Stage3.Check.ConstructorInstance (ConstructorInstance (ConstructorInstance))
 import qualified Stage3.Check.ConstructorInstance as ConstructorInstance
 import Stage3.Check.Context (Context (..))
 import Stage3.Check.DataInstance (DataInstance (DataInstance))
@@ -34,6 +33,7 @@ import qualified Stage3.Check.TypeBinding as TypeBinding
 import qualified Stage3.Simple.Data as Simple.Data
 import Stage3.Temporary.PatternField (Field)
 import qualified Stage3.Temporary.PatternField as Field
+import Stage3.Tree.ConstructorInfo (ConstructorInfo)
 import qualified Stage3.Tree.Pattern as Solved
 import qualified Stage3.Unify as Unify
 import qualified Stage4.Tree.Builtin as Builtin
@@ -51,12 +51,13 @@ data Match s scope
 data Bindings s scope
   = Constructor
       { constructor :: !(Constructor.Index scope),
-        patterns :: !(Strict.Vector (Pattern s scope))
+        patterns :: !(Strict.Vector (Pattern s scope)),
+        constructorInfo :: !ConstructorInfo
       }
   | Record
       { constructor :: !(Constructor.Index scope),
         fields :: !(Strict.Vector (Field s scope)),
-        fieldCount :: !Int
+        constructorInfo :: !ConstructorInfo
       }
   | Integer
       { startPosition :: !Position,
@@ -85,12 +86,12 @@ instance Unify.Zonk Match where
 
 instance Unify.Zonk Bindings where
   zonk zonker = \case
-    Constructor {constructor, patterns} -> do
+    Constructor {constructor, patterns, constructorInfo} -> do
       patterns <- traverse (Unify.zonk zonker) patterns
-      pure Constructor {constructor, patterns}
-    Record {constructor, fields, fieldCount} -> do
+      pure Constructor {constructor, patterns, constructorInfo}
+    Record {constructor, fields, constructorInfo} -> do
       fields <- traverse (Unify.zonk zonker) fields
-      pure Record {constructor, fields, fieldCount}
+      pure Record {constructor, fields, constructorInfo}
     Integer {startPosition, integer, evidence, equal} -> do
       evidence <- Unify.zonk zonker evidence
       equal <- Unify.zonk zonker equal
@@ -164,12 +165,13 @@ check context@Context {typeEnvironment} typex (Stage2.At {match}) =
               Simple.Data.instanciate datax
             let root = Unify.constructor typeIndex
                 base = foldl Unify.call root types
-                ConstructorInstance {entries} =
-                  constructors Strict.Vector.! constructorIndex
+                instancex = constructors Strict.Vector.! constructorIndex
+                entries = ConstructorInstance.types instancex
+                constructorInfo = ConstructorInstance.info instancex
             Unify.unify context constructorPosition typex base
             when (length entries /= length patterns) $ mismatchedConstructorArguments constructorPosition
             patterns <- sequence $ Strict.Vector.zipWith (check context) entries patterns
-            pure $ Constructor {constructor, patterns}
+            pure $ Constructor {constructor, patterns, constructorInfo}
       Stage2.Record {constructorPosition, constructor, fields} -> do
         let Constructor.Index typeIndex constructorIndex = constructor
         datax <- do
@@ -179,12 +181,13 @@ check context@Context {typeEnvironment} typex (Stage2.At {match}) =
           Simple.Data.instanciate datax
         let root = Unify.constructor typeIndex
             base = foldl Unify.call root types
-            ConstructorInstance {entries} =
-              constructors Strict.Vector.! constructorIndex
+            instancex = constructors Strict.Vector.! constructorIndex
+            entries = ConstructorInstance.types instancex
+            constructorInfo = ConstructorInstance.info instancex
             lookup index = entries Strict.Vector.! index
         Unify.unify context constructorPosition typex base
         fields <- traverse (Field.check context lookup) fields
-        pure $ Record {constructor, fields, fieldCount = length entries}
+        pure $ Record {constructor, fields, constructorInfo}
       Stage2.List {startPosition, items} -> do
         element <- Unify.fresh Unify.typex
         items <- traverse (check context element) items
@@ -212,10 +215,12 @@ solveMatch :: Match s scope -> ST s (Solved.Match scope)
 solveMatch Wildcard = pure Solved.Wildcard
 solveMatch Match {match, irrefutable} = do
   match <- case match of
-    Constructor {constructor, patterns} -> Solved.Constructor constructor <$> traverse solve patterns
-    Record {constructor, fields, fieldCount} -> do
+    Constructor {constructor, patterns, constructorInfo} -> do
+      patterns <- traverse solve patterns
+      pure Solved.Constructor {constructor, patterns, constructorInfo}
+    Record {constructor, fields, constructorInfo} -> do
       fields <- traverse Field.solve fields
-      pure Solved.Record {constructor, fields, fieldCount}
+      pure Solved.Record {constructor, fields, constructorInfo}
     List items -> Solved.List <$> traverse solve items
     Integer {startPosition, integer, evidence, equal} -> do
       evidence <- Unify.solveEvidence startPosition evidence

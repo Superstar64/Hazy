@@ -22,10 +22,7 @@ import qualified Stage2.Index.Type2 as Type2
 import Stage2.Scope (Environment (..))
 import Stage2.Shift (Shift (..))
 import qualified Stage2.Shift as Shift
-import Stage3.Check.ConstructorInstance (ConstructorInstance (ConstructorInstance))
-import qualified Stage3.Check.ConstructorInstance as ConstructorInstance
 import Stage3.Check.Context (Context (..))
-import Stage3.Check.DataInstance (DataInstance (DataInstance))
 import qualified Stage3.Check.DataInstance as DataInstance
 import qualified Stage3.Check.LocalBinding as Local (Constraint (..), LocalBinding (..))
 import Stage3.Check.TypeBinding (TypeBinding (TypeBinding))
@@ -330,18 +327,12 @@ typeCheck context_ position = typeCheckWith context_
                 case typeEnvironment Type.Table.! index of
                   TypeBinding {kind = kind'} -> do
                     Simple.lift <$> kind'
-              indexLift constructor = do
-                let Constructor.Index {typeIndex, constructorIndex} = constructor
+              indexLift constructor@Constructor.Index {typeIndex} = do
                 datax <- do
                   let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
-                  Builtin.index pure get typeIndex
-                DataInstance {types, constructors} <-
+                  datax <- Builtin.index pure get typeIndex
                   Simple.Data.instanciate datax
-                let root = Constructor typeIndex
-                    base = foldl Call root types
-                    ConstructorInstance {entries} =
-                      constructors Strict.Vector.! constructorIndex
-                pure $ foldr Function base entries
+                pure $ DataInstance.constructorFunction datax constructor
           Constraint -> unify context position (Type Large) kind
           Small -> unify context position Universe kind
           Large -> unify context position Universe kind
@@ -444,18 +435,12 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
                     case typeEnvironment Type.Table.! index of
                       TypeBinding {kind = kind'} -> do
                         Simple.lift <$> kind'
-                  indexLift constructor = do
-                    let Constructor.Index {typeIndex, constructorIndex} = constructor
+                  indexLift constructor@Constructor.Index {typeIndex} = do
                     datax <- do
                       let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
-                      Builtin.index pure get typeIndex
-                    DataInstance {types, constructors} <-
+                      datax <- Builtin.index pure get typeIndex
                       Simple.Data.instanciate datax
-                    let root = Constructor typeIndex
-                        base = foldl Call root types
-                        ConstructorInstance {entries} =
-                          constructors Strict.Vector.! constructorIndex
-                    pure $ foldr Function base entries
+                    pure $ DataInstance.constructorFunction datax constructor
               real <- Builtin.kind (pure . Simple.lift) indexType indexLift classx
               unify context position (Function target Constraint) real
 

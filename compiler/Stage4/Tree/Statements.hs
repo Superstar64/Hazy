@@ -11,6 +11,7 @@ import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage3.Tree.ConstructorInfo (ConstructorInfo (..))
 import qualified Stage3.Tree.Statements as Stage3
 import qualified Stage4.Index.Term as Term
 import qualified Stage4.Shift as Shift2
@@ -113,10 +114,11 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
             check' <- Expression.monoVariable $ Term.Pattern $ Term.Select index Term.At,
             thenx <- Shift2.map (Shift2.SimplifyPattern index) thenx ->
               bind patternx check (bind target check' thenx)
-  Pattern.Record {constructor, fields, fieldCount} -> go (length fields - 1)
+  Pattern.Record {constructor, fields, constructorInfo = constructorInfo@ConstructorInfo {parameterCount}} ->
+    go (length fields - 1)
     where
       go -1
-        | patterns <- Strict.Vector.replicate fieldCount Pattern.Wildcard,
+        | patterns <- Strict.Vector.replicate parameterCount Pattern.Wildcard,
           match <- Pattern.Constructor {constructor, patterns},
           patternx <- Pattern.Match {match, irrefutable},
           fields <- (\(Pattern.Field field _) -> field) <$> fields,
@@ -127,7 +129,7 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
           Pattern.Wildcard -> go (index - 1)
           target
             | fields <- fields // [(index, Pattern.Field field Pattern.Wildcard)],
-              match <- Pattern.Record {constructor, fields, fieldCount},
+              match <- Pattern.Record {constructor, fields, constructorInfo},
               patternx <- Pattern.Match {match, irrefutable},
               target <- shift target,
               check' <- Expression.monoVariable $ Term.Pattern $ Term.Select index Term.At,

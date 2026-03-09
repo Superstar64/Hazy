@@ -15,10 +15,7 @@ import qualified Stage2.Index.Type2 as Type2
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (shift)
 import qualified Stage2.Tree.Constraint as Stage2
-import Stage3.Check.ConstructorInstance (ConstructorInstance (ConstructorInstance))
-import qualified Stage3.Check.ConstructorInstance as ConstructorInstance
 import Stage3.Check.Context (Context (..))
-import Stage3.Check.DataInstance (DataInstance (DataInstance))
 import qualified Stage3.Check.DataInstance as DataInstance
 import qualified Stage3.Check.LocalBinding as LocalBinding
 import Stage3.Check.TypeBinding (TypeBinding (TypeBinding))
@@ -58,19 +55,13 @@ check
           | TypeBinding {kind = kind'} <- typeEnvironment Type.Table.! constructor =
               do
                 lift <$> kind'
-        indexConstructor constructor = do
-          let Constructor.Index {typeIndex, constructorIndex} = constructor
+        indexLift constructor@Constructor.Index {typeIndex} = do
           datax <- do
             let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.Table.! index)
-            Builtin.index pure get typeIndex
-          DataInstance {types, constructors} <-
+            datax <- Builtin.index pure get typeIndex
             Simple.Data.instanciate datax
-          let root = Unify.constructor typeIndex
-              base = foldl Unify.call root types
-              ConstructorInstance {entries} =
-                constructors Strict.Vector.! constructorIndex
-          pure $ foldr Unify.function base entries
-    real <- Builtin.kind (pure . lift) indexType indexConstructor (shift classx)
+          pure $ DataInstance.constructorFunction datax constructor
+    real <- Builtin.kind (pure . lift) indexType indexLift (shift classx)
 
     Unify.unify context startPosition (Unify.function target Unify.constraint) real
 

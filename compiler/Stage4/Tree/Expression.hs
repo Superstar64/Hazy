@@ -17,6 +17,7 @@ import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage2.Tree.Selector as Selector (Uniform (..))
 import qualified Stage3.Index.Evidence as Index.Evidence
+import Stage3.Tree.ConstructorInfo (ConstructorInfo (..))
 import qualified Stage3.Tree.Definition as Stage3 (Definition)
 import qualified Stage3.Tree.Do as Stage3 (Do)
 import qualified Stage3.Tree.Do as Stage3.Do
@@ -363,8 +364,10 @@ simplifyWith ::
   Expression scope
 simplifyWith Stage3.Call {function, argument} arguments =
   simplifyWith function (simplify argument : arguments)
-simplifyWith Stage3.Constructor {constructor, parameters} arguments =
-  simplifyConstructor constructor parameters (length arguments) (Reverse.fromList arguments)
+simplifyWith
+  Stage3.Constructor {constructor, constructorInfo = ConstructorInfo {parameterCount}}
+  arguments =
+    simplifyConstructor constructor parameterCount (length arguments) (Reverse.fromList arguments)
 simplifyWith expression arguments@(_ : _) =
   foldl Call (simplify expression) arguments
 simplifyWith expression [] = case expression of
@@ -383,10 +386,10 @@ simplifyWith expression [] = case expression of
         evidence,
         instanciation
       }
-  Stage3.Record {constructor, parameters, fields} ->
+  Stage3.Record {constructor, constructorInfo = ConstructorInfo {parameterCount}, fields} ->
     Constructor
       { constructor,
-        arguments = Strict.Vector.generate parameters $ \index' ->
+        arguments = Strict.Vector.generate parameterCount $ \index' ->
           case [ expression
                | Stage3.Field
                    { index,

@@ -31,7 +31,6 @@ import qualified Stage2.Tree.Expression as Stage2 (Expression (..))
 import qualified Stage2.Tree.Selector as Redirect
 import Stage3.Check.ClassInstance (ClassInstance (ClassInstance))
 import qualified Stage3.Check.ClassInstance as ClassInstance
-import Stage3.Check.ConstructorInstance (ConstructorInstance (ConstructorInstance))
 import qualified Stage3.Check.ConstructorInstance as ConstructorInstance
 import Stage3.Check.Context (Context (..))
 import Stage3.Check.DataInstance (DataInstance (DataInstance))
@@ -55,6 +54,7 @@ import Stage3.Temporary.Pattern (Pattern)
 import qualified Stage3.Temporary.Pattern as Pattern
 import Stage3.Temporary.RightHandSide (RightHandSide)
 import qualified Stage3.Temporary.RightHandSide as RightHandSide
+import Stage3.Tree.ConstructorInfo (ConstructorInfo)
 import qualified Stage3.Tree.Expression as Solved
 import qualified Stage3.Unify as Unify
 import {-# SOURCE #-} qualified Stage4.Tree.Builtin as Builtin
@@ -69,7 +69,7 @@ data Expression s scope
       }
   | Constructor
       { constructor :: !(Constructor.Index scope),
-        parameters :: !Int
+        constructorInfo :: !ConstructorInfo
       }
   | Selector
       { selector :: !(Selector.Index scope),
@@ -96,7 +96,7 @@ data Expression s scope
   | List {items :: !(Strict.Vector (Expression s scope))}
   | Record
       { constructor :: !(Constructor.Index scope),
-        parameters :: !Int,
+        constructorInfo :: !ConstructorInfo,
         fields :: !(Strict.Vector (Field s scope))
       }
   | Call
@@ -135,7 +135,7 @@ instance Unify.Zonk Expression where
     Variable {variablePosition, variable, instanciation} -> do
       instanciation <- Unify.zonk zonker instanciation
       pure Variable {variablePosition, variable, instanciation}
-    Constructor {constructor, parameters} -> pure Constructor {constructor, parameters}
+    Constructor {constructor, constructorInfo} -> pure Constructor {constructor, constructorInfo}
     Selector {selector, uniform} -> pure Selector {selector, uniform}
     Method {methodPosition, method, evidence, instanciation} -> do
       evidence <- Unify.zonk zonker evidence
@@ -152,9 +152,9 @@ instance Unify.Zonk Expression where
     List {items} -> do
       items <- traverse (Unify.zonk zonker) items
       pure List {items}
-    Record {constructor, parameters, fields} -> do
+    Record {constructor, constructorInfo, fields} -> do
       fields <- traverse (Unify.zonk zonker) fields
-      pure Record {constructor, parameters, fields}
+      pure Record {constructor, constructorInfo, fields}
     Call {function, argument} -> do
       function <- Unify.zonk zonker function
       argument <- Unify.zonk zonker argument
@@ -208,11 +208,11 @@ check context@Context {typeEnvironment} typex Stage2.Constructor {constructorPos
       Simple.Data.instanciate datax
     let root = Unify.constructor typeIndex
         base = foldl Unify.call root types
-        ConstructorInstance {entries} =
-          constructors Strict.Vector.! constructorIndex
-        typex' = foldr Unify.function base entries
+        instancex = constructors Strict.Vector.! constructorIndex
+        typex' = ConstructorInstance.function instancex base
+        constructorInfo = ConstructorInstance.info instancex
     Unify.unify context constructorPosition typex typex'
-    pure Constructor {constructor, parameters = length entries}
+    pure Constructor {constructor, constructorInfo}
 check
   context@Context {typeEnvironment}
   typex
@@ -230,12 +230,13 @@ check
         Simple.Data.instanciate datax
       let root = Unify.constructor typeIndex
           base = foldl Unify.call root types
-          ConstructorInstance {entries} =
-            constructors Strict.Vector.! constructorIndex
+          instancex = constructors Strict.Vector.! constructorIndex
+          entries = ConstructorInstance.types instancex
+          constructorInfo = ConstructorInstance.info instancex
           lookup index = entries Strict.Vector.! index
       Unify.unify context constructorPosition typex base
       fields <- traverse (Field.check context lookup) fields
-      pure $ Record {constructor, fields, parameters = length entries}
+      pure $ Record {constructor, fields, constructorInfo}
 check
   context@Context {typeEnvironment}
   typex
@@ -250,8 +251,8 @@ check
         base = foldl Unify.call root types
         Redirect.Selector {first, index, uniform} =
           selectors Strict.Vector.! selectorIndex
-        ConstructorInstance {entries} =
-          constructors Strict.Vector.! first
+        instancex = constructors Strict.Vector.! first
+        entries = ConstructorInstance.types instancex
         entry = entries Strict.Vector.! index
         typex' = Unify.function base entry
     Unify.unify context selectorPosition typex typex'
@@ -362,7 +363,7 @@ solve = \case
         { variable,
           instanciation
         }
-  Constructor {constructor, parameters} -> pure $ Solved.Constructor {constructor, parameters}
+  Constructor {constructor, constructorInfo} -> pure $ Solved.Constructor {constructor, constructorInfo}
   Selector {selector, uniform} -> pure $ Solved.Selector {selector, uniform}
   Method {methodPosition, method, evidence, instanciation} -> do
     evidence <- Unify.solveEvidence methodPosition evidence
@@ -373,9 +374,9 @@ solve = \case
           evidence,
           instanciation
         }
-  Record {constructor, parameters, fields} -> do
+  Record {constructor, constructorInfo, fields} -> do
     fields <- traverse Field.solve fields
-    pure Solved.Record {constructor, parameters, fields}
+    pure Solved.Record {constructor, constructorInfo, fields}
   List items -> do
     items <- traverse solve items
     pure $ Solved.List items
