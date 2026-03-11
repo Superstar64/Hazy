@@ -47,6 +47,9 @@ tuple :: Int -> Type s scope
 typex :: Type s scope
 kind :: Type s scope
 typeWith :: Type s scope -> Type s scope
+
+infixr 0 `function`
+
 function :: Type s scope -> Type s scope -> Type s scope
 constraint :: Type s scope
 small :: Type s scope

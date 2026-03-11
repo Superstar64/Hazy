@@ -104,7 +104,7 @@ generateInto context target = \case
     let select =
           Javascript.Member
             { object,
-              field = Mangle.fields !! selectorIndex
+              field = Mangle.fields !! (selectorIndex + 1)
             }
     pure $ statements ++ [done (force select)]
   Let {declarations, letBody} -> do

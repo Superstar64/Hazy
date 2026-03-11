@@ -15,7 +15,6 @@ import Stage2.Scope (Environment ((:+)))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import qualified Stage2.Tree.Selector as Selector (Uniform (..))
 import qualified Stage3.Index.Evidence as Index.Evidence
 import Stage3.Tree.ConstructorInfo (ConstructorInfo (..))
 import qualified Stage3.Tree.Definition as Stage3 (Definition)
@@ -25,6 +24,7 @@ import qualified Stage3.Tree.Expression as Stage3 (Expression (..))
 import qualified Stage3.Tree.ExpressionField as Stage3 (Field (Field))
 import qualified Stage3.Tree.ExpressionField as Stage3.Field
 import qualified Stage3.Tree.RightHandSide as Stage3 (RightHandSide)
+import Stage3.Tree.SelectorInfo (Select (..), SelectorInfo (..))
 import qualified Stage4.Index.Term as Term
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
@@ -307,56 +307,55 @@ instance Simplify Stage3.Do where
 
 simplifyConstructor ::
   Constructor.Index scope ->
-  Int ->
+  ConstructorInfo ->
   Int ->
   List (Expression scope) ->
   Expression scope
-simplifyConstructor constructor parameters argumentCount arguments
-  | parameters > argumentCount =
+simplifyConstructor constructor info@ConstructorInfo {parameterCount} argumentCount arguments
+  | parameterCount > argumentCount =
       Lambda
         { body =
             simplifyConstructor
               (shift constructor)
-              parameters
+              info
               (argumentCount + 1)
               (fmap shift arguments :> lambdaVariable)
         }
-  | parameters == argumentCount =
+  | parameterCount == argumentCount =
       Constructor
         { constructor,
-          arguments = Strict.Vector.fromList (toList arguments)
+          arguments = Strict.Vector.fromListN argumentCount (toList arguments)
         }
   | otherwise = error "bad argument count"
 
 simplifySelector ::
   Selector.Index scope ->
-  Selector.Uniform ->
+  SelectorInfo ->
   Expression scope ->
   Expression scope
-simplifySelector selector@(Selector.Index typeIndex _) uniform argument = case uniform of
-  Selector.Uniform {} -> Selector {selector, argument}
-  Selector.Disjoint {indexes} -> Join {statements = mconcat statements}
-    where
-      generate index select =
-        Statements.bind
-          ( Pattern.Match
-              { irrefutable = False,
-                match =
-                  Pattern.Constructor
-                    { constructor = Constructor.Index typeIndex index,
-                      patterns = Strict.Vector.replicate (length indexes) Pattern.Wildcard
-                    }
-              }
-          )
-          argument
-          ( case select of
-              Strict.Just select ->
-                Statements.Done
-                  { done = monoVariable $ Term.Pattern (Term.Select select Term.At)
+simplifySelector selector Uniform {} argument = Selector {selector, argument}
+simplifySelector (Selector.Index typeIndex _) Disjoint {select} argument = Join {statements = mconcat statements}
+  where
+    generate index Select {selectIndex, constructorInfo = ConstructorInfo {parameterCount}} =
+      Statements.bind match argument get
+      where
+        match =
+          Pattern.Match
+            { irrefutable = False,
+              match =
+                Pattern.Constructor
+                  { constructor = Constructor.Index typeIndex index,
+                    patterns = Strict.Vector.replicate parameterCount Pattern.Wildcard
                   }
-              Strict.Nothing -> Statements.Bottom
-          )
-      statements = zipWith generate [0 ..] $ toList indexes
+            }
+        get =
+          case selectIndex of
+            Strict.Just index ->
+              Statements.Done
+                { done = monoVariable $ Term.Pattern (Term.Select index Term.At)
+                }
+            Strict.Nothing -> Statements.Bottom
+    statements = zipWith generate [0 ..] $ toList select
 
 simplifyWith ::
   Stage3.Expression scope ->
@@ -365,9 +364,9 @@ simplifyWith ::
 simplifyWith Stage3.Call {function, argument} arguments =
   simplifyWith function (simplify argument : arguments)
 simplifyWith
-  Stage3.Constructor {constructor, constructorInfo = ConstructorInfo {parameterCount}}
+  Stage3.Constructor {constructor, constructorInfo}
   arguments =
-    simplifyConstructor constructor parameterCount (length arguments) (Reverse.fromList arguments)
+    simplifyConstructor constructor constructorInfo (length arguments) (Reverse.fromList arguments)
 simplifyWith expression arguments@(_ : _) =
   foldl Call (simplify expression) arguments
 simplifyWith expression [] = case expression of
@@ -376,9 +375,9 @@ simplifyWith expression [] = case expression of
       { variable = Term.from variable,
         instanciation
       }
-  Stage3.Selector {selector, uniform} ->
+  Stage3.Selector {selector, selectorInfo} ->
     Lambda
-      { body = simplifySelector (shift selector) uniform lambdaVariable
+      { body = simplifySelector (shift selector) selectorInfo lambdaVariable
       }
   Stage3.Method {method, evidence, instanciation} ->
     Method

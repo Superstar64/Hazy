@@ -173,7 +173,7 @@ universe = Universe
 constraint :: Type s scope
 constraint = Constraint
 
-infixr 9 `function`
+infixr 0 `function`
 
 function :: Type s scope -> Type s scope -> Type s scope
 function = Function

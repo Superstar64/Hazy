@@ -10,7 +10,6 @@ import qualified Stage2.Index.Selector as Selector (Index)
 import qualified Stage2.Index.Term as Term (Index)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
-import qualified Stage2.Tree.Selector as Selector (Uniform)
 import Stage3.Tree.Alternative (Alternative)
 import Stage3.Tree.ConstructorInfo (ConstructorInfo)
 import Stage3.Tree.Declarations (Declarations)
@@ -19,6 +18,7 @@ import Stage3.Tree.ExpressionField (Field)
 import Stage3.Tree.Lambda (Lambda)
 import Stage3.Tree.Pattern (Pattern)
 import Stage3.Tree.RightHandSide (RightHandSide)
+import Stage3.Tree.SelectorInfo (SelectorInfo)
 import qualified Stage4.Tree.Evidence as Simple (Evidence)
 import qualified Stage4.Tree.Instanciation as Simple (Instanciation)
 import Prelude hiding (Bool (False, True))
@@ -34,7 +34,7 @@ data Expression scope
       }
   | Selector
       { selector :: !(Selector.Index scope),
-        uniform :: !Selector.Uniform
+        selectorInfo :: !SelectorInfo
       }
   | Method
       { method :: !(Method.Index scope),

@@ -28,7 +28,6 @@ import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (shift)
 import qualified Stage2.Tree.Expression as Stage2 (Expression (..))
-import qualified Stage2.Tree.Selector as Redirect
 import Stage3.Check.ClassInstance (ClassInstance (ClassInstance))
 import qualified Stage3.Check.ClassInstance as ClassInstance
 import qualified Stage3.Check.ConstructorInstance as ConstructorInstance
@@ -56,6 +55,7 @@ import Stage3.Temporary.RightHandSide (RightHandSide)
 import qualified Stage3.Temporary.RightHandSide as RightHandSide
 import Stage3.Tree.ConstructorInfo (ConstructorInfo)
 import qualified Stage3.Tree.Expression as Solved
+import Stage3.Tree.SelectorInfo (SelectorInfo)
 import qualified Stage3.Unify as Unify
 import {-# SOURCE #-} qualified Stage4.Tree.Builtin as Builtin
 import {-# SOURCE #-} Stage4.Tree.TypeDeclaration (assumeClass, assumeData)
@@ -73,7 +73,7 @@ data Expression s scope
       }
   | Selector
       { selector :: !(Selector.Index scope),
-        uniform :: !Redirect.Uniform
+        selectorInfo :: !SelectorInfo
       }
   | Method
       { methodPosition :: !Position,
@@ -136,7 +136,7 @@ instance Unify.Zonk Expression where
       instanciation <- Unify.zonk zonker instanciation
       pure Variable {variablePosition, variable, instanciation}
     Constructor {constructor, constructorInfo} -> pure Constructor {constructor, constructorInfo}
-    Selector {selector, uniform} -> pure Selector {selector, uniform}
+    Selector {selector, selectorInfo} -> pure Selector {selector, selectorInfo}
     Method {methodPosition, method, evidence, instanciation} -> do
       evidence <- Unify.zonk zonker evidence
       instanciation <- Unify.zonk zonker instanciation
@@ -245,18 +245,11 @@ check
     datax <- do
       let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
       Builtin.index pure get typeIndex
-    DataInstance {types, constructors, selectors} <-
-      Simple.Data.instanciate datax
-    let root = Unify.constructor typeIndex
-        base = foldl Unify.call root types
-        Redirect.Selector {first, index, uniform} =
-          selectors Strict.Vector.! selectorIndex
-        instancex = constructors Strict.Vector.! first
-        entries = ConstructorInstance.types instancex
-        entry = entries Strict.Vector.! index
-        typex' = Unify.function base entry
+    instancex <- Simple.Data.instanciate datax
+    let selectorInfo = DataInstance.selectorInfo instancex selectorIndex
+        typex' = DataInstance.selectorFunction instancex selector
     Unify.unify context selectorPosition typex typex'
-    pure Selector {selector, uniform}
+    pure Selector {selector, selectorInfo}
 check
   context@Context {typeEnvironment}
   typex
@@ -364,7 +357,7 @@ solve = \case
           instanciation
         }
   Constructor {constructor, constructorInfo} -> pure $ Solved.Constructor {constructor, constructorInfo}
-  Selector {selector, uniform} -> pure $ Solved.Selector {selector, uniform}
+  Selector {selector, selectorInfo} -> pure $ Solved.Selector {selector, selectorInfo}
   Method {methodPosition, method, evidence, instanciation} -> do
     evidence <- Unify.solveEvidence methodPosition evidence
     instanciation <- Unify.solveInstanciation methodPosition instanciation

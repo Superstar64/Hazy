@@ -352,6 +352,7 @@ executable hazy
     Stage3.Tree.PatternField
     Stage3.Tree.RightHandSide
     Stage3.Tree.Scheme
+    Stage3.Tree.SelectorInfo
     Stage3.Tree.Shared
     Stage3.Tree.Statements
     Stage3.Tree.TermDeclaration
