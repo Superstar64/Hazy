@@ -16,6 +16,7 @@ import Stage3.Tree.Declarations (Declarations)
 import Stage3.Tree.Do (Do)
 import Stage3.Tree.ExpressionField (Field)
 import Stage3.Tree.Lambda (Lambda)
+import Stage3.Tree.MethodInfo (MethodInfo)
 import Stage3.Tree.Pattern (Pattern)
 import Stage3.Tree.RightHandSide (RightHandSide)
 import Stage3.Tree.SelectorInfo (SelectorInfo)
@@ -39,7 +40,8 @@ data Expression scope
   | Method
       { method :: !(Method.Index scope),
         evidence :: !(Simple.Evidence scope),
-        instanciation :: !(Simple.Instanciation scope)
+        instanciation :: !(Simple.Instanciation scope),
+        methodInfo :: !MethodInfo
       }
   | Record
       { constructor :: !(Constructor.Index scope),

@@ -28,7 +28,6 @@ import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (shift)
 import qualified Stage2.Tree.Expression as Stage2 (Expression (..))
-import Stage3.Check.ClassInstance (ClassInstance (ClassInstance))
 import qualified Stage3.Check.ClassInstance as ClassInstance
 import qualified Stage3.Check.ConstructorInstance as ConstructorInstance
 import Stage3.Check.Context (Context (..))
@@ -55,6 +54,7 @@ import Stage3.Temporary.RightHandSide (RightHandSide)
 import qualified Stage3.Temporary.RightHandSide as RightHandSide
 import Stage3.Tree.ConstructorInfo (ConstructorInfo)
 import qualified Stage3.Tree.Expression as Solved
+import Stage3.Tree.MethodInfo (MethodInfo)
 import Stage3.Tree.SelectorInfo (SelectorInfo)
 import qualified Stage3.Unify as Unify
 import {-# SOURCE #-} qualified Stage4.Tree.Builtin as Builtin
@@ -79,7 +79,8 @@ data Expression s scope
       { methodPosition :: !Position,
         method :: !(Method.Index scope),
         evidence :: !(Unify.Evidence s scope),
-        instanciation :: !(Unify.Instanciation s scope)
+        instanciation :: !(Unify.Instanciation s scope),
+        methodInfo :: !MethodInfo
       }
   | Integer
       { startPosition :: !Position,
@@ -137,10 +138,10 @@ instance Unify.Zonk Expression where
       pure Variable {variablePosition, variable, instanciation}
     Constructor {constructor, constructorInfo} -> pure Constructor {constructor, constructorInfo}
     Selector {selector, selectorInfo} -> pure Selector {selector, selectorInfo}
-    Method {methodPosition, method, evidence, instanciation} -> do
+    Method {methodPosition, method, evidence, instanciation, methodInfo} -> do
       evidence <- Unify.zonk zonker evidence
       instanciation <- Unify.zonk zonker instanciation
-      pure Method {methodPosition, method, evidence, instanciation}
+      pure Method {methodPosition, method, evidence, instanciation, methodInfo}
     Integer {startPosition, integer, evidence} -> do
       evidence <- Unify.zonk zonker evidence
       pure Integer {startPosition, integer, evidence}
@@ -259,12 +260,13 @@ check
         classx <- do
           let get index = assumeClass <$> TypeBinding.content (typeEnvironment Type.! index)
           Builtin.index pure get typeIndex
-        ClassInstance {methods, evidence} <-
-          Simple.Class.instanciate context methodPosition typeIndex classx
-        let method' = methods Strict.Vector.! methodIndex
-        (typex', instanciation) <- Unify.instanciate context methodPosition method'
+        instancex <- Simple.Class.instanciate context methodPosition typeIndex classx
+        let function = ClassInstance.methodFunction instancex methodIndex
+            methodInfo = ClassInstance.info instancex
+            evidence = ClassInstance.evidence instancex
+        (typex', instanciation) <- Unify.instanciate context methodPosition function
         Unify.unify context methodPosition typex typex'
-        pure Method {methodPosition, method, evidence, instanciation}
+        pure Method {methodPosition, method, evidence, instanciation, methodInfo}
 check context typex Stage2.List {startPosition, items} = do
   inner <- Unify.fresh Unify.typex
   Unify.unify context startPosition typex (Unify.listWith inner)
@@ -358,14 +360,15 @@ solve = \case
         }
   Constructor {constructor, constructorInfo} -> pure $ Solved.Constructor {constructor, constructorInfo}
   Selector {selector, selectorInfo} -> pure $ Solved.Selector {selector, selectorInfo}
-  Method {methodPosition, method, evidence, instanciation} -> do
+  Method {methodPosition, method, evidence, instanciation, methodInfo} -> do
     evidence <- Unify.solveEvidence methodPosition evidence
     instanciation <- Unify.solveInstanciation methodPosition instanciation
     pure $
       Solved.Method
         { method,
           evidence,
-          instanciation
+          instanciation,
+          methodInfo
         }
   Record {constructor, constructorInfo, fields} -> do
     fields <- traverse Field.solve fields

@@ -34,12 +34,18 @@ import Stage4.Temporary.Function (Function (Bound))
 import qualified Stage4.Temporary.Function as Function
 import qualified Stage4.Temporary.Pattern as Pattern
 import qualified Stage4.Temporary.RightHandSide as RightHandSide
+import {-# SOURCE #-} qualified Stage4.Tree.Builtin.Eq as Builtin (eq)
+import {-# SOURCE #-} qualified Stage4.Tree.Builtin.Monad as Builtin (monad)
+import {-# SOURCE #-} qualified Stage4.Tree.Builtin.MonadFail as Builtin (monadFail)
+import {-# SOURCE #-} qualified Stage4.Tree.Builtin.Num as Builtin (num)
+import qualified Stage4.Tree.Class as Class
 import {-# SOURCE #-} Stage4.Tree.Declarations (Declarations)
 import {-# SOURCE #-} qualified Stage4.Tree.Declarations as Declarations
 import Stage4.Tree.Evidence (Evidence)
 import qualified Stage4.Tree.Evidence as Evidence
 import Stage4.Tree.Hook (Hook)
 import Stage4.Tree.Instanciation (Instanciation (..))
+import Stage4.Tree.MethodInfo (MethodInfo)
 import Stage4.Tree.Statements (Statements)
 import qualified Stage4.Tree.Statements as Statements
 import Prelude hiding (fail)
@@ -60,7 +66,8 @@ data Expression scope
   | Method
       { method :: !(Method.Index scope),
         evidence :: !(Evidence scope),
-        instanciation :: !(Instanciation scope)
+        instanciation :: !(Instanciation scope),
+        methodInfo :: !MethodInfo
       }
   | Integer
       { integer :: !Integer
@@ -116,11 +123,12 @@ instance Substitute.Functor Expression where
         { constructor = Substitute.map category constructor,
           arguments = Substitute.map category <$> arguments
         }
-    Method {method, evidence, instanciation} ->
+    Method {method, evidence, instanciation, methodInfo} ->
       Method
         { method = Substitute.map category method,
           evidence = Substitute.map category evidence,
-          instanciation = Substitute.map category instanciation
+          instanciation = Substitute.map category instanciation,
+          methodInfo
         }
     Integer {integer} ->
       Integer
@@ -187,7 +195,8 @@ eq evidence left right =
   Method
     { method = Method.equal,
       evidence,
-      instanciation = Instanciation Strict.Vector.empty
+      instanciation = Instanciation Strict.Vector.empty,
+      methodInfo = Class.info Builtin.eq
     }
     `call` left
     `call` right
@@ -197,7 +206,8 @@ run evidence ignore thenx =
   Method
     { method = Method.thenx,
       evidence,
-      instanciation = Instanciation Strict.Vector.empty
+      instanciation = Instanciation Strict.Vector.empty,
+      methodInfo = Class.info Builtin.monad
     }
     `call` ignore
     `call` thenx
@@ -210,7 +220,8 @@ bind fail evidence input output =
         if fail
           then Evidence.Super {base = evidence, index = 0}
           else evidence,
-      instanciation = Instanciation Strict.Vector.empty
+      instanciation = Instanciation Strict.Vector.empty,
+      methodInfo = Class.info Builtin.monad
     }
     `call` input
     `call` output
@@ -220,7 +231,8 @@ failx evidence =
   Method
     { method = Method.fail,
       evidence,
-      instanciation = Instanciation Strict.Vector.empty
+      instanciation = Instanciation Strict.Vector.empty,
+      methodInfo = Class.info Builtin.monadFail
     }
     `call` Constructor
       { constructor = Constructor.nil,
@@ -234,7 +246,8 @@ integer_ integer evidence =
         Method
           { method = Method.fromInteger,
             evidence,
-            instanciation = Instanciation Strict.Vector.empty
+            instanciation = Instanciation Strict.Vector.empty,
+            methodInfo = Class.info Builtin.num
           },
       argument = Integer {integer}
     }
@@ -379,11 +392,12 @@ simplifyWith expression [] = case expression of
     Lambda
       { body = simplifySelector (shift selector) selectorInfo lambdaVariable
       }
-  Stage3.Method {method, evidence, instanciation} ->
+  Stage3.Method {method, evidence, instanciation, methodInfo} ->
     Method
       { method,
         evidence,
-        instanciation
+        instanciation,
+        methodInfo
       }
   Stage3.Record {constructor, constructorInfo = ConstructorInfo {parameterCount}, fields} ->
     Constructor

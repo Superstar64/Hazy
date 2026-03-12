@@ -7,6 +7,7 @@ import qualified Stage2.Shift as Shift
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
 import Stage4.Tree.Constraint (Constraint)
+import Stage4.Tree.MethodInfo (MethodInfo (..))
 import Stage4.Tree.Scheme (Scheme)
 import Stage4.Tree.Type (Type)
 import qualified Stage4.Tree.Type as Type
@@ -37,3 +38,6 @@ instance Substitute.Functor Class where
 
 kind :: Class scope -> Type scope
 kind Class {parameter} = Type.Function parameter Type.Constraint
+
+info :: Class scope -> MethodInfo
+info Class {constraints} = MethodInfo {constraintCount = length constraints}

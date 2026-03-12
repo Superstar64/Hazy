@@ -70,5 +70,5 @@ generate context = \case
     pure
       Javascript.Member
         { object = base,
-          field = Mangle.supers !! index
+          field = Mangle.fields !! index
         }

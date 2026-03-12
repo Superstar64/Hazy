@@ -14,6 +14,7 @@ import qualified Stage2.Index.Selector as Selector
 import Stage4.Tree.Expression (Expression (..))
 import Stage4.Tree.Hook (Hook (..))
 import Stage4.Tree.Instanciation (Instanciation (Instanciation))
+import Stage4.Tree.MethodInfo (MethodInfo (..))
 import Stage4.Tree.SchemeOver (SchemeOver (..))
 import qualified Stage4.Tree.SchemeOver as SchemeOver
 import Stage5.Generate.Context (Context (..), fresh, singleBinding, symbol, (!-))
@@ -86,14 +87,15 @@ generateInto context target = \case
   Method
     { method = Method.Index {methodIndex},
       evidence,
-      instanciation = Instanciation instanciation
+      instanciation = Instanciation instanciation,
+      methodInfo = MethodInfo {constraintCount}
     } -> do
       evidence <- Evidence.generate context evidence
       name <- Context.fresh context
       let value =
             Javascript.Member
               { object = evidence,
-                field = Mangle.fields !! methodIndex
+                field = Mangle.fields !! (methodIndex + constraintCount)
               }
           statement = Javascript.Const name value
           expression = Javascript.Variable {name}

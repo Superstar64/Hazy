@@ -347,6 +347,7 @@ executable hazy
     Stage3.Tree.InstanceMethod
     Stage3.Tree.Lambda
     Stage3.Tree.Method
+    Stage3.Tree.MethodInfo
     Stage3.Tree.Module
     Stage3.Tree.Pattern
     Stage3.Tree.PatternField
@@ -400,6 +401,7 @@ executable hazy
     Stage4.Tree.Instance
     Stage4.Tree.InstanceMethod
     Stage4.Tree.Instanciation
+    Stage4.Tree.MethodInfo
     Stage4.Tree.Module
     Stage4.Tree.Scheme
     Stage4.Tree.SchemeOver

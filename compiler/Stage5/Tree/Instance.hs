@@ -26,7 +26,7 @@ generate context Instance {evidence, prerequisitesCount, members} = do
   let fields = Javascript.Literal <$> members
   let object =
         Javascript.Object
-          { fields = zip Mangle.supers supers <> zip Mangle.fields fields
+          { fields = zip Mangle.fields (supers ++ fields)
           }
   if
     | 0 <- prerequisitesCount -> pure object

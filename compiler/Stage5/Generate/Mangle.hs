@@ -102,10 +102,6 @@ lazy = pack "a"
 
 value = pack "b"
 
--- todo merge into field
-supers :: [Text]
-supers = [pack ("$" ++ show i) | i <- [0 ..]]
-
 fields :: [Text]
 fields = names
 

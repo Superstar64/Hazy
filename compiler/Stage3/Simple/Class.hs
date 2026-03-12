@@ -13,7 +13,7 @@ import {-# SOURCE #-} qualified Stage3.Unify as Unify
 import {-# SOURCE #-} Stage4.Tree.Class (Class (..))
 
 instanciate :: Context s scope -> Position -> Type2.Index scope -> Class scope -> ST s (ClassInstance s scope)
-instanciate context position index Class {parameter, methods} = do
+instanciate context position index Class {parameter, constraints, methods} = do
   typex <- Unify.fresh (Type.lift parameter)
   evidence <- Unify.constrain context position index typex
   let types = Strict.Vector.singleton typex
@@ -22,5 +22,6 @@ instanciate context position index Class {parameter, methods} = do
     ClassInstance
       { typex,
         evidence,
-        methods
+        methods,
+        constraintCount = length constraints
       }
