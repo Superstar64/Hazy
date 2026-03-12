@@ -103,7 +103,7 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
       -- todo this is `O(n^2)`
       go -1
         | patternx <- Pattern.Match {match, irrefutable} =
-            expand irrefutable patternx check thenx
+            expand patternx check thenx
       go index = case patterns Strict.Vector.! index of
         Pattern.Wildcard -> go (index - 1)
         target
@@ -123,7 +123,7 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
           patternx <- Pattern.Match {match, irrefutable},
           fields <- (\(Pattern.Field field _) -> field) <$> fields,
           thenx <- Shift2.map (Shift2.RenamePattern (fields Strict.Vector.!)) thenx =
-            expand irrefutable patternx check thenx
+            expand patternx check thenx
       go index = case fields Strict.Vector.! index of
         Pattern.Field field patternx -> case patternx of
           Pattern.Wildcard -> go (index - 1)
@@ -184,17 +184,15 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
           (Expression.integer_ integer $ shift evidence)
   where
     expand ::
-      Bool ->
       Pattern scope ->
       Expression scope ->
       Statements (Scope.Pattern ':+ scope) ->
       Statements scope
-    expand irrefutable patternx check thenx =
+    expand patternx check thenx =
       LetOne
         { declaration = check,
           body =
             finish
-              irrefutable
               (shift patternx)
               Expression.lambdaVariable
               (Shift2.map Shift2.LetPattern thenx)
@@ -232,12 +230,11 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
         }
     finish ::
       forall scope.
-      Bool ->
       Pattern scope ->
       Expression scope ->
       Statements (Scope.Pattern ':+ scope) ->
       Statements scope
-    finish irrefutable Pattern.Match {match} check thenx
+    finish Pattern.Match {match, irrefutable} check thenx
       | Pattern.Constructor {constructor, patterns} <- match,
         all wildcard patterns,
         patterns <- length patterns,
@@ -248,7 +245,7 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
       where
         wildcard Pattern.Wildcard {} = True
         wildcard _ = False
-    finish _ _ _ _ = error "bad finish"
+    finish _ _ _ = error "bad finish"
 
 true :: Pattern scope
 true =
