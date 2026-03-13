@@ -26,6 +26,10 @@ data Builtin
   | EqChar
   | EqInteger
   | EqInt
+  | FunctorList
+  | ApplicativeList
+  | MonadList
+  | MonadFailList
   deriving (Eq, Show)
 
 assumed :: Int -> Index (Scope.Local ':+ scopes)

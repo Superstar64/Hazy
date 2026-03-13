@@ -44,7 +44,11 @@ generate context = \case
             eqBool,
             eqChar,
             eqInteger,
-            eqInt
+            eqInt,
+            functorList,
+            applicativeList,
+            monadList,
+            monadFailList
           } = Context.builtin context
         name = case evidence of
           Evidence.NumInt -> numInt
@@ -57,6 +61,10 @@ generate context = \case
           Evidence.EqChar -> eqChar
           Evidence.EqInt -> eqInt
           Evidence.EqInteger -> eqInteger
+          Evidence.FunctorList -> functorList
+          Evidence.ApplicativeList -> applicativeList
+          Evidence.MonadList -> monadList
+          Evidence.MonadFailList -> monadFailList
   Call {function, arguments} -> do
     function <- generate context function
     arguments <- traverse (generate context) (toList arguments)

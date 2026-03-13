@@ -80,6 +80,32 @@ export const eqInt = eqChar;
 
 export const eqInteger = eqChar;
 
+export const functorList = {
+  a: placeholder,
+  b: placeholder,
+};
+
+export const applicativeList = {
+  a: functorList,
+  b: placeholder,
+  c: placeholder,
+  d: placeholder,
+  e: placeholder,
+  f: placeholder,
+};
+
+export const monadList = {
+  a: applicativeList,
+  b: placeholder,
+  c: placeholder,
+  d: placeholder,
+};
+
+export const monadFailList = {
+  a: monadList,
+  b: placeholder,
+};
+
 const placeholderDefault = (_evidence) => {
   throw new Exception("Placeholder");
 };

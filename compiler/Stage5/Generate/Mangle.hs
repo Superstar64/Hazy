@@ -138,6 +138,10 @@ data Builtin a = Builtin
     eqChar,
     eqInt,
     eqInteger,
+    functorList,
+    applicativeList,
+    monadList,
+    monadFailList,
     defaultPlus,
     defaultMinus,
     defaultMultiply,
@@ -186,6 +190,10 @@ instance Applicative Builtin where
         eqChar = a,
         eqInt = a,
         eqInteger = a,
+        functorList = a,
+        applicativeList = a,
+        monadList = a,
+        monadFailList = a,
         defaultPlus = a,
         defaultMinus = a,
         defaultMultiply = a,
@@ -228,6 +236,10 @@ instance Applicative Builtin where
         eqChar = eqChar function (eqChar argument),
         eqInt = eqInt function (eqInt argument),
         eqInteger = eqInteger function (eqInteger argument),
+        functorList = functorList function (functorList argument),
+        applicativeList = applicativeList function (applicativeList argument),
+        monadList = monadList function (monadList argument),
+        monadFailList = monadFailList function (monadFailList argument),
         defaultPlus = defaultPlus function (defaultPlus argument),
         defaultMinus = defaultMinus function (defaultMinus argument),
         defaultMultiply = defaultMultiply function (defaultMultiply argument),
@@ -272,6 +284,10 @@ instance Foldable Builtin where
         eqChar,
         eqInt,
         eqInteger,
+        functorList,
+        applicativeList,
+        monadList,
+        monadFailList,
         defaultPlus,
         defaultMinus,
         defaultMultiply,
@@ -312,6 +328,10 @@ instance Foldable Builtin where
         eqChar,
         eqInt,
         eqInteger,
+        functorList,
+        applicativeList,
+        monadList,
+        monadFailList,
         defaultPlus,
         defaultMinus,
         defaultMultiply,
@@ -357,6 +377,10 @@ canonical =
       eqChar = pack "eqChar",
       eqInt = pack "eqInt",
       eqInteger = pack "eqInteger",
+      functorList = pack "functorList",
+      applicativeList = pack "applicativeList",
+      monadList = pack "monadList",
+      monadFailList = pack "monadFailList",
       defaultPlus = pack "defaultPlus",
       defaultMinus = pack "defaultMinus",
       defaultMultiply = pack "defaultMultiply",
@@ -401,6 +425,10 @@ unique :: [Text]
     : eqChar
     : eqInt
     : eqInteger
+    : functorList
+    : applicativeList
+    : monadList
+    : monadFailList
     : defaultPlus
     : defaultMinus
     : defaultMultiply
@@ -444,6 +472,10 @@ unique :: [Text]
               eqChar,
               eqInt,
               eqInteger,
+              functorList,
+              applicativeList,
+              monadList,
+              monadFailList,
               defaultPlus,
               defaultMinus,
               defaultMultiply,

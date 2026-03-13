@@ -36,6 +36,14 @@ constrain fallthough _ = table
       pure $ single Evidence.EqInteger
     table Type2.Eq Type2.Int [] =
       pure $ single Evidence.EqInt
+    table Type2.Functor Type2.List [] =
+      pure $ single Evidence.FunctorList
+    table Type2.Applicative Type2.List [] =
+      pure $ single Evidence.ApplicativeList
+    table Type2.Monad Type2.List [] =
+      pure $ single Evidence.MonadList
+    table Type2.MonadFail Type2.List [] =
+      pure $ single Evidence.MonadFailList
     table _ _ _ = fallthough
 
     single builtin = call builtin []
