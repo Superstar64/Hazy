@@ -1,0 +1,43 @@
+module Stage3.Unify.Builtin where
+
+import Data.Vector.Strict (fromList)
+import qualified Stage2.Index.Type2 as Type2
+import qualified Stage3.Index.Evidence as Evidence (Builtin (..), Index (..))
+import Stage3.Unify.Evidence (Evidence)
+import qualified Stage3.Unify.Evidence as Evidence (Evidence (..))
+
+constrain ::
+  (Monad m) =>
+  m (Evidence s scope) ->
+  (Type2.Index scope -> t -> m (Evidence s scope)) ->
+  Type2.Index scope ->
+  Type2.Index scope ->
+  [t] ->
+  m (Evidence s scope)
+constrain fallthough _ = table
+  where
+    table Type2.Num Type2.Integer [] =
+      pure $ single Evidence.NumInteger
+    table Type2.Num Type2.Int [] =
+      pure $ single Evidence.NumInt
+    table Type2.Enum Type2.Bool [] =
+      pure $ single Evidence.EnumBool
+    table Type2.Enum Type2.Char [] =
+      pure $ single Evidence.EnumChar
+    table Type2.Enum Type2.Integer [] =
+      pure $ single Evidence.EnumInteger
+    table Type2.Enum Type2.Int [] =
+      pure $ single Evidence.EnumInt
+    table Type2.Eq Type2.Bool [] =
+      pure $ single Evidence.EqBool
+    table Type2.Eq Type2.Char [] =
+      pure $ single Evidence.EqChar
+    table Type2.Eq Type2.Integer [] =
+      pure $ single Evidence.EqInteger
+    table Type2.Eq Type2.Int [] =
+      pure $ single Evidence.EqInt
+    table _ _ _ = fallthough
+
+    single builtin = call builtin []
+    call builtin [] = Evidence.Variable $ Evidence.Builtin builtin
+    call builtin list = Evidence.Call (Evidence.Variable $ Evidence.Builtin builtin) $ fromList list

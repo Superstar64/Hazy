@@ -362,6 +362,7 @@ executable hazy
     Stage3.Tree.TypeDeclarationExtra
     Stage3.Tree.TypePattern
     Stage3.Unify
+    Stage3.Unify.Builtin
     Stage3.Unify.Class
     Stage3.Unify.Constraint
     Stage3.Unify.Error

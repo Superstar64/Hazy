@@ -27,10 +27,11 @@ import qualified Stage3.Check.DataInstance as DataInstance
 import qualified Stage3.Check.LocalBinding as Local (Constraint (..), LocalBinding (..))
 import Stage3.Check.TypeBinding (TypeBinding (TypeBinding))
 import qualified Stage3.Check.TypeBinding as TypeBinding
-import qualified Stage3.Index.Evidence as Evidence (Builtin (..), Index (..))
+import qualified Stage3.Index.Evidence as Evidence (Index (..))
 import qualified Stage3.Simple.Data as Simple.Data
 import qualified Stage3.Simple.Evidence as Simple.Evidence (lift)
 import qualified Stage3.Simple.Type as Simple (instanciate, lift)
+import qualified Stage3.Unify.Builtin as Builtin (constrain)
 import Stage3.Unify.Class
   ( Collected (..),
     Collector (..),
@@ -45,7 +46,7 @@ import qualified Stage3.Unify.Class as Class
 import {-# SOURCE #-} Stage3.Unify.Error (Error (..), abort)
 import Stage3.Unify.Evidence (Evidence)
 import qualified Stage3.Unify.Evidence as Evidence (Box (..), Evidence (..), unify, unshift)
-import {-# SOURCE #-} qualified Stage4.Tree.Builtin as Builtin
+import {-# SOURCE #-} qualified Stage4.Tree.Builtin as Builtin (index, kind)
 import qualified Stage4.Tree.Constraint as Simple (argument)
 import qualified Stage4.Tree.Constraint as Simple.Constraint
 import qualified Stage4.Tree.Type as Simple (Type (..))
@@ -404,26 +405,6 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
       Type s scope ->
       [Type s scope] ->
       ST s (Evidence s scope)
-    constrainWith _ Type2.Num (Constructor Type2.Integer) [] =
-      pure $ Evidence.Variable $ Evidence.Builtin Evidence.NumInteger
-    constrainWith _ Type2.Num (Constructor Type2.Int) [] =
-      pure $ Evidence.Variable $ Evidence.Builtin Evidence.NumInt
-    constrainWith _ Type2.Enum (Constructor Type2.Bool) [] =
-      pure $ Evidence.Variable $ Evidence.Builtin Evidence.EnumBool
-    constrainWith _ Type2.Enum (Constructor Type2.Char) [] =
-      pure $ Evidence.Variable $ Evidence.Builtin Evidence.EnumChar
-    constrainWith _ Type2.Enum (Constructor Type2.Integer) [] =
-      pure $ Evidence.Variable $ Evidence.Builtin Evidence.EnumInteger
-    constrainWith _ Type2.Enum (Constructor Type2.Int) [] =
-      pure $ Evidence.Variable $ Evidence.Builtin Evidence.EnumInt
-    constrainWith _ Type2.Eq (Constructor Type2.Bool) [] =
-      pure $ Evidence.Variable $ Evidence.Builtin Evidence.EqBool
-    constrainWith _ Type2.Eq (Constructor Type2.Char) [] =
-      pure $ Evidence.Variable $ Evidence.Builtin Evidence.EqChar
-    constrainWith _ Type2.Eq (Constructor Type2.Integer) [] =
-      pure $ Evidence.Variable $ Evidence.Builtin Evidence.EqInteger
-    constrainWith _ Type2.Eq (Constructor Type2.Int) [] =
-      pure $ Evidence.Variable $ Evidence.Builtin Evidence.EqInt
     constrainWith context@Context {typeEnvironment} classx term@(Logical reference) arguments =
       readSTRef reference >>= \case
         Solved term -> constrainWith context classx term arguments
@@ -496,8 +477,12 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
       typeCheck context position (Type Small) argument
       typeCheck context position (Type Small) result
       constrainWith context classx (Constructor Type2.Arrow `Call` argument `Call` result) arguments
-    constrainWith _ _ _ _ =
-      abort position (Constrain context_ classx_ term_ arguments_)
+    constrainWith context classx typex arguments = case typex of
+      Constructor typex -> Builtin.constrain quit constrain classx typex arguments
+      _ -> quit
+      where
+        constrain classx typex = constrainWith context classx typex []
+        quit = abort position (Constrain context_ classx_ term_ arguments_)
 
     proof :: forall scope s. Evidence.Index scope -> Strict.Vector (Evidence s scope) -> Evidence s scope
     proof variable arguments
