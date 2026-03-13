@@ -423,6 +423,7 @@ executable hazy
     Stage5.Tree.Declarations
     Stage5.Tree.Evidence
     Stage5.Tree.Expression
+    Stage5.Tree.Hook
     Stage5.Tree.Instance
     Stage5.Tree.Module
     Stage5.Tree.Statements

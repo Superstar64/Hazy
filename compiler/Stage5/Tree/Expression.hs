@@ -8,21 +8,19 @@ import qualified Javascript.Tree.Expression as Javascript (Expression (..))
 import qualified Javascript.Tree.Field as Javascript (Field (..))
 import qualified Javascript.Tree.Statement as Javascript (Statement (..))
 import qualified Stage2.Index.Constructor as Constructor
-import Stage2.Index.Method (Applicative (..), Enum (..), Eq (..), Functor (..), Monad (..), MonadFail (..), Num (..))
 import qualified Stage2.Index.Method as Method
 import qualified Stage2.Index.Selector as Selector
 import Stage4.Tree.Expression (Expression (..))
-import Stage4.Tree.Hook (Hook (..))
 import Stage4.Tree.Instanciation (Instanciation (Instanciation))
 import Stage4.Tree.MethodInfo (MethodInfo (..))
 import Stage4.Tree.SchemeOver (SchemeOver (..))
 import qualified Stage4.Tree.SchemeOver as SchemeOver
 import Stage5.Generate.Context (Context (..), fresh, singleBinding, symbol, (!-))
 import qualified Stage5.Generate.Context as Context
-import Stage5.Generate.Mangle (Builtin (..))
 import qualified Stage5.Generate.Mangle as Mangle
 import {-# SOURCE #-} qualified Stage5.Tree.Declarations as Declarations
 import qualified Stage5.Tree.Evidence as Evidence
+import qualified Stage5.Tree.Hook as Hook
 import qualified Stage5.Tree.Statements as Statements
 
 generate ::
@@ -143,83 +141,7 @@ generateInto context target = \case
             { bigInt = integer
             }
       ]
-  Hook {hook} -> do
-    let Context {builtin} = context
-        Builtin
-          { defaultPlus,
-            defaultMinus,
-            defaultMultiply,
-            defaultNegate,
-            defaultAbs,
-            defaultSignum,
-            defaultFromInteger,
-            defaultSucc,
-            defaultPred,
-            defaultToEnum,
-            defaultFromEnum,
-            defaultEnumFrom,
-            defaultEnumFromThen,
-            defaultEnumFromTo,
-            defaultEnumFromThenTo,
-            defaultEqual,
-            defaultNotEqual,
-            defaultFmap,
-            defaultFconst,
-            defaultPure,
-            defaultAp,
-            defaultLiftA2,
-            defaultDiscardLeft,
-            defaultDiscordRight,
-            defaultBind,
-            defaultThen,
-            defaultReturn,
-            defaultFail
-          } = builtin
-        defaultx evidence name = do
-          evidence <- Evidence.generate context evidence
-          pure
-            Javascript.Call
-              { function = Javascript.Variable {name},
-                arguments = [evidence]
-              }
-    expression <- case hook of
-      DefaultNum {evidence, num} -> defaultx evidence $ case num of
-        Plus -> defaultPlus
-        Minus -> defaultMinus
-        Multiply -> defaultMultiply
-        Negate -> defaultNegate
-        Abs -> defaultAbs
-        Signum -> defaultSignum
-        FromInteger -> defaultFromInteger
-      DefaultEnum {evidence, enum} -> defaultx evidence $ case enum of
-        Succ -> defaultSucc
-        Pred -> defaultPred
-        ToEnum -> defaultToEnum
-        FromEnum -> defaultFromEnum
-        EnumFrom -> defaultEnumFrom
-        EnumFromThen -> defaultEnumFromThen
-        EnumFromTo -> defaultEnumFromTo
-        EnumFromThenTo -> defaultEnumFromThenTo
-      DefaultEq {evidence, eq} -> defaultx evidence $ case eq of
-        Equal -> defaultEqual
-        NotEqual -> defaultNotEqual
-      DefaultFunctor {evidence, functor} -> defaultx evidence $ case functor of
-        Fmap -> defaultFmap
-        Fconst -> defaultFconst
-      DefaultApplicative {evidence, applicative} -> defaultx evidence $ case applicative of
-        Pure -> defaultPure
-        Ap -> defaultAp
-        LiftA2 -> defaultLiftA2
-        DiscardLeft -> defaultDiscardLeft
-        DiscardRight -> defaultDiscordRight
-      DefaultMonad {evidence, monad} -> defaultx evidence $ case monad of
-        Bind -> defaultBind
-        Then -> defaultThen
-        Return -> defaultReturn
-      DefaultMonadFail {evidence, monadFail} -> defaultx evidence $ case monadFail of
-        Fail -> defaultFail
-
-    pure [done expression]
+  Hook {hook} -> Hook.generateInto context target hook
   where
     done value =
       Javascript.Expression
