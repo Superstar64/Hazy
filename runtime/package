@@ -2,3 +2,4 @@
 Hazy.hs
 Hazy/Builtin.hs
 Hazy/Helper.hs
+Hazy/Prelude.hs

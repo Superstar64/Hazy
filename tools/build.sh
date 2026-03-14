@@ -38,10 +38,11 @@ cp runtime/package $DIST/packages/runtime/package
 cp runtime/header/Hazy.hs $DIST/packages/runtime/header/Hazy.hs
 cp runtime/header/Hazy/Builtin.hs $DIST/packages/runtime/header/Hazy/Builtin.hs
 cp runtime/source/Hazy/Helper.hs $DIST/packages/runtime/header/Hazy/Helper.hs
+cp runtime/source/Hazy/Prelude.hs $DIST/packages/runtime/header/Hazy/Prelude.hs
 
 cp runtime/javascript/Hazy.mjs $DIST/packages/runtime/artifact/Hazy.mjs
 cp runtime/javascript/Hazy/Builtin.mjs $DIST/packages/runtime/artifact/Hazy/Builtin.mjs
-$DIST/bin/hazy --bare -c -I runtime/header runtime/source/Hazy/Helper.hs -o $DIST/packages/runtime/artifact
+$DIST/bin/hazy --bare -c -I runtime/header runtime/source -o $DIST/packages/runtime/artifact
 
 # Compile base
 $DIST/bin/hazy --pack --bare-runtime library/base/source -o $DIST/packages/base $(cat library/base/flags)

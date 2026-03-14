@@ -112,6 +112,16 @@ const placeholderDefault = (_evidence) => {
   throw new Exception("Placeholder");
 };
 
+export {
+  defaultEqual,
+  defaultNotEqual,
+  defaultSucc,
+  defaultPred,
+  defaultEnumFrom,
+  defaultEnumFromTo,
+  defaultEnumFromThen,
+  defaultEnumFromThenTo,
+} from "./Hazy/Helper.mjs";
 export const defaultPlus = placeholderDefault;
 export const defaultMinus = placeholderDefault;
 export const defaultMultiply = placeholderDefault;
@@ -119,15 +129,8 @@ export const defaultNegate = placeholderDefault;
 export const defaultAbs = placeholderDefault;
 export const defaultSignum = placeholderDefault;
 export const defaultFromInteger = placeholderDefault;
-export const defaultSucc = placeholderDefault;
-export const defaultPred = placeholderDefault;
 export const defaultToEnum = placeholderDefault;
 export const defaultFromEnum = placeholderDefault;
-export const defaultEnumFrom = placeholderDefault;
-export const defaultEnumFromThen = placeholderDefault;
-export const defaultEnumFromTo = placeholderDefault;
-export const defaultEnumFromThenTo = placeholderDefault;
-export { defaultEqual, defaultNotEqual } from "./Hazy/Helper.mjs";
 export const defaultFmap = placeholderDefault;
 export const defaultFconst = placeholderDefault;
 export const defaultPure = placeholderDefault;

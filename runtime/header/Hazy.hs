@@ -1,4 +1,9 @@
 {-# LANGUAGE_HAZY NoStableImports #-}
+
+-- |
+-- This module contains all the compiler primitives. This is a combination of
+-- of primitives that are hard wired into the compiler from Hazy.Builtin and
+-- primitives that are defined in userspace but left abstract.
 module Hazy (module Hazy.Builtin, module Hazy) where
 
 import Hazy.Builtin
