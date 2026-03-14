@@ -91,7 +91,7 @@ if [ -n "$HASKELL_FILES" ]; then
 
     echo "=== Checking Self Resolution ==="
 
-    if ! cabal run hazy --verbose=0 -- --bare --resolve utility compiler -I runtime/header \
+    if ! cabal run hazy --verbose=0 -- --bare --resolve utility compiler -I runtime/header -I runtime/source \
         -I library/base/source; then
         echo "Self resolution failed"
         exit 1

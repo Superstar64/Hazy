@@ -1,17 +1,21 @@
-{-# LANGUAGE_HAZY NoStableImports #-}
+{-# LANGUAGE_HAZY NoStableImports, NoImplicitPrelude #-}
 
 -- |
--- This module contains the subset of the Prelude needed by the helper code.
+-- This module contains Hazy's Prelude variant. This is largely subset of the
+-- Prelude needed by helper code.
 --
 -- The definitions here are largely taken from the Haskell2010 report.
-module Hazy.Prelude (module Hazy, module Hazy.Prelude) where
+module Hazy.Prelude where
 
 import Hazy
-import Prelude ()
 
 infixr 9 .
 
 infixl 4 <$>
+
+data Text
+
+data IO a
 
 subtract :: (Num a) => a -> a -> a
 subtract = flip (-)

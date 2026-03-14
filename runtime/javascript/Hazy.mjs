@@ -19,6 +19,34 @@ export function abort() {
   throw new Error("bottom");
 }
 
+export const error = {
+  a: 0,
+  b: (message) => {
+    throw new Error(force(message));
+  },
+};
+
+// todo perform replacement on invalid scalar values
+export const pack = {
+  a: 0,
+  b: (list) => {
+    let buffer = "";
+    let current = force(list);
+    while (current.a) {
+      buffer += String.fromCodePoint(force(current.b));
+      current = force(current.c);
+    }
+    return buffer;
+  },
+};
+
+export const putStrLn = {
+  a: 0,
+  b: (thunk) => () => {
+    console.log(force(thunk));
+  },
+};
+
 export const numInt = {
   a: placeholder,
   b: placeholder,
@@ -143,30 +171,3 @@ export const defaultPure = placeholderDefault;
 export const defaultBind = placeholderDefault;
 export const defaultFail = placeholderDefault;
 
-export const error = {
-  a: 0,
-  b: (message) => {
-    throw new Error(force(message));
-  },
-};
-
-// todo perform replacement on invalid scalar values
-export const pack = {
-  a: 0,
-  b: (list) => {
-    let buffer = "";
-    let current = force(list);
-    while (current.a) {
-      buffer += String.fromCodePoint(force(current.b));
-      current = force(current.c);
-    }
-    return buffer;
-  },
-};
-
-export const putStrLn = {
-  a: 0,
-  b: (thunk) => () => {
-    console.log(force(thunk));
-  },
-};

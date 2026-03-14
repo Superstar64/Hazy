@@ -1,4 +1,4 @@
-{-# LANGUAGE_HAZY NoStableImports #-}
+{-# LANGUAGE_HAZY NoStableImports, NoImplicitPrelude #-}
 
 -- |
 -- This module contains helpers that the runtime call into. This is mainly
@@ -8,8 +8,7 @@
 -- The definitions here are largely taken from the Haskell2010 report.
 module Hazy.Helper where
 
-import Hazy.Prelude
-import Prelude ()
+import Hazy
 
 defaultEqual :: (Eq a) => a -> a -> Bool
 defaultEqual x y = not (x /= y)
