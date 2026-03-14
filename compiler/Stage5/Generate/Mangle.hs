@@ -165,7 +165,7 @@ data Builtin a = Builtin
     defaultAp,
     defaultLiftA2,
     defaultDiscardLeft,
-    defaultDiscordRight,
+    defaultDiscardRight,
     defaultBind,
     defaultThen,
     defaultReturn,
@@ -217,7 +217,7 @@ instance Applicative Builtin where
         defaultAp = a,
         defaultLiftA2 = a,
         defaultDiscardLeft = a,
-        defaultDiscordRight = a,
+        defaultDiscardRight = a,
         defaultBind = a,
         defaultThen = a,
         defaultReturn = a,
@@ -263,7 +263,7 @@ instance Applicative Builtin where
         defaultAp = defaultAp function (defaultAp argument),
         defaultLiftA2 = defaultLiftA2 function (defaultLiftA2 argument),
         defaultDiscardLeft = defaultDiscardLeft function (defaultDiscardLeft argument),
-        defaultDiscordRight = defaultDiscordRight function (defaultDiscordRight argument),
+        defaultDiscardRight = defaultDiscardRight function (defaultDiscardRight argument),
         defaultBind = defaultBind function (defaultBind argument),
         defaultThen = defaultThen function (defaultThen argument),
         defaultReturn = defaultReturn function (defaultReturn argument),
@@ -311,7 +311,7 @@ instance Foldable Builtin where
         defaultAp,
         defaultLiftA2,
         defaultDiscardLeft,
-        defaultDiscordRight,
+        defaultDiscardRight,
         defaultBind,
         defaultThen,
         defaultReturn,
@@ -355,7 +355,7 @@ instance Foldable Builtin where
         defaultAp,
         defaultLiftA2,
         defaultDiscardLeft,
-        defaultDiscordRight,
+        defaultDiscardRight,
         defaultBind,
         defaultThen,
         defaultReturn,
@@ -404,7 +404,7 @@ canonical =
       defaultAp = pack "defaultAp",
       defaultLiftA2 = pack "defaultLiftA2",
       defaultDiscardLeft = pack "defaultDiscardLeft",
-      defaultDiscordRight = pack "defaultDiscordRight",
+      defaultDiscardRight = pack "defaultDiscardRight",
       defaultBind = pack "defaultBind",
       defaultThen = pack "defaultThen",
       defaultReturn = pack "defaultReturn",
@@ -452,7 +452,7 @@ unique :: [Text]
     : defaultAp
     : defaultLiftA2
     : defaultDiscardLeft
-    : defaultDiscordRight
+    : defaultDiscardRight
     : defaultBind
     : defaultThen
     : defaultReturn
@@ -499,7 +499,7 @@ unique :: [Text]
               defaultAp,
               defaultLiftA2,
               defaultDiscardLeft,
-              defaultDiscordRight,
+              defaultDiscardRight,
               defaultBind,
               defaultThen,
               defaultReturn,

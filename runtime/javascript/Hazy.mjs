@@ -121,26 +121,26 @@ export {
   defaultEnumFromTo,
   defaultEnumFromThen,
   defaultEnumFromThenTo,
+  defaultMinus,
+  defaultNegate,
+  defaultFconst,
+  defaultAp,
+  defaultLiftA2,
+  defaultDiscardLeft,
+  defaultDiscardRight,
+  defaultThen,
+  defaultReturn,
 } from "./Hazy/Helper.mjs";
 export const defaultPlus = placeholderDefault;
-export const defaultMinus = placeholderDefault;
 export const defaultMultiply = placeholderDefault;
-export const defaultNegate = placeholderDefault;
 export const defaultAbs = placeholderDefault;
 export const defaultSignum = placeholderDefault;
 export const defaultFromInteger = placeholderDefault;
 export const defaultToEnum = placeholderDefault;
 export const defaultFromEnum = placeholderDefault;
 export const defaultFmap = placeholderDefault;
-export const defaultFconst = placeholderDefault;
 export const defaultPure = placeholderDefault;
-export const defaultAp = placeholderDefault;
-export const defaultLiftA2 = placeholderDefault;
-export const defaultDiscardLeft = placeholderDefault;
-export const defaultDiscordRight = placeholderDefault;
 export const defaultBind = placeholderDefault;
-export const defaultThen = placeholderDefault;
-export const defaultReturn = placeholderDefault;
 export const defaultFail = placeholderDefault;
 
 export const error = {

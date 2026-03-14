@@ -35,6 +35,33 @@ defaultEnumFromThen x y = map toEnum [fromEnum x, fromEnum y ..]
 defaultEnumFromThenTo :: (Enum a) => a -> a -> a -> [a]
 defaultEnumFromThenTo x y z = map toEnum [fromEnum x, fromEnum y .. fromEnum z]
 
+defaultMinus :: (Num a) => a -> a -> a
+defaultMinus x y = x + negate y
+
+defaultNegate :: (Num a) => a -> a
+defaultNegate x = 0 - x
+
+defaultFconst :: (Functor f) => a -> f b -> f a
+defaultFconst a = fmap (const a)
+
+defaultAp :: (Applicative f) => f (a -> b) -> f a -> f b
+defaultAp = liftA2 id
+
+defaultLiftA2 :: (Applicative f) => (a -> b -> c) -> f a -> f b -> f c
+defaultLiftA2 f a b = f <$> a <*> b
+
+defaultDiscardLeft :: (Applicative f) => f a -> f b -> f b
+defaultDiscardLeft = liftA2 (flip const)
+
+defaultDiscardRight :: (Applicative f) => f a -> f b -> f a
+defaultDiscardRight = liftA2 const
+
+defaultThen :: (Monad m) => m a -> m b -> m b
+defaultThen a b = a >>= \_ -> b
+
+defaultReturn :: (Monad m) => a -> m a
+defaultReturn = pure
+
 eqBoolEqual :: Bool -> Bool -> Bool
 eqBoolEqual False False = True
 eqBoolEqual True True = True

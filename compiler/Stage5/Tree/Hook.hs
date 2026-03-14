@@ -36,7 +36,7 @@ generateInto context target hook = do
           defaultAp,
           defaultLiftA2,
           defaultDiscardLeft,
-          defaultDiscordRight,
+          defaultDiscardRight,
           defaultBind,
           defaultThen,
           defaultReturn,
@@ -78,7 +78,7 @@ generateInto context target hook = do
       Ap -> defaultAp
       LiftA2 -> defaultLiftA2
       DiscardLeft -> defaultDiscardLeft
-      DiscardRight -> defaultDiscordRight
+      DiscardRight -> defaultDiscardRight
     DefaultMonad {evidence, monad} -> defaultx evidence $ case monad of
       Bind -> defaultBind
       Then -> defaultThen

@@ -11,8 +11,16 @@ import Prelude ()
 
 infixr 9 .
 
+infixl 4 <$>
+
 subtract :: (Num a) => a -> a -> a
 subtract = flip (-)
+
+id :: a -> a
+id x = x
+
+const :: a -> b -> a
+const x _ = x
 
 (.) :: (b -> c) -> (a -> b) -> a -> c
 f . g = \x -> f (g x)
@@ -27,3 +35,6 @@ not False = True
 map :: (a -> b) -> [a] -> [b]
 map f [] = []
 map f (x : xs) = f x : map f xs
+
+(<$>) :: (Functor f) => (a -> b) -> f a -> f b
+(<$>) = fmap
