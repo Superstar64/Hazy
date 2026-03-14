@@ -11,6 +11,12 @@ eqBoolEqual _ _ = False
 
 eqBoolNotEqual :: Bool -> Bool -> Bool
 eqBoolNotEqual a b = not (eqBoolEqual a b)
-  where
-    not False = True
-    not True = False
+
+defaultEqual :: (Eq a) => a -> a -> Bool
+defaultEqual x y = not (x /= y)
+
+defaultNotEqual :: (Eq a) => a -> a -> Bool
+defaultNotEqual x y = not (x == y)
+
+not False = True
+not True = False
