@@ -39,14 +39,13 @@ fixWith position fixity make = \target precedence operators -> case fixWith targ
           precedence == precedence' -> case associativity of
             Right -> first (make e index) (fixWith (Just Right) precedence operators)
             None -> first (make e index) (fixWith Nothing (precedence + 1) operators)
-            Left -> left e operators
+            Left -> left e index operators
               where
-                left e operators = case fixWith Nothing (precedence + 1) operators of
-                  (e2, Oped index operators)
-                    | Fixity {associativity = associativity', precedence = precedence'} <-
-                        fixity index,
-                      precedence == precedence',
-                      associativity == associativity' ->
-                        left (make e index e2) operators
+                left e index operators = case fixWith Nothing (precedence + 1) operators of
+                  (e2, Oped index2 operators)
+                    | Fixity {associativity = Left, precedence = precedence'} <-
+                        fixity index2,
+                      precedence == precedence' ->
+                        left (make e index e2) index2 operators
                   (e2, oped) -> (make e index e2, oped)
       es -> es
