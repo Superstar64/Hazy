@@ -48,13 +48,13 @@ export const putStrLn = {
 };
 
 export const numInt = {
-  a: placeholder,
-  b: placeholder,
-  c: placeholder,
-  d: placeholder,
-  e: placeholder,
-  f: placeholder,
-  g: placeholder,
+  a: { a: 0, b: (x) => (y) => (force(x) + force(y)) | 0 },
+  b: { a: 0, b: (x) => (y) => (force(x) - force(y)) | 0 },
+  c: { a: 0, b: (x) => (y) => Math.imul(force(x), force(y)) },
+  d: { a: 0, b: (x) => -force(x) | 0 },
+  e: { a: 0, b: (x) => -Math.abs(force(x)) | 0 },
+  f: { a: 0, b: (x) => Math.sign(force(x)) },
+  g: { a: 0, b: (x) => Number(BigInt.asIntN(32, force(x))) },
 };
 
 export const numInteger = {
@@ -90,11 +90,38 @@ export const enumInt = {
   h: placeholder,
 };
 
-export const enumInteger = enumInt;
+export const enumInteger = {
+  a: placeholder,
+  b: placeholder,
+  c: placeholder,
+  d: placeholder,
+  e: placeholder,
+  f: placeholder,
+  g: placeholder,
+  h: placeholder,
+};
 
-export const enumBool = enumInt;
+export const enumBool = {
+  a: placeholder,
+  b: placeholder,
+  c: placeholder,
+  d: placeholder,
+  e: placeholder,
+  f: placeholder,
+  g: placeholder,
+  h: placeholder,
+};
 
-export const enumChar = enumInt;
+export const enumChar = {
+  a: placeholder,
+  b: placeholder,
+  c: placeholder,
+  d: placeholder,
+  e: placeholder,
+  f: placeholder,
+  g: placeholder,
+  h: placeholder,
+};
 
 export const eqBool = {
   a: helper.eqBoolEqual,
@@ -106,9 +133,15 @@ export const eqChar = {
   b: { a: 0, b: (x) => (y) => boolean(force(x) !== force(y)) },
 };
 
-export const eqInt = eqChar;
+export const eqInt = {
+  a: { a: 0, b: (x) => (y) => boolean(force(x) === force(y)) },
+  b: { a: 0, b: (x) => (y) => boolean(force(x) !== force(y)) },
+};
 
-export const eqInteger = eqChar;
+export const eqInteger = {
+  a: { a: 0, b: (x) => (y) => boolean(force(x) === force(y)) },
+  b: { a: 0, b: (x) => (y) => boolean(force(x) !== force(y)) },
+};
 
 export const functorList = {
   a: placeholder,
