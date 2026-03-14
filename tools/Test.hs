@@ -75,21 +75,35 @@ main = do
   dirty <- doesDirectoryExist ".test"
   when dirty $ removeDirectoryRecursive ".test"
   createDirectoryIfMissing False ".test"
+
   createDirectory ".test/dist"
   createDirectory ".test/dist/bin"
-  createDirectory ".test/dist/packages"
   copyFile source hazy
-  -- todo, use proper recursive copy in Haskell
-  callProcess "cp" ["-R", "library/runtime/", ".test/dist/packages/runtime"]
+
+  createDirectory ".test/dist/packages"
+
+  createDirectory ".test/dist/packages/runtime"
+  createDirectory ".test/dist/packages/runtime/header"
+  createDirectory ".test/dist/packages/runtime/header/Hazy"
+
+  createDirectory ".test/dist/packages/runtime/artifact"
+  createDirectory ".test/dist/packages/runtime/artifact/Hazy"
+
+  copyFile "runtime/package" ".test/dist/packages/runtime/package"
+
+  copyFile "runtime/header/Hazy.hs" ".test/dist/packages/runtime/header/Hazy.hs"
+  copyFile "runtime/header/Hazy/Builtin.hs" ".test/dist/packages/runtime/header/Hazy/Builtin.hs"
+  copyFile "runtime/source/Hazy/Helper.hs" ".test/dist/packages/runtime/header/Hazy/Helper.hs"
+
+  copyFile "runtime/javascript/Hazy.mjs" ".test/dist/packages/runtime/artifact/Hazy.mjs"
+  copyFile "runtime/javascript/Hazy/Builtin.mjs" ".test/dist/packages/runtime/artifact/Hazy/Builtin.mjs"
+  callProcessVerbose hazy $
+    words
+      "--bare -c -I runtime/header runtime/source/Hazy/Helper.hs -o .test/dist/packages/runtime/artifact"
+
   flags <- readFile "library/base/flags"
-  callProcessVerbose
-    hazy
-    $ [ "--bare-runtime",
-        "--pack",
-        "library/base/source",
-        "-o",
-        ".test/dist/packages/base"
-      ]
+  callProcessVerbose hazy $
+    words "--bare-runtime --pack library/base/source -o .test/dist/packages/base"
       ++ words flags
   parse hazy
   resolve hazy

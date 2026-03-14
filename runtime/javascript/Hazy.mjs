@@ -1,3 +1,5 @@
+import * as helper from "./Hazy/Helper.mjs";
+
 function force(thunk) {
   return thunk.a ? thunk.b() : thunk.b;
 }
@@ -67,8 +69,8 @@ export const enumBool = enumInt;
 export const enumChar = enumInt;
 
 export const eqBool = {
-  a: { a: 0, b: (x) => (y) => boolean(force(x).a === force(y).a) },
-  b: { a: 0, b: (x) => (y) => boolean(force(x).a !== force(y).a) },
+  a: helper.eqBoolEqual,
+  b: helper.eqBoolNotEqual,
 };
 
 export const eqChar = {

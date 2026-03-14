@@ -2,6 +2,7 @@
 module Hazy (module Hazy.Builtin, module Hazy) where
 
 import Hazy.Builtin
+import Prelude ()
 
 -- The usage of 'missing' variable is deliberate. It's not a special compiler
 -- builtin, but rather the compiler doesn't bother doing symbol resolution on
