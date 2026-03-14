@@ -4,10 +4,6 @@ function force(thunk) {
   return thunk.a ? thunk.b() : thunk.b;
 }
 
-function boolean(b) {
-  return { a: b ? 1 : 0 };
-}
-
 export const placeholder = {
   a: 1,
   b() {
@@ -129,18 +125,18 @@ export const eqBool = {
 };
 
 export const eqChar = {
-  a: { a: 0, b: (x) => (y) => boolean(force(x) === force(y)) },
-  b: { a: 0, b: (x) => (y) => boolean(force(x) !== force(y)) },
+  a: { a: 0, b: (x) => (y) => ({ a: +(force(x) === force(y)) }) },
+  b: { a: 0, b: (x) => (y) => ({ a: +(force(x) !== force(y)) }) },
 };
 
 export const eqInt = {
-  a: { a: 0, b: (x) => (y) => boolean(force(x) === force(y)) },
-  b: { a: 0, b: (x) => (y) => boolean(force(x) !== force(y)) },
+  a: { a: 0, b: (x) => (y) => ({ a: +(force(x) === force(y)) }) },
+  b: { a: 0, b: (x) => (y) => ({ a: +(force(x) !== force(y)) }) },
 };
 
 export const eqInteger = {
-  a: { a: 0, b: (x) => (y) => boolean(force(x) === force(y)) },
-  b: { a: 0, b: (x) => (y) => boolean(force(x) !== force(y)) },
+  a: { a: 0, b: (x) => (y) => ({ a: +(force(x) === force(y)) }) },
+  b: { a: 0, b: (x) => (y) => ({ a: +(force(x) !== force(y)) }) },
 };
 
 export const functorList = {
