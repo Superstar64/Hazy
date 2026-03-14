@@ -20,6 +20,9 @@ import Hazy.Prelude
 placeholder :: a
 placeholder = missing
 
+undefined :: a
+undefined = missing
+
 error :: Text -> a
 error = missing
 

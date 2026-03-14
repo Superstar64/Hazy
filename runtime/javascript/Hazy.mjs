@@ -1,7 +1,12 @@
 import * as helper from "./Hazy/Helper.mjs";
+export * from "./Hazy/Helper.mjs";
 
 function force(thunk) {
   return thunk.a ? thunk.b() : thunk.b;
+}
+
+export function abort() {
+  throw new Error("bottom");
 }
 
 export const placeholder = {
@@ -11,9 +16,12 @@ export const placeholder = {
   },
 };
 
-export function abort() {
-  throw new Error("bottom");
-}
+export const undefined = {
+  a: 1,
+  b() {
+    throw new Error("undefined");
+  },
+};
 
 export const error = {
   a: 0,
@@ -164,39 +172,3 @@ export const monadFailList = {
   a: monadList,
   b: placeholder,
 };
-
-const placeholderDefault = (_evidence) => {
-  throw new Exception("Placeholder");
-};
-
-export {
-  defaultEqual,
-  defaultNotEqual,
-  defaultSucc,
-  defaultPred,
-  defaultEnumFrom,
-  defaultEnumFromTo,
-  defaultEnumFromThen,
-  defaultEnumFromThenTo,
-  defaultMinus,
-  defaultNegate,
-  defaultFconst,
-  defaultAp,
-  defaultLiftA2,
-  defaultDiscardLeft,
-  defaultDiscardRight,
-  defaultThen,
-  defaultReturn,
-} from "./Hazy/Helper.mjs";
-export const defaultPlus = placeholderDefault;
-export const defaultMultiply = placeholderDefault;
-export const defaultAbs = placeholderDefault;
-export const defaultSignum = placeholderDefault;
-export const defaultFromInteger = placeholderDefault;
-export const defaultToEnum = placeholderDefault;
-export const defaultFromEnum = placeholderDefault;
-export const defaultFmap = placeholderDefault;
-export const defaultPure = placeholderDefault;
-export const defaultBind = placeholderDefault;
-export const defaultFail = placeholderDefault;
-

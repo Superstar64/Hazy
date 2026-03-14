@@ -22,6 +22,12 @@ defaultSucc = toEnum . (\x -> x + 1) . fromEnum
 defaultPred :: (Enum a) => a -> a
 defaultPred = toEnum . (subtract 1) . fromEnum
 
+defaultToEnum :: (Enum a) => Int -> a
+defaultToEnum = undefined
+
+defaultFromEnum :: (Enum a) => a -> Int
+defaultFromEnum = undefined
+
 defaultEnumFrom :: (Enum a) => a -> [a]
 defaultEnumFrom x = map toEnum [fromEnum x ..]
 
@@ -34,14 +40,35 @@ defaultEnumFromThen x y = map toEnum [fromEnum x, fromEnum y ..]
 defaultEnumFromThenTo :: (Enum a) => a -> a -> a -> [a]
 defaultEnumFromThenTo x y z = map toEnum [fromEnum x, fromEnum y .. fromEnum z]
 
+defaultPlus :: (Num a) => a -> a -> a
+defaultPlus = undefined
+
 defaultMinus :: (Num a) => a -> a -> a
 defaultMinus x y = x + negate y
+
+defaultMultiply :: (Num a) => a -> a -> a
+defaultMultiply = undefined
 
 defaultNegate :: (Num a) => a -> a
 defaultNegate x = 0 - x
 
+defaultAbs :: (Num a) => a -> a
+defaultAbs = undefined
+
+defaultSignum :: (Num a) => a -> a
+defaultSignum = undefined
+
+defaultFromInteger :: (Num a) => Integer -> a
+defaultFromInteger = undefined
+
+defaultFmap :: (Functor f) => (a -> b) -> f a -> f b
+defaultFmap = undefined
+
 defaultFconst :: (Functor f) => a -> f b -> f a
 defaultFconst a = fmap (const a)
+
+defaultPure :: (Applicative f) => a -> f a
+defaultPure = undefined
 
 defaultAp :: (Applicative f) => f (a -> b) -> f a -> f b
 defaultAp = liftA2 id
@@ -55,11 +82,17 @@ defaultDiscardLeft = liftA2 (flip const)
 defaultDiscardRight :: (Applicative f) => f a -> f b -> f a
 defaultDiscardRight = liftA2 const
 
+defaultBind :: (Monad m) => m a -> (a -> m b) -> m b
+defaultBind = undefined
+
 defaultThen :: (Monad m) => m a -> m b -> m b
 defaultThen a b = a >>= \_ -> b
 
 defaultReturn :: (Monad m) => a -> m a
 defaultReturn = pure
+
+defaultFail :: (MonadFail m) => String -> m a
+defaultFail = undefined
 
 eqBoolEqual :: Bool -> Bool -> Bool
 eqBoolEqual False False = True
