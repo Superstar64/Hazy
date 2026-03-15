@@ -166,7 +166,7 @@ import Data.Traversable
   ( mapAccumL,
     mapAccumR,
   )
-import Hazy (placeholder)
+import Hazy (map, placeholder)
 import Prelude (Integral, Num, error)
 
 infixr 5 ++
@@ -191,9 +191,6 @@ uncons = placeholder
 
 singleton :: a -> [a]
 singleton = placeholder
-
-map :: (a -> b) -> [a] -> [b]
-map = placeholder
 
 reverse :: [a] -> [a]
 reverse = placeholder

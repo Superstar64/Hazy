@@ -7,21 +7,8 @@ module Data.Ord
   )
 where
 
-import Data.Bool (Bool)
-import Hazy (placeholder)
+import Hazy (Ord (..), Ordering (..), placeholder)
 import Prelude (Eq, error)
-
-class (Eq a) => Ord a where
-  compare :: a -> a -> Ordering
-  infix 4 <, <=, >=, >
-  (<), (<=), (>), (>=) :: a -> a -> Bool
-  max :: a -> a -> a
-  min :: a -> a -> a
-
-data Ordering
-  = LT
-  | EQ
-  | GT
 
 newtype Down a = Down
   { getDown :: a

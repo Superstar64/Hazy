@@ -7,18 +7,13 @@ module Data.Functor
   )
 where
 
-import Hazy (Functor (..), placeholder)
+import Hazy (Functor (..), placeholder, (<$>))
 import Prelude (error)
 
 infixl 4 $>
 
 ($>) :: (Functor f) => f a -> b -> f b
 ($>) = placeholder
-
-infixl 4 <$>
-
-(<$>) :: (Functor f) => (a -> b) -> f a -> f b
-(<$>) = placeholder
 
 infixl 1 <&>
 

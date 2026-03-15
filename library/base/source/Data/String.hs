@@ -9,10 +9,8 @@ module Data.String
 where
 
 import Data.Char (Char)
-import Hazy (placeholder)
+import Hazy (String, placeholder)
 import Prelude (error)
-
-type String = [Char]
 
 class IsString a where
   fromString :: String -> a

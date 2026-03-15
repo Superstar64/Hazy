@@ -10,22 +10,8 @@ module Data.Function
   )
 where
 
-import Hazy (placeholder)
+import Hazy (const, flip, id, placeholder, (.))
 import Prelude (error)
-
-id :: a -> a
-id = placeholder
-
-const :: a -> b -> a
-const = placeholder
-
-infixr 9 .
-
-(.) :: (b -> c) -> (a -> b) -> a -> c
-(.) = placeholder
-
-flip :: (a -> b -> c) -> b -> a -> c
-flip = placeholder
 
 infixr 0 $
 

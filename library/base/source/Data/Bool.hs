@@ -8,7 +8,7 @@ module Data.Bool
   )
 where
 
-import Hazy (Bool (..), placeholder)
+import Hazy (Bool (..), not, otherwise, placeholder)
 import Prelude (error)
 
 infixr 3 &&
@@ -20,12 +20,6 @@ infixr 2 ||
 
 (||) :: Bool -> Bool -> Bool
 (||) = placeholder
-
-not :: Bool -> Bool
-not = placeholder
-
-otherwise :: Bool
-otherwise = placeholder
 
 bool :: a -> a -> Bool -> a
 bool = placeholder

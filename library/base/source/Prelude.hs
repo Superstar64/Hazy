@@ -291,10 +291,12 @@ import Data.Tuple
     uncurry,
   )
 import Hazy as Builtin
-  ( Enum (..),
+  ( Bounded (..),
+    Enum (..),
     Integer,
     Num (..),
     placeholder,
+    subtract,
   )
 import qualified Hazy
 import System.IO
@@ -338,9 +340,6 @@ import Text.Show
     shows,
   )
 import Prelude ()
-
-class Bounded a where
-  minBound, maxBound :: a
 
 data Float
 
@@ -395,9 +394,6 @@ class (RealFrac a, Floating a) => RealFloat a where
   isNegativeZero :: a -> Bool
   isIEEE :: a -> Bool
   atan2 :: a -> a -> a
-
-subtract :: (Num a) => a -> a -> a
-subtract = placeholder
 
 even :: (Integral a) => a -> Bool
 even = placeholder
