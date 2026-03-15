@@ -7,6 +7,7 @@ module Stage3.Simple.SchemeOver
   )
 where
 
+import Control.Monad (zipWithM)
 import Control.Monad.ST (ST)
 import Data.Foldable (toList)
 import qualified Data.Kind
@@ -77,11 +78,11 @@ augmentNamed name position parameters constraints Context {termEnvironment, loca
                       evidence
                     }
             pure $ (shift classx, root) : concat children
-          collect Constraint {classx, head, arguments} = do
-            let evidence = Evidence.Variable {variable = Evidence.assumed head}
+          collect index Constraint {classx, head, arguments} = do
+            let evidence = Evidence.Variable {variable = Evidence.assumed index}
             entail <- entailed classx arguments evidence
             pure (head, entail)
-      collected <- traverse collect (toList constraints)
+      collected <- zipWithM collect [0 ..] $ toList constraints
       let ordered = orderWithInt (++) [] (length parameters) collected
           constraints = Vector.map (Map.fromListWith $ LocalBinding.combine position) ordered
           rigid index typex constraints =
