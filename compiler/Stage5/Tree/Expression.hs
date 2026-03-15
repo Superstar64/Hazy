@@ -73,7 +73,7 @@ generateInto context target = \case
     arguments <- traverse (Evidence.generate context) (toList instanciation)
     pure [done (evaluate expression arguments)]
   Constructor {constructor = Constructor.Index {constructorIndex}, arguments} -> do
-    arguments <- traverse (thunk context) (toList arguments)
+    arguments <- traverse (thunk context Done) (toList arguments)
     let tag = Javascript.Number constructorIndex
         elements = map Javascript.Literal (tag : arguments)
         fields = zip Mangle.fields elements
@@ -125,7 +125,7 @@ generateInto context target = \case
       ]
   Call {function, argument} -> do
     (statements, function) <- generate context function
-    argument <- thunk context argument
+    argument <- thunk context Done argument
     let call =
           Javascript.Call
             { function,
@@ -151,8 +151,18 @@ generateInto context target = \case
             }
         )
 
-thunk :: Context s scope -> Expression scope -> ST s Javascript.Expression
-thunk context value = do
+-- |
+-- Is the thunk a part of a binding group or not?
+data Binder
+  = Done
+  | Group
+
+thunk :: Context s scope -> Binder -> Expression scope -> ST s Javascript.Expression
+thunk context Done Variable {variable, instanciation = Instanciation instanciation}
+  | null instanciation = do
+      name <- symbol context (context !- variable)
+      pure Javascript.Variable {name}
+thunk context _ value = do
   let member =
         Javascript.Member
           { object = Javascript.This,
@@ -198,7 +208,7 @@ declaration context scheme@SchemeOver {result = expression} = do
   fresh <- Vector.replicateM constraintCount (Context.fresh context)
   context <- pure $ Context.evidenceBindings fresh context
   if
-    | 0 <- constraintCount -> thunk context expression
+    | 0 <- constraintCount -> thunk context Group expression
     | otherwise -> do
         (statements, result) <- generate context expression
         pure $

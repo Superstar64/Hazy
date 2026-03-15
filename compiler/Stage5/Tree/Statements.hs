@@ -73,7 +73,7 @@ attempt context target label = \case
     result <- attempt context target label letBody
     pure $ declarations ++ result
   LetOne {declaration, body} -> do
-    thunk <- Expression.thunk context declaration
+    thunk <- Expression.thunk context Expression.Done declaration
     name <- fresh context
     let declaration = Javascript.Const name thunk
     body <- attempt (singleBinding name context) target label body

@@ -16,5 +16,10 @@ generateInto ::
   Javascript.Expression ->
   Expression scope ->
   ST s [Javascript.Statement 'True]
-thunk :: Context s scope -> Expression scope -> ST s Javascript.Expression
+
+data Binder
+  = Done
+  | Group
+
+thunk :: Context s scope -> Binder -> Expression scope -> ST s Javascript.Expression
 declaration :: Context s scope -> SchemeOver Expression scope -> ST s Javascript.Expression
