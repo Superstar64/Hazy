@@ -209,17 +209,15 @@ unify context_ position term1_ term2_ = unifyWith context_ term1_ term2_
               combine box box'
           where
             combine (Solved term) (Solved term') = unify term term'
-            combine (Solved (Logical reference)) Unsolved {kind, constraints} = do
-              box <- readSTRef reference
-              combine box Unsolved {kind, constraints}
+            combine (Solved (Logical reference)) Unsolved {} = do
+              unify (Logical reference) (Logical reference')
+            combine Unsolved {} (Solved (Logical reference')) = do
+              unify (Logical reference) (Logical reference')
             combine (Solved term) Unsolved {kind, constraints} = do
               occurs context position reference' term
               typeCheck context position kind term
               reconstrain context position constraints term
               writeSTRef reference' $! Solved term
-            combine Unsolved {kind, constraints} (Solved (Logical reference')) = do
-              box' <- readSTRef reference'
-              combine Unsolved {kind, constraints} box'
             combine Unsolved {kind, constraints} (Solved term') = do
               occurs context position reference term'
               typeCheck context position kind term'
