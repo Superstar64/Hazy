@@ -277,6 +277,7 @@ import Javascript.Printer.Tree.MemberExpression
 import Javascript.Printer.Tree.MethodDefinition
   ( MethodDefinition,
     methodDefinition1,
+    methodDefinition5,
   )
 import Javascript.Printer.Tree.ModuleExportName
   ( ModuleExportName,

@@ -12,6 +12,9 @@ data Field
   | Method
       { definition :: [Statement 'True]
       }
+  | Getter
+      { definition :: [Statement 'True]
+      }
 
 print :: Text -> Field -> Printer.PropertyDefinition yield await
 print name = \case
@@ -29,4 +32,12 @@ print name = \case
       parameters <- Printer.formalParameters1,
       definition <- Statement.print <$> definition,
       method <- Printer.methodDefinition1 name parameters definition ->
+        Printer.propertyDefinition4 method
+  Getter {definition}
+    | name <- Printer.identifier name,
+      name <- Printer.literalPropertyName1 name,
+      name <- Printer.propertyName1 name,
+      name <- Printer.classElementName1 name,
+      definition <- Statement.print <$> definition,
+      method <- Printer.methodDefinition5 name definition ->
         Printer.propertyDefinition4 method

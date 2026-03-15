@@ -29,3 +29,19 @@ methodDefinition1 name parameters body =
         print body,
         token "}"
       ]
+
+methodDefinition5 ::
+  ClassElementName yield await ->
+  [StatementListItem 'False 'False 'True] ->
+  MethodDefinition yield await
+methodDefinition5 name body =
+  MethodDefinition $
+    mconcat
+      [ token "get",
+        print name,
+        token "(",
+        token ")",
+        token "{",
+        print body,
+        token "}"
+      ]
