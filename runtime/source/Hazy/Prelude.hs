@@ -40,6 +40,9 @@ class (Eq a) => Ord a where
 instance Ord Int where
   (<=) = intLessThenEqual
 
+instance Ord Integer where
+  (<=) = integerLessThenEqual
+
 class Bounded a where
   minBound :: a
   maxBound :: a

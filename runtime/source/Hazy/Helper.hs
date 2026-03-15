@@ -129,3 +129,28 @@ enumIntEnumFromThenTo from thenx to = run from
     run from | from > to = []
     run from = from : run (from + step)
     step = thenx - from
+
+enumIntegerSucc :: Integer -> Integer
+enumIntegerSucc x = x + 1
+
+enumIntegerPred :: Integer -> Integer
+enumIntegerPred x = x - 1
+
+enumIntegerEnumFrom :: Integer -> [Integer]
+enumIntegerEnumFrom x = [x, x + 1 ..]
+
+enumIntegerEnumFromTo :: Integer -> Integer -> [Integer]
+enumIntegerEnumFromTo x y = [x, x + 1 .. y]
+
+enumIntegerEnumFromThen :: Integer -> Integer -> [Integer]
+enumIntegerEnumFromThen from thenx = run from
+  where
+    run from = from : run (from + step)
+    step = thenx - from
+
+enumIntegerEnumFromThenTo :: Integer -> Integer -> Integer -> [Integer]
+enumIntegerEnumFromThenTo from thenx to = run from
+  where
+    run from | from > to = []
+    run from = from : run (from + step)
+    step = thenx - from

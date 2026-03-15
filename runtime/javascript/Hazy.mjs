@@ -105,14 +105,22 @@ export const enumInt = {
 };
 
 export const enumInteger = {
-  a: placeholder,
-  b: placeholder,
-  c: placeholder,
-  d: placeholder,
-  e: placeholder,
-  f: placeholder,
-  g: placeholder,
-  h: placeholder,
+  a: helper.enumIntegerSucc,
+  b: helper.enumIntegerPred,
+  c: { v: (x) => BigInt(x.v) },
+  d: {
+    v: (x) => {
+      x = x.v;
+      if (x > boundedIntMaxBound.v || x < boundedIntMinBound.v) {
+        throw new Error("Enum Integer Overflow");
+      }
+      return Number(x);
+    },
+  },
+  e: helper.enumIntegerEnumFrom,
+  f: helper.enumIntegerEnumFromThen,
+  g: helper.enumIntegerEnumFromTo,
+  h: helper.enumIntegerEnumFromThenTo,
 };
 
 export const enumBool = {
