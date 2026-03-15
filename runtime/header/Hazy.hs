@@ -31,3 +31,13 @@ pack = missing
 
 putStrLn :: Text -> IO ()
 putStrLn = missing
+
+intLessThenEqual :: Int -> Int -> Bool
+intLessThenEqual = missing
+
+integerLessThenEqual :: Integer -> Integer -> Bool
+integerLessThenEqual = missing
+
+boundedIntMinBound, boundedIntMaxBound :: Int
+boundedIntMinBound = missing
+boundedIntMaxBound = missing

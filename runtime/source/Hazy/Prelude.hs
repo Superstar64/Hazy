@@ -13,6 +13,41 @@ infixr 9 .
 
 infixl 4 <$>
 
+infix 4 <, <=, >=, >
+
+class (Eq a) => Ord a where
+  compare :: a -> a -> Ordering
+  (<), (<=), (>=), (>) :: a -> a -> Bool
+  max, min :: a -> a -> a
+
+  compare x y
+    | x == y = EQ
+    | x <= y = LT
+    | otherwise = GT
+
+  x <= y = compare x y /= GT
+  x < y = compare x y == LT
+  x >= y = compare x y /= LT
+  x > y = compare x y == GT
+
+  max x y
+    | x <= y = y
+    | otherwise = x
+  min x y
+    | x <= y = x
+    | otherwise = y
+
+instance Ord Int where
+  (<=) = intLessThenEqual
+
+class Bounded a where
+  minBound :: a
+  maxBound :: a
+
+instance Bounded Int where
+  minBound = boundedIntMinBound
+  maxBound = boundedIntMaxBound
+
 subtract :: (Num a) => a -> a -> a
 subtract = flip (-)
 
@@ -32,9 +67,20 @@ not :: Bool -> Bool
 not True = False
 not False = True
 
+otherwise :: Bool
+otherwise = True
+
 type String = [Char]
 
 data IO a
+
+data Ordering = LT | EQ | GT
+
+instance Eq Ordering where
+  LT == LT = True
+  EQ == EQ = True
+  GT == EQ = True
+  _ == _ = False
 
 map :: (a -> b) -> [a] -> [b]
 map f [] = []

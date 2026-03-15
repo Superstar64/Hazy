@@ -51,6 +51,26 @@ export const putStrLn = {
   },
 };
 
+export const intLessThenEqual = {
+  a: 0,
+  b: (x) => (y) => ({ a: +(force(x) <= force(y)) }),
+};
+
+export const integerLessThenEqual = {
+  a: 0,
+  b: (x) => (y) => ({ a: +(force(x) <= force(y)) }),
+};
+
+export const boundedIntMinBound = {
+  a: 0,
+  b: -2147483648,
+};
+
+export const boundedIntMaxBound = {
+  a: 0,
+  b: 2147483647,
+};
+
 export const numInt = {
   a: { a: 0, b: (x) => (y) => (force(x) + force(y)) | 0 },
   b: { a: 0, b: (x) => (y) => (force(x) - force(y)) | 0 },
@@ -84,14 +104,14 @@ export const numInteger = {
 };
 
 export const enumInt = {
-  a: placeholder,
-  b: placeholder,
-  c: placeholder,
-  d: placeholder,
-  e: placeholder,
-  f: placeholder,
-  g: placeholder,
-  h: placeholder,
+  a: helper.enumIntSucc,
+  b: helper.enumIntPred,
+  c: helper.enumIntToEnum,
+  d: helper.enumIntFromEnum,
+  e: helper.enumIntEnumFrom,
+  f: helper.enumIntEnumFromThen,
+  g: helper.enumIntEnumFromTo,
+  h: helper.enumIntEnumFromThenTo,
 };
 
 export const enumInteger = {

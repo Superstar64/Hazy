@@ -101,3 +101,29 @@ eqBoolEqual _ _ = False
 
 eqBoolNotEqual :: Bool -> Bool -> Bool
 eqBoolNotEqual a b = not (eqBoolEqual a b)
+
+enumIntSucc :: Int -> Int
+enumIntSucc x = x + 1
+
+enumIntPred :: Int -> Int
+enumIntPred x = x - 1
+
+enumIntToEnum :: Int -> Int
+enumIntToEnum = id
+
+enumIntFromEnum :: Int -> Int
+enumIntFromEnum = id
+
+enumIntEnumFrom :: Int -> [Int]
+enumIntEnumFrom x = [x .. maxBound]
+
+enumIntEnumFromTo :: Int -> Int -> [Int]
+enumIntEnumFromTo x y = [x, x + 1 .. y]
+
+enumIntEnumFromThen :: Int -> Int -> [Int]
+enumIntEnumFromThen x y = [x, y .. maxBound]
+
+enumIntEnumFromThenTo :: Int -> Int -> Int -> [Int]
+enumIntEnumFromThenTo x y z
+  | z > x = []
+  | otherwise = x : enumIntEnumFromThenTo (x + y) y z
