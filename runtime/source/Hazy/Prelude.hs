@@ -79,7 +79,7 @@ data Ordering = LT | EQ | GT
 instance Eq Ordering where
   LT == LT = True
   EQ == EQ = True
-  GT == EQ = True
+  GT == GT = True
   _ == _ = False
 
 map :: (a -> b) -> [a] -> [b]

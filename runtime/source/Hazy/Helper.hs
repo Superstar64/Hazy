@@ -124,6 +124,8 @@ enumIntEnumFromThen :: Int -> Int -> [Int]
 enumIntEnumFromThen x y = [x, y .. maxBound]
 
 enumIntEnumFromThenTo :: Int -> Int -> Int -> [Int]
-enumIntEnumFromThenTo x y z
-  | z > x = []
-  | otherwise = x : enumIntEnumFromThenTo (x + y) y z
+enumIntEnumFromThenTo from thenx to = run from
+  where
+    run from | from > to = []
+    run from = from : run (from + step)
+    step = thenx - from
