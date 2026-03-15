@@ -1,8 +1,9 @@
 import * as helper from "./Hazy/Helper.mjs";
 export * from "./Hazy/Helper.mjs";
 
-function force(thunk) {
-  return thunk.a ? thunk.b() : thunk.b;
+export function done(thunk, value) {
+  Object.defineProperty(thunk, "v", { value });
+  return value;
 }
 
 export function abort() {
@@ -10,97 +11,86 @@ export function abort() {
 }
 
 export const placeholder = {
-  a: 1,
-  b() {
+  get v() {
     throw new Error("placeholder");
   },
 };
 
 export const undefined = {
-  a: 1,
-  b() {
+  get v() {
     throw new Error("undefined");
   },
 };
 
 export const error = {
-  a: 0,
-  b: (message) => {
-    throw new Error(force(message));
+  v: (message) => {
+    throw new Error(message.v);
   },
 };
 
 // todo perform replacement on invalid scalar values
 export const pack = {
-  a: 0,
-  b: (list) => {
+  v: (list) => {
     let buffer = "";
-    let current = force(list);
+    let current = list.v;
     while (current.a) {
-      buffer += String.fromCodePoint(force(current.b));
-      current = force(current.c);
+      buffer += String.fromCodePoint(current.b.v);
+      current = current.c.v;
     }
     return buffer;
   },
 };
 
 export const putStrLn = {
-  a: 0,
-  b: (thunk) => () => {
-    console.log(force(thunk));
+  v: (text) => () => {
+    console.log(text.v);
   },
 };
 
 export const intLessThenEqual = {
-  a: 0,
-  b: (x) => (y) => ({ a: +(force(x) <= force(y)) }),
+  v: (x) => (y) => ({ a: +(x.v <= y.v) }),
 };
 
 export const integerLessThenEqual = {
-  a: 0,
-  b: (x) => (y) => ({ a: +(force(x) <= force(y)) }),
+  v: (x) => (y) => ({ a: +(x.v <= y.v) }),
 };
 
 export const boundedIntMinBound = {
-  a: 0,
-  b: -2147483648,
+  v: -2147483648,
 };
 
 export const boundedIntMaxBound = {
-  a: 0,
-  b: 2147483647,
+  v: 2147483647,
 };
 
 export const numInt = {
-  a: { a: 0, b: (x) => (y) => (force(x) + force(y)) | 0 },
-  b: { a: 0, b: (x) => (y) => (force(x) - force(y)) | 0 },
-  c: { a: 0, b: (x) => (y) => Math.imul(force(x), force(y)) },
-  d: { a: 0, b: (x) => -force(x) | 0 },
-  e: { a: 0, b: (x) => -Math.abs(force(x)) | 0 },
-  f: { a: 0, b: (x) => Math.sign(force(x)) },
-  g: { a: 0, b: (x) => Number(BigInt.asIntN(32, force(x))) },
+  a: { v: (x) => (y) => (x.v + y.v) | 0 },
+  b: { v: (x) => (y) => (x.v - y.v) | 0 },
+  c: { v: (x) => (y) => Math.imul(x.v, y.v) },
+  d: { v: (x) => -x.v | 0 },
+  e: { v: (x) => -Math.abs(x.v) | 0 },
+  f: { v: (x) => Math.sign(x.v) },
+  g: { v: (x) => Number(BigInt.asIntN(32, x.v)) },
 };
 
 export const numInteger = {
-  a: { a: 0, b: (x) => (y) => force(x) + force(y) },
-  b: { a: 0, b: (x) => (y) => force(x) - force(y) },
-  c: { a: 0, b: (x) => (y) => force(x) * force(y) },
-  d: { a: 0, b: (x) => -force(x) },
+  a: { v: (x) => (y) => x.v + y.v },
+  b: { v: (x) => (y) => x.v - y.v },
+  c: { v: (x) => (y) => x.v * y.v },
+  d: { v: (x) => -x.v },
   e: {
-    a: 0,
-    b: (x) => {
-      x = force(x);
+    v: (x) => {
+      x = x.v;
       return x >= 0n ? x : -x;
     },
   },
   f: {
-    a: 0,
-    b: (x) => {
-      x = force(x);
+    v: (x) => {
+      x = x.v;
       return x == 0n ? 0n : x > 0n ? 1n : -1n;
     },
   },
-  g: { a: 0, b: (x) => force(x) },
+  g: { v: (x) => x.v },
 };
 
 export const enumInt = {
@@ -153,18 +143,18 @@ export const eqBool = {
 };
 
 export const eqChar = {
-  a: { a: 0, b: (x) => (y) => ({ a: +(force(x) === force(y)) }) },
-  b: { a: 0, b: (x) => (y) => ({ a: +(force(x) !== force(y)) }) },
+  b: { v: (x) => (y) => ({ a: +(x.v !== y.v) }) },
+  a: { v: (x) => (y) => ({ a: +(x.v === y.v) }) },
 };
 
 export const eqInt = {
-  a: { a: 0, b: (x) => (y) => ({ a: +(force(x) === force(y)) }) },
-  b: { a: 0, b: (x) => (y) => ({ a: +(force(x) !== force(y)) }) },
+  a: { v: (x) => (y) => ({ a: +(x.v === y.v) }) },
+  b: { v: (x) => (y) => ({ a: +(x.v !== y.v) }) },
 };
 
 export const eqInteger = {
-  a: { a: 0, b: (x) => (y) => ({ a: +(force(x) === force(y)) }) },
-  b: { a: 0, b: (x) => (y) => ({ a: +(force(x) !== force(y)) }) },
+  a: { v: (x) => (y) => ({ a: +(x.v === y.v) }) },
+  b: { v: (x) => (y) => ({ a: +(x.v !== y.v) }) },
 };
 
 export const functorList = {

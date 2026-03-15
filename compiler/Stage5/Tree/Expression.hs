@@ -17,6 +17,7 @@ import Stage4.Tree.SchemeOver (SchemeOver (..))
 import qualified Stage4.Tree.SchemeOver as SchemeOver
 import Stage5.Generate.Context (Context (..), fresh, singleBinding, symbol, (!-))
 import qualified Stage5.Generate.Context as Context
+import Stage5.Generate.Mangle (Builtin (..))
 import qualified Stage5.Generate.Mangle as Mangle
 import {-# SOURCE #-} qualified Stage5.Tree.Declarations as Declarations
 import qualified Stage5.Tree.Evidence as Evidence
@@ -35,26 +36,10 @@ generate context expression = do
 
 force :: Javascript.Expression -> Javascript.Expression
 force object =
-  let base =
-        Javascript.Member
-          { object,
-            field = Mangle.value
-          }
-      value =
-        Javascript.Ternary
-          { condition =
-              Javascript.Member
-                { object,
-                  field = Mangle.lazy
-                },
-            valid =
-              Javascript.Call
-                { function = base,
-                  arguments = []
-                },
-            invalid = base
-          }
-   in value
+  Javascript.Member
+    { object,
+      field = Mangle.value
+    }
 
 evaluate :: Javascript.Expression -> [Javascript.Expression] -> Javascript.Expression
 evaluate thunk [] = force thunk
@@ -162,41 +147,17 @@ thunk context Done Variable {variable, instanciation = Instanciation instanciati
   | null instanciation = do
       name <- symbol context (context !- variable)
       pure Javascript.Variable {name}
-thunk context _ value = do
-  let member =
-        Javascript.Member
-          { object = Javascript.This,
-            field = Mangle.value
+thunk context@Context {builtin = Builtin {done}} _ value = do
+  (body, value) <- generate context value
+  let result =
+        Javascript.Call
+          { function = Javascript.Variable {name = done},
+            arguments = [Javascript.This, value]
           }
-  body <- generateInto context member value
-  let flag =
-        Javascript.Expression
-          Javascript.Assign
-            { target =
-                Javascript.Member
-                  { object = Javascript.This,
-                    field = Mangle.lazy
-                  },
-              value =
-                Javascript.Number
-                  { number = 0
-                  }
-            }
-      return =
-        Javascript.Return
-          Javascript.Member
-            { object = Javascript.This,
-              field = Mangle.value
-            }
       fields =
-        [ ( Mangle.lazy,
-            Javascript.Literal
-              { literal = Javascript.Number {number = 1}
-              }
-          ),
-          ( Mangle.value,
-            Javascript.Method
-              { definition = mconcat [body, [flag], [return]]
+        [ ( Mangle.value,
+            Javascript.Getter
+              { definition = body ++ [Javascript.Return result]
               }
           )
         ]
