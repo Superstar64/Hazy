@@ -16,11 +16,12 @@ export const placeholder = {
   },
 };
 
-export const undefined = {
+const _undefined = {
   get v() {
     throw new Error("undefined");
   },
 };
+export { _undefined as "undefined" };
 
 export const error = {
   v: (message) => {
@@ -94,7 +95,7 @@ export const numInteger = {
   f: {
     v: (x) => {
       x = x.v;
-      return x == 0n ? 0n : x > 0n ? 1n : -1n;
+      return x === 0n ? 0n : x > 0n ? 1n : -1n;
     },
   },
   g: { v: (x) => x.v },
