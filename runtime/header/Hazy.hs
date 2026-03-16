@@ -32,6 +32,9 @@ pack = missing
 putStrLn :: Text -> IO ()
 putStrLn = missing
 
+trace :: Text -> a -> a
+trace = missing
+
 intLessThenEqual :: Int -> Int -> Bool
 intLessThenEqual = missing
 

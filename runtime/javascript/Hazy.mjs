@@ -47,6 +47,13 @@ export const putStrLn = {
   },
 };
 
+export const trace = {
+  v: (text) => (thunk) => {
+    console.log(text.v);
+    return thunk.v;
+  },
+};
+
 export const intLessThenEqual = {
   v: (x) => (y) => ({ a: +(x.v <= y.v) }),
 };
