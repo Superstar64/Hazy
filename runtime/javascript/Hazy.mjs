@@ -124,14 +124,14 @@ export const enumInteger = {
 };
 
 export const enumBool = {
-  a: placeholder,
-  b: placeholder,
-  c: placeholder,
-  d: placeholder,
-  e: placeholder,
-  f: placeholder,
-  g: placeholder,
-  h: placeholder,
+  a: helper.enumBoolSucc,
+  b: helper.enumBoolPred,
+  c: helper.enumBoolToEnum,
+  d: helper.enumBoolFromEnum,
+  e: helper.enumBoolEnumFrom,
+  f: helper.enumBoolEnumFromThen,
+  g: helper.enumBoolEnumFromTo,
+  h: helper.enumBoolEnumFromThenTo,
 };
 
 export const enumChar = {

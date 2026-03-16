@@ -154,3 +154,31 @@ enumIntegerEnumFromThenTo from thenx to = run from
     run from | from > to = []
     run from = from : run (from + step)
     step = thenx - from
+
+enumBoolSucc :: Bool -> Bool
+enumBoolSucc = defaultSucc
+
+enumBoolPred :: Bool -> Bool
+enumBoolPred = defaultPred
+
+enumBoolToEnum :: Int -> Bool
+enumBoolToEnum = \case
+  0 -> False
+  1 -> True
+
+enumBoolFromEnum :: Bool -> Int
+enumBoolFromEnum = \case
+  False -> 0
+  True -> 1
+
+enumBoolEnumFrom :: Bool -> [Bool]
+enumBoolEnumFrom = defaultEnumFrom
+
+enumBoolEnumFromThen :: Bool -> Bool -> [Bool]
+enumBoolEnumFromThen = defaultEnumFromThen
+
+enumBoolEnumFromTo :: Bool -> Bool -> [Bool]
+enumBoolEnumFromTo = defaultEnumFromTo
+
+enumBoolEnumFromThenTo :: Bool -> Bool -> Bool -> [Bool]
+enumBoolEnumFromThenTo = defaultEnumFromThenTo
