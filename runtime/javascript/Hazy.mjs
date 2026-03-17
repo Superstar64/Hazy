@@ -1,9 +1,8 @@
 import * as helper from "./Hazy/Helper.mjs";
 export * from "./Hazy/Helper.mjs";
 
-export function done(thunk, value) {
-  Object.defineProperty(thunk, "v", { value });
-  return value;
+function force(thunk) {
+  return thunk.a ? thunk.b() : thunk.b;
 }
 
 export function abort() {
@@ -11,94 +10,106 @@ export function abort() {
 }
 
 export const placeholder = {
-  get v() {
+  a: 1,
+  b() {
     throw new Error("placeholder");
   },
 };
 
-const _undefined = {
-  get v() {
+export const _undefined = {
+  a: 1,
+  b() {
     throw new Error("undefined");
   },
 };
 export { _undefined as "undefined" };
 
 export const error = {
-  v: (message) => {
-    throw new Error(message.v);
+  a: 0,
+  b: (message) => {
+    throw new Error(force(message));
   },
 };
 
 // todo perform replacement on invalid scalar values
 export const pack = {
-  v: (list) => {
+  a: 0,
+  b: (list) => {
     let buffer = "";
-    let current = list.v;
+    let current = force(list);
     while (current.a) {
-      buffer += String.fromCodePoint(current.b.v);
-      current = current.c.v;
+      buffer += String.fromCodePoint(force(current.b));
+      current = force(current.c);
     }
     return buffer;
   },
 };
 
 export const putStrLn = {
-  v: (text) => () => {
-    console.log(text.v);
+  a: 0,
+  b: (thunk) => () => {
+    console.log(force(thunk));
   },
 };
 
 export const trace = {
-  v: (text) => (thunk) => {
-    console.log(text.v);
-    return thunk.v;
+  a: 0,
+  b: (text) => (thunk) => {
+    console.log(force(text));
+    return force(thunk);
   },
 };
 
 export const intLessThenEqual = {
-  v: (x) => (y) => ({ a: +(x.v <= y.v) }),
+  a: 0,
+  b: (x) => (y) => ({ a: +(force(x) <= force(y)) }),
 };
 
 export const integerLessThenEqual = {
-  v: (x) => (y) => ({ a: +(x.v <= y.v) }),
+  a: 0,
+  b: (x) => (y) => ({ a: +(force(x) <= force(y)) }),
 };
 
 export const boundedIntMinBound = {
-  v: -2147483648,
+  a: 0,
+  b: -2147483648,
 };
 
 export const boundedIntMaxBound = {
-  v: 2147483647,
+  a: 0,
+  b: 2147483647,
 };
 
 export const numInt = {
-  a: { v: (x) => (y) => (x.v + y.v) | 0 },
-  b: { v: (x) => (y) => (x.v - y.v) | 0 },
-  c: { v: (x) => (y) => Math.imul(x.v, y.v) },
-  d: { v: (x) => -x.v | 0 },
-  e: { v: (x) => -Math.abs(x.v) | 0 },
-  f: { v: (x) => Math.sign(x.v) },
-  g: { v: (x) => Number(BigInt.asIntN(32, x.v)) },
+  a: { a: 0, b: (x) => (y) => (force(x) + force(y)) | 0 },
+  b: { a: 0, b: (x) => (y) => (force(x) - force(y)) | 0 },
+  c: { a: 0, b: (x) => (y) => Math.imul(force(x), force(y)) },
+  d: { a: 0, b: (x) => -force(x) | 0 },
+  e: { a: 0, b: (x) => -Math.abs(force(x)) | 0 },
+  f: { a: 0, b: (x) => Math.sign(force(x)) },
+  g: { a: 0, b: (x) => Number(BigInt.asIntN(32, force(x))) },
 };
 
 export const numInteger = {
-  a: { v: (x) => (y) => x.v + y.v },
-  b: { v: (x) => (y) => x.v - y.v },
-  c: { v: (x) => (y) => x.v * y.v },
-  d: { v: (x) => -x.v },
+  a: { a: 0, b: (x) => (y) => force(x) + force(y) },
+  b: { a: 0, b: (x) => (y) => force(x) - force(y) },
+  c: { a: 0, b: (x) => (y) => force(x) * force(y) },
+  d: { a: 0, b: (x) => -force(x) },
   e: {
-    v: (x) => {
-      x = x.v;
+    a: 0,
+    b: (x) => {
+      x = force(x);
       return x >= 0n ? x : -x;
     },
   },
   f: {
-    v: (x) => {
-      x = x.v;
+    a: 0,
+    b: (x) => {
+      x = force(x);
       return x === 0n ? 0n : x > 0n ? 1n : -1n;
     },
   },
-  g: { v: (x) => x.v },
+  g: { a: 0, b: (x) => force(x) },
 };
 
 export const enumInt = {
@@ -115,11 +126,12 @@ export const enumInt = {
 export const enumInteger = {
   a: helper.enumIntegerSucc,
   b: helper.enumIntegerPred,
-  c: { v: (x) => BigInt(x.v) },
+  c: { a: 0, b: (x) => BigInt(force(x)) },
   d: {
-    v: (x) => {
-      x = x.v;
-      if (x > boundedIntMaxBound.v || x < boundedIntMinBound.v) {
+    a: 0,
+    b: (x) => {
+      x = force(x);
+      if (x > force(boundedIntMaxBound) || x < force(boundedIntMinBound)) {
         throw new Error("Enum Integer Overflow");
       }
       return Number(x);
@@ -159,18 +171,18 @@ export const eqBool = {
 };
 
 export const eqChar = {
-  b: { v: (x) => (y) => ({ a: +(x.v !== y.v) }) },
-  a: { v: (x) => (y) => ({ a: +(x.v === y.v) }) },
+  a: { a: 0, b: (x) => (y) => ({ a: +(force(x) === force(y)) }) },
+  b: { a: 0, b: (x) => (y) => ({ a: +(force(x) !== force(y)) }) },
 };
 
 export const eqInt = {
-  a: { v: (x) => (y) => ({ a: +(x.v === y.v) }) },
-  b: { v: (x) => (y) => ({ a: +(x.v !== y.v) }) },
+  a: { a: 0, b: (x) => (y) => ({ a: +(force(x) === force(y)) }) },
+  b: { a: 0, b: (x) => (y) => ({ a: +(force(x) !== force(y)) }) },
 };
 
 export const eqInteger = {
-  a: { v: (x) => (y) => ({ a: +(x.v === y.v) }) },
-  b: { v: (x) => (y) => ({ a: +(x.v !== y.v) }) },
+  a: { a: 0, b: (x) => (y) => ({ a: +(force(x) === force(y)) }) },
+  b: { a: 0, b: (x) => (y) => ({ a: +(force(x) !== force(y)) }) },
 };
 
 export const functorList = {

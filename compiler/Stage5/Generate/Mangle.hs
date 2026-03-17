@@ -98,7 +98,9 @@ mangleInstance run brand name target = Text.Lazy.toStrict $ Builder.toLazyText b
           qualify (path :.. root :.=. name)
         ]
 
-value = pack "v"
+lazy = pack "a"
+
+value = pack "b"
 
 fields :: [Text]
 fields = names
@@ -125,8 +127,7 @@ mjs = pack ".mjs"
 runtime = pack "Hazy.mjs"
 
 data Builtin a = Builtin
-  { done,
-    abort,
+  { abort,
     numInt,
     numInteger,
     enumBool,
@@ -178,8 +179,7 @@ instance Functor Builtin where
 instance Applicative Builtin where
   pure a =
     Builtin
-      { done = a,
-        abort = a,
+      { abort = a,
         numInt = a,
         numInteger = a,
         enumBool = a,
@@ -225,8 +225,7 @@ instance Applicative Builtin where
       }
   function <*> argument =
     Builtin
-      { done = done function (done argument),
-        abort = abort function (abort argument),
+      { abort = abort function (abort argument),
         numInt = numInt function (numInt argument),
         numInteger = numInteger function (numInteger argument),
         enumBool = enumBool function (enumBool argument),
@@ -274,8 +273,7 @@ instance Applicative Builtin where
 instance Foldable Builtin where
   toList
     Builtin
-      { done,
-        abort,
+      { abort,
         numInt,
         numInteger,
         enumBool,
@@ -319,8 +317,7 @@ instance Foldable Builtin where
         defaultReturn,
         defaultFail
       } =
-      [ done,
-        abort,
+      [ abort,
         numInt,
         numInteger,
         enumBool,
@@ -369,8 +366,7 @@ instance Foldable Builtin where
 canonical :: Builtin Text
 canonical =
   Builtin
-    { done = pack "done",
-      abort = pack "abort",
+    { abort = pack "abort",
       numInt = pack "numInt",
       numInteger = pack "numInteger",
       enumBool = pack "enumBool",
@@ -418,8 +414,7 @@ canonical =
 builtin :: Builtin Text
 unique :: [Text]
 (builtin, unique) = case names of
-  done
-    : abort
+  abort
     : numInt
     : numInteger
     : enumBool
@@ -466,8 +461,7 @@ unique :: [Text]
       where
         builtins =
           Builtin
-            { done,
-              abort,
+            { abort,
               numInt,
               numInteger,
               enumBool,

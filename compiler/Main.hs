@@ -369,9 +369,15 @@ main'' args = case getOpt order options args of
                     createDirectoryIfMissing True (dropFileName file)
                     Text.IO.writeFile file artifact
                 let index =
-                      pack "import{main as a}from\"./Main.mjs\";a."
-                        <> Mangle.value
-                        <> pack "();"
+                      mconcat
+                        [ pack "import{main as a}from\"./Main.mjs\";(a.",
+                          Mangle.lazy,
+                          pack "?a.",
+                          Mangle.value,
+                          pack "():a.",
+                          Mangle.value,
+                          pack ")()"
+                        ]
                 Text.IO.writeFile (target </> "index.mjs") index
                 pure target
               Pack -> pure $ target </> "artifact"
