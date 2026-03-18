@@ -91,13 +91,21 @@ main = do
 
   copyFile "runtime/package" ".test/dist/packages/runtime/package"
 
-  copyFile "runtime/header/Hazy.hs" ".test/dist/packages/runtime/header/Hazy.hs"
-  copyFile "runtime/header/Hazy/Builtin.hs" ".test/dist/packages/runtime/header/Hazy/Builtin.hs"
-  copyFile "runtime/source/Hazy/Helper.hs" ".test/dist/packages/runtime/header/Hazy/Helper.hs"
-  copyFile "runtime/source/Hazy/Prelude.hs" ".test/dist/packages/runtime/header/Hazy/Prelude.hs"
+  let header = ["Hazy", "Hazy/Builtin"]
+      source = ["Hazy/Helper", "Hazy/Prelude"]
+  for_ header $ \file ->
+    copyFile
+      ("runtime/header/" ++ file ++ ".hs")
+      (".test/dist/packages/runtime/header/" ++ file ++ ".hs")
+  for_ source $ \file ->
+    copyFile
+      ("runtime/source/" ++ file ++ ".hs")
+      (".test/dist/packages/runtime/header/" ++ file ++ ".hs")
+  for_ header $ \file ->
+    copyFile
+      ("runtime/javascript/" ++ file ++ ".mjs")
+      (".test/dist/packages/runtime/artifact/" ++ file ++ ".mjs")
 
-  copyFile "runtime/javascript/Hazy.mjs" ".test/dist/packages/runtime/artifact/Hazy.mjs"
-  copyFile "runtime/javascript/Hazy/Builtin.mjs" ".test/dist/packages/runtime/artifact/Hazy/Builtin.mjs"
   callProcessVerbose hazy $
     words
       "--bare -c -I runtime/header runtime/source -o .test/dist/packages/runtime/artifact"

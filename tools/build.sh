@@ -35,13 +35,22 @@ mkdir $DIST/packages/runtime/artifact/Hazy
 
 cp runtime/package $DIST/packages/runtime/package
 
-cp runtime/header/Hazy.hs $DIST/packages/runtime/header/Hazy.hs
-cp runtime/header/Hazy/Builtin.hs $DIST/packages/runtime/header/Hazy/Builtin.hs
-cp runtime/source/Hazy/Helper.hs $DIST/packages/runtime/header/Hazy/Helper.hs
-cp runtime/source/Hazy/Prelude.hs $DIST/packages/runtime/header/Hazy/Prelude.hs
+HEADER="Hazy Hazy/Builtin"
+SOURCE="Hazy/Helper Hazy/Prelude"
 
-cp runtime/javascript/Hazy.mjs $DIST/packages/runtime/artifact/Hazy.mjs
-cp runtime/javascript/Hazy/Builtin.mjs $DIST/packages/runtime/artifact/Hazy/Builtin.mjs
+for FILE in $HEADER; do
+    cp runtime/header/$FILE.hs $DIST/packages/runtime/header/$FILE.hs
+done
+
+for FILE in $SOURCE; do
+    echo $FILE
+    cp runtime/source/$FILE.hs $DIST/packages/runtime/header/$FILE.hs
+done
+
+for FILE in $HEADER; do
+    cp runtime/javascript/$FILE.mjs $DIST/packages/runtime/artifact/$FILE.mjs
+done
+
 $DIST/bin/hazy --bare -c -I runtime/header runtime/source -o $DIST/packages/runtime/artifact
 
 # Compile base
