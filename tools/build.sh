@@ -43,7 +43,6 @@ for FILE in $HEADER; do
 done
 
 for FILE in $SOURCE; do
-    echo $FILE
     cp runtime/source/$FILE.hs $DIST/packages/runtime/header/$FILE.hs
 done
 
