@@ -111,7 +111,7 @@ check
                       Data {index1, head1} -> Evidence.Data index1 head1
                       Class {index2, head2} -> Evidence.Class index2 head2
                 arguments = Strict.Vector.fromList $ do
-                  i <- [0 .. length prerequisites]
+                  i <- [0 .. length prerequisites - 1]
                   pure
                     Simple.Evidence.Variable
                       { variable = Evidence.Index (Evidence0.Assumed i)
