@@ -17,7 +17,6 @@ import qualified Data.Vector as Vector
 import qualified Error (allow, fail, types)
 import qualified Javascript.Printer.Lexer as Javascript (print, run)
 import qualified Javascript.Tree.Module as Module (print)
-import qualified Javascript.Tree.Statement as Javascript (Statement)
 import Package as X (Module (Module), Package (Package))
 import qualified Package
 import Stage1.Extensions (Extensions, hazy)
@@ -42,6 +41,7 @@ import qualified Stage4.Tree.Module as Module (simplify)
 import qualified Stage4.Tree.Module as Stage4 (Module, name)
 import qualified Stage5.Generate.Mangle as Mangle
 import qualified Stage5.Tree.Module as Module (generate)
+import qualified Stage5.Tree.Module as Stage5
 import System.Console.GetOpt (ArgDescr (..), ArgOrder (..), OptDescr (..), getOpt, usageInfo)
 import System.Directory (createDirectoryIfMissing, listDirectory)
 import System.Environment (getArgs, getExecutablePath)
@@ -131,7 +131,7 @@ stage3 _ = pure . Module.check
 stage4 :: Debug -> Vector Stage3.Module -> IO (Vector Stage4.Module)
 stage4 _ = pure . Vector.imap Module.simplify
 
-stage5 :: Debug -> Vector Stage4.Module -> IO (Vector (FullQualifiers, [Javascript.Statement 'False]))
+stage5 :: Debug -> Vector Stage4.Module -> IO (Vector Stage5.Module)
 stage5 _ = pure . Module.generate
 
 message :: String -> Int -> Int -> FullQualifiers -> IO ()
@@ -381,7 +381,7 @@ main'' args = case getOpt order options args of
                 Text.IO.writeFile (target </> "index.mjs") index
                 pure target
               Pack -> pure $ target </> "artifact"
-            for_ (zip [1 ..] $ toList code) $ \(index, (name, statements)) -> do
+            for_ (zip [1 ..] $ toList code) $ \(index, Stage5.Module {name, statements}) -> do
               case verbose of
                 Loud -> message "Compiling" index total name
                 Quiet -> pure ()
@@ -395,7 +395,7 @@ main'' args = case getOpt order options args of
                 case verbose of
                   Loud -> putStrLn "Copying Headers Files"
                   Quiet -> pure ()
-                let copy (path, _) loaded = do
+                let copy Stage5.Module {name = path} loaded = do
                       let file = target </> "header" </> Mangle.pathSys path ++ ".hs"
                       createDirectoryIfMissing True (dropFileName file)
                       Text.IO.writeFile file (contents loaded)
@@ -403,7 +403,8 @@ main'' args = case getOpt order options args of
                 case verbose of
                   Loud -> putStrLn "Writing Package Meta"
                   Quiet -> pure ()
-                let format (path, _) = pack "\n" <> Mangle.pathJS path <> pack ".hs"
+                let format Stage5.Module {name = path} =
+                      pack "\n" <> Mangle.pathJS path <> pack ".hs"
                     files = foldMap format code
                     extensions = intercalate (pack ",") language
                     meta = extensions <> pack ";" <> files

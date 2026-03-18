@@ -15,7 +15,7 @@ import qualified Stage2.Index.Type as Type (Index (..))
 import qualified Stage2.Index.Type2 as Type2
 import qualified Stage2.Scope as Scope
 import Stage4.Tree.Declarations (Declarations (..))
-import Stage4.Tree.Module (Module (..))
+import qualified Stage4.Tree.Module as Stage4 (Module (..))
 import Stage4.Tree.TermDeclaration (TermDeclaration (Definition))
 import qualified Stage4.Tree.TermDeclaration as Term
 import qualified Stage4.Tree.TypeDeclaration as Type (LazyTypeDeclaration (..))
@@ -30,22 +30,27 @@ import qualified Stage5.Generate.Precontext as Precontext
 import qualified Stage5.Tree.Expression as Expression
 import qualified Stage5.Tree.Instance as Instance
 
-generate :: Vector Module -> Vector (FullQualifiers, [Javascript.Statement 'False])
+data Module = Module
+  { name :: !FullQualifiers,
+    statements :: [Javascript.Statement 'False]
+  }
+
+generate :: Vector Stage4.Module -> Vector Module
 generate modules = Vector.imap go modules
   where
     pre = precontext modules
-    go index Module {name, declarations} =
+    go index Stage4.Module {name, declarations} =
       let statements = runST (generate' pre name index declarations)
-       in (name, statements)
+       in Module {name, statements}
 
-precontext :: Vector Module -> Precontext
+precontext :: Vector Stage4.Module -> Precontext
 precontext modules =
   Precontext
     { terms = names <$> modules,
       types = instanceNames <$> modules
     }
   where
-    names Module {name = path, declarations = Declarations {terms}} = generate <$> terms
+    names Stage4.Module {name = path, declarations = Declarations {terms}} = generate <$> terms
       where
         generate (name Term.:^ _) =
           Global
@@ -53,7 +58,7 @@ precontext modules =
               name = Mangle.mangle name
             }
     instanceNames
-      Module
+      Stage4.Module
         { name = path,
           declarations = Declarations {types, classInstances, dataInstances}
         } = Vector.zipWith3 generate types classInstances dataInstances
@@ -74,7 +79,7 @@ precontext modules =
               target :: Type.Index Scope.Global -> FullyQualifiedConstructorIdentifier
               target (Type.Global global local) = targetPath :.=. targetName
                 where
-                  Module
+                  Stage4.Module
                     { name = targetPath,
                       declarations = Declarations {types}
                     } = modules Vector.! global
