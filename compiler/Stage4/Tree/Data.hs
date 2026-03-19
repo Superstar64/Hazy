@@ -1,6 +1,7 @@
 module Stage4.Tree.Data where
 
 import qualified Data.Vector.Strict as Strict
+import Stage1.Tree.Brand (Brand)
 import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
@@ -14,7 +15,8 @@ import qualified Stage4.Tree.Type as Type
 data Data scope = Data
   { parameters :: !(Strict.Vector (Type scope)),
     constructors :: !(Strict.Vector (Constructor (Local ':+ scope))),
-    selectors :: !(Strict.Vector Selector)
+    selectors :: !(Strict.Vector Selector),
+    brand :: !Brand
   }
   deriving (Show)
 
@@ -28,11 +30,12 @@ instance Shift2.Functor Data where
   map = Substitute.mapDefault
 
 instance Substitute.Functor Data where
-  map category Data {parameters, constructors, selectors} =
+  map category Data {parameters, constructors, selectors, brand} =
     Data
       { parameters = Substitute.map category <$> parameters,
         constructors = Substitute.map (Substitute.Over category) <$> constructors,
-        selectors
+        selectors,
+        brand
       }
 
 kind :: Data scope -> Type scope

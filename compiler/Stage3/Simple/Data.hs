@@ -9,11 +9,11 @@ import {-# SOURCE #-} qualified Stage3.Unify as Unify
 import Stage4.Tree.Data (Data (..))
 
 instanciate :: Data scope -> ST s (DataInstance s scope)
-instanciate Data {parameters, constructors, selectors} = do
+instanciate Data {parameters, constructors, selectors, brand} = do
   types <- traverse (Unify.fresh . Type.lift) parameters
   pure
     DataInstance
       { types,
-        constructors = Constructor.instanciate types <$> constructors,
+        constructors = Constructor.instanciate brand types <$> constructors,
         selectors
       }

@@ -1,19 +1,21 @@
 module Stage3.Check.ConstructorInstance where
 
 import qualified Data.Vector.Strict as Strict
+import Stage1.Tree.Brand (Brand)
+import qualified Stage1.Tree.Brand as Brand
 import Stage3.Check.EntryInstance (EntryInstance, entry)
 import Stage3.Tree.ConstructorInfo (ConstructorInfo (..))
 import {-# SOURCE #-} qualified Stage3.Unify as Unify
 
-newtype ConstructorInstance s scope = ConstructorInstance
-  { entries :: Strict.Vector (EntryInstance s scope)
+data ConstructorInstance s scope = ConstructorInstance
+  { entries :: !(Strict.Vector (EntryInstance s scope)),
+    brand :: !Brand
   }
 
 info :: ConstructorInstance s scope -> ConstructorInfo
-info ConstructorInstance {entries} =
-  ConstructorInfo
-    { parameterCount = length entries
-    }
+info ConstructorInstance {entries, brand} = case brand of
+  Brand.Newtype -> Newtype
+  Brand.Boxed -> ConstructorInfo {parameterCount_ = length entries}
 
 types :: ConstructorInstance s scope -> Strict.Vector (Unify.Type s scope)
 types ConstructorInstance {entries} = entry <$> entries

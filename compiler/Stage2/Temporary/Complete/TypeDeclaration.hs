@@ -9,8 +9,9 @@ import qualified Data.Set as Set
 import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
-import Error (duplicateTypeEntries, missingTypeDeclaration)
+import Error (duplicateTypeEntries, invalidNewtype, missingTypeDeclaration)
 import Stage1.Position (Position)
+import qualified Stage1.Tree.Brand as Brand
 import Stage1.Variable (ConstructorIdentifier)
 import qualified Stage1.Variable as Variable
 import qualified Stage2.Index.Type as Type (Index (..))
@@ -35,6 +36,9 @@ import qualified Stage2.Temporary.Partial.More.GADT as More.GADT
 import qualified Stage2.Temporary.Partial.More.Synonym as More (Synonym (Synonym))
 import qualified Stage2.Temporary.Partial.More.Synonym as More.Synonym
 import qualified Stage2.Temporary.Partial.TypeDeclaration as Partial
+import qualified Stage2.Tree.Constructor as Real.Constructor
+import qualified Stage2.Tree.Entry as Real.Entry
+import qualified Stage2.Tree.Field as Real.Field
 import qualified Stage2.Tree.TypeDeclaration as Real
 import Verbose (Debug (resolving))
 
@@ -81,16 +85,36 @@ merge entries@(entry :| _) =
               (Variable.print' name)
               $ if
                 | constructors <- fmap Constructor.shrink constructors,
-                  selectors <- fmap Selector.shrink selectors ->
-                    Real.ADT
-                      { position,
-                        name,
-                        brand,
-                        parameters,
-                        constructors,
-                        selectors,
-                        annotation
-                      }
+                  selectors <- fmap Selector.shrink selectors,
+                  let sane
+                        | Brand.Newtype <- brand =
+                            if length constructors == 1
+                              then case Strict.Vector.head constructors of
+                                Real.Constructor.Constructor {entries}
+                                  | length entries == 1,
+                                    Real.Entry.Entry {strict} <- Strict.Vector.head entries,
+                                    not strict ->
+                                      ()
+                                Real.Constructor.Record {fields}
+                                  | length fields == 1,
+                                    Real.Field.Field {entry} <- Strict.Vector.head fields,
+                                    Real.Entry.Entry {strict} <- entry,
+                                    not strict ->
+                                      ()
+                                _ -> invalidNewtype position
+                              else invalidNewtype position
+                        | otherwise = () ->
+                    seq
+                      sane
+                      Real.ADT
+                        { position,
+                          name,
+                          brand,
+                          parameters,
+                          constructors,
+                          selectors,
+                          annotation
+                        }
         | Just
             ( _,
               More.GADT

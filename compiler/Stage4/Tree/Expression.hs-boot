@@ -3,6 +3,7 @@
 module Stage4.Tree.Expression where
 
 import Data.Kind (Type)
+import qualified Stage2.Index.Constructor as Constructor
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift)
@@ -19,6 +20,8 @@ type role Expression nominal
 
 type Expression :: Environment -> Type
 data Expression scope
+
+data Direction = Construct | Destruct
 
 instance Shift Expression
 
@@ -38,6 +41,7 @@ patternVariable :: Expression (Scope.Pattern ':+ scopes)
 patternVariableAt :: Int -> Expression (Scope.SimplePattern ':+ scope)
 character_ :: Char -> Expression scope
 join_ :: Statements scope -> Expression scope
+newtype_ :: Constructor.Index scope -> Expression scope -> Direction -> Expression scope
 eq :: Evidence scope -> Expression scope -> Expression scope -> Expression scope
 eqChar :: Expression scope -> Expression scope -> Expression scope
 integer_ :: Integer -> Evidence scope -> Expression scope

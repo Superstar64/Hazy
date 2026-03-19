@@ -16,7 +16,8 @@ import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Index.Evidence as Index.Evidence
-import Stage3.Tree.ConstructorInfo (ConstructorInfo (..))
+import Stage3.Tree.ConstructorInfo (ConstructorInfo (ConstructorInfo))
+import qualified Stage3.Tree.ConstructorInfo as ConstructorInfo
 import qualified Stage3.Tree.Definition as Stage3 (Definition)
 import qualified Stage3.Tree.Do as Stage3 (Do)
 import qualified Stage3.Tree.Do as Stage3.Do
@@ -92,6 +93,14 @@ data Expression scope
   | Hook
       { hook :: !(Hook scope)
       }
+  | Newtype
+      { constructor :: !(Constructor.Index scope),
+        argument :: !(Expression scope),
+        direction :: !Direction
+      }
+  deriving (Show)
+
+data Direction = Construct | Destruct
   deriving (Show)
 
 instance Scope.Show Expression where
@@ -160,6 +169,12 @@ instance Substitute.Functor Expression where
       Hook
         { hook = Substitute.map category hook
         }
+    Newtype {constructor, argument, direction} ->
+      Newtype
+        { constructor = Substitute.map category constructor,
+          argument = Substitute.map category argument,
+          direction
+        }
 
 monoVariable :: Term.Index scope -> Expression scope
 monoVariable variable =
@@ -182,6 +197,9 @@ character_ character = Character {character}
 
 join_ :: Statements scope -> Expression scope
 join_ statements = Join {statements}
+
+newtype_ :: Constructor.Index scope -> Expression scope -> Direction -> Expression scope
+newtype_ constructor argument direction = Newtype {constructor, argument, direction}
 
 eqChar :: Expression scope -> Expression scope -> Expression scope
 eqChar =
@@ -324,8 +342,8 @@ simplifyConstructor ::
   Int ->
   List (Expression scope) ->
   Expression scope
-simplifyConstructor constructor info@ConstructorInfo {parameterCount} argumentCount arguments
-  | parameterCount > argumentCount =
+simplifyConstructor constructor info argumentCount arguments
+  | ConstructorInfo.parameterCount info > argumentCount =
       Lambda
         { body =
             simplifyConstructor
@@ -334,12 +352,26 @@ simplifyConstructor constructor info@ConstructorInfo {parameterCount} argumentCo
               (argumentCount + 1)
               (fmap shift arguments :> lambdaVariable)
         }
-  | parameterCount == argumentCount =
-      Constructor
-        { constructor,
-          arguments = Strict.Vector.fromListN argumentCount (toList arguments)
-        }
-  | otherwise = error "bad argument count"
+simplifyConstructor constructor info argumentCount arguments
+  | arguments <- Strict.Vector.fromListN argumentCount (toList arguments) =
+      simplifyConstructorExact constructor info arguments
+
+simplifyConstructorExact ::
+  Constructor.Index scope ->
+  ConstructorInfo ->
+  Strict.Vector (Expression scope) ->
+  Expression scope
+simplifyConstructorExact constructor ConstructorInfo {} arguments =
+  Constructor
+    { constructor,
+      arguments
+    }
+simplifyConstructorExact constructor ConstructorInfo.Newtype arguments =
+  Newtype
+    { constructor,
+      argument = Strict.Vector.head arguments,
+      direction = Construct
+    }
 
 simplifySelector ::
   Selector.Index scope ->
@@ -349,7 +381,7 @@ simplifySelector ::
 simplifySelector selector Uniform {} argument = Selector {selector, argument}
 simplifySelector (Selector.Index typeIndex _) Disjoint {select} argument = Join {statements = mconcat statements}
   where
-    generate index Select {selectIndex, constructorInfo = ConstructorInfo {parameterCount}} =
+    generate index Select {selectIndex, constructorInfo} =
       Statements.bind match argument get
       where
         match =
@@ -358,7 +390,11 @@ simplifySelector (Selector.Index typeIndex _) Disjoint {select} argument = Join 
               match =
                 Pattern.Constructor
                   { constructor = Constructor.Index typeIndex index,
-                    patterns = Strict.Vector.replicate parameterCount Pattern.Wildcard
+                    patterns =
+                      Strict.Vector.replicate
+                        (ConstructorInfo.parameterCount constructorInfo)
+                        Pattern.Wildcard,
+                    constructorInfo
                   }
             }
         get =
@@ -399,21 +435,21 @@ simplifyWith expression [] = case expression of
         instanciation,
         methodInfo
       }
-  Stage3.Record {constructor, constructorInfo = ConstructorInfo {parameterCount}, fields} ->
-    Constructor
-      { constructor,
-        arguments = Strict.Vector.generate parameterCount $ \index' ->
-          case [ expression
-               | Stage3.Field
-                   { index,
-                     expression
-                   } <-
-                   toList fields,
-                 index == index'
-               ] of
-            [] -> Join {statements = Statements.Bottom}
-            fields -> simplify $ last fields
-      }
+  Stage3.Record {constructor, constructorInfo, fields} ->
+    simplifyConstructorExact constructor constructorInfo arguments
+    where
+      parameterCount = ConstructorInfo.parameterCount constructorInfo
+      arguments = Strict.Vector.generate parameterCount $ \index' ->
+        case [ expression
+             | Stage3.Field
+                 { index,
+                   expression
+                 } <-
+                 toList fields,
+               index == index'
+             ] of
+          [] -> Join {statements = Statements.Bottom}
+          fields -> simplify $ last fields
   Stage3.Integer {integer, evidence} -> integer_ integer evidence
   Stage3.Tuple {elements} ->
     Constructor
@@ -434,7 +470,8 @@ simplifyWith expression [] = case expression of
               { match =
                   Pattern.Constructor
                     { constructor = Constructor.true,
-                      patterns = Strict.Vector.empty
+                      patterns = Strict.Vector.empty,
+                      constructorInfo = ConstructorInfo {parameterCount_ = 0}
                     },
                 irrefutable = False
               }

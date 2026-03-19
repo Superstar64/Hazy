@@ -94,6 +94,11 @@ instance Functor Index where
     Pattern (Select index At) -> SimplePattern index
     Pattern _ -> error "bad finish pattern"
     Shift index -> Shift index
+  map FinishNewtype index = case index of
+    SimplePattern n
+      | n == 0 -> SimpleDeclaration
+      | otherwise -> error "bad finish newtype"
+    Shift index -> Shift index
   map (ReplaceIrrefutable target) index = case index of
     SimplePattern index
       | index == target -> Shift SimpleDeclaration

@@ -84,6 +84,7 @@ module Error
     mismatchedConstructorArguments,
     universeMustBeSmall,
     uncheckable,
+    invalidNewtype,
     unsupportedFeatureExpressionAnnotation,
     unsupportedFeatureRunST,
     unsupportedFeatureRightSection,
@@ -285,6 +286,7 @@ data Type
   | MismatchedConstructorArguments
   | UniverseMustBeSmall
   | Uncheckable
+  | InvalidNewtype
   | UnsupportedFeature
   deriving (Show, Eq, Enum, Bounded)
 
@@ -533,6 +535,9 @@ uncheckable position = errorAt Uncheckable position $ fromString "not typechecka
 mismatchedConstructorArguments :: Position -> a
 mismatchedConstructorArguments position =
   errorAt MismatchedConstructorArguments position $ fromString "mismatched number of constructor arguments"
+
+invalidNewtype :: Position -> a
+invalidNewtype position = errorAt InvalidNewtype position $ fromString "Invalid newtype definition"
 
 listComprehension = fromString "list comprehension"
 

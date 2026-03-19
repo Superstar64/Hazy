@@ -2,6 +2,7 @@ module Stage4.Tree.Builtin.Tuple where
 
 import Data.Foldable (Foldable (toList))
 import qualified Data.Vector.Strict as Strict.Vector
+import qualified Stage1.Tree.Brand as Brand
 import qualified Stage2.Index.Constructor as Constructor
 import qualified Stage2.Index.Local as Local
 import Stage4.Tree.Constructor (Constructor (..))
@@ -15,7 +16,8 @@ tuple n =
   Data
     { parameters = Strict.Vector.replicate n Type.smallType,
       constructors = Strict.Vector.fromList $ toList set,
-      selectors = Strict.Vector.empty
+      selectors = Strict.Vector.empty,
+      brand = Brand.Boxed
     }
   where
     set = map go [minBound .. maxBound]

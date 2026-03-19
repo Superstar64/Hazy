@@ -12,6 +12,7 @@ import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage3.Tree.ConstructorInfo (ConstructorInfo (..))
+import qualified Stage3.Tree.ConstructorInfo as ConstructorInfo
 import qualified Stage3.Tree.Statements as Stage3
 import qualified Stage4.Index.Term as Term
 import qualified Stage4.Shift as Shift2
@@ -98,7 +99,7 @@ bind Pattern.Wildcard check thenx =
       body = Shift2.map Shift2.ReplaceWildcard thenx
     }
 bind Pattern.Match {match, irrefutable} check thenx = case match of
-  Pattern.Constructor {constructor, patterns} -> go (length patterns - 1)
+  Pattern.Constructor {constructor, patterns, constructorInfo} -> go (length patterns - 1)
     where
       -- todo this is `O(n^2)`
       go -1
@@ -108,18 +109,19 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
         Pattern.Wildcard -> go (index - 1)
         target
           | patterns <- patterns // [(index, Pattern.Wildcard)],
-            match <- Pattern.Constructor {constructor, patterns},
+            match <- Pattern.Constructor {constructor, patterns, constructorInfo},
             patternx <- Pattern.Match {match, irrefutable},
             target <- shift target,
             check' <- Expression.monoVariable $ Term.Pattern $ Term.Select index Term.At,
             thenx <- Shift2.map (Shift2.SimplifyPattern index) thenx ->
               bind patternx check (bind target check' thenx)
-  Pattern.Record {constructor, fields, constructorInfo = constructorInfo@ConstructorInfo {parameterCount}} ->
+  Pattern.Record {constructor, fields, constructorInfo = constructorInfo} ->
     go (length fields - 1)
     where
       go -1
-        | patterns <- Strict.Vector.replicate parameterCount Pattern.Wildcard,
-          match <- Pattern.Constructor {constructor, patterns},
+        | parameterCount <- ConstructorInfo.parameterCount constructorInfo,
+          patterns <- Strict.Vector.replicate parameterCount Pattern.Wildcard,
+          match <- Pattern.Constructor {constructor, patterns, constructorInfo},
           patternx <- Pattern.Match {match, irrefutable},
           fields <- (\(Pattern.Field field _) -> field) <$> fields,
           thenx <- Shift2.map (Shift2.RenamePattern (fields Strict.Vector.!)) thenx =
@@ -143,14 +145,16 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
         Nothing ->
           Pattern.Constructor
             { constructor = Constructor.nil,
-              patterns = Strict.Vector.empty
+              patterns = Strict.Vector.empty,
+              constructorInfo = ConstructorInfo {parameterCount_ = 0}
             },
       tail <- Pattern.Match {match, irrefutable},
       patterns <- Strict.Vector.fromList [head, tail],
       match <-
         Pattern.Constructor
           { constructor = Constructor.cons,
-            patterns
+            patterns,
+            constructorInfo = ConstructorInfo {parameterCount_ = 2}
           },
       cons <- Pattern.Match {match, irrefutable} ->
         bind cons check (Shift2.map Shift2.SimplifyList thenx)
@@ -164,7 +168,8 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
         [] ->
           Pattern.Constructor
             { constructor = Constructor.nil,
-              patterns = Strict.Vector.empty
+              patterns = Strict.Vector.empty,
+              constructorInfo = ConstructorInfo {parameterCount_ = 0}
             },
       patternx <- Pattern.Match {match, irrefutable} ->
         bind patternx check thenx
@@ -235,13 +240,18 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
       Statements (Scope.Pattern ':+ scope) ->
       Statements scope
     finish Pattern.Match {match, irrefutable} check thenx
-      | Pattern.Constructor {constructor, patterns} <- match,
+      | Pattern.Constructor {constructor, patterns, constructorInfo} <- match,
         all wildcard patterns,
         patterns <- length patterns,
         thenx <- Shift2.map Shift2.FinishPattern thenx =
-          if irrefutable
-            then replace constructor patterns check thenx (patterns - 1)
-            else Bind {constructor, patterns, check, thenx}
+          if
+            | Newtype <- constructorInfo ->
+                LetOne
+                  { declaration = Expression.newtype_ constructor check Expression.Destruct,
+                    body = Shift2.map Shift2.FinishNewtype thenx
+                  }
+            | irrefutable -> replace constructor patterns check thenx (patterns - 1)
+            | otherwise -> Bind {constructor, patterns, check, thenx}
       where
         wildcard Pattern.Wildcard {} = True
         wildcard _ = False
@@ -253,7 +263,8 @@ true =
       { match =
           Pattern.Constructor
             { constructor = Constructor2.true,
-              patterns = Strict.Vector.empty
+              patterns = Strict.Vector.empty,
+              constructorInfo = ConstructorInfo {parameterCount_ = 0}
             },
         irrefutable = False
       }

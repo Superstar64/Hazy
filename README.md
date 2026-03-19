@@ -337,9 +337,6 @@ Named field pun syntax is supported.
 ## Bugs
 These are deviations that will are planned to get fixed at some point.
 
-### Newtypes are plain data
-Newtype declarations are treated as normal data declarations.
-
 ### No binding groups
 Hazy does not generalize bindings groups. Unannotated declarations that form a
 cycle are errors.

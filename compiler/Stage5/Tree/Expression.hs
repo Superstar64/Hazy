@@ -142,6 +142,7 @@ generateInto context target = \case
             }
       ]
   Hook {hook} -> Hook.generateInto context target hook
+  Newtype {argument} -> generateInto context target argument
   where
     done value =
       Javascript.Expression

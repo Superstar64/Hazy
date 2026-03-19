@@ -88,14 +88,15 @@ simplify (name Solved.:^ declaration) = name :^ simplify' declaration
 
 simplify' :: Solved.TypeDeclaration scope -> TypeDeclaration scope
 simplify' = \case
-  Solved.ADT {name, parameters, constructors, selectors} ->
+  Solved.ADT {name, parameters, constructors, selectors, brand} ->
     Data
       { name,
         datax =
           Data.Data
             { parameters,
               constructors = Constructor.simplify <$> constructors,
-              selectors
+              selectors,
+              brand
             }
       }
   Solved.Class {name, parameter, constraints, methods} ->

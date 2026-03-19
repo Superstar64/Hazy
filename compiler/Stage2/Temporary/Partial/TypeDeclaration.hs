@@ -12,6 +12,7 @@ import Error
   )
 import Order (orderList', orderNonEmpty', orderWith')
 import Stage1.Position (Position)
+import Stage1.Tree.Brand (Brand (Boxed))
 import qualified Stage1.Tree.ClassDeclarations as Stage1 (ClassDeclarations (..))
 import qualified Stage1.Tree.Data as Stage1 (Data (..))
 import qualified Stage1.Tree.Declaration as Stage1 (Declaration (..))
@@ -153,7 +154,11 @@ resolve context entry = case entry of
                               sane
                                 | all (== typex) [typex | Strict.Just typex <- toList types] = ()
                                 | otherwise = mismatchSelectorTypes position
-                              uniform = all (== Strict.Just index) indexes && all (== Strict.Just strict) stricts
+                              uniform
+                                | Boxed <- brand =
+                                    all (== Strict.Just index) indexes
+                                      && all (== Strict.Just strict) stricts
+                                | otherwise = False
                           let item =
                                 Complete.Selector
                                   { position,

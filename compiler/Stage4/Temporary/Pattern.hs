@@ -20,7 +20,8 @@ data Pattern scope
 data Bindings scope
   = Constructor
       { constructor :: !(Constructor.Index scope),
-        patterns :: !(Strict.Vector (Pattern scope))
+        patterns :: !(Strict.Vector (Pattern scope)),
+        constructorInfo :: !ConstructorInfo
       }
   | Record
       { constructor :: !(Constructor.Index scope),
@@ -60,10 +61,11 @@ instance Shift.Functor Bindings where
 
 instance Shift2.Functor Bindings where
   map category = \case
-    Constructor {constructor, patterns} ->
+    Constructor {constructor, patterns, constructorInfo} ->
       Constructor
         { constructor = Shift2.map category constructor,
-          patterns = Shift2.map category <$> patterns
+          patterns = Shift2.map category <$> patterns,
+          constructorInfo
         }
     Record {constructor, fields, constructorInfo} ->
       Record
@@ -107,10 +109,11 @@ simplify (Stage3.At match) = case match of
 
 simplifyBindings :: Stage3.Bindings scope -> Bindings scope
 simplifyBindings = \case
-  Stage3.Constructor {constructor, patterns} ->
+  Stage3.Constructor {constructor, patterns, constructorInfo} ->
     Constructor
       { constructor,
-        patterns = simplify <$> patterns
+        patterns = simplify <$> patterns,
+        constructorInfo
       }
   Stage3.Record {constructor, fields, constructorInfo} ->
     Record

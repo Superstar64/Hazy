@@ -1,6 +1,7 @@
 module Stage4.Tree.Builtin.Bool where
 
 import qualified Data.Vector.Strict as Strict.Vector
+import qualified Stage1.Tree.Brand as Brand
 import qualified Stage2.Index.Constructor as Constructor
 import Stage4.Tree.Constructor (Constructor (..))
 import Stage4.Tree.Data (Data (Data))
@@ -11,7 +12,8 @@ bool =
   Data
     { parameters = Strict.Vector.empty,
       constructors = Strict.Vector.fromList set,
-      selectors = Strict.Vector.empty
+      selectors = Strict.Vector.empty,
+      brand = Brand.Boxed
     }
   where
     set = map go [minBound .. maxBound]
