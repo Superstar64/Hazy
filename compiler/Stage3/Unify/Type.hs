@@ -46,6 +46,7 @@ import qualified Stage3.Unify.Class as Class
 import {-# SOURCE #-} Stage3.Unify.Error (Error (..), abort)
 import Stage3.Unify.Evidence (Evidence)
 import qualified Stage3.Unify.Evidence as Evidence (Box (..), Evidence (..), unify, unshift)
+import Stage3.Unify.Instanciation (Instanciation (..))
 import {-# SOURCE #-} qualified Stage4.Tree.Builtin as Builtin (index, kind)
 import qualified Stage4.Tree.Constraint as Simple (argument)
 import qualified Stage4.Tree.Constraint as Simple.Constraint
@@ -483,9 +484,7 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
         quit = abort position (Constrain context_ classx_ term_ arguments_)
 
     proof :: forall scope s. Evidence.Index scope -> Strict.Vector (Evidence s scope) -> Evidence s scope
-    proof variable arguments
-      | null arguments = Evidence.Variable variable
-      | otherwise = Evidence.Call (Evidence.Variable variable) arguments
+    proof variable arguments = Evidence.Variable variable (Instanciation arguments)
 
 reconstrain :: Context s scope -> Position -> Map (Type2.Index scope) (Delay s scope) -> Type s scope -> ST s ()
 reconstrain context position constraints term =

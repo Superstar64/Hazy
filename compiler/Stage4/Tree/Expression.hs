@@ -46,6 +46,7 @@ import Stage4.Tree.Evidence (Evidence)
 import qualified Stage4.Tree.Evidence as Evidence
 import Stage4.Tree.Hook (Hook)
 import Stage4.Tree.Instanciation (Instanciation (..))
+import qualified Stage4.Tree.Instanciation as Instanciation
 import Stage4.Tree.MethodInfo (MethodInfo)
 import Stage4.Tree.Statements (Statements)
 import qualified Stage4.Tree.Statements as Statements
@@ -205,7 +206,8 @@ eqChar :: Expression scope -> Expression scope -> Expression scope
 eqChar =
   eq
     Evidence.Variable
-      { variable = Index.Evidence.Builtin Index.Evidence.EqChar
+      { variable = Index.Evidence.Builtin Index.Evidence.EqChar,
+        instanciation = Instanciation.empty
       }
 
 eq :: Evidence scope -> Expression scope -> Expression scope -> Expression scope

@@ -9,10 +9,11 @@ import qualified Stage3.Index.Evidence0 as Evidence0
 import Stage4.Tree.Class (Class (Class))
 import qualified Stage4.Tree.Class as Class
 import Stage4.Tree.ClassExtra (ClassExtra (..))
-import Stage4.Tree.Evidence (Evidence (Variable, variable))
+import Stage4.Tree.Evidence (Evidence (Variable, instanciation, variable))
 import Stage4.Tree.Expression (Expression (Hook, hook))
 import Stage4.Tree.Hook (Hook (DefaultEnum))
 import qualified Stage4.Tree.Hook
+import qualified Stage4.Tree.Instanciation as Instanciation
 import qualified Stage4.Tree.Scheme as Scheme
 import qualified Stage4.Tree.Type as Type (Type (..), smallType)
 
@@ -50,6 +51,7 @@ enumExtra =
     set = map go [minBound .. maxBound]
       where
         go enum =
-          Hook {hook = DefaultEnum {enum, evidence = Variable {variable}}}
+          Hook {hook = DefaultEnum {enum, evidence = Variable {variable, instanciation}}}
           where
             variable = Evidence.Index $ Evidence0.Shift $ Evidence0.Assumed 0
+            instanciation = Instanciation.empty

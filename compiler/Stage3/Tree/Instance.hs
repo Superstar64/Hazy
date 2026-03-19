@@ -37,6 +37,8 @@ import qualified Stage4.Tree.Constraint as Simple.Constraint
 import qualified Stage4.Tree.Evidence as Simple (Evidence)
 import qualified Stage4.Tree.Evidence as Simple.Evidence
 import {-# SOURCE #-} qualified Stage4.Tree.Expression as Simple.Expression
+import qualified Stage4.Tree.Instanciation as Simple (Instanciation (Instanciation))
+import qualified Stage4.Tree.Instanciation as Simple.Instanciation
 import qualified Stage4.Tree.Scheme as Simple (Scheme (..))
 import qualified Stage4.Tree.SchemeOver as Simple (SchemeOver (..))
 import qualified Stage4.Tree.Type as Simple.Type (Type (..))
@@ -101,20 +103,17 @@ check
             base = foldl Simple.Type.Call (shift $ Simple.Type.Constructor head) variables
               where
                 variables = [Simple.Type.Variable $ Local.Local i | i <- [0 .. length parameters - 1]]
-            self
-              | null prerequisites = root
-              | otherwise = Simple.Evidence.Call {function, arguments}
+            self = Simple.Evidence.Variable {variable = shift variable, instanciation}
               where
-                root@function = shift Simple.Evidence.Variable {variable}
-                  where
-                    variable = case key of
-                      Data {index1, head1} -> Evidence.Data index1 head1
-                      Class {index2, head2} -> Evidence.Class index2 head2
-                arguments = Strict.Vector.fromList $ do
+                variable = case key of
+                  Data {index1, head1} -> Evidence.Data index1 head1
+                  Class {index2, head2} -> Evidence.Class index2 head2
+                instanciation = Simple.Instanciation $ Strict.Vector.fromList $ do
                   i <- [0 .. length prerequisites - 1]
                   pure
                     Simple.Evidence.Variable
-                      { variable = Evidence.Index (Evidence0.Assumed i)
+                      { variable = Evidence.Index (Evidence0.Assumed i),
+                        instanciation = Simple.Instanciation.empty
                       }
         context <- Scheme.augment startPosition parameters prerequisites context
         {-

@@ -5,6 +5,7 @@ import qualified Stage2.Index.Type2 as Type2
 import qualified Stage3.Index.Evidence as Evidence (Builtin (..), Index (..))
 import Stage3.Unify.Evidence (Evidence)
 import qualified Stage3.Unify.Evidence as Evidence (Evidence (..))
+import Stage3.Unify.Instanciation (Instanciation (..))
 
 constrain ::
   (Monad m) =>
@@ -47,5 +48,4 @@ constrain fallthough _ = table
     table _ _ _ = fallthough
 
     single builtin = call builtin []
-    call builtin [] = Evidence.Variable $ Evidence.Builtin builtin
-    call builtin list = Evidence.Call (Evidence.Variable $ Evidence.Builtin builtin) $ fromList list
+    call builtin list = Evidence.Variable (Evidence.Builtin builtin) $ Instanciation $ fromList list

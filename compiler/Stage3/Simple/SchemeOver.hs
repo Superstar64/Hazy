@@ -38,6 +38,7 @@ import {-# SOURCE #-} qualified Stage4.Tree.Builtin as Builtin
 import {-# SOURCE #-} qualified Stage4.Tree.Class as Class (Class (..))
 import Stage4.Tree.Constraint (Constraint (..))
 import qualified Stage4.Tree.Evidence as Evidence (Evidence (..))
+import qualified Stage4.Tree.Instanciation as Instanciation (empty)
 import Stage4.Tree.SchemeOver (SchemeOver (..))
 import Stage4.Tree.Type (Type)
 import {-# SOURCE #-} Stage4.Tree.TypeDeclaration (assumeClass)
@@ -79,7 +80,7 @@ augmentNamed name position parameters constraints Context {termEnvironment, loca
                     }
             pure $ (shift classx, root) : concat children
           collect index Constraint {classx, head, arguments} = do
-            let evidence = Evidence.Variable {variable = Evidence.assumed index}
+            let evidence = Evidence.Variable {variable = Evidence.assumed index, instanciation = Instanciation.empty}
             entail <- entailed classx arguments evidence
             pure (head, entail)
       collected <- zipWithM collect [0 ..] $ toList constraints

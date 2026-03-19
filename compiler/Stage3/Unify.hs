@@ -32,8 +32,8 @@ module Stage3.Unify
     constraint,
     function,
     variable',
-    call',
     super,
+    instanciation,
     fresh,
     unify,
     constrain,
@@ -223,14 +223,14 @@ mono result =
 monoScheme :: Type s scope -> Scheme s scope
 monoScheme = Scheme . mono
 
-variable' :: Evidence.Index scope -> Evidence s scope
+variable' :: Evidence.Index scope -> Instanciation s scope -> Evidence s scope
 variable' = Evidence.Variable
-
-call' :: Evidence s scope -> Strict.Vector (Evidence s scope) -> Evidence s scope
-call' = Evidence.Call
 
 super :: Evidence s scope -> Int -> Evidence s scope
 super = Evidence.Super
+
+instanciation :: Strict.Vector (Evidence s scope) -> Instanciation s scope
+instanciation = Instanciation
 
 instanciate :: Context s scope -> Position -> Scheme s scope -> ST s (Type s scope, Instanciation s scope)
 instanciate context position Scheme {runScheme} =

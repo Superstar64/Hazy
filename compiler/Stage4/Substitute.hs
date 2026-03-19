@@ -18,6 +18,9 @@ import Prelude hiding (Functor, map)
 data Category scope1 scope2 where
   Lift :: Shift2.Category scope1 scope2 -> Category scope1 scope2
   Over :: Category scopes scopes' -> Category (scope1 ':+ scopes) (scope1 ':+ scopes')
+  -- |
+  -- Replace rigid evidence with new evidence. Note that rigid evidence cannot
+  -- have an instanciation because quantified constraints are not supported.
   Substitute ::
     Shift.Category scope scope' ->
     Vector (Type scope') ->

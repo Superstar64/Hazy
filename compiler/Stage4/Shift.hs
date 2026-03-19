@@ -10,6 +10,7 @@ import qualified Stage2.Index.Type2 as Type2
 import Stage2.Scope (Environment (..), Pattern, SimpleDeclaration, SimplePattern)
 import qualified Stage2.Shift as Stage2
 import qualified Stage3.Index.Evidence as Evidence
+import qualified Stage3.Index.Evidence0 as Evidence0
 import Prelude hiding (Functor, map)
 
 data Category scope scope' where
@@ -61,6 +62,9 @@ instance Functor Selector.Index where
   map = Stage2.map . general
 
 instance Functor Method.Index where
+  map = Stage2.map . general
+
+instance Functor Evidence0.Index where
   map = Stage2.map . general
 
 instance Functor Evidence.Index where
