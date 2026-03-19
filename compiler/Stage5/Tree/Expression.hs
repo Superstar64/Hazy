@@ -23,15 +23,40 @@ import qualified Stage5.Tree.Evidence as Evidence
 import qualified Stage5.Tree.Hook as Hook
 import qualified Stage5.Tree.Statements as Statements
 
-generate ::
-  Context s scope ->
-  Expression scope ->
-  ST s ([Javascript.Statement 'True], Javascript.Expression)
-generate context expression = do
-  name <- fresh context
-  let letx = Javascript.Let name
-  body <- generateInto context Javascript.Variable {name} expression
-  pure (letx : body, Javascript.Variable {name})
+delay :: [Javascript.Statement 'True] -> Javascript.Expression
+delay body =
+  let flag =
+        Javascript.Expression
+          Javascript.Assign
+            { target =
+                Javascript.Member
+                  { object = Javascript.This,
+                    field = Mangle.lazy
+                  },
+              value =
+                Javascript.Number
+                  { number = 0
+                  }
+            }
+      return =
+        Javascript.Return
+          Javascript.Member
+            { object = Javascript.This,
+              field = Mangle.value
+            }
+      fields =
+        [ ( Mangle.lazy,
+            Javascript.Literal
+              { literal = Javascript.Number {number = 1}
+              }
+          ),
+          ( Mangle.value,
+            Javascript.Method
+              { definition = mconcat [body, [flag], [return]]
+              }
+          )
+        ]
+   in Javascript.Object {fields}
 
 force :: Javascript.Expression -> Javascript.Expression
 force object =
@@ -60,6 +85,16 @@ evaluate :: Javascript.Expression -> [Javascript.Expression] -> Javascript.Expre
 evaluate thunk [] = force thunk
 evaluate function arguments =
   Javascript.Call {function, arguments}
+
+generate ::
+  Context s scope ->
+  Expression scope ->
+  ST s ([Javascript.Statement 'True], Javascript.Expression)
+generate context expression = do
+  name <- fresh context
+  let letx = Javascript.Let name
+  body <- generateInto context Javascript.Variable {name} expression
+  pure (letx : body, Javascript.Variable {name})
 
 generateInto ::
   Context s scope ->
@@ -170,38 +205,7 @@ thunk context _ value = do
             field = Mangle.value
           }
   body <- generateInto context member value
-  let flag =
-        Javascript.Expression
-          Javascript.Assign
-            { target =
-                Javascript.Member
-                  { object = Javascript.This,
-                    field = Mangle.lazy
-                  },
-              value =
-                Javascript.Number
-                  { number = 0
-                  }
-            }
-      return =
-        Javascript.Return
-          Javascript.Member
-            { object = Javascript.This,
-              field = Mangle.value
-            }
-      fields =
-        [ ( Mangle.lazy,
-            Javascript.Literal
-              { literal = Javascript.Number {number = 1}
-              }
-          ),
-          ( Mangle.value,
-            Javascript.Method
-              { definition = mconcat [body, [flag], [return]]
-              }
-          )
-        ]
-  pure Javascript.Object {fields}
+  pure (delay body)
 
 declaration :: Context s scope -> SchemeOver Expression scope -> ST s Javascript.Expression
 declaration context scheme@SchemeOver {result = expression} = do

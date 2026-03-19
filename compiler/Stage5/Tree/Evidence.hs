@@ -14,10 +14,16 @@ import Stage5.Generate.Context (Context, (!=.))
 import qualified Stage5.Generate.Context as Context
 import qualified Stage5.Generate.Mangle as Magnle
 import qualified Stage5.Generate.Mangle as Mangle
+import {-# SOURCE #-} Stage5.Tree.Expression (force)
 
 generate :: Context s scope -> Evidence scope -> ST s Javascript.Expression
 generate context = \case
   Variable {variable, instanciation = Instanciation arguments} -> do
+    let strict = case variable of
+          Evidence.Index {} -> True
+          Evidence.Class {} -> False
+          Evidence.Data {} -> False
+          Evidence.Builtin {} -> True
     literal@function <- case variable of
       Evidence.Class index target
         | Type.Binding {classInstances} <- context !=. index,
@@ -69,7 +75,10 @@ generate context = \case
             Evidence.MonadFailList -> monadFailList
     if null arguments
       then
-        pure literal
+        pure $
+          if strict
+            then literal
+            else force literal
       else do
         arguments <- traverse (generate context) (toList arguments)
         pure $

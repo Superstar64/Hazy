@@ -20,16 +20,7 @@ generate context Instance {evidence, prerequisitesCount, members} = do
   fresh <- Vector.replicateM prerequisitesCount (Context.fresh context)
   context <- pure $ Context.evidenceBindings fresh context
   evidence <- traverse (Evidence.generate context) (toList evidence)
-  {-
-  While super class methods could be plain values, the declaration order
-  matters in Javascript if they are generated as that. Instead their are
-  generated with a getter to avoid that.
-
-  At some point in the future, values could be generated when it's known that
-  the declaration order is safe.
-  -}
-  let return expression = [Javascript.Return expression]
-      supers = Javascript.Getter <$> map return evidence
+  let supers = Javascript.Literal <$> evidence
   members <- for (toList members) $ \method ->
     Expression.declaration context (definition method)
   let fields = Javascript.Literal <$> members
@@ -37,11 +28,12 @@ generate context Instance {evidence, prerequisitesCount, members} = do
         Javascript.Object
           { fields = zip Mangle.fields (supers ++ fields)
           }
+      body = [Javascript.Return object]
   if
-    | 0 <- prerequisitesCount -> pure object
+    | 0 <- prerequisitesCount -> pure $ Expression.delay body
     | otherwise ->
         pure
           Javascript.Arrow
             { parameters = toList fresh,
-              body = [Javascript.Return object]
+              body
             }

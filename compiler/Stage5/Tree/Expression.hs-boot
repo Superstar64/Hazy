@@ -21,5 +21,6 @@ data Binder
   = Done
   | Group
 
+force :: Javascript.Expression -> Javascript.Expression
 thunk :: Context s scope -> Binder -> Expression scope -> ST s Javascript.Expression
 declaration :: Context s scope -> SchemeOver Expression scope -> ST s Javascript.Expression
