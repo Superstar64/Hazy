@@ -58,6 +58,13 @@ delay body =
         ]
    in Javascript.Object {fields}
 
+done :: Javascript.Expression
+done =
+  Javascript.Member
+    { object = Javascript.This,
+      field = Mangle.value
+    }
+
 force :: Javascript.Expression -> Javascript.Expression
 force object =
   let base =
@@ -199,12 +206,7 @@ thunk context Done Variable {variable, instanciation = Instanciation instanciati
       name <- symbol context (context !- variable)
       pure Javascript.Variable {name}
 thunk context _ value = do
-  let member =
-        Javascript.Member
-          { object = Javascript.This,
-            field = Mangle.value
-          }
-  body <- generateInto context member value
+  body <- generateInto context done value
   pure (delay body)
 
 declaration :: Context s scope -> SchemeOver Expression scope -> ST s Javascript.Expression

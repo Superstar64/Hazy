@@ -28,12 +28,19 @@ generate context Instance {evidence, prerequisitesCount, members} = do
         Javascript.Object
           { fields = zip Mangle.fields (supers ++ fields)
           }
-      body = [Javascript.Return object]
   if
-    | 0 <- prerequisitesCount -> pure $ Expression.delay body
+    | 0 <- prerequisitesCount ->
+        pure $
+          Expression.delay
+            [ Javascript.Expression $
+                Javascript.Assign
+                  { target = Expression.done,
+                    value = object
+                  }
+            ]
     | otherwise ->
         pure
           Javascript.Arrow
             { parameters = toList fresh,
-              body
+              body = [Javascript.Return object]
             }
