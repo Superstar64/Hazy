@@ -97,15 +97,15 @@ export const numInteger = {
   d: { a: 0, b: (x) => -force(x) },
   e: {
     a: 0,
-    b: (x) => {
-      x = force(x);
+    b: (x_) => {
+      const x = force(x_);
       return x >= 0n ? x : -x;
     },
   },
   f: {
     a: 0,
-    b: (x) => {
-      x = force(x);
+    b: (x_) => {
+      const x = force(x_);
       return x === 0n ? 0n : x > 0n ? 1n : -1n;
     },
   },
@@ -129,8 +129,8 @@ export const enumInteger = {
   c: { a: 0, b: (x) => BigInt(force(x)) },
   d: {
     a: 0,
-    b: (x) => {
-      x = force(x);
+    b: (x_) => {
+      const x = force(x_);
       if (x > force(boundedIntMaxBound) || x < force(boundedIntMinBound)) {
         throw new Error("Enum Integer Overflow");
       }
