@@ -24,6 +24,7 @@ data Builtin
   | EnumInt
   | EqBool
   | EqChar
+  | EqTuple !Int
   | EqInteger
   | EqInt
   | FunctorList

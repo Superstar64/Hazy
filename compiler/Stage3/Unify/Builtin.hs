@@ -15,7 +15,7 @@ constrain ::
   Type2.Index scope ->
   [t] ->
   m (Evidence s scope)
-constrain fallthough _ = table
+constrain fallthough constrain = table
   where
     table Type2.Num Type2.Integer [] =
       pure $ single Evidence.NumInteger
@@ -33,6 +33,10 @@ constrain fallthough _ = table
       pure $ single Evidence.EqBool
     table Type2.Eq Type2.Char [] =
       pure $ single Evidence.EqChar
+    table Type2.Eq (Type2.Tuple n) types
+      | n == length types = do
+          types <- traverse (constrain Type2.Eq) types
+          pure $ call (Evidence.EqTuple n) types
     table Type2.Eq Type2.Integer [] =
       pure $ single Evidence.EqInteger
     table Type2.Eq Type2.Int [] =

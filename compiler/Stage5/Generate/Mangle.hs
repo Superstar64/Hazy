@@ -111,6 +111,8 @@ lazy = pack "a"
 
 value = pack "b"
 
+local = pack "a"
+
 pathSys :: FullQualifiers -> FilePath
 pathSys = foldr1 (</>) . fmap unpack . path'
 
@@ -142,6 +144,7 @@ data Builtin a = Builtin
     enumInteger,
     eqBool,
     eqChar,
+    eqTuple,
     eqInt,
     eqInteger,
     functorList,
@@ -194,6 +197,7 @@ instance Applicative Builtin where
         enumInteger = a,
         eqBool = a,
         eqChar = a,
+        eqTuple = a,
         eqInt = a,
         eqInteger = a,
         functorList = a,
@@ -240,6 +244,7 @@ instance Applicative Builtin where
         enumInteger = enumInteger function (enumInteger argument),
         eqBool = eqBool function (eqBool argument),
         eqChar = eqChar function (eqChar argument),
+        eqTuple = eqTuple function (eqTuple argument),
         eqInt = eqInt function (eqInt argument),
         eqInteger = eqInteger function (eqInteger argument),
         functorList = functorList function (functorList argument),
@@ -288,6 +293,7 @@ instance Foldable Builtin where
         enumInteger,
         eqBool,
         eqChar,
+        eqTuple,
         eqInt,
         eqInteger,
         functorList,
@@ -332,6 +338,7 @@ instance Foldable Builtin where
         enumInteger,
         eqBool,
         eqChar,
+        eqTuple,
         eqInt,
         eqInteger,
         functorList,
@@ -381,6 +388,7 @@ canonical =
       enumInteger = pack "enumInteger",
       eqBool = pack "eqBool",
       eqChar = pack "eqChar",
+      eqTuple = pack "eqTuple",
       eqInt = pack "eqInt",
       eqInteger = pack "eqInteger",
       functorList = pack "functorList",
@@ -429,6 +437,7 @@ unique :: [Text]
     : enumInteger
     : eqBool
     : eqChar
+    : eqTuple
     : eqInt
     : eqInteger
     : functorList
@@ -476,6 +485,7 @@ unique :: [Text]
               enumInteger,
               eqBool,
               eqChar,
+              eqTuple,
               eqInt,
               eqInteger,
               functorList,

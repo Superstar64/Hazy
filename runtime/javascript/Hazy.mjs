@@ -175,6 +175,43 @@ export const eqChar = {
   b: { a: 0, b: (x) => (y) => ({ a: +(force(x) !== force(y)) }) },
 };
 
+export const eqTuple =
+  (...fields) =>
+  (...evidences) => ({
+    a: {
+      a: 0,
+      b: (x_) => (y_) => {
+        const x = force(x_);
+        const y = force(y_);
+        for (let i = 0; i < fields.length; i++) {
+          const field = fields[i];
+          const evidence = evidences[i];
+          const equal = force(evidence.a)(field(x))(field(y));
+          if (!equal.a) {
+            return { a: 0 };
+          }
+        }
+        return { a: 1 };
+      },
+    },
+    b: {
+      a: 0,
+      b: (x_) => (y_) => {
+        const x = force(x_);
+        const y = force(y_);
+        for (let i = 0; i < fields.length; i++) {
+          const field = fields[i];
+          const evidence = evidences[i];
+          const equal = force(evidence.b)(field(x))(field(y));
+          if (equal.a) {
+            return { a: 1 };
+          }
+        }
+        return { a: 0 };
+      },
+    },
+  });
+
 export const eqInt = {
   a: { a: 0, b: (x) => (y) => ({ a: +(force(x) === force(y)) }) },
   b: { a: 0, b: (x) => (y) => ({ a: +(force(x) !== force(y)) }) },

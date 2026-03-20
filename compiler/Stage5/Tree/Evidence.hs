@@ -3,8 +3,8 @@ module Stage5.Tree.Evidence where
 import Control.Monad.ST (ST)
 import Data.Foldable (toList)
 import qualified Data.Map as Map
-import qualified Javascript.Tree.Expression as Javacript
-import qualified Javascript.Tree.Expression as Javascript
+import qualified Javascript.Tree.Expression as Javascript (Expression (..))
+import qualified Javascript.Tree.Statement as Javascript (Statement (..))
 import qualified Stage3.Index.Evidence as Evidence (Builtin (..), Index (..))
 import Stage4.Tree.Evidence (Evidence (..))
 import Stage4.Tree.Instanciation (Instanciation (Instanciation))
@@ -12,7 +12,6 @@ import qualified Stage5.Generate.Binding.Evidence as Evidence (Binding (..))
 import qualified Stage5.Generate.Binding.Type as Type
 import Stage5.Generate.Context (Context, (!=.))
 import qualified Stage5.Generate.Context as Context
-import qualified Stage5.Generate.Mangle as Magnle
 import qualified Stage5.Generate.Mangle as Mangle
 import {-# SOURCE #-} Stage5.Tree.Expression (force)
 
@@ -40,7 +39,42 @@ generate context = \case
       Evidence.Index index
         | Evidence.Binding name <- context Context.!~ index ->
             pure Javascript.Variable {name}
-      Evidence.Builtin evidence -> pure Javacript.Variable {name}
+      Evidence.Builtin evidence -> case evidence of
+        Evidence.EqTuple number ->
+          pure
+            Javascript.Call
+              { function = Javascript.Variable {name = eqTuple},
+                arguments = do
+                  name <- take number $ tail Mangle.names
+                  pure $
+                    Javascript.Arrow
+                      { parameters = [Mangle.local],
+                        body =
+                          [ Javascript.Return $
+                              Javascript.Member
+                                { object = Javascript.Variable {name = Mangle.local},
+                                  field = name
+                                }
+                          ]
+                      }
+              }
+        _ -> pure Javascript.Variable {name}
+          where
+            name = case evidence of
+              Evidence.NumInt -> numInt
+              Evidence.NumInteger -> numInteger
+              Evidence.EnumBool -> enumBool
+              Evidence.EnumChar -> enumChar
+              Evidence.EnumInt -> enumInt
+              Evidence.EnumInteger -> enumInteger
+              Evidence.EqBool -> eqBool
+              Evidence.EqChar -> eqChar
+              Evidence.EqInt -> eqInt
+              Evidence.EqInteger -> eqInteger
+              Evidence.FunctorList -> functorList
+              Evidence.ApplicativeList -> applicativeList
+              Evidence.MonadList -> monadList
+              Evidence.MonadFailList -> monadFailList
         where
           Mangle.Builtin
             { numInt,
@@ -51,6 +85,7 @@ generate context = \case
               enumInteger,
               eqBool,
               eqChar,
+              eqTuple,
               eqInteger,
               eqInt,
               functorList,
@@ -58,21 +93,6 @@ generate context = \case
               monadList,
               monadFailList
             } = Context.builtin context
-          name = case evidence of
-            Evidence.NumInt -> numInt
-            Evidence.NumInteger -> numInteger
-            Evidence.EnumBool -> enumBool
-            Evidence.EnumChar -> enumChar
-            Evidence.EnumInt -> enumInt
-            Evidence.EnumInteger -> enumInteger
-            Evidence.EqBool -> eqBool
-            Evidence.EqChar -> eqChar
-            Evidence.EqInt -> eqInt
-            Evidence.EqInteger -> eqInteger
-            Evidence.FunctorList -> functorList
-            Evidence.ApplicativeList -> applicativeList
-            Evidence.MonadList -> monadList
-            Evidence.MonadFailList -> monadFailList
     if null arguments
       then
         pure $
@@ -82,7 +102,7 @@ generate context = \case
       else do
         arguments <- traverse (generate context) (toList arguments)
         pure $
-          Javacript.Call
+          Javascript.Call
             { function,
               arguments
             }
