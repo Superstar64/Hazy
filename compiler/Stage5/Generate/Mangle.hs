@@ -25,12 +25,21 @@ import qualified Stage2.Index.Type2 as Type2
 import Stage4.Tree.TermDeclaration (Name (..))
 import System.FilePath ((</>))
 
+letters, letters' :: [Char]
+letters = ['a' .. 'z'] ++ ['A' .. 'Z'] ++ ['$', '_']
+letters' = letters ++ ['0' .. '9']
+
 names :: [Text]
-names = filter (`Set.notMember` keywords) $ map pack $ go [[]]
+names = filter (`Set.notMember` keywords) $ map pack $ go [""]
   where
-    go base =
-      let prefix = base >>= (\base -> [letter : base | letter <- ['a' .. 'z']])
-       in prefix ++ go prefix
+    go :: [String] -> [String]
+    go post =
+      let set = (:) <$> letters <*> post
+          next = (:) <$> letters' <*> post
+       in set ++ go next
+
+fields :: [Text]
+fields = names
 
 data Brand
   = Class
@@ -101,9 +110,6 @@ mangleInstance run brand name target = Text.Lazy.toStrict $ Builder.toLazyText b
 lazy = pack "a"
 
 value = pack "b"
-
-fields :: [Text]
-fields = names
 
 pathSys :: FullQualifiers -> FilePath
 pathSys = foldr1 (</>) . fmap unpack . path'
