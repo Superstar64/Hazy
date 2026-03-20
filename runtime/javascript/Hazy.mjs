@@ -49,6 +49,7 @@ export const putStrLn = {
   a: 0,
   b: (thunk) => () => {
     console.log(force(thunk));
+    return { a: 0 };
   },
 };
 
