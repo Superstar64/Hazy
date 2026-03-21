@@ -177,17 +177,15 @@ export const eqChar = {
 };
 
 export const eqTuple =
-  (...fields) =>
+  (unpack) =>
   (...evidences) => ({
     a: {
       a: 0,
       b: (x_) => (y_) => {
-        const x = force(x_);
-        const y = force(y_);
-        for (let i = 0; i < fields.length; i++) {
-          const field = fields[i];
-          const evidence = evidences[i];
-          const equal = force(evidence.a)(field(x))(field(y));
+        const x = unpack(force(x_));
+        const y = unpack(force(y_));
+        for (let i = 0; i < evidences.length; i++) {
+          const equal = force(evidences[i].a)(x[i])(y[i]);
           if (!equal.a) {
             return { a: 0 };
           }
@@ -198,12 +196,10 @@ export const eqTuple =
     b: {
       a: 0,
       b: (x_) => (y_) => {
-        const x = force(x_);
-        const y = force(y_);
-        for (let i = 0; i < fields.length; i++) {
-          const field = fields[i];
-          const evidence = evidences[i];
-          const equal = force(evidence.b)(field(x))(field(y));
+        const x = unpack(force(x_));
+        const y = unpack(force(y_));
+        for (let i = 0; i < evidences.length; i++) {
+          const equal = force(evidences[i].b)(x[i])(y[i]);
           if (equal.a) {
             return { a: 1 };
           }

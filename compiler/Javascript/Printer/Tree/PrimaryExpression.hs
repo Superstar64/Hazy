@@ -2,6 +2,7 @@ module Javascript.Printer.Tree.PrimaryExpression where
 
 import Data.Kind (Type)
 import Javascript.Printer.Lexer (Identifier, Lexer, Print (..), token)
+import Javascript.Printer.Tree.ArrayLiteral (ArrayLiteral)
 import Javascript.Printer.Tree.Expression (Expression)
 import Javascript.Printer.Tree.Literal (Literal)
 import Javascript.Printer.Tree.ObjectLiteral (ObjectLiteral)
@@ -21,6 +22,9 @@ primaryExpression2 name = PrimaryExpression $ print name
 
 primaryExpression3 :: Literal -> PrimaryExpression yield await
 primaryExpression3 ast = PrimaryExpression (print ast)
+
+primaryExpression4 :: ArrayLiteral yield await -> PrimaryExpression yield await
+primaryExpression4 ast = PrimaryExpression (print ast)
 
 primaryExpression5 :: ObjectLiteral yield await -> PrimaryExpression yield await
 primaryExpression5 ast = PrimaryExpression (print ast)

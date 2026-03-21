@@ -44,19 +44,22 @@ generate context = \case
           pure
             Javascript.Call
               { function = Javascript.Variable {name = eqTuple},
-                arguments = do
-                  name <- take number $ tail Mangle.names
-                  pure $
-                    Javascript.Arrow
+                arguments =
+                  [ Javascript.Arrow
                       { parameters = [Mangle.local],
                         body =
                           [ Javascript.Return $
-                              Javascript.Member
-                                { object = Javascript.Variable {name = Mangle.local},
-                                  field = name
-                                }
+                              Javascript.Array $
+                                do
+                                  name <- take number $ tail Mangle.names
+                                  pure $
+                                    Javascript.Member
+                                      { object = Javascript.Variable {name = Mangle.local},
+                                        field = name
+                                      }
                           ]
                       }
+                  ]
               }
         _ -> pure Javascript.Variable {name}
           where

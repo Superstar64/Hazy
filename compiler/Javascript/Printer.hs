@@ -7,6 +7,7 @@ module Javascript.Printer
     module Javascript.Printer.Tree.AdditiveExpression,
     module Javascript.Printer.Tree.ArgumentList,
     module Javascript.Printer.Tree.Arguments,
+    module Javascript.Printer.Tree.ArrayLiteral,
     module Javascript.Printer.Tree.ArrowFunction,
     module Javascript.Printer.Tree.ArrowParameters,
     module Javascript.Printer.Tree.AssignmentExpression,
@@ -22,6 +23,8 @@ module Javascript.Printer
     module Javascript.Printer.Tree.ConciseBody,
     module Javascript.Printer.Tree.ConditionalExpression,
     module Javascript.Printer.Tree.Declaration,
+    module Javascript.Printer.Tree.ElementList,
+    module Javascript.Printer.Tree.Elision,
     module Javascript.Printer.Tree.EqualityExpression,
     module Javascript.Printer.Tree.ExponentiationExpression,
     module Javascript.Printer.Tree.ExportDeclaration,
@@ -96,6 +99,11 @@ import Javascript.Printer.Tree.Arguments
     arguments1,
     arguments2,
   )
+import Javascript.Printer.Tree.ArrayLiteral
+  ( ArrayLiteral,
+    arrayLiteral1,
+    arrayLiteral2,
+  )
 import Javascript.Printer.Tree.ArrowFunction
   ( ArrowFunction,
     arrowFunction,
@@ -163,6 +171,12 @@ import Javascript.Printer.Tree.Declaration
   ( Declaration,
     declaration3,
   )
+import Javascript.Printer.Tree.ElementList
+  ( ElementList,
+    elementList1,
+    elementList3,
+  )
+import Javascript.Printer.Tree.Elision (Elision)
 import Javascript.Printer.Tree.EqualityExpression
   ( EqualityExpression,
     equalityExpression1,
@@ -316,6 +330,7 @@ import Javascript.Printer.Tree.PrimaryExpression
     primaryExpression13,
     primaryExpression2,
     primaryExpression3,
+    primaryExpression4,
     primaryExpression5,
   )
 import Javascript.Printer.Tree.PropertyDefinition

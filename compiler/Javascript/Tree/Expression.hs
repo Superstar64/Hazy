@@ -47,6 +47,9 @@ data Expression
       { left :: Expression,
         right :: Expression
       }
+  | Array
+      { elements :: [Expression]
+      }
 
 print :: (Print ast) => Expression -> ast
 print = run
@@ -189,4 +192,11 @@ instance Print (Printer.PrimaryExpression yield await) where
     | string <- Printer.string string,
       literal <- Printer.literal4 string =
         Printer.primaryExpression3 literal
+  run Array {elements} = Printer.primaryExpression4 $ case elements of
+    [] -> Printer.arrayLiteral1 Nothing
+    (head : tail)
+      | head <- Printer.elementList1 Nothing $ run head,
+        tail <- map run tail,
+        elementList <- foldl (`Printer.elementList3` Nothing) head tail ->
+          Printer.arrayLiteral2 elementList
   run expression = Printer.primaryExpression13 (run expression)

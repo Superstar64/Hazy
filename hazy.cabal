@@ -52,6 +52,7 @@ executable hazy
     Javascript.Printer.Tree.AdditiveExpression
     Javascript.Printer.Tree.ArgumentList
     Javascript.Printer.Tree.Arguments
+    Javascript.Printer.Tree.ArrayLiteral
     Javascript.Printer.Tree.ArrowFunction
     Javascript.Printer.Tree.ArrowParameters
     Javascript.Printer.Tree.AssignmentExpression
@@ -67,6 +68,8 @@ executable hazy
     Javascript.Printer.Tree.ConciseBody
     Javascript.Printer.Tree.ConditionalExpression
     Javascript.Printer.Tree.Declaration
+    Javascript.Printer.Tree.ElementList
+    Javascript.Printer.Tree.Elision
     Javascript.Printer.Tree.EqualityExpression
     Javascript.Printer.Tree.ExponentiationExpression
     Javascript.Printer.Tree.ExportDeclaration
