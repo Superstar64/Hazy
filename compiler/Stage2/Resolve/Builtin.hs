@@ -49,6 +49,8 @@ import Stage2.Resolve.Builtin.Num
     plus,
     signum,
   )
+import Stage2.Resolve.Builtin.Ordering (gt, lt, ordering)
+import qualified Stage2.Resolve.Builtin.Ordering as Ordering
 import Prelude hiding
   ( Either (Left, Right),
     abs,
@@ -235,7 +237,15 @@ builtin =
             return,
             fail
           ],
-      constructors = Map.fromListWith undefined [false, true],
+      constructors =
+        Map.fromListWith
+          undefined
+          [ false,
+            true,
+            lt,
+            Ordering.eq,
+            gt
+          ],
       types =
         Map.fromListWith
           undefined
@@ -249,6 +259,7 @@ builtin =
             st,
             integer,
             int,
+            ordering,
             num,
             enum,
             eq,

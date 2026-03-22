@@ -182,3 +182,12 @@ enumBoolEnumFromTo = defaultEnumFromTo
 
 enumBoolEnumFromThenTo :: Bool -> Bool -> Bool -> [Bool]
 enumBoolEnumFromThenTo = defaultEnumFromThenTo
+
+eqOrderingEqual :: Ordering -> Ordering -> Bool
+eqOrderingEqual LT LT = True
+eqOrderingEqual EQ EQ = True
+eqOrderingEqual GT GT = True
+eqOrderingEqual _ _ = False
+
+eqOrderingNotEqual :: Ordering -> Ordering -> Bool
+eqOrderingNotEqual = defaultNotEqual

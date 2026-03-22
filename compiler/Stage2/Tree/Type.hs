@@ -344,18 +344,11 @@ label context = \case
           Constructor.All
             { bool,
               list,
-              tuplex
+              tuplex,
+              ordering
             }
-        bool Constructor.False =
-          Stage1.Lifted
-            { startPosition = (),
-              lifted = () :@ hazy := ConstructorIdentifier (constructorIdentifier $ pack "False")
-            }
-        bool Constructor.True =
-          Stage1.Lifted
-            { startPosition = (),
-              lifted = () :@ hazy := ConstructorIdentifier (constructorIdentifier $ pack "True")
-            }
+        bool Constructor.False = builtin "False"
+        bool Constructor.True = builtin "True"
         list Constructor.Nil =
           Stage1.LiftedList
             { startPosition = (),
@@ -369,6 +362,14 @@ label context = \case
           Stage1.Tupling
             { startPosition = (),
               count
+            }
+        ordering Constructor.LT = builtin "LT"
+        ordering Constructor.EQ = builtin "EQ"
+        ordering Constructor.GT = builtin "GT"
+        builtin name =
+          Stage1.Lifted
+            { startPosition = (),
+              lifted = () :@ hazy := ConstructorIdentifier (constructorIdentifier $ pack name)
             }
     Type2.Arrow ->
       Stage1.Arrow
@@ -389,17 +390,19 @@ label context = \case
     Type2.Integer -> builtin "Integer"
     Type2.Int -> builtin "Int"
     Type2.Num -> builtin "Num"
-    Type2.Enum ->builtin "Enum"
+    Type2.Enum -> builtin "Enum"
     Type2.Eq -> builtin "Eq"
     Type2.Functor -> builtin "Functor"
-    Type2.Applicative ->builtin "Applicative"
-    Type2.Monad ->builtin "Monad"
-    Type2.MonadFail ->builtin "MonadFail"
+    Type2.Applicative -> builtin "Applicative"
+    Type2.Monad -> builtin "Monad"
+    Type2.MonadFail -> builtin "MonadFail"
+    Type2.Ordering -> builtin "Ordering"
     where
-      builtin name = Stage1.Constructor
-        { startPosition = (),
-          constructor = () :@ hazy :=. constructorIdentifier (pack name)
-        }
+      builtin name =
+        Stage1.Constructor
+          { startPosition = (),
+            constructor = () :@ hazy :=. constructorIdentifier (pack name)
+          }
   List {element} ->
     Stage1.List
       { startPosition = (),

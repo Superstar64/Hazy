@@ -86,6 +86,7 @@ mangleInstance run brand name target = Text.Lazy.toStrict $ Builder.toLazyText b
       Type2.Tuple n -> mconcat [fromString "(", mconcat $ replicate n $ fromString ",", fromString ")"]
       Type2.Integer -> fromString "Hazy.Integer"
       Type2.Int -> fromString "Hazy.Int"
+      Type2.Ordering -> fromString "Hazy.Ordering"
       Type2.Num -> fromString "Hazy.Num"
       Type2.Enum -> fromString "Hazy.Enum"
       Type2.Eq -> fromString "Hazy.Eq"
@@ -147,6 +148,7 @@ data Builtin a = Builtin
     eqTuple,
     eqInt,
     eqInteger,
+    eqOrdering,
     functorList,
     applicativeList,
     monadList,
@@ -200,6 +202,7 @@ instance Applicative Builtin where
         eqTuple = a,
         eqInt = a,
         eqInteger = a,
+        eqOrdering = a,
         functorList = a,
         applicativeList = a,
         monadList = a,
@@ -247,6 +250,7 @@ instance Applicative Builtin where
         eqTuple = eqTuple function (eqTuple argument),
         eqInt = eqInt function (eqInt argument),
         eqInteger = eqInteger function (eqInteger argument),
+        eqOrdering = eqOrdering function (eqOrdering argument),
         functorList = functorList function (functorList argument),
         applicativeList = applicativeList function (applicativeList argument),
         monadList = monadList function (monadList argument),
@@ -296,6 +300,7 @@ instance Foldable Builtin where
         eqTuple,
         eqInt,
         eqInteger,
+        eqOrdering,
         functorList,
         applicativeList,
         monadList,
@@ -341,6 +346,7 @@ instance Foldable Builtin where
         eqTuple,
         eqInt,
         eqInteger,
+        eqOrdering,
         functorList,
         applicativeList,
         monadList,
@@ -391,6 +397,7 @@ canonical =
       eqTuple = pack "eqTuple",
       eqInt = pack "eqInt",
       eqInteger = pack "eqInteger",
+      eqOrdering = pack "eqOrdering",
       functorList = pack "functorList",
       applicativeList = pack "applicativeList",
       monadList = pack "monadList",
@@ -440,6 +447,7 @@ unique :: [Text]
     : eqTuple
     : eqInt
     : eqInteger
+    : eqOrdering
     : functorList
     : applicativeList
     : monadList
@@ -488,6 +496,7 @@ unique :: [Text]
               eqTuple,
               eqInt,
               eqInteger,
+              eqOrdering,
               functorList,
               applicativeList,
               monadList,

@@ -27,6 +27,7 @@ data Builtin
   | EqTuple !Int
   | EqInteger
   | EqInt
+  | EqOrdering
   | FunctorList
   | ApplicativeList
   | MonadList

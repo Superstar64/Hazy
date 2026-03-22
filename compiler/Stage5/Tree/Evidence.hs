@@ -74,6 +74,7 @@ generate context = \case
               Evidence.EqChar -> eqChar
               Evidence.EqInt -> eqInt
               Evidence.EqInteger -> eqInteger
+              Evidence.EqOrdering -> eqOrdering
               Evidence.FunctorList -> functorList
               Evidence.ApplicativeList -> applicativeList
               Evidence.MonadList -> monadList
@@ -91,6 +92,7 @@ generate context = \case
               eqTuple,
               eqInteger,
               eqInt,
+              eqOrdering,
               functorList,
               applicativeList,
               monadList,

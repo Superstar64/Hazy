@@ -219,6 +219,11 @@ export const eqInteger = {
   b: { a: 0, b: (x) => (y) => ({ a: +(force(x) !== force(y)) }) },
 };
 
+export const eqOrdering = {
+  a: helper.eqOrderingEqual,
+  b: helper.eqOrderingNotEqual,
+};
+
 export const functorList = {
   a: placeholder,
   b: placeholder,

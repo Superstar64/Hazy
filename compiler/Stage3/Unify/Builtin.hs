@@ -37,6 +37,8 @@ constrain fallthough constrain = table
       | n == length types = do
           types <- traverse (constrain Type2.Eq) types
           pure $ call (Evidence.EqTuple n) types
+    table Type2.Eq Type2.Ordering [] =
+      pure $ single Evidence.EqOrdering
     table Type2.Eq Type2.Integer [] =
       pure $ single Evidence.EqInteger
     table Type2.Eq Type2.Int [] =

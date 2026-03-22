@@ -19,6 +19,7 @@ data Index scope
   | Tuple !Int
   | Integer
   | Int
+  | Ordering
   | Num
   | Enum
   | Eq
@@ -53,6 +54,7 @@ traverse run = \case
     Tuple count -> Tuple count
     Integer -> Integer
     Int -> Int
+    Ordering -> Ordering
     Num -> Num
     Enum -> Enum
     Eq -> Eq

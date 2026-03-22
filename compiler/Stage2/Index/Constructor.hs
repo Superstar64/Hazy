@@ -5,7 +5,7 @@ import qualified Stage2.Index.Type as Type
 import qualified Stage2.Index.Type2 as Type2
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import Prelude hiding (Bool (False, True), map, traverse)
+import Prelude hiding (Bool (..), Ordering (..), map, traverse)
 
 data Index scope = Index
   { typeIndex :: !(Type2.Index scope),
@@ -52,18 +52,41 @@ tuple n =
       constructorIndex = fromEnum Tuple
     }
 
+data Ordering = LT | EQ | GT
+  deriving (Enum, Bounded)
+
+lt =
+  Index
+    { typeIndex = Type2.Ordering,
+      constructorIndex = fromEnum LT
+    }
+
+eq =
+  Index
+    { typeIndex = Type2.Ordering,
+      constructorIndex = fromEnum EQ
+    }
+
+gt =
+  Index
+    { typeIndex = Type2.Ordering,
+      constructorIndex = fromEnum EQ
+    }
+
 data All a = All
   { bool :: Bool -> a,
     list :: List -> a,
-    tuplex :: Int -> Tuple -> a
+    tuplex :: Int -> Tuple -> a,
+    ordering :: Ordering -> a
   }
 
 run :: (Type.Index scope -> Int -> a) -> All a -> Index scope -> a
-run normal All {bool, list, tuplex} Index {typeIndex, constructorIndex} = case typeIndex of
+run normal All {bool, list, tuplex, ordering} Index {typeIndex, constructorIndex} = case typeIndex of
   Type2.Index typeIndex -> normal typeIndex constructorIndex
   Type2.Bool -> bool (toEnum constructorIndex)
   Type2.List -> list (toEnum constructorIndex)
   Type2.Tuple n -> tuplex n (toEnum constructorIndex)
+  Type2.Ordering -> ordering (toEnum constructorIndex)
   _ -> error "bad run constructor"
 
 map :: (Type.Index scope -> Type.Index scope') -> Index scope -> Index scope'

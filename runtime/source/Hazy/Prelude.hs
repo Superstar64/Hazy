@@ -77,14 +77,6 @@ type String = [Char]
 
 data IO a
 
-data Ordering = LT | EQ | GT
-
-instance Eq Ordering where
-  LT == LT = True
-  EQ == EQ = True
-  GT == GT = True
-  _ == _ = False
-
 map :: (a -> b) -> [a] -> [b]
 map f [] = []
 map f (x : xs) = f x : map f xs
