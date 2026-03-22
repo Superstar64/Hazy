@@ -49,10 +49,12 @@ import Stage2.Resolve.Builtin.Num
     plus,
     signum,
   )
+import Stage2.Resolve.Builtin.Ord (compare, greaterThen, greaterThenEqual, lessThen, lessThenEqual, max, min, ord)
 import Stage2.Resolve.Builtin.Ordering (gt, lt, ordering)
 import qualified Stage2.Resolve.Builtin.Ordering as Ordering
 import Prelude hiding
   ( Either (Left, Right),
+    Ord (..),
     abs,
     enumFrom,
     enumFromThen,
@@ -224,6 +226,13 @@ builtin =
             enumFromThenTo,
             equal,
             notEqual,
+            compare,
+            lessThen,
+            lessThenEqual,
+            greaterThen,
+            greaterThenEqual,
+            max,
+            min,
             runST,
             fmap,
             fconst,
@@ -263,6 +272,7 @@ builtin =
             num,
             enum,
             eq,
+            ord,
             functor,
             applicative,
             monad,

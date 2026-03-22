@@ -23,6 +23,10 @@ data Hook scope
       { evidence :: !(Evidence scope),
         eq :: !Method.Eq
       }
+  | DefaultOrd
+      { evidence :: !(Evidence scope),
+        ord :: !Method.Ord
+      }
   | DefaultFunctor
       { evidence :: !(Evidence scope),
         functor :: !Method.Functor
@@ -66,6 +70,11 @@ instance Substitute.Functor Hook where
       DefaultEq
         { evidence = Substitute.map category evidence,
           eq
+        }
+    DefaultOrd {evidence, ord} ->
+      DefaultOrd
+        { evidence = Substitute.map category evidence,
+          ord
         }
     DefaultFunctor {evidence, functor} ->
       DefaultFunctor

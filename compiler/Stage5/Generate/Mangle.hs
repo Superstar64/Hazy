@@ -90,6 +90,7 @@ mangleInstance run brand name target = Text.Lazy.toStrict $ Builder.toLazyText b
       Type2.Num -> fromString "Hazy.Num"
       Type2.Enum -> fromString "Hazy.Enum"
       Type2.Eq -> fromString "Hazy.Eq"
+      Type2.Ord -> fromString "Hazy.Ord"
       Type2.Functor -> fromString "Hazy.Functor"
       Type2.Applicative -> fromString "Hazy.Applicative"
       Type2.Monad -> fromString "Hazy.Monad"
@@ -149,6 +150,8 @@ data Builtin a = Builtin
     eqInt,
     eqInteger,
     eqOrdering,
+    ordInt,
+    ordInteger,
     functorList,
     applicativeList,
     monadList,
@@ -169,6 +172,13 @@ data Builtin a = Builtin
     defaultEnumFromTo,
     defaultEnumFromThenTo,
     defaultEqual,
+    defaultCompare,
+    defaultLessThen,
+    defaultLessThenEqual,
+    defaultGreaterThen,
+    defaultGreaterThenEqual,
+    defaultMax,
+    defaultMin,
     defaultNotEqual,
     defaultFmap,
     defaultFconst,
@@ -203,6 +213,8 @@ instance Applicative Builtin where
         eqInt = a,
         eqInteger = a,
         eqOrdering = a,
+        ordInt = a,
+        ordInteger = a,
         functorList = a,
         applicativeList = a,
         monadList = a,
@@ -224,6 +236,13 @@ instance Applicative Builtin where
         defaultEnumFromThenTo = a,
         defaultEqual = a,
         defaultNotEqual = a,
+        defaultCompare = a,
+        defaultLessThen = a,
+        defaultLessThenEqual = a,
+        defaultGreaterThen = a,
+        defaultGreaterThenEqual = a,
+        defaultMax = a,
+        defaultMin = a,
         defaultFmap = a,
         defaultFconst = a,
         defaultPure = a,
@@ -251,6 +270,8 @@ instance Applicative Builtin where
         eqInt = eqInt function (eqInt argument),
         eqInteger = eqInteger function (eqInteger argument),
         eqOrdering = eqOrdering function (eqOrdering argument),
+        ordInt = ordInt function (ordInt argument),
+        ordInteger = ordInteger function (ordInteger argument),
         functorList = functorList function (functorList argument),
         applicativeList = applicativeList function (applicativeList argument),
         monadList = monadList function (monadList argument),
@@ -272,6 +293,13 @@ instance Applicative Builtin where
         defaultEnumFromThenTo = defaultEnumFromThenTo function (defaultEnumFromThenTo argument),
         defaultEqual = defaultEqual function (defaultEqual argument),
         defaultNotEqual = defaultNotEqual function (defaultNotEqual argument),
+        defaultCompare = defaultCompare function (defaultCompare argument),
+        defaultLessThen = defaultLessThen function (defaultLessThen argument),
+        defaultLessThenEqual = defaultLessThenEqual function (defaultLessThenEqual argument),
+        defaultGreaterThen = defaultGreaterThen function (defaultGreaterThen argument),
+        defaultGreaterThenEqual = defaultGreaterThenEqual function (defaultGreaterThenEqual argument),
+        defaultMax = defaultMax function (defaultMax argument),
+        defaultMin = defaultMin function (defaultMin argument),
         defaultFmap = defaultFmap function (defaultFmap argument),
         defaultFconst = defaultFconst function (defaultFconst argument),
         defaultPure = defaultPure function (defaultPure argument),
@@ -301,6 +329,8 @@ instance Foldable Builtin where
         eqInt,
         eqInteger,
         eqOrdering,
+        ordInt,
+        ordInteger,
         functorList,
         applicativeList,
         monadList,
@@ -322,6 +352,13 @@ instance Foldable Builtin where
         defaultEnumFromThenTo,
         defaultEqual,
         defaultNotEqual,
+        defaultCompare,
+        defaultLessThen,
+        defaultLessThenEqual,
+        defaultGreaterThen,
+        defaultGreaterThenEqual,
+        defaultMax,
+        defaultMin,
         defaultFmap,
         defaultFconst,
         defaultPure,
@@ -347,6 +384,8 @@ instance Foldable Builtin where
         eqInt,
         eqInteger,
         eqOrdering,
+        ordInt,
+        ordInteger,
         functorList,
         applicativeList,
         monadList,
@@ -368,6 +407,13 @@ instance Foldable Builtin where
         defaultEnumFromThenTo,
         defaultEqual,
         defaultNotEqual,
+        defaultCompare,
+        defaultLessThen,
+        defaultLessThenEqual,
+        defaultGreaterThen,
+        defaultGreaterThenEqual,
+        defaultMax,
+        defaultMin,
         defaultFmap,
         defaultFconst,
         defaultPure,
@@ -398,6 +444,8 @@ canonical =
       eqInt = pack "eqInt",
       eqInteger = pack "eqInteger",
       eqOrdering = pack "eqOrdering",
+      ordInt = pack "ordInt",
+      ordInteger = pack "ordInteger",
       functorList = pack "functorList",
       applicativeList = pack "applicativeList",
       monadList = pack "monadList",
@@ -419,6 +467,13 @@ canonical =
       defaultEnumFromThenTo = pack "defaultEnumFromThenTo",
       defaultEqual = pack "defaultEqual",
       defaultNotEqual = pack "defaultNotEqual",
+      defaultCompare = pack "defaultCompare",
+      defaultLessThen = pack "defaultLessThen",
+      defaultLessThenEqual = pack "defaultLessThenEqual",
+      defaultGreaterThen = pack "defaultGreaterThen",
+      defaultGreaterThenEqual = pack "defaultGreaterThenEqual",
+      defaultMax = pack "defaultMax",
+      defaultMin = pack "defaultMin",
       defaultFmap = pack "defaultFmap",
       defaultFconst = pack "defaultFconst",
       defaultPure = pack "defaultPure",
@@ -448,6 +503,8 @@ unique :: [Text]
     : eqInt
     : eqInteger
     : eqOrdering
+    : ordInt
+    : ordInteger
     : functorList
     : applicativeList
     : monadList
@@ -469,6 +526,13 @@ unique :: [Text]
     : defaultEnumFromThenTo
     : defaultEqual
     : defaultNotEqual
+    : defaultCompare
+    : defaultLessThen
+    : defaultLessThenEqual
+    : defaultGreaterThen
+    : defaultGreaterThenEqual
+    : defaultMax
+    : defaultMin
     : defaultFmap
     : defaultFconst
     : defaultPure
@@ -497,6 +561,8 @@ unique :: [Text]
               eqInt,
               eqInteger,
               eqOrdering,
+              ordInt,
+              ordInteger,
               functorList,
               applicativeList,
               monadList,
@@ -518,6 +584,13 @@ unique :: [Text]
               defaultEnumFromThenTo,
               defaultEqual,
               defaultNotEqual,
+              defaultCompare,
+              defaultLessThen,
+              defaultLessThenEqual,
+              defaultGreaterThen,
+              defaultGreaterThenEqual,
+              defaultMax,
+              defaultMin,
               defaultFmap,
               defaultFconst,
               defaultPure,

@@ -28,6 +28,8 @@ data Builtin
   | EqInteger
   | EqInt
   | EqOrdering
+  | OrdInt
+  | OrdInteger
   | FunctorList
   | ApplicativeList
   | MonadList

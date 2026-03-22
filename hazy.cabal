@@ -205,6 +205,7 @@ executable hazy
     Stage2.Resolve.Builtin.Monad
     Stage2.Resolve.Builtin.MonadFail
     Stage2.Resolve.Builtin.Num
+    Stage2.Resolve.Builtin.Ord
     Stage2.Resolve.Builtin.Ordering
     Stage2.Resolve.Canonical
     Stage2.Resolve.Context
@@ -393,6 +394,7 @@ executable hazy
     Stage4.Tree.Builtin.Monad
     Stage4.Tree.Builtin.MonadFail
     Stage4.Tree.Builtin.Num
+    Stage4.Tree.Builtin.Ord
     Stage4.Tree.Builtin.Ordering
     Stage4.Tree.Builtin.Tuple
     Stage4.Tree.Class

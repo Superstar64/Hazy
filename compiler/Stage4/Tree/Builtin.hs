@@ -12,6 +12,7 @@ import Stage4.Tree.Builtin.List (list)
 import Stage4.Tree.Builtin.Monad (monad, monadExtra)
 import Stage4.Tree.Builtin.MonadFail (monadFail, monadFailExtra)
 import Stage4.Tree.Builtin.Num (num, numExtra)
+import Stage4.Tree.Builtin.Ord (ord, ordExtra)
 import Stage4.Tree.Builtin.Ordering (ordering)
 import Stage4.Tree.Builtin.Tuple (tuple)
 import Stage4.Tree.Class (Class)
@@ -44,6 +45,7 @@ kind pure typex constructor = \case
     Type2.Num -> classKind
     Type2.Enum -> classKind
     Type2.Eq -> classKind
+    Type2.Ord -> classKind
     Type2.Functor -> classKind
     Type2.Applicative -> classKind
     Type2.Monad -> classKind
@@ -74,6 +76,7 @@ instance Builtin Class where
     Type2.Num -> pure num
     Type2.Enum -> pure enum
     Type2.Eq -> pure eq
+    Type2.Ord -> pure ord
     Type2.Functor -> pure functor
     Type2.Applicative -> pure applicative
     Type2.Monad -> pure monad
@@ -86,6 +89,7 @@ instance Builtin ClassExtra where
     Type2.Num -> pure numExtra
     Type2.Enum -> pure enumExtra
     Type2.Eq -> pure eqExtra
+    Type2.Ord -> pure ordExtra
     Type2.Functor -> pure functorExtra
     Type2.Applicative -> pure applicativeExtra
     Type2.Monad -> pure monadExtra

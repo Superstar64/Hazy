@@ -16,6 +16,34 @@ defaultEqual x y = not (x /= y)
 defaultNotEqual :: (Eq a) => a -> a -> Bool
 defaultNotEqual x y = not (x == y)
 
+defaultCompare :: (Ord a) => a -> a -> Ordering
+defaultCompare x y
+  | x == y = EQ
+  | x <= y = LT
+  | otherwise = GT
+
+defaultLessThen :: (Ord a) => a -> a -> Bool
+defaultLessThen x y = compare x y == LT
+
+defaultLessThenEqual :: (Ord a) => a -> a -> Bool
+defaultLessThenEqual x y = compare x y /= GT
+
+defaultGreaterThen :: (Ord a) => a -> a -> Bool
+defaultGreaterThen x y = compare x y == GT
+
+defaultGreaterThenEqual :: (Ord a) => a -> a -> Bool
+defaultGreaterThenEqual x y = compare x y /= LT
+
+defaultMax :: (Ord a) => a -> a -> a
+defaultMax x y
+  | x <= y = y
+  | otherwise = x
+
+defaultMin :: (Ord a) => a -> a -> a
+defaultMin x y
+  | x <= y = x
+  | otherwise = y
+
 defaultSucc :: (Enum a) => a -> a
 defaultSucc = toEnum . (\x -> x + 1) . fromEnum
 
@@ -191,3 +219,39 @@ eqOrderingEqual _ _ = False
 
 eqOrderingNotEqual :: Ordering -> Ordering -> Bool
 eqOrderingNotEqual = defaultNotEqual
+
+ordIntCompare :: Int -> Int -> Ordering
+ordIntCompare = defaultCompare
+
+ordIntLessThen :: Int -> Int -> Bool
+ordIntLessThen = defaultLessThen
+
+ordIntGreaterThen :: Int -> Int -> Bool
+ordIntGreaterThen = defaultGreaterThen
+
+ordIntGreaterThenEqual :: Int -> Int -> Bool
+ordIntGreaterThenEqual = defaultGreaterThenEqual
+
+ordIntMax :: Int -> Int -> Int
+ordIntMax = defaultMax
+
+ordIntMin :: Int -> Int -> Int
+ordIntMin = defaultMin
+
+ordIntegerCompare :: Integer -> Integer -> Ordering
+ordIntegerCompare = defaultCompare
+
+ordIntegerLessThen :: Integer -> Integer -> Bool
+ordIntegerLessThen = defaultLessThen
+
+ordIntegerGreaterThen :: Integer -> Integer -> Bool
+ordIntegerGreaterThen = defaultGreaterThen
+
+ordIntegerGreaterThenEqual :: Integer -> Integer -> Bool
+ordIntegerGreaterThenEqual = defaultGreaterThenEqual
+
+ordIntegerMax :: Integer -> Integer -> Integer
+ordIntegerMax = defaultMax
+
+ordIntegerMin :: Integer -> Integer -> Integer
+ordIntegerMin = defaultMin

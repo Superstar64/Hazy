@@ -35,12 +35,6 @@ putStrLn = missing
 trace :: Text -> a -> a
 trace = missing
 
-intLessThenEqual :: Int -> Int -> Bool
-intLessThenEqual = missing
-
-integerLessThenEqual :: Integer -> Integer -> Bool
-integerLessThenEqual = missing
-
 boundedIntMinBound, boundedIntMaxBound :: Int
 boundedIntMinBound = missing
 boundedIntMaxBound = missing

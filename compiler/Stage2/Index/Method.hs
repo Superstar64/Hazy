@@ -3,14 +3,14 @@ module Stage2.Index.Method where
 import qualified Stage2.Index.Type2 as Type2
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import Prelude hiding (Enum, Eq)
+import Prelude hiding (Enum, Eq, Ord)
 import qualified Prelude
 
 data Index scope = Index
   { typeIndex :: !(Type2.Index scope),
     methodIndex :: !Int
   }
-  deriving (Show, Prelude.Eq, Ord)
+  deriving (Show, Prelude.Eq, Prelude.Ord)
 
 instance Shift Index where
   shift = shiftDefault
@@ -77,6 +77,30 @@ data Eq
 equal = Index Type2.Eq $ Prelude.fromEnum Equal
 
 notEqual = Index Type2.Eq $ Prelude.fromEnum NotEqual
+
+data Ord
+  = Compare
+  | LessThen
+  | LessThenEqual
+  | GreaterThen
+  | GreaterThenEqual
+  | Max
+  | Min
+  deriving (Prelude.Enum, Bounded, Show)
+
+compare = Index Type2.Ord $ Prelude.fromEnum Compare
+
+lessThen = Index Type2.Ord $ Prelude.fromEnum LessThen
+
+lessThenEqual = Index Type2.Ord $ Prelude.fromEnum LessThenEqual
+
+greaterThen = Index Type2.Ord $ Prelude.fromEnum GreaterThen
+
+greaterThenEqual = Index Type2.Ord $ Prelude.fromEnum GreaterThenEqual
+
+max = Index Type2.Ord $ Prelude.fromEnum Max
+
+min = Index Type2.Ord $ Prelude.fromEnum Min
 
 data Functor
   = Fmap

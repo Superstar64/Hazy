@@ -61,16 +61,6 @@ export const trace = {
   },
 };
 
-export const intLessThenEqual = {
-  a: 0,
-  b: (x) => (y) => ({ a: +(force(x) <= force(y)) }),
-};
-
-export const integerLessThenEqual = {
-  a: 0,
-  b: (x) => (y) => ({ a: +(force(x) <= force(y)) }),
-};
-
 export const boundedIntMinBound = {
   a: 0,
   b: -2147483648,
@@ -222,6 +212,34 @@ export const eqInteger = {
 export const eqOrdering = {
   a: helper.eqOrderingEqual,
   b: helper.eqOrderingNotEqual,
+};
+
+export const ordInt = {
+  a: eqInt,
+  b: helper.ordIntCompare,
+  c: helper.ordIntLessThen,
+  d: {
+    a: 0,
+    b: (x) => (y) => ({ a: +(force(x) <= force(y)) }),
+  },
+  e: helper.ordIntGreaterThen,
+  f: helper.ordIntGreaterThenEqual,
+  g: helper.ordIntMax,
+  h: helper.ordIntMin,
+};
+
+export const ordInteger = {
+  a: eqInteger,
+  b: helper.ordIntegerCompare,
+  c: helper.ordIntegerLessThen,
+  d: {
+    a: 0,
+    b: (x) => (y) => ({ a: +(force(x) <= force(y)) }),
+  },
+  e: helper.ordIntegerGreaterThen,
+  f: helper.ordIntegerGreaterThenEqual,
+  g: helper.ordIntegerMax,
+  h: helper.ordIntegerMin,
 };
 
 export const functorList = {

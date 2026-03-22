@@ -3,7 +3,16 @@ module Stage5.Tree.Hook where
 import Control.Monad.ST (ST)
 import qualified Javascript.Tree.Expression as Javascript (Expression (..))
 import qualified Javascript.Tree.Statement as Javascript (Statement (..))
-import Stage2.Index.Method (Applicative (..), Enum (..), Eq (..), Functor (..), Monad (..), MonadFail (..), Num (..))
+import Stage2.Index.Method
+  ( Applicative (..),
+    Enum (..),
+    Eq (..),
+    Functor (..),
+    Monad (..),
+    MonadFail (..),
+    Num (..),
+    Ord (..),
+  )
 import Stage4.Tree.Hook (Hook (..))
 import Stage5.Generate.Context (Context (..))
 import Stage5.Generate.Mangle (Builtin (..))
@@ -30,6 +39,13 @@ generateInto context target hook = do
           defaultEnumFromThenTo,
           defaultEqual,
           defaultNotEqual,
+          defaultCompare,
+          defaultLessThen,
+          defaultLessThenEqual,
+          defaultGreaterThen,
+          defaultGreaterThenEqual,
+          defaultMax,
+          defaultMin,
           defaultFmap,
           defaultFconst,
           defaultPure,
@@ -70,6 +86,14 @@ generateInto context target hook = do
     DefaultEq {evidence, eq} -> defaultx evidence $ case eq of
       Equal -> defaultEqual
       NotEqual -> defaultNotEqual
+    DefaultOrd {evidence, ord} -> defaultx evidence $ case ord of
+      Compare -> defaultCompare
+      LessThen -> defaultLessThen
+      LessThenEqual -> defaultLessThenEqual
+      GreaterThen -> defaultGreaterThen
+      GreaterThenEqual -> defaultGreaterThenEqual
+      Max -> defaultMax
+      Min -> defaultMin
     DefaultFunctor {evidence, functor} -> defaultx evidence $ case functor of
       Fmap -> defaultFmap
       Fconst -> defaultFconst
