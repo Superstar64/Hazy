@@ -345,6 +345,7 @@ executable hazy
     Stage3.Tree.Definition
     Stage3.Tree.Do
     Stage3.Tree.Entry
+    Stage3.Tree.EntryInfo
     Stage3.Tree.Expression
     Stage3.Tree.ExpressionField
     Stage3.Tree.Field
@@ -401,9 +402,11 @@ executable hazy
     Stage4.Tree.ClassExtra
     Stage4.Tree.Constraint
     Stage4.Tree.Constructor
+    Stage4.Tree.ConstructorInfo
     Stage4.Tree.Data
     Stage4.Tree.Declarations
     Stage4.Tree.Entry
+    Stage4.Tree.EntryInfo
     Stage4.Tree.Evidence
     Stage4.Tree.Expression
     Stage4.Tree.Hook

@@ -16,8 +16,8 @@ import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Index.Evidence as Index.Evidence
-import Stage3.Tree.ConstructorInfo (ConstructorInfo (ConstructorInfo))
-import qualified Stage3.Tree.ConstructorInfo as ConstructorInfo
+import qualified Stage3.Tree.ConstructorInfo as Stage3 (ConstructorInfo (ConstructorInfo))
+import qualified Stage3.Tree.ConstructorInfo as Stage3.ConstructorInfo
 import qualified Stage3.Tree.Definition as Stage3 (Definition)
 import qualified Stage3.Tree.Do as Stage3 (Do)
 import qualified Stage3.Tree.Do as Stage3.Do
@@ -40,8 +40,10 @@ import {-# SOURCE #-} qualified Stage4.Tree.Builtin.Monad as Builtin (monad)
 import {-# SOURCE #-} qualified Stage4.Tree.Builtin.MonadFail as Builtin (monadFail)
 import {-# SOURCE #-} qualified Stage4.Tree.Builtin.Num as Builtin (num)
 import qualified Stage4.Tree.Class as Class
+import Stage4.Tree.ConstructorInfo (ConstructorInfo (..))
 import {-# SOURCE #-} Stage4.Tree.Declarations (Declarations)
 import {-# SOURCE #-} qualified Stage4.Tree.Declarations as Declarations
+import Stage4.Tree.EntryInfo (EntryInfo (..))
 import Stage4.Tree.Evidence (Evidence)
 import qualified Stage4.Tree.Evidence as Evidence
 import Stage4.Tree.Hook (Hook)
@@ -59,11 +61,13 @@ data Expression scope
       }
   | Constructor
       { constructor :: !(Constructor.Index scope),
-        arguments :: !(Strict.Vector (Expression scope))
+        arguments :: !(Strict.Vector (Expression scope)),
+        constructorInfo :: !ConstructorInfo
       }
   | Selector
       { selector :: !(Selector.Index scope),
-        argument :: !(Expression scope)
+        argument :: !(Expression scope),
+        selectorInfo :: !EntryInfo
       }
   | Method
       { method :: !(Method.Index scope),
@@ -123,15 +127,17 @@ instance Substitute.Functor Expression where
         { variable = Substitute.map category variable,
           instanciation = Substitute.map category instanciation
         }
-    Selector {selector, argument} ->
+    Selector {selector, argument, selectorInfo} ->
       Selector
         { selector = Substitute.map category selector,
-          argument = Substitute.map category argument
+          argument = Substitute.map category argument,
+          selectorInfo
         }
-    Constructor {constructor, arguments} ->
+    Constructor {constructor, arguments, constructorInfo} ->
       Constructor
         { constructor = Substitute.map category constructor,
-          arguments = Substitute.map category <$> arguments
+          arguments = Substitute.map category <$> arguments,
+          constructorInfo
         }
     Method {method, evidence, instanciation, methodInfo} ->
       Method
@@ -256,7 +262,8 @@ failx evidence =
     }
     `call` Constructor
       { constructor = Constructor.nil,
-        arguments = Strict.Vector.empty
+        arguments = Strict.Vector.empty,
+        constructorInfo = ConstructorInfo {entries = Strict.Vector.empty}
       }
 
 integer_ :: Integer -> Evidence scope -> Expression scope
@@ -340,12 +347,12 @@ instance Simplify Stage3.Do where
 
 simplifyConstructor ::
   Constructor.Index scope ->
-  ConstructorInfo ->
+  Stage3.ConstructorInfo ->
   Int ->
   List (Expression scope) ->
   Expression scope
 simplifyConstructor constructor info argumentCount arguments
-  | ConstructorInfo.parameterCount info > argumentCount =
+  | Stage3.ConstructorInfo.entryCount info > argumentCount =
       Lambda
         { body =
             simplifyConstructor
@@ -360,15 +367,16 @@ simplifyConstructor constructor info argumentCount arguments
 
 simplifyConstructorExact ::
   Constructor.Index scope ->
-  ConstructorInfo ->
+  Stage3.ConstructorInfo ->
   Strict.Vector (Expression scope) ->
   Expression scope
-simplifyConstructorExact constructor ConstructorInfo {} arguments =
+simplifyConstructorExact constructor Stage3.ConstructorInfo {entries} arguments =
   Constructor
     { constructor,
-      arguments
+      arguments,
+      constructorInfo = ConstructorInfo {entries}
     }
-simplifyConstructorExact constructor ConstructorInfo.Newtype arguments =
+simplifyConstructorExact constructor Stage3.ConstructorInfo.Newtype arguments =
   Newtype
     { constructor,
       argument = Strict.Vector.head arguments,
@@ -380,8 +388,14 @@ simplifySelector ::
   SelectorInfo ->
   Expression scope ->
   Expression scope
-simplifySelector selector Uniform {} argument = Selector {selector, argument}
-simplifySelector (Selector.Index typeIndex _) Disjoint {select} argument = Join {statements = mconcat statements}
+simplifySelector selector Uniform {strict} argument =
+  Selector
+    { selector,
+      argument,
+      selectorInfo = EntryInfo {strict}
+    }
+simplifySelector (Selector.Index typeIndex _) Disjoint {select} argument =
+  Join {statements = mconcat statements}
   where
     generate index Select {selectIndex, constructorInfo} =
       Statements.bind match argument get
@@ -394,7 +408,7 @@ simplifySelector (Selector.Index typeIndex _) Disjoint {select} argument = Join 
                   { constructor = Constructor.Index typeIndex index,
                     patterns =
                       Strict.Vector.replicate
-                        (ConstructorInfo.parameterCount constructorInfo)
+                        (Stage3.ConstructorInfo.entryCount constructorInfo)
                         Pattern.Wildcard,
                     constructorInfo
                   }
@@ -440,8 +454,8 @@ simplifyWith expression [] = case expression of
   Stage3.Record {constructor, constructorInfo, fields} ->
     simplifyConstructorExact constructor constructorInfo arguments
     where
-      parameterCount = ConstructorInfo.parameterCount constructorInfo
-      arguments = Strict.Vector.generate parameterCount $ \index' ->
+      entryCount = Stage3.ConstructorInfo.entryCount constructorInfo
+      arguments = Strict.Vector.generate entryCount $ \index' ->
         case [ expression
              | Stage3.Field
                  { index,
@@ -456,7 +470,11 @@ simplifyWith expression [] = case expression of
   Stage3.Tuple {elements} ->
     Constructor
       { constructor = Constructor.tuple (length elements),
-        arguments = simplify <$> Strict.Vector2.toVector elements
+        arguments = simplify <$> Strict.Vector2.toVector elements,
+        constructorInfo =
+          ConstructorInfo
+            { entries = Strict.Vector.replicate (length elements) EntryInfo {strict = False}
+            }
       }
   Stage3.List {items} ->
     foldr (cons . simplify) nil items
@@ -473,7 +491,7 @@ simplifyWith expression [] = case expression of
                   Pattern.Constructor
                     { constructor = Constructor.true,
                       patterns = Strict.Vector.empty,
-                      constructorInfo = ConstructorInfo {parameterCount_ = 0}
+                      constructorInfo = Stage3.ConstructorInfo {entries = Strict.Vector.empty}
                     },
                 irrefutable = False
               }
@@ -531,10 +549,19 @@ simplifyWith expression [] = case expression of
     cons head tail =
       Constructor
         { constructor = Constructor.cons,
-          arguments = Strict.Vector.fromList [head, tail]
+          arguments = Strict.Vector.fromList [head, tail],
+          constructorInfo =
+            ConstructorInfo
+              { entries =
+                  Strict.Vector.fromList
+                    [ EntryInfo {strict = False},
+                      EntryInfo {strict = False}
+                    ]
+              }
         }
     nil =
       Constructor
         { constructor = Constructor.nil,
-          arguments = Strict.Vector.empty
+          arguments = Strict.Vector.empty,
+          constructorInfo = ConstructorInfo {entries = Strict.Vector.empty}
         }

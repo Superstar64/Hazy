@@ -3,6 +3,7 @@ module Stage3.Check.EntryInstance where
 import qualified Data.Vector.Strict as Strict
 import Stage2.Scope (Environment (..), Local)
 import qualified Stage3.Simple.Type as Type
+import Stage3.Tree.EntryInfo (EntryInfo (..))
 import {-# SOURCE #-} qualified Stage3.Unify as Unify
 import Stage4.Tree.Entry (Entry (..))
 
@@ -17,3 +18,6 @@ instanciate fresh Entry {entry, strict} =
     { entry = Type.instanciate fresh entry,
       strict
     }
+
+info :: EntryInstance s scope -> EntryInfo
+info EntryInstance {strict} = EntryInfo {strict}

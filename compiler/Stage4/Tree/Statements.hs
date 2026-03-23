@@ -11,16 +11,18 @@ import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage3.Tree.ConstructorInfo (ConstructorInfo (..))
-import qualified Stage3.Tree.ConstructorInfo as ConstructorInfo
-import qualified Stage3.Tree.Statements as Stage3
+import qualified Stage3.Tree.ConstructorInfo as Stage3 (ConstructorInfo (..))
+import qualified Stage3.Tree.ConstructorInfo as Stage3.ConstructorInfo
+import qualified Stage3.Tree.Statements as Stage3 (Statements (..))
 import qualified Stage4.Index.Term as Term
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
 import Stage4.Temporary.Pattern (Pattern)
 import qualified Stage4.Temporary.Pattern as Pattern
+import Stage4.Tree.ConstructorInfo (ConstructorInfo (..))
 import {-# SOURCE #-} Stage4.Tree.Declarations (Declarations)
 import {-# SOURCE #-} qualified Stage4.Tree.Declarations as Declarations
+import Stage4.Tree.EntryInfo (EntryInfo (..))
 import {-# SOURCE #-} Stage4.Tree.Expression (Expression)
 import {-# SOURCE #-} qualified Stage4.Tree.Expression as Expression
 
@@ -28,7 +30,7 @@ data Statements scope
   = Done {done :: !(Expression scope)}
   | Bind
       { constructor :: !(Constructor.Index scope),
-        patterns :: !Int,
+        constructorInfo :: !ConstructorInfo,
         check :: !(Expression scope),
         thenx :: !(Statements (Scope.SimplePattern ':+ scope))
       }
@@ -68,10 +70,10 @@ instance Substitute.Functor Statements where
       Done
         { done = Substitute.map category done
         }
-    Bind {constructor, patterns, check, thenx} ->
+    Bind {constructor, constructorInfo, check, thenx} ->
       Bind
         { constructor = Substitute.map category constructor,
-          patterns,
+          constructorInfo,
           check = Substitute.map category check,
           thenx = Substitute.map (Substitute.Over category) thenx
         }
@@ -119,8 +121,8 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
     go (length fields - 1)
     where
       go -1
-        | parameterCount <- ConstructorInfo.parameterCount constructorInfo,
-          patterns <- Strict.Vector.replicate parameterCount Pattern.Wildcard,
+        | entryCount <- Stage3.ConstructorInfo.entryCount constructorInfo,
+          patterns <- Strict.Vector.replicate entryCount Pattern.Wildcard,
           match <- Pattern.Constructor {constructor, patterns, constructorInfo},
           patternx <- Pattern.Match {match, irrefutable},
           fields <- (\(Pattern.Field field _) -> field) <$> fields,
@@ -146,7 +148,7 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
           Pattern.Constructor
             { constructor = Constructor.nil,
               patterns = Strict.Vector.empty,
-              constructorInfo = ConstructorInfo {parameterCount_ = 0}
+              constructorInfo = Stage3.ConstructorInfo {entries = Strict.Vector.empty}
             },
       tail <- Pattern.Match {match, irrefutable},
       patterns <- Strict.Vector.fromList [head, tail],
@@ -154,7 +156,14 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
         Pattern.Constructor
           { constructor = Constructor.cons,
             patterns,
-            constructorInfo = ConstructorInfo {parameterCount_ = 2}
+            constructorInfo =
+              Stage3.ConstructorInfo
+                { entries =
+                    Strict.Vector.fromList
+                      [ EntryInfo {strict = False},
+                        EntryInfo {strict = False}
+                      ]
+                }
           },
       cons <- Pattern.Match {match, irrefutable} ->
         bind cons check (Shift2.map Shift2.SimplifyList thenx)
@@ -169,7 +178,7 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
           Pattern.Constructor
             { constructor = Constructor.nil,
               patterns = Strict.Vector.empty,
-              constructorInfo = ConstructorInfo {parameterCount_ = 0}
+              constructorInfo = Stage3.ConstructorInfo {entries = Strict.Vector.empty}
             },
       patternx <- Pattern.Match {match, irrefutable} ->
         bind patternx check thenx
@@ -204,7 +213,7 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
         }
     replace ::
       Constructor2.Index scope ->
-      Int ->
+      ConstructorInfo ->
       Expression scope ->
       Statements (Scope.SimplePattern ':+ scope) ->
       Int ->
@@ -212,13 +221,13 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
     replace _ _ _ thenx -1 = Shift2.map (Shift2.Lift $ Shift.Unshift fail) thenx
       where
         fail = error "bad irrefutable replace"
-    replace constructor patterns check thenx n =
+    replace constructor constructorInfo check thenx n =
       LetOne
         { declaration =
             Expression.join_
               Bind
                 { constructor,
-                  patterns,
+                  constructorInfo,
                   check,
                   thenx =
                     Done
@@ -228,7 +237,7 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
           body =
             replace
               (shift constructor)
-              patterns
+              constructorInfo
               (shift check)
               (Shift2.map (Shift2.ReplaceIrrefutable n) thenx)
               (n - 1)
@@ -242,16 +251,18 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
     finish Pattern.Match {match, irrefutable} check thenx
       | Pattern.Constructor {constructor, patterns, constructorInfo} <- match,
         all wildcard patterns,
-        patterns <- length patterns,
         thenx <- Shift2.map Shift2.FinishPattern thenx =
-          if
-            | Newtype <- constructorInfo ->
-                LetOne
-                  { declaration = Expression.newtype_ constructor check Expression.Destruct,
-                    body = Shift2.map Shift2.FinishNewtype thenx
-                  }
-            | irrefutable -> replace constructor patterns check thenx (patterns - 1)
-            | otherwise -> Bind {constructor, patterns, check, thenx}
+          case constructorInfo of
+            Stage3.Newtype ->
+              LetOne
+                { declaration = Expression.newtype_ constructor check Expression.Destruct,
+                  body = Shift2.map Shift2.FinishNewtype thenx
+                }
+            Stage3.ConstructorInfo {entries}
+              | irrefutable -> replace constructor constructorInfo check thenx (length patterns - 1)
+              | otherwise -> Bind {constructor, constructorInfo, check, thenx}
+              where
+                constructorInfo = ConstructorInfo {entries}
       where
         wildcard Pattern.Wildcard {} = True
         wildcard _ = False
@@ -264,7 +275,7 @@ true =
           Pattern.Constructor
             { constructor = Constructor2.true,
               patterns = Strict.Vector.empty,
-              constructorInfo = ConstructorInfo {parameterCount_ = 0}
+              constructorInfo = Stage3.ConstructorInfo {entries = Strict.Vector.empty}
             },
         irrefutable = False
       }
@@ -292,10 +303,10 @@ simplify = \case
 call :: Statements scope -> Expression scope -> Statements scope
 call statements argument = case statements of
   Done {done} -> Done {done = Expression.call done argument}
-  Bind {constructor, patterns, check, thenx} ->
+  Bind {constructor, constructorInfo, check, thenx} ->
     Bind
       { constructor,
-        patterns,
+        constructorInfo,
         check,
         thenx = call thenx (shift argument)
       }
