@@ -431,6 +431,7 @@ executable hazy
     Stage5.Generate.LocalType
     Stage5.Generate.Mangle
     Stage5.Generate.Precontext
+    Stage5.Generate.Variable
     Stage5.Tree.Declarations
     Stage5.Tree.Evidence
     Stage5.Tree.Expression

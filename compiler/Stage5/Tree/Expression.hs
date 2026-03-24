@@ -1,5 +1,6 @@
 module Stage5.Tree.Expression where
 
+import Control.Monad (zipWithM)
 import Control.Monad.ST (ST)
 import Data.Char (ord)
 import Data.Foldable (toList)
@@ -10,11 +11,14 @@ import qualified Javascript.Tree.Statement as Javascript (Statement (..))
 import qualified Stage2.Index.Constructor as Constructor
 import qualified Stage2.Index.Method as Method
 import qualified Stage2.Index.Selector as Selector
+import Stage4.Tree.ConstructorInfo (ConstructorInfo (..))
+import Stage4.Tree.EntryInfo (EntryInfo (..))
 import Stage4.Tree.Expression (Expression (..))
 import Stage4.Tree.Instanciation (Instanciation (Instanciation))
 import Stage4.Tree.MethodInfo (MethodInfo (..))
 import Stage4.Tree.SchemeOver (SchemeOver (..))
 import qualified Stage4.Tree.SchemeOver as SchemeOver
+import qualified Stage5.Generate.Binding.Term as Term
 import Stage5.Generate.Context (Context (..), fresh, singleBinding, symbol, (!-))
 import qualified Stage5.Generate.Context as Context
 import qualified Stage5.Generate.Mangle as Mangle
@@ -88,9 +92,10 @@ force object =
           }
    in value
 
-evaluate :: Javascript.Expression -> [Javascript.Expression] -> Javascript.Expression
-evaluate thunk [] = force thunk
-evaluate function arguments =
+evaluate :: Bool -> Javascript.Expression -> [Javascript.Expression] -> Javascript.Expression
+evaluate False thunk [] = force thunk
+evaluate True value [] = value
+evaluate _ function arguments =
   Javascript.Call {function, arguments}
 
 generate ::
@@ -110,17 +115,30 @@ generateInto ::
   ST s [Javascript.Statement 'True]
 generateInto context target = \case
   Variable {variable, instanciation = Instanciation instanciation} -> do
-    name <- symbol context (context !- variable)
+    let Term.Binding {name, strict} = context !- variable
+    name <- symbol context name
     let expression = Javascript.Variable {name}
     arguments <- traverse (Evidence.generate context) (toList instanciation)
-    pure [done (evaluate expression arguments)]
-  Constructor {constructor = Constructor.Index {constructorIndex}, arguments} -> do
-    arguments <- traverse (thunk context Done) (toList arguments)
-    let tag = Javascript.Number constructorIndex
-        elements = map Javascript.Literal (tag : arguments)
-        fields = zip Mangle.fields elements
-        object = Javascript.Object {fields}
-    pure [done object]
+    pure [done (evaluate strict expression arguments)]
+  Constructor
+    { constructor = Constructor.Index {constructorIndex},
+      arguments,
+      constructorInfo = ConstructorInfo {entries}
+    } -> do
+      let process EntryInfo {strict} argument =
+            if strict
+              then do
+                (extra, value) <- generate context argument
+                pure (extra, value)
+              else do
+                value <- thunk context Done argument
+                pure ([], value)
+      (extra, arguments) <- unzip <$> zipWithM process (toList entries) (toList arguments)
+      let tag = Javascript.Number constructorIndex
+          elements = map Javascript.Literal (tag : arguments)
+          fields = zip Mangle.fields elements
+          object = Javascript.Object {fields}
+      pure $ concat extra ++ [done object]
   Character {character} -> do
     let string = Javascript.Number {number = ord character}
     pure [done string]
@@ -140,15 +158,19 @@ generateInto context target = \case
           statement = Javascript.Const name value
           expression = Javascript.Variable {name}
       arguments <- traverse (Evidence.generate context) (toList instanciation)
-      pure [statement, done (evaluate expression arguments)]
-  Selector {selector = Selector.Index {selectorIndex}, argument} -> do
-    (statements, object) <- generate context argument
-    let select =
-          Javascript.Member
-            { object,
-              field = Mangle.fields !! (selectorIndex + 1)
-            }
-    pure $ statements ++ [done (force select)]
+      pure [statement, done (evaluate False expression arguments)]
+  Selector
+    { selector = Selector.Index {selectorIndex},
+      argument,
+      selectorInfo = EntryInfo {strict}
+    } -> do
+      (statements, object) <- generate context argument
+      let select =
+            Javascript.Member
+              { object,
+                field = Mangle.fields !! (selectorIndex + 1)
+              }
+      pure $ statements ++ [done (evaluate strict select [])]
   Let {declarations, letBody} -> do
     (context, declarations) <- Declarations.generate context declarations
     result <- generateInto context target letBody
@@ -202,8 +224,9 @@ data Binder
 
 thunk :: Context s scope -> Binder -> Expression scope -> ST s Javascript.Expression
 thunk context Done Variable {variable, instanciation = Instanciation instanciation}
-  | null instanciation = do
-      name <- symbol context (context !- variable)
+  | null instanciation,
+    Term.Binding {name, strict = False} <- context !- variable = do
+      name <- symbol context name
       pure Javascript.Variable {name}
 thunk context _ value = do
   body <- generateInto context done value

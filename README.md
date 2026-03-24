@@ -377,9 +377,6 @@ exotic :: (Eq (f Int), Eq (f Char)) => f Int -> f Int -> f Char -> f Char -> Boo
 exotic a b c d = a == b && c == d
 ```
 
-### Strict constructor fields are ignored
-The fields of a constructor are all lazy.
-
 ### Class methods are always public
 If you have access to a typeclass, then you are able to define instances for
 it's methods regards on whether or not the method is exported.

@@ -3,7 +3,7 @@ module Stage5.Tree.Statements (generate) where
 import Control.Monad.ST (ST)
 import Data.Foldable (toList)
 import Data.Text (Text)
-import qualified Data.Vector as Vector
+import qualified Data.Vector.Strict as Strict.Vector
 import qualified Javascript.Tree.Expression as Javascript (Expression (..))
 import qualified Javascript.Tree.Statement as Javascript (Statement (..))
 import qualified Stage2.Index.Constructor as Constructor
@@ -44,13 +44,13 @@ attempt context target label = \case
     pure $ assign ++ [break]
   Bind
     { constructor = Constructor.Index {constructorIndex},
-      constructorInfo = ConstructorInfo {entries},
+      constructorInfo = constructorInfo@ConstructorInfo {entries},
       check,
       thenx
     } -> do
       (prelude, check) <- Expression.generate context check
-      names <- Vector.replicateM (length entries) (Context.fresh context)
-      context <- pure $ Context.patternBindings names context
+      names <- Strict.Vector.replicateM (length entries) (Context.fresh context)
+      context <- pure $ Context.patternBindings names constructorInfo context
       thenx <- attempt context target label thenx
       let ifx = Javascript.If condition (bind ++ thenx)
           condition =
