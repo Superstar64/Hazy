@@ -1,6 +1,5 @@
 module Data.Ratio
-  ( Ratio,
-    Rational,
+  ( Rational,
     (%),
     numerator,
     denominator,
@@ -8,9 +7,7 @@ module Data.Ratio
   )
 where
 
-import Hazy (placeholder)
-
-data Ratio a
+import Hazy (Ratio, placeholder)
 
 type Rational = Ratio Integer
 

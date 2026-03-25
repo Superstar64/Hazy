@@ -20,6 +20,7 @@ data Index scope
   | Integer
   | Int
   | Ordering
+  | Ratio
   | Num
   | Enum
   | Eq
@@ -56,6 +57,7 @@ traverse run = \case
     Integer -> Integer
     Int -> Int
     Ordering -> Ordering
+    Ratio -> Ratio
     Num -> Num
     Enum -> Enum
     Eq -> Eq

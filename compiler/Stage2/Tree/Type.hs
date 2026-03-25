@@ -345,7 +345,8 @@ label context = \case
             { bool,
               list,
               tuplex,
-              ordering
+              ordering,
+              ratio
             }
         bool Constructor.False = builtin "False"
         bool Constructor.True = builtin "True"
@@ -366,6 +367,7 @@ label context = \case
         ordering Constructor.LT = builtin "LT"
         ordering Constructor.EQ = builtin "EQ"
         ordering Constructor.GT = builtin "GT"
+        ratio Constructor.MakeRatio = builtin ":%"
         builtin name =
           Stage1.Lifted
             { startPosition = (),
@@ -389,6 +391,7 @@ label context = \case
     Type2.ST -> builtin "ST"
     Type2.Integer -> builtin "Integer"
     Type2.Int -> builtin "Int"
+    Type2.Ratio -> builtin "Ratio"
     Type2.Num -> builtin "Num"
     Type2.Enum -> builtin "Enum"
     Type2.Eq -> builtin "Eq"

@@ -14,6 +14,7 @@ import Stage4.Tree.Builtin.MonadFail (monadFail, monadFailExtra)
 import Stage4.Tree.Builtin.Num (num, numExtra)
 import Stage4.Tree.Builtin.Ord (ord, ordExtra)
 import Stage4.Tree.Builtin.Ordering (ordering)
+import Stage4.Tree.Builtin.Ratio (ratio)
 import Stage4.Tree.Builtin.Tuple (tuple)
 import Stage4.Tree.Class (Class)
 import qualified Stage4.Tree.Class as Class
@@ -37,6 +38,7 @@ kind pure typex constructor = \case
     Type2.List -> dataKind
     Type2.Tuple {} -> dataKind
     Type2.Ordering -> dataKind
+    Type2.Ratio -> dataKind
     Type2.Char -> Type.smallType
     Type2.ST -> Type.smallType `Type.Function` Type.smallType `Type.Function` Type.smallType
     Type2.Arrow -> Type.smallType `Type.Function` Type.smallType `Type.Function` Type.smallType
@@ -68,6 +70,7 @@ instance Builtin Data where
     Type2.List -> pure list
     Type2.Tuple n -> pure (tuple n)
     Type2.Ordering -> pure ordering
+    Type2.Ratio -> pure ratio
     _ -> error "bad data index"
 
 instance Builtin Class where

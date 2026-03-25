@@ -52,6 +52,8 @@ import Stage2.Resolve.Builtin.Num
 import Stage2.Resolve.Builtin.Ord (compare, greaterThen, greaterThenEqual, lessThen, lessThenEqual, max, min, ord)
 import Stage2.Resolve.Builtin.Ordering (gt, lt, ordering)
 import qualified Stage2.Resolve.Builtin.Ordering as Ordering
+import Stage2.Resolve.Builtin.Ratio (ratio)
+import qualified Stage2.Resolve.Builtin.Ratio as Ratio
 import Prelude hiding
   ( Either (Left, Right),
     Ord (..),
@@ -253,7 +255,8 @@ builtin =
             true,
             lt,
             Ordering.eq,
-            gt
+            gt,
+            Ratio.make
           ],
       types =
         Map.fromListWith
@@ -269,6 +272,7 @@ builtin =
             integer,
             int,
             ordering,
+            ratio,
             num,
             enum,
             eq,

@@ -73,21 +73,33 @@ gt =
       constructorIndex = fromEnum EQ
     }
 
+data Ratio = MakeRatio
+  deriving (Enum, Bounded)
+
+makeRatio =
+  Index
+    { typeIndex = Type2.Ratio,
+      constructorIndex = fromEnum MakeRatio
+    }
+
 data All a = All
   { bool :: Bool -> a,
     list :: List -> a,
     tuplex :: Int -> Tuple -> a,
-    ordering :: Ordering -> a
+    ordering :: Ordering -> a,
+    ratio :: Ratio -> a
   }
 
 run :: (Type.Index scope -> Int -> a) -> All a -> Index scope -> a
-run normal All {bool, list, tuplex, ordering} Index {typeIndex, constructorIndex} = case typeIndex of
-  Type2.Index typeIndex -> normal typeIndex constructorIndex
-  Type2.Bool -> bool (toEnum constructorIndex)
-  Type2.List -> list (toEnum constructorIndex)
-  Type2.Tuple n -> tuplex n (toEnum constructorIndex)
-  Type2.Ordering -> ordering (toEnum constructorIndex)
-  _ -> error "bad run constructor"
+run normal All {bool, list, tuplex, ordering, ratio} Index {typeIndex, constructorIndex} =
+  case typeIndex of
+    Type2.Index typeIndex -> normal typeIndex constructorIndex
+    Type2.Bool -> bool (toEnum constructorIndex)
+    Type2.List -> list (toEnum constructorIndex)
+    Type2.Tuple n -> tuplex n (toEnum constructorIndex)
+    Type2.Ordering -> ordering (toEnum constructorIndex)
+    Type2.Ratio -> ratio (toEnum constructorIndex)
+    _ -> error "bad run constructor"
 
 map :: (Type.Index scope -> Type.Index scope') -> Index scope -> Index scope'
 map run = runIdentity . traverse (Identity . run)
