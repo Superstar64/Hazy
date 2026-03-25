@@ -44,6 +44,9 @@ defaultMin x y
   | x <= y = x
   | otherwise = y
 
+defaultToRational :: (Real a) => a -> Ratio Integer
+defaultToRational = undefined
+
 defaultSucc :: (Enum a) => a -> a
 defaultSucc = toEnum . (\x -> x + 1) . fromEnum
 

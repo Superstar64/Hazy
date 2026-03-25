@@ -102,6 +102,11 @@ max = Index Type2.Ord $ Prelude.fromEnum Max
 
 min = Index Type2.Ord $ Prelude.fromEnum Min
 
+data Real = ToRational
+  deriving (Prelude.Enum, Bounded, Show)
+
+toRational = Index Type2.Real $ Prelude.fromEnum ToRational
+
 data Functor
   = Fmap
   | Fconst

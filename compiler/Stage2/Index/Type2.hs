@@ -25,6 +25,7 @@ data Index scope
   | Enum
   | Eq
   | Ord
+  | Real
   | Functor
   | Applicative
   | Monad
@@ -62,6 +63,7 @@ traverse run = \case
     Enum -> Enum
     Eq -> Eq
     Ord -> Ord
+    Real -> Real
     Functor -> Functor
     Applicative -> Applicative
     Monad -> Monad

@@ -92,6 +92,7 @@ mangleInstance run brand name target = Text.Lazy.toStrict $ Builder.toLazyText b
       Type2.Enum -> fromString "Hazy.Enum"
       Type2.Eq -> fromString "Hazy.Eq"
       Type2.Ord -> fromString "Hazy.Ord"
+      Type2.Real -> fromString "Hazy.Real"
       Type2.Functor -> fromString "Hazy.Functor"
       Type2.Applicative -> fromString "Hazy.Applicative"
       Type2.Monad -> fromString "Hazy.Monad"
@@ -180,6 +181,7 @@ data Builtin a = Builtin
     defaultGreaterThenEqual,
     defaultMax,
     defaultMin,
+    defaultToRational,
     defaultNotEqual,
     defaultFmap,
     defaultFconst,
@@ -244,6 +246,7 @@ instance Applicative Builtin where
         defaultGreaterThenEqual = a,
         defaultMax = a,
         defaultMin = a,
+        defaultToRational = a,
         defaultFmap = a,
         defaultFconst = a,
         defaultPure = a,
@@ -301,6 +304,7 @@ instance Applicative Builtin where
         defaultGreaterThenEqual = defaultGreaterThenEqual function (defaultGreaterThenEqual argument),
         defaultMax = defaultMax function (defaultMax argument),
         defaultMin = defaultMin function (defaultMin argument),
+        defaultToRational = defaultToRational function (defaultToRational argument),
         defaultFmap = defaultFmap function (defaultFmap argument),
         defaultFconst = defaultFconst function (defaultFconst argument),
         defaultPure = defaultPure function (defaultPure argument),
@@ -360,6 +364,7 @@ instance Foldable Builtin where
         defaultGreaterThenEqual,
         defaultMax,
         defaultMin,
+        defaultToRational,
         defaultFmap,
         defaultFconst,
         defaultPure,
@@ -415,6 +420,7 @@ instance Foldable Builtin where
         defaultGreaterThenEqual,
         defaultMax,
         defaultMin,
+        defaultToRational,
         defaultFmap,
         defaultFconst,
         defaultPure,
@@ -475,6 +481,7 @@ canonical =
       defaultGreaterThenEqual = pack "defaultGreaterThenEqual",
       defaultMax = pack "defaultMax",
       defaultMin = pack "defaultMin",
+      defaultToRational = pack "defaultToRational",
       defaultFmap = pack "defaultFmap",
       defaultFconst = pack "defaultFconst",
       defaultPure = pack "defaultPure",
@@ -534,6 +541,7 @@ unique :: [Text]
     : defaultGreaterThenEqual
     : defaultMax
     : defaultMin
+    : defaultToRational
     : defaultFmap
     : defaultFconst
     : defaultPure
@@ -592,6 +600,7 @@ unique :: [Text]
               defaultGreaterThenEqual,
               defaultMax,
               defaultMin,
+              defaultToRational,
               defaultFmap,
               defaultFconst,
               defaultPure,

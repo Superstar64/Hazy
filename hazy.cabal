@@ -208,6 +208,7 @@ executable hazy
     Stage2.Resolve.Builtin.Ord
     Stage2.Resolve.Builtin.Ordering
     Stage2.Resolve.Builtin.Ratio
+    Stage2.Resolve.Builtin.Real
     Stage2.Resolve.Canonical
     Stage2.Resolve.Context
     Stage2.Resolve.Core
@@ -399,6 +400,7 @@ executable hazy
     Stage4.Tree.Builtin.Ord
     Stage4.Tree.Builtin.Ordering
     Stage4.Tree.Builtin.Ratio
+    Stage4.Tree.Builtin.Real
     Stage4.Tree.Builtin.Tuple
     Stage4.Tree.Class
     Stage4.Tree.ClassExtra

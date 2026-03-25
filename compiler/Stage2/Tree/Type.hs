@@ -396,6 +396,7 @@ label context = \case
     Type2.Enum -> builtin "Enum"
     Type2.Eq -> builtin "Eq"
     Type2.Ord -> builtin "Ord"
+    Type2.Real -> builtin "Real"
     Type2.Functor -> builtin "Functor"
     Type2.Applicative -> builtin "Applicative"
     Type2.Monad -> builtin "Monad"

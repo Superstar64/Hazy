@@ -12,6 +12,7 @@ import Stage2.Index.Method
     MonadFail (..),
     Num (..),
     Ord (..),
+    Real (..),
   )
 import Stage4.Tree.Hook (Hook (..))
 import Stage5.Generate.Context (Context (..))
@@ -46,6 +47,7 @@ generateInto context target hook = do
           defaultGreaterThenEqual,
           defaultMax,
           defaultMin,
+          defaultToRational,
           defaultFmap,
           defaultFconst,
           defaultPure,
@@ -94,6 +96,8 @@ generateInto context target hook = do
       GreaterThenEqual -> defaultGreaterThenEqual
       Max -> defaultMax
       Min -> defaultMin
+    DefaultReal {evidence, real} -> defaultx evidence $ case real of
+      ToRational -> defaultToRational
     DefaultFunctor {evidence, functor} -> defaultx evidence $ case functor of
       Fmap -> defaultFmap
       Fconst -> defaultFconst

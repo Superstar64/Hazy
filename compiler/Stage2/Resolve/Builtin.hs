@@ -49,11 +49,21 @@ import Stage2.Resolve.Builtin.Num
     plus,
     signum,
   )
-import Stage2.Resolve.Builtin.Ord (compare, greaterThen, greaterThenEqual, lessThen, lessThenEqual, max, min, ord)
+import Stage2.Resolve.Builtin.Ord
+  ( compare,
+    greaterThen,
+    greaterThenEqual,
+    lessThen,
+    lessThenEqual,
+    max,
+    min,
+    ord,
+  )
 import Stage2.Resolve.Builtin.Ordering (gt, lt, ordering)
 import qualified Stage2.Resolve.Builtin.Ordering as Ordering
 import Stage2.Resolve.Builtin.Ratio (ratio)
 import qualified Stage2.Resolve.Builtin.Ratio as Ratio
+import Stage2.Resolve.Builtin.Real (real, toRational)
 import Prelude hiding
   ( Either (Left, Right),
     Ord (..),
@@ -74,6 +84,7 @@ import Prelude hiding
     signum,
     succ,
     toEnum,
+    toRational,
   )
 
 charName = constructorIdentifier (pack "Char")
@@ -235,6 +246,7 @@ builtin =
             greaterThenEqual,
             max,
             min,
+            toRational,
             runST,
             fmap,
             fconst,
@@ -277,6 +289,7 @@ builtin =
             enum,
             eq,
             ord,
+            real,
             functor,
             applicative,
             monad,
