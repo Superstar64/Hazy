@@ -5,7 +5,7 @@ module Data.Void
   )
 where
 
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 
 data Void
 

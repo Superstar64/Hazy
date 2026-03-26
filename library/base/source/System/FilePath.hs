@@ -55,7 +55,7 @@ module System.FilePath
   )
 where
 
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 
 pathSeparator :: Char
 pathSeparator = placeholder

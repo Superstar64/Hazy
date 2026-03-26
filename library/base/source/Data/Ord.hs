@@ -7,7 +7,7 @@ module Data.Ord
   )
 where
 
-import Hazy (Ord (..), Ordering (..), placeholder)
+import Hazy.Prelude (Ord (..), Ordering (..), placeholder)
 import Prelude (Eq, error)
 
 newtype Down a = Down

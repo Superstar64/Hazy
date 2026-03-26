@@ -9,7 +9,7 @@ module Data.STRef
 where
 
 import Control.Monad.ST (ST)
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 
 data STRef s a
 

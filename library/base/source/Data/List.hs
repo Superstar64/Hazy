@@ -166,7 +166,7 @@ import Data.Traversable
   ( mapAccumL,
     mapAccumR,
   )
-import Hazy (map, placeholder)
+import Hazy.Prelude (map, placeholder)
 import Prelude (Integral, Num, error)
 
 infixr 5 ++

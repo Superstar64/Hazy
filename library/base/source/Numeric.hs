@@ -26,7 +26,7 @@ module Numeric
   )
 where
 
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 
 showSigned :: (Real a) => (a -> ShowS) -> Int -> a -> ShowS
 showSigned = placeholder

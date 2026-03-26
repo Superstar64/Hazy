@@ -103,7 +103,7 @@ module Data.Text
   )
 where
 
-import Hazy (Text, pack, placeholder)
+import Hazy.Prelude (Text, pack, placeholder)
 
 unpack :: Text -> String
 unpack = placeholder

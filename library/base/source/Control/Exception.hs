@@ -1,6 +1,6 @@
 module Control.Exception where
 
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 
 -- Keep this absolutely minimal until I figure out how to deal with exceptions
 

@@ -9,7 +9,7 @@ where
 
 import Control.Applicative (Alternative)
 import Data.List.NonEmpty (NonEmpty)
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 
 some :: (Alternative m) => m a -> m (NonEmpty a)
 some = placeholder

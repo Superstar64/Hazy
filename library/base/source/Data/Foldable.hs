@@ -31,7 +31,7 @@ import Data.Int (Int)
 import Data.Maybe (Maybe)
 import Data.Monoid (Monoid)
 import Data.Ord (Ord, Ordering)
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 import Prelude (Num, error)
 
 class Foldable t where

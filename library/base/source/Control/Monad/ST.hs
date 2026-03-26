@@ -7,7 +7,7 @@ module Control.Monad.ST
   )
 where
 
-import Hazy (ST, placeholder, runST)
+import Hazy.Prelude (ST, placeholder, runST)
 
 fixST :: (a -> ST s a) -> ST s a
 fixST = placeholder

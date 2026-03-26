@@ -7,7 +7,7 @@ module Data.Ratio
   )
 where
 
-import Hazy (Ratio, placeholder)
+import Hazy.Prelude (Ratio, placeholder)
 
 type Rational = Ratio Integer
 

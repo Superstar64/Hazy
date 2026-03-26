@@ -1,6 +1,6 @@
 module System.Console.GetOpt where
 
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 
 getOpt :: ArgOrder a -> [OptDescr a] -> [String] -> ([a], [String], [String])
 getOpt = placeholder

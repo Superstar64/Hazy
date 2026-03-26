@@ -2,13 +2,14 @@
 
 -- |
 -- This module contains helpers that the runtime call into. This is mainly
--- and instance methods and type class defaults that are necessarily part of the
+-- for type class defaults and instances that are necessarily part of the
 -- runtime by transative closure.
 --
 -- The definitions here are largely taken from the Haskell2010 report.
 module Hazy.Helper where
 
 import Hazy
+import Hazy.Prelude
 
 defaultEqual, defaultNotEqual :: (Eq a) => a -> a -> Bool
 defaultEqual x y = not (x /= y)

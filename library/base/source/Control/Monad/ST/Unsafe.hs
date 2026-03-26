@@ -1,7 +1,7 @@
 module Control.Monad.ST.Unsafe where
 
 import Control.Monad.ST (ST)
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 
 unsafeInterleaveST :: ST s a -> ST s a
 unsafeInterleaveST = placeholder

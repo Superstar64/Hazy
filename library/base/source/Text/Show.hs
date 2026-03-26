@@ -13,7 +13,7 @@ import Data.Bool (Bool)
 import Data.Char (Char)
 import Data.Int (Int)
 import Data.String (String)
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 import Prelude (error)
 
 type ShowS = String -> String

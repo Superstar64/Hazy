@@ -1,7 +1,7 @@
 module Data.Bifoldable where
 
 import Control.Applicative (Alternative)
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 
 class Bifoldable p where
   bifold :: (Monoid m) => p m m -> m

@@ -20,7 +20,7 @@ module Foreign.Ptr
   )
 where
 
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 
 data Ptr a
 

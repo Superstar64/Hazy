@@ -109,7 +109,7 @@ module Data.Text.Lazy
 where
 
 import Data.Int (Int64)
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 
 data Text
 

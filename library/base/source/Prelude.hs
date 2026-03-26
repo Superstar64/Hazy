@@ -290,7 +290,7 @@ import Data.Tuple
     snd,
     uncurry,
   )
-import Hazy as Builtin
+import Hazy.Prelude
   ( Bounded (..),
     Enum (..),
     Fractional (..),
@@ -301,7 +301,7 @@ import Hazy as Builtin
     placeholder,
     subtract,
   )
-import qualified Hazy
+import qualified Hazy.Prelude as Hazy
 import System.IO
   ( FilePath,
     IO,

@@ -3,5 +3,5 @@ module Data.Eq
   )
 where
 
-import Hazy (Eq (..))
+import Hazy.Prelude (Eq (..))
 import Prelude ()

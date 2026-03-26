@@ -29,7 +29,7 @@ module Control.Applicative.Combinators
 where
 
 import Control.Applicative (Alternative (empty, many, some, (<|>)), optional)
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 
 between :: (Applicative m) => m open -> m close -> m a -> m a
 between = placeholder

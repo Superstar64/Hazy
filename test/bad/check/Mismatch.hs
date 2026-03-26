@@ -2,7 +2,7 @@
 
 module BadExample2 where
 
-import Hazy (Bool (False, True))
+import Hazy.Prelude (Bool (False, True))
 
 data Data a b = Data a (a -> b)
 

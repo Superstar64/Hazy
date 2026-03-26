@@ -64,7 +64,7 @@ module Data.List.NonEmpty
 where
 
 import Control.Applicative (Alternative (..))
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 
 infixr 5 :|
 

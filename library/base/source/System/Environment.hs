@@ -13,7 +13,7 @@ module System.Environment
   )
 where
 
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 
 getArgs :: IO [String]
 getArgs = placeholder

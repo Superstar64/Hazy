@@ -202,7 +202,7 @@ module Data.Vector
   )
 where
 
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 
 data Vector a
 

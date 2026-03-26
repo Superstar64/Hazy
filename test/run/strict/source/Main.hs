@@ -1,6 +1,6 @@
 module Main where
 
-import Hazy (pack, trace)
+import Hazy.Prelude (pack, trace)
 
 data Strict = Strict {select :: !String}
 

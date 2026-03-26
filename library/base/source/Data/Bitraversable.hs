@@ -2,7 +2,7 @@ module Data.Bitraversable where
 
 import Data.Bifoldable (Bifoldable)
 import Data.Bifunctor (Bifunctor)
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 
 class (Bifunctor t, Bifoldable t) => Bitraversable t where
   bitraverse :: (Applicative f) => (a -> f c) -> (b -> f d) -> t a b -> f (t c d)

@@ -8,7 +8,7 @@ module Data.Bool
   )
 where
 
-import Hazy (Bool (..), not, otherwise, placeholder)
+import Hazy.Prelude (Bool (..), not, otherwise, placeholder)
 import Prelude (error)
 
 infixr 3 &&

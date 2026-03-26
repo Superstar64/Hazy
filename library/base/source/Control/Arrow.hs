@@ -20,7 +20,7 @@ import Control.Category
     (<<<),
     (>>>),
   )
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 import Prelude hiding (id, (.))
 
 class (Category a) => Arrow a where

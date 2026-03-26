@@ -9,7 +9,7 @@ module Data.String
 where
 
 import Data.Char (Char)
-import Hazy (String, placeholder)
+import Hazy.Prelude (String, placeholder)
 import Prelude (error)
 
 class IsString a where

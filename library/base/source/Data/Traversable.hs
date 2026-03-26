@@ -12,7 +12,7 @@ where
 import Control.Applicative (Applicative)
 import Control.Monad (Monad)
 import Data.Monoid (Monoid)
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 import Prelude (Foldable, Functor, error)
 
 class (Functor t, Foldable t) => Traversable t where

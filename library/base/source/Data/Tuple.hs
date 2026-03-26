@@ -8,7 +8,7 @@ module Data.Tuple
   )
 where
 
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 import Prelude (error)
 
 data Solo a = Solo a

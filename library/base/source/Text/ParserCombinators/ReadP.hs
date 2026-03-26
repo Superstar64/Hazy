@@ -41,7 +41,7 @@ import Data.Bool (Bool)
 import Data.Char (Char)
 import Data.Int (Int)
 import Data.String (String)
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 import Text.Read (ReadS)
 import Prelude (error)
 

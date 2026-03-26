@@ -24,7 +24,7 @@ import Data.Semigroup
     Semigroup ((<>)),
     Sum (getSum),
   )
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 import Prelude ()
 
 class (Semigroup a) => Monoid a where

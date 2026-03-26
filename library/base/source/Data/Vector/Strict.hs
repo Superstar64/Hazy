@@ -1,7 +1,7 @@
 module Data.Vector.Strict where
 
 import qualified Data.Vector as Lazy
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 
 data Vector a
 

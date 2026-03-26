@@ -6,7 +6,7 @@ module System.IO.Unsafe
   )
 where
 
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 import System.IO (IO)
 import Prelude (error)
 

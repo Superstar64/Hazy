@@ -25,7 +25,7 @@ import Data.Int (Int)
 import Data.Maybe (Maybe)
 import Data.Ratio (Rational)
 import Data.String (String)
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 import Text.ParserCombinators.ReadP (ReadP)
 import Prelude (Integer, Num, error)
 

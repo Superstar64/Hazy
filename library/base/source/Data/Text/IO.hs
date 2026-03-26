@@ -15,7 +15,7 @@ module Data.Text.IO
 where
 
 import Data.Text (Text)
-import Hazy (placeholder, putStrLn)
+import Hazy.Prelude (placeholder, putStrLn)
 import System.IO (Handle)
 import Prelude (FilePath, IO, error)
 

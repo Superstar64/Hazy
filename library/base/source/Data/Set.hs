@@ -71,7 +71,7 @@ module Data.Set
   )
 where
 
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 
 data Set a
 

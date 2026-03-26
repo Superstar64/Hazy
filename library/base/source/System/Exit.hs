@@ -1,6 +1,6 @@
 module System.Exit where
 
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 
 data ExitCode
   = ExitSuccess

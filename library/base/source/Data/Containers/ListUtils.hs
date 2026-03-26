@@ -6,7 +6,7 @@ module Data.Containers.ListUtils
   )
 where
 
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 
 nubOrd :: (Ord a) => [a] -> [a]
 nubOrd = placeholder

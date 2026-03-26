@@ -13,7 +13,7 @@ module Data.Maybe
 where
 
 import Data.Bool (Bool)
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 import Prelude (error)
 
 data Maybe a

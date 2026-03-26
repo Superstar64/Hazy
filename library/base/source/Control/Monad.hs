@@ -47,7 +47,7 @@ import Data.Functor
 import Data.Int (Int)
 import Data.String (String)
 import Data.Traversable (Traversable, mapM, sequence)
-import Hazy (Monad (..), MonadFail (..), placeholder)
+import Hazy.Prelude (Monad (..), MonadFail (..), placeholder)
 import Prelude (error)
 
 class (Alternative m, Monad m) => MonadPlus m where

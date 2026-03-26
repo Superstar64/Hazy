@@ -26,7 +26,7 @@ where
 import Data.Bool (Bool)
 import Data.List.NonEmpty (NonEmpty)
 import Data.Monoid (Monoid)
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 import Prelude (Integral, error)
 
 class Semigroup a where

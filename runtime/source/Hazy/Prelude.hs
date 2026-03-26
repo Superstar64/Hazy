@@ -5,9 +5,18 @@
 -- subset of the proper Prelude that is needed by helper code.
 --
 -- The definitions here are largely taken from the Haskell2010 report.
-module Hazy.Prelude where
+module Hazy.Prelude
+  ( module Hazy.Prelude,
+    module Hazy.Builtin,
+    error,
+    pack,
+    putStrLn,
+    trace,
+  )
+where
 
 import Hazy
+import Hazy.Builtin
 
 infixr 9 .
 

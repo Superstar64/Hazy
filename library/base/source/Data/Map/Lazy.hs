@@ -131,7 +131,7 @@ where
 
 import Data.Semigroup (Arg)
 import Data.Set (Set)
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 
 data Map k a
 

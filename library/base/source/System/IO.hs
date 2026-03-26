@@ -103,7 +103,7 @@ import Data.String (String)
 import Data.Text (pack)
 import qualified Data.Text.IO as Text
 import Foreign.Ptr (Ptr)
-import Hazy (IO, placeholder)
+import Hazy.Prelude (IO, placeholder)
 import Text.Show (Show)
 import Prelude (Integer, Read, error)
 

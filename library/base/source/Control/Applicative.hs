@@ -18,7 +18,7 @@ where
 import Data.Foldable (asum)
 import Data.Functor (Functor, (<$), (<$>))
 import Data.Maybe (Maybe)
-import Hazy (Applicative (..), placeholder)
+import Hazy.Prelude (Applicative (..), placeholder)
 import Prelude (error)
 
 class (Applicative f) => Alternative f where

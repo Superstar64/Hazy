@@ -8,7 +8,7 @@ module Data.IORef
   )
 where
 
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 import System.IO (IO)
 import Prelude (error)
 

@@ -1,7 +1,7 @@
 module Data.Text.Lazy.IO where
 
 import Data.Text.Lazy (Text)
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 import System.IO (Handle)
 
 readFile :: FilePath -> IO Text

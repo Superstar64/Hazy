@@ -1,6 +1,6 @@
 module ZeroField where
 
-import qualified Hazy
+import qualified Hazy.Prelude as Hazy
 import Prelude ()
 
 data Zero = Zero

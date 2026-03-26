@@ -12,7 +12,7 @@ where
 
 import Data.Text (Text)
 import qualified Data.Text.Lazy as Lazy (Text)
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 
 data Builder
 

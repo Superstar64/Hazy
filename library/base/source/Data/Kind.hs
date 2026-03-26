@@ -4,4 +4,4 @@ module Data.Kind
   )
 where
 
-import Hazy (Constraint, Type)
+import Hazy.Prelude (Constraint, Type)

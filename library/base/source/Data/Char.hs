@@ -38,7 +38,7 @@ where
 import Data.Bool (Bool)
 import Data.Int (Int)
 import Data.String (String)
-import Hazy (Char, placeholder)
+import Hazy.Prelude (Char, placeholder)
 import Text.Show (ShowS)
 import Prelude (ReadS, error)
 

@@ -12,7 +12,7 @@ module Data.Either
 where
 
 import Data.Bool (Bool)
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 import Prelude (error)
 
 data Either a b

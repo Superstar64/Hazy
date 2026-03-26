@@ -5,7 +5,7 @@ module Control.Category
   )
 where
 
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 import Prelude hiding (id, (.))
 
 class Category cat where

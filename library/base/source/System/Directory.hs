@@ -60,7 +60,7 @@ module System.Directory
   )
 where
 
-import Hazy (placeholder)
+import Hazy.Prelude (placeholder)
 
 createDirectory :: FilePath -> IO ()
 createDirectory = placeholder
