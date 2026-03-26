@@ -461,6 +461,9 @@ executable hazy
 
   default-extensions:
     DataKinds
+    DeriveFoldable
+    DeriveFunctor
+    DeriveTraversable
     DisambiguateRecordFields
     GADTs
     LambdaCase
