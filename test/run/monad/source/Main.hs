@@ -41,13 +41,9 @@ abort = case Abort "def" <*> Valid "abc" of
   Valid message -> 'v' : message
 
 bad :: String
-bad = case do { True <- Valid False; pure "def"} of
+bad = case do True <- Valid False; pure "def" of
   Abort message -> 'a' : message
   Valid message -> 'v' : message
 
-combine :: String -> String -> String
-combine [] ys = ys
-combine (x : xs) ys = x : combine xs ys
-
 main :: IO ()
-main = putStrLn (valid `combine` abort `combine` bad)
+main = putStrLn (valid ++ abort ++ bad)

@@ -166,13 +166,8 @@ import Data.Traversable
   ( mapAccumL,
     mapAccumR,
   )
-import Hazy.Prelude (map, placeholder)
+import Hazy.Prelude (map, placeholder, (++))
 import Prelude (Integral, Num, error)
-
-infixr 5 ++
-
-(++) :: [a] -> [a] -> [a]
-(++) = placeholder
 
 head :: [a] -> a
 head = placeholder

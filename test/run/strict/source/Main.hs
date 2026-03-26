@@ -11,8 +11,4 @@ repack = let Strict repack = Strict "repack" in repack
 
 selector = select (Strict "select")
 
-combine :: String -> String -> String
-combine [] ys = ys
-combine (x : xs) ys = x : combine xs ys
-
-main = putStrLn (ignore `combine` repack `combine` selector)
+main = putStrLn (ignore ++ repack ++ selector)

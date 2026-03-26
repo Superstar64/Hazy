@@ -18,8 +18,4 @@ v2 = C {c1 = "c1", d = "d"}
 
 v3 = E {e = "e", f = "f", g = "g"}
 
-combine :: String -> String -> String
-combine [] ys = ys
-combine (x : xs) ys = x : combine xs ys
-
-main = putStrLn (b v1 `combine` c1 v2 `combine` d v2 `combine` g v3)
+main = putStrLn (b v1 ++ c1 v2 ++ d v2 ++ g v3)

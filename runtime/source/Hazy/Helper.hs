@@ -245,12 +245,16 @@ instance Eq HelperOrdering where
   Ordering GT == Ordering GT = True
   _ == _ = False
 
-newtype HelperList a = List [a]
+newtype HelperList a = List {list :: [a]}
 
 instance Functor HelperList
 
-instance Applicative HelperList
+instance Applicative HelperList where
+  pure x = List [x]
+  (<*>) = ap
 
-instance Monad HelperList
+instance Monad HelperList where
+  List m >>= k = List $ concat $ map (list . k) m
 
-instance MonadFail HelperList
+instance MonadFail HelperList where
+  fail _ = List []
