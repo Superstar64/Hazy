@@ -29,6 +29,8 @@ data Builtin
   | EqInt
   | EqList
   | EqOrdering
+  | OrdChar
+  | OrdTuple !Int
   | OrdInt
   | OrdInteger
   | OrdBool

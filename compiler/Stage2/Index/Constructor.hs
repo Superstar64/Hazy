@@ -70,7 +70,7 @@ eq =
 gt =
   Index
     { typeIndex = Type2.Ordering,
-      constructorIndex = fromEnum EQ
+      constructorIndex = fromEnum GT
     }
 
 data Ratio = MakeRatio

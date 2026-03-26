@@ -177,45 +177,92 @@ export const eqBool = helper["instance Hazy.Eq HelperBool"];
 export const eqChar = helper["instance Hazy.Eq HelperChar"];
 export const eqTuple =
   (unpack) =>
-  (...evidences) => ({
-    a: {
-      a: 0,
-      b: (x_) => (y_) => {
-        const x = unpack(force(x_));
-        const y = unpack(force(y_));
-        for (let i = 0; i < evidences.length; i++) {
-          const equal = force(evidences[i].a)(x[i])(y[i]);
-          if (!equal.a) {
-            return { a: 0 };
+  (...evidences) => {
+    const result = {
+      a: {
+        a: 0,
+        b: (x_) => (y_) => {
+          const x = unpack(force(x_));
+          const y = unpack(force(y_));
+          for (let i = 0; i < evidences.length; i++) {
+            const equal = force(evidences[i].a)(x[i])(y[i]);
+            if (!equal.a) {
+              return { a: 0 };
+            }
           }
-        }
-        return { a: 1 };
+          return { a: 1 };
+        },
       },
-    },
-    b: {
+      b: undefined,
+    };
+    result.b = {
       a: 0,
-      b: (x_) => (y_) => {
-        const x = unpack(force(x_));
-        const y = unpack(force(y_));
-        for (let i = 0; i < evidences.length; i++) {
-          const equal = force(evidences[i].b)(x[i])(y[i]);
-          if (equal.a) {
-            return { a: 1 };
-          }
-        }
-        return { a: 0 };
-      },
-    },
-  });
+      b: helper.defaultNotEqual(result),
+    };
+    return result;
+  };
 export const eqInt = helper["instance Hazy.Eq HelperInt"];
 export const eqInteger = helper["instance Hazy.Eq HelperInteger"];
 export const eqList = helper["instance Hazy.Eq HelperList"];
 export const eqOrdering = helper["instance Hazy.Eq HelperOrdering"];
+export const ordChar = helper["instance Hazy.Ord HelperChar"];
+export const ordTuple =
+  (unpack) =>
+  (...evidences) => {
+    const result = {
+      a: eqTuple(unpack)(...evidences.map((x) => x.a)),
+      b: {
+        a: 0,
+        b: (x_) => (y_) => {
+          const x = unpack(force(x_));
+          const y = unpack(force(y_));
+          for (let i = 0; i < evidences.length; i++) {
+            const result = force(evidences[i].b)(x[i])(y[i]);
+            if (result.a == 0 || result.a == 2) {
+              return { a: result.a };
+            }
+          }
+          return { a: 1 };
+        },
+      },
+      c: undefined,
+      d: undefined,
+      e: undefined,
+      f: undefined,
+      g: undefined,
+      h: undefined,
+    };
+    result.c = {
+      a: 0,
+      b: helper.defaultLessThen(result),
+    };
+    result.d = {
+      a: 0,
+      b: helper.defaultLessThenEqual(result),
+    };
+    result.e = {
+      a: 0,
+      b: helper.defaultGreaterThen(result),
+    };
+    result.f = {
+      a: 0,
+      b: helper.defaultGreaterThenEqual(result),
+    };
+    result.g = {
+      a: 0,
+      b: helper.defaultMax(result),
+    };
+    result.h = {
+      a: 0,
+      b: helper.defaultMin(result),
+    };
+    return result;
+  };
 export const ordInt = helper["instance Hazy.Ord HelperInt"];
 export const ordInteger = helper["instance Hazy.Ord HelperInteger"];
 export const ordBool = helper["instance Hazy.Ord HelperBool"];
 export const ordList = helper["instance Hazy.Ord HelperList"];
-export const ordOrdering = helper["instance Hazy.Ord Ordering"];
+export const ordOrdering = helper["instance Hazy.Ord HelperOrdering"];
 export const realInt = helper["instance Hazy.Real HelperInt"];
 export const realInteger = helper["instance Hazy.Real HelperInteger"];
 export const integralInt = helper["instance Hazy.Integral HelperInt"];

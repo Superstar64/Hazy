@@ -39,56 +39,65 @@ generate context = \case
       Evidence.Index index
         | Evidence.Binding name <- context Context.!~ index ->
             pure Javascript.Variable {name}
-      Evidence.Builtin evidence -> case evidence of
-        Evidence.EqTuple number ->
-          pure
-            Javascript.Call
-              { function = Javascript.Variable {name = eqTuple},
-                arguments =
-                  [ Javascript.Arrow
-                      { parameters = [Mangle.local],
-                        body =
-                          [ Javascript.Return $
-                              Javascript.Array $
-                                do
-                                  name <- take number $ tail Mangle.names
-                                  pure $
-                                    Javascript.Member
-                                      { object = Javascript.Variable {name = Mangle.local},
-                                        field = name
-                                      }
-                          ]
-                      }
-                  ]
-              }
-        _ -> pure Javascript.Variable {name}
-          where
-            name = case evidence of
-              Evidence.NumInt -> numInt
-              Evidence.NumInteger -> numInteger
-              Evidence.EnumBool -> enumBool
-              Evidence.EnumChar -> enumChar
-              Evidence.EnumInt -> enumInt
-              Evidence.EnumInteger -> enumInteger
-              Evidence.EqBool -> eqBool
-              Evidence.EqChar -> eqChar
-              Evidence.EqInt -> eqInt
-              Evidence.EqInteger -> eqInteger
-              Evidence.EqList -> eqList
-              Evidence.EqOrdering -> eqOrdering
-              Evidence.OrdInt -> ordInt
-              Evidence.OrdInteger -> ordInteger
-              Evidence.OrdBool -> ordBool
-              Evidence.OrdList -> ordList
-              Evidence.OrdOrdering -> ordOrdering
-              Evidence.RealInt -> realInt
-              Evidence.RealInteger -> realInteger
-              Evidence.IntegralInt -> integralInt
-              Evidence.IntegralInteger -> integralInteger
-              Evidence.FunctorList -> functorList
-              Evidence.ApplicativeList -> applicativeList
-              Evidence.MonadList -> monadList
-              Evidence.MonadFailList -> monadFailList
+      Evidence.Builtin evidence ->
+        let unpackTuple number =
+              [ Javascript.Arrow
+                  { parameters = [Mangle.local],
+                    body =
+                      [ Javascript.Return $
+                          Javascript.Array $
+                            do
+                              name <- take number $ tail Mangle.names
+                              pure $
+                                Javascript.Member
+                                  { object = Javascript.Variable {name = Mangle.local},
+                                    field = name
+                                  }
+                      ]
+                  }
+              ]
+         in case evidence of
+              Evidence.EqTuple number ->
+                pure
+                  Javascript.Call
+                    { function = Javascript.Variable {name = eqTuple},
+                      arguments = unpackTuple number
+                    }
+              Evidence.OrdTuple number ->
+                pure
+                  Javascript.Call
+                    { function = Javascript.Variable {name = ordTuple},
+                      arguments = unpackTuple number
+                    }
+              _ -> pure Javascript.Variable {name}
+                where
+                  name = case evidence of
+                    Evidence.NumInt -> numInt
+                    Evidence.NumInteger -> numInteger
+                    Evidence.EnumBool -> enumBool
+                    Evidence.EnumChar -> enumChar
+                    Evidence.EnumInt -> enumInt
+                    Evidence.EnumInteger -> enumInteger
+                    Evidence.EqBool -> eqBool
+                    Evidence.EqChar -> eqChar
+                    Evidence.EqInt -> eqInt
+                    Evidence.EqInteger -> eqInteger
+                    Evidence.EqList -> eqList
+                    Evidence.EqOrdering -> eqOrdering
+                    Evidence.OrdChar -> ordChar
+                    Evidence.OrdInt -> ordInt
+                    Evidence.OrdInteger -> ordInteger
+                    Evidence.OrdBool -> ordBool
+                    Evidence.OrdList -> ordList
+                    Evidence.OrdOrdering -> ordOrdering
+                    Evidence.RealInt -> realInt
+                    Evidence.RealInteger -> realInteger
+                    Evidence.IntegralInt -> integralInt
+                    Evidence.IntegralInteger -> integralInteger
+                    Evidence.FunctorList -> functorList
+                    Evidence.ApplicativeList -> applicativeList
+                    Evidence.MonadList -> monadList
+                    Evidence.MonadFailList -> monadFailList
         where
           Mangle.Builtin
             { numInt,
@@ -107,6 +116,8 @@ generate context = \case
               ordInt,
               ordInteger,
               ordBool,
+              ordChar,
+              ordTuple,
               ordList,
               ordOrdering,
               realInt,

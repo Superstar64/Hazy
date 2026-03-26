@@ -261,14 +261,16 @@ instance Eq HelperOrdering where
   Ordering GT == Ordering GT = True
   _ == _ = False
 
-instance Ord Ordering where
-  Ordering LT <= Ordering LT = True
-  Ordering LT <= Ordering EQ = True
-  Ordering LT <= Ordering GT = True
-  Ordering EQ <= Ordering EQ = True
-  Ordering EQ <= Ordering GT = True
-  Ordering GT <= Ordering GT = True
-  _ <= _ = False
+instance Ord HelperOrdering where
+  Ordering LT `compare` Ordering LT = EQ
+  Ordering LT `compare` Ordering EQ = LT
+  Ordering LT `compare` Ordering GT = LT
+  Ordering EQ `compare` Ordering LT = GT
+  Ordering EQ `compare` Ordering EQ = EQ
+  Ordering EQ `compare` Ordering GT = LT
+  Ordering GT `compare` Ordering LT = GT
+  Ordering GT `compare` Ordering EQ = GT
+  Ordering GT `compare` Ordering GT = EQ
 
 newtype HelperList a = List {list :: [a]}
 
@@ -278,13 +280,13 @@ instance (Eq a) => Eq (HelperList a) where
   _ == _ = False
 
 instance (Ord a) => Ord (HelperList a) where
-  List [] <= List [] = True
-  List [] <= List (_ : _) = True
-  List (x : xs) <= List (x' : xs') = case compare x x' of
-    LT -> True
-    EQ -> xs <= xs'
-    GT -> False
-  _ <= _ = False
+  List [] `compare` List [] = EQ
+  List [] `compare` List (_ : _) = LT
+  List (_ : _) `compare` List [] = GT
+  List (x : xs) `compare` List (x' : xs') = case compare x x' of
+    LT -> LT
+    EQ -> compare xs xs'
+    GT -> GT
 
 instance Functor HelperList where
   fmap f (List xs) = List (map f xs)
