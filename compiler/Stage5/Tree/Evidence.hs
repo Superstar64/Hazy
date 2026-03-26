@@ -74,9 +74,13 @@ generate context = \case
               Evidence.EqChar -> eqChar
               Evidence.EqInt -> eqInt
               Evidence.EqInteger -> eqInteger
+              Evidence.EqList -> eqList
               Evidence.EqOrdering -> eqOrdering
               Evidence.OrdInt -> ordInt
               Evidence.OrdInteger -> ordInteger
+              Evidence.OrdBool -> ordBool
+              Evidence.OrdList -> ordList
+              Evidence.OrdOrdering -> ordOrdering
               Evidence.RealInt -> realInt
               Evidence.RealInteger -> realInteger
               Evidence.IntegralInt -> integralInt
@@ -98,9 +102,13 @@ generate context = \case
               eqTuple,
               eqInteger,
               eqInt,
+              eqList,
               eqOrdering,
               ordInt,
               ordInteger,
+              ordBool,
+              ordList,
+              ordOrdering,
               realInt,
               realInteger,
               integralInt,

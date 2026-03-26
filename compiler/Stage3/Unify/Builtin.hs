@@ -43,10 +43,20 @@ constrain fallthough constrain = table
       pure $ single Evidence.EqInteger
     table Type2.Eq Type2.Int [] =
       pure $ single Evidence.EqInt
+    table Type2.Eq Type2.List [element] = do
+      element <- constrain Type2.Eq element
+      pure $ call Evidence.EqList [element]
     table Type2.Ord Type2.Int [] =
       pure $ single Evidence.OrdInt
     table Type2.Ord Type2.Integer [] =
       pure $ single Evidence.OrdInteger
+    table Type2.Ord Type2.Bool [] =
+      pure $ single Evidence.OrdBool
+    table Type2.Ord Type2.List [element] = do
+      element <- constrain Type2.Ord element
+      pure $ call Evidence.OrdList [element]
+    table Type2.Ord Type2.Ordering [] =
+      pure $ single Evidence.OrdOrdering
     table Type2.Real Type2.Int [] =
       pure $ single Evidence.RealInt
     table Type2.Real Type2.Integer [] =

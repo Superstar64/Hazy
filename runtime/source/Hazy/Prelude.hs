@@ -24,6 +24,10 @@ infixr 5 ++
 
 infixl 4 <$>
 
+infixr 3 &&
+
+infixr 2 ||
+
 infixr 0 $
 
 class Bounded a where
@@ -51,6 +55,12 @@ flip f x y = f y x
 
 ($) :: (a -> b) -> a -> b
 ($) = id
+
+(&&), (||) :: Bool -> Bool -> Bool
+True && x = x
+False && _ = False
+True || _ = True
+False || x = x
 
 not :: Bool -> Bool
 not True = False

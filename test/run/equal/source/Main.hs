@@ -8,7 +8,7 @@ data Custom = Custom
 instance Eq Custom where
   Custom == Custom = True
 
-same = case (number, 'a', Custom) == (1, 'a', Custom) of
+same = case (number, True, Custom, "abc", EQ) == (1, True, Custom, "abc", EQ) of
   True -> "y"
   False -> "n"
 

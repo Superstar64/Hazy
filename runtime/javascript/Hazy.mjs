@@ -209,9 +209,13 @@ export const eqTuple =
   });
 export const eqInt = helper["instance Hazy.Eq HelperInt"];
 export const eqInteger = helper["instance Hazy.Eq HelperInteger"];
+export const eqList = helper["instance Hazy.Eq HelperList"];
 export const eqOrdering = helper["instance Hazy.Eq HelperOrdering"];
 export const ordInt = helper["instance Hazy.Ord HelperInt"];
 export const ordInteger = helper["instance Hazy.Ord HelperInteger"];
+export const ordBool = helper["instance Hazy.Ord HelperBool"];
+export const ordList = helper["instance Hazy.Ord HelperList"];
+export const ordOrdering = helper["instance Hazy.Ord Ordering"];
 export const realInt = helper["instance Hazy.Real HelperInt"];
 export const realInteger = helper["instance Hazy.Real HelperInteger"];
 export const integralInt = helper["instance Hazy.Integral HelperInt"];

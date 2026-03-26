@@ -27,9 +27,13 @@ data Builtin
   | EqTuple !Int
   | EqInteger
   | EqInt
+  | EqList
   | EqOrdering
   | OrdInt
   | OrdInteger
+  | OrdBool
+  | OrdList
+  | OrdOrdering
   | RealInt
   | RealInteger
   | IntegralInt
