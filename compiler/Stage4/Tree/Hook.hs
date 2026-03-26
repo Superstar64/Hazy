@@ -31,6 +31,14 @@ data Hook scope
       { evidence :: !(Evidence scope),
         real :: !Method.Real
       }
+  | DefaultIntegral
+      { evidence :: !(Evidence scope),
+        integral :: !Method.Integral
+      }
+  | DefaultFractional
+      { evidence :: !(Evidence scope),
+        fractional :: !Method.Fractional
+      }
   | DefaultFunctor
       { evidence :: !(Evidence scope),
         functor :: !Method.Functor
@@ -84,6 +92,16 @@ instance Substitute.Functor Hook where
       DefaultReal
         { evidence = Substitute.map category evidence,
           real
+        }
+    DefaultIntegral {evidence, integral} ->
+      DefaultIntegral
+        { evidence = Substitute.map category evidence,
+          integral
+        }
+    DefaultFractional {evidence, fractional} ->
+      DefaultFractional
+        { evidence = Substitute.map category evidence,
+          fractional
         }
     DefaultFunctor {evidence, functor} ->
       DefaultFunctor

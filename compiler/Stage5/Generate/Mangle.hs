@@ -93,6 +93,8 @@ mangleInstance run brand name target = Text.Lazy.toStrict $ Builder.toLazyText b
       Type2.Eq -> fromString "Hazy.Eq"
       Type2.Ord -> fromString "Hazy.Ord"
       Type2.Real -> fromString "Hazy.Real"
+      Type2.Integral -> fromString "Hazy.Integral"
+      Type2.Fractional -> fromString "Hazy.Fractional"
       Type2.Functor -> fromString "Hazy.Functor"
       Type2.Applicative -> fromString "Hazy.Applicative"
       Type2.Monad -> fromString "Hazy.Monad"
@@ -174,6 +176,7 @@ data Builtin a = Builtin
     defaultEnumFromTo,
     defaultEnumFromThenTo,
     defaultEqual,
+    defaultNotEqual,
     defaultCompare,
     defaultLessThen,
     defaultLessThenEqual,
@@ -182,7 +185,16 @@ data Builtin a = Builtin
     defaultMax,
     defaultMin,
     defaultToRational,
-    defaultNotEqual,
+    defaultQuot,
+    defaultRem,
+    defaultDiv,
+    defaultMod,
+    defaultQuotRem,
+    defaultDivMod,
+    defaultToInteger,
+    defaultDivide,
+    defaultRecip,
+    defaultFromRational,
     defaultFmap,
     defaultFconst,
     defaultPure,
@@ -247,6 +259,16 @@ instance Applicative Builtin where
         defaultMax = a,
         defaultMin = a,
         defaultToRational = a,
+        defaultQuot = a,
+        defaultRem = a,
+        defaultDiv = a,
+        defaultMod = a,
+        defaultQuotRem = a,
+        defaultDivMod = a,
+        defaultToInteger = a,
+        defaultDivide = a,
+        defaultRecip = a,
+        defaultFromRational = a,
         defaultFmap = a,
         defaultFconst = a,
         defaultPure = a,
@@ -305,6 +327,16 @@ instance Applicative Builtin where
         defaultMax = defaultMax function (defaultMax argument),
         defaultMin = defaultMin function (defaultMin argument),
         defaultToRational = defaultToRational function (defaultToRational argument),
+        defaultQuot = defaultQuot function (defaultQuot argument),
+        defaultRem = defaultRem function (defaultRem argument),
+        defaultDiv = defaultDiv function (defaultDiv argument),
+        defaultMod = defaultMod function (defaultMod argument),
+        defaultQuotRem = defaultQuotRem function (defaultQuotRem argument),
+        defaultDivMod = defaultDivMod function (defaultDivMod argument),
+        defaultToInteger = defaultToInteger function (defaultToInteger argument),
+        defaultDivide = defaultDivide function (defaultDivide argument),
+        defaultRecip = defaultRecip function (defaultRecip argument),
+        defaultFromRational = defaultFromRational function (defaultFromRational argument),
         defaultFmap = defaultFmap function (defaultFmap argument),
         defaultFconst = defaultFconst function (defaultFconst argument),
         defaultPure = defaultPure function (defaultPure argument),
@@ -365,6 +397,16 @@ instance Foldable Builtin where
         defaultMax,
         defaultMin,
         defaultToRational,
+        defaultQuot,
+        defaultRem,
+        defaultDiv,
+        defaultMod,
+        defaultQuotRem,
+        defaultDivMod,
+        defaultToInteger,
+        defaultDivide,
+        defaultRecip,
+        defaultFromRational,
         defaultFmap,
         defaultFconst,
         defaultPure,
@@ -421,6 +463,16 @@ instance Foldable Builtin where
         defaultMax,
         defaultMin,
         defaultToRational,
+        defaultQuot,
+        defaultRem,
+        defaultDiv,
+        defaultMod,
+        defaultQuotRem,
+        defaultDivMod,
+        defaultToInteger,
+        defaultDivide,
+        defaultRecip,
+        defaultFromRational,
         defaultFmap,
         defaultFconst,
         defaultPure,
@@ -482,6 +534,16 @@ canonical =
       defaultMax = pack "defaultMax",
       defaultMin = pack "defaultMin",
       defaultToRational = pack "defaultToRational",
+      defaultQuot = pack "defaultQuot",
+      defaultRem = pack "defaultRem",
+      defaultDiv = pack "defaultDiv",
+      defaultMod = pack "defaultMod",
+      defaultQuotRem = pack "defaultQuotRem",
+      defaultDivMod = pack "defaultDivMod",
+      defaultToInteger = pack "defaultToInteger",
+      defaultDivide = pack "defaultDivide",
+      defaultRecip = pack "defaultRecip",
+      defaultFromRational = pack "defaultFromRational",
       defaultFmap = pack "defaultFmap",
       defaultFconst = pack "defaultFconst",
       defaultPure = pack "defaultPure",
@@ -542,6 +604,16 @@ unique :: [Text]
     : defaultMax
     : defaultMin
     : defaultToRational
+    : defaultQuot
+    : defaultRem
+    : defaultDiv
+    : defaultMod
+    : defaultQuotRem
+    : defaultDivMod
+    : defaultToInteger
+    : defaultDivide
+    : defaultRecip
+    : defaultFromRational
     : defaultFmap
     : defaultFconst
     : defaultPure
@@ -601,6 +673,16 @@ unique :: [Text]
               defaultMax,
               defaultMin,
               defaultToRational,
+              defaultQuot,
+              defaultRem,
+              defaultDiv,
+              defaultMod,
+              defaultQuotRem,
+              defaultDivMod,
+              defaultToInteger,
+              defaultDivide,
+              defaultRecip,
+              defaultFromRational,
               defaultFmap,
               defaultFconst,
               defaultPure,

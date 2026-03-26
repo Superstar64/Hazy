@@ -7,7 +7,9 @@ import Stage4.Tree.Builtin.Applicative (applicative, applicativeExtra)
 import Stage4.Tree.Builtin.Bool (bool)
 import Stage4.Tree.Builtin.Enum (enum, enumExtra)
 import Stage4.Tree.Builtin.Eq (eq, eqExtra)
+import Stage4.Tree.Builtin.Fractional (fractional, fractionalExtra)
 import Stage4.Tree.Builtin.Functor (functor, functorExtra)
+import Stage4.Tree.Builtin.Integral (integral, integralExtra)
 import Stage4.Tree.Builtin.List (list)
 import Stage4.Tree.Builtin.Monad (monad, monadExtra)
 import Stage4.Tree.Builtin.MonadFail (monadFail, monadFailExtra)
@@ -50,6 +52,8 @@ kind pure typex constructor = \case
     Type2.Eq -> classKind
     Type2.Ord -> classKind
     Type2.Real -> classKind
+    Type2.Integral -> classKind
+    Type2.Fractional -> classKind
     Type2.Functor -> classKind
     Type2.Applicative -> classKind
     Type2.Monad -> classKind
@@ -83,6 +87,8 @@ instance Builtin Class where
     Type2.Eq -> pure eq
     Type2.Ord -> pure ord
     Type2.Real -> pure real
+    Type2.Integral -> pure integral
+    Type2.Fractional -> pure fractional
     Type2.Functor -> pure functor
     Type2.Applicative -> pure applicative
     Type2.Monad -> pure monad
@@ -97,6 +103,8 @@ instance Builtin ClassExtra where
     Type2.Eq -> pure eqExtra
     Type2.Ord -> pure ordExtra
     Type2.Real -> pure realExtra
+    Type2.Integral -> pure integralExtra
+    Type2.Fractional -> pure fractionalExtra
     Type2.Functor -> pure functorExtra
     Type2.Applicative -> pure applicativeExtra
     Type2.Monad -> pure monadExtra

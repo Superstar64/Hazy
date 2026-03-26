@@ -36,7 +36,9 @@ import Stage2.Resolve.Builtin.Enum
     toEnum,
   )
 import Stage2.Resolve.Builtin.Eq (eq, equal, notEqual)
+import Stage2.Resolve.Builtin.Fractional (divide, fractional, fromRational, recip)
 import Stage2.Resolve.Builtin.Functor (fconst, fmap, functor)
+import Stage2.Resolve.Builtin.Integral (div, divMod, integral, mod, quot, quotRem, rem, toInteger)
 import Stage2.Resolve.Builtin.Monad (bind, monad, return, thenx)
 import Stage2.Resolve.Builtin.MonadFail (fail, monadFail)
 import Stage2.Resolve.Builtin.Num
@@ -65,26 +67,17 @@ import Stage2.Resolve.Builtin.Ratio (ratio)
 import qualified Stage2.Resolve.Builtin.Ratio as Ratio
 import Stage2.Resolve.Builtin.Real (real, toRational)
 import Prelude hiding
-  ( Either (Left, Right),
+  ( Applicative (..),
+    Either (..),
+    Enum (..),
+    Fractional (..),
+    Functor (..),
+    Integral (..),
+    Monad (..),
+    MonadFail (..),
+    Num (..),
     Ord (..),
-    abs,
-    enumFrom,
-    enumFromThen,
-    enumFromThenTo,
-    enumFromTo,
-    fail,
-    fmap,
-    fromEnum,
-    fromInteger,
-    liftA2,
-    negate,
-    pred,
-    pure,
-    return,
-    signum,
-    succ,
-    toEnum,
-    toRational,
+    Real (..),
   )
 
 charName = constructorIdentifier (pack "Char")
@@ -247,6 +240,16 @@ builtin =
             max,
             min,
             toRational,
+            quot,
+            rem,
+            div,
+            mod,
+            quotRem,
+            divMod,
+            toInteger,
+            divide,
+            recip,
+            fromRational,
             runST,
             fmap,
             fconst,
@@ -290,6 +293,8 @@ builtin =
             eq,
             ord,
             real,
+            integral,
+            fractional,
             functor,
             applicative,
             monad,

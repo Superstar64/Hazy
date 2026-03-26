@@ -107,6 +107,32 @@ data Real = ToRational
 
 toRational = Index Type2.Real $ Prelude.fromEnum ToRational
 
+data Integral = Quot | Rem | Div | Mod | QuotRem | DivMod | ToInteger
+  deriving (Prelude.Enum, Bounded, Show)
+
+quot = Index Type2.Integral $ Prelude.fromEnum Quot
+
+rem = Index Type2.Integral $ Prelude.fromEnum Rem
+
+div = Index Type2.Integral $ Prelude.fromEnum Div
+
+mod = Index Type2.Integral $ Prelude.fromEnum Mod
+
+quotRem = Index Type2.Integral $ Prelude.fromEnum QuotRem
+
+divMod = Index Type2.Integral $ Prelude.fromEnum DivMod
+
+toInteger = Index Type2.Integral $ Prelude.fromEnum ToInteger
+
+data Fractional = Divide | Recip | FromRational
+  deriving (Prelude.Enum, Bounded, Show)
+
+divide = Index Type2.Fractional $ Prelude.fromEnum Divide
+
+recip = Index Type2.Fractional $ Prelude.fromEnum Recip
+
+fromRational = Index Type2.Fractional $ Prelude.fromEnum FromRational
+
 data Functor
   = Fmap
   | Fconst

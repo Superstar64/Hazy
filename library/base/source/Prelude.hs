@@ -293,8 +293,11 @@ import Data.Tuple
 import Hazy as Builtin
   ( Bounded (..),
     Enum (..),
+    Fractional (..),
     Integer,
+    Integral (..),
     Num (..),
+    Real (..),
     placeholder,
     subtract,
   )
@@ -346,21 +349,6 @@ data Float
 data Double
 
 data Word
-
-class (Num a, Ord a) => Real a where
-  toRational :: a -> Rational
-
-class (Real a, Enum a) => Integral a where
-  infixl 7 `quot`, `rem`, `div`, `mod`
-  quot, rem, div, mod :: a -> a -> a
-  quotRem, divMod :: a -> a -> (a, a)
-  toInteger :: a -> Integer
-
-class (Num a) => Fractional a where
-  infixl 7 /
-  (/) :: a -> a -> a
-  recip :: a -> a
-  fromRational :: Rational -> a
 
 class (Fractional a) => Floating a where
   pi :: a

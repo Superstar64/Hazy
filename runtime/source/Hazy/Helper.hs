@@ -47,6 +47,34 @@ defaultMin x y
 defaultToRational :: (Real a) => a -> Ratio Integer
 defaultToRational = undefined
 
+defaultQuot,
+  defaultRem,
+  defaultDiv,
+  defaultMod ::
+    (Integral a) => a -> a -> a
+defaultQuot n d = q where (q, r) = quotRem n d
+defaultRem n d = r where (q, r) = quotRem n d
+defaultDiv n d = q where (q, r) = divMod n d
+defaultMod n d = r where (q, r) = divMod n d
+
+defaultQuotRem, defaultDivMod :: (Integral a) => a -> a -> (a, a)
+defaultQuotRem = undefined
+defaultDivMod n d = if signum r == negate (signum d) then (q - 1, r + d) else qr
+  where
+    qr@(q, r) = quotRem n d
+
+defaultToInteger :: (Integral a) => a -> Integer
+defaultToInteger = undefined
+
+defaultDivide :: (Fractional a) => a -> a -> a
+defaultDivide x y = x * recip y
+
+defaultRecip :: (Fractional a) => a -> a
+defaultRecip x = 1 / x
+
+defaultFromRational :: (Fractional a) => Ratio Integer -> a
+defaultFromRational = undefined
+
 defaultSucc :: (Enum a) => a -> a
 defaultSucc = toEnum . (\x -> x + 1) . fromEnum
 

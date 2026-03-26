@@ -7,7 +7,9 @@ import Stage2.Index.Method
   ( Applicative (..),
     Enum (..),
     Eq (..),
+    Fractional (..),
     Functor (..),
+    Integral (..),
     Monad (..),
     MonadFail (..),
     Num (..),
@@ -48,6 +50,16 @@ generateInto context target hook = do
           defaultMax,
           defaultMin,
           defaultToRational,
+          defaultQuot,
+          defaultRem,
+          defaultDiv,
+          defaultMod,
+          defaultQuotRem,
+          defaultDivMod,
+          defaultToInteger,
+          defaultDivide,
+          defaultRecip,
+          defaultFromRational,
           defaultFmap,
           defaultFconst,
           defaultPure,
@@ -98,6 +110,18 @@ generateInto context target hook = do
       Min -> defaultMin
     DefaultReal {evidence, real} -> defaultx evidence $ case real of
       ToRational -> defaultToRational
+    DefaultIntegral {evidence, integral} -> defaultx evidence $ case integral of
+      Quot -> defaultQuot
+      Rem -> defaultRem
+      Mod -> defaultMod
+      Div -> defaultDiv
+      QuotRem -> defaultQuotRem
+      DivMod -> defaultDivMod
+      ToInteger -> defaultToInteger
+    DefaultFractional {evidence, fractional} -> defaultx evidence $ case fractional of
+      Divide -> defaultDivide
+      Recip -> defaultRecip
+      FromRational -> defaultFromRational
     DefaultFunctor {evidence, functor} -> defaultx evidence $ case functor of
       Fmap -> defaultFmap
       Fconst -> defaultFconst

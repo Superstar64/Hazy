@@ -201,7 +201,9 @@ executable hazy
     Stage2.Resolve.Builtin.Bool
     Stage2.Resolve.Builtin.Enum
     Stage2.Resolve.Builtin.Eq
+    Stage2.Resolve.Builtin.Fractional
     Stage2.Resolve.Builtin.Functor
+    Stage2.Resolve.Builtin.Integral
     Stage2.Resolve.Builtin.Monad
     Stage2.Resolve.Builtin.MonadFail
     Stage2.Resolve.Builtin.Num
@@ -392,7 +394,9 @@ executable hazy
     Stage4.Tree.Builtin.Bool
     Stage4.Tree.Builtin.Enum
     Stage4.Tree.Builtin.Eq
+    Stage4.Tree.Builtin.Fractional
     Stage4.Tree.Builtin.Functor
+    Stage4.Tree.Builtin.Integral
     Stage4.Tree.Builtin.List
     Stage4.Tree.Builtin.Monad
     Stage4.Tree.Builtin.MonadFail
