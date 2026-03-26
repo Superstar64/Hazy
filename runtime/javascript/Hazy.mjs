@@ -16,14 +16,6 @@ export const placeholder = {
   },
 };
 
-export const _undefined = {
-  a: 1,
-  b() {
-    throw new Error("undefined");
-  },
-};
-export { _undefined as "undefined" };
-
 export const error = {
   a: 0,
   b: (message) => {
@@ -61,111 +53,108 @@ export const trace = {
   },
 };
 
-export const boundedIntMinBound = {
+export const primIntToChar = {
+  a: 0,
+  b: (c) => force(c),
+};
+
+export { primIntToChar as primCharToInt };
+
+export const primEqualInt = {
+  a: 0,
+  b: (x) => (y) => ({ a: +(force(x) === force(y)) }),
+};
+
+export const primLessThenEqualInt = {
+  a: 0,
+  b: (x) => (y) => ({ a: +(force(x) <= force(y)) }),
+};
+
+export const primIntMinBound = {
   a: 0,
   b: -2147483648,
 };
 
-export const boundedIntMaxBound = {
+export const primIntMaxBound = {
   a: 0,
   b: 2147483647,
 };
 
-export const numInt = {
-  a: { a: 0, b: (x) => (y) => (force(x) + force(y)) | 0 },
-  b: { a: 0, b: (x) => (y) => (force(x) - force(y)) | 0 },
-  c: { a: 0, b: (x) => (y) => Math.imul(force(x), force(y)) },
-  d: { a: 0, b: (x) => -force(x) | 0 },
-  e: { a: 0, b: (x) => -Math.abs(force(x)) | 0 },
-  f: { a: 0, b: (x) => Math.sign(force(x)) },
-  g: { a: 0, b: (x) => Number(BigInt.asIntN(32, force(x))) },
+export const primIntAdd = { a: 0, b: (x) => (y) => (force(x) + force(y)) | 0 };
+export const primIntMinus = {
+  a: 0,
+  b: (x) => (y) => (force(x) - force(y)) | 0,
+};
+export const primIntMultiply = {
+  a: 0,
+  b: (x) => (y) => Math.imul(force(x), force(y)),
+};
+export const primIntNegate = { a: 0, b: (x) => -force(x) | 0 };
+export const primIntAbs = { a: 0, b: (x) => -Math.abs(force(x)) | 0 };
+export const primIntSignum = { a: 0, b: (x) => Math.sign(force(x)) };
+
+export const primIntToInteger = {
+  a: 0,
+  b: (x) => BigInt(force(x)),
 };
 
-export const numInteger = {
-  a: { a: 0, b: (x) => (y) => force(x) + force(y) },
-  b: { a: 0, b: (x) => (y) => force(x) - force(y) },
-  c: { a: 0, b: (x) => (y) => force(x) * force(y) },
-  d: { a: 0, b: (x) => -force(x) },
-  e: {
-    a: 0,
-    b: (x_) => {
-      const x = force(x_);
-      return x >= 0n ? x : -x;
-    },
+export const primIntegerCastToInt = {
+  a: 0,
+  b: (x_) => {
+    const x = force(x_);
+    if (x > force(primIntMaxBound) || x < force(primIntMinBound)) {
+      throw new Error("Enum Integer Overflow");
+    }
+    return Number(x);
   },
-  f: {
-    a: 0,
-    b: (x_) => {
-      const x = force(x_);
-      return x === 0n ? 0n : x > 0n ? 1n : -1n;
-    },
+};
+
+export const primIntegerTruncateToInt = {
+  a: 0,
+  b: (x) => Number(BigInt.asIntN(32, force(x))),
+};
+
+export const primEqualInteger = {
+  a: 0,
+  b: (x) => (y) => ({ a: +(force(x) === force(y)) }),
+};
+
+export const primLessThenEqualInteger = {
+  a: 0,
+  b: (x) => (y) => ({ a: +(force(x) <= force(y)) }),
+};
+
+export const primIntegerAdd = { a: 0, b: (x) => (y) => force(x) + force(y) };
+export const primIntegerMinus = { a: 0, b: (x) => (y) => force(x) - force(y) };
+export const primIntegerMultiply = {
+  a: 0,
+  b: (x) => (y) => force(x) * force(y),
+};
+export const primIntegerNegate = { a: 0, b: (x) => -force(x) };
+export const primIntegerAbs = {
+  a: 0,
+  b: (x_) => {
+    const x = force(x_);
+    return x >= 0n ? x : -x;
   },
-  g: { a: 0, b: (x) => force(x) },
 };
 
-export const enumInt = {
-  a: helper.enumIntSucc,
-  b: helper.enumIntPred,
-  c: helper.enumIntToEnum,
-  d: helper.enumIntFromEnum,
-  e: helper.enumIntEnumFrom,
-  f: helper.enumIntEnumFromThen,
-  g: helper.enumIntEnumFromTo,
-  h: helper.enumIntEnumFromThenTo,
-};
-
-export const enumInteger = {
-  a: helper.enumIntegerSucc,
-  b: helper.enumIntegerPred,
-  c: { a: 0, b: (x) => BigInt(force(x)) },
-  d: {
-    a: 0,
-    b: (x_) => {
-      const x = force(x_);
-      if (x > force(boundedIntMaxBound) || x < force(boundedIntMinBound)) {
-        throw new Error("Enum Integer Overflow");
-      }
-      return Number(x);
-    },
+export const primIntegerSignum = {
+  a: 0,
+  b: (x_) => {
+    const x = force(x_);
+    return x === 0n ? 0n : x > 0n ? 1n : -1n;
   },
-  e: helper.enumIntegerEnumFrom,
-  f: helper.enumIntegerEnumFromThen,
-  g: helper.enumIntegerEnumFromTo,
-  h: helper.enumIntegerEnumFromThenTo,
 };
 
-export const enumBool = {
-  a: helper.enumBoolSucc,
-  b: helper.enumBoolPred,
-  c: helper.enumBoolToEnum,
-  d: helper.enumBoolFromEnum,
-  e: helper.enumBoolEnumFrom,
-  f: helper.enumBoolEnumFromThen,
-  g: helper.enumBoolEnumFromTo,
-  h: helper.enumBoolEnumFromThenTo,
-};
-
-export const enumChar = {
-  a: placeholder,
-  b: placeholder,
-  c: placeholder,
-  d: placeholder,
-  e: placeholder,
-  f: placeholder,
-  g: placeholder,
-  h: placeholder,
-};
-
-export const eqBool = {
-  a: helper.eqBoolEqual,
-  b: helper.eqBoolNotEqual,
-};
-
-export const eqChar = {
-  a: { a: 0, b: (x) => (y) => ({ a: +(force(x) === force(y)) }) },
-  b: { a: 0, b: (x) => (y) => ({ a: +(force(x) !== force(y)) }) },
-};
-
+export const numInt = helper["instance Hazy.Num HelperInt"];
+export const numInteger = helper["instance Hazy.Num HelperInteger"];
+export const enumBool = helper["instance Hazy.Enum HelperBool"];
+export const enumChar = helper["instance Hazy.Enum HelperChar"];
+export const enumInt = helper["instance Hazy.Enum HelperInt"];
+export const enumInteger = helper["instance Hazy.Enum HelperInteger"];
+export const eqBool = helper["instance Hazy.Eq HelperBool"];
+export const eqChar = helper["instance Hazy.Eq HelperChar"];
 export const eqTuple =
   (unpack) =>
   (...evidences) => ({
@@ -198,72 +187,12 @@ export const eqTuple =
       },
     },
   });
-
-export const eqInt = {
-  a: { a: 0, b: (x) => (y) => ({ a: +(force(x) === force(y)) }) },
-  b: { a: 0, b: (x) => (y) => ({ a: +(force(x) !== force(y)) }) },
-};
-
-export const eqInteger = {
-  a: { a: 0, b: (x) => (y) => ({ a: +(force(x) === force(y)) }) },
-  b: { a: 0, b: (x) => (y) => ({ a: +(force(x) !== force(y)) }) },
-};
-
-export const eqOrdering = {
-  a: helper.eqOrderingEqual,
-  b: helper.eqOrderingNotEqual,
-};
-
-export const ordInt = {
-  a: eqInt,
-  b: helper.ordIntCompare,
-  c: helper.ordIntLessThen,
-  d: {
-    a: 0,
-    b: (x) => (y) => ({ a: +(force(x) <= force(y)) }),
-  },
-  e: helper.ordIntGreaterThen,
-  f: helper.ordIntGreaterThenEqual,
-  g: helper.ordIntMax,
-  h: helper.ordIntMin,
-};
-
-export const ordInteger = {
-  a: eqInteger,
-  b: helper.ordIntegerCompare,
-  c: helper.ordIntegerLessThen,
-  d: {
-    a: 0,
-    b: (x) => (y) => ({ a: +(force(x) <= force(y)) }),
-  },
-  e: helper.ordIntegerGreaterThen,
-  f: helper.ordIntegerGreaterThenEqual,
-  g: helper.ordIntegerMax,
-  h: helper.ordIntegerMin,
-};
-
-export const functorList = {
-  a: placeholder,
-  b: placeholder,
-};
-
-export const applicativeList = {
-  a: functorList,
-  b: placeholder,
-  c: placeholder,
-  d: placeholder,
-  e: placeholder,
-  f: placeholder,
-};
-
-export const monadList = {
-  a: applicativeList,
-  b: placeholder,
-  c: placeholder,
-  d: placeholder,
-};
-
-export const monadFailList = {
-  a: monadList,
-  b: placeholder,
-};
+export const eqInt = helper["instance Hazy.Eq HelperInt"];
+export const eqInteger = helper["instance Hazy.Eq HelperInteger"];
+export const eqOrdering = helper["instance Hazy.Eq HelperOrdering"];
+export const ordInt = helper["instance Hazy.Ord HelperInt"];
+export const ordInteger = helper["instance Hazy.Ord HelperInteger"];
+export const functorList = helper["instance Hazy.Functor HelperList"];
+export const applicativeList = helper["instance Hazy.Applicative HelperList"];
+export const monadList = helper["instance Hazy.Monad HelperList"];
+export const monadFailList = helper["instance Hazy.MonadFail HelperList"];

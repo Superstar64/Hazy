@@ -22,7 +22,7 @@ generate context = \case
           Evidence.Index {} -> True
           Evidence.Class {} -> False
           Evidence.Data {} -> False
-          Evidence.Builtin {} -> True
+          Evidence.Builtin {} -> False
     literal@function <- case variable of
       Evidence.Class index target
         | Type.Binding {classInstances} <- context !=. index,

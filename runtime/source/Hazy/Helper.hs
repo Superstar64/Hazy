@@ -10,10 +10,8 @@ module Hazy.Helper where
 
 import Hazy
 
-defaultEqual :: (Eq a) => a -> a -> Bool
+defaultEqual, defaultNotEqual :: (Eq a) => a -> a -> Bool
 defaultEqual x y = not (x /= y)
-
-defaultNotEqual :: (Eq a) => a -> a -> Bool
 defaultNotEqual x y = not (x == y)
 
 defaultCompare :: (Ord a) => a -> a -> Ordering
@@ -22,24 +20,20 @@ defaultCompare x y
   | x <= y = LT
   | otherwise = GT
 
-defaultLessThen :: (Ord a) => a -> a -> Bool
+defaultLessThen,
+  defaultLessThenEqual,
+  defaultGreaterThen,
+  defaultGreaterThenEqual ::
+    (Ord a) => a -> a -> Bool
 defaultLessThen x y = compare x y == LT
-
-defaultLessThenEqual :: (Ord a) => a -> a -> Bool
 defaultLessThenEqual x y = compare x y /= GT
-
-defaultGreaterThen :: (Ord a) => a -> a -> Bool
 defaultGreaterThen x y = compare x y == GT
-
-defaultGreaterThenEqual :: (Ord a) => a -> a -> Bool
 defaultGreaterThenEqual x y = compare x y /= LT
 
-defaultMax :: (Ord a) => a -> a -> a
+defaultMax, defaultMin :: (Ord a) => a -> a -> a
 defaultMax x y
   | x <= y = y
   | otherwise = x
-
-defaultMin :: (Ord a) => a -> a -> a
 defaultMin x y
   | x <= y = x
   | otherwise = y
@@ -75,10 +69,8 @@ defaultRecip x = 1 / x
 defaultFromRational :: (Fractional a) => Ratio Integer -> a
 defaultFromRational = undefined
 
-defaultSucc :: (Enum a) => a -> a
+defaultSucc, defaultPred :: (Enum a) => a -> a
 defaultSucc = toEnum . (\x -> x + 1) . fromEnum
-
-defaultPred :: (Enum a) => a -> a
 defaultPred = toEnum . (subtract 1) . fromEnum
 
 defaultToEnum :: (Enum a) => Int -> a
@@ -99,22 +91,16 @@ defaultEnumFromThen x y = map toEnum [fromEnum x, fromEnum y ..]
 defaultEnumFromThenTo :: (Enum a) => a -> a -> a -> [a]
 defaultEnumFromThenTo x y z = map toEnum [fromEnum x, fromEnum y .. fromEnum z]
 
-defaultPlus :: (Num a) => a -> a -> a
+defaultPlus, defaultMinus, defaultMultiply :: (Num a) => a -> a -> a
 defaultPlus = undefined
-
-defaultMinus :: (Num a) => a -> a -> a
 defaultMinus x y = x + negate y
-
-defaultMultiply :: (Num a) => a -> a -> a
 defaultMultiply = undefined
 
 defaultNegate :: (Num a) => a -> a
 defaultNegate x = 0 - x
 
-defaultAbs :: (Num a) => a -> a
+defaultAbs, defaultSignum :: (Num a) => a -> a
 defaultAbs = undefined
-
-defaultSignum :: (Num a) => a -> a
 defaultSignum = undefined
 
 defaultFromInteger :: (Num a) => Integer -> a
@@ -153,136 +139,117 @@ defaultReturn = pure
 defaultFail :: (MonadFail m) => String -> m a
 defaultFail = undefined
 
-eqBoolEqual :: Bool -> Bool -> Bool
-eqBoolEqual False False = True
-eqBoolEqual True True = True
-eqBoolEqual _ _ = False
+newtype HelperBool = Bool Bool
 
-eqBoolNotEqual :: Bool -> Bool -> Bool
-eqBoolNotEqual a b = not (eqBoolEqual a b)
+instance Eq HelperBool where
+  Bool False == Bool False = True
+  Bool True == Bool True = True
+  _ == _ = False
 
-enumIntSucc :: Int -> Int
-enumIntSucc x = x + 1
+instance Ord HelperBool where
+  Bool False <= _ = True
+  Bool True <= Bool True = True
+  _ <= _ = False
 
-enumIntPred :: Int -> Int
-enumIntPred x = x - 1
+instance Enum HelperBool where
+  toEnum = \case
+    0 -> Bool False
+    1 -> Bool True
+  fromEnum = \case
+    Bool False -> 0
+    Bool True -> 1
 
-enumIntToEnum :: Int -> Int
-enumIntToEnum = id
+newtype HelperChar = Char Char
 
-enumIntFromEnum :: Int -> Int
-enumIntFromEnum = id
+instance Eq HelperChar where
+  Char c == Char c' = fromEnum c == fromEnum c'
 
-enumIntEnumFrom :: Int -> [Int]
-enumIntEnumFrom x = [x .. maxBound]
+instance Ord HelperChar where
+  Char c <= Char c' = fromEnum c <= fromEnum c'
 
-enumIntEnumFromTo :: Int -> Int -> [Int]
-enumIntEnumFromTo x y = [x, x + 1 .. y]
+instance Enum HelperChar where
+  toEnum x = Char (primIntToChar x)
+  fromEnum (Char x) = primCharToInt x
 
-enumIntEnumFromThen :: Int -> Int -> [Int]
-enumIntEnumFromThen x y = [x, y .. maxBound]
+newtype HelperInt = Int Int
 
-enumIntEnumFromThenTo :: Int -> Int -> Int -> [Int]
-enumIntEnumFromThenTo from thenx to = run from
-  where
-    run from | from > to = []
-    run from = from : run (from + step)
-    step = thenx - from
+instance Eq HelperInt where
+  Int x == Int y = primEqualInt x y
 
-enumIntegerSucc :: Integer -> Integer
-enumIntegerSucc x = x + 1
+instance Ord HelperInt where
+  Int x <= Int y = primLessThenEqualInt x y
 
-enumIntegerPred :: Integer -> Integer
-enumIntegerPred x = x - 1
+instance Enum HelperInt where
+  succ (Int x) = Int (x + 1)
+  pred (Int x) = Int (x - 1)
+  toEnum = Int
+  fromEnum (Int x) = x
+  enumFrom (Int x) = [Int x .. Int maxBound]
+  enumFromTo (Int x) (Int y) = [Int x, Int (x + 1) .. Int y]
+  enumFromThen (Int x) (Int y) = [Int x, Int y .. Int maxBound]
+  enumFromThenTo (Int from) (Int thenx) (Int to) = run from
+    where
+      run from | from > to = []
+      run from = Int from : run (from + step)
+      step = thenx - from
 
-enumIntegerEnumFrom :: Integer -> [Integer]
-enumIntegerEnumFrom x = [x, x + 1 ..]
+instance Num HelperInt where
+  Int x + Int y = Int (primIntAdd x y)
+  Int x - Int y = Int (primIntMinus x y)
+  Int x * Int y = Int (primIntMultiply x y)
+  negate (Int x) = Int (primIntNegate x)
+  abs (Int x) = Int (primIntAbs x)
+  signum (Int x) = Int (primIntSignum x)
+  fromInteger x = Int (primIntegerTruncateToInt x)
 
-enumIntegerEnumFromTo :: Integer -> Integer -> [Integer]
-enumIntegerEnumFromTo x y = [x, x + 1 .. y]
+newtype HelperInteger = Integer Integer
 
-enumIntegerEnumFromThen :: Integer -> Integer -> [Integer]
-enumIntegerEnumFromThen from thenx = run from
-  where
-    run from = from : run (from + step)
-    step = thenx - from
+instance Eq HelperInteger where
+  Integer x == Integer y = primEqualInteger x y
 
-enumIntegerEnumFromThenTo :: Integer -> Integer -> Integer -> [Integer]
-enumIntegerEnumFromThenTo from thenx to = run from
-  where
-    run from | from > to = []
-    run from = from : run (from + step)
-    step = thenx - from
+instance Ord HelperInteger where
+  Integer x <= Integer y = primLessThenEqualInteger x y
 
-enumBoolSucc :: Bool -> Bool
-enumBoolSucc = defaultSucc
+instance Enum HelperInteger where
+  succ (Integer x) = Integer (x + 1)
+  pred (Integer x) = Integer (x - 1)
+  toEnum x = Integer (primIntToInteger x)
+  fromEnum (Integer x) = primIntegerCastToInt x
+  enumFrom (Integer x) = [Integer x, Integer (x + 1) ..]
+  enumFromTo (Integer x) (Integer y) = [Integer x, Integer (x + 1) .. Integer y]
+  enumFromThen (Integer from) (Integer thenx) = run from
+    where
+      run from = Integer from : run (from + step)
+      step = thenx - from
+  enumFromThenTo (Integer from) (Integer thenx) (Integer to) = run from
+    where
+      run from | from > to = []
+      run from = Integer from : run (from + step)
+      step = thenx - from
 
-enumBoolPred :: Bool -> Bool
-enumBoolPred = defaultPred
+instance Num HelperInteger where
+  Integer x + Integer y = Integer (primIntegerAdd x y)
+  Integer x - Integer y = Integer (primIntegerMinus x y)
+  Integer x * Integer y = Integer (primIntegerMultiply x y)
+  negate (Integer x) = Integer (primIntegerNegate x)
+  abs (Integer x) = Integer (primIntegerAbs x)
+  signum (Integer x) = Integer (primIntegerSignum x)
+  fromInteger x = Integer x
 
-enumBoolToEnum :: Int -> Bool
-enumBoolToEnum = \case
-  0 -> False
-  1 -> True
+newtype HelperOrdering = Ordering Ordering
 
-enumBoolFromEnum :: Bool -> Int
-enumBoolFromEnum = \case
-  False -> 0
-  True -> 1
+instance Eq HelperOrdering where
+  Ordering LT == Ordering LT = True
+  Ordering EQ == Ordering EQ = True
+  Ordering GT == Ordering GT = True
+  _ == _ = False
 
-enumBoolEnumFrom :: Bool -> [Bool]
-enumBoolEnumFrom = defaultEnumFrom
+newtype HelperList a = List [a]
 
-enumBoolEnumFromThen :: Bool -> Bool -> [Bool]
-enumBoolEnumFromThen = defaultEnumFromThen
+instance Functor HelperList
 
-enumBoolEnumFromTo :: Bool -> Bool -> [Bool]
-enumBoolEnumFromTo = defaultEnumFromTo
+instance Applicative HelperList
 
-enumBoolEnumFromThenTo :: Bool -> Bool -> Bool -> [Bool]
-enumBoolEnumFromThenTo = defaultEnumFromThenTo
+instance Monad HelperList
 
-eqOrderingEqual :: Ordering -> Ordering -> Bool
-eqOrderingEqual LT LT = True
-eqOrderingEqual EQ EQ = True
-eqOrderingEqual GT GT = True
-eqOrderingEqual _ _ = False
-
-eqOrderingNotEqual :: Ordering -> Ordering -> Bool
-eqOrderingNotEqual = defaultNotEqual
-
-ordIntCompare :: Int -> Int -> Ordering
-ordIntCompare = defaultCompare
-
-ordIntLessThen :: Int -> Int -> Bool
-ordIntLessThen = defaultLessThen
-
-ordIntGreaterThen :: Int -> Int -> Bool
-ordIntGreaterThen = defaultGreaterThen
-
-ordIntGreaterThenEqual :: Int -> Int -> Bool
-ordIntGreaterThenEqual = defaultGreaterThenEqual
-
-ordIntMax :: Int -> Int -> Int
-ordIntMax = defaultMax
-
-ordIntMin :: Int -> Int -> Int
-ordIntMin = defaultMin
-
-ordIntegerCompare :: Integer -> Integer -> Ordering
-ordIntegerCompare = defaultCompare
-
-ordIntegerLessThen :: Integer -> Integer -> Bool
-ordIntegerLessThen = defaultLessThen
-
-ordIntegerGreaterThen :: Integer -> Integer -> Bool
-ordIntegerGreaterThen = defaultGreaterThen
-
-ordIntegerGreaterThenEqual :: Integer -> Integer -> Bool
-ordIntegerGreaterThenEqual = defaultGreaterThenEqual
-
-ordIntegerMax :: Integer -> Integer -> Integer
-ordIntegerMax = defaultMax
-
-ordIntegerMin :: Integer -> Integer -> Integer
-ordIntegerMin = defaultMin
+instance MonadFail HelperList

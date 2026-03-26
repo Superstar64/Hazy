@@ -18,8 +18,8 @@ class Bounded a where
   maxBound :: a
 
 instance Bounded Int where
-  minBound = boundedIntMinBound
-  maxBound = boundedIntMaxBound
+  minBound = primIntMinBound
+  maxBound = primIntMaxBound
 
 subtract :: (Num a) => a -> a -> a
 subtract = flip (-)
@@ -47,9 +47,15 @@ type String = [Char]
 
 data IO a
 
+undefined :: a
+undefined = error (pack "Prelude.undefined")
+
 map :: (a -> b) -> [a] -> [b]
 map f [] = []
 map f (x : xs) = f x : map f xs
+
+placeholder :: a
+placeholder = error (pack "Prelude.placeholder")
 
 data Text
 
