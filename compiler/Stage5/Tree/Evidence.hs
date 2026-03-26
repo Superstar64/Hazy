@@ -77,6 +77,10 @@ generate context = \case
               Evidence.EqOrdering -> eqOrdering
               Evidence.OrdInt -> ordInt
               Evidence.OrdInteger -> ordInteger
+              Evidence.RealInt -> realInt
+              Evidence.RealInteger -> realInteger
+              Evidence.IntegralInt -> integralInt
+              Evidence.IntegralInteger -> integralInteger
               Evidence.FunctorList -> functorList
               Evidence.ApplicativeList -> applicativeList
               Evidence.MonadList -> monadList
@@ -97,6 +101,10 @@ generate context = \case
               eqOrdering,
               ordInt,
               ordInteger,
+              realInt,
+              realInteger,
+              integralInt,
+              integralInteger,
               functorList,
               applicativeList,
               monadList,

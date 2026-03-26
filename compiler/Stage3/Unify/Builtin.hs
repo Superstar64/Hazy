@@ -47,6 +47,14 @@ constrain fallthough constrain = table
       pure $ single Evidence.OrdInt
     table Type2.Ord Type2.Integer [] =
       pure $ single Evidence.OrdInteger
+    table Type2.Real Type2.Int [] =
+      pure $ single Evidence.RealInt
+    table Type2.Real Type2.Integer [] =
+      pure $ single Evidence.RealInteger
+    table Type2.Integral Type2.Int [] =
+      pure $ single Evidence.IntegralInt
+    table Type2.Integral Type2.Integer [] =
+      pure $ single Evidence.IntegralInteger
     table Type2.Functor Type2.List [] =
       pure $ single Evidence.FunctorList
     table Type2.Applicative Type2.List [] =

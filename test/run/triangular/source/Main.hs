@@ -1,6 +1,6 @@
 module Main where
 
-triangular, triangular2, triangular2' :: Integer -> Integer
+triangular, triangular' :: Integer -> Integer
 triangular n
   of 
      n /= 1
@@ -8,12 +8,10 @@ triangular n
   of
     1
 
-triangular2 n = 2 * triangular n
-
-triangular2' n = n * (n + 1)
+triangular' n = n * (n + 1) `quot` 2
 
 main :: IO ()
 main = putStrLn result where
-  result = case triangular2 10 == triangular2' 10 of
+  result = case triangular 10 == triangular' 10 of
     True -> "y"
     False -> "n"

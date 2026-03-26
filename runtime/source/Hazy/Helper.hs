@@ -203,6 +203,14 @@ instance Num HelperInt where
   signum (Int x) = Int (primIntSignum x)
   fromInteger x = Int (primIntegerTruncateToInt x)
 
+instance Real HelperInt where
+  toRational (Int x) = primIntToInteger x :% 1
+
+instance Integral HelperInt where
+  Int x `quot` Int y = Int (primIntQuot x y)
+  Int x `rem` Int y = Int (primIntRem x y)
+  quotRem x y = (x `quot` y, x `rem` y)
+
 newtype HelperInteger = Integer Integer
 
 instance Eq HelperInteger where
@@ -236,6 +244,14 @@ instance Num HelperInteger where
   abs (Integer x) = Integer (primIntegerAbs x)
   signum (Integer x) = Integer (primIntegerSignum x)
   fromInteger x = Integer x
+
+instance Real HelperInteger where
+  toRational (Integer x) = x :% 1
+
+instance Integral HelperInteger where
+  Integer x `quot` Integer y = Integer (primIntegerQuot x y)
+  Integer x `rem` Integer y = Integer (primIntegerRem x y)
+  quotRem x y = (x `quot` y, x `rem` y)
 
 newtype HelperOrdering = Ordering Ordering
 

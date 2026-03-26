@@ -98,6 +98,16 @@ export const primIntToInteger = {
   b: (x) => BigInt(force(x)),
 };
 
+export const primIntQuot = {
+  a: 0,
+  b: (x) => (y) => (force(x) / force(y)) | 0,
+};
+
+export const primIntRem = {
+  a: 0,
+  b: (x) => (y) => (force(x) % force(y)) | 0,
+};
+
 export const primIntegerCastToInt = {
   a: 0,
   b: (x_) => {
@@ -147,6 +157,16 @@ export const primIntegerSignum = {
   },
 };
 
+export const primIntegerQuot = {
+  a: 0,
+  b: (x) => (y) => force(x) / force(y),
+};
+
+export const primIntegerRem = {
+  a: 0,
+  b: (x) => (y) => force(x) % force(y),
+};
+
 export const numInt = helper["instance Hazy.Num HelperInt"];
 export const numInteger = helper["instance Hazy.Num HelperInteger"];
 export const enumBool = helper["instance Hazy.Enum HelperBool"];
@@ -192,6 +212,10 @@ export const eqInteger = helper["instance Hazy.Eq HelperInteger"];
 export const eqOrdering = helper["instance Hazy.Eq HelperOrdering"];
 export const ordInt = helper["instance Hazy.Ord HelperInt"];
 export const ordInteger = helper["instance Hazy.Ord HelperInteger"];
+export const realInt = helper["instance Hazy.Real HelperInt"];
+export const realInteger = helper["instance Hazy.Real HelperInteger"];
+export const integralInt = helper["instance Hazy.Integral HelperInt"];
+export const integralInteger = helper["instance Hazy.Integral HelperInteger"];
 export const functorList = helper["instance Hazy.Functor HelperList"];
 export const applicativeList = helper["instance Hazy.Applicative HelperList"];
 export const monadList = helper["instance Hazy.Monad HelperList"];

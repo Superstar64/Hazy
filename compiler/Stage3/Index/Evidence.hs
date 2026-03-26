@@ -30,6 +30,10 @@ data Builtin
   | EqOrdering
   | OrdInt
   | OrdInteger
+  | RealInt
+  | RealInteger
+  | IntegralInt
+  | IntegralInteger
   | FunctorList
   | ApplicativeList
   | MonadList

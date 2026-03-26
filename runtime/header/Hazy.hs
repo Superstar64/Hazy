@@ -56,6 +56,10 @@ primLessThenEqualInteger = missing
 primIntToInteger :: Int -> Integer
 primIntToInteger = missing
 
+primIntQuot, primIntRem :: Int -> Int -> Int
+primIntQuot = missing
+primIntRem = missing
+
 primIntegerCastToInt, primIntegerTruncateToInt :: Integer -> Int
 primIntegerCastToInt = missing
 primIntegerTruncateToInt = missing
@@ -75,3 +79,7 @@ primIntegerNegate = missing
 primIntegerAbs, primIntegerSignum :: Integer -> Integer
 primIntegerAbs = missing
 primIntegerSignum = missing
+
+primIntegerQuot, primIntegerRem :: Integer -> Integer -> Integer
+primIntegerQuot = missing
+primIntegerRem = missing
