@@ -247,7 +247,8 @@ instance Eq HelperOrdering where
 
 newtype HelperList a = List {list :: [a]}
 
-instance Functor HelperList
+instance Functor HelperList where
+  fmap f (List xs) = List (map f xs)
 
 instance Applicative HelperList where
   pure x = List [x]
