@@ -83,3 +83,9 @@ primIntegerSignum = missing
 primIntegerQuot, primIntegerRem :: Integer -> Integer -> Integer
 primIntegerQuot = missing
 primIntegerRem = missing
+
+primSTPure :: a -> ST s a
+primSTPure = missing
+
+primSTBind :: ST s a -> (a -> ST s b) -> ST s b
+primSTBind = missing

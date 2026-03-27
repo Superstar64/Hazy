@@ -71,7 +71,19 @@ otherwise = True
 
 type String = [Char]
 
-data IO a
+data RealWorld
+
+newtype IO a = IO {runIO :: ST RealWorld a}
+
+instance Functor IO where
+  fmap = liftM
+
+instance Applicative IO where
+  pure x = IO (pure x)
+  (<*>) = ap
+
+instance Monad IO where
+  IO m >>= f = IO (m >>= (runIO . f))
 
 undefined :: a
 undefined = error (pack "Prelude.undefined")
@@ -99,8 +111,13 @@ data Text
 (<$>) :: (Functor f) => (a -> b) -> f a -> f b
 (<$>) = fmap
 
+liftM :: (Monad m) => (a -> b) -> m a -> m b
+liftM f a = do
+  a' <- a
+  return (f a')
+
 ap :: (Monad m) => m (a -> b) -> m a -> m b
 ap f a = do
   f' <- f
   a' <- a
-  pure (f' a')
+  return (f' a')

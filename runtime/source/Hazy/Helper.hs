@@ -300,3 +300,15 @@ instance Monad HelperList where
 
 instance MonadFail HelperList where
   fail _ = List []
+
+newtype HelperST s a = STx {st :: ST s a}
+
+instance Functor (HelperST s) where
+  fmap = liftM
+
+instance Applicative (HelperST s) where
+  pure x = STx (primSTPure x)
+  (<*>) = ap
+
+instance Monad (HelperST s) where
+  STx m >>= f = STx (primSTBind m (st . f))

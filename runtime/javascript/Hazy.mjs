@@ -167,6 +167,19 @@ export const primIntegerRem = {
   b: (x) => (y) => force(x) % force(y),
 };
 
+export const primSTPure = {
+  a: 0,
+  b: (x) => () => force(x),
+};
+
+export const primSTBind = {
+  a: 0,
+  b: (m) => (f) => () => {
+    let x = force(m)();
+    return force(f)(x)();
+  },
+};
+
 export const numInt = helper["instance Hazy.Num HelperInt"];
 export const numInteger = helper["instance Hazy.Num HelperInteger"];
 export const enumBool = helper["instance Hazy.Enum HelperBool"];
@@ -271,3 +284,6 @@ export const functorList = helper["instance Hazy.Functor HelperList"];
 export const applicativeList = helper["instance Hazy.Applicative HelperList"];
 export const monadList = helper["instance Hazy.Monad HelperList"];
 export const monadFailList = helper["instance Hazy.MonadFail HelperList"];
+export const functorST = helper["instance Hazy.Functor HelperST"];
+export const applicativeST = helper["instance Hazy.Applicative HelperST"];
+export const monadST = helper["instance Hazy.Monad HelperST"];

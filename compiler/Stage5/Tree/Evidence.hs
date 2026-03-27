@@ -98,6 +98,9 @@ generate context = \case
                     Evidence.ApplicativeList -> applicativeList
                     Evidence.MonadList -> monadList
                     Evidence.MonadFailList -> monadFailList
+                    Evidence.FunctorST -> functorST
+                    Evidence.ApplicativeST -> applicativeST
+                    Evidence.MonadST -> monadST
         where
           Mangle.Builtin
             { numInt,
@@ -127,7 +130,10 @@ generate context = \case
               functorList,
               applicativeList,
               monadList,
-              monadFailList
+              monadFailList,
+              functorST,
+              applicativeST,
+              monadST
             } = Context.builtin context
     if null arguments
       then

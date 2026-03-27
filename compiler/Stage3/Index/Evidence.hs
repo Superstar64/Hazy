@@ -44,6 +44,9 @@ data Builtin
   | ApplicativeList
   | MonadList
   | MonadFailList
+  | FunctorST
+  | ApplicativeST
+  | MonadST
   deriving (Eq, Show)
 
 assumed :: Int -> Index (Scope.Local ':+ scopes)
