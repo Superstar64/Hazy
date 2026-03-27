@@ -1,5 +1,4 @@
 import * as helper from "./Hazy/Helper.mjs";
-export * from "./Hazy/Helper.mjs";
 
 function force(thunk) {
   return thunk.a ? thunk.b() : thunk.b;
@@ -179,15 +178,6 @@ export const primSTBind = {
     return force(f)(x)();
   },
 };
-
-export const numInt = helper["instance Hazy.Num HelperInt"];
-export const numInteger = helper["instance Hazy.Num HelperInteger"];
-export const enumBool = helper["instance Hazy.Enum HelperBool"];
-export const enumChar = helper["instance Hazy.Enum HelperChar"];
-export const enumInt = helper["instance Hazy.Enum HelperInt"];
-export const enumInteger = helper["instance Hazy.Enum HelperInteger"];
-export const eqBool = helper["instance Hazy.Eq HelperBool"];
-export const eqChar = helper["instance Hazy.Eq HelperChar"];
 export const eqTuple =
   (unpack) =>
   (...evidences) => {
@@ -214,11 +204,7 @@ export const eqTuple =
     };
     return result;
   };
-export const eqInt = helper["instance Hazy.Eq HelperInt"];
-export const eqInteger = helper["instance Hazy.Eq HelperInteger"];
-export const eqList = helper["instance Hazy.Eq HelperList"];
-export const eqOrdering = helper["instance Hazy.Eq HelperOrdering"];
-export const ordChar = helper["instance Hazy.Ord HelperChar"];
+
 export const ordTuple =
   (unpack) =>
   (...evidences) => {
@@ -271,19 +257,36 @@ export const ordTuple =
     };
     return result;
   };
-export const ordInt = helper["instance Hazy.Ord HelperInt"];
-export const ordInteger = helper["instance Hazy.Ord HelperInteger"];
-export const ordBool = helper["instance Hazy.Ord HelperBool"];
-export const ordList = helper["instance Hazy.Ord HelperList"];
-export const ordOrdering = helper["instance Hazy.Ord HelperOrdering"];
-export const realInt = helper["instance Hazy.Real HelperInt"];
-export const realInteger = helper["instance Hazy.Real HelperInteger"];
-export const integralInt = helper["instance Hazy.Integral HelperInt"];
-export const integralInteger = helper["instance Hazy.Integral HelperInteger"];
-export const functorList = helper["instance Hazy.Functor HelperList"];
-export const applicativeList = helper["instance Hazy.Applicative HelperList"];
-export const monadList = helper["instance Hazy.Monad HelperList"];
-export const monadFailList = helper["instance Hazy.MonadFail HelperList"];
-export const functorST = helper["instance Hazy.Functor HelperST"];
-export const applicativeST = helper["instance Hazy.Applicative HelperST"];
-export const monadST = helper["instance Hazy.Monad HelperST"];
+
+export * from "./Hazy/Helper.mjs";
+export {
+  "instance Hazy.Num HelperInt" as numInt,
+  "instance Hazy.Num HelperInteger" as numInteger,
+  "instance Hazy.Enum HelperBool" as enumBool,
+  "instance Hazy.Enum HelperChar" as enumChar,
+  "instance Hazy.Enum HelperInt" as enumInt,
+  "instance Hazy.Enum HelperInteger" as enumInteger,
+  "instance Hazy.Eq HelperBool" as eqBool,
+  "instance Hazy.Eq HelperChar" as eqChar,
+  "instance Hazy.Eq HelperInt" as eqInt,
+  "instance Hazy.Eq HelperInteger" as eqInteger,
+  "instance Hazy.Eq HelperList" as eqList,
+  "instance Hazy.Eq HelperOrdering" as eqOrdering,
+  "instance Hazy.Ord HelperChar" as ordChar,
+  "instance Hazy.Ord HelperInt" as ordInt,
+  "instance Hazy.Ord HelperInteger" as ordInteger,
+  "instance Hazy.Ord HelperBool" as ordBool,
+  "instance Hazy.Ord HelperList" as ordList,
+  "instance Hazy.Ord HelperOrdering" as ordOrdering,
+  "instance Hazy.Real HelperInt" as realInt,
+  "instance Hazy.Real HelperInteger" as realInteger,
+  "instance Hazy.Integral HelperInt" as integralInt,
+  "instance Hazy.Integral HelperInteger" as integralInteger,
+  "instance Hazy.Functor HelperList" as functorList,
+  "instance Hazy.Applicative HelperList" as applicativeList,
+  "instance Hazy.Monad HelperList" as monadList,
+  "instance Hazy.MonadFail HelperList" as monadFailList,
+  "instance Hazy.Functor HelperST" as functorST,
+  "instance Hazy.Applicative HelperST" as applicativeST,
+  "instance Hazy.Monad HelperST" as monadST,
+} from "./Hazy/Helper.mjs";
