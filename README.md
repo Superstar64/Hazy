@@ -352,23 +352,6 @@ f a b = a b
 g a b = f a b
 ```
 
-### Universal monomorphic restriction
-Hazy applies the monomorphism restriction to all declarations. This means that
-only type variables without constraints are generalized.
-
-Consider these two examples:
-```haskell
-f a = a      -- #1
-f' a = a + 1 -- #2
-```
-Here, `#1` is polymorphic over an unconstrainted type variable so it gets
-properly generalized to `f :: a -> a`. However, `#2` is rejected because it
-would have the type `f' :: Num a => a -> a`.
-
-### MonoLocalBinds Only
-All local bindings are monomorphic. This is nearly equivalent to GHC's
-`MonoLocalBinds` extension.
-
 ### Constraints must have unique typeclass variable pairs
 Constraints must not have overlapping typeclass / rigid variable pairs.
 For example, something like this is not allowed:
@@ -398,8 +381,25 @@ instance Hidden Usage where
   private = Usage
 ```
 
-## Intentional
-These are deviations that are unlikely to be fixed in the the near future.
+## Planned Toggles
+These are devitations that will eventually toggleable with a language pragma.
+
+### Universal monomorphic restriction
+Hazy applies the monomorphism restriction to all declarations. This means that
+only type variables without constraints are generalized.
+
+Consider these two examples:
+```haskell
+f a = a      -- #1
+f' a = a + 1 -- #2
+```
+Here, `#1` is polymorphic over an unconstrainted type variable so it gets
+properly generalized to `f :: a -> a`. However, `#2` is rejected because it
+would have the type `f' :: Num a => a -> a`.
+
+### MonoLocalBinds Only
+All local bindings are monomorphic. This is nearly equivalent to GHC's
+`MonoLocalBinds` extension.
 
 ### No Negation Operator
 Hazy does not implement a negation operator. However negative integer literals
@@ -420,6 +420,10 @@ This example is a normal integer literal:
 literal = (-10)
 ```
 
+### Postfix Operators
+Left sections are treated as function application and are not eta expanded.
+This follows GHC's `PostfixOperators` extension.
+
 ### Hiding imports for type does not hide constructors
 Haskell 2010 specifics that `hiding` declarations must also hide constructors.
 Hazy instead only hides the type constructor as one would expect.
@@ -436,13 +440,13 @@ Instead, the syntax for hiding constructor mirrors that of import constructors.
 import Prelude hiding (Maybe (Just))
 ```
 
+## Intentional
+These are deviations that are unlikely to be fixed in the the near future.
+
 ### No orphan instances
 Hazy does not support orphan instances. All instance declarations must have
 either the class or the data instance in the same module.
 
-### Postfix Operators
-Left sections are treated as function application and are not eta expanded.
-This follows GHC's `PostfixOperators` extension.
 
 # Copyright
 Copyright © 2026 Freddy Angel Cubas "superstar64"
