@@ -9,7 +9,6 @@ import qualified Data.Strict.Vector1 as Strict (Vector1)
 import qualified Data.Strict.Vector2 as Strict (Vector2)
 import Data.Text (Text)
 import qualified Data.Vector.Strict as Strict (Vector)
-import Error (badRunSTCall)
 import Stage1.Position (Position)
 import Stage1.Tree.Associativity (Associativity (..))
 import qualified Stage1.Tree.Expression as Stage1 (Expression (..))
@@ -19,10 +18,9 @@ import qualified Stage1.Tree.ExpressionInfix as Stage1.Infix
 import Stage1.Tree.Fixity (Fixity (..))
 import Stage1.Tree.Marked (Marked (..))
 import Stage1.Variable (QualifiedName (..))
-import qualified Stage2.Index.Constructor as Constructor (Index (..), cons, tuple)
+import qualified Stage2.Index.Constructor as Constructor (Index (..), cons)
 import qualified Stage2.Index.Method as Method
 import qualified Stage2.Index.Selector as Selector
-import qualified Stage2.Index.Term as Term (Index (..))
 import qualified Stage2.Index.Term2 as Term2
 import qualified Stage2.Resolve.Binding.Constructor as Constructor (Binding (..))
 import qualified Stage2.Resolve.Binding.Term as Term (Binding (..))
@@ -42,6 +40,8 @@ import qualified Stage2.Shift as Shift
 import {-# SOURCE #-} qualified Stage2.Temporary.ExpressionInfix as Infix (fix, fixWith, resolve)
 import Stage2.Tree.Alternative (Alternative (..))
 import qualified Stage2.Tree.Alternative as Alternative (resolve)
+import Stage2.Tree.CallHead (CallHead)
+import qualified Stage2.Tree.CallHead as CallHead
 import {-# SOURCE #-} Stage2.Tree.Declarations (Declarations)
 import {-# SOURCE #-} qualified Stage2.Tree.Declarations as Declarations
 import Stage2.Tree.ExpressionField (Field)
@@ -61,21 +61,8 @@ import qualified Stage2.Tree.Statements as Statements (resolve)
 import Prelude hiding (Bool (False, True), Either (Left, Right))
 
 data Expression scope
-  = Variable
-      { variablePosition :: !Position,
-        variable :: !(Term.Index scope)
-      }
-  | Constructor
-      { constructorPosition :: !Position,
-        constructor :: !(Constructor.Index scope)
-      }
-  | Selector
-      { selectorPosition :: !Position,
-        selector :: !(Selector.Index scope)
-      }
-  | Method
-      { methodPosition :: !Position,
-        method :: !(Method.Index scope)
+  = CallHead
+      { callHead :: !(CallHead scope)
       }
   | Integer
       { startPosition :: !Position,
@@ -149,28 +136,9 @@ data Expression scope
       { startPosition :: !Position,
         cases :: !(Strict.Vector (Alternative scope))
       }
-  | RightSectionVariable
+  | RightSection
       { operatorPosition :: !Position,
-        leftVariable :: !(Term.Index scope),
-        right :: !(Expression scope)
-      }
-  | RightSectionConstructor
-      { operatorPosition :: !Position,
-        leftConstructor :: !(Constructor.Index scope),
-        right :: !(Expression scope)
-      }
-  | RightSectionSelector
-      { operatorPosition :: !Position,
-        leftSelector :: !(Selector.Index scope),
-        right :: !(Expression scope)
-      }
-  | RightSectionMethod
-      { operatorPosition :: !Position,
-        leftMethod :: !(Method.Index scope),
-        right :: !(Expression scope)
-      }
-  | RightSectionCons
-      { operatorPosition :: !Position,
+        left :: !(CallHead scope),
         right :: !(Expression scope)
       }
   | Annotation
@@ -189,25 +157,9 @@ instance Shift Expression where
 
 instance Shift.Functor Expression where
   map category = \case
-    Variable {variablePosition, variable} ->
-      Variable
-        { variablePosition,
-          variable = Shift.map category variable
-        }
-    Constructor {constructorPosition, constructor} ->
-      Constructor
-        { constructorPosition,
-          constructor = Shift.map category constructor
-        }
-    Selector {selectorPosition, selector} ->
-      Selector
-        { selectorPosition,
-          selector = Shift.map category selector
-        }
-    Method {methodPosition, method} ->
-      Method
-        { methodPosition,
-          method = Shift.map category method
+    CallHead {callHead} ->
+      CallHead
+        { callHead = Shift.map category callHead
         }
     Integer {startPosition, integer} -> Integer {startPosition, integer}
     Float {startPosition, float} -> Float {startPosition, float}
@@ -282,33 +234,10 @@ instance Shift.Functor Expression where
         { startPosition,
           cases = fmap (Shift.map category) cases
         }
-    RightSectionVariable {operatorPosition, right, leftVariable} ->
-      RightSectionVariable
+    RightSection {operatorPosition, left, right} ->
+      RightSection
         { operatorPosition,
-          leftVariable = Shift.map category leftVariable,
-          right = Shift.map category right
-        }
-    RightSectionConstructor {operatorPosition, right, leftConstructor} ->
-      RightSectionConstructor
-        { operatorPosition,
-          right = Shift.map category right,
-          leftConstructor = Shift.map category leftConstructor
-        }
-    RightSectionSelector {operatorPosition, right, leftSelector} ->
-      RightSectionSelector
-        { operatorPosition,
-          leftSelector = Shift.map category leftSelector,
-          right = Shift.map category right
-        }
-    RightSectionMethod {operatorPosition, right, leftMethod} ->
-      RightSectionMethod
-        { operatorPosition,
-          leftMethod = Shift.map category leftMethod,
-          right = Shift.map category right
-        }
-    RightSectionCons {operatorPosition, right} ->
-      RightSectionCons
-        { operatorPosition,
+          left = Shift.map category left,
           right = Shift.map category right
         }
     Annotation {expression, operatorPosition, annotation} ->
@@ -323,27 +252,10 @@ instance Shift.Functor Expression where
           imperative = Shift.map category imperative
         }
 
-variablex :: Position -> Term2.Index scope -> Expression scope
-variablex variablePosition@selectorPosition@methodPosition = \case
-  Term2.Index variable ->
-    Variable
-      { variablePosition,
-        variable
-      }
-  Term2.Select selector ->
-    Selector
-      { selectorPosition,
-        selector
-      }
-  Term2.Method method ->
-    Method
-      { methodPosition,
-        method
-      }
-  Term2.RunST -> badRunSTCall variablePosition
+callHead_ callHead = CallHead {callHead}
 
 resolveTerm2 :: Position -> Term2.Index scope -> Reverse.List (Expression scope) -> Expression scope
-resolveTerm2 position index Nil = variablex position index
+resolveTerm2 position index Nil = CallHead {callHead = CallHead.resolveVariable position index}
 resolveTerm2 startPosition Term2.RunST (Nil :> imperative) =
   RunST
     { startPosition,
@@ -355,12 +267,13 @@ resolveTerm2 position index (arguments :> argument) =
       argument
     }
 
-resolveConstructor2 :: Position -> Constructor.Index scope -> Reverse.List (Expression scope) -> Expression scope
-resolveConstructor2 constructorPosition constructor Nil =
-  Constructor
-    { constructorPosition,
-      constructor
-    }
+resolveConstructor2 ::
+  Position ->
+  Constructor.Index scope ->
+  Reverse.List (Expression scope) ->
+  Expression scope
+resolveConstructor2 position constructor Nil =
+  CallHead {callHead = CallHead.resolveConstructor position constructor}
 resolveConstructor2 position index (arguments :> argument) =
   Call
     { function = resolveConstructor2 position index arguments,
@@ -392,14 +305,12 @@ resolveWith context expression [] = case expression of
   Stage1.Character {startPosition, character} -> Character {startPosition, character}
   Stage1.String {startPosition, string} -> String {startPosition, string}
   Stage1.Tupling {startPosition, count} ->
-    Constructor
-      { constructorPosition = startPosition,
-        constructor = Constructor.tuple count
+    CallHead
+      { callHead = CallHead.resolveTupling startPosition count
       }
   Stage1.Unit {startPosition} ->
-    Constructor
-      { constructorPosition = startPosition,
-        constructor = Constructor.tuple 0
+    CallHead
+      { callHead = CallHead.resolveTupling startPosition 0
       }
   Stage1.Tuple {startPosition, elements} ->
     Tuple
@@ -492,9 +403,8 @@ resolveWith context expression [] = case expression of
         cases = fmap (Alternative.resolve context) cases
       }
   Stage1.Cons {startPosition} ->
-    Constructor
-      { constructorPosition = startPosition,
-        constructor = Constructor.cons
+    CallHead
+      { callHead = CallHead.resolveCons startPosition
       }
   Stage1.Infix {left, operator, right} ->
     Infix.fix $
@@ -514,76 +424,36 @@ resolveWith context expression [] = case expression of
             operatorPosition,
             tail
           }
-  Stage1.LeftSection {leftSection, operator} -> case operator of
-    operatorPosition :@ QualifiedVariable operator -> case context !- (operatorPosition :@ operator) of
-      Term.Binding
-        { position,
-          index,
-          fixity = Fixity {associativity, precedence}
-        } -> case associativity of
-          Left ->
-            let left = Infix.fixWith (Just Left) precedence $ Infix.resolve context leftSection
-             in resolveTerm2 position index (Nil :> left)
-          _ ->
-            let left = Infix.fixWith Nothing (precedence + 1) $ Infix.resolve context leftSection
-             in resolveTerm2 position index (Nil :> left)
-    operatorPosition :@ QualifiedConstructor operator -> case context !=~ (operatorPosition :@ operator) of
-      Constructor.Binding
-        { position,
-          index,
-          fixity = Fixity {associativity, precedence}
-        } ->
-          case associativity of
-            Left ->
-              let left = Infix.fixWith (Just Left) precedence $ Infix.resolve context leftSection
-               in resolveConstructor2 position index (Nil :> left)
-            _ ->
-              let left = Infix.fixWith Nothing (precedence + 1) $ Infix.resolve context leftSection
-               in resolveConstructor2 position index (Nil :> left)
+  Stage1.LeftSection {leftSection, operator = operatorPosition :@ operator} -> case operator of
+    QualifiedVariable operator -> resolveTerm2 position index (Nil :> left)
+      where
+        Term.Binding {position, index, fixity} = context !- operatorPosition :@ operator
+        left = section Left fixity leftSection
+    QualifiedConstructor operator -> resolveConstructor2 position index (Nil :> left)
+      where
+        Constructor.Binding {position, index, fixity} = context !=~ operatorPosition :@ operator
+        left = section Left fixity leftSection
+  Stage1.LeftSectionCons {operatorPosition, leftSection} ->
+    resolveConstructor2 operatorPosition Constructor.cons (Nil :> left)
     where
-
-  Stage1.LeftSectionCons {operatorPosition, leftSection} -> case associativity of
-    Left ->
-      let left = Infix.fixWith (Just Left) precedence $ Infix.resolve context leftSection
-       in resolveConstructor2 operatorPosition Constructor.cons (Nil :> left)
-    _ ->
-      let left = Infix.fixWith Nothing (precedence + 1) $ Infix.resolve context leftSection
-       in resolveConstructor2 operatorPosition Constructor.cons (Nil :> left)
+      fixity = Fixity {associativity = Right, precedence = 5}
+      left = section Left fixity leftSection
+  Stage1.RightSection {operator = operatorPosition :@ operator, rightSection} -> case operator of
+    QualifiedVariable operator -> RightSection {operatorPosition, left, right}
+      where
+        Term.Binding {index, fixity} = context !- operatorPosition :@ operator
+        left = CallHead.resolveVariable operatorPosition index
+        right = section Right fixity rightSection
+    QualifiedConstructor name -> RightSection {operatorPosition, left, right}
+      where
+        Constructor.Binding {index, fixity} = context !=~ operatorPosition :@ name
+        left = CallHead.resolveConstructor operatorPosition index
+        right = section Right fixity rightSection
+  Stage1.RightSectionCons {operatorPosition, rightSection} ->
+    RightSection {operatorPosition, left = CallHead.resolveCons operatorPosition, right}
     where
-      Fixity {associativity, precedence} = Fixity {associativity = Right, precedence = 5}
-  Stage1.RightSection {operator, rightSection} -> case operator of
-    operatorPosition :@ QualifiedVariable operator -> case context !- operatorPosition :@ operator of
-      Term.Binding
-        { index,
-          fixity = Fixity {associativity, precedence}
-        } ->
-          let right = case associativity of
-                Right -> Infix.fixWith (Just Right) precedence $ Infix.resolve context rightSection
-                _ -> Infix.fixWith Nothing (precedence + 1) $ Infix.resolve context rightSection
-           in case index of
-                Term2.Index leftVariable -> RightSectionVariable {operatorPosition, leftVariable, right}
-                Term2.Select leftSelector -> RightSectionSelector {operatorPosition, leftSelector, right}
-                Term2.Method leftMethod -> RightSectionMethod {operatorPosition, leftMethod, right}
-                Term2.RunST -> badRunSTCall operatorPosition
-    operatorPosition :@ QualifiedConstructor name -> case context !=~ operatorPosition :@ name of
-      Constructor.Binding
-        { index,
-          fixity = Fixity {associativity, precedence}
-        } ->
-          let right =
-                case associativity of
-                  Right -> Infix.fixWith (Just Right) precedence $ Infix.resolve context rightSection
-                  _ -> Infix.fixWith Nothing (precedence + 1) $ Infix.resolve context rightSection
-           in RightSectionConstructor {operatorPosition, leftConstructor = index, right}
-  Stage1.RightSectionCons {operatorPosition, rightSection} -> case associativity of
-    Right ->
-      let right = Infix.fixWith (Just Right) precedence $ Infix.resolve context rightSection
-       in RightSectionCons {operatorPosition, right}
-    _ ->
-      let right = Infix.fixWith Nothing (precedence + 1) $ Infix.resolve context rightSection
-       in RightSectionCons {operatorPosition, right}
-    where
-      Fixity {associativity, precedence} = Fixity {associativity = Right, precedence = 5}
+      right = section Right fixity rightSection
+      fixity = Fixity {associativity = Right, precedence = 5}
   Stage1.Annotation {expression, operatorPosition, annotation} ->
     let scheme' = Scheme.resolve context annotation
         context' = Scheme.augment scheme' context
@@ -592,3 +462,9 @@ resolveWith context expression [] = case expression of
             operatorPosition,
             annotation = scheme'
           }
+  where
+    section wanted Fixity {associativity, precedence} section
+      | wanted == associativity =
+          Infix.fixWith (Just associativity) precedence $ Infix.resolve context section
+      | otherwise =
+          Infix.fixWith Nothing (precedence + 1) $ Infix.resolve context section

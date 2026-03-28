@@ -10,8 +10,9 @@ import qualified Stage2.Index.Type2 as Type2
 import Stage2.Resolve.Context (Context (..), (!-%), (!-*))
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import qualified Stage2.Tree.CallHead as CallHead
 import {-# SOURCE #-} Stage2.Tree.Expression (Expression)
-import {-# SOURCE #-} Stage2.Tree.Expression as Expression (resolve, variablex)
+import {-# SOURCE #-} Stage2.Tree.Expression as Expression (callHead_, resolve)
 
 data Select scope
   = Select !Int !(Expression scope)
@@ -29,7 +30,7 @@ resolve typex context = \case
   Stage1.Field {variable, field} -> make variable (Expression.resolve context field)
   Stage1.Pun {variable = variable@(position :@ _ :- localName)} ->
     let index = context !-* position :@ Local :- localName
-     in make variable (variablex position index)
+     in make variable $ callHead_ $ CallHead.resolveVariable position index
   where
     make name@(position :@ _) expression
       | Selector.Index typex' selector <- context !-% name,

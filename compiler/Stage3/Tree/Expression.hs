@@ -5,43 +5,23 @@ import qualified Data.Strict.Vector2 as Strict (Vector2)
 import Data.Text (Text)
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Stage2.Index.Constructor as Constructor
-import qualified Stage2.Index.Method as Method
-import qualified Stage2.Index.Selector as Selector (Index)
-import qualified Stage2.Index.Term as Term (Index)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage3.Tree.Alternative (Alternative)
+import Stage3.Tree.CallHead (CallHead)
 import Stage3.Tree.ConstructorInfo (ConstructorInfo)
 import Stage3.Tree.Declarations (Declarations)
 import Stage3.Tree.Do (Do)
 import Stage3.Tree.ExpressionField (Field)
 import Stage3.Tree.Lambda (Lambda)
-import Stage3.Tree.MethodInfo (MethodInfo)
 import Stage3.Tree.Pattern (Pattern)
 import Stage3.Tree.RightHandSide (RightHandSide)
-import Stage3.Tree.SelectorInfo (SelectorInfo)
 import qualified Stage4.Tree.Evidence as Simple (Evidence)
-import qualified Stage4.Tree.Instanciation as Simple (Instanciation)
 import Prelude hiding (Bool (False, True))
 
 data Expression scope
-  = Variable
-      { variable :: !(Term.Index scope),
-        instanciation :: !(Simple.Instanciation scope)
-      }
-  | Constructor
-      { constructor :: !(Constructor.Index scope),
-        constructorInfo :: !ConstructorInfo
-      }
-  | Selector
-      { selector :: !(Selector.Index scope),
-        selectorInfo :: !SelectorInfo
-      }
-  | Method
-      { method :: !(Method.Index scope),
-        evidence :: !(Simple.Evidence scope),
-        instanciation :: !(Simple.Instanciation scope),
-        methodInfo :: !MethodInfo
+  = CallHead
+      { callHead :: !(CallHead scope)
       }
   | Record
       { constructor :: !(Constructor.Index scope),

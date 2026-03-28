@@ -261,6 +261,7 @@ executable hazy
     Stage2.Temporary.TypeInfix
     Stage2.Tree.Alternative
     Stage2.Tree.Body
+    Stage2.Tree.CallHead
     Stage2.Tree.Constraint
     Stage2.Tree.Constructor
     Stage2.Tree.Declarations
@@ -318,6 +319,7 @@ executable hazy
     Stage3.Synonym
     Stage3.Temporary.Alternative
     Stage3.Temporary.Body
+    Stage3.Temporary.CallHead
     Stage3.Temporary.Constraint
     Stage3.Temporary.Constructor
     Stage3.Temporary.Declarations
@@ -342,6 +344,7 @@ executable hazy
     Stage3.Temporary.TypePattern
     Stage3.Tree.Alternative
     Stage3.Tree.Body
+    Stage3.Tree.CallHead
     Stage3.Tree.Constraint
     Stage3.Tree.Constructor
     Stage3.Tree.ConstructorInfo

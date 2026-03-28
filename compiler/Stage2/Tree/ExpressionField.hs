@@ -14,7 +14,8 @@ import qualified Stage2.Resolve.Binding.Constructor as Constructor (Binding (..)
 import Stage2.Resolve.Context (Context (..), (!-%), (!-*))
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import {-# SOURCE #-} Stage2.Tree.Expression (Expression, variablex)
+import qualified Stage2.Tree.CallHead as CallHead
+import {-# SOURCE #-} Stage2.Tree.Expression (Expression, callHead_)
 import {-# SOURCE #-} qualified Stage2.Tree.Expression as Expression (resolve)
 
 data Field scope
@@ -40,7 +41,7 @@ resolve context binding field = case field of
   Stage1.Field {variable, field} -> make variable (Expression.resolve context field)
   Stage1.Pun {variable = variable@(position :@ _ :- localName)} ->
     let index = context !-* position :@ Local :- localName
-     in make variable (variablex position index)
+     in make variable $ callHead_ (CallHead.resolveVariable position index)
   where
     make name@(position :@ (path :- root)) expression = case binding of
       Constructor.Binding

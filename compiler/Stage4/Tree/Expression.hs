@@ -16,6 +16,7 @@ import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Index.Evidence as Index.Evidence
+import qualified Stage3.Tree.CallHead as Stage3 (CallHead (..))
 import qualified Stage3.Tree.ConstructorInfo as Stage3 (ConstructorInfo (ConstructorInfo))
 import qualified Stage3.Tree.ConstructorInfo as Stage3.ConstructorInfo
 import qualified Stage3.Tree.Definition as Stage3 (Definition)
@@ -298,6 +299,27 @@ class Simplify source where
 instance Simplify Stage3.Expression where
   simplify expression = simplifyWith expression []
 
+instance Simplify Stage3.CallHead where
+  simplify = \case
+    Stage3.Variable {variable, instanciation} ->
+      Variable
+        { variable = Term.from variable,
+          instanciation
+        }
+    Stage3.Selector {selector, selectorInfo} ->
+      Lambda
+        { body = simplifySelector (shift selector) selectorInfo lambdaVariable
+        }
+    Stage3.Method {method, evidence, instanciation, methodInfo} ->
+      Method
+        { method,
+          evidence,
+          instanciation,
+          methodInfo
+        }
+    Stage3.Constructor {constructor, constructorInfo} ->
+      simplifyConstructor constructor constructorInfo 0 Reverse.Nil
+
 instance Simplify Stage3.Definition where
   simplify = Definition.desugar . Definition.simplify
 
@@ -428,29 +450,12 @@ simplifyWith ::
   Expression scope
 simplifyWith Stage3.Call {function, argument} arguments =
   simplifyWith function (simplify argument : arguments)
-simplifyWith
-  Stage3.Constructor {constructor, constructorInfo}
-  arguments =
-    simplifyConstructor constructor constructorInfo (length arguments) (Reverse.fromList arguments)
+simplifyWith Stage3.CallHead {callHead = Stage3.Constructor {constructor, constructorInfo}} arguments =
+  simplifyConstructor constructor constructorInfo (length arguments) (Reverse.fromList arguments)
 simplifyWith expression arguments@(_ : _) =
   foldl Call (simplify expression) arguments
 simplifyWith expression [] = case expression of
-  Stage3.Variable {variable, instanciation} ->
-    Variable
-      { variable = Term.from variable,
-        instanciation
-      }
-  Stage3.Selector {selector, selectorInfo} ->
-    Lambda
-      { body = simplifySelector (shift selector) selectorInfo lambdaVariable
-      }
-  Stage3.Method {method, evidence, instanciation, methodInfo} ->
-    Method
-      { method,
-        evidence,
-        instanciation,
-        methodInfo
-      }
+  Stage3.CallHead {callHead} -> simplify callHead
   Stage3.Record {constructor, constructorInfo, fields} ->
     simplifyConstructorExact constructor constructorInfo arguments
     where
