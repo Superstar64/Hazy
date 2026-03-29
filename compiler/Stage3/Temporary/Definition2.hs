@@ -5,7 +5,8 @@ import Stage1.Position (Position)
 import Stage2.Index.Term (Bound)
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (shift)
-import qualified Stage2.Tree.TermDeclaration as Stage2 (TermDeclaration (..))
+import Stage2.Tree.Annotation (Annotated, Inferred)
+import qualified Stage2.Tree.Definition2 as Stage2
 import Stage3.Check.Context (Context)
 import Stage3.Temporary.Definition (Definition)
 import qualified Stage3.Temporary.Definition as Definition
@@ -42,31 +43,31 @@ instance Unify.Zonk Definition2 where
 instance Unify.Generalizable Definition2 where
   collect collector body = Unify.collect collector (typex body)
 
-data Which s scope where
-  Auto :: Which s scope
-  Manual :: Which s (Local ':+ scope)
-  Share :: (Int -> ST s (Unify.Scheme s scopes)) -> Which s (scope ':+ scopes)
+data Which mark scope where
+  Manual :: Which Annotated (Local ':+ scope)
+  Auto :: Which Inferred scope
 
 check ::
   Context s (scope ':+ scopes) ->
-  Which s (scope ':+ scopes) ->
+  (Int -> ST s (Unify.Scheme s scopes)) ->
+  Which mark (scope ':+ scopes) ->
   Unify.Type s (scope ':+ scopes) ->
-  Stage2.TermDeclaration scopes ->
+  Stage2.Definition2 mark scopes ->
   ST s (Definition2 s (scope ':+ scopes))
-check context Auto typex Stage2.Auto {definitionAuto} = do
-  definition <- Definition.check context typex (shift definitionAuto)
+check context _ Auto typex (Stage2.Auto definition) = do
+  definition <- Definition.check context typex (shift definition)
   pure $ Body {definition, typex}
-check context Manual typex Stage2.Manual {definition} = do
+check context _ Manual typex (Stage2.Manual definition) = do
   definition <- Definition.check context typex definition
   pure Body {definition, typex}
-check context (Share shared) typex Stage2.Share {position, shareIndex, patternx, bound} = do
-  target <- shared shareIndex
-  (full, instanciation) <- Unify.instanciate context position (shift target)
-  patternx <- Pattern.check context full (shift patternx)
-  let typex' = patternx Pattern.! bound
-  Unify.unify context position typex typex'
-  pure Shared {shareIndex, instanciation, patternx, bound, typex}
-check _ _ _ _ = error "mismatch which"
+check context shared _ typex declaration = case declaration of
+  Stage2.Share Stage2.Choice {position, shareIndex, patternx, bound} -> do
+    target <- shared shareIndex
+    (full, instanciation) <- Unify.instanciate context position (shift target)
+    patternx <- Pattern.check context full (shift patternx)
+    let typex' = patternx Pattern.! bound
+    Unify.unify context position typex typex'
+    pure Shared {shareIndex, instanciation, patternx, bound, typex}
 
 solve :: Position -> Definition2 s scope -> ST s (Solved.Definition2 scope)
 solve position = \case

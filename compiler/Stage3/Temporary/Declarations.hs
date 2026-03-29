@@ -185,11 +185,10 @@ checkTermDeclaration context index declaration =
       context <- pure $ localBindings declarations context
       let Functor.Annotated {meta} = terms Vector.! index
       annotation <- meta
-      let any = TypeAnnotation.local annotation
       let share index = do
             Shared {body} <- shared Vector.! index
             pure $ Unify.Scheme $ Unify.mapScheme (Unify.MapScheme Shared.typex) body
-      TermDeclaration.check context share any declaration
+      TermDeclaration.checkLocal context share annotation declaration
   )
 
 checkShared ::

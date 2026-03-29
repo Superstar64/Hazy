@@ -163,11 +163,10 @@ checkTermDeclaration global local declaration =
       annotation <- meta
       let context = globalBindings moduleSet
           -- todo, augment context with self to allow basic recursive inference
-          any = TypeAnnotation.global annotation
           share index = do
             Shared {body} <- shared Vector.! index
             pure $ Scheme.lift $ Scheme $ SchemeOver.map (SchemeOver.Map Shared.typex) body
-      unsolved <- TermDeclaration.Unsolved.check context share any declaration
+      unsolved <- TermDeclaration.Unsolved.checkGlobal context share annotation declaration
       TermDeclaration.Unsolved.solve unsolved
   )
 

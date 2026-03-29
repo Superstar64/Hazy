@@ -3,10 +3,10 @@
 module Stage3.Check.TypeAnnotation where
 
 import Control.Monad.ST (ST)
-import qualified Data.Strict.Maybe as Strict
 import Stage1.Position (Position)
+import qualified Stage2.Tree.Annotation as Stage2 (Annotation (..))
 import qualified Stage2.Tree.Scheme as Stage2 (Scheme (..))
-import qualified Stage2.Tree.TermDeclaration as Stage2 (TermDeclaration (..))
+import qualified Stage2.Tree.TermDeclaration as Stage2 (TermDeclaration (..), TermDeclaration' (..))
 import {-# SOURCE #-} Stage3.Check.Context (Context)
 import qualified Stage3.Synonym as Synonym
 import {-# SOURCE #-} qualified Stage3.Temporary.Scheme as Scheme (check, solve)
@@ -27,21 +27,6 @@ data LocalTypeAnnotation s scope
   = LocalAnnotation !(Annotation scope)
   | LocalInferred !(Unify.Type s scope)
 
-data AnyAnnotation s scope
-  = AnyAnnotation !(Annotation scope)
-  | Global
-  | Local !(Unify.Type s scope)
-
-global :: GlobalTypeAnnotation scope -> AnyAnnotation s scope
-global = \case
-  GlobalAnnotation annotation -> AnyAnnotation annotation
-  GlobalInferred -> Global
-
-local :: LocalTypeAnnotation s scope -> AnyAnnotation s scope
-local = \case
-  LocalAnnotation annotation -> AnyAnnotation annotation
-  LocalInferred typex -> Local typex
-
 checkAnnotation :: Context s scope -> Stage2.Scheme Position scope -> ST s (Annotation scope)
 checkAnnotation context annotation = do
   annotation <- Scheme.check context annotation
@@ -51,21 +36,15 @@ checkAnnotation context annotation = do
   pure $ Annotation {annotation, annotation'}
 
 checkGlobal :: Context s scope -> Stage2.TermDeclaration scope -> ST s (GlobalTypeAnnotation scope)
-checkGlobal context Stage2.Manual {annotation} =
-  GlobalAnnotation <$> checkAnnotation context annotation
-checkGlobal _ Stage2.Auto {} = pure GlobalInferred
-checkGlobal context Stage2.Share {annotationShare} = case annotationShare of
-  Strict.Nothing -> pure GlobalInferred
-  Strict.Just annotation -> GlobalAnnotation <$> checkAnnotation context annotation
+checkGlobal context Stage2.TermDeclaration {declaration = annotation Stage2.::: _} =
+  case annotation of
+    Stage2.Annotation annotation -> GlobalAnnotation <$> checkAnnotation context annotation
+    Stage2.NoAnnotation -> pure GlobalInferred
 
 checkLocal :: Context s scope -> Stage2.TermDeclaration scope -> ST s (LocalTypeAnnotation s scope)
-checkLocal context Stage2.Manual {annotation} =
-  LocalAnnotation <$> checkAnnotation context annotation
-checkLocal _ Stage2.Auto {} = do
-  typex <- Unify.fresh Unify.typex
-  pure $ LocalInferred typex
-checkLocal context Stage2.Share {annotationShare} = case annotationShare of
-  Strict.Nothing -> do
-    typex <- Unify.fresh Unify.typex
-    pure $ LocalInferred typex
-  Strict.Just annotation -> LocalAnnotation <$> checkAnnotation context annotation
+checkLocal context Stage2.TermDeclaration {declaration = annotation Stage2.::: _} =
+  case annotation of
+    Stage2.Annotation annotation -> LocalAnnotation <$> checkAnnotation context annotation
+    Stage2.NoAnnotation -> do
+      typex <- Unify.fresh Unify.typex
+      pure $ LocalInferred typex

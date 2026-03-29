@@ -5,7 +5,6 @@ import Data.List.NonEmpty (NonEmpty (..))
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe (catMaybes, mapMaybe)
-import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import qualified Data.Vector.Strict as Strict (Vector)
 import Error
   ( duplicateAnnotationEntries,
@@ -36,9 +35,11 @@ import qualified Stage2.Temporary.Partial.More.Selector as More.Selector
 import qualified Stage2.Temporary.Partial.More.Share as More (Shared (Shared))
 import qualified Stage2.Temporary.Partial.More.Share as More.Share
 import qualified Stage2.Temporary.Partial.TermDeclaration as Partial
+import qualified Stage2.Tree.Annotation as Real (Annotation (..))
 import qualified Stage2.Tree.Definition as Definition (merge)
+import qualified Stage2.Tree.Definition2 as Real (Choice (..), Definition2 (..))
 import Stage2.Tree.Scheme (Scheme)
-import qualified Stage2.Tree.TermDeclaration as Real
+import qualified Stage2.Tree.TermDeclaration as Real (TermDeclaration (..), TermDeclaration' (..))
 import Verbose (Debug (resolving))
 import Prelude hiding (Either (Left, Right), Real)
 
@@ -61,7 +62,11 @@ shrink TermDeclaration {declaration} = case declaration of
   Real valid -> Just valid
   _ -> Nothing
 
-merge :: (Debug verbose) => NonEmpty (Partial.TermDeclaration scope) -> verbose (TermDeclaration scope)
+merge ::
+  forall scope verbose.
+  (Debug verbose) =>
+  NonEmpty (Partial.TermDeclaration scope) ->
+  verbose (TermDeclaration scope)
 merge entries@(entry :| _) =
   let termDeclaration declaration = TermDeclaration {position, name, fixity, annotation, declaration}
    in termDeclaration <$> declaration
@@ -70,64 +75,30 @@ merge entries@(entry :| _) =
       [] -> missingVariableEntry position
       [_]
         | Just (position, body) <- functions -> case annotation of
-            Nothing ->
-              Real
-                <$> Verbose.resolving
-                  (Variable.printLiteral' name)
-                  Real.Auto
-                    { position,
-                      name,
-                      fixity,
-                      definitionAuto = Definition.merge $ fmap More.Function.functionAuto body
-                    }
-            Just annotation ->
-              Real
-                <$> Verbose.resolving
-                  (Variable.printLiteral' name)
-                  Real.Manual
-                    { position,
-                      name,
-                      fixity,
-                      definition = Definition.merge $ fmap More.Function.functionManual body,
-                      annotation
-                    }
+            Nothing -> Real <$> Verbose.resolving (Variable.printLiteral' name) real
+              where
+                real = Real.TermDeclaration {position, name, fixity, declaration}
+                declaration = Real.NoAnnotation Real.::: Real.Auto definition
+                definition = Definition.merge $ fmap More.Function.functionAuto body
+            Just annotation -> Real <$> Verbose.resolving (Variable.printLiteral' name) real
+              where
+                real = Real.TermDeclaration {position, name, fixity, declaration}
+                declaration = Real.Annotation annotation Real.::: Real.Manual definition
+                definition = Definition.merge $ fmap More.Function.functionManual body
         | Just (_, More.Selector {typeIndex, selectorIndex}) <- selection,
           () <- noAnnotation ->
-            pure $
-              Select
-                More.Selector
-                  { typeIndex,
-                    selectorIndex
-                  }
+            pure $ Select More.Selector {typeIndex, selectorIndex}
         | Just (_, More.Method {typeIndex, methodIndex}) <- method,
           () <- noAnnotation ->
-            pure $
-              Method
-                More.Method
-                  { typeIndex,
-                    methodIndex
-                  }
-        | Just
-            ( position,
-              More.Shared
-                { shareIndex,
-                  bound,
-                  patternx
-                }
-              ) <-
-            share ->
-            let annotationShare = maybe Strict.Nothing Strict.Just annotation
-             in pure $
-                  Real
-                    Real.Share
-                      { position,
-                        name,
-                        fixity,
-                        shareIndex,
-                        bound,
-                        patternx,
-                        annotationShare
-                      }
+            pure $ Method More.Method {typeIndex, methodIndex}
+        | Just (position, More.Shared {shareIndex, bound, patternx}) <- share ->
+            let shared :: Real.Definition2 marked scope
+                shared = Real.Share Real.Choice {position, shareIndex, bound, patternx}
+                declaration = case annotation of
+                  Nothing -> Real.NoAnnotation Real.::: shared
+                  Just annotation -> Real.Annotation annotation Real.::: shared
+                real = Real.TermDeclaration {position, name, fixity, declaration}
+             in Real <$> Verbose.resolving (Variable.printLiteral' name) real
         | otherwise -> error "no entry"
       entries -> duplicateVariableEntries entries
     position = Partial.position entry
