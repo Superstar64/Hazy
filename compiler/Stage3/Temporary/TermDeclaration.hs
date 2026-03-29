@@ -4,6 +4,7 @@ import Control.Monad.ST (ST)
 import Stage1.Position (Position)
 import Stage1.Variable (Variable)
 import Stage2.Index.Term (Bound)
+import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (shift)
 import qualified Stage2.Tree.TermDeclaration as Stage2 (TermDeclaration (..))
 import Stage3.Check.Context (Context (..))
@@ -93,25 +94,12 @@ check context _ annotation Stage2.Auto {position, definitionAuto, name} = case a
     pure Auto {position, name, body}
   _ -> error "bad type annotation"
 check context _ annotation Stage2.Manual {position, definition, name} = case annotation of
-  AnyAnnotation
-    Annotation
-      { annotation =
-          annotation@Solved.Scheme
-            { parameters,
-              constraints,
-              result
-            }
-      } ->
-      do
-        let typex = lift $ Simple.simplify result
-        context <- Solved.Scheme.augment position parameters constraints context
+  AnyAnnotation Annotation {annotation} ->
+    do
+      body <- checkAnnotation context position annotation $ \context typex -> do
         definition <- Definition.check context typex definition
-        let body =
-              Unify.schemeOver
-                (Simple.Type.lift . TypePattern.typex <$> parameters)
-                (Simple.Constraint.lift . Simple.Constraint.simplify <$> constraints)
-                Body {definition, typex}
-        pure Manual {position, name, annotation, body}
+        pure Body {definition, typex}
+      pure Manual {position, name, annotation, body}
   _ -> error "bad type annotation"
 check context shared annotation Stage2.Share {name, position, shareIndex, patternx, bound} = do
   target <- shared shareIndex
@@ -121,14 +109,7 @@ check context shared annotation Stage2.Share {name, position, shareIndex, patter
         (full, instanciation) <- Unify.instanciate context position (shift target)
         patternx <- Pattern.check context full (shift patternx)
         let typex = patternx Pattern.! bound
-        pure
-          Shared
-            { shareIndex,
-              instanciation,
-              patternx,
-              bound,
-              typex
-            }
+        pure Shared {shareIndex, instanciation, patternx, bound, typex}
       pure Auto {position, name, body}
     Local typex' -> do
       body <- Unify.generalizeOver context $ Unify.Generalize $ \context -> do
@@ -136,43 +117,43 @@ check context shared annotation Stage2.Share {name, position, shareIndex, patter
         patternx <- Pattern.check context full (shift patternx)
         let typex = patternx Pattern.! bound
         Unify.unify context position typex (shift typex')
-        pure
-          Shared
-            { shareIndex,
-              instanciation,
-              patternx,
-              bound,
-              typex
-            }
+        pure Shared {shareIndex, instanciation, patternx, bound, typex}
       pure Auto {position, name, body}
-    AnyAnnotation
-      Annotation
-        { annotation =
-            annotation@Solved.Scheme
-              { parameters,
-                constraints,
-                result
-              }
-        } ->
-        do
-          let typex' = lift $ Simple.simplify result
-          context <- Solved.Scheme.augment position parameters constraints context
+    AnyAnnotation Annotation {annotation} ->
+      do
+        body <- checkAnnotation context position annotation $ \context typex -> do
           (full, instanciation) <- Unify.instanciate context position (shift target)
           patternx <- Pattern.check context full (shift patternx)
-          let typex = patternx Pattern.! bound
-          Unify.unify context position typex typex'
-          let body =
-                Unify.schemeOver
-                  (Simple.Type.lift . TypePattern.typex <$> parameters)
-                  (Simple.Constraint.lift . Simple.Constraint.simplify <$> constraints)
-                  Shared
-                    { shareIndex,
-                      instanciation,
-                      patternx,
-                      bound,
-                      typex
-                    }
-          pure Manual {position, name, annotation, body}
+          pure Shared {shareIndex, instanciation, patternx, bound, typex}
+        pure Manual {position, name, annotation, body}
+
+checkAnnotation ::
+  Context s scope ->
+  Position ->
+  Solved.Scheme scope ->
+  ( Context s (Local ':+ scope) ->
+    Unify.Type s (Local ':+ scope) ->
+    ST s (typex s (Local ':+ scope))
+  ) ->
+  ST s (Unify.SchemeOver typex s scope)
+checkAnnotation
+  context
+  position
+  Solved.Scheme
+    { parameters,
+      constraints,
+      result
+    }
+  go =
+    do
+      let typex = lift $ Simple.simplify result
+      context <- Solved.Scheme.augment position parameters constraints context
+      definition <- go context typex
+      pure $
+        Unify.schemeOver
+          (Simple.Type.lift . TypePattern.typex <$> parameters)
+          (Simple.Constraint.lift . Simple.Constraint.simplify <$> constraints)
+          definition
 
 solve :: TermDeclaration s scope -> ST s (Solved.TermDeclaration scope)
 solve = \case
