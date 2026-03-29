@@ -53,6 +53,7 @@ import qualified Stage4.Tree.Instanciation as Instanciation
 import Stage4.Tree.MethodInfo (MethodInfo)
 import Stage4.Tree.Statements (Statements)
 import qualified Stage4.Tree.Statements as Statements
+import {-# SOURCE #-} qualified Stage4.Tree.TermDeclaration as TermDeclaration
 import Prelude hiding (fail)
 
 data Expression scope
@@ -550,6 +551,15 @@ simplifyWith expression [] = case expression of
   Stage3.String {string} ->
     foldr (cons . Character) nil (unpack string)
   Stage3.Do {statements} -> simplify statements
+  Stage3.Annotation {expression, annotation, instanciation} ->
+    Let
+      { declarations = Declarations.single $ shift $ TermDeclaration.annotation expression annotation,
+        letBody =
+          Variable
+            { variable = Term.Declaration 0,
+              instanciation = shift instanciation
+            }
+      }
   where
     cons head tail =
       Constructor

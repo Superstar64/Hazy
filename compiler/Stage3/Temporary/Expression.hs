@@ -9,8 +9,7 @@ import Data.Traversable (for)
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
 import Error
-  ( unsupportedFeatureExpressionAnnotation,
-    unsupportedFeatureFloatingPointLiterals,
+  ( unsupportedFeatureFloatingPointLiterals,
     unsupportedFeatureListComprehension,
     unsupportedFeatureRecordUpdate,
     unsupportedFeatureRightSection,
@@ -28,8 +27,10 @@ import qualified Stage3.Check.ConstructorInstance as ConstructorInstance
 import Stage3.Check.Context (Context (..))
 import Stage3.Check.DataInstance (DataInstance (DataInstance))
 import qualified Stage3.Check.DataInstance as DataInstance
+import qualified Stage3.Check.TypeAnnotation as Annotation
 import qualified Stage3.Check.TypeBinding as TypeBinding
 import qualified Stage3.Simple.Data as Simple.Data
+import Stage3.Simple.Scheme (instanciate)
 import Stage3.Temporary.Alternative (Alternative)
 import qualified Stage3.Temporary.Alternative as Alternative
 import Stage3.Temporary.CallHead (CallHead)
@@ -46,8 +47,10 @@ import Stage3.Temporary.Pattern (Pattern)
 import qualified Stage3.Temporary.Pattern as Pattern
 import Stage3.Temporary.RightHandSide (RightHandSide)
 import qualified Stage3.Temporary.RightHandSide as RightHandSide
+import qualified Stage3.Temporary.TermDeclaration as TermDeclaration
 import Stage3.Tree.ConstructorInfo (ConstructorInfo)
 import qualified Stage3.Tree.Expression as Solved
+import Stage3.Tree.Scheme (Scheme)
 import qualified Stage3.Unify as Unify
 import {-# SOURCE #-} qualified Stage4.Tree.Builtin as Builtin
 import {-# SOURCE #-} Stage4.Tree.TypeDeclaration (assumeData)
@@ -105,6 +108,12 @@ data Expression s scope
   | Do
       { statements :: !(Do s scope)
       }
+  | Annotation
+      { expression :: !(Unify.SchemeOver Expression s scope),
+        operatorPosition :: !Position,
+        annotation :: !(Scheme scope),
+        instanciation :: !(Unify.Instanciation s scope)
+      }
 
 instance Unify.Zonk Expression where
   zonk zonker = \case
@@ -155,6 +164,10 @@ instance Unify.Zonk Expression where
     Do {statements} -> do
       statements <- Unify.zonk zonker statements
       pure Do {statements}
+    Annotation {expression, operatorPosition, annotation, instanciation} -> do
+      expression <- Unify.zonk zonker expression
+      instanciation <- Unify.zonk zonker instanciation
+      pure Annotation {expression, operatorPosition, annotation, instanciation}
 
 check :: Context s scope -> Unify.Type s scope -> Stage2.Expression scope -> ST s (Expression s scope)
 check context typex Stage2.CallHead {callHead} = do
@@ -253,8 +266,13 @@ check context typex Stage2.LambdaCase {startPosition, cases} = do
   pure LambdaCase {cases}
 check _ _ Stage2.RightSection {operatorPosition} =
   unsupportedFeatureRightSection operatorPosition
-check _ _ Stage2.Annotation {operatorPosition} =
-  unsupportedFeatureExpressionAnnotation operatorPosition
+check context typex Stage2.Annotation {expression, operatorPosition, annotation} = do
+  Annotation.Annotation {annotation, annotation'} <- Annotation.checkAnnotation context annotation
+  expression <- TermDeclaration.checkAnnotation context operatorPosition annotation $
+    \context typex -> check context typex expression
+  (typex', instanciation) <- instanciate context operatorPosition annotation'
+  Unify.unify context operatorPosition typex typex'
+  pure Annotation {expression, operatorPosition, annotation, instanciation}
 check _ _ Stage2.RunST {startPosition} =
   unsupportedFeatureRunST startPosition
 
@@ -307,3 +325,7 @@ solve = \case
   Do {statements} -> do
     statements <- Do.solve statements
     pure Solved.Do {statements}
+  Annotation {expression, operatorPosition, annotation, instanciation} -> do
+    expression <- Unify.solveSchemeOver (Unify.Solve $ const solve) operatorPosition expression
+    instanciation <- Unify.solveInstanciation operatorPosition instanciation
+    pure Solved.Annotation {expression, annotation, instanciation}

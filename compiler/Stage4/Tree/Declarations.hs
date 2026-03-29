@@ -70,3 +70,13 @@ simplify
     where
       count = length terms
       share index = declaration (count + index)
+
+single :: LazyTermDeclaration scope -> Declarations scope
+single term =
+  Declarations
+    { terms = Vector.singleton term,
+      types = Vector.empty,
+      typeExtras = Vector.empty,
+      dataInstances = Vector.empty,
+      classInstances = Vector.empty
+    }

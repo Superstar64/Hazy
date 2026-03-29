@@ -85,7 +85,6 @@ module Error
     universeMustBeSmall,
     uncheckable,
     invalidNewtype,
-    unsupportedFeatureExpressionAnnotation,
     unsupportedFeatureRunST,
     unsupportedFeatureRightSection,
     unsupportedFeatureRecordUpdate,
@@ -557,18 +556,12 @@ rightSection = fromString "right section"
 
 runST = fromString "runST"
 
-expressionAnnotations = fromString "expression annotations"
-
 unsupportedFeature :: Builder -> Position -> a
 unsupportedFeature feature position =
   errorAt UnsupportedFeature position $ fromString "unsupported feature: " <> feature
 
 unsupportedFeatureRunST :: Position -> a
 unsupportedFeatureRunST = unsupportedFeature runST
-
-unsupportedFeatureExpressionAnnotation :: Position -> a
-unsupportedFeatureExpressionAnnotation =
-  unsupportedFeature expressionAnnotations
 
 unsupportedFeatureRightSection :: Position -> a
 unsupportedFeatureRightSection =

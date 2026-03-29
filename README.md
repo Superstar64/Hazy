@@ -19,7 +19,6 @@ Haskell features are missing, only a test Javascript backend is implemented.
 - List Comprehensions
 - Record Updates
 - Right Sections
-- Type Annotation Expressions
 - Deriving
 - GADTs
 - Polymorphic Components

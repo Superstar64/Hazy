@@ -16,7 +16,10 @@ import Stage3.Tree.ExpressionField (Field)
 import Stage3.Tree.Lambda (Lambda)
 import Stage3.Tree.Pattern (Pattern)
 import Stage3.Tree.RightHandSide (RightHandSide)
+import Stage3.Tree.Scheme (Scheme)
 import qualified Stage4.Tree.Evidence as Simple (Evidence)
+import qualified Stage4.Tree.Instanciation as Simple (Instanciation (..))
+import qualified Stage4.Tree.SchemeOver as Simple (SchemeOver (..))
 import Prelude hiding (Bool (False, True))
 
 data Expression scope
@@ -66,4 +69,12 @@ data Expression scope
   | Do
       { statements :: !(Do scope)
       }
+  | Annotation
+      { expression :: !(Simple.SchemeOver Expression scope),
+        annotation :: !(Scheme scope),
+        instanciation :: !(Simple.Instanciation scope)
+      }
   deriving (Show)
+
+instance Scope.Show Expression where
+  showsPrec = showsPrec

@@ -5,6 +5,8 @@ import qualified Stage2.Index.Term as Stage2.Term
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Definition2 as Stage3 (Definition2 (..))
+import qualified Stage3.Tree.Expression as Stage3 (Expression)
+import qualified Stage3.Tree.Scheme as Stage3 (Scheme)
 import qualified Stage3.Tree.Shared as Stage3.Shared
 import qualified Stage3.Tree.TermDeclaration as Stage3 (LazyTermDeclaration (..), TermDeclaration (..))
 import qualified Stage4.Index.Term as Term
@@ -14,6 +16,7 @@ import qualified Stage4.Temporary.Pattern as Pattern
 import Stage4.Tree.Expression (Expression)
 import qualified Stage4.Tree.Expression as Expression
 import Stage4.Tree.Scheme (Scheme (Scheme))
+import qualified Stage4.Tree.Scheme as Scheme
 import Stage4.Tree.SchemeOver (SchemeOver (..))
 import qualified Stage4.Tree.Statements as Statements
 
@@ -127,3 +130,17 @@ simplifyShared index shared =
                     result = Stage3.Shared.typex result
                   }
           }
+
+annotation :: SchemeOver Stage3.Expression scope -> Stage3.Scheme scope -> LazyTermDeclaration scope
+annotation SchemeOver {parameters, constraints, result} scheme =
+  Unnamed 0
+    :^ Definition
+      { name = Unnamed 0,
+        definition =
+          SchemeOver
+            { parameters,
+              constraints,
+              result = Expression.simplify result
+            },
+        typex = Scheme.simplify scheme
+      }
