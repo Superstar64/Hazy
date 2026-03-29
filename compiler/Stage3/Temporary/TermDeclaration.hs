@@ -11,10 +11,8 @@ import Stage3.Check.TypeAnnotation (Annotation (..), AnyAnnotation (..))
 import qualified Stage3.Simple.Constraint as Simple.Constraint (lift)
 import Stage3.Simple.Type (lift)
 import qualified Stage3.Simple.Type as Simple.Type
-import qualified Stage3.Temporary.Definition as Definition
 import Stage3.Temporary.Definition2 (Definition2 (..))
 import qualified Stage3.Temporary.Definition2 as Definition2
-import qualified Stage3.Temporary.Pattern as Pattern
 import qualified Stage3.Tree.Scheme as Solved (Scheme (..))
 import qualified Stage3.Tree.Scheme as Solved.Scheme
 import qualified Stage3.Tree.TermDeclaration as Solved (TermDeclaration (..))
@@ -51,52 +49,36 @@ check ::
   AnyAnnotation s scope ->
   Stage2.TermDeclaration scope ->
   ST s (TermDeclaration s scope)
-check context _ annotation Stage2.Auto {position, definitionAuto, name} = case annotation of
+check context shared annotation declaration = case annotation of
   Global -> do
     body <- Unify.generalizeOver context $ Unify.Generalize $ \context -> do
+      let which = case declaration of
+            Stage2.Auto {} -> Definition2.Auto
+            Stage2.Share {} -> Definition2.Share shared
+            _ -> error "bad annotation"
       typex <- Unify.fresh Unify.typex
-      definition <- Definition.check context typex (shift definitionAuto)
-      pure $ Body {definition, typex}
+      Definition2.check context which typex declaration
     pure Auto {position, name, body}
   Local typex -> do
     body <- Unify.generalizeOver context $ Unify.Generalize $ \context -> do
-      definition <- Definition.check context (shift typex) (shift definitionAuto)
-      pure $ Body {definition, typex = shift typex}
+      let which = case declaration of
+            Stage2.Auto {} -> Definition2.Auto
+            Stage2.Share {} -> Definition2.Share shared
+            _ -> error "bad annotation"
+      Definition2.check context which (shift typex) declaration
     pure Auto {position, name, body}
-  _ -> error "bad type annotation"
-check context _ annotation Stage2.Manual {position, definition, name} = case annotation of
   AnyAnnotation Annotation {annotation} ->
     do
       body <- checkAnnotation context position annotation $ \context typex -> do
-        definition <- Definition.check context typex definition
-        pure Body {definition, typex}
+        let which = case declaration of
+              Stage2.Manual {} -> Definition2.Manual
+              Stage2.Share {} -> Definition2.Share shared
+              _ -> error "bad annotation"
+        Definition2.check context which typex declaration
       pure Manual {position, name, annotation, body}
-  _ -> error "bad type annotation"
-check context shared annotation Stage2.Share {name, position, shareIndex, patternx, bound} = do
-  target <- shared shareIndex
-  case annotation of
-    Global -> do
-      body <- Unify.generalizeOver context $ Unify.Generalize $ \context -> do
-        (full, instanciation) <- Unify.instanciate context position (shift target)
-        patternx <- Pattern.check context full (shift patternx)
-        let typex = patternx Pattern.! bound
-        pure Shared {shareIndex, instanciation, patternx, bound, typex}
-      pure Auto {position, name, body}
-    Local typex' -> do
-      body <- Unify.generalizeOver context $ Unify.Generalize $ \context -> do
-        (full, instanciation) <- Unify.instanciate context position (shift target)
-        patternx <- Pattern.check context full (shift patternx)
-        let typex = patternx Pattern.! bound
-        Unify.unify context position typex (shift typex')
-        pure Shared {shareIndex, instanciation, patternx, bound, typex}
-      pure Auto {position, name, body}
-    AnyAnnotation Annotation {annotation} ->
-      do
-        body <- checkAnnotation context position annotation $ \context typex -> do
-          (full, instanciation) <- Unify.instanciate context position (shift target)
-          patternx <- Pattern.check context full (shift patternx)
-          pure Shared {shareIndex, instanciation, patternx, bound, typex}
-        pure Manual {position, name, annotation, body}
+  where
+    position = Stage2.position declaration
+    name = Stage2.name declaration
 
 checkAnnotation ::
   Context s scope ->
