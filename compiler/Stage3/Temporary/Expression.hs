@@ -12,7 +12,6 @@ import Error
   ( unsupportedFeatureFloatingPointLiterals,
     unsupportedFeatureListComprehension,
     unsupportedFeatureRecordUpdate,
-    unsupportedFeatureRightSection,
     unsupportedFeatureRunST,
   )
 import Stage1.Position (Position)
@@ -114,6 +113,10 @@ data Expression s scope
         annotation :: !(Scheme scope),
         instanciation :: !(Unify.Instanciation s scope)
       }
+  | RightSection
+      { left :: !(CallHead s scope),
+        right :: !(Expression s scope)
+      }
 
 instance Unify.Zonk Expression where
   zonk zonker = \case
@@ -168,6 +171,10 @@ instance Unify.Zonk Expression where
       expression <- Unify.zonk zonker expression
       instanciation <- Unify.zonk zonker instanciation
       pure Annotation {expression, operatorPosition, annotation, instanciation}
+    RightSection {left, right} -> do
+      left <- Unify.zonk zonker left
+      right <- Unify.zonk zonker right
+      pure RightSection {left, right}
 
 check :: Context s scope -> Unify.Type s scope -> Stage2.Expression scope -> ST s (Expression s scope)
 check context typex Stage2.CallHead {callHead} = do
@@ -264,8 +271,15 @@ check context typex Stage2.LambdaCase {startPosition, cases} = do
   cases <- traverse (Alternative.check context resultType parameterType) cases
   Unify.unify context startPosition typex (Unify.function parameterType resultType)
   pure LambdaCase {cases}
-check _ _ Stage2.RightSection {operatorPosition} =
-  unsupportedFeatureRightSection operatorPosition
+check context typex Stage2.RightSection {left, operatorPosition, right} = do
+  argumentType1 <- Unify.fresh Unify.typex
+  argumentType2 <- Unify.fresh Unify.typex
+  result <- Unify.fresh Unify.typex
+  let target = argumentType1 `Unify.function` argumentType2 `Unify.function` result
+  left <- CallHead.check context target left
+  right <- check context argumentType2 right
+  Unify.unify context operatorPosition typex (argumentType1 `Unify.function` result)
+  pure RightSection {left, right}
 check context typex Stage2.Annotation {expression, operatorPosition, annotation} = do
   Annotation.Annotation {annotation, annotation'} <- Annotation.checkAnnotation context annotation
   expression <- TermDeclaration.checkAnnotation context operatorPosition annotation $
@@ -329,3 +343,7 @@ solve = \case
     expression <- Unify.solveSchemeOver (Unify.Solve $ const solve) operatorPosition expression
     instanciation <- Unify.solveInstanciation operatorPosition instanciation
     pure Solved.Annotation {expression, annotation, instanciation}
+  RightSection {left, right} -> do
+    left <- CallHead.solve left
+    right <- solve right
+    pure Solved.RightSection {left, right}

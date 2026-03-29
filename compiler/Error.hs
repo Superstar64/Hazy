@@ -86,7 +86,6 @@ module Error
     uncheckable,
     invalidNewtype,
     unsupportedFeatureRunST,
-    unsupportedFeatureRightSection,
     unsupportedFeatureRecordUpdate,
     unsupportedFeatureListComprehension,
     unsupportedFeatureConstraintedTypeDefaulting,
@@ -552,8 +551,6 @@ constraintedTypeDefaulting = fromString "constrained type defaulting"
 
 recordUpdate = fromString "record update"
 
-rightSection = fromString "right section"
-
 runST = fromString "runST"
 
 unsupportedFeature :: Builder -> Position -> a
@@ -562,10 +559,6 @@ unsupportedFeature feature position =
 
 unsupportedFeatureRunST :: Position -> a
 unsupportedFeatureRunST = unsupportedFeature runST
-
-unsupportedFeatureRightSection :: Position -> a
-unsupportedFeatureRightSection =
-  unsupportedFeature rightSection
 
 unsupportedFeatureRecordUpdate :: Position -> a
 unsupportedFeatureRecordUpdate =

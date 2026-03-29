@@ -18,7 +18,6 @@ Haskell features are missing, only a test Javascript backend is implemented.
 - Constrained Type Defaulting
 - List Comprehensions
 - Record Updates
-- Right Sections
 - Deriving
 - GADTs
 - Polymorphic Components

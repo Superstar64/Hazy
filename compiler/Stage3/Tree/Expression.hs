@@ -74,6 +74,10 @@ data Expression scope
         annotation :: !(Scheme scope),
         instanciation :: !(Simple.Instanciation scope)
       }
+  | RightSection
+      { left :: !(CallHead scope),
+        right :: !(Expression scope)
+      }
   deriving (Show)
 
 instance Scope.Show Expression where

@@ -71,7 +71,7 @@ defaultFromRational :: (Fractional a) => Ratio Integer -> a
 defaultFromRational = undefined
 
 defaultSucc, defaultPred :: (Enum a) => a -> a
-defaultSucc = toEnum . (\x -> x + 1) . fromEnum
+defaultSucc = toEnum . (+ 1) . fromEnum
 defaultPred = toEnum . (subtract 1) . fromEnum
 
 defaultToEnum :: (Enum a) => Int -> a

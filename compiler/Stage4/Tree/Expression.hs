@@ -560,6 +560,18 @@ simplifyWith expression [] = case expression of
               instanciation = shift instanciation
             }
       }
+  Stage3.RightSection {left, right} -> do
+    Lambda
+      { body =
+          Call
+            { function =
+                Call
+                  { function = shift $ simplify left,
+                    argument = lambdaVariable
+                  },
+              argument = shift $ simplify right
+            }
+      }
   where
     cons head tail =
       Constructor
