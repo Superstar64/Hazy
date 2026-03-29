@@ -272,6 +272,16 @@ instance Ord HelperOrdering where
   Ordering GT `compare` Ordering EQ = GT
   Ordering GT `compare` Ordering GT = EQ
 
+instance Enum HelperOrdering where
+  fromEnum = \case
+    Ordering LT -> 0
+    Ordering EQ -> 1
+    Ordering GT -> 2
+  toEnum = \case
+    0 -> Ordering LT
+    1 -> Ordering EQ
+    2 -> Ordering GT
+
 newtype HelperList a = List {list :: [a]}
 
 instance (Eq a) => Eq (HelperList a) where
@@ -312,3 +322,9 @@ instance Applicative (HelperST s) where
 
 instance Monad (HelperST s) where
   STx m >>= f = STx (primSTBind m (st . f))
+
+newtype HelperUnit = HelperUnit ()
+
+instance Enum HelperUnit where
+  fromEnum (HelperUnit ()) = 0
+  toEnum 0 = HelperUnit ()

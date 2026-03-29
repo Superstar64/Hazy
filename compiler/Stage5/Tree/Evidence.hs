@@ -78,6 +78,8 @@ generate context = \case
                     Evidence.EnumChar -> enumChar
                     Evidence.EnumInt -> enumInt
                     Evidence.EnumInteger -> enumInteger
+                    Evidence.EnumOrdering -> enumOrdering
+                    Evidence.EnumUnit -> enumUnit
                     Evidence.EqBool -> eqBool
                     Evidence.EqChar -> eqChar
                     Evidence.EqInt -> eqInt
@@ -109,6 +111,8 @@ generate context = \case
               enumChar,
               enumInt,
               enumInteger,
+              enumOrdering,
+              enumUnit,
               eqBool,
               eqChar,
               eqTuple,

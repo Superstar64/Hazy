@@ -29,6 +29,10 @@ constrain fallthough constrain = table
       pure $ single Evidence.EnumInteger
     table Type2.Enum Type2.Int [] =
       pure $ single Evidence.EnumInt
+    table Type2.Enum (Type2.Tuple 0) [] =
+      pure $ single Evidence.EnumUnit
+    table Type2.Enum Type2.Ordering [] =
+      pure $ single Evidence.EnumOrdering
     table Type2.Eq Type2.Bool [] =
       pure $ single Evidence.EqBool
     table Type2.Eq Type2.Char [] =

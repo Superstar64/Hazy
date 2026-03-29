@@ -266,6 +266,8 @@ export {
   "instance Hazy.Enum HelperChar" as enumChar,
   "instance Hazy.Enum HelperInt" as enumInt,
   "instance Hazy.Enum HelperInteger" as enumInteger,
+  "instance Hazy.Enum HelperOrdering" as enumOrdering,
+  "instance Hazy.Enum HelperUnit" as enumUnit,
   "instance Hazy.Eq HelperBool" as eqBool,
   "instance Hazy.Eq HelperChar" as eqChar,
   "instance Hazy.Eq HelperInt" as eqInt,

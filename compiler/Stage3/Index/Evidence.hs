@@ -22,6 +22,8 @@ data Builtin
   | EnumChar
   | EnumInteger
   | EnumInt
+  | EnumOrdering
+  | EnumUnit
   | EqBool
   | EqChar
   | EqTuple !Int
