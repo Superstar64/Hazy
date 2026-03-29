@@ -4,8 +4,9 @@ import Stage1.Variable (Variable)
 import qualified Stage2.Index.Term as Stage2.Term
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import qualified Stage3.Tree.Definition2 as Stage3 (Definition2 (..))
 import qualified Stage3.Tree.Shared as Stage3.Shared
-import qualified Stage3.Tree.TermDeclaration as Stage3
+import qualified Stage3.Tree.TermDeclaration as Stage3 (LazyTermDeclaration (..), TermDeclaration (..))
 import qualified Stage4.Index.Term as Term
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute

@@ -324,6 +324,7 @@ executable hazy
     Stage3.Temporary.Constructor
     Stage3.Temporary.Declarations
     Stage3.Temporary.Definition
+    Stage3.Temporary.Definition2
     Stage3.Temporary.Do
     Stage3.Temporary.Entry
     Stage3.Temporary.Expression
@@ -350,6 +351,7 @@ executable hazy
     Stage3.Tree.ConstructorInfo
     Stage3.Tree.Declarations
     Stage3.Tree.Definition
+    Stage3.Tree.Definition2
     Stage3.Tree.Do
     Stage3.Tree.Entry
     Stage3.Tree.EntryInfo
