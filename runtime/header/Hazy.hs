@@ -11,17 +11,17 @@ import Hazy.Prelude (IO, Text)
 -- builtin, but rather the compiler doesn't bother doing symbol resolution on
 -- definitions it doesn't need.
 
-error :: Text -> a
-error = missing
+errorText :: Text -> a
+errorText = missing
 
 pack :: [Char] -> Text
 pack = missing
 
-putStrLn :: Text -> IO ()
-putStrLn = missing
+putStrLnText :: Text -> IO ()
+putStrLnText = missing
 
-trace :: Text -> a -> a
-trace = missing
+traceText :: Text -> a -> a
+traceText = missing
 
 primIntToChar :: Int -> Char
 primIntToChar = missing

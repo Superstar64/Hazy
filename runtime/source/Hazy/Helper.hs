@@ -366,7 +366,7 @@ instance (Integral a) => Enum (HelperRatio a) where
   enumFromThenTo = numericEnumFromThenTo
 
 reduce :: (Integral a) => a -> a -> HelperRatio a
-reduce _ 0 = error $ pack "Data.Ratio.% : zero denominator"
+reduce _ 0 = error "Data.Ratio.% : zero denominator"
 reduce x y = Ratio $ (x `quot` d) :% (y `quot` d)
   where
     d = gcd x y

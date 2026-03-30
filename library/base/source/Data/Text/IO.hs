@@ -15,7 +15,7 @@ module Data.Text.IO
 where
 
 import Data.Text (Text)
-import Hazy.Prelude (placeholder, putStrLn)
+import Hazy.Prelude (placeholder, putStrLnText)
 import System.IO (Handle)
 import Prelude (FilePath, IO, error)
 
@@ -51,3 +51,6 @@ getLine = placeholder
 
 putStr :: Text -> IO ()
 putStr = placeholder
+
+putStrLn :: Text -> IO ()
+putStrLn = putStrLnText

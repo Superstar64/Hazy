@@ -15,7 +15,7 @@ export const placeholder = {
   },
 };
 
-export const error = {
+export const errorText = {
   a: 0,
   b: (message) => {
     throw new Error(force(message));
@@ -36,7 +36,7 @@ export const pack = {
   },
 };
 
-export const putStrLn = {
+export const putStrLnText = {
   a: 0,
   b: (thunk) => () => {
     console.log(force(thunk));
@@ -44,7 +44,7 @@ export const putStrLn = {
   },
 };
 
-export const trace = {
+export const traceText = {
   a: 0,
   b: (text) => (thunk) => {
     console.log(force(text));

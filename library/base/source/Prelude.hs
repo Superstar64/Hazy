@@ -444,12 +444,14 @@ import Hazy.Prelude
     Num (..),
     Real (..),
     RealFrac (..),
+    error,
     even,
     fromIntegral,
     gcd,
     odd,
     placeholder,
     subtract,
+    undefined,
   )
 import qualified Hazy.Prelude as Hazy
 import System.IO
@@ -548,14 +550,8 @@ until = placeholder
 asTypeOf :: a -> a -> a
 asTypeOf = placeholder
 
-error :: [Char] -> a
-error message = Hazy.error (Hazy.pack message)
-
 errorWithoutStackTrace :: [Char] -> a
 errorWithoutStackTrace = placeholder
-
-undefined :: a
-undefined = error "bottom"
 
 infixr 0 `seq`
 

@@ -8,10 +8,10 @@
 module Hazy.Prelude
   ( module Hazy.Prelude,
     module Hazy.Builtin,
-    error,
+    errorText,
     pack,
-    putStrLn,
-    trace,
+    putStrLnText,
+    traceText,
   )
 where
 
@@ -75,7 +75,7 @@ even n = n `rem` 2 == 0
 odd = not . even
 
 gcd :: (Integral a) => a -> a -> a
-gcd 0 0 = error $ pack "Prelude.gcd: gcd 0 0 is undefined"
+gcd 0 0 = error "Prelude.gcd: gcd 0 0 is undefined"
 gcd x y = gcd' (abs x) (abs y)
   where
     gcd' x 0 = x
@@ -128,8 +128,11 @@ instance Applicative IO where
 instance Monad IO where
   IO m >>= f = IO (m >>= (runIO . f))
 
+error :: String -> a
+error = errorText . pack
+
 undefined :: a
-undefined = error (pack "Prelude.undefined")
+undefined = error "Prelude.undefined"
 
 map :: (a -> b) -> [a] -> [b]
 map f [] = []
@@ -156,7 +159,13 @@ takeWhile p (x : xs)
   | otherwise = []
 
 placeholder :: a
-placeholder = error (pack "Prelude.placeholder")
+placeholder = error "Prelude.placeholder"
+
+trace :: String -> a -> a
+trace = traceText . pack
+
+putStrLn :: String -> IO ()
+putStrLn = putStrLnText . pack
 
 data Text
 

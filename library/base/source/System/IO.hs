@@ -103,7 +103,7 @@ import Data.String (String)
 import Data.Text (pack)
 import qualified Data.Text.IO as Text
 import Foreign.Ptr (Ptr)
-import Hazy.Prelude (IO, placeholder)
+import Hazy.Prelude (IO, placeholder, putStrLn)
 import Text.Show (Show)
 import Prelude (Integer, Read, error)
 
@@ -263,9 +263,6 @@ putChar = placeholder
 
 putStr :: String -> IO ()
 putStr = placeholder
-
-putStrLn :: String -> IO ()
-putStrLn string = Text.putStrLn (pack string)
 
 print :: (Show a) => a -> IO ()
 print = placeholder
