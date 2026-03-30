@@ -438,20 +438,30 @@ import Data.Tuple
 import Hazy.Prelude
   ( Bounded (..),
     Enum (..),
+    Floating (..),
     Fractional (..),
     Integer,
     Integral (..),
     Num (..),
     Real (..),
+    RealFloat (..),
     RealFrac (..),
+    asTypeOf,
     error,
     even,
     fromIntegral,
     gcd,
+    lcm,
     odd,
     placeholder,
+    realToFrac,
+    seq,
     subtract,
     undefined,
+    until,
+    ($!),
+    (^),
+    (^^),
   )
 import qualified Hazy.Prelude as Hazy
 import System.IO
@@ -502,66 +512,8 @@ data Double
 
 data Word
 
-class (Fractional a) => Floating a where
-  pi :: a
-  exp, log, sqrt :: a -> a
-  infixr 8 **
-  (**), logBase :: a -> a -> a
-  sin, cos, tan :: a -> a
-  asin, acos, atan :: a -> a
-  sinh, cosh, tanh :: a -> a
-  asinh, acosh, atanh :: a -> a
-
-class (RealFrac a, Floating a) => RealFloat a where
-  floatRadix :: a -> Integer
-  floatDigits :: a -> Int
-  floatRange :: a -> (Int, Int)
-  decodeFloat :: a -> (Integer, Int)
-  encodeFloat :: Integer -> Int -> a
-  exponent :: a -> Int
-  significand :: a -> a
-  scaleFloat :: Int -> a -> a
-  isNaN :: a -> Bool
-  isInfinite :: a -> Bool
-  isDenormalized :: a -> Bool
-  isNegativeZero :: a -> Bool
-  isIEEE :: a -> Bool
-  atan2 :: a -> a -> a
-
-lcm :: (Integral a) => a -> a -> a
-lcm = placeholder
-
-infixr 8 ^
-
-(^) :: (Num a, Integral b) => a -> b -> a
-(^) = placeholder
-
-infixr 8 ^^
-
-(^^) :: (Fractional a, Integral b) => a -> b -> a
-(^^) = placeholder
-
-realToFrac :: (Real a, Fractional b) => a -> b
-realToFrac = placeholder
-
-until :: (a -> Bool) -> (a -> a) -> a -> a
-until = placeholder
-
-asTypeOf :: a -> a -> a
-asTypeOf = placeholder
-
 errorWithoutStackTrace :: [Char] -> a
 errorWithoutStackTrace = placeholder
-
-infixr 0 `seq`
-
-seq :: a -> b -> b
-seq = placeholder
-
-infixr 0 $!
-
-($!) :: (a -> b) -> a -> b
-($!) = placeholder
 
 data IOError
 

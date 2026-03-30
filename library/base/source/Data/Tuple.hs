@@ -8,22 +8,10 @@ module Data.Tuple
   )
 where
 
-import Hazy.Prelude (placeholder)
-import Prelude (error)
+import Hazy.Prelude (curry, fst, placeholder, snd, uncurry)
+import Prelude ()
 
 data Solo a = Solo a
-
-fst :: (a, b) -> a
-fst = placeholder
-
-snd :: (a, b) -> b
-snd = placeholder
-
-curry :: ((a, b) -> c) -> a -> b -> c
-curry = placeholder
-
-uncurry :: (a -> b -> c) -> (a, b) -> c
-uncurry = placeholder
 
 swap :: (a, b) -> (b, a)
 swap = placeholder

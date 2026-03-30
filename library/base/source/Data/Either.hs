@@ -12,15 +12,8 @@ module Data.Either
 where
 
 import Data.Bool (Bool)
-import Hazy.Prelude (placeholder)
-import Prelude (error)
-
-data Either a b
-  = Left a
-  | Right b
-
-either :: (a -> c) -> (b -> c) -> Either a b -> c
-either = placeholder
+import Hazy.Prelude (Either (..), either, placeholder)
+import Prelude ()
 
 lefts :: [Either a b] -> [a]
 lefts = placeholder

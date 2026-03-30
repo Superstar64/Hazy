@@ -167,34 +167,42 @@ import Data.Traversable
     mapAccumR,
   )
 import Hazy.Prelude
-  ( iterate,
+  ( break,
+    cycle,
+    drop,
+    dropWhile,
+    filter,
+    head,
+    init,
+    iterate,
+    last,
+    lookup,
     map,
     placeholder,
+    repeat,
+    replicate,
+    reverse,
+    span,
+    splitAt,
+    tail,
+    take,
     takeWhile,
+    unzip,
+    unzip3,
+    zip,
+    zip3,
+    zipWith,
+    zipWith3,
+    (!!),
     (++),
   )
 import Prelude (Integral, Num, error)
-
-head :: [a] -> a
-head = placeholder
-
-last :: [a] -> a
-last = placeholder
-
-tail :: [a] -> [a]
-tail = placeholder
-
-init :: [a] -> [a]
-init = placeholder
 
 uncons :: [a] -> Maybe (a, [a])
 uncons = placeholder
 
 singleton :: a -> [a]
 singleton = placeholder
-
-reverse :: [a] -> [a]
-reverse = placeholder
 
 intersperse :: a -> [a] -> [a]
 intersperse = placeholder
@@ -229,38 +237,11 @@ scanr1 = placeholder
 iterate' :: (a -> a) -> a -> [a]
 iterate' = placeholder
 
-repeat :: a -> [a]
-repeat = placeholder
-
-replicate :: Int -> a -> [a]
-replicate = placeholder
-
-cycle :: [a] -> [a]
-cycle = placeholder
-
 unfoldr :: (b -> Maybe (a, b)) -> b -> [a]
 unfoldr = placeholder
 
-take :: Int -> [a] -> [a]
-take = placeholder
-
-drop :: Int -> [a] -> [a]
-drop = placeholder
-
-splitAt :: Int -> [a] -> ([a], [a])
-splitAt = placeholder
-
-dropWhile :: (a -> Bool) -> [a] -> [a]
-dropWhile = placeholder
-
 dropWhileEnd :: (a -> Bool) -> [a] -> [a]
 dropWhileEnd = placeholder
-
-span :: (a -> Bool) -> [a] -> ([a], [a])
-span = placeholder
-
-break :: (a -> Bool) -> [a] -> ([a], [a])
-break = placeholder
 
 stripPrefix :: (Eq a) => [a] -> [a] -> Maybe [a]
 stripPrefix = placeholder
@@ -286,17 +267,8 @@ isInfixOf = placeholder
 isSubsequenceOf :: (Eq a) => [a] -> [a] -> Bool
 isSubsequenceOf = placeholder
 
-lookup :: (Eq a) => a -> [(a, b)] -> Maybe b
-lookup = placeholder
-
-filter :: (a -> Bool) -> [a] -> [a]
-filter = placeholder
-
 partition :: (a -> Bool) -> [a] -> ([a], [a])
 partition = placeholder
-
-(!!) :: [a] -> Int -> a
-(!!) = placeholder
 
 elemIndex :: (Eq a) => a -> [a] -> Maybe Int
 elemIndex = placeholder
@@ -310,12 +282,6 @@ findIndex = placeholder
 findIndices :: (a -> Bool) -> [a] -> [Int]
 findIndices = placeholder
 
-zip :: [a] -> [b] -> [(a, b)]
-zip = placeholder
-
-zip3 :: [a] -> [b] -> [c] -> [(a, b, c)]
-zip3 = placeholder
-
 zip4 :: [a] -> [b] -> [c] -> [d] -> [(a, b, c, d)]
 zip4 = placeholder
 
@@ -328,12 +294,6 @@ zip6 = placeholder
 zip7 :: [a] -> [b] -> [c] -> [d] -> [e] -> [f] -> [g] -> [(a, b, c, d, e, f, g)]
 zip7 = placeholder
 
-zipWith :: (a -> b -> c) -> [a] -> [b] -> [c]
-zipWith = placeholder
-
-zipWith3 :: (a -> b -> c -> d) -> [a] -> [b] -> [c] -> [d]
-zipWith3 = placeholder
-
 zipWith4 :: (a -> b -> c -> d -> e) -> [a] -> [b] -> [c] -> [d] -> [e]
 zipWith4 = placeholder
 
@@ -345,12 +305,6 @@ zipWith6 = placeholder
 
 zipWith7 :: (a -> b -> c -> d -> e -> f -> g -> h) -> [a] -> [b] -> [c] -> [d] -> [e] -> [f] -> [g] -> [h]
 zipWith7 = placeholder
-
-unzip :: [(a, b)] -> ([a], [b])
-unzip = placeholder
-
-unzip3 :: [(a, b, c)] -> ([a], [b], [c])
-unzip3 = placeholder
 
 unzip4 :: [(a, b, c, d)] -> ([a], [b], [c], [d])
 unzip4 = placeholder

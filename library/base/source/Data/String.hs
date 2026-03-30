@@ -9,20 +9,8 @@ module Data.String
 where
 
 import Data.Char (Char)
-import Hazy.Prelude (String, placeholder)
+import Hazy.Prelude (String, lines, placeholder, unlines, unwords, words)
 import Prelude (error)
 
 class IsString a where
   fromString :: String -> a
-
-lines :: String -> [String]
-lines = placeholder
-
-words :: String -> [String]
-words = placeholder
-
-unlines :: [String] -> String
-unlines = placeholder
-
-unwords :: [String] -> String
-unwords = placeholder

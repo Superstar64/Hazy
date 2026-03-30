@@ -386,3 +386,5 @@ numericEnumFromThenTo n n' m = takeWhile p (numericEnumFromThen n n')
     p
       | n' >= n = (<= m + (n' - n) / 2)
       | otherwise = (>= m + (n' - n) / 2)
+
+data Strict a = Strict !a

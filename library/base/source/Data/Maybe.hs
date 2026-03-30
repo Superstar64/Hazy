@@ -13,15 +13,8 @@ module Data.Maybe
 where
 
 import Data.Bool (Bool)
-import Hazy.Prelude (placeholder)
-import Prelude (error)
-
-data Maybe a
-  = Nothing
-  | Just a
-
-maybe :: b -> (a -> b) -> Maybe a -> b
-maybe = placeholder
+import Hazy.Prelude (Maybe (..), maybe, placeholder)
+import Prelude ()
 
 isJust :: Maybe a -> Bool
 isJust = placeholder

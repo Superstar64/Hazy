@@ -47,8 +47,8 @@ import Data.Functor
 import Data.Int (Int)
 import Data.String (String)
 import Data.Traversable (Traversable, mapM, sequence)
-import Hazy.Prelude (Monad (..), MonadFail (..), placeholder)
-import Prelude (error)
+import Hazy.Prelude (Monad (..), MonadFail (..), ap, liftM, placeholder, (=<<))
+import Prelude ()
 
 class (Alternative m, Monad m) => MonadPlus m where
   mzero :: m a
@@ -65,11 +65,6 @@ sequence_ = placeholder
 
 forM_ :: (Foldable t, Monad m) => t a -> (a -> m b) -> m ()
 forM_ = placeholder
-
-infixr 1 =<<
-
-(=<<) :: (Monad m) => (a -> m b) -> m a -> m b
-(=<<) = placeholder
 
 infixr 1 >=>
 
@@ -126,9 +121,6 @@ when = placeholder
 unless :: (Applicative f) => Bool -> f () -> f ()
 unless = placeholder
 
-liftM :: (Monad m) => (a1 -> r) -> m a1 -> m r
-liftM = placeholder
-
 liftM2 :: (Monad m) => (a1 -> a2 -> r) -> m a1 -> m a2 -> m r
 liftM2 = placeholder
 
@@ -140,9 +132,6 @@ liftM4 = placeholder
 
 liftM5 :: (Monad m) => (a1 -> a2 -> a3 -> a4 -> a5 -> r) -> m a1 -> m a2 -> m a3 -> m a4 -> m a5 -> m r
 liftM5 = placeholder
-
-ap :: (Monad m) => m (a -> b) -> m a -> m b
-ap = placeholder
 
 infixl 4 <$!>
 
