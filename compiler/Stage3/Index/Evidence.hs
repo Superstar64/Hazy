@@ -18,12 +18,14 @@ data Index scope
 data Builtin
   = NumInteger
   | NumInt
+  | NumRatio
   | EnumBool
   | EnumChar
   | EnumInteger
   | EnumInt
   | EnumOrdering
   | EnumUnit
+  | EnumRatio
   | EqBool
   | EqChar
   | EqTuple !Int
@@ -31,6 +33,7 @@ data Builtin
   | EqInt
   | EqList
   | EqOrdering
+  | EqRatio
   | OrdChar
   | OrdTuple !Int
   | OrdInt
@@ -38,10 +41,13 @@ data Builtin
   | OrdBool
   | OrdList
   | OrdOrdering
+  | OrdRatio
   | RealInt
   | RealInteger
+  | RealRatio
   | IntegralInt
   | IntegralInteger
+  | FractionalRatio
   | FunctorList
   | ApplicativeList
   | MonadList

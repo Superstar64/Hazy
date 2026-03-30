@@ -17,6 +17,7 @@ where
 
 import Hazy
 import Hazy.Builtin
+import Hazy.Helper (ratio, reduce)
 
 infixr 9 .
 
@@ -38,8 +39,50 @@ instance Bounded Int where
   minBound = primIntMinBound
   maxBound = primIntMaxBound
 
+class (Real a, Fractional a) => RealFrac a where
+  properFraction :: (Integral b) => a -> (b, a)
+  truncate, round :: (Integral b) => a -> b
+  ceiling, floor :: (Integral b) => a -> b
+
+  truncate x = m where (m, _) = properFraction x
+
+  round x =
+    let (n, r) = properFraction x
+        m = if r < 0 then n - 1 else n + 1
+     in case signum (abs r - 0.5) of
+          -1 -> n
+          0 -> if even n then n else m
+          1 -> m
+
+  ceiling x = if r > 0 then n + 1 else n
+    where
+      (n, r) = properFraction x
+
+  floor x = if r < 0 then n - 1 else n
+    where
+      (n, r) = properFraction x
+
+instance (Integral a) => RealFrac (Ratio a) where
+  properFraction (x :% y) = (fromIntegral q, r :% y)
+    where
+      (q, r) = quotRem x y
+
 subtract :: (Num a) => a -> a -> a
 subtract = flip (-)
+
+even, odd :: (Integral a) => a -> Bool
+even n = n `rem` 2 == 0
+odd = not . even
+
+gcd :: (Integral a) => a -> a -> a
+gcd 0 0 = error $ pack "Prelude.gcd: gcd 0 0 is undefined"
+gcd x y = gcd' (abs x) (abs y)
+  where
+    gcd' x 0 = x
+    gcd' x y = gcd' y (x `rem` y)
+
+fromIntegral :: (Integral a, Num b) => a -> b
+fromIntegral = fromInteger . toInteger
 
 id :: a -> a
 id x = x
@@ -103,6 +146,15 @@ foldr :: (a -> b -> b) -> b -> [a] -> b
 foldr f z [] = z
 foldr f z (x : xs) = f x (foldr f z xs)
 
+iterate :: (a -> a) -> a -> [a]
+iterate f x = x : iterate f (f x)
+
+takeWhile :: (a -> Bool) -> [a] -> [a]
+takeWhile p [] = []
+takeWhile p (x : xs)
+  | p x = x : takeWhile p xs
+  | otherwise = []
+
 placeholder :: a
 placeholder = error (pack "Prelude.placeholder")
 
@@ -121,3 +173,13 @@ ap f a = do
   f' <- f
   a' <- a
   return (f' a')
+
+(%) :: (Integral a) => a -> a -> Ratio a
+numerator, denominator :: (Integral a) => Ratio a -> a
+x % y = ratio (reduce (x * signum y) (abs y))
+
+type Rational = Ratio Integer
+
+numerator (x :% _) = x
+
+denominator (_ :% y) = y

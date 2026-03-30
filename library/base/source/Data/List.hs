@@ -39,7 +39,7 @@ module Data.List
     mapAccumL,
     mapAccumR,
     iterate,
-    iterate,
+    iterate',
     repeat,
     replicate,
     cycle,
@@ -166,7 +166,13 @@ import Data.Traversable
   ( mapAccumL,
     mapAccumR,
   )
-import Hazy.Prelude (map, placeholder, (++))
+import Hazy.Prelude
+  ( iterate,
+    map,
+    placeholder,
+    takeWhile,
+    (++),
+  )
 import Prelude (Integral, Num, error)
 
 head :: [a] -> a
@@ -220,9 +226,6 @@ scanr = placeholder
 scanr1 :: (a -> a -> a) -> [a] -> [a]
 scanr1 = placeholder
 
-iterate :: (a -> a) -> a -> [a]
-iterate = placeholder
-
 iterate' :: (a -> a) -> a -> [a]
 iterate' = placeholder
 
@@ -246,9 +249,6 @@ drop = placeholder
 
 splitAt :: Int -> [a] -> ([a], [a])
 splitAt = placeholder
-
-takeWhile :: (a -> Bool) -> [a] -> [a]
-takeWhile = placeholder
 
 dropWhile :: (a -> Bool) -> [a] -> [a]
 dropWhile = placeholder

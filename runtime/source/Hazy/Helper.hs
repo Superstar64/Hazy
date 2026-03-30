@@ -39,7 +39,7 @@ defaultMin x y
   | x <= y = x
   | otherwise = y
 
-defaultToRational :: (Real a) => a -> Ratio Integer
+defaultToRational :: (Real a) => a -> Rational
 defaultToRational = undefined
 
 defaultQuot,
@@ -67,7 +67,7 @@ defaultDivide x y = x * recip y
 defaultRecip :: (Fractional a) => a -> a
 defaultRecip x = 1 / x
 
-defaultFromRational :: (Fractional a) => Ratio Integer -> a
+defaultFromRational :: (Fractional a) => Rational -> a
 defaultFromRational = undefined
 
 defaultSucc, defaultPred :: (Enum a) => a -> a
@@ -328,3 +328,61 @@ newtype HelperUnit = HelperUnit ()
 instance Enum HelperUnit where
   fromEnum (HelperUnit ()) = 0
   toEnum 0 = HelperUnit ()
+
+newtype HelperRatio a = Ratio {ratio :: Ratio a}
+
+instance (Eq a) => Eq (HelperRatio a) where
+  Ratio (n :% d) == Ratio (n' :% d') =
+    n == n' && d == d'
+
+instance (Integral a) => Ord (HelperRatio a) where
+  Ratio (x :% y) <= Ratio (x' :% y') = x * y' <= x' * y
+  Ratio (x :% y) < Ratio (x' :% y') = x * y' < x' * y
+
+instance (Integral a) => Num (HelperRatio a) where
+  Ratio (x :% y) + Ratio (x' :% y') = reduce (x * y' + x' * y) (y * y')
+  Ratio (x :% y) * Ratio (x' :% y') = reduce (x * x') (y * y')
+  negate (Ratio (x :% y)) = Ratio ((negate x) :% y)
+  abs (Ratio (x :% y)) = Ratio (abs x :% y)
+  signum (Ratio (x :% y)) = Ratio (signum x :% 1)
+  fromInteger x = Ratio (fromInteger x :% 1)
+
+instance (Integral a) => Real (HelperRatio a) where
+  toRational (Ratio (x :% y)) = toInteger x :% toInteger y
+
+instance (Integral a) => Fractional (HelperRatio a) where
+  Ratio (x :% y) / Ratio (x' :% y') = Ratio $ (x * y') % (y * x')
+  recip (Ratio (x :% y)) = Ratio (y % x)
+  fromRational (x :% y) = Ratio (fromInteger x :% fromInteger y)
+
+instance (Integral a) => Enum (HelperRatio a) where
+  succ x = x + 1
+  pred x = x - 1
+  toEnum = fromIntegral
+  fromEnum = fromInteger . truncate . ratio
+  enumFrom = numericEnumFrom
+  enumFromThen = numericEnumFromThen
+  enumFromTo = numericEnumFromTo
+  enumFromThenTo = numericEnumFromThenTo
+
+reduce :: (Integral a) => a -> a -> HelperRatio a
+reduce _ 0 = error $ pack "Data.Ratio.% : zero denominator"
+reduce x y = Ratio $ (x `quot` d) :% (y `quot` d)
+  where
+    d = gcd x y
+
+numericEnumFrom :: (Fractional a) => a -> [a]
+numericEnumFromThen :: (Fractional a) => a -> a -> [a]
+numericEnumFromTo :: (Fractional a, Ord a) => a -> a -> [a]
+numericEnumFromThenTo :: (Fractional a, Ord a) => a -> a -> a -> [a]
+numericEnumFrom = iterate (+ 1)
+
+numericEnumFromThen n m = iterate (+ (m - n)) n
+
+numericEnumFromTo n m = takeWhile (<= m + 1 / 2) (numericEnumFrom n)
+
+numericEnumFromThenTo n n' m = takeWhile p (numericEnumFromThen n n')
+  where
+    p
+      | n' >= n = (<= m + (n' - n) / 2)
+      | otherwise = (>= m + (n' - n) / 2)

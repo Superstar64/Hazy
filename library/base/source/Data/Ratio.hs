@@ -7,20 +7,15 @@ module Data.Ratio
   )
 where
 
-import Hazy.Prelude (Ratio, placeholder)
-
-type Rational = Ratio Integer
-
-infixl 7 %
-
-(%) :: (Integral a) => a -> a -> Ratio a
-(%) = placeholder
-
-numerator :: Ratio a -> a
-numerator = placeholder
-
-denominator :: Ratio a -> a
-denominator = placeholder
+import Hazy.Prelude
+  ( Ratio,
+    Rational,
+    denominator,
+    numerator,
+    placeholder,
+    (%),
+  )
+import Prelude (RealFrac)
 
 approxRational :: (RealFrac a) => a -> a -> Rational
 approxRational = placeholder

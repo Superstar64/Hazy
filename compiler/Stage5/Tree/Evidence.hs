@@ -74,28 +74,34 @@ generate context = \case
                   name = case evidence of
                     Evidence.NumInt -> numInt
                     Evidence.NumInteger -> numInteger
+                    Evidence.NumRatio -> numRatio
                     Evidence.EnumBool -> enumBool
                     Evidence.EnumChar -> enumChar
                     Evidence.EnumInt -> enumInt
                     Evidence.EnumInteger -> enumInteger
                     Evidence.EnumOrdering -> enumOrdering
                     Evidence.EnumUnit -> enumUnit
+                    Evidence.EnumRatio -> enumRatio
                     Evidence.EqBool -> eqBool
                     Evidence.EqChar -> eqChar
                     Evidence.EqInt -> eqInt
                     Evidence.EqInteger -> eqInteger
                     Evidence.EqList -> eqList
                     Evidence.EqOrdering -> eqOrdering
+                    Evidence.EqRatio -> eqRatio
                     Evidence.OrdChar -> ordChar
                     Evidence.OrdInt -> ordInt
                     Evidence.OrdInteger -> ordInteger
                     Evidence.OrdBool -> ordBool
                     Evidence.OrdList -> ordList
                     Evidence.OrdOrdering -> ordOrdering
+                    Evidence.OrdRatio -> ordRatio
                     Evidence.RealInt -> realInt
                     Evidence.RealInteger -> realInteger
+                    Evidence.RealRatio -> realRatio
                     Evidence.IntegralInt -> integralInt
                     Evidence.IntegralInteger -> integralInteger
+                    Evidence.FractionalRatio -> fractionalRatio
                     Evidence.FunctorList -> functorList
                     Evidence.ApplicativeList -> applicativeList
                     Evidence.MonadList -> monadList
@@ -107,12 +113,14 @@ generate context = \case
           Mangle.Builtin
             { numInt,
               numInteger,
+              numRatio,
               enumBool,
               enumChar,
               enumInt,
               enumInteger,
               enumOrdering,
               enumUnit,
+              enumRatio,
               eqBool,
               eqChar,
               eqTuple,
@@ -120,6 +128,7 @@ generate context = \case
               eqInt,
               eqList,
               eqOrdering,
+              eqRatio,
               ordInt,
               ordInteger,
               ordBool,
@@ -127,10 +136,13 @@ generate context = \case
               ordTuple,
               ordList,
               ordOrdering,
+              ordRatio,
               realInt,
               realInteger,
+              realRatio,
               integralInt,
               integralInteger,
+              fractionalRatio,
               functorList,
               applicativeList,
               monadList,

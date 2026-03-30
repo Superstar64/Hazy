@@ -21,6 +21,9 @@ constrain fallthough constrain = table
       pure $ single Evidence.NumInteger
     table Type2.Num Type2.Int [] =
       pure $ single Evidence.NumInt
+    table Type2.Num Type2.Ratio [integer] = do
+      integer <- constrain Type2.Integral integer
+      pure $ call Evidence.NumRatio [integer]
     table Type2.Enum Type2.Bool [] =
       pure $ single Evidence.EnumBool
     table Type2.Enum Type2.Char [] =
@@ -33,6 +36,9 @@ constrain fallthough constrain = table
       pure $ single Evidence.EnumUnit
     table Type2.Enum Type2.Ordering [] =
       pure $ single Evidence.EnumOrdering
+    table Type2.Enum Type2.Ratio [integer] = do
+      integer <- constrain Type2.Integral integer
+      pure $ call Evidence.EnumRatio [integer]
     table Type2.Eq Type2.Bool [] =
       pure $ single Evidence.EqBool
     table Type2.Eq Type2.Char [] =
@@ -50,6 +56,9 @@ constrain fallthough constrain = table
     table Type2.Eq Type2.List [element] = do
       element <- constrain Type2.Eq element
       pure $ call Evidence.EqList [element]
+    table Type2.Eq Type2.Ratio [integer] = do
+      integer <- constrain Type2.Eq integer
+      pure $ call Evidence.EqRatio [integer]
     table Type2.Ord Type2.Char [] =
       pure $ single Evidence.OrdChar
     table Type2.Ord (Type2.Tuple n) types
@@ -67,14 +76,23 @@ constrain fallthough constrain = table
       pure $ call Evidence.OrdList [element]
     table Type2.Ord Type2.Ordering [] =
       pure $ single Evidence.OrdOrdering
+    table Type2.Ord Type2.Ratio [integer] = do
+      integer <- constrain Type2.Integral integer
+      pure $ call Evidence.OrdRatio [integer]
     table Type2.Real Type2.Int [] =
       pure $ single Evidence.RealInt
     table Type2.Real Type2.Integer [] =
       pure $ single Evidence.RealInteger
+    table Type2.Real Type2.Ratio [integer] = do
+      integer <- constrain Type2.Integral integer
+      pure $ call Evidence.RealRatio [integer]
     table Type2.Integral Type2.Int [] =
       pure $ single Evidence.IntegralInt
     table Type2.Integral Type2.Integer [] =
       pure $ single Evidence.IntegralInteger
+    table Type2.Fractional Type2.Ratio [integer] = do
+      integer <- constrain Type2.Integral integer
+      pure $ call Evidence.FractionalRatio [integer]
     table Type2.Functor Type2.List [] =
       pure $ single Evidence.FunctorList
     table Type2.Applicative Type2.List [] =

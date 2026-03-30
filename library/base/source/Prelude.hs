@@ -298,6 +298,11 @@ import Hazy.Prelude
     Integral (..),
     Num (..),
     Real (..),
+    RealFrac (..),
+    even,
+    fromIntegral,
+    gcd,
+    odd,
     placeholder,
     subtract,
   )
@@ -360,13 +365,6 @@ class (Fractional a) => Floating a where
   sinh, cosh, tanh :: a -> a
   asinh, acosh, atanh :: a -> a
 
-class (Real a, Fractional a) => RealFrac a where
-  properFraction :: (Integral b) => a -> (b, a)
-  truncate :: (Integral b) => a -> b
-  round :: (Integral b) => a -> b
-  ceiling :: (Integral b) => a -> b
-  floor :: (Integral b) => a -> b
-
 class (RealFrac a, Floating a) => RealFloat a where
   floatRadix :: a -> Integer
   floatDigits :: a -> Int
@@ -383,15 +381,6 @@ class (RealFrac a, Floating a) => RealFloat a where
   isIEEE :: a -> Bool
   atan2 :: a -> a -> a
 
-even :: (Integral a) => a -> Bool
-even = placeholder
-
-odd :: (Integral a) => a -> Bool
-odd = placeholder
-
-gcd :: (Integral a) => a -> a -> a
-gcd = placeholder
-
 lcm :: (Integral a) => a -> a -> a
 lcm = placeholder
 
@@ -404,9 +393,6 @@ infixr 8 ^^
 
 (^^) :: (Fractional a, Integral b) => a -> b -> a
 (^^) = placeholder
-
-fromIntegral :: (Integral a, Num b) => a -> b
-fromIntegral = placeholder
 
 realToFrac :: (Real a, Fractional b) => a -> b
 realToFrac = placeholder
