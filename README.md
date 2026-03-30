@@ -14,7 +14,6 @@ Haskell features are missing, only a test Javascript backend is implemented.
 
 # Missing
 
-- Floating Point Literals
 - Constrained Type Defaulting
 - List Comprehensions
 - Record Updates
