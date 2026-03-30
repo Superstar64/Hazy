@@ -662,13 +662,13 @@ identifier = ($ []) <$> identifier
         property = optional (try (char '.' *> identifier))
 
 number :: Parser Stream Lexeme
-number = sign <**> (try nondecimal <|> number <**> postfix)
+number = sign <**> (try nondecimal <|> read <$> number <**> postfix)
   where
     sign :: Parser Stream Integer
     sign = -1 <$ char '-' <|> pure 1
 
-    number :: (Read a) => Parser Stream a
-    number = read <$> Applicative.some digit
+    number :: Parser Stream String
+    number = Applicative.some digit
     nondecimal = parse <$> char '0' <*> asum nonbinary
       where
         nonbinary =
@@ -676,7 +676,7 @@ number = sign <**> (try nondecimal <|> number <**> postfix)
             (:) <$> asum (map char "xX") <*> Applicative.some hexDigit
           ]
         parse _ digits sign = Integer $ sign * read ('0' : digits)
-    exponent = try $ parse <$> char 'e' <*> sign <*> number
+    exponent = try $ parse <$> char 'e' <*> sign <*> (read <$> number)
       where
         parse _ sign number = case sign of
           Just False -> 1 / 10 ^ number
