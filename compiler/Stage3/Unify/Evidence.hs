@@ -47,8 +47,10 @@ unify (Logical reference) (Logical reference')
       combine box box'
   where
     combine (Solved evidence) (Solved evidence') = unify evidence evidence'
-    combine Unsolved evidence' = writeSTRef reference evidence'
-    combine evidence Unsolved = writeSTRef reference' evidence
+    combine Unsolved _ =
+      writeSTRef reference $ Solved $ Logical reference'
+    combine _ Unsolved =
+      writeSTRef reference' $ Solved $ Logical reference
 unify (Logical reference) evidence' =
   readSTRef reference >>= \case
     Solved evidence -> unify evidence evidence'
