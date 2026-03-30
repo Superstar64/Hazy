@@ -306,7 +306,7 @@ resolveWith context expression [] = case expression of
   Stage1.String {startPosition, string} -> String {startPosition, string}
   Stage1.Tupling {startPosition, count} ->
     CallHead
-      { callHead = CallHead.resolveTupling startPosition count
+      { callHead = CallHead.resolveTupling startPosition (count + 1)
       }
   Stage1.Unit {startPosition} ->
     CallHead
