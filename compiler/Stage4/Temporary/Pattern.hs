@@ -33,6 +33,11 @@ data Bindings scope
         evidence :: !(Evidence scope),
         equal :: !(Evidence scope)
       }
+  | Float
+      { float :: !Rational,
+        evidence :: !(Evidence scope),
+        equal :: !(Evidence scope)
+      }
   | List {items :: !(Strict.Vector1 (Pattern scope))}
   | Character {character :: !Char}
   | String {text :: !Text}
@@ -83,6 +88,12 @@ instance Shift2.Functor Bindings where
           evidence = Shift2.map category evidence,
           equal = Shift2.map category equal
         }
+    Float {float, evidence, equal} ->
+      Float
+        { float,
+          evidence = Shift2.map category evidence,
+          equal = Shift2.map category equal
+        }
     Character {character} -> Character {character}
     String {text} -> String {text}
 
@@ -128,6 +139,12 @@ simplifyBindings = \case
   Stage3.Integer {integer, evidence, equal} ->
     Integer
       { integer,
+        evidence,
+        equal
+      }
+  Stage3.Float {float, evidence, equal} ->
+    Float
+      { float,
         evidence,
         equal
       }

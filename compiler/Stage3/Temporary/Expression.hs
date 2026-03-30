@@ -9,8 +9,7 @@ import Data.Traversable (for)
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
 import Error
-  ( unsupportedFeatureFloatingPointLiterals,
-    unsupportedFeatureListComprehension,
+  ( unsupportedFeatureListComprehension,
     unsupportedFeatureRecordUpdate,
     unsupportedFeatureRunST,
   )
@@ -62,6 +61,11 @@ data Expression s scope
   | Integer
       { startPosition :: !Position,
         integer :: !Integer,
+        evidence :: !(Unify.Evidence s scope)
+      }
+  | Float
+      { startPosition :: !Position,
+        float :: !Rational,
         evidence :: !(Unify.Evidence s scope)
       }
   | Character
@@ -126,6 +130,9 @@ instance Unify.Zonk Expression where
     Integer {startPosition, integer, evidence} -> do
       evidence <- Unify.zonk zonker evidence
       pure Integer {startPosition, integer, evidence}
+    Float {startPosition, float, evidence} -> do
+      evidence <- Unify.zonk zonker evidence
+      pure Float {startPosition, float, evidence}
     Character {character} -> pure Character {character}
     String {string} -> pure String {string}
     Tuple {elements} -> do
@@ -229,6 +236,9 @@ check context typex Stage2.MultiwayIf {branches} = do
 check context typex Stage2.Integer {startPosition, integer} = do
   evidence <- Unify.constrain context startPosition Type2.Num typex
   pure $ Integer {startPosition, integer, evidence}
+check context typex Stage2.Float {startPosition, float} = do
+  evidence <- Unify.constrain context startPosition Type2.Fractional typex
+  pure $ Float {startPosition, float, evidence}
 check context typex Stage2.String {startPosition, string} = do
   Unify.unify context startPosition typex (Unify.listWith Unify.char)
   pure $ String string
@@ -244,8 +254,6 @@ check context typex Stage2.Tuple {startPosition, elements} = do
   let target = foldl Unify.call (Unify.tuple $ length elements) types
   Unify.unify context startPosition typex target
   pure $ Tuple {elements}
-check _ _ Stage2.Float {startPosition} =
-  unsupportedFeatureFloatingPointLiterals startPosition
 check _ _ Stage2.Comprehension {startPosition} =
   unsupportedFeatureListComprehension startPosition
 check _ _ Stage2.Update {updatePosition} =
@@ -331,6 +339,9 @@ solve = \case
   Integer {startPosition, integer, evidence} -> do
     evidence <- Unify.solveEvidence startPosition evidence
     pure Solved.Integer {integer, evidence}
+  Float {startPosition, float, evidence} -> do
+    evidence <- Unify.solveEvidence startPosition evidence
+    pure Solved.Float {float, evidence}
   String {string} -> pure $ Solved.String {string}
   Character {character} -> pure $ Solved.Character {character}
   Tuple {elements} -> do

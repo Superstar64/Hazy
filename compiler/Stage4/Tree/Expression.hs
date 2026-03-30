@@ -3,6 +3,7 @@ module Stage4.Tree.Expression where
 import Data.Foldable (toList)
 import Data.List.Reverse (List (..))
 import qualified Data.List.Reverse as Reverse
+import Data.Ratio (denominator, numerator)
 import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import qualified Data.Strict.Vector2 as Strict.Vector2
 import Data.Text (unpack)
@@ -37,6 +38,7 @@ import qualified Stage4.Temporary.Function as Function
 import qualified Stage4.Temporary.Pattern as Pattern
 import qualified Stage4.Temporary.RightHandSide as RightHandSide
 import {-# SOURCE #-} qualified Stage4.Tree.Builtin.Eq as Builtin (eq)
+import {-# SOURCE #-} qualified Stage4.Tree.Builtin.Fractional as Builtin (fractional)
 import {-# SOURCE #-} qualified Stage4.Tree.Builtin.Monad as Builtin (monad)
 import {-# SOURCE #-} qualified Stage4.Tree.Builtin.MonadFail as Builtin (monadFail)
 import {-# SOURCE #-} qualified Stage4.Tree.Builtin.Num as Builtin (num)
@@ -281,6 +283,35 @@ integer_ integer evidence =
       argument = Integer {integer}
     }
 
+float_ :: Rational -> Evidence scope -> Expression scope
+float_ float evidence =
+  Call
+    { function =
+        Method
+          { method = Method.fromRational,
+            evidence,
+            instanciation = Instanciation Strict.Vector.empty,
+            methodInfo = Class.info Builtin.fractional
+          },
+      argument =
+        Constructor
+          { constructor = Constructor.makeRatio,
+            arguments =
+              Strict.Vector.fromList
+                [ Integer {integer = numerator float},
+                  Integer {integer = denominator float}
+                ],
+            constructorInfo =
+              ConstructorInfo
+                { entries =
+                    Strict.Vector.fromList
+                      [ EntryInfo {strict = True},
+                        EntryInfo {strict = True}
+                      ]
+                }
+          }
+    }
+
 infixl 9 `call`
 
 call :: Expression scope -> Expression scope -> Expression scope
@@ -473,6 +504,7 @@ simplifyWith expression [] = case expression of
           [] -> Join {statements = Statements.Bottom}
           fields -> simplify $ last fields
   Stage3.Integer {integer, evidence} -> integer_ integer evidence
+  Stage3.Float {float, evidence} -> float_ float evidence
   Stage3.Tuple {elements} ->
     Constructor
       { constructor = Constructor.tuple (length elements),

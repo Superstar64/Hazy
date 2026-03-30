@@ -35,6 +35,10 @@ data Expression scope
       { integer :: !Integer,
         evidence :: !(Simple.Evidence scope)
       }
+  | Float
+      { float :: !Rational,
+        evidence :: !(Simple.Evidence scope)
+      }
   | Tuple {elements :: !(Strict.Vector2 (Expression scope))}
   | List {items :: !(Strict.Vector (Expression scope))}
   | Call

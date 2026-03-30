@@ -39,6 +39,11 @@ data Bindings scope
         evidence :: !(Evidence scope),
         equal :: !(Evidence scope)
       }
+  | Float
+      { float :: !Rational,
+        evidence :: !(Evidence scope),
+        equal :: !(Evidence scope)
+      }
   | Character {character :: !Char}
   | String {text :: !Text}
   deriving (Show)

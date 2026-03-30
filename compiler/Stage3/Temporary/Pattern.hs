@@ -10,7 +10,6 @@ import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
 import Error
   ( mismatchedConstructorArguments,
-    unsupportedFeatureFloatingPointLiterals,
   )
 import Stage1.Position (Position)
 import qualified Stage2.Index.Constructor as Constructor
@@ -65,6 +64,12 @@ data Bindings s scope
         evidence :: !(Unify.Evidence s scope),
         equal :: !(Unify.Evidence s scope)
       }
+  | Float
+      { startPosition :: !Position,
+        float :: !Rational,
+        evidence :: !(Unify.Evidence s scope),
+        equal :: !(Unify.Evidence s scope)
+      }
   | Character
       { character :: !Char
       }
@@ -97,6 +102,10 @@ instance Unify.Zonk Bindings where
       equal <- Unify.zonk zonker equal
       pure Integer {startPosition, integer, evidence, equal}
     Character {character} -> pure Character {character}
+    Float {startPosition, float, evidence, equal} -> do
+      evidence <- Unify.zonk zonker evidence
+      equal <- Unify.zonk zonker equal
+      pure Float {startPosition, float, evidence, equal}
     String {string} -> pure String {string}
     List {items} -> do
       items <- traverse (Unify.zonk zonker) items
@@ -109,6 +118,7 @@ At Match {match} _ ! Bound.Select index bound = case match of
   Record {fields} -> fields Strict.Vector.! index Field.! bound
   List {items} -> toVector items Strict.Vector.! index ! bound
   Integer {} -> error "bad index"
+  Float {} -> error "bad index"
   Character {} -> error "bad index"
   String {} -> error "bad index"
 At Wildcard _ ! Bound.Select {} = error "bad index"
@@ -135,6 +145,7 @@ augmentMatch match = case match of
     Constructor {patterns} -> fmap augmentPattern patterns
     Record {fields} -> fmap Field.augmentField fields
     Integer {} -> Strict.Vector.empty
+    Float {} -> Strict.Vector.empty
     Character {} -> Strict.Vector.empty
     String {} -> Strict.Vector.empty
 
@@ -203,8 +214,10 @@ check context@Context {typeEnvironment} typex (Stage2.At {match}) =
         evidence <- Unify.constrain context startPosition Type2.Num typex
         equal <- Unify.constrain context startPosition Type2.Eq typex
         pure Integer {startPosition, integer, evidence, equal}
-      Stage2.Float {startPosition} ->
-        unsupportedFeatureFloatingPointLiterals startPosition
+      Stage2.Float {startPosition, float} -> do
+        evidence <- Unify.constrain context startPosition Type2.Fractional typex
+        equal <- Unify.constrain context startPosition Type2.Eq typex
+        pure Float {startPosition, float, evidence, equal}
 
 solve :: Pattern s scope -> ST s (Solved.Pattern scope)
 solve (At match _) = do
@@ -226,6 +239,10 @@ solveMatch Match {match, irrefutable} = do
       evidence <- Unify.solveEvidence startPosition evidence
       equal <- Unify.solveEvidence startPosition equal
       pure Solved.Integer {integer, evidence, equal}
+    Float {startPosition, float, evidence, equal} -> do
+      evidence <- Unify.solveEvidence startPosition evidence
+      equal <- Unify.solveEvidence startPosition equal
+      pure Solved.Float {float, evidence, equal}
     Character {character} -> pure $ Solved.Character {character}
     String string -> pure $ Solved.String string
   pure Solved.Match {match, irrefutable}

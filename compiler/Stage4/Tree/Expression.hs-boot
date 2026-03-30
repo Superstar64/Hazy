@@ -45,6 +45,7 @@ newtype_ :: Constructor.Index scope -> Expression scope -> Direction -> Expressi
 eq :: Evidence scope -> Expression scope -> Expression scope -> Expression scope
 eqChar :: Expression scope -> Expression scope -> Expression scope
 integer_ :: Integer -> Evidence scope -> Expression scope
+float_ :: Rational -> Evidence scope -> Expression scope
 call :: Expression scope -> Expression scope -> Expression scope
 
 class Simplify source where

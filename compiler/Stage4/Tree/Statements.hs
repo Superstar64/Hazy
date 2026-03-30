@@ -196,6 +196,15 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
           (shift equal)
           Expression.patternVariable
           (Expression.integer_ integer $ shift evidence)
+  Pattern.Float {float, evidence, equal} ->
+    bind Pattern.Wildcard check $
+      bind true equal' (shift thenx)
+    where
+      equal' =
+        Expression.eq
+          (shift equal)
+          Expression.patternVariable
+          (Expression.float_ float $ shift evidence)
   where
     expand ::
       Pattern scope ->

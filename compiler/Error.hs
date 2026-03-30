@@ -90,7 +90,6 @@ module Error
     unsupportedFeatureListComprehension,
     unsupportedFeatureConstraintedTypeDefaulting,
     unsupportedFeatureStrictFunctions,
-    unsupportedFeatureFloatingPointLiterals,
     unsupportedFeaturePolymorphicComponents,
     unsupportedFeatureGADTs,
   )
@@ -539,8 +538,6 @@ invalidNewtype position = errorAt InvalidNewtype position $ fromString "Invalid 
 
 listComprehension = fromString "list comprehension"
 
-floatingPointLiterals = fromString "floating point literals"
-
 strictFunctions = fromString "strict functions"
 
 gadts = fromString "GADTs"
@@ -575,10 +572,6 @@ unsupportedFeatureConstraintedTypeDefaulting =
 unsupportedFeatureStrictFunctions :: Position -> a
 unsupportedFeatureStrictFunctions =
   unsupportedFeature strictFunctions
-
-unsupportedFeatureFloatingPointLiterals :: Position -> a
-unsupportedFeatureFloatingPointLiterals =
-  unsupportedFeature floatingPointLiterals
 
 unsupportedFeaturePolymorphicComponents :: Position -> a
 unsupportedFeaturePolymorphicComponents =
