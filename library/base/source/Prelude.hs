@@ -1,37 +1,135 @@
 module Prelude
-  ( Bool (..),
+  ( Bool
+      ( False,
+        True
+      ),
     (&&),
     (||),
     not,
     otherwise,
-    Maybe (..),
+    Maybe
+      ( Nothing,
+        Just
+      ),
     maybe,
-    Either (..),
+    Either
+      ( Left,
+        Right
+      ),
     either,
-    Ordering (..),
+    Ordering
+      ( LT,
+        EQ,
+        GT
+      ),
     Char,
     String,
     fst,
     snd,
     curry,
     uncurry,
-    Eq (..),
-    Ord (..),
-    Enum (..),
-    Bounded (..),
+    Eq
+      ( (==),
+        (/=)
+      ),
+    Ord
+      ( compare,
+        (<),
+        (<=),
+        (>),
+        (>=),
+        max,
+        min
+      ),
+    Enum
+      ( succ,
+        pred,
+        toEnum,
+        fromEnum,
+        enumFrom,
+        enumFromThen,
+        enumFromTo,
+        enumFromThenTo
+      ),
+    Bounded
+      ( minBound,
+        maxBound
+      ),
     Int,
     Integer,
     Float,
     Double,
     Rational,
     Word,
-    Num (..),
-    Real (..),
-    Integral (..),
-    Fractional (..),
-    Floating (..),
-    RealFrac (..),
-    RealFloat (..),
+    Num
+      ( (+),
+        (-),
+        (*),
+        negate,
+        abs,
+        signum,
+        fromInteger
+      ),
+    Real
+      ( toRational
+      ),
+    Integral
+      ( quot,
+        rem,
+        div,
+        mod,
+        quotRem,
+        divMod,
+        toInteger
+      ),
+    Fractional
+      ( (/),
+        recip,
+        fromRational
+      ),
+    Floating
+      ( pi,
+        exp,
+        log,
+        sqrt,
+        (**),
+        logBase,
+        sin,
+        cos,
+        tan,
+        asin,
+        acos,
+        atan,
+        sinh,
+        cosh,
+        tanh,
+        asinh,
+        acosh,
+        atanh
+      ),
+    RealFrac
+      ( properFraction,
+        truncate,
+        round,
+        ceiling,
+        floor
+      ),
+    RealFloat
+      ( floatRadix,
+        floatDigits,
+        floatRange,
+        decodeFloat,
+        encodeFloat,
+        exponent,
+        significand,
+        scaleFloat,
+        isNaN,
+        isInfinite,
+        isDenormalized,
+        isNegativeZero,
+        isIEEE,
+        atan2
+      ),
     subtract,
     even,
     odd,
@@ -41,18 +139,56 @@ module Prelude
     (^^),
     fromIntegral,
     realToFrac,
-    Semigroup (..),
-    Monoid (..),
-    Functor (..),
+    Semigroup
+      ( (<>)
+      ),
+    Monoid
+      ( mempty,
+        mappend,
+        mconcat
+      ),
+    Functor
+      ( fmap,
+        (<$)
+      ),
     (<$>),
-    Applicative (..),
-    Monad (..),
-    MonadFail (..),
+    Applicative
+      ( pure,
+        (<*>),
+        liftA2,
+        (*>),
+        (<*)
+      ),
+    Monad
+      ( (>>=),
+        (>>),
+        return
+      ),
+    MonadFail
+      ( fail
+      ),
     mapM_,
     sequence_,
     (=<<),
-    Foldable (..),
-    Traversable (..),
+    Foldable
+      ( foldMap,
+        foldr,
+        foldl,
+        foldl',
+        foldr1,
+        foldl1,
+        elem,
+        maximum,
+        minimum,
+        sum,
+        product
+      ),
+    Traversable
+      ( traverse,
+        sequenceA,
+        mapM,
+        sequence
+      ),
     id,
     const,
     (.),
@@ -110,13 +246,20 @@ module Prelude
     unlines,
     unwords,
     ShowS,
-    Show (..),
+    Show
+      ( showsPrec,
+        show,
+        showList
+      ),
     shows,
     showChar,
     showString,
     showParen,
     ReadS,
-    Read (..),
+    Read
+      ( readsPrec,
+        readList
+      ),
     reads,
     readParen,
     read,
@@ -144,7 +287,8 @@ where
 
 import Control.Applicative
   ( Applicative
-      ( pure,
+      ( liftA2,
+        pure,
         (*>),
         (<*),
         (<*>)
@@ -187,6 +331,7 @@ import Data.Foldable
         fold,
         foldMap,
         foldl,
+        foldl',
         foldl1,
         foldr,
         foldr1,
