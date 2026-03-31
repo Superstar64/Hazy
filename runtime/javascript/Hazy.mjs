@@ -4,6 +4,128 @@ function force(thunk) {
   return thunk.a ? thunk.b() : thunk.b;
 }
 
+const Lu = /\p{Lu}/v;
+const Ll = /\p{Ll}/v;
+const Lt = /\p{Lt}/v;
+const Lm = /\p{Lm}/v;
+const Lo = /\p{Lo}/v;
+const Mn = /\p{Mn}/v;
+const Mc = /\p{Mc}/v;
+const Me = /\p{Me}/v;
+const Nd = /\p{Nd}/v;
+const Nl = /\p{Nl}/v;
+const No = /\p{No}/v;
+const Pc = /\p{Pc}/v;
+const Pd = /\p{Pd}/v;
+const Ps = /\p{Ps}/v;
+const Pe = /\p{Pe}/v;
+const Pi = /\p{Pi}/v;
+const Pf = /\p{Pf}/v;
+const Po = /\p{Po}/v;
+const Sm = /\p{Sm}/v;
+const Sc = /\p{Sc}/v;
+const Sk = /\p{Sk}/v;
+const So = /\p{So}/v;
+const Zs = /\p{Zs}/v;
+const Zl = /\p{Zl}/v;
+const Zp = /\p{Zp}/v;
+const Cc = /\p{Cc}/v;
+const Cf = /\p{Cf}/v;
+const Cs = /\p{Cs}/v;
+const Co = /\p{Co}/v;
+
+function category(code) {
+  const str = String.fromCodePoint(code);
+  if (Lu.test(str)) {
+    return 0;
+  }
+  if (Ll.test(str)) {
+    return 1;
+  }
+  if (Lt.test(str)) {
+    return 2;
+  }
+  if (Lm.test(str)) {
+    return 3;
+  }
+  if (Lo.test(str)) {
+    return 4;
+  }
+  if (Mn.test(str)) {
+    return 5;
+  }
+  if (Mc.test(str)) {
+    return 6;
+  }
+  if (Me.test(str)) {
+    return 7;
+  }
+  if (Nd.test(str)) {
+    return 8;
+  }
+  if (Nl.test(str)) {
+    return 9;
+  }
+  if (No.test(str)) {
+    return 10;
+  }
+  if (Pc.test(str)) {
+    return 11;
+  }
+  if (Pd.test(str)) {
+    return 12;
+  }
+  if (Ps.test(str)) {
+    return 13;
+  }
+  if (Pe.test(str)) {
+    return 14;
+  }
+  if (Pi.test(str)) {
+    return 15;
+  }
+  if (Pf.test(str)) {
+    return 16;
+  }
+  if (Po.test(str)) {
+    return 17;
+  }
+  if (Sm.test(str)) {
+    return 18;
+  }
+  if (Sc.test(str)) {
+    return 19;
+  }
+  if (Sk.test(str)) {
+    return 20;
+  }
+  if (So.test(str)) {
+    return 21;
+  }
+  if (Zs.test(str)) {
+    return 22;
+  }
+  if (Zl.test(str)) {
+    return 23;
+  }
+  if (Zp.test(str)) {
+    return 24;
+  }
+  if (Cc.test(str)) {
+    return 25;
+  }
+  if (Cf.test(str)) {
+    return 26;
+  }
+  if (Cs.test(str)) {
+    return 27;
+  }
+  if (Co.test(str)) {
+    return 28;
+  }
+  return 29;
+}
+
 export function abort() {
   throw new Error("bottom");
 }
@@ -43,6 +165,11 @@ export const traceText = {
     console.log(force(text));
     return force(thunk);
   },
+};
+
+export const generalCategory = {
+  a: 0,
+  b: (code) => ({ a: category(force(code)) }),
 };
 
 export const primToConstructorTag = {

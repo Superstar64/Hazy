@@ -5,7 +5,7 @@
 module Hazy where
 
 import Hazy.Builtin
-import Hazy.Prelude (IO, Text)
+import Hazy.Prelude (GeneralCategory, IO, Text)
 
 -- The usage of 'missing' variable is deliberate. It's not a special compiler
 -- builtin, but rather the compiler doesn't bother doing symbol resolution on
@@ -22,6 +22,9 @@ putStrLnText = missing
 
 traceText :: Text -> a -> a
 traceText = missing
+
+generalCategory :: Char -> GeneralCategory
+generalCategory = missing
 
 primToConstructorTag :: a -> Int
 primToConstructorTag = missing

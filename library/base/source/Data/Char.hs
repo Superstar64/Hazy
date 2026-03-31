@@ -38,9 +38,9 @@ where
 import Data.Bool (Bool)
 import Data.Int (Int)
 import Data.String (String)
-import Hazy.Prelude (Char, placeholder)
+import Hazy.Prelude (Char, GeneralCategory (..), generalCategory, placeholder)
 import Text.Show (ShowS)
-import Prelude (ReadS, error)
+import Prelude (ReadS)
 
 isControl :: Char -> Bool
 isControl = placeholder
@@ -101,41 +101,6 @@ isAsciiUpper = placeholder
 
 isAsciiLower :: Char -> Bool
 isAsciiLower = placeholder
-
-data GeneralCategory
-  = UppercaseLetter
-  | LowercaseLetter
-  | TitlecaseLetter
-  | ModifierLetter
-  | OtherLetter
-  | NonSpacingMark
-  | SpacingCombiningMark
-  | EnclosingMark
-  | DecimalNumber
-  | LetterNumber
-  | OtherNumber
-  | ConnectorPunctuation
-  | DashPunctuation
-  | OpenPunctuation
-  | ClosePunctuation
-  | InitialQuote
-  | FinalQuote
-  | OtherPunctuation
-  | MathSymbol
-  | CurrencySymbol
-  | ModifierSymbol
-  | OtherSymbol
-  | Space
-  | LineSeparator
-  | ParagraphSeparator
-  | Control
-  | Format
-  | Surrogate
-  | PrivateUse
-  | NotAssigned
-
-generalCategory :: Char -> GeneralCategory
-generalCategory = placeholder
 
 toUpper :: Char -> Char
 toUpper = placeholder

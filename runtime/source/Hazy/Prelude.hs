@@ -12,12 +12,13 @@ module Hazy.Prelude
     pack,
     putStrLnText,
     traceText,
+    generalCategory,
   )
 where
 
 import Hazy
 import Hazy.Builtin
-import Hazy.Helper (Strict (..), ratio, reduce)
+import Hazy.Helper (Strict (..), enumCompare, enumEqual, ratio, reduce)
 
 infixr 9 .
 
@@ -589,3 +590,49 @@ x % y = ratio (reduce (x * signum y) (abs y))
 numerator (x :% _) = x
 
 denominator (_ :% y) = y
+
+data GeneralCategory
+  = UppercaseLetter
+  | LowercaseLetter
+  | TitlecaseLetter
+  | ModifierLetter
+  | OtherLetter
+  | NonSpacingMark
+  | SpacingCombiningMark
+  | EnclosingMark
+  | DecimalNumber
+  | LetterNumber
+  | OtherNumber
+  | ConnectorPunctuation
+  | DashPunctuation
+  | OpenPunctuation
+  | ClosePunctuation
+  | InitialQuote
+  | FinalQuote
+  | OtherPunctuation
+  | MathSymbol
+  | CurrencySymbol
+  | ModifierSymbol
+  | OtherSymbol
+  | Space
+  | LineSeparator
+  | ParagraphSeparator
+  | Control
+  | Format
+  | Surrogate
+  | PrivateUse
+  | NotAssigned
+
+instance Enum GeneralCategory where
+  toEnum x | x >= 0 && x < 30 = primFromConstructorTag x
+  fromEnum = primToConstructorTag
+
+instance Eq GeneralCategory where
+  (==) = enumEqual
+
+instance Ord GeneralCategory where
+  compare = enumCompare
+
+instance Bounded GeneralCategory where
+  minBound = UppercaseLetter
+  maxBound = NotAssigned
