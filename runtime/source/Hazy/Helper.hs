@@ -11,6 +11,36 @@ module Hazy.Helper where
 import Hazy
 import Hazy.Prelude
 
+data Strict a = Strict !a
+
+enumEqual :: (Enum a) => a -> a -> Bool
+enumEqual l r = fromEnum l == fromEnum r
+
+enumCompare :: (Enum a) => a -> a -> Ordering
+enumCompare l r = compare (fromEnum l) (fromEnum r)
+
+reduce :: (Integral a) => a -> a -> HelperRatio a
+reduce _ 0 = error "Data.Ratio.% : zero denominator"
+reduce x y = Ratio $ (x `quot` d) :% (y `quot` d)
+  where
+    d = gcd x y
+
+numericEnumFrom :: (Fractional a) => a -> [a]
+numericEnumFromThen :: (Fractional a) => a -> a -> [a]
+numericEnumFromTo :: (Fractional a, Ord a) => a -> a -> [a]
+numericEnumFromThenTo :: (Fractional a, Ord a) => a -> a -> a -> [a]
+numericEnumFrom = iterate (+ 1)
+
+numericEnumFromThen n m = iterate (+ (m - n)) n
+
+numericEnumFromTo n m = takeWhile (<= m + 1 / 2) (numericEnumFrom n)
+
+numericEnumFromThenTo n n' m = takeWhile p (numericEnumFromThen n n')
+  where
+    p
+      | n' >= n = (<= m + (n' - n) / 2)
+      | otherwise = (>= m + (n' - n) / 2)
+
 defaultEqual, defaultNotEqual :: (Eq a) => a -> a -> Bool
 defaultEqual x y = not (x /= y)
 defaultNotEqual x y = not (x == y)
@@ -143,14 +173,10 @@ defaultFail = undefined
 newtype HelperBool = Bool Bool
 
 instance Eq HelperBool where
-  Bool False == Bool False = True
-  Bool True == Bool True = True
-  _ == _ = False
+  (==) = enumEqual
 
 instance Ord HelperBool where
-  Bool False <= _ = True
-  Bool True <= Bool True = True
-  _ <= _ = False
+  compare = enumCompare
 
 instance Enum HelperBool where
   toEnum = \case
@@ -163,10 +189,10 @@ instance Enum HelperBool where
 newtype HelperChar = Char Char
 
 instance Eq HelperChar where
-  Char c == Char c' = fromEnum c == fromEnum c'
+  (==) = enumEqual
 
 instance Ord HelperChar where
-  Char c <= Char c' = fromEnum c <= fromEnum c'
+  compare = enumCompare
 
 instance Enum HelperChar where
   toEnum x = Char (primIntToChar x)
@@ -256,21 +282,10 @@ instance Integral HelperInteger where
 newtype HelperOrdering = Ordering Ordering
 
 instance Eq HelperOrdering where
-  Ordering LT == Ordering LT = True
-  Ordering EQ == Ordering EQ = True
-  Ordering GT == Ordering GT = True
-  _ == _ = False
+  (==) = enumEqual
 
 instance Ord HelperOrdering where
-  Ordering LT `compare` Ordering LT = EQ
-  Ordering LT `compare` Ordering EQ = LT
-  Ordering LT `compare` Ordering GT = LT
-  Ordering EQ `compare` Ordering LT = GT
-  Ordering EQ `compare` Ordering EQ = EQ
-  Ordering EQ `compare` Ordering GT = LT
-  Ordering GT `compare` Ordering LT = GT
-  Ordering GT `compare` Ordering EQ = GT
-  Ordering GT `compare` Ordering GT = EQ
+  compare = enumCompare
 
 instance Enum HelperOrdering where
   fromEnum = \case
@@ -364,27 +379,3 @@ instance (Integral a) => Enum (HelperRatio a) where
   enumFromThen = numericEnumFromThen
   enumFromTo = numericEnumFromTo
   enumFromThenTo = numericEnumFromThenTo
-
-reduce :: (Integral a) => a -> a -> HelperRatio a
-reduce _ 0 = error "Data.Ratio.% : zero denominator"
-reduce x y = Ratio $ (x `quot` d) :% (y `quot` d)
-  where
-    d = gcd x y
-
-numericEnumFrom :: (Fractional a) => a -> [a]
-numericEnumFromThen :: (Fractional a) => a -> a -> [a]
-numericEnumFromTo :: (Fractional a, Ord a) => a -> a -> [a]
-numericEnumFromThenTo :: (Fractional a, Ord a) => a -> a -> a -> [a]
-numericEnumFrom = iterate (+ 1)
-
-numericEnumFromThen n m = iterate (+ (m - n)) n
-
-numericEnumFromTo n m = takeWhile (<= m + 1 / 2) (numericEnumFrom n)
-
-numericEnumFromThenTo n n' m = takeWhile p (numericEnumFromThen n n')
-  where
-    p
-      | n' >= n = (<= m + (n' - n) / 2)
-      | otherwise = (>= m + (n' - n) / 2)
-
-data Strict a = Strict !a
