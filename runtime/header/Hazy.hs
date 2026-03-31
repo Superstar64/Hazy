@@ -23,6 +23,13 @@ putStrLnText = missing
 traceText :: Text -> a -> a
 traceText = missing
 
+primToConstructorTag :: a -> Int
+primToConstructorTag = missing
+
+-- the constructor must be unitary
+primFromConstructorTag :: Int -> a
+primFromConstructorTag = missing
+
 primIntToChar :: Int -> Char
 primIntToChar = missing
 

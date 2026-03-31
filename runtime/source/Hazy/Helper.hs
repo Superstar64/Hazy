@@ -179,12 +179,8 @@ instance Ord HelperBool where
   compare = enumCompare
 
 instance Enum HelperBool where
-  toEnum = \case
-    0 -> Bool False
-    1 -> Bool True
-  fromEnum = \case
-    Bool False -> 0
-    Bool True -> 1
+  toEnum x | x >= 0 && x < 2 = primFromConstructorTag x
+  fromEnum = primToConstructorTag
 
 newtype HelperChar = Char Char
 
@@ -288,14 +284,8 @@ instance Ord HelperOrdering where
   compare = enumCompare
 
 instance Enum HelperOrdering where
-  fromEnum = \case
-    Ordering LT -> 0
-    Ordering EQ -> 1
-    Ordering GT -> 2
-  toEnum = \case
-    0 -> Ordering LT
-    1 -> Ordering EQ
-    2 -> Ordering GT
+  toEnum x | x >= 0 && x < 3 = primFromConstructorTag x
+  fromEnum = primToConstructorTag
 
 newtype HelperList a = List {list :: [a]}
 
