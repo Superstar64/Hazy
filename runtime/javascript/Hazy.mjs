@@ -8,13 +8,6 @@ export function abort() {
   throw new Error("bottom");
 }
 
-export const placeholder = {
-  a: 1,
-  b() {
-    throw new Error("placeholder");
-  },
-};
-
 export const errorText = {
   a: 0,
   b: (message) => {
