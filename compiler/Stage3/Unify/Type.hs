@@ -363,17 +363,27 @@ typeCheck context_ position = typeCheckWith context_
             unify context position Small universe
             unify context position (Type Large) kind
 
-mark :: Context s scope -> Position -> Mask.Erasure -> Type s scope -> ST s ()
-mark context@Context {localEnvironment} position erasure term_ = mark term_
+-- |
+-- Marking a type with `Known` forces a type to not be erased so that the
+-- runtime can know what it is. `mark` only forces the head normal form of a
+-- type to be known. So `mark (List a)` will only force `List` to be known, not
+-- `a`.
+--
+-- This is done to allow type class variable to not be counted as runtime
+-- variables in type class default methods.
+mark :: forall s scope. Context s scope -> Position -> Mask.Erasure -> Type s scope -> ST s ()
+mark context position erasure term_ = mark context term_
   where
-    mark = \case
+    mark :: Context s scope' -> Type s scope' -> ST s ()
+    mark context@Context {localEnvironment} = \case
       Logical reference'
         | otherwise ->
             readSTRef reference' >>= \case
               Unsolved {kind, constraints, erasure = erasure'} -> do
                 writeSTRef reference' Unsolved {kind, constraints, erasure = erasure <> erasure'}
-              Solved typex -> mark typex
-      Shift _ -> pure ()
+              Solved typex -> mark context typex
+      Shift typex -> do
+        mark (Shift.unshift context) typex
       Variable index -> case localEnvironment Local.Table.! index of
         Local.Rigid {mask}
           | Mask.valid mask erasure -> pure ()
@@ -382,14 +392,9 @@ mark context@Context {localEnvironment} position erasure term_ = mark term_
           Mask.Erased -> pure ()
           Mask.Known -> error "runtime mask on wobbly"
       Constructor _ -> pure ()
-      Call term1 term2 -> do
-        mark term1
-        mark term2
-      Function argument result -> do
-        mark argument
-        mark result
-      Type universe -> do
-        mark universe
+      Call term1 _ -> mark context term1
+      Function {} -> pure ()
+      Type {} -> pure ()
       Constraint -> pure ()
       Small -> pure ()
       Large -> pure ()

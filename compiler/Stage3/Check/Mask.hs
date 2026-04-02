@@ -11,9 +11,9 @@ data Mask
 -- |
 -- A desire for a unification variable
 data Erasure
-  = -- | This variable is erased and not needed at runtime
+  = -- | This type is erased and not needed at runtime
     Erased
-  | -- | This variable is needed at runtime
+  | -- | This type must be know at runtime
     Known
 
 instance Semigroup Erasure where
