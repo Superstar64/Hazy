@@ -9,11 +9,14 @@ import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Tree.Scheme (Scheme)
 import qualified Stage2.Tree.Scheme as Scheme
+import Stage2.Tree.StrictnessAnnotation (StrictnessAnnotation (..))
+import qualified Stage2.Tree.StrictnessAnnotation as StrictnessAnnotation
+import qualified Stage2.Tree.Type as Type
 
 data Entry position scope = Entry
   { startPosition :: !position,
     entry :: !(Scheme position scope),
-    strict :: !Bool
+    strict :: !(StrictnessAnnotation position scope)
   }
   deriving (Show, Eq)
 
@@ -25,7 +28,7 @@ instance Shift.Functor (Entry position) where
     Entry
       { startPosition,
         entry = Shift.map category entry,
-        strict
+        strict = Shift.map category strict
       }
 
 anonymize :: Entry position scope -> Entry () scope
@@ -33,7 +36,7 @@ anonymize Entry {entry, strict} =
   Entry
     { startPosition = (),
       entry = Scheme.anonymize entry,
-      strict
+      strict = StrictnessAnnotation.anonymize strict
     }
 
 resolve :: Context scope -> Stage1.Entry -> Entry Position scope
@@ -42,11 +45,20 @@ resolve context = \case
     Entry
       { startPosition,
         entry = Scheme.resolve context entry,
-        strict = False
+        strict = Lazy
       }
   Stage1.Strict {startPosition, entry} ->
     Entry
       { startPosition,
         entry = Scheme.resolve context entry,
-        strict = True
+        strict = Strict
+      }
+  Stage1.Polymorphic {startPosition, levity, entry} ->
+    Entry
+      { startPosition,
+        entry = Scheme.resolve context entry,
+        strict =
+          Polymorphic
+            { levity = Type.resolve context levity
+            }
       }

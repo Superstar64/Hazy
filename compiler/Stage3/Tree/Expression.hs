@@ -28,7 +28,7 @@ data Expression scope
       }
   | Record
       { constructor :: !(Constructor.Index scope),
-        constructorInfo :: !ConstructorInfo,
+        constructorInfo :: !(ConstructorInfo scope),
         fields :: !(Strict.Vector (Field scope))
       }
   | Integer

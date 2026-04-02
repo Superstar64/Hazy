@@ -180,6 +180,7 @@ data Extension
   | StableImports
   | UnorderedRecords
   | ConstructorFields
+  | LevityPolymorphicFields
   deriving (Show, Bounded, Enum)
 
 data Toggle

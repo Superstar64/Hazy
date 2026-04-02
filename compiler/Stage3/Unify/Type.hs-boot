@@ -7,6 +7,8 @@ import qualified Data.Kind as Kind
 import Stage1.Position (Position)
 import Stage2.Scope (Environment)
 import Stage2.Shift (Shift)
+import {-# SOURCE #-} Stage3.Check.Context (Context)
+import qualified Stage3.Check.Mask as Mask
 import {-# SOURCE #-} Stage3.Unify.Class (Functor, Zonk)
 import qualified Stage4.Tree.Type as Simple
 import Prelude hiding (Functor)
@@ -29,4 +31,5 @@ data Box s scope
 
 fresh :: Type s scope -> ST s (Type s scope)
 -- todo, have mechinism to ensure solve is the last ST action
+mark :: Context s scope -> Position -> Mask.Erasure -> Type s scope -> ST s ()
 solve :: Position -> Type s scope -> ST s (Simple.Type scope)

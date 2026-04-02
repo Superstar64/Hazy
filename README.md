@@ -244,6 +244,58 @@ of `notJust` is eta expanded.
 
 Import declarations may appear anywhere inside a module.
 
+### Levity Polymorphic Fields
+* Pragma: `LevityPolymorphicFields`
+* Toggleable: False
+
+Fields can be parameterized by their strictness (also called levity). A field
+can prefixed with `~!s` to signify that it has levity `s`. Here, `s` must have
+kind `Levity`. The main elements of `Levity` are `Lazy` and `Strict` and
+they correspond to lazy and strict fields.
+
+For example, here's a pair that could be lazy or strict:
+```haskell
+import Data.Kind (Type, Levity, Strict, Lazy)
+
+type Pair :: Levity -> Type -> Type -> Type
+data Pair s a b = Pair ~!s a ~!s b
+
+lazyPair :: a -> b -> Pair Lazy a b
+lazyPair a b = Pair a b
+
+strictPair :: a -> b -> Pair Strict a b
+strictPair a b = Pair a b
+```
+
+Like GHC's levity polymorphism, when a constructor is called or pattern matched
+against, all it's fields must have monomorphic levity variables.
+
+Consider this example:
+```haskell
+polyPair :: a -> b -> Pair s a b
+polyPair a b = Pair a b
+
+idPair :: Pair s a b  -> Pair s a b
+idPair p = p
+```
+Here, `polyPair` isn't legal because the compiler don't know the levity of `s`
+for the constructor. However `idPair` is okay, because the constructors are
+never called or pattern matched against.
+
+This restriction is only applied when the type variable is unknown at runtime.
+Since type class default methods are always inlined, a type class's type
+variable is allowed to be levity polymorphic.
+
+For example, this is legal:
+```haskell
+class IntPair s where
+  intPair :: Pair s Int Int
+  intPair = Pair 0 0
+
+instance IntPair Lazy
+instance IntPair Strict
+```
+
 ## GHC Extensions
 ### Scoped Type Variables
 * Pragma: `ScopedTypeVariables`

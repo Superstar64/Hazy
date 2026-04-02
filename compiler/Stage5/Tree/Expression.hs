@@ -21,6 +21,7 @@ import qualified Stage4.Tree.SchemeOver as SchemeOver
 import qualified Stage5.Generate.Binding.Term as Term
 import Stage5.Generate.Context (Context (..), fresh, singleBinding, symbol, (!-))
 import qualified Stage5.Generate.Context as Context
+import qualified Stage5.Generate.Info as Info
 import qualified Stage5.Generate.Mangle as Mangle
 import {-# SOURCE #-} qualified Stage5.Tree.Declarations as Declarations
 import qualified Stage5.Tree.Evidence as Evidence
@@ -126,7 +127,7 @@ generateInto context target = \case
       constructorInfo = ConstructorInfo {entries}
     } -> do
       let process EntryInfo {strict} argument =
-            if strict
+            if Info.strict strict
               then do
                 (extra, value) <- generate context argument
                 pure (extra, value)
@@ -170,7 +171,7 @@ generateInto context target = \case
               { object,
                 field = Mangle.fields !! (selectorIndex + 1)
               }
-      pure $ statements ++ [done (evaluate strict select [])]
+      pure $ statements ++ [done (evaluate (Info.strict strict) select [])]
   Let {declarations, letBody} -> do
     (context, declarations) <- Declarations.generate context declarations
     result <- generateInto context target letBody

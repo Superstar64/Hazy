@@ -1,7 +1,10 @@
 module Stage3.Check.DataInstance where
 
+import Control.Monad.ST (ST)
+import Data.Foldable (traverse_)
 import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
+import Stage1.Position (Position)
 import qualified Stage2.Index.Constructor as Constructor (Index (..))
 import qualified Stage2.Index.Selector as Selector (Index (..))
 import Stage2.Tree.Selector (Selector (..))
@@ -9,12 +12,14 @@ import qualified Stage2.Tree.Selector as Selector (Uniform (..))
 import Stage3.Check.ConstructorInstance (ConstructorInstance (..))
 import qualified Stage3.Check.ConstructorInstance as Constructor (info)
 import qualified Stage3.Check.ConstructorInstance as ConstructorInstance
+import Stage3.Check.Context (Context)
 import Stage3.Check.EntryInstance (EntryInstance (..))
-import Stage3.Tree.SelectorInfo (Select (..), SelectorInfo (..))
+import Stage3.Temporary.SelectorInfo (Select (..), SelectorInfo (..))
 import {-# SOURCE #-} qualified Stage3.Unify as Unify
 
 data DataInstance s scope = DataInstance
-  { types :: !(Strict.Vector (Unify.Type s scope)),
+  { position :: !Position,
+    types :: !(Strict.Vector (Unify.Type s scope)),
     constructors :: !(Strict.Vector (ConstructorInstance s scope)),
     selectors :: !(Strict.Vector Selector)
   }
@@ -36,12 +41,12 @@ selectorFunction DataInstance {types, constructors, selectors} (Selector.Index t
     ConstructorInstance {entries} = constructors Strict.Vector.! first
     EntryInstance {entry} = entries Strict.Vector.! index
 
-selectorInfo :: DataInstance s scope -> Int -> SelectorInfo
-selectorInfo DataInstance {constructors, selectors} index = case selectors Strict.Vector.! index of
-  Selector {uniform = Selector.Uniform {strict}} ->
-    Uniform
-      { strict
-      }
+selectorInfo :: DataInstance s scope -> Int -> SelectorInfo s scope
+selectorInfo DataInstance {position, constructors, selectors} index = case selectors Strict.Vector.! index of
+  Selector {first, index, uniform = Selector.Uniform} -> Uniform {position, strict}
+    where
+      ConstructorInstance {entries} = constructors Strict.Vector.! first
+      EntryInstance {strict} = entries Strict.Vector.! index
   Selector {uniform = Selector.Disjoint {indexes}} ->
     Disjoint
       { select = Strict.Vector.imap pick indexes
@@ -52,3 +57,7 @@ selectorInfo DataInstance {constructors, selectors} index = case selectors Stric
           { selectIndex,
             constructorInfo = Constructor.info (constructors Strict.Vector.! index)
           }
+
+mark :: Context s scope -> DataInstance s scope -> ST s ()
+mark context DataInstance {constructors} =
+  traverse_ (ConstructorInstance.mark context) constructors

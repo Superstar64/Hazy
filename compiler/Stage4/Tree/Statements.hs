@@ -7,6 +7,7 @@ import Data.Vector.Strict ((//))
 import qualified Data.Vector.Strict as Strict.Vector
 import qualified Stage2.Index.Constructor as Constructor
 import qualified Stage2.Index.Constructor as Constructor2
+import qualified Stage2.Index.Type2 as Type2
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shift, shiftDefault)
@@ -25,12 +26,13 @@ import {-# SOURCE #-} qualified Stage4.Tree.Declarations as Declarations
 import Stage4.Tree.EntryInfo (EntryInfo (..))
 import {-# SOURCE #-} Stage4.Tree.Expression (Expression)
 import {-# SOURCE #-} qualified Stage4.Tree.Expression as Expression
+import qualified Stage4.Tree.Type as Type
 
 data Statements scope
   = Done {done :: !(Expression scope)}
   | Bind
       { constructor :: !(Constructor.Index scope),
-        constructorInfo :: !ConstructorInfo,
+        constructorInfo :: !(ConstructorInfo scope),
         check :: !(Expression scope),
         thenx :: !(Statements (Scope.SimplePattern ':+ scope))
       }
@@ -73,7 +75,7 @@ instance Substitute.Functor Statements where
     Bind {constructor, constructorInfo, check, thenx} ->
       Bind
         { constructor = Substitute.map category constructor,
-          constructorInfo,
+          constructorInfo = Substitute.map category constructorInfo,
           check = Substitute.map category check,
           thenx = Substitute.map (Substitute.Over category) thenx
         }
@@ -160,8 +162,8 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
               Stage3.ConstructorInfo
                 { entries =
                     Strict.Vector.fromList
-                      [ EntryInfo {strict = False},
-                        EntryInfo {strict = False}
+                      [ EntryInfo {strict = Type.Constructor Type2.Lazy},
+                        EntryInfo {strict = Type.Constructor Type2.Lazy}
                       ]
                 }
           },
@@ -222,7 +224,7 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
         }
     replace ::
       Constructor2.Index scope ->
-      ConstructorInfo ->
+      ConstructorInfo scope ->
       Expression scope ->
       Statements (Scope.SimplePattern ':+ scope) ->
       Int ->
@@ -246,7 +248,7 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
           body =
             replace
               (shift constructor)
-              constructorInfo
+              (shift constructorInfo)
               (shift check)
               (Shift2.map (Shift2.ReplaceIrrefutable n) thenx)
               (n - 1)

@@ -25,6 +25,7 @@ import qualified Stage5.Generate.Binding.Type as Type (Binding (..))
 import Stage5.Generate.Global (Global)
 import Stage5.Generate.GlobalType (GlobalType (GlobalType))
 import qualified Stage5.Generate.GlobalType as GlobalType
+import qualified Stage5.Generate.Info as Info
 import Stage5.Generate.LocalType (LocalType (LocalType))
 import qualified Stage5.Generate.LocalType as LocalType
 import qualified Stage5.Generate.Mangle as Mangle
@@ -100,7 +101,7 @@ singleBinding name Context {terms, evidence, types, unique, used, builtin} =
 
 patternBindings ::
   Strict.Vector Text ->
-  ConstructorInfo ->
+  ConstructorInfo scope ->
   Context s scope ->
   Context s (Scope.SimplePattern ':+ scope)
 patternBindings names ConstructorInfo {entries} Context {terms, evidence, types, unique, used, builtin} =
@@ -114,7 +115,11 @@ patternBindings names ConstructorInfo {entries} Context {terms, evidence, types,
     }
   where
     patterns = Strict.Vector.toLazy $ Strict.Vector.zipWith bind names entries
-    bind name EntryInfo {strict} = Term.Binding {name = Local name, strict}
+    bind name EntryInfo {strict} =
+      Term.Binding
+        { name = Local name,
+          strict = Info.strict strict
+        }
 
 evidenceBindings ::
   Vector Text ->

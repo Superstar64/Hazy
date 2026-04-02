@@ -40,6 +40,7 @@ import qualified Stage2.Tree.Constraint as Constraint
 import qualified Stage2.Tree.Entry as Entry
 import qualified Stage2.Tree.Field as Field
 import qualified Stage2.Tree.Selector as Selector
+import qualified Stage2.Tree.StrictnessAnnotation as StrictnessAnnotation
 import Stage2.Tree.Type (Type)
 import qualified Stage2.Tree.Type as Type (resolve)
 import qualified Stage2.Tree.TypePattern as TypePattern
@@ -146,9 +147,10 @@ resolve context entry = case entry of
                                   Nothing -> Strict.Nothing
                                   Just (index, Complete.Field {field}) ->
                                     Strict.Just (index, field)
-                              strict = Entry.strict $ Field.entry field
+                              strictness = StrictnessAnnotation.anonymize . Entry.strict . Field.entry
+                              strict = strictness field
                               indexes = fmap fst <$> fields
-                              stricts = fmap (Entry.strict . Field.entry . snd) <$> fields
+                              stricts = fmap (strictness . snd) <$> fields
                               typex = Entry.anonymize $ Field.entry field
                               types = fmap (Entry.anonymize . Field.entry . snd) <$> fields
                               sane
@@ -172,7 +174,7 @@ resolve context entry = case entry of
                                           uniform =
                                             if seq sane uniform
                                               then
-                                                Selector.Uniform {strict}
+                                                Selector.Uniform {}
                                               else
                                                 Selector.Disjoint {indexes}
                                         }

@@ -286,6 +286,7 @@ executable hazy
     Stage2.Tree.Selector
     Stage2.Tree.Shared
     Stage2.Tree.Statements
+    Stage2.Tree.StrictnessAnnotation
     Stage2.Tree.TermDeclaration
     Stage2.Tree.Type
     Stage2.Tree.TypeDeclaration
@@ -325,11 +326,13 @@ executable hazy
     Stage3.Temporary.CallHead
     Stage3.Temporary.Constraint
     Stage3.Temporary.Constructor
+    Stage3.Temporary.ConstructorInfo
     Stage3.Temporary.Declarations
     Stage3.Temporary.Definition
     Stage3.Temporary.Definition2
     Stage3.Temporary.Do
     Stage3.Temporary.Entry
+    Stage3.Temporary.EntryInfo
     Stage3.Temporary.Expression
     Stage3.Temporary.ExpressionField
     Stage3.Temporary.Field
@@ -341,8 +344,10 @@ executable hazy
     Stage3.Temporary.RightHandSide
     Stage3.Temporary.Scheme
     Stage3.Temporary.Select
+    Stage3.Temporary.SelectorInfo
     Stage3.Temporary.Shared
     Stage3.Temporary.Statements
+    Stage3.Temporary.StrictnessAnnotation
     Stage3.Temporary.TermDeclaration
     Stage3.Temporary.Type
     Stage3.Temporary.TypePattern
@@ -375,6 +380,7 @@ executable hazy
     Stage3.Tree.SelectorInfo
     Stage3.Tree.Shared
     Stage3.Tree.Statements
+    Stage3.Tree.StrictnessAnnotation
     Stage3.Tree.TermDeclaration
     Stage3.Tree.Type
     Stage3.Tree.TypeDeclaration
@@ -444,6 +450,7 @@ executable hazy
     Stage5.Generate.Context
     Stage5.Generate.Global
     Stage5.Generate.GlobalType
+    Stage5.Generate.Info
     Stage5.Generate.LocalType
     Stage5.Generate.Mangle
     Stage5.Generate.Mangle.Builtin

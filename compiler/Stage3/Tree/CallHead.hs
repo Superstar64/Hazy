@@ -17,11 +17,11 @@ data CallHead scope
       }
   | Constructor
       { constructor :: !(Constructor.Index scope),
-        constructorInfo :: !ConstructorInfo
+        constructorInfo :: !(ConstructorInfo scope)
       }
   | Selector
       { selector :: !(Selector.Index scope),
-        selectorInfo :: !SelectorInfo
+        selectorInfo :: !(SelectorInfo scope)
       }
   | Method
       { method :: !(Method.Index scope),

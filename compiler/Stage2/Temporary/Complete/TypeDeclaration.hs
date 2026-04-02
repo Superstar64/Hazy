@@ -39,6 +39,7 @@ import qualified Stage2.Temporary.Partial.TypeDeclaration as Partial
 import qualified Stage2.Tree.Constructor as Real.Constructor
 import qualified Stage2.Tree.Entry as Real.Entry
 import qualified Stage2.Tree.Field as Real.Field
+import qualified Stage2.Tree.StrictnessAnnotation as StrictnessAnnotation
 import qualified Stage2.Tree.TypeDeclaration as Real
 import Verbose (Debug (resolving))
 
@@ -93,13 +94,13 @@ merge entries@(entry :| _) =
                                 Real.Constructor.Constructor {entries}
                                   | length entries == 1,
                                     Real.Entry.Entry {strict} <- Strict.Vector.head entries,
-                                    not strict ->
+                                    StrictnessAnnotation.Lazy <- strict ->
                                       ()
                                 Real.Constructor.Record {fields}
                                   | length fields == 1,
                                     Real.Field.Field {entry} <- Strict.Vector.head fields,
                                     Real.Entry.Entry {strict} <- entry,
-                                    not strict ->
+                                    StrictnessAnnotation.Lazy <- strict ->
                                       ()
                                 _ -> invalidNewtype position
                               else invalidNewtype position

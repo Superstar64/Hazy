@@ -33,6 +33,8 @@ import Stage3.Temporary.Alternative (Alternative)
 import qualified Stage3.Temporary.Alternative as Alternative
 import Stage3.Temporary.CallHead (CallHead)
 import qualified Stage3.Temporary.CallHead as CallHead
+import Stage3.Temporary.ConstructorInfo (ConstructorInfo)
+import qualified Stage3.Temporary.ConstructorInfo as ConstructorInfo
 import Stage3.Temporary.Declarations (Declarations)
 import qualified Stage3.Temporary.Declarations as Declarations
 import Stage3.Temporary.Do (Do)
@@ -46,7 +48,6 @@ import qualified Stage3.Temporary.Pattern as Pattern
 import Stage3.Temporary.RightHandSide (RightHandSide)
 import qualified Stage3.Temporary.RightHandSide as RightHandSide
 import qualified Stage3.Temporary.TermDeclaration as TermDeclaration
-import Stage3.Tree.ConstructorInfo (ConstructorInfo)
 import qualified Stage3.Tree.Expression as Solved
 import Stage3.Tree.Scheme (Scheme)
 import qualified Stage3.Unify as Unify
@@ -78,7 +79,7 @@ data Expression s scope
   | List {items :: !(Strict.Vector (Expression s scope))}
   | Record
       { constructor :: !(Constructor.Index scope),
-        constructorInfo :: !ConstructorInfo,
+        constructorInfo :: !(ConstructorInfo s scope),
         fields :: !(Strict.Vector (Field s scope))
       }
   | Call
@@ -142,6 +143,7 @@ instance Unify.Zonk Expression where
       items <- traverse (Unify.zonk zonker) items
       pure List {items}
     Record {constructor, constructorInfo, fields} -> do
+      constructorInfo <- Unify.zonk zonker constructorInfo
       fields <- traverse (Unify.zonk zonker) fields
       pure Record {constructor, constructorInfo, fields}
     Call {function, argument} -> do
@@ -201,7 +203,7 @@ check
         let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
         Builtin.index pure get typeIndex
       DataInstance {types, constructors} <-
-        Simple.Data.instanciate datax
+        Simple.Data.instanciate context constructorPosition datax
       let root = Unify.constructor typeIndex
           base = foldl Unify.call root types
           instancex = constructors Strict.Vector.! constructorIndex
@@ -305,6 +307,7 @@ solve = \case
     pure Solved.CallHead {callHead}
   Record {constructor, constructorInfo, fields} -> do
     fields <- traverse Field.solve fields
+    constructorInfo <- ConstructorInfo.solve constructorInfo
     pure Solved.Record {constructor, constructorInfo, fields}
   List items -> do
     items <- traverse solve items

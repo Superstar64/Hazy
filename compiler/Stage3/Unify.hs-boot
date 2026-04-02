@@ -3,13 +3,14 @@
 module Stage3.Unify
   ( module Stage3.Unify,
     Evidence,
-    Zonk,
+    Zonk (..),
     Constraint,
     Instanciation,
     SchemeOver,
     Type,
     fresh,
     solve,
+    mark,
   )
 where
 

@@ -59,7 +59,7 @@ check
           datax <- do
             let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.Table.! index)
             datax <- Builtin.index pure get typeIndex
-            Simple.Data.instanciate datax
+            Simple.Data.instanciate context startPosition datax
           pure $ DataInstance.constructorFunction datax constructor
     real <- Builtin.kind (pure . lift) indexType indexLift (shift classx)
 

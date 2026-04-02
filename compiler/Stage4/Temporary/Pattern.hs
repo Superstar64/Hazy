@@ -21,12 +21,12 @@ data Bindings scope
   = Constructor
       { constructor :: !(Constructor.Index scope),
         patterns :: !(Strict.Vector (Pattern scope)),
-        constructorInfo :: !ConstructorInfo
+        constructorInfo :: !(ConstructorInfo scope)
       }
   | Record
       { constructor :: !(Constructor.Index scope),
         fields :: !(Strict.Vector (Field scope)),
-        constructorInfo :: !ConstructorInfo
+        constructorInfo :: !(ConstructorInfo scope)
       }
   | Integer
       { integer :: !Integer,
@@ -70,13 +70,13 @@ instance Shift2.Functor Bindings where
       Constructor
         { constructor = Shift2.map category constructor,
           patterns = Shift2.map category <$> patterns,
-          constructorInfo
+          constructorInfo = Shift2.map category constructorInfo
         }
     Record {constructor, fields, constructorInfo} ->
       Record
         { constructor = Shift2.map category constructor,
           fields = Shift2.map category <$> fields,
-          constructorInfo
+          constructorInfo = Shift2.map category constructorInfo
         }
     List {items} ->
       List

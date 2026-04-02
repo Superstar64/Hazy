@@ -30,9 +30,10 @@ import qualified Stage3.Check.DataInstance as DataInstance
 import Stage3.Check.TermBinding (TermBinding (..), Type (..))
 import qualified Stage3.Check.TypeBinding as TypeBinding
 import qualified Stage3.Simple.Data as Simple.Data
+import Stage3.Temporary.ConstructorInfo (ConstructorInfo)
+import qualified Stage3.Temporary.ConstructorInfo as ConstructorInfo
 import Stage3.Temporary.PatternField (Field)
 import qualified Stage3.Temporary.PatternField as Field
-import Stage3.Tree.ConstructorInfo (ConstructorInfo)
 import qualified Stage3.Tree.Pattern as Solved
 import qualified Stage3.Unify as Unify
 import qualified Stage4.Tree.Builtin as Builtin
@@ -51,12 +52,12 @@ data Bindings s scope
   = Constructor
       { constructor :: !(Constructor.Index scope),
         patterns :: !(Strict.Vector (Pattern s scope)),
-        constructorInfo :: !ConstructorInfo
+        constructorInfo :: !(ConstructorInfo s scope)
       }
   | Record
       { constructor :: !(Constructor.Index scope),
         fields :: !(Strict.Vector (Field s scope)),
-        constructorInfo :: !ConstructorInfo
+        constructorInfo :: !(ConstructorInfo s scope)
       }
   | Integer
       { startPosition :: !Position,
@@ -93,9 +94,11 @@ instance Unify.Zonk Bindings where
   zonk zonker = \case
     Constructor {constructor, patterns, constructorInfo} -> do
       patterns <- traverse (Unify.zonk zonker) patterns
+      constructorInfo <- Unify.zonk zonker constructorInfo
       pure Constructor {constructor, patterns, constructorInfo}
     Record {constructor, fields, constructorInfo} -> do
       fields <- traverse (Unify.zonk zonker) fields
+      constructorInfo <- Unify.zonk zonker constructorInfo
       pure Record {constructor, fields, constructorInfo}
     Integer {startPosition, integer, evidence, equal} -> do
       evidence <- Unify.zonk zonker evidence
@@ -173,7 +176,7 @@ check context@Context {typeEnvironment} typex (Stage2.At {match}) =
               let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
               Builtin.index pure get typeIndex
             DataInstance {types, constructors} <-
-              Simple.Data.instanciate datax
+              Simple.Data.instanciate context constructorPosition datax
             let root = Unify.constructor typeIndex
                 base = foldl Unify.call root types
                 instancex = constructors Strict.Vector.! constructorIndex
@@ -189,7 +192,7 @@ check context@Context {typeEnvironment} typex (Stage2.At {match}) =
           let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
           Builtin.index pure get typeIndex
         DataInstance {types, constructors} <-
-          Simple.Data.instanciate datax
+          Simple.Data.instanciate context constructorPosition datax
         let root = Unify.constructor typeIndex
             base = foldl Unify.call root types
             instancex = constructors Strict.Vector.! constructorIndex
@@ -230,9 +233,11 @@ solveMatch Match {match, irrefutable} = do
   match <- case match of
     Constructor {constructor, patterns, constructorInfo} -> do
       patterns <- traverse solve patterns
+      constructorInfo <- ConstructorInfo.solve constructorInfo
       pure Solved.Constructor {constructor, patterns, constructorInfo}
     Record {constructor, fields, constructorInfo} -> do
       fields <- traverse Field.solve fields
+      constructorInfo <- ConstructorInfo.solve constructorInfo
       pure Solved.Record {constructor, fields, constructorInfo}
     List items -> Solved.List <$> traverse solve items
     Integer {startPosition, integer, evidence, equal} -> do

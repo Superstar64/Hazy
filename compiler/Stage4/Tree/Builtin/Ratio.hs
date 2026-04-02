@@ -3,6 +3,7 @@ module Stage4.Tree.Builtin.Ratio where
 import qualified Data.Vector.Strict as Strict.Vector
 import qualified Stage1.Tree.Brand as Brand
 import qualified Stage2.Index.Local as Local
+import qualified Stage2.Index.Type2 as Type2
 import Stage4.Tree.Constructor (Constructor (..))
 import Stage4.Tree.Data (Data (..))
 import Stage4.Tree.Entry (Entry (..))
@@ -21,11 +22,11 @@ ratio =
                 Strict.Vector.fromList
                   [ Entry
                       { entry = a,
-                        strict = True
+                        strict = Type.Constructor Type2.Strict
                       },
                     Entry
                       { entry = a,
-                        strict = True
+                        strict = Type.Constructor Type2.Strict
                       }
                   ]
             }

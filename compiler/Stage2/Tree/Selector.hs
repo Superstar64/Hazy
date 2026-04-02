@@ -16,8 +16,6 @@ data Selector
 
 data Uniform
   = Uniform
-      { strict :: !Bool
-      }
   | Disjoint
       { indexes :: !(Strict.Vector (Strict.Maybe Int))
       }

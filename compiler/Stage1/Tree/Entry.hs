@@ -15,6 +15,7 @@ import Stage1.Parser
 import Stage1.Position (Position)
 import Stage1.Tree.Scheme (Scheme)
 import qualified Stage1.Tree.Scheme as Scheme
+import Stage1.Tree.Type (Type)
 import qualified Stage1.Tree.Type as Type
 
 data Entry
@@ -32,6 +33,11 @@ data Entry
       { startPosition :: !Position,
         entry :: !(Scheme Position)
       }
+  | Polymorphic
+      { startPosition :: !Position,
+        levity :: !(Type Position),
+        entry :: !(Scheme Position)
+      }
   deriving (Show)
 
 parse :: Parser (Scheme Position) -> Parser Entry
@@ -41,6 +47,13 @@ parse scheme =
       lazy <$> betweenParens Scheme.parse,
       strict
         <$> (position <* token "!")
+        <*> asum
+          [ betweenParens Scheme.parse,
+            Scheme.mono <$> Type.parse3
+          ],
+      polymorphic
+        <$> (position <* token "~!")
+        <*> Type.parse3
         <*> asum
           [ betweenParens Scheme.parse,
             Scheme.mono <$> Type.parse3
@@ -55,5 +68,11 @@ parse scheme =
     strict startPosition entry =
       Strict
         { startPosition,
+          entry
+        }
+    polymorphic startPosition levity entry =
+      Polymorphic
+        { startPosition,
+          levity,
           entry
         }

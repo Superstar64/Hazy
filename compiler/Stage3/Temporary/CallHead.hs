@@ -20,10 +20,12 @@ import qualified Stage3.Check.TypeBinding as TypeBinding
 import qualified Stage3.Simple.Class as Simple.Class
 import qualified Stage3.Simple.Data as Simple.Data
 import Stage3.Simple.Scheme (instanciate)
+import Stage3.Temporary.ConstructorInfo (ConstructorInfo)
+import qualified Stage3.Temporary.ConstructorInfo as ConstructorInfo
+import Stage3.Temporary.SelectorInfo (SelectorInfo)
+import qualified Stage3.Temporary.SelectorInfo as SelectorInfo
 import qualified Stage3.Tree.CallHead as Solved
-import Stage3.Tree.ConstructorInfo (ConstructorInfo)
 import Stage3.Tree.MethodInfo (MethodInfo)
-import Stage3.Tree.SelectorInfo (SelectorInfo)
 import qualified Stage3.Unify as Unify
 import qualified Stage4.Tree.Builtin as Builtin
 import Stage4.Tree.TypeDeclaration (assumeClass, assumeData)
@@ -36,11 +38,11 @@ data CallHead s scope
       }
   | Constructor
       { constructor :: !(Constructor.Index scope),
-        constructorInfo :: !ConstructorInfo
+        constructorInfo :: !(ConstructorInfo s scope)
       }
   | Selector
       { selector :: !(Selector.Index scope),
-        selectorInfo :: !SelectorInfo
+        selectorInfo :: !(SelectorInfo s scope)
       }
   | Method
       { methodPosition :: !Position,
@@ -55,8 +57,12 @@ instance Unify.Zonk CallHead where
     Variable {variablePosition, variable, instanciation} -> do
       instanciation <- Unify.zonk zonker instanciation
       pure Variable {variablePosition, variable, instanciation}
-    Constructor {constructor, constructorInfo} -> pure Constructor {constructor, constructorInfo}
-    Selector {selector, selectorInfo} -> pure Selector {selector, selectorInfo}
+    Constructor {constructor, constructorInfo} -> do
+      constructorInfo <- Unify.zonk zonker constructorInfo
+      pure Constructor {constructor, constructorInfo}
+    Selector {selector, selectorInfo} -> do
+      selectorInfo <- Unify.zonk zonker selectorInfo
+      pure Selector {selector, selectorInfo}
     Method {methodPosition, method, evidence, instanciation, methodInfo} -> do
       evidence <- Unify.zonk zonker evidence
       instanciation <- Unify.zonk zonker instanciation
@@ -81,7 +87,7 @@ check context@Context {typeEnvironment} typex Stage2.Constructor {constructorPos
       let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
       Builtin.index pure get typeIndex
     DataInstance {types, constructors} <-
-      Simple.Data.instanciate datax
+      Simple.Data.instanciate context constructorPosition datax
     let root = Unify.constructor typeIndex
         base = foldl Unify.call root types
         instancex = constructors Strict.Vector.! constructorIndex
@@ -97,7 +103,7 @@ check
     datax <- do
       let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
       Builtin.index pure get typeIndex
-    instancex <- Simple.Data.instanciate datax
+    instancex <- Simple.Data.instanciate context selectorPosition datax
     let selectorInfo = DataInstance.selectorInfo instancex selectorIndex
         typex' = DataInstance.selectorFunction instancex selector
     Unify.unify context selectorPosition typex typex'
@@ -127,8 +133,12 @@ solve = \case
         { variable,
           instanciation
         }
-  Constructor {constructor, constructorInfo} -> pure $ Solved.Constructor {constructor, constructorInfo}
-  Selector {selector, selectorInfo} -> pure $ Solved.Selector {selector, selectorInfo}
+  Constructor {constructor, constructorInfo} -> do
+    constructorInfo <- ConstructorInfo.solve constructorInfo
+    pure $ Solved.Constructor {constructor, constructorInfo}
+  Selector {selector, selectorInfo} -> do
+    selectorInfo <- SelectorInfo.solve selectorInfo
+    pure $ Solved.Selector {selector, selectorInfo}
   Method {methodPosition, method, evidence, instanciation, methodInfo} -> do
     evidence <- Unify.solveEvidence methodPosition evidence
     instanciation <- Unify.solveInstanciation methodPosition instanciation

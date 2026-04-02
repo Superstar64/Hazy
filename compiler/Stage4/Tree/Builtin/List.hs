@@ -29,10 +29,10 @@ list =
             head =
               Entry
                 { entry = Type.Variable $ Local.Local 0,
-                  strict = False
+                  strict = Type.Constructor Type2.Lazy
                 }
             tail =
               Entry
                 { entry = Type.Constructor Type2.List `Type.Call` Type.Variable (Local.Local 0),
-                  strict = False
+                  strict = Type.Constructor Type2.Lazy
                 }

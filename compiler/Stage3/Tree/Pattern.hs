@@ -26,12 +26,12 @@ data Bindings scope
   = Constructor
       { constructor :: !(Constructor.Index scope),
         patterns :: !(Strict.Vector (Pattern scope)),
-        constructorInfo :: !ConstructorInfo
+        constructorInfo :: !(ConstructorInfo scope)
       }
   | Record
       { constructor :: !(Constructor.Index scope),
         fields :: !(Strict.Vector (Field scope)),
-        constructorInfo :: !ConstructorInfo
+        constructorInfo :: !(ConstructorInfo scope)
       }
   | List {items :: !(Strict.Vector1 (Pattern scope))}
   | Integer

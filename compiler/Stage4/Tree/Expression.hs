@@ -12,6 +12,7 @@ import qualified Data.Vector.Strict as Strict.Vector
 import qualified Stage2.Index.Constructor as Constructor
 import qualified Stage2.Index.Method as Method
 import qualified Stage2.Index.Selector as Selector (Index (..))
+import qualified Stage2.Index.Type2 as Type2
 import Stage2.Scope (Environment ((:+)))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shift, shiftDefault)
@@ -56,6 +57,7 @@ import Stage4.Tree.MethodInfo (MethodInfo)
 import Stage4.Tree.Statements (Statements)
 import qualified Stage4.Tree.Statements as Statements
 import {-# SOURCE #-} qualified Stage4.Tree.TermDeclaration as TermDeclaration
+import qualified Stage4.Tree.Type as Type
 import Prelude hiding (fail)
 
 data Expression scope
@@ -66,12 +68,12 @@ data Expression scope
   | Constructor
       { constructor :: !(Constructor.Index scope),
         arguments :: !(Strict.Vector (Expression scope)),
-        constructorInfo :: !ConstructorInfo
+        constructorInfo :: !(ConstructorInfo scope)
       }
   | Selector
       { selector :: !(Selector.Index scope),
         argument :: !(Expression scope),
-        selectorInfo :: !EntryInfo
+        selectorInfo :: !(EntryInfo scope)
       }
   | Method
       { method :: !(Method.Index scope),
@@ -135,13 +137,13 @@ instance Substitute.Functor Expression where
       Selector
         { selector = Substitute.map category selector,
           argument = Substitute.map category argument,
-          selectorInfo
+          selectorInfo = Substitute.map category selectorInfo
         }
     Constructor {constructor, arguments, constructorInfo} ->
       Constructor
         { constructor = Substitute.map category constructor,
           arguments = Substitute.map category <$> arguments,
-          constructorInfo
+          constructorInfo = Substitute.map category constructorInfo
         }
     Method {method, evidence, instanciation, methodInfo} ->
       Method
@@ -305,8 +307,8 @@ float_ float evidence =
               ConstructorInfo
                 { entries =
                     Strict.Vector.fromList
-                      [ EntryInfo {strict = True},
-                        EntryInfo {strict = True}
+                      [ EntryInfo {strict = Type.Constructor Type2.Strict},
+                        EntryInfo {strict = Type.Constructor Type2.Strict}
                       ]
                 }
           }
@@ -340,7 +342,7 @@ instance Simplify Stage3.CallHead where
         }
     Stage3.Selector {selector, selectorInfo} ->
       Lambda
-        { body = simplifySelector (shift selector) selectorInfo lambdaVariable
+        { body = simplifySelector (shift selector) (shift selectorInfo) lambdaVariable
         }
     Stage3.Method {method, evidence, instanciation, methodInfo} ->
       Method
@@ -401,7 +403,7 @@ instance Simplify Stage3.Do where
 
 simplifyConstructor ::
   Constructor.Index scope ->
-  Stage3.ConstructorInfo ->
+  Stage3.ConstructorInfo scope ->
   Int ->
   List (Expression scope) ->
   Expression scope
@@ -411,7 +413,7 @@ simplifyConstructor constructor info argumentCount arguments
         { body =
             simplifyConstructor
               (shift constructor)
-              info
+              (shift info)
               (argumentCount + 1)
               (fmap shift arguments :> lambdaVariable)
         }
@@ -421,7 +423,7 @@ simplifyConstructor constructor info argumentCount arguments
 
 simplifyConstructorExact ::
   Constructor.Index scope ->
-  Stage3.ConstructorInfo ->
+  Stage3.ConstructorInfo scope ->
   Strict.Vector (Expression scope) ->
   Expression scope
 simplifyConstructorExact constructor Stage3.ConstructorInfo {entries} arguments =
@@ -439,7 +441,7 @@ simplifyConstructorExact constructor Stage3.ConstructorInfo.Newtype arguments =
 
 simplifySelector ::
   Selector.Index scope ->
-  SelectorInfo ->
+  SelectorInfo scope ->
   Expression scope ->
   Expression scope
 simplifySelector selector Uniform {strict} argument =
@@ -511,7 +513,12 @@ simplifyWith expression [] = case expression of
         arguments = simplify <$> Strict.Vector2.toVector elements,
         constructorInfo =
           ConstructorInfo
-            { entries = Strict.Vector.replicate (length elements) EntryInfo {strict = False}
+            { entries =
+                Strict.Vector.replicate
+                  (length elements)
+                  EntryInfo
+                    { strict = Type.Constructor Type2.Lazy
+                    }
             }
       }
   Stage3.List {items} ->
@@ -613,8 +620,8 @@ simplifyWith expression [] = case expression of
             ConstructorInfo
               { entries =
                   Strict.Vector.fromList
-                    [ EntryInfo {strict = False},
-                      EntryInfo {strict = False}
+                    [ EntryInfo {strict = Type.Constructor Type2.Lazy},
+                      EntryInfo {strict = Type.Constructor Type2.Lazy}
                     ]
               }
         }

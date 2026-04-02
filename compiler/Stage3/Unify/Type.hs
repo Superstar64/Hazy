@@ -341,7 +341,7 @@ typeCheck context_ position = typeCheckWith context_
                 datax <- do
                   let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
                   datax <- Builtin.index pure get typeIndex
-                  Simple.Data.instanciate datax
+                  Simple.Data.instanciate context position datax
                 pure $ DataInstance.constructorFunction datax constructor
           Constraint -> unify context position (Type Large) kind
           Levity -> unify context position (Type Large) kind
@@ -467,7 +467,7 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
                     datax <- do
                       let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
                       datax <- Builtin.index pure get typeIndex
-                      Simple.Data.instanciate datax
+                      Simple.Data.instanciate context position datax
                     pure $ DataInstance.constructorFunction datax constructor
               real <- Builtin.kind (pure . Simple.lift) indexType indexLift classx
               unify context position (Function target Constraint) real

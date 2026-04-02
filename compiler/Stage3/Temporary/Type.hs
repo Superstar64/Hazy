@@ -74,7 +74,7 @@ check context@Context {localEnvironment, typeEnvironment} kind = \case
         datax <- do
           let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
           datax <- Builtin.index pure get typeIndex
-          Simple.Data.instanciate datax
+          Simple.Data.instanciate context constructorPosition datax
         pure $ DataInstance.constructorFunction datax constructor
   Stage2.Tuple {startPosition, elements} -> do
     elements <- traverse (check context Unify.typex) elements
