@@ -12,6 +12,7 @@ import Stage2.Shift (shift)
 import qualified Stage2.Tree.Method as Stage2 (Method (..))
 import qualified Stage2.Tree.TypeDeclaration as Stage2 (TypeDeclaration (..))
 import Stage3.Check.Context (Context)
+import qualified Stage3.Check.Mask as Mask
 import Stage3.Simple.SchemeOver (augment, augment')
 import qualified Stage3.Simple.Type as Simple.Type
 import {-# SOURCE #-} qualified Stage3.Temporary.Definition as Definition
@@ -56,12 +57,13 @@ check context classx proper = \case
                   arguments = Strict.Vector.empty
                 }
           )
+          Mask.Inline
           context
       let go
             Method {annotation' = Simple.Scheme scheme@Simple.SchemeOver {result}}
             Stage2.Method {position, definition} = do
               for definition $ \definition -> do
-                context <- augment' position scheme context
+                context <- augment' position scheme Mask.Runtime context
                 definition <- Definition.check context (Simple.Type.lift result) (shift definition)
                 Definition.solve definition
       defaults <- sequence $ Strict.Vector.zipWith go base methods

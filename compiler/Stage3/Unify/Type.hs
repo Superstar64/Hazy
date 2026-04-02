@@ -25,6 +25,7 @@ import qualified Stage2.Shift as Shift
 import Stage3.Check.Context (Context (..))
 import qualified Stage3.Check.DataInstance as DataInstance
 import qualified Stage3.Check.LocalBinding as Local (Constraint (..), LocalBinding (..))
+import qualified Stage3.Check.Mask as Mask
 import Stage3.Check.TypeBinding (TypeBinding (TypeBinding))
 import qualified Stage3.Check.TypeBinding as TypeBinding
 import qualified Stage3.Index.Evidence as Evidence (Index (..))
@@ -85,7 +86,8 @@ data Type s scopes where
 data Box s scope
   = Unsolved
       { kind :: !(Type s scope),
-        constraints :: !(Map (Type2.Index scope) (Delay s scope))
+        constraints :: !(Map (Type2.Index scope) (Delay s scope)),
+        erasure :: !Mask.Erasure
       }
   | Solved !(Type s scope)
 
@@ -141,14 +143,16 @@ instance Zonk Type where
         Levity -> pure Levity
 
 instance Generalizable Type where
-  collect Collector = collect
+  collect (Collector mask) = collect
     where
       collect :: Type s scopes -> ST s [Collected s scopes]
       collect = \case
         Logical reference ->
           readSTRef reference >>= \case
             Solved typex -> collect typex
-            Unsolved {} -> pure [Collect reference]
+            Unsolved {erasure}
+              | Mask.valid mask erasure -> pure [Collect reference]
+              | otherwise -> pure []
         Shift typex -> fmap Reach <$> collect typex
         Variable {} -> pure []
         Constructor {} -> pure []
@@ -190,7 +194,7 @@ instance Instantiatable Type where
 
 fresh :: Type s scope -> ST s (Type s scope)
 fresh kind = do
-  box <- newSTRef $! Unsolved {kind, constraints = Map.empty}
+  box <- newSTRef $! Unsolved {kind, constraints = Map.empty, erasure = Mask.Erased}
   pure (Logical box)
 
 -- | Unify two types
@@ -219,19 +223,19 @@ unify context_ position term1_ term2_ = unifyWith context_ term1_ term2_
               unify (Logical reference) (Logical reference')
             combine Unsolved {} (Solved (Logical reference')) = do
               unify (Logical reference) (Logical reference')
-            combine (Solved term) Unsolved {kind, constraints} = do
-              occurs context position reference' term
+            combine (Solved term) Unsolved {kind, constraints, erasure} = do
+              occurs context position erasure reference' term
               typeCheck context position kind term
               reconstrain context position constraints term
               writeSTRef reference' $! Solved term
-            combine Unsolved {kind, constraints} (Solved term') = do
-              occurs context position reference term'
+            combine Unsolved {kind, constraints, erasure} (Solved term') = do
+              occurs context position erasure reference term'
               typeCheck context position kind term'
               reconstrain context position constraints term'
               writeSTRef reference $! Solved term'
             combine
-              Unsolved {kind = kind1, constraints = constraints1}
-              Unsolved {kind = kind2, constraints = constraints2}
+              Unsolved {kind = kind1, constraints = constraints1, erasure = erasure1}
+              Unsolved {kind = kind2, constraints = constraints2, erasure = erasure2}
                 | constraints1 <- fmap pure constraints1,
                   constraints2 <- fmap pure constraints2,
                   let merge left right = do
@@ -245,20 +249,20 @@ unify context_ position term1_ term2_ = unifyWith context_ term1_ term2_
                     do
                       Stage3.Unify.Type.unify context position kind1 kind2
                       constraints <- sequence $ Map.unionWith merge constraints1 constraints2
-                      writeSTRef reference' $! Unsolved {kind = kind1, constraints}
+                      writeSTRef reference' $! Unsolved {kind = kind1, constraints, erasure = erasure1 <> erasure2}
                       writeSTRef reference $! Solved (Logical reference')
         unify (Logical reference) term' =
           readSTRef reference >>= \case
-            Unsolved {kind, constraints} -> do
-              occurs context position reference term'
+            Unsolved {kind, constraints, erasure} -> do
+              occurs context position erasure reference term'
               typeCheck context position kind term'
               reconstrain context position constraints term'
               writeSTRef reference $ Solved term'
             Solved term -> unify term term'
         unify term (Logical reference') =
           readSTRef reference' >>= \case
-            Unsolved {kind, constraints} -> do
-              occurs context position reference' term
+            Unsolved {kind, constraints, erasure} -> do
+              occurs context position erasure reference' term
               typeCheck context position kind term
               reconstrain context position constraints term
               writeSTRef reference' $ Solved term
@@ -359,8 +363,44 @@ typeCheck context_ position = typeCheckWith context_
             unify context position Small universe
             unify context position (Type Large) kind
 
-occurs :: Context s scope -> Position -> STRef s (Box s scope) -> Type s scope -> ST s ()
-occurs context position reference term_ = occurs term_
+mark :: Context s scope -> Position -> Mask.Erasure -> Type s scope -> ST s ()
+mark context@Context {localEnvironment} position erasure term_ = mark term_
+  where
+    mark = \case
+      Logical reference'
+        | otherwise ->
+            readSTRef reference' >>= \case
+              Unsolved {kind, constraints, erasure = erasure'} -> do
+                writeSTRef reference' Unsolved {kind, constraints, erasure = erasure <> erasure'}
+              Solved typex -> mark typex
+      Shift _ -> pure ()
+      Variable index -> case localEnvironment Local.Table.! index of
+        Local.Rigid {mask}
+          | Mask.valid mask erasure -> pure ()
+          | otherwise -> mismask
+        Local.Wobbly {} -> case erasure of
+          Mask.Erased -> pure ()
+          Mask.Known -> error "runtime mask on wobbly"
+      Constructor _ -> pure ()
+      Call term1 term2 -> do
+        mark term1
+        mark term2
+      Function argument result -> do
+        mark argument
+        mark result
+      Type universe -> do
+        mark universe
+      Constraint -> pure ()
+      Small -> pure ()
+      Large -> pure ()
+      Universe -> pure ()
+      Levity -> pure ()
+    mismask = abort position (Mismask context term_)
+
+occurs :: Context s scope -> Position -> Mask.Erasure -> STRef s (Box s scope) -> Type s scope -> ST s ()
+occurs context position erasure reference term_ = do
+  occurs term_
+  mark context position erasure term_
   where
     occurs = \case
       Logical reference'
@@ -415,7 +455,7 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
     constrainWith context@Context {typeEnvironment} classx term@(Logical reference) arguments =
       readSTRef reference >>= \case
         Solved term -> constrainWith context classx term arguments
-        Unsolved {kind, constraints} -> do
+        Unsolved {kind, constraints, erasure} -> do
           case Map.lookup classx constraints of
             Nothing -> do
               target <- fresh (Type Large)
@@ -435,7 +475,7 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
               typeCheck context position target (foldl Call term arguments)
               logical <- newSTRef Evidence.Unsolved {}
               let delay = Delay {arguments, evidence = Evidence.Logical logical}
-              writeSTRef reference $! Unsolved {kind, constraints = Map.insert classx delay constraints}
+              writeSTRef reference $! Unsolved {kind, constraints = Map.insert classx delay constraints, erasure}
               pure $ Evidence.Logical logical
             Just Delay {arguments = arguments', evidence}
               | length arguments == length arguments' -> do
@@ -511,7 +551,7 @@ unshift context position typex = unshift typex
     unshift = \case
       Logical reference ->
         readSTRef reference >>= \case
-          Unsolved {kind, constraints} -> do
+          Unsolved {kind, constraints, erasure} -> do
             let unshiftDelay (key, Delay {arguments, evidence}) = do
                   key <- Shift.partialUnshift misshift key
                   arguments <- traverse unshift arguments
@@ -521,7 +561,7 @@ unshift context position typex = unshift typex
             -- todo
             -- there's no Map.traverseKeysMonotonic
             constraints <- Map.fromAscList <$> traverse unshiftDelay (Map.toAscList constraints)
-            box <- newSTRef $! Unsolved {kind, constraints}
+            box <- newSTRef $! Unsolved {kind, constraints, erasure}
             let term = Logical box
             writeSTRef reference $! Solved $ Shift term
             pure term

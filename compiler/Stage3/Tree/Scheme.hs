@@ -6,6 +6,7 @@ import qualified Data.Vector.Strict as Strict.Vector
 import Stage1.Position (Position)
 import Stage2.Scope (Environment (..), Local)
 import Stage3.Check.Context (Context (..))
+import Stage3.Check.Mask (Mask)
 import Stage3.Simple.SchemeOver (augmentNamed)
 import Stage3.Tree.Constraint (Constraint (..))
 import Stage3.Tree.Type (Type)
@@ -25,6 +26,7 @@ augment ::
   Position ->
   Strict.Vector (TypePattern scope) ->
   Strict.Vector (Constraint scope) ->
+  Mask ->
   Context s scope ->
   ST s (Context s (Local ':+ scope))
 augment position parameters constraints =

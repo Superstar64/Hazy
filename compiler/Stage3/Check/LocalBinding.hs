@@ -10,6 +10,7 @@ import qualified Stage2.Index.Type2 as Type2
 import qualified Stage2.Label.Binding.Local as Label
 import Stage2.Scope (Environment)
 import Stage2.Shift (Shift (shift))
+import Stage3.Check.Mask (Mask)
 import {-# SOURCE #-} qualified Stage3.Unify as Unify (Type)
 import qualified Stage4.Tree.Evidence as Simple (Evidence)
 import Stage4.Tree.Type as Simple (Type)
@@ -19,7 +20,8 @@ data LocalBinding s scope
   = Rigid
       { label :: !(forall scope. Label.LocalBinding scope),
         rigid :: !(Simple.Type scope),
-        constraints :: !(Map (Type2.Index scope) (Constraint scope))
+        constraints :: !(Map (Type2.Index scope) (Constraint scope)),
+        mask :: !Mask
       }
   | Wobbly
       { label :: !(forall scope. Label.LocalBinding scope),
@@ -28,11 +30,12 @@ data LocalBinding s scope
 
 instance Shift (LocalBinding s) where
   shift = \case
-    Rigid {label, rigid, constraints} ->
+    Rigid {label, rigid, constraints, mask} ->
       Rigid
         { label,
           rigid = shift rigid,
-          constraints = Map.map shift $ Map.mapKeysMonotonic shift constraints
+          constraints = Map.map shift $ Map.mapKeysMonotonic shift constraints,
+          mask
         }
     Wobbly {label, wobbly} -> Wobbly {label, wobbly = shift wobbly}
 

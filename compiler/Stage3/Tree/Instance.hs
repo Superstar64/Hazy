@@ -18,6 +18,7 @@ import qualified Stage2.Tree.Instance as Stage2
 import Stage3.Check.Context (Context (..))
 import Stage3.Check.InstanceAnnotation (InstanceAnnotation (InstanceAnnotation))
 import qualified Stage3.Check.InstanceAnnotation as InstanceAnnotation
+import qualified Stage3.Check.Mask as Mask
 import qualified Stage3.Check.TypeBinding as TypeBinding
 import qualified Stage3.Index.Evidence as Evidence
 import qualified Stage3.Index.Evidence0 as Evidence0
@@ -115,7 +116,7 @@ check
                       { variable = Evidence.Index (Evidence0.Assumed i),
                         instanciation = Simple.Instanciation.empty
                       }
-        context <- Scheme.augment startPosition parameters prerequisites context
+        context <- Scheme.augment startPosition parameters prerequisites Mask.Runtime context
         {-
           instances where the constraints contain the variable in the non head part
           should not kind check, so we should be able to safely ignore them
@@ -143,7 +144,7 @@ check
         let check _ scheme (Strict.Just member) = do
               let Simple.Scheme Simple.SchemeOver {parameters, constraints, result} = scheme
               result <- pure $ Simple.Type.lift result
-              context <- Simple.Scheme.augment' startPosition scheme context
+              context <- Simple.Scheme.augment' startPosition scheme Mask.Runtime context
               definition <- Unsolved.Definition.check context result member
               definition <- Unsolved.Definition.solve definition
               let result = Simple.Expression.simplify definition

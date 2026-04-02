@@ -10,6 +10,7 @@ import qualified Stage2.Tree.Annotation as Stage2 (Annotation (..))
 import qualified Stage2.Tree.Definition2 as Stage2 (Definition2)
 import qualified Stage2.Tree.TermDeclaration as Stage2 (TermDeclaration (..), TermDeclaration' (..))
 import Stage3.Check.Context (Context (..))
+import qualified Stage3.Check.Mask as Mask
 import Stage3.Check.TypeAnnotation (Annotation (..), GlobalTypeAnnotation (..), LocalTypeAnnotation (..))
 import qualified Stage3.Simple.Constraint as Simple.Constraint (lift)
 import Stage3.Simple.Type (lift)
@@ -133,7 +134,7 @@ checkAnnotation
   go =
     do
       let typex = lift $ Simple.simplify result
-      context <- Solved.Scheme.augment position parameters constraints context
+      context <- Solved.Scheme.augment position parameters constraints Mask.Runtime context
       definition <- go context typex
       pure $
         Unify.schemeOver

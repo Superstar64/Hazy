@@ -20,6 +20,7 @@ import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift (..))
 import Stage3.Check.Context (Context (..))
+import qualified Stage3.Check.Mask as Mask
 import Stage3.Unify.Class
   ( Collected (..),
     Collector (..),
@@ -105,7 +106,7 @@ generalizeOver context (Generalize run) = do
           localEnvironment = Table.Local.Local Vector.empty localEnvironment,
           typeEnvironment = Table.Type.Local typeEnvironment
         }
-  candidates <- collect Collector wobbly
+  candidates <- collect (Collector Mask.Runtime) wobbly
   traverse_ shiftUnwanted candidates
   boxes <- nub . catMaybes <$> traverse selectBox candidates
   parameters <- Strict.Vector.fromList <$> traverse parameter boxes

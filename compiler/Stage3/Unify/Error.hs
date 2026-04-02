@@ -9,6 +9,7 @@ import qualified Data.Vector as Vector
 import Error
   ( constraintError,
     escapingType,
+    maskError,
     occurenceError,
     unificationError,
   )
@@ -29,16 +30,18 @@ import qualified Stage2.Shift as Shift
 import qualified Stage2.Tree.Type as Stage2
 import Stage3.Check.Context (Context)
 import qualified Stage3.Check.Context as Context
+import qualified Stage3.Check.Mask as Mask
 import Stage3.Unify.Class (Collected (..), Collector (..))
 import qualified Stage3.Unify.Class as Collect
 import Stage3.Unify.Type (Box (..), Type (..))
 
 collect :: Type s scopes -> ST s [Collected s scopes]
-collect = Collect.collect Collector
+collect = Collect.collect (Collector Mask.Inline)
 
 data Error s where
   Unify :: Context s scope -> Type s scope -> Type s scope -> Error s
   Occurs :: Context s scope -> STRef s (Box s scope) -> Type s scope -> Error s
+  Mismask :: Context s scope -> Type s scope -> Error s
   Constrain :: Context s scope -> Type2.Index scope -> Type s scope -> [Type s scope] -> Error s
   Unshift :: Context s (scope ':+ scopes) -> Type s (scope ':+ scopes) -> Error s
 
@@ -62,6 +65,12 @@ abort position = \case
              in Stage1.build $ Stage1.print $ Stage2.label temporary ast
     term <- Stage1.build . Stage1.print . Stage2.label temporary <$> fabricate Shift.Shift labeled term
     occurenceError position infinite term
+  Mismask context term -> do
+    unsolved <- nub <$> collect term
+    let labeled = zip unsolved [Local.Local i | i <- [0 ..]]
+        temporary = temporaries (length unsolved) context
+    term <- Stage1.build . Stage1.print . Stage2.label temporary <$> fabricate Shift.Shift labeled term
+    maskError position term
   Constrain context classx constructor arguments -> do
     unsolved <- nub . concat <$> traverse collect (constructor : arguments)
     let labeled = zip unsolved [Local.Local i | i <- [0 ..]]

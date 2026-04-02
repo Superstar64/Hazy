@@ -85,6 +85,7 @@ module Error
     universeMustBeSmall,
     uncheckable,
     invalidNewtype,
+    maskError,
     unsupportedFeatureRunST,
     unsupportedFeatureRecordUpdate,
     unsupportedFeatureListComprehension,
@@ -284,6 +285,7 @@ data Type
   | UniverseMustBeSmall
   | Uncheckable
   | InvalidNewtype
+  | Mismask
   | UnsupportedFeature
   deriving (Show, Eq, Enum, Bounded)
 
@@ -535,6 +537,15 @@ mismatchedConstructorArguments position =
 
 invalidNewtype :: Position -> a
 invalidNewtype position = errorAt InvalidNewtype position $ fromString "Invalid newtype definition"
+
+maskError :: Position -> Builder -> a
+maskError position typex = errorAt Mismask position $ mconcat builders
+  where
+    builders =
+      [ fromString "masking error:`",
+        typex,
+        fromString "` needs to have a precise type"
+      ]
 
 listComprehension = fromString "list comprehension"
 

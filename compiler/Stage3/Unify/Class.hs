@@ -8,6 +8,7 @@ import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift)
 import qualified Stage2.Shift as Shift
+import Stage3.Check.Mask (Mask)
 import {-# SOURCE #-} Stage3.Unify.Type (Box, Type)
 import Prelude hiding (Functor, map)
 
@@ -49,7 +50,7 @@ instance Eq (Collected s scopes) where
 -- |
 -- See rational of Zonker
 data Collector s s' where
-  Collector :: Collector s s
+  Collector :: Mask -> Collector s s
 
 class (Zonk typex) => Generalizable typex where
   collect :: Collector s s' -> typex s scopes -> ST s [Collected s' scopes]

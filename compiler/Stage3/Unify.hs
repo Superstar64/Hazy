@@ -36,6 +36,7 @@ module Stage3.Unify
     super,
     instanciation,
     fresh,
+    mark,
     unify,
     constrain,
     Zonk (..),
@@ -90,6 +91,7 @@ import Stage3.Unify.Type
   ( Type (..),
     constrain,
     fresh,
+    mark,
     solve,
     unify,
   )

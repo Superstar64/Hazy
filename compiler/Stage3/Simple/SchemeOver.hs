@@ -29,6 +29,7 @@ import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (shift)
 import Stage3.Check.Context (Context (..))
 import qualified Stage3.Check.LocalBinding as LocalBinding
+import Stage3.Check.Mask (Mask)
 import qualified Stage3.Check.TypeBinding as TypeBinding
 import qualified Stage3.Index.Evidence as Evidence (assumed)
 import qualified Stage3.Simple.Constraint as Constraint (lift)
@@ -63,9 +64,10 @@ augmentNamed ::
   Position ->
   Strict.Vector (Type scope) ->
   Strict.Vector (Constraint scope) ->
+  Mask ->
   Context s scope ->
   ST s (Context s (Local ':+ scope))
-augmentNamed name position parameters constraints Context {termEnvironment, localEnvironment, typeEnvironment}
+augmentNamed name position parameters constraints mask Context {termEnvironment, localEnvironment, typeEnvironment}
   | parameters <- Strict.Vector.toLazy parameters = do
       let entailed classx arguments evidence = do
             Class.Class {constraints} <- do
@@ -90,7 +92,8 @@ augmentNamed name position parameters constraints Context {termEnvironment, loca
             LocalBinding.Rigid
               { label = Label.LocalBinding {name = name index},
                 rigid = shift typex,
-                constraints
+                constraints,
+                mask
               }
           locals = Vector.izipWith rigid parameters constraints
       () <- pure $ foldr (\map () -> foldr seq () map) () constraints
@@ -105,6 +108,7 @@ augment ::
   Position ->
   Strict.Vector.Vector (Type scope) ->
   Strict.Vector.Vector (Constraint scope) ->
+  Mask ->
   Context s scope ->
   ST s (Context s (Local ':+ scope))
 augment = augmentNamed name
@@ -114,6 +118,7 @@ augment = augmentNamed name
 augment' ::
   Position ->
   SchemeOver typex scope ->
+  Mask ->
   Context s scope ->
   ST s (Context s (Local ':+ scope))
 augment' position SchemeOver {parameters, constraints} =

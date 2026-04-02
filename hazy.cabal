@@ -298,6 +298,7 @@ executable hazy
     Stage3.Check.InstanceAnnotation
     Stage3.Check.KindAnnotation
     Stage3.Check.LocalBinding
+    Stage3.Check.Mask
     Stage3.Check.TermBinding
     Stage3.Check.TypeAnnotation
     Stage3.Check.TypeBinding

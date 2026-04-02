@@ -12,6 +12,7 @@ import qualified Data.Vector.Strict as Strict
 import Stage1.Position (Position)
 import Stage2.Scope (Environment ((:+)), Local)
 import {-# SOURCE #-} Stage3.Check.Context (Context (..))
+import Stage3.Check.Mask (Mask)
 import qualified Stage3.Simple.Constraint as Constraint
 import Stage3.Simple.SchemeOver (augment)
 import qualified Stage3.Simple.SchemeOver as SchemeOver
@@ -34,5 +35,5 @@ instanciate' fresh (Scheme SchemeOver {parameters, constraints, result}) =
     (Constraint.instanciate fresh <$> constraints)
     (Type.instanciate' fresh result)
 
-augment' :: Position -> Scheme scope -> Context s scope -> ST s (Context s (Local ':+ scope))
+augment' :: Position -> Scheme scope -> Mask -> Context s scope -> ST s (Context s (Local ':+ scope))
 augment' position = SchemeOver.augment' position . runScheme
