@@ -32,6 +32,8 @@ data Index scope
   | Applicative
   | Monad
   | MonadFail
+  | Lazy
+  | Strict
   deriving (Show, Eq, Ord)
 
 instance Shift Index where
@@ -72,6 +74,8 @@ traverse run = \case
     Applicative -> Applicative
     Monad -> Monad
     MonadFail -> MonadFail
+    Lazy -> Lazy
+    Strict -> Strict
 
 unlocal :: Index (Local ':+ scope) -> Index scope
 unlocal = map Type1.unlocal

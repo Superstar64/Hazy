@@ -52,6 +52,7 @@ infixr 0 `function`
 
 function :: Type s scope -> Type s scope -> Type s scope
 constraint :: Type s scope
+levity :: Type s scope
 small :: Type s scope
 large :: Type s scope
 universe :: Type s scope

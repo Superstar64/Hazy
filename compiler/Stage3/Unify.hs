@@ -30,6 +30,7 @@ module Stage3.Unify
     large,
     universe,
     constraint,
+    levity,
     function,
     variable',
     super,
@@ -172,6 +173,9 @@ universe = Universe
 
 constraint :: Type s scope
 constraint = Constraint
+
+levity :: Type s scope
+levity = Levity
 
 infixr 0 `function`
 

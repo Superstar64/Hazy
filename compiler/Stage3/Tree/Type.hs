@@ -38,4 +38,5 @@ data Type scope
       }
   | SmallType {}
   | Constraint {}
+  | Levity {}
   deriving (Show)

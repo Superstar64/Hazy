@@ -82,6 +82,8 @@ data Type position scope
       {startPosition :: !position}
   | Universe
       {startPosition :: !position}
+  | Levity
+      {startPosition :: !position}
   deriving (Show, Eq)
 
 instance Shift (Type position) where
@@ -142,6 +144,7 @@ instance Shift.Functor (Type position) where
     Small {startPosition} -> Small {startPosition}
     Large {startPosition} -> Large {startPosition}
     Universe {startPosition} -> Universe {startPosition}
+    Levity {startPosition} -> Levity {startPosition}
 
 anonymize :: Type position scope -> Type () scope
 anonymize = \case
@@ -198,6 +201,7 @@ anonymize = \case
   Small {} -> Small {startPosition = ()}
   Large {} -> Large {startPosition = ()}
   Universe {} -> Universe {startPosition = ()}
+  Levity {} -> Levity {startPosition = ()}
 
 resolve :: Resolved.Context scope -> Stage1.Type Position -> Type Position scope
 resolve context = \case
@@ -219,6 +223,7 @@ resolve context = \case
       Type3.Small -> Small {startPosition}
       Type3.Large -> Large {startPosition}
       Type3.Universe -> Universe {startPosition}
+      Type3.Levity -> Levity {startPosition}
   Stage1.Unit {startPosition = constructorPosition@startPosition} ->
     Constructor
       { startPosition,
@@ -404,6 +409,8 @@ label context = \case
     Type2.Monad -> builtin "Monad"
     Type2.MonadFail -> builtin "MonadFail"
     Type2.Ordering -> builtin "Ordering"
+    Type2.Lazy -> builtin "Lazy"
+    Type2.Strict -> builtin "Strict"
     where
       builtin name =
         Stage1.Constructor
@@ -474,6 +481,11 @@ label context = \case
     Stage1.Constructor
       { startPosition = (),
         constructor = () :@ hazy :=. constructorIdentifier (pack "Type")
+      }
+  Levity {} ->
+    Stage1.Constructor
+      { startPosition = (),
+        constructor = () :@ hazy :=. constructorIdentifier (pack "Levity")
       }
   where
     hazy = Local :. constructorIdentifier (pack "Hazy")

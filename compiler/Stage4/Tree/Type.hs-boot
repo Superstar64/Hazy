@@ -18,6 +18,7 @@ data Type scope
   | Small
   | Large
   | Universe
+  | Levity
 
 instance Eq (Type scope)
 

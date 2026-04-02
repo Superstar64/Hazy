@@ -161,3 +161,4 @@ abort position = \case
       Small -> pure $ Stage2.Small {startPosition = ()}
       Large -> pure $ Stage2.Large {startPosition = ()}
       Universe -> pure $ Stage2.Universe {startPosition = ()}
+      Levity -> pure $ Stage2.Levity {startPosition = ()}

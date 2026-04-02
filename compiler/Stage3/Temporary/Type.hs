@@ -49,6 +49,7 @@ data Type s scope
       }
   | SmallType {}
   | Constraint {}
+  | Levity {}
 
 check :: Context s scope -> Unify.Type s scope -> Stage2.Type Position scope -> ST s (Type s scope)
 check context@Context {localEnvironment, typeEnvironment} kind = \case
@@ -117,6 +118,9 @@ check context@Context {localEnvironment, typeEnvironment} kind = \case
   Stage2.Small {startPosition} -> uncheckable startPosition
   Stage2.Large {startPosition} -> uncheckable startPosition
   Stage2.Universe {startPosition} -> uncheckable startPosition
+  Stage2.Levity {startPosition} -> do
+    Unify.unify context startPosition kind Unify.kind
+    pure Levity
 
 solve :: Synonym.Context s scope -> Type s scope -> ST s (Solved.Type scope)
 solve context = \case
@@ -151,3 +155,4 @@ solve context = \case
     pure $ Solved.LiftedList {items}
   SmallType {} -> pure Solved.SmallType {}
   Constraint {} -> pure Solved.Constraint {}
+  Levity {} -> pure Solved.Levity {}

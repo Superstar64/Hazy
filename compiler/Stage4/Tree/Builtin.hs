@@ -58,6 +58,8 @@ kind pure typex constructor = \case
     Type2.Applicative -> classKind
     Type2.Monad -> classKind
     Type2.MonadFail -> classKind
+    Type2.Lazy -> Type.Levity
+    Type2.Strict -> Type.Levity
     where
       dataKind = Data.kind $ index id (error "bad index") real
       classKind = Class.kind $ index id (error "bad index") real

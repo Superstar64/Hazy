@@ -100,6 +100,12 @@ integerName = constructorIdentifier (pack "Integer")
 
 intName = constructorIdentifier (pack "Int")
 
+lazyName = constructorIdentifier (pack "Lazy")
+
+strictName = constructorIdentifier (pack "Strict")
+
+levityName = constructorIdentifier (pack "Levity")
+
 char =
   ( charName,
     Type.Binding
@@ -209,6 +215,39 @@ int =
       }
   )
 
+lazy =
+  ( lazyName,
+    Type.Binding
+      { position = Position.internal,
+        index = Type3.Index Type2.Lazy,
+        constructors = Set.empty,
+        fields = Set.empty,
+        methods = Map.empty
+      }
+  )
+
+strict =
+  ( strictName,
+    Type.Binding
+      { position = Position.internal,
+        index = Type3.Index Type2.Strict,
+        constructors = Set.empty,
+        fields = Set.empty,
+        methods = Map.empty
+      }
+  )
+
+levity =
+  ( levityName,
+    Type.Binding
+      { position = Position.internal,
+        index = Type3.Levity,
+        constructors = Set.empty,
+        fields = Set.empty,
+        methods = Map.empty
+      }
+  )
+
 builtin :: Bindings () scope
 builtin =
   Bindings
@@ -298,7 +337,10 @@ builtin =
             functor,
             applicative,
             monad,
-            monadFail
+            monadFail,
+            lazy,
+            strict,
+            levity
           ],
       stability = ()
     }

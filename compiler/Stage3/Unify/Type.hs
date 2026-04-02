@@ -80,6 +80,7 @@ data Type s scopes where
   Small :: Type s scopes
   Large :: Type s scopes
   Universe :: Type s scopes
+  Levity :: Type s scope
 
 data Box s scope
   = Unsolved
@@ -110,6 +111,7 @@ instance Functor (Type s) where
     Small -> Small
     Large -> Large
     Universe -> Universe
+    Levity -> Levity
 
 instance Zonk Type where
   zonk Zonker = zonk
@@ -136,6 +138,7 @@ instance Zonk Type where
         Small -> pure Small
         Large -> pure Large
         Universe -> pure Universe
+        Levity -> pure Levity
 
 instance Generalizable Type where
   collect Collector = collect
@@ -163,6 +166,7 @@ instance Generalizable Type where
         Small -> pure []
         Large -> pure []
         Universe -> pure []
+        Levity -> pure []
 
 instance Instantiatable Type where
   substitute replacements = \case
@@ -176,6 +180,7 @@ instance Instantiatable Type where
     Small -> Small
     Large -> Large
     Universe -> Universe
+    Levity -> Levity
     typex -> case replacements of
       Substitute replacements -> case typex of
         Shift typex -> typex
@@ -293,6 +298,7 @@ unify context_ position term1_ term2_ = unifyWith context_ term1_ term2_
         unify Small Small = pure ()
         unify Large Large = pure ()
         unify Universe Universe = pure ()
+        unify Levity Levity = pure ()
         unify _ _ = mismatch
 
     mismatch :: ST s ()
@@ -334,6 +340,7 @@ typeCheck context_ position = typeCheckWith context_
                   Simple.Data.instanciate datax
                 pure $ DataInstance.constructorFunction datax constructor
           Constraint -> unify context position (Type Large) kind
+          Levity -> unify context position (Type Large) kind
           Small -> unify context position Universe kind
           Large -> unify context position Universe kind
           Universe -> error "type checking universe"
@@ -377,6 +384,7 @@ occurs context position reference term_ = occurs term_
       Small -> pure ()
       Large -> pure ()
       Universe -> pure ()
+      Levity -> pure ()
     occurrenece = abort position (Occurs context reference term_)
 
 constrain ::
@@ -536,6 +544,7 @@ unshift context position typex = unshift typex
       Small -> pure Small
       Large -> pure Large
       Universe -> pure Universe
+      Levity -> pure Levity
     misshift = do
       abort position $ Unshift context typex
 
@@ -551,6 +560,7 @@ defaultFrom position constraints kind = case kind of
       Solved kind -> defaultFrom position constraints kind
       Unsolved {} -> ambiguousType position
   Type universe -> defaultUniverse position constraints universe
+  Levity -> pure $ Simple.Constructor Type2.Lazy
   _ -> ambiguousType position
 defaultUniverse position constraints universe = case universe of
   Logical reference ->
@@ -592,3 +602,4 @@ solve position = solve
       Small -> pure Simple.Small
       Large -> pure Simple.Large
       Universe -> pure Simple.Universe
+      Levity -> pure Simple.Levity

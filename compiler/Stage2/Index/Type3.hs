@@ -14,6 +14,7 @@ data Index scope
   | Small
   | Large
   | Universe
+  | Levity
   deriving (Show, Eq, Ord)
 
 map :: (Type1.Index scope -> Type1.Index scope') -> Index scope -> Index scope'
@@ -27,6 +28,7 @@ traverse run = \case
   Small -> pure Small
   Large -> pure Large
   Universe -> pure Universe
+  Levity -> pure Levity
 
 instance Shift Index where
   shift = shiftDefault

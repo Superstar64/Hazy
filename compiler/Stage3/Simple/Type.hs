@@ -24,6 +24,7 @@ instanciate fresh = \case
   Small -> Unify.small
   Large -> Unify.large
   Universe -> Unify.universe
+  Levity -> Unify.levity
 
 -- todo remove this ugly hack
 
@@ -44,6 +45,7 @@ instanciate' fresh = \case
   Small -> Unify.small
   Large -> Unify.large
   Universe -> Unify.universe
+  Levity -> Unify.levity
 
 lift :: Type scope -> Unify.Type s scope
 lift = instanciate undefined . shift

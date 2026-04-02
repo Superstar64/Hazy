@@ -25,6 +25,7 @@ data Type scope
   | Small
   | Large
   | Universe
+  | Levity
   deriving (Show, Eq)
 
 infixr 0 `Function`
@@ -62,6 +63,7 @@ instance Substitute.Functor Type where
     Small -> Small
     Large -> Large
     Universe -> Universe
+    Levity -> Levity
 
 simplify :: Solved.Type scope -> Type scope
 simplify typex = simplifyWith typex []
@@ -90,3 +92,4 @@ simplifyWith typex [] = case typex of
      in foldr (cons . simplify) nil items
   Solved.SmallType {} -> Type Small
   Solved.Constraint {} -> Constraint
+  Solved.Levity {} -> Levity
