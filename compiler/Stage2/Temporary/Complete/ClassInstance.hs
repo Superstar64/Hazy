@@ -73,8 +73,6 @@ resolve context lookup = \case
                         memberMethods
                         instanceDefinition
                   }
-                where
-
               entry = case instanceHead of
                 Head {startPosition, typeName, parameters}
                   | dataIndex <- context !=.* startPosition :@ typeName ->

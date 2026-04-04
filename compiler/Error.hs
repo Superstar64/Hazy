@@ -86,6 +86,7 @@ module Error
     uncheckable,
     invalidNewtype,
     maskError,
+    orphanInstance,
     unsupportedFeatureRunST,
     unsupportedFeatureRecordUpdate,
     unsupportedFeatureListComprehension,
@@ -286,6 +287,7 @@ data Type
   | Uncheckable
   | InvalidNewtype
   | Mismask
+  | OrphanInstance
   | UnsupportedFeature
   deriving (Show, Eq, Enum, Bounded)
 
@@ -542,10 +544,13 @@ maskError :: Position -> Builder -> a
 maskError position typex = errorAt Mismask position $ mconcat builders
   where
     builders =
-      [ fromString "masking error:`",
+      [ fromString "masking error: `",
         typex,
         fromString "` needs to have a precise type"
       ]
+
+orphanInstance :: Position -> a
+orphanInstance position = errorAt OrphanInstance position $ fromString "Orphan instance"
 
 listComprehension = fromString "list comprehension"
 

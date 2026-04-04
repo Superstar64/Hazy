@@ -9,11 +9,13 @@ import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
-import Error (overlappingInstances)
+import Error (orphanInstance, overlappingInstances)
 import Order (orderNonEmpty, orderNonEmpty', orderWithInt)
 import Stage1.Extensions (Extensions)
 import Stage1.Position (Position)
 import qualified Stage1.Tree.Declaration as Stage1 (Declaration (..))
+import Stage1.Tree.InstanceHead (InstanceHead (..))
+import Stage1.Variable (ConstructorIdentifier, QualifiedConstructorIdentifier (..), Qualifiers (..))
 import qualified Stage2.Index.Term0 as Term0 (Index (..))
 import qualified Stage2.Index.Type as Type (Index (..))
 import qualified Stage2.Index.Type2 as Type2
@@ -84,13 +86,11 @@ resolve context extensions declarations = do
         unique instances = overlappingInstances (ClassInstance.classPosition <$> toList instances)
     pure $ fmap (fmap unique) ordered
   dataInstances <- do
-    let instances = foldMap (DataInstance.resolve context resolve) declarations
-        resolve = DataInstance.Resolve {typeIndexes}
+    let instances = foldMap (DataInstance.resolve context (`Map.lookup` typeIndexes)) declarations
         ordered = orderWithInt (Map.unionWith (<>)) Map.empty (length types) (DataInstance.prepare <$> instances)
         unique (instancex :| []) = DataInstance.shrink instancex
         unique instances = overlappingInstances (DataInstance.classPosition <$> toList instances)
     pure $ fmap (fmap unique) ordered
-
   terms <- mfix $ \terms -> do
     let entries = Term.resolve context lookupTerm lookupType lookupShared 0 declarations
         lookupTerm name = terms Strict.Vector.! (termIndexes Map.! name)
@@ -98,16 +98,33 @@ resolve context extensions declarations = do
         lookupShared index = shared Strict.Vector.! index
         termIndexes = Term.indexes terms
     Strict.Vector.fromLazy <$> sequence (orderNonEmpty Term.merge entries)
+  let noOrphans = foldr (seq . orphan (`Map.member` typeIndexes)) () declarations
+  pure $
+    seq
+      noOrphans
+      Declarations
+        { terms,
+          constructors,
+          types,
+          shared,
+          dataInstances,
+          classInstances
+        }
 
-  pure
-    Declarations
-      { terms,
-        constructors,
-        types,
-        shared,
-        dataInstances,
-        classInstances
-      }
+orphan :: (ConstructorIdentifier -> Bool) -> Stage1.Declaration Position -> ()
+orphan local = \case
+  Stage1.Instance {startPosition, className, instanceHead}
+    | localClass -> ()
+    | localData -> ()
+    | otherwise -> orphanInstance startPosition
+    where
+      localClass
+        | Local :=. classx <- className = local classx
+        | otherwise = False
+      localData
+        | Head {typeName = Local :=. datax} <- instanceHead = local datax
+        | otherwise = False
+  _ -> ()
 
 bindings ::
   (Monoid stability) =>

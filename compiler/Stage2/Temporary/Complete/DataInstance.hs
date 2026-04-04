@@ -34,8 +34,12 @@ newtype Resolve = Resolve
   { typeIndexes :: Map ConstructorIdentifier Int
   }
 
-resolve :: Context scope -> Resolve -> Stage1.Declaration Position -> [DataInstance scope]
-resolve context Resolve {typeIndexes} = \case
+resolve ::
+  Context scope ->
+  (ConstructorIdentifier -> Maybe Int) ->
+  Stage1.Declaration Position ->
+  [DataInstance scope]
+resolve context lookup = \case
   Stage1.Instance
     { startPosition,
       prerequisites,
@@ -44,7 +48,7 @@ resolve context Resolve {typeIndexes} = \case
       instanceHead = Head {typeName = Local :=. datax, parameters},
       instanceDefinition
     }
-      | Just dataIndex <- Map.lookup datax typeIndexes,
+      | Just dataIndex <- lookup datax,
         valid ->
           let Type.Binding {index, methods} = context !=. classPosition :@ className
               classIndex = Type3.toType2 (illegalInstanceClass classPosition) index
@@ -67,7 +71,7 @@ resolve context Resolve {typeIndexes} = \case
       where
         valid
           | Local :=. classx <- className,
-            Map.member classx typeIndexes =
+            Just _ <- lookup classx =
               False
           | otherwise = True
   _ -> []
