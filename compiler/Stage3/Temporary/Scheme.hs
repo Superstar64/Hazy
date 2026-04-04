@@ -16,7 +16,6 @@ import qualified Stage2.Tree.Scheme as Stage2 (Scheme (..))
 import qualified Stage2.Tree.TypePattern as Stage2 (TypePattern (..))
 import Stage3.Check.Context (Context (..))
 import Stage3.Check.LocalBinding (LocalBinding (Wobbly, label, wobbly))
-import qualified Stage3.Synonym as Synonym
 import Stage3.Temporary.Constraint (Constraint)
 import qualified Stage3.Temporary.Constraint as Constraint
 import Stage3.Temporary.Type (Type)
@@ -43,11 +42,11 @@ check context (Stage2.Scheme {parameters, constraints, result}) = do
   result <- Type.check (augment parameters context) Unify.typex result
   pure $ Scheme {parameters, constraints, result}
 
-solve :: Synonym.Context s scope -> Scheme s scope -> ST s (Solved.Scheme scope)
-solve context Scheme {parameters, constraints, result} = do
-  parameters <- traverse TypePattern.solve parameters
-  constraints <- traverse (Constraint.solve (Synonym.local context)) constraints
-  result <- Type.solve (Synonym.local context) result
+solve :: Context s scope -> Scheme s scope -> ST s (Solved.Scheme scope)
+solve context Scheme {parameters = wobbly, constraints, result} = do
+  parameters <- traverse TypePattern.solve wobbly
+  constraints <- traverse (Constraint.solve (augment wobbly context)) constraints
+  result <- Type.solve (augment wobbly context) result
   pure $ Solved.Scheme {parameters, constraints, result}
 
 augment :: Strict.Vector (TypePattern s scope) -> Context s scope -> Context s (Local ':+ scope)

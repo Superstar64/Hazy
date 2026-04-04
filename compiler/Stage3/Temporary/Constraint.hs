@@ -23,7 +23,6 @@ import qualified Stage3.Check.TypeBinding as TypeBinding
 import qualified Stage3.Simple.Data as Simple.Data
 import Stage3.Simple.Type (lift)
 import qualified Stage3.Simple.Type as Simple (lift)
-import qualified Stage3.Synonym as Synonym
 import Stage3.Temporary.Type (Type)
 import qualified Stage3.Temporary.Type as Type (check, solve)
 import qualified Stage3.Tree.Constraint as Solved
@@ -82,7 +81,7 @@ check
 
     pure $ Constraint {classx, head, arguments}
 
-solve :: Synonym.Context s (Local ':+ scope) -> Constraint s scope -> ST s (Solved.Constraint scope)
+solve :: Context s (Local ':+ scope) -> Constraint s scope -> ST s (Solved.Constraint scope)
 solve context Constraint {classx, head, arguments} = do
   arguments <- traverse (Type.solve context) arguments
   pure

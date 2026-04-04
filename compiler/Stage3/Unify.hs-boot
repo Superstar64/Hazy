@@ -11,6 +11,7 @@ module Stage3.Unify
     fresh,
     solve,
     mark,
+    unify,
   )
 where
 
@@ -26,9 +27,9 @@ import qualified Stage2.Scope as Scope
 import {-# SOURCE #-} Stage3.Check.Context (Context)
 import qualified Stage3.Index.Evidence as Evidence
 import {-# SOURCE #-} Stage3.Unify.Class
-import {-# SOURCE #-} Stage3.Unify.Constraint hiding (solve)
+import {-# SOURCE #-} Stage3.Unify.Constraint hiding (solve, unify)
 import Stage3.Unify.Evidence (Evidence)
-import {-# SOURCE #-} Stage3.Unify.Instanciation hiding (solve)
+import {-# SOURCE #-} Stage3.Unify.Instanciation hiding (solve, unify)
 import {-# SOURCE #-} Stage3.Unify.SchemeOver
 import {-# SOURCE #-} Stage3.Unify.Type
 
@@ -60,7 +61,6 @@ universe :: Type s scope
 variable' :: Evidence.Index scope -> Instanciation s scope -> Evidence s scope
 super :: Evidence s scope -> Int -> Evidence s scope
 instanciation :: Strict.Vector (Evidence s scope) -> Instanciation s scope
-unify :: Context s scope -> Position -> Type s scope -> Type s scope -> ST s ()
 scheme ::
   Strict.Vector (Type s scope) ->
   Strict.Vector (Constraint s scope) ->

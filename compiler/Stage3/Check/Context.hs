@@ -2,12 +2,14 @@ module Stage3.Check.Context where
 
 import Control.Monad.ST (ST)
 import qualified Data.Kind
+import qualified Data.Strict.Maybe as Strict
 import qualified Data.Vector as Vector
 import qualified Stage2.Index.Table.Local as Local
 import qualified Stage2.Index.Table.Term as Term
 import qualified Stage2.Index.Table.Type as Type
+import qualified Stage2.Index.Type2 as Type2
 import qualified Stage2.Label.Context as Label
-import Stage2.Scope (Declaration, Environment (..), Global)
+import Stage2.Scope (Declaration, Environment (..), Global, Local)
 import qualified Stage2.Shift as Shift
 import {-# SOURCE #-} Stage3.Check.InstanceAnnotation (InstanceAnnotation)
 import {-# SOURCE #-} Stage3.Check.KindAnnotation (KindAnnotation (..))
@@ -16,7 +18,7 @@ import qualified Stage3.Check.LocalBinding as LocalBinding
 import Stage3.Check.TermBinding (TermBinding)
 import qualified Stage3.Check.TermBinding as TermBinding
 import {-# SOURCE #-} Stage3.Check.TypeAnnotation (GlobalTypeAnnotation, LocalTypeAnnotation)
-import Stage3.Check.TypeBinding (TypeBinding)
+import Stage3.Check.TypeBinding (TypeBinding (..))
 import qualified Stage3.Check.TypeBinding as TypeBinding
 import qualified Stage3.Functor.Declarations as Functor (Declarations (..))
 import qualified Stage3.Functor.Module as Functor (Module (..))
@@ -24,6 +26,7 @@ import qualified Stage3.Functor.ModuleSet as Functor (ModuleSet (..))
 import {-# SOURCE #-} Stage3.Tree.TermDeclaration (TermDeclaration)
 import {-# SOURCE #-} Stage3.Tree.TypeDeclaration (TypeDeclaration)
 import {-# SOURCE #-} Stage3.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
+import Stage4.Tree.Type (Type)
 
 type Context :: Data.Kind.Type -> Environment -> Data.Kind.Type
 data Context s scope = Context
@@ -99,3 +102,9 @@ label Context {termEnvironment, localEnvironment, typeEnvironment} =
       locals = Local.map (Local.Map LocalBinding.label) localEnvironment,
       types = Type.map (Type.Map TypeBinding.label) typeEnvironment
     }
+
+lookupSynonym :: Context s scope -> Type2.Index scope -> ST s (Strict.Maybe (Type (Local ':+ scope)))
+lookupSynonym Context {typeEnvironment} (Type2.Index index) = do
+  let TypeBinding {synonym} = typeEnvironment Type.! index
+  synonym
+lookupSynonym _ _ = pure Strict.Nothing

@@ -21,7 +21,6 @@ import Stage3.Check.KindAnnotation (KindAnnotation)
 import qualified Stage3.Check.KindAnnotation as KindAnnotation
 import qualified Stage3.Check.KindAnnotation as Stage3
 import qualified Stage3.Simple.Type as Simple (lift)
-import qualified Stage3.Synonym as Synonym
 import qualified Stage3.Temporary.Constraint as Constraint
 import qualified Stage3.Temporary.Constructor as Unsolved.Constructor
 import qualified Stage3.Temporary.Method as Unsolved.Method
@@ -114,8 +113,7 @@ check
       (parameters, kind) <- checkHead context position annotation (parameters, Unify.typex)
       context <- pure $ Unsolved.Scheme.augment parameters context
       constructors <- traverse (Unsolved.Constructor.check context) constructors
-      let simplify = Synonym.fromProper context
-      constructors <- traverse (Unsolved.Constructor.solve simplify) constructors
+      constructors <- traverse (Unsolved.Constructor.solve context) constructors
       kind' <- Unify.solve position kind
       let solveTypePattern = Unify.solve position . Unsolved.TypePattern.typex
       parameters <- Strict.Vector.fromList . toList <$> traverse solveTypePattern parameters
@@ -142,11 +140,10 @@ check
     (Identity parameter, kind) <-
       checkHead context position annotation (Identity parameter, Unify.constraint)
     context <- pure $ Unsolved.Scheme.augment (Strict.Vector.singleton parameter) context
-    let simplify = Synonym.fromProper context
     constraints <- traverse (Constraint.check context) constraints
-    constraints <- traverse (Constraint.solve simplify) constraints
+    constraints <- traverse (Constraint.solve context) constraints
     methods <- traverse (Unsolved.Method.check context) methods
-    methods <- traverse (Unsolved.Method.solve simplify) methods
+    methods <- traverse (Unsolved.Method.solve context) methods
     kind' <- Unify.solve position kind
     parameter <- Unify.solve position . Unsolved.TypePattern.typex $ parameter
     pure $

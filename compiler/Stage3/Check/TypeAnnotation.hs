@@ -8,7 +8,6 @@ import qualified Stage2.Tree.Annotation as Stage2 (Annotation (..))
 import qualified Stage2.Tree.Scheme as Stage2 (Scheme (..))
 import qualified Stage2.Tree.TermDeclaration as Stage2 (TermDeclaration (..), TermDeclaration' (..))
 import {-# SOURCE #-} Stage3.Check.Context (Context)
-import qualified Stage3.Synonym as Synonym
 import {-# SOURCE #-} qualified Stage3.Temporary.Scheme as Scheme (check, solve)
 import {-# SOURCE #-} Stage3.Tree.Scheme (Scheme)
 import {-# SOURCE #-} qualified Stage3.Unify as Unify
@@ -30,8 +29,7 @@ data LocalTypeAnnotation s scope
 checkAnnotation :: Context s scope -> Stage2.Scheme Position scope -> ST s (Annotation scope)
 checkAnnotation context annotation = do
   annotation <- Scheme.check context annotation
-  let simplify = Synonym.fromProper context
-  annotation <- Scheme.solve simplify annotation
+  annotation <- Scheme.solve context annotation
   let annotation' = Simple.simplify annotation
   pure $ Annotation {annotation, annotation'}
 

@@ -15,13 +15,13 @@ import qualified Stage2.Index.Table.Type as Type.Table
 import qualified Stage2.Index.Type2 as Type2
 import qualified Stage2.Tree.Type as Stage2 (Type (..))
 import Stage3.Check.Context (Context (..))
+import qualified Stage3.Check.Context as Context
 import qualified Stage3.Check.DataInstance as DataInstance
 import qualified Stage3.Check.LocalBinding as LocalBinding (LocalBinding (..))
 import Stage3.Check.TypeBinding (TypeBinding (TypeBinding))
 import qualified Stage3.Check.TypeBinding as TypeBinding
 import qualified Stage3.Simple.Data as Simple.Data
 import Stage3.Simple.Type (lift)
-import qualified Stage3.Synonym as Synonym
 import qualified Stage3.Tree.Type as Solved
 import {-# SOURCE #-} qualified Stage3.Unify as Unify
 import {-# SOURCE #-} qualified Stage4.Tree.Builtin as Builtin
@@ -122,7 +122,7 @@ check context@Context {localEnvironment, typeEnvironment} kind = \case
     Unify.unify context startPosition kind Unify.kind
     pure Levity
 
-solve :: Synonym.Context s scope -> Type s scope -> ST s (Solved.Type scope)
+solve :: Context s scope -> Type s scope -> ST s (Solved.Type scope)
 solve context = \case
   Variable {variable} -> do
     pure
@@ -130,7 +130,7 @@ solve context = \case
         { variable
         }
   Constructor {constructor} -> do
-    synonym <- Synonym.lookup context constructor
+    synonym <- Context.lookupSynonym context constructor
     pure
       Solved.Constructor
         { constructor,

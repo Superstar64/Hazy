@@ -33,3 +33,4 @@ fresh :: Type s scope -> ST s (Type s scope)
 -- todo, have mechinism to ensure solve is the last ST action
 mark :: Context s scope -> Position -> Mask.Erasure -> Type s scope -> ST s ()
 solve :: Position -> Type s scope -> ST s (Simple.Type scope)
+unify :: Context s scope -> Position -> Type s scope -> Type s scope -> ST s ()

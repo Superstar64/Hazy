@@ -6,7 +6,6 @@ import qualified Stage2.Shift as Shift
 import qualified Stage2.Tree.Entry as Stage2 (Entry (..))
 import qualified Stage2.Tree.Scheme as Stage2 (Scheme (Scheme, result))
 import Stage3.Check.Context (Context (..))
-import qualified Stage3.Synonym as Synonym
 import Stage3.Temporary.StrictnessAnnotation (StrictnessAnnotation)
 import qualified Stage3.Temporary.StrictnessAnnotation as StrictnessAnnotation
 import Stage3.Temporary.Type (Type)
@@ -30,7 +29,7 @@ check context Stage2.Entry {startPosition, entry = Stage2.Scheme {result}, stric
         strict
       }
 
-solve :: Synonym.Context s scope -> Entry s scope -> ST s (Solved.Entry scope)
+solve :: Context s scope -> Entry s scope -> ST s (Solved.Entry scope)
 solve context Entry {entry, strict} = do
   entry <- Type.solve context entry
   strict <- StrictnessAnnotation.solve context strict

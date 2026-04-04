@@ -320,7 +320,6 @@ executable hazy
     Stage3.Simple.Scheme
     Stage3.Simple.SchemeOver
     Stage3.Simple.Type
-    Stage3.Synonym
     Stage3.Temporary.Alternative
     Stage3.Temporary.Body
     Stage3.Temporary.CallHead
@@ -466,7 +465,7 @@ executable hazy
     Verbose
 
   build-depends:
-    base >=4.21.0 && <4.22,
+    base,
     containers >=0.7 && <0.8,
     directory >=1.3.9 && <1.4,
     filepath >=1.5.4 && <1.6,

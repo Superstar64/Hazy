@@ -14,7 +14,6 @@ import qualified Stage2.Tree.TypeDeclaration as Stage2
     parameters,
   )
 import Stage3.Check.Context (Context)
-import qualified Stage3.Synonym as Synonym
 import qualified Stage3.Temporary.Scheme as Unsolved.Scheme
 import qualified Stage3.Temporary.Type as Type
 import qualified Stage3.Temporary.Type as Unsolved.Type
@@ -42,16 +41,14 @@ check context Stage2.Synonym {position, synonym, parameters, annotation} =
       Strict.Just annotation -> do
         universe <- Unify.fresh Unify.universe
         annotation <- Type.check context (Unify.typeWith universe) annotation
-        let synonym = Synonym.fromProper context
-        annotation <- Type.solve synonym annotation
+        annotation <- Type.solve context annotation
         pure Annotation {kind' = Simple.simplify annotation}
     let unused = error "unused parameter"
     (parameters, kind) <- TypeDeclaration.checkHead unused unused annotation (parameters, target)
     context <- pure $ Unsolved.Scheme.augment parameters context
     definition <- Unsolved.Type.check context (shift target) synonym
     kind' <- Unify.solve position kind
-    let simplify = Synonym.fromProper context
-    definition <- Unsolved.Type.solve simplify definition
+    definition <- Unsolved.Type.solve context definition
     let definition' = Simple.simplify definition
     pure Synonym {kind = Strict.Nothing, kind', definition, definition'}
 check context declaration = case Stage2.annotation declaration of
@@ -59,6 +56,5 @@ check context declaration = case Stage2.annotation declaration of
   Strict.Just annotation -> do
     universe <- Unify.fresh Unify.universe
     annotation <- Type.check context (Unify.typeWith universe) annotation
-    let synonym = Synonym.fromProper context
-    annotation <- Type.solve synonym annotation
+    annotation <- Type.solve context annotation
     pure $ Annotation {kind' = Simple.simplify annotation}
