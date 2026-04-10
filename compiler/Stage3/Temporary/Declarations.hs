@@ -1,13 +1,13 @@
 module Stage3.Temporary.Declarations (Declarations (..), check, solve) where
 
 import Control.Monad.ST (ST)
-import Data.Acyclic (loebST8)
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Octafunctor (octamap)
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Error (cyclicalTypeChecking)
+import Graph.Topological (loebST8)
 import Stage1.Variable (Qualifiers (Local))
 import qualified Stage2.Index.Type as Type
 import qualified Stage2.Index.Type2 as Type2

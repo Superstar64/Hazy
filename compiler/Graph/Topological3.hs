@@ -1,4 +1,4 @@
-module Data.Acyclic3
+module Graph.Topological3
   ( Loeb3 (..),
     loeb3,
     loebST3,
@@ -6,11 +6,11 @@ module Data.Acyclic3
 where
 
 import Control.Monad.ST (ST)
-import Data.Acyclic1 (Loeb (..), loeb, loebST)
 import Data.Trifoldable (Trifoldable (..))
 import Data.Trifunctor (Trifunctor (..))
 import Data.Tritraversable (Tritraversable (..))
 import Data.Void (Void)
+import Graph.Topological1 (Loeb (..), loeb, loebST)
 import Prelude hiding (Double, map)
 
 newtype Triple f a = Triple {runTriple :: f a a a}

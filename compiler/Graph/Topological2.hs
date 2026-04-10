@@ -1,4 +1,4 @@
-module Data.Acyclic2
+module Graph.Topological2
   ( Loeb2 (..),
     loeb2,
     loebST2,
@@ -6,11 +6,11 @@ module Data.Acyclic2
 where
 
 import Control.Monad.ST (ST)
-import Data.Acyclic1 (Loeb (..), loeb, loebST)
 import Data.Bifoldable (Bifoldable (..))
 import Data.Bifunctor (Bifunctor (..))
 import Data.Bitraversable (Bitraversable (..))
 import Data.Void (Void)
+import Graph.Topological1 (Loeb (..), loeb, loebST)
 import Prelude hiding (Double, map)
 
 newtype Double f a = Double {runDouble :: f a a}

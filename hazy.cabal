@@ -14,15 +14,6 @@ category: Development
 executable hazy
   main-is: Main.hs
   other-modules:
-    Data.Acyclic
-    Data.Acyclic1
-    Data.Acyclic2
-    Data.Acyclic3
-    Data.Acyclic4
-    Data.Acyclic5
-    Data.Acyclic6
-    Data.Acyclic7
-    Data.Acyclic8
     Data.Heptafoldable
     Data.Heptafunctor
     Data.Heptatraversable
@@ -46,6 +37,15 @@ executable hazy
     Data.Trifunctor
     Data.Tritraversable
     Error
+    Graph.Topological
+    Graph.Topological1
+    Graph.Topological2
+    Graph.Topological3
+    Graph.Topological4
+    Graph.Topological5
+    Graph.Topological6
+    Graph.Topological7
+    Graph.Topological8
     Javascript.Keywords
     Javascript.Printer
     Javascript.Printer.Lexer

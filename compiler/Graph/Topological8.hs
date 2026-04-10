@@ -1,4 +1,4 @@
-module Data.Acyclic8
+module Graph.Topological8
   ( Loeb8 (..),
     loeb8,
     loebST8,
@@ -6,11 +6,11 @@ module Data.Acyclic8
 where
 
 import Control.Monad.ST (ST)
-import Data.Acyclic1 (Loeb (..), loeb, loebST)
 import Data.Octafoldable (Octafoldable (..))
 import Data.Octafunctor (Octafunctor (..))
 import Data.Octatraversable (Octatraversable (..))
 import Data.Void (Void)
+import Graph.Topological1 (Loeb (..), loeb, loebST)
 import Prelude hiding (Double, map)
 
 newtype Octuple f a = Octuple {runOctuple :: f a a a a a a a a}

@@ -1,4 +1,4 @@
-module Data.Acyclic4
+module Graph.Topological4
   ( Loeb4 (..),
     loeb4,
     loebST4,
@@ -6,11 +6,11 @@ module Data.Acyclic4
 where
 
 import Control.Monad.ST (ST)
-import Data.Acyclic1 (Loeb (..), loeb, loebST)
 import Data.Quadrifoldable (Quadrifoldable (..))
 import Data.Quadrifunctor (Quadrifunctor (..))
 import Data.Quadritraversable (Quadritraversable (..))
 import Data.Void (Void)
+import Graph.Topological1 (Loeb (..), loeb, loebST)
 import Prelude hiding (Double, map)
 
 newtype Quadruple f a = Quadruple {runQuadruple :: f a a a a}

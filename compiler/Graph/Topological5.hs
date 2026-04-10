@@ -1,4 +1,4 @@
-module Data.Acyclic5
+module Graph.Topological5
   ( Loeb5 (..),
     loeb5,
     loebST5,
@@ -6,11 +6,11 @@ module Data.Acyclic5
 where
 
 import Control.Monad.ST (ST)
-import Data.Acyclic1 (Loeb (..), loeb, loebST)
 import Data.Pentafoldable (Pentafoldable (..))
 import Data.Pentafunctor (Pentafunctor (..))
 import Data.Pentatraversable (Pentatraversable (..))
 import Data.Void (Void)
+import Graph.Topological1 (Loeb (..), loeb, loebST)
 import Prelude hiding (Double, map)
 
 newtype Quinetuple f a = Quinetuple {runQuinetuple :: f a a a a a}

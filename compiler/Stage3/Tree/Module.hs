@@ -1,11 +1,11 @@
 module Stage3.Tree.Module (Module (..), check) where
 
 import Control.Monad.ST (ST)
-import Data.Acyclic (Loeb8 (..), loeb8)
 import qualified Data.Map as Map
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Error (cyclicalTypeChecking)
+import Graph.Topological (Loeb8 (..), loeb8)
 import Stage1.Variable (FullQualifiers)
 import qualified Stage2.Index.Type as Type
 import Stage2.Scope (Global)

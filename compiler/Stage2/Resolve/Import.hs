@@ -8,7 +8,6 @@ module Stage2.Resolve.Import
 where
 
 import Control.Monad (liftM2)
-import Data.Acyclic (Loeb (..), Loeb3 (..), loeb, loeb3)
 import Data.Foldable (toList)
 import Data.Functor.Identity (Identity (..), runIdentity)
 import Data.Map (Map)
@@ -24,6 +23,7 @@ import Error
     moduleNotInScope,
     typeNotInScope,
   )
+import Graph.Topological (Loeb (..), Loeb3 (..), loeb, loeb3)
 import Stage1.Extensions (Extensions (Extensions, implicitPrelude, stableImports))
 import qualified Stage1.Extensions as Stage1 (Extensions (..))
 import Stage1.Position (Position)

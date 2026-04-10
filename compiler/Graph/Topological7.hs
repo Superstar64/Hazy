@@ -1,4 +1,4 @@
-module Data.Acyclic7
+module Graph.Topological7
   ( Loeb7 (..),
     loeb7,
     loebST7,
@@ -6,11 +6,11 @@ module Data.Acyclic7
 where
 
 import Control.Monad.ST (ST)
-import Data.Acyclic1 (Loeb (..), loeb, loebST)
 import Data.Heptafoldable (Heptafoldable (..))
 import Data.Heptafunctor (Heptafunctor (..))
 import Data.Heptatraversable (Heptatraversable (..))
 import Data.Void (Void)
+import Graph.Topological1 (Loeb (..), loeb, loebST)
 import Prelude hiding (Double, map)
 
 newtype Septuple f a = Septuple {runSeptuple :: f a a a a a a a}

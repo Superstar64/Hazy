@@ -1,4 +1,4 @@
-module Data.Acyclic6
+module Graph.Topological6
   ( Loeb6 (..),
     loeb6,
     loebST6,
@@ -6,11 +6,11 @@ module Data.Acyclic6
 where
 
 import Control.Monad.ST (ST)
-import Data.Acyclic1 (Loeb (..), loeb, loebST)
 import Data.Hexafoldable (Hexafoldable (..))
 import Data.Hexafunctor (Hexafunctor (..))
 import Data.Hexatraversable (Hexatraversable (..))
 import Data.Void (Void)
+import Graph.Topological1 (Loeb (..), loeb, loebST)
 import Prelude hiding (Double, map)
 
 newtype Sixtuple f a = Sixtuple {runSixtuple :: f a a a a a a}
