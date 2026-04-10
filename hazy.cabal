@@ -37,6 +37,7 @@ executable hazy
     Data.Trifunctor
     Data.Tritraversable
     Error
+    Graph.StronglyConnected
     Graph.Topological
     Graph.Topological1
     Graph.Topological2
