@@ -8,6 +8,7 @@ import Data.Foldable (toList)
 import qualified Data.Strict.Vector1 as Strict (Vector1, fromList')
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
+import Stage1.FreeVariables (TermBindingVariables (..))
 import Stage1.Parser
   ( Parser,
     asum,
@@ -16,7 +17,6 @@ import Stage1.Parser
     try,
   )
 import Stage1.ParserCombinator (Position)
-import Stage1.TermBindingVariables (TermBindingVariables (..))
 import qualified Stage1.Tree.Marked as Marked
 import Stage1.Tree.Pattern (Pattern)
 import qualified Stage1.Tree.Pattern as Pattern

@@ -6,6 +6,7 @@ module Stage1.Tree.Data where
 
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
+import Stage1.FreeVariables (TermBindingVariables (..))
 import Stage1.Parser
   ( Parser,
     asum,
@@ -16,7 +17,6 @@ import Stage1.Parser
     token,
   )
 import Stage1.Position (Position)
-import Stage1.TermBindingVariables (TermBindingVariables (..))
 import Stage1.Tree.Constructor (Constructor)
 import qualified Stage1.Tree.Constructor as Constructor
 import Stage1.Tree.GADTConstructor (GADTConstructor)

@@ -7,7 +7,7 @@ import Data.Foldable (toList)
 import qualified Data.Map as Map
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
-import Stage1.FreeTypeVariables (FreeTypeVariables (..))
+import Stage1.FreeVariables (FreeTypeVariables (..))
 import Stage1.Position (Position)
 import Stage1.Tree.Marked (Marked (..))
 import qualified Stage1.Tree.Scheme as Stage1 (Scheme (..))

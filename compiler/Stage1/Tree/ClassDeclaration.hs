@@ -3,9 +3,9 @@ module Stage1.Tree.ClassDeclaration where
 
 import Data.Foldable (toList)
 import qualified Data.Strict.Vector1 as Strict
+import Stage1.FreeVariables (TermBindingVariables (termBindingVariables))
 import Stage1.Parser (Parser, asum, position, sepBy1Comma, token, try)
 import Stage1.Position (Position)
-import Stage1.TermBindingVariables (TermBindingVariables (termBindingVariables))
 import Stage1.Tree.Fixity (Fixity)
 import qualified Stage1.Tree.Fixity as Fixity
 import Stage1.Tree.LeftHandSide (LeftHandSide)

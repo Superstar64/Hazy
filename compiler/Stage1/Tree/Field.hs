@@ -6,13 +6,13 @@ module Stage1.Tree.Field where
 
 import Data.Foldable (toList)
 import qualified Data.Strict.Vector1 as Strict
+import Stage1.FreeVariables (TermBindingVariables (..))
 import Stage1.Parser
   ( Parser,
     sepBy1Comma,
     token,
   )
 import Stage1.Position (Position)
-import Stage1.TermBindingVariables (TermBindingVariables (..))
 import Stage1.Tree.Entry (Entry)
 import qualified Stage1.Tree.Entry as Entry
 import Stage1.Tree.Marked (Marked (..))

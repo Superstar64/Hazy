@@ -8,6 +8,7 @@ import Data.Foldable (toList)
 import qualified Data.Strict.Vector1 as Strict (Vector1, fromNonEmpty)
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
+import Stage1.FreeVariables (TermBindingVariables (..))
 import Stage1.Parser
   ( Parser,
     asum,
@@ -23,7 +24,6 @@ import Stage1.Parser
     (<**>),
   )
 import Stage1.Position (Position)
-import Stage1.TermBindingVariables (TermBindingVariables (..))
 import Stage1.Tree.Alias (Alias)
 import Stage1.Tree.Brand (Brand)
 import qualified Stage1.Tree.Brand as Brand

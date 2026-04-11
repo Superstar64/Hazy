@@ -2,8 +2,8 @@ module Stage2.Temporary.Complete.Shared where
 
 import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
+import Stage1.FreeVariables (TermBindingVariables (..))
 import Stage1.Position (Position)
-import Stage1.TermBindingVariables (TermBindingVariables (..))
 import Stage1.Tree.Declaration as Stage1 (Declaration (..))
 import qualified Stage1.Tree.LeftHandSide as Stage1 (LeftHandSide (Pattern))
 import qualified Stage1.Tree.Marked as Marked

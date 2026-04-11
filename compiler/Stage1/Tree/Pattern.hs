@@ -9,6 +9,7 @@ import qualified Data.Strict.Vector2 as Strict (Vector2, fromList'')
 import Data.Text (Text)
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
+import Stage1.FreeVariables (TermBindingVariables (..))
 import Stage1.Parser
   ( Parser,
     asum,
@@ -25,7 +26,6 @@ import Stage1.Parser
   )
 import qualified Stage1.Parser as Parser
 import Stage1.Position (Position)
-import Stage1.TermBindingVariables (TermBindingVariables (..))
 import Stage1.Tree.Marked (Marked (..))
 import qualified Stage1.Tree.Marked as Marked
 import Stage1.Tree.PatternField (Field)

@@ -125,13 +125,12 @@ executable hazy
     Order
     Package
     Stage1.Extensions
-    Stage1.FreeTypeVariables
+    Stage1.FreeVariables
     Stage1.Lexer
     Stage1.Parser
     Stage1.ParserCombinator
     Stage1.Position
     Stage1.Printer
-    Stage1.TermBindingVariables
     Stage1.Tree.Alias
     Stage1.Tree.Alternative
     Stage1.Tree.Associativity

@@ -1,6 +1,6 @@
 module Stage1.Tree.Type where
 
-import Stage1.FreeTypeVariables (FreeTypeVariables)
+import Stage1.FreeVariables (FreeTypeVariables)
 import Stage1.Parser (Parser)
 import Stage1.Position (Position)
 

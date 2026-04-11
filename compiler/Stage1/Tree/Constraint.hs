@@ -8,7 +8,7 @@ import Control.Applicative ((<**>))
 import qualified Control.Applicative as Applicative (some)
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
-import Stage1.FreeTypeVariables (FreeTypeVariables (..))
+import Stage1.FreeVariables (FreeTypeVariables (..))
 import Stage1.Parser
   ( Parser,
     asum,

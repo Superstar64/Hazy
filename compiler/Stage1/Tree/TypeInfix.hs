@@ -4,7 +4,7 @@
 -- Parser syntax tree for infix types
 module Stage1.Tree.TypeInfix where
 
-import Stage1.FreeTypeVariables (FreeTypeVariables (..))
+import Stage1.FreeVariables (FreeTypeVariables (..))
 import Stage1.Parser
   ( Parser,
     asum,

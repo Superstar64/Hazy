@@ -8,7 +8,7 @@ import Data.Foldable (toList)
 import qualified Data.Strict.Vector2 as Strict (Vector2, fromList'')
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
-import Stage1.FreeTypeVariables (FreeTypeVariables (..))
+import Stage1.FreeVariables (FreeTypeVariables (..))
 import Stage1.Parser
   ( Parser,
     asum,

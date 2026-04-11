@@ -4,6 +4,7 @@
 -- Parser syntax tree for infix patterns
 module Stage1.Tree.PatternInfix where
 
+import Stage1.FreeVariables (TermBindingVariables (..))
 import Stage1.Parser
   ( Parser,
     asum,
@@ -13,7 +14,6 @@ import Stage1.Parser
     (<|>),
   )
 import Stage1.Position (Position)
-import Stage1.TermBindingVariables (TermBindingVariables (..))
 import qualified Stage1.Tree.Marked as Marked
 import Stage1.Tree.Pattern (Pattern)
 import qualified Stage1.Tree.Pattern as Pattern

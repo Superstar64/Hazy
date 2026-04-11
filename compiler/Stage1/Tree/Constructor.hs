@@ -6,6 +6,7 @@ module Stage1.Tree.Constructor where
 
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
+import Stage1.FreeVariables (TermBindingVariables (..))
 import Stage1.Parser
   ( Parser,
     asum,
@@ -17,7 +18,6 @@ import Stage1.Parser
     (<**>),
   )
 import Stage1.Position (Position)
-import Stage1.TermBindingVariables (TermBindingVariables (..))
 import Stage1.Tree.Entry (Entry)
 import qualified Stage1.Tree.Entry as Entry
 import Stage1.Tree.Field (Field)
