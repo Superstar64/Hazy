@@ -5,8 +5,9 @@
 -- See this article on vanilla loeb: https://github.com/quchen/articles/blob/master/loeb-moeb.md
 -- Also see standard topological sort: https://en.wikipedia.org/wiki/Topological_sorting#Depth-first_search
 module Graph.Topological1
-  ( loeb,
-    Loeb (..),
+  ( Loeb (..),
+    Formula (..),
+    loeb,
     loebST,
   )
 where
@@ -14,28 +15,27 @@ where
 import Control.Applicative (liftA)
 import Control.Monad.ST (ST, runST, stToIO)
 import Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
-import Data.Void (Void, absurd)
 import System.IO.Unsafe (unsafeInterleaveIO, unsafePerformIO)
 import Prelude hiding (fail)
 
-data Mark s f a
+data Mark s t a
   = Unmarked
-      { algebra :: f (ST s a) -> ST s a,
-        fail :: Void
+      { fail :: forall a. a,
+        algebra :: t (ST s a) -> ST s a
       }
   | Temporary
-      { fail :: Void
+      { fail :: forall a. a
       }
   | Permanent
       { result :: a
       }
 
-initialize :: (Functor f) => f (Void, f (ST s a) -> ST s a) -> f (ST s (STRef s (Mark s f a)))
+initialize :: (Functor t) => t (Formula t s a) -> t (ST s (STRef s (Mark s t a)))
 initialize = fmap apply
   where
-    apply (fail, algebra) = newSTRef $! Unmarked {algebra, fail}
+    apply Formula {cycle, run} = newSTRef $! Unmarked {algebra = run, fail = cycle}
 
-visit :: (Functor f) => f (STRef s (Mark s f a)) -> f (ST s a)
+visit :: (Functor t) => t (STRef s (Mark s t a)) -> t (ST s a)
 visit spreadsheet = table
   where
     table = fmap calculate spreadsheet
@@ -47,12 +47,15 @@ visit spreadsheet = table
           result <- algebra table
           writeSTRef reference $! Permanent {result}
           pure result
-        Temporary {fail} -> absurd fail
+        Temporary {fail} -> fail
         Permanent {result} -> pure result
 
-newtype Loeb t a
-  = Loeb
-      (forall s. t (Void, t (ST s a) -> ST s a))
+data Formula t s a = Formula
+  { cycle :: forall a. a,
+    run :: t (ST s a) -> ST s a
+  }
+
+newtype Loeb t a = Loeb (forall s. t (Formula t s a))
 
 -- |
 -- Applicative representing lazy side effects ala the R language. This
@@ -89,9 +92,15 @@ loeb (Loeb spreadsheet) = unsafePerformIO $ do
   runLazyIO $ traverse (LazyIO . stToIO) $ visit spreadsheet
 loebStrict (Loeb spreadsheet) = runST (loebST spreadsheet)
 
-loebST :: (Traversable t) => t (Void, t (ST s a) -> ST s a) -> ST s (t a)
+loebST :: (Traversable t) => t (Formula t s a) -> ST s (t a)
 loebST spreadsheet = do
   spreadsheet <- sequence $ initialize spreadsheet
   sequence $ visit spreadsheet
 
-testLazy = head $ loeb $ Loeb $ (undefined, const $ pure 'a') : undefined
+testLazy = head $ loeb $ Loeb $ sample : undefined
+  where
+    sample =
+      Formula
+        { cycle = undefined,
+          run = const $ pure 'a'
+        }

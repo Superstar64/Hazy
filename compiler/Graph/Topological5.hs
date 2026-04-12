@@ -1,5 +1,6 @@
 module Graph.Topological5
   ( Loeb5 (..),
+    Formula5 (..),
     loeb5,
     loebST5,
   )
@@ -9,8 +10,7 @@ import Control.Monad.ST (ST)
 import Data.Pentafoldable (Pentafoldable (..))
 import Data.Pentafunctor (Pentafunctor (..))
 import Data.Pentatraversable (Pentatraversable (..))
-import Data.Void (Void)
-import Graph.Topological1 (Loeb (..), loeb, loebST)
+import Graph.Topological1 (Formula (..), Loeb (..), loeb, loebST)
 import Prelude hiding (Double, map)
 
 newtype Quinetuple f a = Quinetuple {runQuinetuple :: f a a a a a}
@@ -46,76 +46,79 @@ fiveD _ = undefined
 fiveE (FiveE e) = e
 fiveE _ = undefined
 
-packQuintupleM ::
-  (Pentafunctor f, Functor m) =>
-  f (m a) (m b) (m c) (m d) (m e) ->
-  Quinetuple f (m (Five a b c d e))
-packQuintupleM =
+data Formula5 t s a b c d e z = Formula5
+  { cycle :: forall a. a,
+    run :: t (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) -> ST s z
+  }
+
+packFormula ::
+  (Pentafunctor t) =>
+  t
+    (Formula5 t s a b c d e a)
+    (Formula5 t s a b c d e b)
+    (Formula5 t s a b c d e c)
+    (Formula5 t s a b c d e d)
+    (Formula5 t s a b c d e e) ->
+  Quinetuple t (Formula (Quinetuple t) s (Five a b c d e))
+packFormula =
   Quinetuple
     . pentamap
-      (fmap FiveA)
-      (fmap FiveB)
-      (fmap FiveC)
-      (fmap FiveD)
-      (fmap FiveE)
+      (pack FiveA)
+      (pack FiveB)
+      (pack FiveC)
+      (pack FiveD)
+      (pack FiveE)
 
-unpackQuintuple ::
+pack ::
+  (Pentafunctor t) =>
+  (z -> Five a b c d e) ->
+  Formula5 t s a b c d e z ->
+  Formula (Quinetuple t) s (Five a b c d e)
+pack wrap Formula5 {cycle, run} =
+  Formula
+    { cycle,
+      run =
+        fmap wrap
+          . run
+          . pentamap
+            (fmap fiveA)
+            (fmap fiveB)
+            (fmap fiveC)
+            (fmap fiveD)
+            (fmap fiveE)
+          . runQuinetuple
+    }
+
+newtype Loeb5 t a b c d e
+  = Loeb5
+      ( forall s.
+        t
+          (Formula5 t s a b c d e a)
+          (Formula5 t s a b c d e b)
+          (Formula5 t s a b c d e c)
+          (Formula5 t s a b c d e d)
+          (Formula5 t s a b c d e e)
+      )
+
+finish ::
   (Pentafunctor t) =>
   Quinetuple t (Five a b c d e) ->
   t a b c d e
-unpackQuintuple =
-  pentamap
-    fiveA
-    fiveB
-    fiveC
-    fiveD
-    fiveE
-    . runQuinetuple
-
-unpackQuintupleM ::
-  (Pentafunctor f, Functor m) =>
-  Quinetuple f (m (Five a b c d e)) ->
-  f (m a) (m b) (m c) (m d) (m e)
-unpackQuintupleM =
-  pentamap
-    (fmap fiveA)
-    (fmap fiveB)
-    (fmap fiveC)
-    (fmap fiveD)
-    (fmap fiveE)
-    . runQuinetuple
-
-goQuintuple cell = case cell of
-  FiveA run -> fmap FiveA . run . unpackQuintupleM
-  FiveB run -> fmap FiveB . run . unpackQuintupleM
-  FiveC run -> fmap FiveC . run . unpackQuintupleM
-  FiveD run -> fmap FiveD . run . unpackQuintupleM
-  FiveE run -> fmap FiveE . run . unpackQuintupleM
-
-newtype Loeb5 f s a b c d e
-  = Loeb5
-      ( forall s.
-        f
-          (Void, f (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) -> ST s a)
-          (Void, f (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) -> ST s b)
-          (Void, f (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) -> ST s c)
-          (Void, f (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) -> ST s d)
-          (Void, f (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) -> ST s e)
-      )
+finish = pentamap fiveA fiveB fiveC fiveD fiveE . runQuinetuple
 
 loeb5 ::
-  (Pentatraversable f) =>
-  Loeb5 f s a b c d e ->
-  f a b c d e
-loeb5 (Loeb5 spreadsheet) = unpackQuintuple $ loeb $ Loeb $ fmap goQuintuple <$> packQuintupleM spreadsheet
+  (Pentatraversable t) =>
+  Loeb5 t a b c d e ->
+  t a b c d e
+loeb5 (Loeb5 spreadsheet) = finish $ loeb $ Loeb $ packFormula spreadsheet
 
 loebST5 ::
   (Pentatraversable t) =>
   t
-    (Void, t (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) -> ST s a)
-    (Void, t (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) -> ST s b)
-    (Void, t (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) -> ST s c)
-    (Void, t (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) -> ST s d)
-    (Void, t (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) -> ST s e) ->
+    (Formula5 t s a b c d e a)
+    (Formula5 t s a b c d e b)
+    (Formula5 t s a b c d e c)
+    (Formula5 t s a b c d e d)
+    (Formula5 t s a b c d e e) ->
   ST s (t a b c d e)
-loebST5 spreadsheet = fmap unpackQuintuple $ loebST $ fmap goQuintuple <$> packQuintupleM spreadsheet
+loebST5 spreadsheet = fmap finish $ loebST $ packFormula spreadsheet

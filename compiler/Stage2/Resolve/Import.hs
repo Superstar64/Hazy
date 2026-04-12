@@ -8,13 +8,14 @@ module Stage2.Resolve.Import
 where
 
 import Control.Monad (liftM2)
+import Control.Monad.ST (ST)
 import Data.Foldable (toList)
 import Data.Functor.Identity (Identity (..), runIdentity)
 import Data.Map (Map)
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import Data.Trifunctor (Trifunctor (trimap))
-import Data.Void (Void)
+import Data.Void (Void, absurd)
 import Error
   ( constructorNotInScope,
     cyclicalImports,
@@ -23,7 +24,8 @@ import Error
     moduleNotInScope,
     typeNotInScope,
   )
-import Graph.Topological (Loeb (..), Loeb3 (..), loeb, loeb3)
+import Graph.Topological (Formula (..), Loeb (..), Loeb3 (..), loeb, loeb3)
+import Graph.Topological3 (Formula3 (..))
 import Stage1.Extensions (Extensions (Extensions, implicitPrelude, stableImports))
 import qualified Stage1.Extensions as Stage1 (Extensions (..))
 import Stage1.Position (Position)
@@ -657,5 +659,13 @@ pickModules modules =
   Regular.Canonical.fromFunctor $ loeb3 $ Loeb3 $ Canonical $ loeb $ Loeb $ Map.mapWithKey pick modules
   where
     pick path modulex =
-      let (fail, run) = pickModule path modulex
-       in (fail, fmap (trimap (fmap runAlgebra3A) (fmap runAlgebra3B) (fmap runAlgebra3C) . runDependency) . run)
+      let (cycle, run) = pickModule path modulex
+          formula3 :: (Void, t (ST s a) (ST s b) (ST s c) -> ST s z) -> Formula3 t s a b c z
+          formula3 (cycle, run) = Formula3 {cycle = absurd cycle, run}
+          algebraA = formula3 . fmap runAlgebra3A
+          algebraB = formula3 . fmap runAlgebra3B
+          algebraC = formula3 . fmap runAlgebra3C
+       in Formula
+            { cycle = absurd cycle,
+              run = fmap (trimap algebraA algebraB algebraC . runDependency) . run
+            }

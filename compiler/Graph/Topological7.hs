@@ -1,5 +1,6 @@
 module Graph.Topological7
   ( Loeb7 (..),
+    Formula7 (..),
     loeb7,
     loebST7,
   )
@@ -9,8 +10,7 @@ import Control.Monad.ST (ST)
 import Data.Heptafoldable (Heptafoldable (..))
 import Data.Heptafunctor (Heptafunctor (..))
 import Data.Heptatraversable (Heptatraversable (..))
-import Data.Void (Void)
-import Graph.Topological1 (Loeb (..), loeb, loebST)
+import Graph.Topological1 (Formula (..), Loeb (..), loeb, loebST)
 import Prelude hiding (Double, map)
 
 newtype Septuple f a = Septuple {runSeptuple :: f a a a a a a a}
@@ -54,88 +54,86 @@ sevenF _ = undefined
 sevenG (SevenG a) = a
 sevenG _ = undefined
 
-packSeptupleM ::
-  (Heptafunctor f', Functor m) =>
-  f' (m a) (m b) (m c) (m d) (m e) (m f) (m g) ->
-  Septuple f' (m (Seven a b c d e f g))
-packSeptupleM =
+data Formula7 t s a b c d e f g z = Formula7
+  { cycle :: forall a. a,
+    run :: t (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) (ST s f) (ST s g) -> ST s z
+  }
+
+packFormula ::
+  (Heptafunctor t) =>
+  t
+    (Formula7 t s a b c d e f g a)
+    (Formula7 t s a b c d e f g b)
+    (Formula7 t s a b c d e f g c)
+    (Formula7 t s a b c d e f g d)
+    (Formula7 t s a b c d e f g e)
+    (Formula7 t s a b c d e f g f)
+    (Formula7 t s a b c d e f g g) ->
+  Septuple t (Formula (Septuple t) s (Seven a b c d e f g))
+packFormula =
   Septuple
     . heptamap
-      (fmap SevenA)
-      (fmap SevenB)
-      (fmap SevenC)
-      (fmap SevenD)
-      (fmap SevenE)
-      (fmap SevenF)
-      (fmap SevenG)
+      (pack7 SevenA)
+      (pack7 SevenB)
+      (pack7 SevenC)
+      (pack7 SevenD)
+      (pack7 SevenE)
+      (pack7 SevenF)
+      (pack7 SevenG)
 
-unpackSeptuple ::
+pack7 ::
   (Heptafunctor t) =>
-  Septuple t (Seven a b c d e f g) ->
-  t a b c d e f g
-unpackSeptuple =
-  heptamap
-    sevenA
-    sevenB
-    sevenC
-    sevenD
-    sevenE
-    sevenF
-    sevenG
-    . runSeptuple
+  (z -> Seven a b c d e f g) ->
+  Formula7 t s a b c d e f g z ->
+  Formula (Septuple t) s (Seven a b c d e f g)
+pack7 wrap Formula7 {cycle, run} =
+  Formula
+    { cycle,
+      run =
+        fmap wrap
+          . run
+          . heptamap
+            (fmap sevenA)
+            (fmap sevenB)
+            (fmap sevenC)
+            (fmap sevenD)
+            (fmap sevenE)
+            (fmap sevenF)
+            (fmap sevenG)
+          . runSeptuple
+    }
 
-unpackSeptupleM ::
-  (Heptafunctor f', Functor m) =>
-  Septuple f' (m (Seven a b c d e f g)) ->
-  f' (m a) (m b) (m c) (m d) (m e) (m f) (m g)
-unpackSeptupleM =
-  heptamap
-    (fmap sevenA)
-    (fmap sevenB)
-    (fmap sevenC)
-    (fmap sevenD)
-    (fmap sevenE)
-    (fmap sevenF)
-    (fmap sevenG)
-    . runSeptuple
-
-goSeptuple cell = case cell of
-  SevenA run -> fmap SevenA . run . unpackSeptupleM
-  SevenB run -> fmap SevenB . run . unpackSeptupleM
-  SevenC run -> fmap SevenC . run . unpackSeptupleM
-  SevenD run -> fmap SevenD . run . unpackSeptupleM
-  SevenE run -> fmap SevenE . run . unpackSeptupleM
-  SevenF run -> fmap SevenF . run . unpackSeptupleM
-  SevenG run -> fmap SevenG . run . unpackSeptupleM
-
-newtype Loeb7 f' s a b c d e f g
+newtype Loeb7 t a b c d e f g
   = Loeb7
       ( forall s.
-        f'
-          (Void, f' (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) (ST s f) (ST s g) -> ST s a)
-          (Void, f' (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) (ST s f) (ST s g) -> ST s b)
-          (Void, f' (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) (ST s f) (ST s g) -> ST s c)
-          (Void, f' (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) (ST s f) (ST s g) -> ST s d)
-          (Void, f' (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) (ST s f) (ST s g) -> ST s e)
-          (Void, f' (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) (ST s f) (ST s g) -> ST s f)
-          (Void, f' (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) (ST s f) (ST s g) -> ST s g)
+        t
+          (Formula7 t s a b c d e f g a)
+          (Formula7 t s a b c d e f g b)
+          (Formula7 t s a b c d e f g c)
+          (Formula7 t s a b c d e f g d)
+          (Formula7 t s a b c d e f g e)
+          (Formula7 t s a b c d e f g f)
+          (Formula7 t s a b c d e f g g)
       )
 
+finish :: (Heptafunctor t) => Septuple t (Seven a b c d e f g) -> t a b c d e f g
+finish = heptamap sevenA sevenB sevenC sevenD sevenE sevenF sevenG . runSeptuple
+
 loeb7 ::
-  (Heptatraversable f') =>
-  Loeb7 f' s a b c d e f g ->
-  f' a b c d e f g
-loeb7 (Loeb7 spreadsheet) = unpackSeptuple $ loeb $ Loeb $ fmap goSeptuple <$> packSeptupleM spreadsheet
+  (Heptatraversable t) =>
+  Loeb7 t a b c d e f g ->
+  t a b c d e f g
+loeb7 (Loeb7 spreadsheet) = finish $ loeb $ Loeb $ packFormula spreadsheet
 
 loebST7 ::
   (Heptatraversable t) =>
   t
-    (Void, t (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) (ST s f) (ST s g) -> ST s a)
-    (Void, t (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) (ST s f) (ST s g) -> ST s b)
-    (Void, t (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) (ST s f) (ST s g) -> ST s c)
-    (Void, t (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) (ST s f) (ST s g) -> ST s d)
-    (Void, t (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) (ST s f) (ST s g) -> ST s e)
-    (Void, t (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) (ST s f) (ST s g) -> ST s f)
-    (Void, t (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) (ST s f) (ST s g) -> ST s g) ->
+    (Formula7 t s a b c d e f g a)
+    (Formula7 t s a b c d e f g b)
+    (Formula7 t s a b c d e f g c)
+    (Formula7 t s a b c d e f g d)
+    (Formula7 t s a b c d e f g e)
+    (Formula7 t s a b c d e f g f)
+    (Formula7 t s a b c d e f g g) ->
   ST s (t a b c d e f g)
-loebST7 spreadsheet = fmap unpackSeptuple $ loebST $ fmap goSeptuple <$> packSeptupleM spreadsheet
+loebST7 spreadsheet = fmap finish $ loebST $ packFormula spreadsheet

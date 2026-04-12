@@ -7,7 +7,8 @@ import Data.Octafunctor (octamap)
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Error (cyclicalTypeChecking)
-import Graph.Topological (loebST8)
+import Graph.Topological (Formula8 (..), loebST8)
+import qualified Graph.Topological8
 import Stage1.Variable (Qualifiers (Local))
 import qualified Stage2.Index.Type as Type
 import qualified Stage2.Index.Type2 as Type2
@@ -93,6 +94,20 @@ type Functor s scope =
     (ST s (InstanceAnnotation (Scope.Declaration ':+ scope)))
     (ST s (Instance (Scope.Declaration ':+ scope)))
 
+type Formula s scope z =
+  Formula8
+    (Functor.Declarations (Scope.Declaration ':+ scope))
+    s
+    (LocalTypeAnnotation s (Scope.Declaration ':+ scope))
+    (TermDeclaration s (Scope.Declaration ':+ scope))
+    (Shared s (Scope.Declaration ':+ scope))
+    (KindAnnotation (Scope.Declaration ':+ scope))
+    (TypeDeclaration (Scope.Declaration ':+ scope))
+    (TypeDeclarationExtra (Scope.Declaration ':+ scope))
+    (InstanceAnnotation (Scope.Declaration ':+ scope))
+    (Instance (Scope.Declaration ':+ scope))
+    z
+
 fromFunctor ::
   Functor.Declarations
     scope
@@ -161,27 +176,25 @@ checkTermAnnotation ::
   Context s scope ->
   p ->
   Stage2.TermDeclaration (Scope.Declaration ':+ scope) ->
-  ( a,
-    Functor s scope ->
-    ST s (LocalTypeAnnotation s (Scope.Declaration ':+ scope))
-  )
-checkTermAnnotation context _ declaration =
-  ( cyclicalTypeChecking $ Stage2.TermDeclaration.position declaration,
-    \declarations -> do
+  Formula s scope (LocalTypeAnnotation s (Scope.Declaration ':+ scope))
+checkTermAnnotation context _ declaration = Formula8 {cycle, run}
+  where
+    cycle :: a
+    cycle = cyclicalTypeChecking $ Stage2.TermDeclaration.position declaration
+    run declarations = do
       context <- pure $ localBindings declarations context
       TypeAnnotation.checkLocal context declaration
-  )
 
 checkTermDeclaration ::
   Context s scope ->
   Int ->
   Stage2.TermDeclaration (Scope.Declaration ':+ scope) ->
-  ( a,
-    Functor s scope -> ST s (TermDeclaration s (Scope.Declaration ':+ scope))
-  )
-checkTermDeclaration context index declaration =
-  ( cyclicalTypeChecking $ Stage2.TermDeclaration.position declaration,
-    \declarations@Functor.Declarations {terms, shared} -> do
+  Formula s scope (TermDeclaration s (Scope.Declaration ':+ scope))
+checkTermDeclaration context index declaration = Formula8 {cycle, run}
+  where
+    cycle :: a
+    cycle = cyclicalTypeChecking $ Stage2.TermDeclaration.position declaration
+    run declarations@Functor.Declarations {terms, shared} = do
       context <- pure $ localBindings declarations context
       let Functor.Annotated {meta} = terms Vector.! index
       annotation <- meta
@@ -189,97 +202,85 @@ checkTermDeclaration context index declaration =
             Shared {body} <- shared Vector.! index
             pure $ Unify.Scheme $ Unify.mapScheme (Unify.MapScheme Shared.typex) body
       TermDeclaration.checkLocal context share annotation declaration
-  )
 
 checkShared ::
   Context s scope ->
   p ->
   Stage2.Shared (Scope.Declaration ':+ scope) ->
-  ( a,
-    Functor s scope ->
-    ST s (Shared s (Scope.Declaration ':+ scope))
-  )
-checkShared context _ declaration =
-  ( cyclicalTypeChecking $ Stage2.Shared.equalPosition declaration,
-    \declarations -> do
+  Formula s scope (Shared s (Scope.Declaration ':+ scope))
+checkShared context _ declaration = Formula8 {cycle, run}
+  where
+    cycle :: a
+    cycle = cyclicalTypeChecking $ Stage2.Shared.equalPosition declaration
+    run declarations = do
       context <- pure $ localBindings declarations context
       typex <- Unify.fresh Unify.typex
       Shared.check context (Just typex) declaration
-  )
 
 checkTypeAnnotation ::
   Context s scope ->
   p ->
   Stage2.TypeDeclaration (Scope.Declaration ':+ scope) ->
-  ( a,
-    Functor s scope ->
-    ST s (KindAnnotation (Scope.Declaration ':+ scope))
-  )
-checkTypeAnnotation context _ declaration =
-  ( cyclicalTypeChecking $ Stage2.TypeDeclaration.position declaration,
-    \declarations -> do
+  Formula s scope (KindAnnotation (Scope.Declaration ':+ scope))
+checkTypeAnnotation context _ declaration = Formula8 {cycle, run}
+  where
+    cycle :: a
+    cycle = cyclicalTypeChecking $ Stage2.TypeDeclaration.position declaration
+    run declarations = do
       context <- pure $ localBindings declarations context
       KindAnnotation.check context declaration
-  )
 
 checkTypeDeclaration ::
   Context s scope ->
   Int ->
   Stage2.TypeDeclaration (Scope.Declaration ':+ scope) ->
-  ( a,
-    Functor s scope ->
-    ST s (TypeDeclaration (Scope.Declaration ':+ scope))
-  )
-checkTypeDeclaration context index declaration =
-  ( cyclicalTypeChecking $ Stage2.TypeDeclaration.position declaration,
-    \declarations@Functor.Declarations {types} -> do
+  Formula s scope (TypeDeclaration (Scope.Declaration ':+ scope))
+checkTypeDeclaration context index declaration = Formula8 {cycle, run}
+  where
+    cycle :: a
+    cycle = cyclicalTypeChecking $ Stage2.TypeDeclaration.position declaration
+    run declarations@Functor.Declarations {types} = do
       context <- pure $ localBindings declarations context
       let Functor.Annotated {meta} = types Vector.! index
       annotation <- meta
       TypeDeclaration.check context annotation declaration
-  )
 
 checkTypeDeclarationExtra ::
   Context s scope ->
   Int ->
   Stage2.TypeDeclaration (Scope.Declaration ':+ scope) ->
-  ( a,
-    Functor s scope ->
-    ST s (TypeDeclarationExtra (Scope.Declaration ':+ scope))
-  )
-checkTypeDeclarationExtra context index declaration =
-  ( cyclicalTypeChecking $ Stage2.TypeDeclaration.position declaration,
-    \declarations@Functor.Declarations {types} -> do
+  Formula s scope (TypeDeclarationExtra (Scope.Declaration ':+ scope))
+checkTypeDeclarationExtra context index declaration = Formula8 {cycle, run}
+  where
+    cycle :: a
+    cycle = cyclicalTypeChecking $ Stage2.TypeDeclaration.position declaration
+    run declarations@Functor.Declarations {types} = do
       context <- pure $ localBindings declarations context
       let Functor.Annotated {content} = types Vector.! index
       proper <- content
       TypeDeclarationExtra.check context (Type.Declaration index) proper declaration
-  )
 
 checkInstanceAnnotation ::
   Context s scope ->
   p ->
   Stage2.Instance.Instance (Scope.Declaration ':+ scope) ->
-  ( a,
-    Functor s scope ->
-    ST s (InstanceAnnotation (Scope.Declaration ':+ scope))
-  )
-checkInstanceAnnotation context _ declaration =
-  ( cyclicalTypeChecking $ Stage2.Instance.startPosition declaration,
-    \declarations -> InstanceAnnotation.check (localBindings declarations context) declaration
-  )
+  Formula s scope (InstanceAnnotation (Scope.Declaration ':+ scope))
+checkInstanceAnnotation context _ declaration = Formula8 {cycle, run}
+  where
+    cycle :: a
+    cycle = cyclicalTypeChecking $ Stage2.Instance.startPosition declaration
+    run declarations = InstanceAnnotation.check (localBindings declarations context) declaration
 
 checkInstanceDeclaration ::
   Context s scope ->
   Instance.Key.Key (Scope.Declaration ':+ scope) ->
   Stage2.Instance (Scope.Declaration ':+ scope) ->
-  ( a,
-    Functor s scope ->
-    ST s (Instance (Scope.Declaration ':+ scope))
-  )
-checkInstanceDeclaration context key declaration =
-  ( cyclicalTypeChecking $ Stage2.Instance.startPosition declaration,
-    \declarations -> do
+  Formula s scope (Instance (Scope.Declaration ':+ scope))
+checkInstanceDeclaration context key declaration = Formula8 {cycle, run}
+  where
+    cycle :: a
+    cycle = cyclicalTypeChecking $ Stage2.Instance.startPosition declaration
+    run declarations = do
       let Functor.Declarations {dataInstances, classInstances} = declarations
       case key of
         Instance.Key.Data {index, classKey} -> do
@@ -292,7 +293,6 @@ checkInstanceDeclaration context key declaration =
               key = Instance.Class {index2 = Type.Declaration index, head2 = dataKey}
           annotation <- meta
           Instance.check (localBindings declarations context) key annotation declaration
-  )
 
 solve :: Declarations s scope -> ST s (Solved.Declarations scope)
 solve

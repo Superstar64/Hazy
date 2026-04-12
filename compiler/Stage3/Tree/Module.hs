@@ -5,7 +5,8 @@ import qualified Data.Map as Map
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Error (cyclicalTypeChecking)
-import Graph.Topological (Loeb8 (..), loeb8)
+import Graph.Topological (Formula8 (..), Loeb8 (..), loeb8)
+import qualified Graph.Topological8
 import Stage1.Variable (FullQualifiers)
 import qualified Stage2.Index.Type as Type
 import Stage2.Scope (Global)
@@ -65,6 +66,20 @@ type Functor s =
     (ST s (TypeDeclarationExtra Global))
     (ST s (InstanceAnnotation Global))
     (ST s (Instance Global))
+
+type Formula s z =
+  Formula8
+    Functor.ModuleSet
+    s
+    (GlobalTypeAnnotation Global)
+    (TermDeclaration Global)
+    (Shared Global)
+    (KindAnnotation Global)
+    (TypeDeclaration Global)
+    (TypeDeclarationExtra Global)
+    (InstanceAnnotation Global)
+    (Instance Global)
+    z
 
 fromFunctor ::
   Functor.Module
@@ -142,21 +157,23 @@ checkTermAnnotation ::
   p1 ->
   p2 ->
   Stage2.TermDeclaration Global ->
-  (a, Functor s -> ST s (GlobalTypeAnnotation Global))
-checkTermAnnotation _ _ declaration =
-  ( cyclicalTypeChecking $ Stage2.TermDeclaration.position declaration,
-    \modules ->
-      TypeAnnotation.checkGlobal (globalBindings modules) declaration
-  )
+  Formula s (GlobalTypeAnnotation Global)
+checkTermAnnotation _ _ declaration = Formula8 {cycle, run}
+  where
+    cycle :: a
+    cycle = cyclicalTypeChecking $ Stage2.TermDeclaration.position declaration
+    run modules = TypeAnnotation.checkGlobal (globalBindings modules) declaration
 
 checkTermDeclaration ::
   Int ->
   Int ->
   Stage2.TermDeclaration Global ->
-  (a, Functor s -> ST s (TermDeclaration Global))
-checkTermDeclaration global local declaration =
-  ( cyclicalTypeChecking $ Stage2.TermDeclaration.position declaration,
-    \moduleSet@(Functor.ModuleSet modules) -> do
+  Formula s (TermDeclaration Global)
+checkTermDeclaration global local declaration = Formula8 {cycle, run}
+  where
+    cycle :: a
+    cycle = cyclicalTypeChecking $ Stage2.TermDeclaration.position declaration
+    run moduleSet@(Functor.ModuleSet modules) = do
       let Functor.Module {declarations} = modules Vector.! global
           Functor.Declarations {terms, shared} = declarations
           Functor.Annotated {meta} = terms Vector.! local
@@ -168,40 +185,41 @@ checkTermDeclaration global local declaration =
             pure $ Scheme.lift $ Scheme $ SchemeOver.map (SchemeOver.Map Shared.typex) body
       unsolved <- TermDeclaration.Unsolved.checkGlobal context share annotation declaration
       TermDeclaration.Unsolved.solve unsolved
-  )
 
 checkShared ::
   p1 ->
   p2 ->
   Stage2.Shared.Shared Global ->
-  ( a,
-    Functor s -> ST s (Shared Global)
-  )
-checkShared _ _ declaration =
-  ( cyclicalTypeChecking $ Stage2.Shared.equalPosition declaration,
-    \modules -> do
+  Formula s (Shared Global)
+checkShared _ _ declaration = Formula8 {cycle, run}
+  where
+    cycle :: a
+    cycle = cyclicalTypeChecking $ Stage2.Shared.equalPosition declaration
+    run modules = do
       shared <- Temporary.Shared.check (globalBindings modules) Nothing declaration
       Temporary.Shared.solve shared
-  )
 
 checkTypeAnnotation ::
   p1 ->
   p2 ->
   Stage2.TypeDeclaration.TypeDeclaration Global ->
-  (a, Functor s -> ST s (KindAnnotation Global))
-checkTypeAnnotation _ _ declaration =
-  ( cyclicalTypeChecking $ Stage2.TypeDeclaration.position declaration,
-    \modules -> KindAnnotation.check (globalBindings modules) declaration
-  )
+  Formula s (KindAnnotation Global)
+checkTypeAnnotation _ _ declaration = Formula8 {cycle, run}
+  where
+    cycle :: a
+    cycle = cyclicalTypeChecking $ Stage2.TypeDeclaration.position declaration
+    run modules = KindAnnotation.check (globalBindings modules) declaration
 
 checkTypeDeclaration ::
   Int ->
   Int ->
   Stage2.TypeDeclaration.TypeDeclaration Global ->
-  (a, Functor s -> ST s (TypeDeclaration Global))
-checkTypeDeclaration global local declaration =
-  ( cyclicalTypeChecking $ Stage2.TypeDeclaration.position declaration,
-    \moduleSet@(Functor.ModuleSet modules) -> do
+  Formula s (TypeDeclaration Global)
+checkTypeDeclaration global local declaration = Formula8 {cycle, run}
+  where
+    cycle :: a
+    cycle = cyclicalTypeChecking $ Stage2.TypeDeclaration.position declaration
+    run moduleSet@(Functor.ModuleSet modules) = do
       let Functor.Module {declarations} = modules Vector.! global
           Functor.Declarations {types} = declarations
           Functor.Annotated {meta} = types Vector.! local
@@ -209,42 +227,45 @@ checkTypeDeclaration global local declaration =
       let context = globalBindings moduleSet
       -- todo, augment context with self to allow basic recursive inference
       TypeDeclaration.check context annotation declaration
-  )
 
 checkTypeDeclarationExtra ::
   Int ->
   Int ->
   Stage2.TypeDeclaration.TypeDeclaration Global ->
-  (a, Functor s -> ST s (TypeDeclarationExtra Global))
-checkTypeDeclarationExtra global local declaration =
-  ( cyclicalTypeChecking $ Stage2.TypeDeclaration.position declaration,
-    \moduleSet@(Functor.ModuleSet modules) -> do
+  Formula s (TypeDeclarationExtra Global)
+checkTypeDeclarationExtra global local declaration = Formula8 {cycle, run}
+  where
+    cycle :: a
+    cycle = cyclicalTypeChecking $ Stage2.TypeDeclaration.position declaration
+    run moduleSet@(Functor.ModuleSet modules) = do
       let Functor.Module {declarations} = modules Vector.! global
           Functor.Declarations {types} = declarations
           Functor.Annotated {content} = types Vector.! local
       proper <- content
       let context = globalBindings moduleSet
       TypeDeclarationExtra.check context (Type.Global global local) proper declaration
-  )
 
 checkInstanceAnnotation ::
   p1 ->
   p2 ->
   Stage2.Instance.Instance Global ->
-  (a, Functor s -> ST s (InstanceAnnotation Global))
-checkInstanceAnnotation _ _ declaration =
-  ( cyclicalTypeChecking $ Stage2.Instance.startPosition declaration,
-    \modules -> InstanceAnnotation.check (globalBindings modules) declaration
-  )
+  Formula s (InstanceAnnotation Global)
+checkInstanceAnnotation _ _ declaration = Formula8 {cycle, run}
+  where
+    cycle :: a
+    cycle = cyclicalTypeChecking $ Stage2.Instance.startPosition declaration
+    run modules = InstanceAnnotation.check (globalBindings modules) declaration
 
 checkInstanceDeclaration ::
   Int ->
   Instance.Key.Key Global ->
   Stage2.Instance.Instance Global ->
-  (a, Functor s -> ST s (Instance Global))
-checkInstanceDeclaration global key declaration =
-  ( cyclicalTypeChecking $ Stage2.Instance.startPosition declaration,
-    \moduleSet@(Functor.ModuleSet modules) -> do
+  Formula s (Instance Global)
+checkInstanceDeclaration global key declaration = Formula8 {cycle, run}
+  where
+    cycle :: a
+    cycle = cyclicalTypeChecking $ Stage2.Instance.startPosition declaration
+    run moduleSet@(Functor.ModuleSet modules) = do
       let Functor.Module {declarations} = modules Vector.! global
           Functor.Declarations {dataInstances, classInstances} = declarations
       case key of
@@ -258,4 +279,3 @@ checkInstanceDeclaration global key declaration =
               key = Instance.Class {index2 = Type.Global global index, head2 = dataKey}
           annotation <- meta
           Instance.check (globalBindings moduleSet) key annotation declaration
-  )

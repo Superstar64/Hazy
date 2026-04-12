@@ -1,5 +1,6 @@
 module Graph.Topological3
   ( Loeb3 (..),
+    Formula3 (..),
     loeb3,
     loebST3,
   )
@@ -9,8 +10,7 @@ import Control.Monad.ST (ST)
 import Data.Trifoldable (Trifoldable (..))
 import Data.Trifunctor (Trifunctor (..))
 import Data.Tritraversable (Tritraversable (..))
-import Data.Void (Void)
-import Graph.Topological1 (Loeb (..), loeb, loebST)
+import Graph.Topological1 (Formula (..), Loeb (..), loeb, loebST)
 import Prelude hiding (Double, map)
 
 newtype Triple f a = Triple {runTriple :: f a a a}
@@ -38,40 +38,47 @@ threeB _ = undefined
 threeC (ThreeC c) = c
 threeC _ = undefined
 
-packTripleM :: (Trifunctor f, Functor m) => f (m a) (m b) (m c) -> Triple f (m (Three a b c))
-packTripleM = Triple . trimap (fmap ThreeA) (fmap ThreeB) (fmap ThreeC)
+data Formula3 t s a b c z = Formula3
+  { cycle :: forall a. a,
+    run :: t (ST s a) (ST s b) (ST s c) -> ST s z
+  }
 
-unpackTriple :: (Trifunctor t) => Triple t (Three a b c) -> t a b c
-unpackTriple = trimap threeA threeB threeC . runTriple
+packFormula ::
+  (Trifunctor t) =>
+  t (Formula3 t s a b c a) (Formula3 t s a b c b) (Formula3 t s a b c c) ->
+  Triple t (Formula (Triple t) s (Three a b c))
+packFormula = Triple . trimap (pack ThreeA) (pack ThreeB) (pack ThreeC)
 
-unpackTripleM :: (Trifunctor f, Functor m) => Triple f (m (Three a b c)) -> f (m a) (m b) (m c)
-unpackTripleM = trimap (fmap threeA) (fmap threeB) (fmap threeC) . runTriple
+pack :: (Trifunctor t) => (z -> Three a b c) -> Formula3 t s a b c z -> Formula (Triple t) s (Three a b c)
+pack wrap Formula3 {cycle, run} =
+  Formula
+    { cycle,
+      run = fmap wrap . run . trimap (fmap threeA) (fmap threeB) (fmap threeC) . runTriple
+    }
 
-goTriple cell = case cell of
-  ThreeA run -> fmap ThreeA . run . unpackTripleM
-  ThreeB run -> fmap ThreeB . run . unpackTripleM
-  ThreeC run -> fmap ThreeC . run . unpackTripleM
-
-newtype Loeb3 f s a b c
+newtype Loeb3 t a b c
   = Loeb3
       ( forall s.
-        f
-          (Void, f (ST s a) (ST s b) (ST s c) -> ST s a)
-          (Void, f (ST s a) (ST s b) (ST s c) -> ST s b)
-          (Void, f (ST s a) (ST s b) (ST s c) -> ST s c)
+        t
+          (Formula3 t s a b c a)
+          (Formula3 t s a b c b)
+          (Formula3 t s a b c c)
       )
 
+finish :: (Trifunctor t) => Triple t (Three a b c) -> t a b c
+finish = trimap threeA threeB threeC . runTriple
+
 loeb3 ::
-  (Tritraversable f) =>
-  Loeb3 f s a b c ->
-  f a b c
-loeb3 (Loeb3 spreadsheet) = unpackTriple $ loeb $ Loeb $ fmap goTriple <$> packTripleM spreadsheet
+  (Tritraversable t) =>
+  Loeb3 t a b c ->
+  t a b c
+loeb3 (Loeb3 spreadsheet) = finish $ loeb $ Loeb $ packFormula spreadsheet
 
 loebST3 ::
   (Tritraversable t) =>
   t
-    (Void, t (ST s a) (ST s b) (ST s c) -> ST s a)
-    (Void, t (ST s a) (ST s b) (ST s c) -> ST s b)
-    (Void, t (ST s a) (ST s b) (ST s c) -> ST s c) ->
+    (Formula3 t s a b c a)
+    (Formula3 t s a b c b)
+    (Formula3 t s a b c c) ->
   ST s (t a b c)
-loebST3 spreadsheet = fmap unpackTriple $ loebST $ fmap goTriple <$> packTripleM spreadsheet
+loebST3 spreadsheet = fmap finish $ loebST $ packFormula spreadsheet

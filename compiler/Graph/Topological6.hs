@@ -1,5 +1,6 @@
 module Graph.Topological6
   ( Loeb6 (..),
+    Formula6 (..),
     loeb6,
     loebST6,
   )
@@ -9,8 +10,7 @@ import Control.Monad.ST (ST)
 import Data.Hexafoldable (Hexafoldable (..))
 import Data.Hexafunctor (Hexafunctor (..))
 import Data.Hexatraversable (Hexatraversable (..))
-import Data.Void (Void)
-import Graph.Topological1 (Loeb (..), loeb, loebST)
+import Graph.Topological1 (Formula (..), Loeb (..), loeb, loebST)
 import Prelude hiding (Double, map)
 
 newtype Sixtuple f a = Sixtuple {runSixtuple :: f a a a a a a}
@@ -50,82 +50,84 @@ sixE _ = undefined
 sixF (SixF a) = a
 sixF _ = undefined
 
-packSixtupleM ::
-  (Hexafunctor f', Functor m) =>
-  f' (m a) (m b) (m c) (m d) (m e) (m f) ->
-  Sixtuple f' (m (Six a b c d e f))
-packSixtupleM =
+data Formula6 t s a b c d e f z = Formula6
+  { cycle :: forall a. a,
+    run :: t (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) (ST s f) -> ST s z
+  }
+
+packFormula ::
+  (Hexafunctor t) =>
+  t
+    (Formula6 t s a b c d e f a)
+    (Formula6 t s a b c d e f b)
+    (Formula6 t s a b c d e f c)
+    (Formula6 t s a b c d e f d)
+    (Formula6 t s a b c d e f e)
+    (Formula6 t s a b c d e f f) ->
+  Sixtuple t (Formula (Sixtuple t) s (Six a b c d e f))
+packFormula =
   Sixtuple
     . hexamap
-      (fmap SixA)
-      (fmap SixB)
-      (fmap SixC)
-      (fmap SixD)
-      (fmap SixE)
-      (fmap SixF)
+      (pack SixA)
+      (pack SixB)
+      (pack SixC)
+      (pack SixD)
+      (pack SixE)
+      (pack SixF)
 
-unpackSixtuple ::
+pack ::
+  (Hexafunctor t) =>
+  (z -> Six a b c d e f) ->
+  Formula6 t s a b c d e f z ->
+  Formula (Sixtuple t) s (Six a b c d e f)
+pack wrap Formula6 {cycle, run} =
+  Formula
+    { cycle,
+      run =
+        fmap wrap
+          . run
+          . hexamap
+            (fmap sixA)
+            (fmap sixB)
+            (fmap sixC)
+            (fmap sixD)
+            (fmap sixE)
+            (fmap sixF)
+          . runSixtuple
+    }
+
+newtype Loeb6 t a b c d e f
+  = Loeb6
+      ( forall s.
+        t
+          (Formula6 t s a b c d e f a)
+          (Formula6 t s a b c d e f b)
+          (Formula6 t s a b c d e f c)
+          (Formula6 t s a b c d e f d)
+          (Formula6 t s a b c d e f e)
+          (Formula6 t s a b c d e f f)
+      )
+
+finish ::
   (Hexafunctor t) =>
   Sixtuple t (Six a b c d e f) ->
   t a b c d e f
-unpackSixtuple =
-  hexamap
-    sixA
-    sixB
-    sixC
-    sixD
-    sixE
-    sixF
-    . runSixtuple
-
-unpackSixtupleM ::
-  (Hexafunctor f', Functor m) =>
-  Sixtuple f' (m (Six a b c d e f)) ->
-  f' (m a) (m b) (m c) (m d) (m e) (m f)
-unpackSixtupleM =
-  hexamap
-    (fmap sixA)
-    (fmap sixB)
-    (fmap sixC)
-    (fmap sixD)
-    (fmap sixE)
-    (fmap sixF)
-    . runSixtuple
-
-goSixtuple cell = case cell of
-  SixA run -> fmap SixA . run . unpackSixtupleM
-  SixB run -> fmap SixB . run . unpackSixtupleM
-  SixC run -> fmap SixC . run . unpackSixtupleM
-  SixD run -> fmap SixD . run . unpackSixtupleM
-  SixE run -> fmap SixE . run . unpackSixtupleM
-  SixF run -> fmap SixF . run . unpackSixtupleM
-
-newtype Loeb6 f' s a b c d e f
-  = Loeb6
-      ( forall s.
-        f'
-          (Void, f' (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) (ST s f) -> ST s a)
-          (Void, f' (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) (ST s f) -> ST s b)
-          (Void, f' (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) (ST s f) -> ST s c)
-          (Void, f' (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) (ST s f) -> ST s d)
-          (Void, f' (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) (ST s f) -> ST s e)
-          (Void, f' (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) (ST s f) -> ST s f)
-      )
+finish = hexamap sixA sixB sixC sixD sixE sixF . runSixtuple
 
 loeb6 ::
-  (Hexatraversable f') =>
-  Loeb6 f' s a b c d e f ->
-  f' a b c d e f
-loeb6 (Loeb6 spreadsheet) = unpackSixtuple $ loeb $ Loeb $ fmap goSixtuple <$> packSixtupleM spreadsheet
+  (Hexatraversable t) =>
+  Loeb6 t a b c d e f ->
+  t a b c d e f
+loeb6 (Loeb6 spreadsheet) = finish $ loeb $ Loeb $ packFormula spreadsheet
 
 loebST6 ::
   (Hexatraversable t) =>
   t
-    (Void, t (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) (ST s f) -> ST s a)
-    (Void, t (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) (ST s f) -> ST s b)
-    (Void, t (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) (ST s f) -> ST s c)
-    (Void, t (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) (ST s f) -> ST s d)
-    (Void, t (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) (ST s f) -> ST s e)
-    (Void, t (ST s a) (ST s b) (ST s c) (ST s d) (ST s e) (ST s f) -> ST s f) ->
+    (Formula6 t s a b c d e f a)
+    (Formula6 t s a b c d e f b)
+    (Formula6 t s a b c d e f c)
+    (Formula6 t s a b c d e f d)
+    (Formula6 t s a b c d e f e)
+    (Formula6 t s a b c d e f f) ->
   ST s (t a b c d e f)
-loebST6 spreadsheet = fmap unpackSixtuple $ loebST $ fmap goSixtuple <$> packSixtupleM spreadsheet
+loebST6 spreadsheet = fmap finish $ loebST $ packFormula spreadsheet

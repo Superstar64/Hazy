@@ -1,5 +1,6 @@
 module Graph.Topological4
   ( Loeb4 (..),
+    Formula4 (..),
     loeb4,
     loebST4,
   )
@@ -9,8 +10,7 @@ import Control.Monad.ST (ST)
 import Data.Quadrifoldable (Quadrifoldable (..))
 import Data.Quadrifunctor (Quadrifunctor (..))
 import Data.Quadritraversable (Quadritraversable (..))
-import Data.Void (Void)
-import Graph.Topological1 (Loeb (..), loeb, loebST)
+import Graph.Topological1 (Formula (..), Loeb (..), loeb, loebST)
 import Prelude hiding (Double, map)
 
 newtype Quadruple f a = Quadruple {runQuadruple :: f a a a a}
@@ -42,70 +42,52 @@ fourC _ = undefined
 fourD (FourD d) = d
 fourD _ = undefined
 
-packQuadrupleM ::
-  (Quadrifunctor f, Functor m) =>
-  f (m a) (m b) (m c) (m d) ->
-  Quadruple f (m (Four a b c d))
-packQuadrupleM =
-  Quadruple
-    . quadrimap
-      (fmap FourA)
-      (fmap FourB)
-      (fmap FourC)
-      (fmap FourD)
+data Formula4 t s a b c d z = Formula4
+  { cycle :: forall a. a,
+    run :: t (ST s a) (ST s b) (ST s c) (ST s d) -> ST s z
+  }
 
-unpackQuadruple ::
+packFormula ::
+  (Quadrifunctor t) =>
+  t (Formula4 t s a b c d a) (Formula4 t s a b c d b) (Formula4 t s a b c d c) (Formula4 t s a b c d d) ->
+  Quadruple t (Formula (Quadruple t) s (Four a b c d))
+packFormula = Quadruple . quadrimap (pack FourA) (pack FourB) (pack FourC) (pack FourD)
+
+pack :: (Quadrifunctor t) => (z -> Four a b c d) -> Formula4 t s a b c d z -> Formula (Quadruple t) s (Four a b c d)
+pack wrap Formula4 {cycle, run} =
+  Formula
+    { cycle,
+      run = fmap wrap . run . quadrimap (fmap fourA) (fmap fourB) (fmap fourC) (fmap fourD) . runQuadruple
+    }
+
+newtype Loeb4 t a b c d
+  = Loeb4
+      ( forall s.
+        t
+          (Formula4 t s a b c d a)
+          (Formula4 t s a b c d b)
+          (Formula4 t s a b c d c)
+          (Formula4 t s a b c d d)
+      )
+
+finish ::
   (Quadrifunctor t) =>
   Quadruple t (Four a b c d) ->
   t a b c d
-unpackQuadruple =
-  quadrimap
-    fourA
-    fourB
-    fourC
-    fourD
-    . runQuadruple
-
-unpackQuadrupleM ::
-  (Quadrifunctor f, Functor m) =>
-  Quadruple f (m (Four a b c d)) ->
-  f (m a) (m b) (m c) (m d)
-unpackQuadrupleM =
-  quadrimap
-    (fmap fourA)
-    (fmap fourB)
-    (fmap fourC)
-    (fmap fourD)
-    . runQuadruple
-
-goQuadruple cell = case cell of
-  FourA run -> fmap FourA . run . unpackQuadrupleM
-  FourB run -> fmap FourB . run . unpackQuadrupleM
-  FourC run -> fmap FourC . run . unpackQuadrupleM
-  FourD run -> fmap FourD . run . unpackQuadrupleM
-
-newtype Loeb4 f s a b c d
-  = Loeb4
-      ( forall s.
-        f
-          (Void, f (ST s a) (ST s b) (ST s c) (ST s d) -> ST s a)
-          (Void, f (ST s a) (ST s b) (ST s c) (ST s d) -> ST s b)
-          (Void, f (ST s a) (ST s b) (ST s c) (ST s d) -> ST s c)
-          (Void, f (ST s a) (ST s b) (ST s c) (ST s d) -> ST s d)
-      )
+finish = quadrimap fourA fourB fourC fourD . runQuadruple
 
 loeb4 ::
-  (Quadritraversable f) =>
-  Loeb4 f s a b c d ->
-  f a b c d
-loeb4 (Loeb4 spreadsheet) = unpackQuadruple $ loeb $ Loeb $ fmap goQuadruple <$> packQuadrupleM spreadsheet
+  (Quadritraversable t) =>
+  Loeb4 t a b c d ->
+  t a b c d
+loeb4 (Loeb4 spreadsheet) = finish $ loeb $ Loeb $ packFormula spreadsheet
 
 loebST4 ::
   (Quadritraversable t) =>
   t
-    (Void, t (ST s a) (ST s b) (ST s c) (ST s d) -> ST s a)
-    (Void, t (ST s a) (ST s b) (ST s c) (ST s d) -> ST s b)
-    (Void, t (ST s a) (ST s b) (ST s c) (ST s d) -> ST s c)
-    (Void, t (ST s a) (ST s b) (ST s c) (ST s d) -> ST s d) ->
+    (Formula4 t s a b c d a)
+    (Formula4 t s a b c d b)
+    (Formula4 t s a b c d c)
+    (Formula4 t s a b c d d) ->
   ST s (t a b c d)
-loebST4 spreadsheet = fmap unpackQuadruple $ loebST $ fmap goQuadruple <$> packQuadrupleM spreadsheet
+loebST4 spreadsheet = fmap finish $ loebST $ packFormula spreadsheet
