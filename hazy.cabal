@@ -185,6 +185,7 @@ executable hazy
     Stage2.Index.Term0
     Stage2.Index.Term2
     Stage2.Index.Type
+    Stage2.Index.Type0
     Stage2.Index.Type2
     Stage2.Index.Type3
     Stage2.Label.Binding.Local

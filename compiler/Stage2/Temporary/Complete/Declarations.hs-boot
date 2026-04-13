@@ -7,7 +7,7 @@ import Stage1.Extensions (Extensions)
 import Stage1.Position (Position)
 import qualified Stage1.Tree.Declaration as Stage1
 import qualified Stage2.Index.Term0 as Term0
-import qualified Stage2.Index.Type as Type
+import qualified Stage2.Index.Type0 as Type0
 import Stage2.Resolve.Bindings (Bindings)
 import Stage2.Resolve.Context (Context)
 import Stage2.Scope (Environment)
@@ -29,7 +29,7 @@ resolve ::
 bindings ::
   (Monoid stability) =>
   (Int -> Term0.Index scope) ->
-  (Int -> Type.Index scope) ->
+  (Int -> Type0.Index scope) ->
   Declarations scope ->
   Bindings stability scope
 shrink :: Declarations scope -> Real.Declarations scope

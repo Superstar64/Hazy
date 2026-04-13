@@ -15,7 +15,7 @@ import qualified Stage1.Tree.Module as Stage1 (Module (..), declarations, name)
 import Stage1.Variable (FullQualifiers)
 import qualified Stage1.Variable as Variable
 import qualified Stage2.Index.Term0 as Term0 (Index (..))
-import qualified Stage2.Index.Type as Type
+import qualified Stage2.Index.Type0 as Type0
 import Stage2.Resolve.Bindings (Bindings)
 import qualified Stage2.Resolve.Bindings as Bindings
 import Stage2.Resolve.Canonical (Canonical)
@@ -42,7 +42,7 @@ resolve modules = mfix $ \main ->
   let bindings :: Vector (Bindings () Global)
       bindings = Vector.imap bound main
         where
-          bound index = Declarations.bindings (Term0.Global index) (Type.Global index) . declarations
+          bound index = Declarations.bindings (Term0.Global index) (Type0.Global index) . declarations
 
       canonical :: Canonical Global
       canonical = Import.pickModules (fmap context indexes)

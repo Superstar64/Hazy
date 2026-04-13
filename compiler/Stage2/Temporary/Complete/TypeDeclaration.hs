@@ -14,7 +14,7 @@ import Stage1.Position (Position)
 import qualified Stage1.Tree.Brand as Brand
 import Stage1.Variable (ConstructorIdentifier)
 import qualified Stage1.Variable as Variable
-import qualified Stage2.Index.Type as Type (Index (..))
+import qualified Stage2.Index.Type0 as Type0
 import qualified Stage2.Index.Type2 as Type2
 import qualified Stage2.Index.Type3 as Type3
 import qualified Stage2.Resolve.Binding.Type as Type (Binding (..))
@@ -240,7 +240,7 @@ indexes :: Strict.Vector (TypeDeclaration scope) -> Map ConstructorIdentifier In
 indexes types = Map.fromList $ zip [name typex | typex <- toList types] [0 ..]
 
 bindings ::
-  (Int -> Type.Index scope) ->
+  (Int -> Type0.Index scope) ->
   Strict.Vector (TypeDeclaration scope) ->
   Map ConstructorIdentifier (Type.Binding scope)
 bindings index types = Map.map typeIndex (indexes types)
@@ -248,7 +248,7 @@ bindings index types = Map.map typeIndex (indexes types)
     typeIndex vectorIndex =
       Type.Binding
         { position,
-          index = Type3.Index $ Type2.Index $ index vectorIndex,
+          index = Type3.Index $ Type2.Index $ Type0.normal $ index vectorIndex,
           constructors =
             case constructors of
               ADT constructors ->

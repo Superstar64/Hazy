@@ -17,7 +17,7 @@ import qualified Stage1.Tree.Declaration as Stage1 (Declaration (..))
 import Stage1.Tree.InstanceHead (InstanceHead (..))
 import Stage1.Variable (ConstructorIdentifier, QualifiedConstructorIdentifier (..), Qualifiers (..))
 import qualified Stage2.Index.Term0 as Term0 (Index (..))
-import qualified Stage2.Index.Type as Type (Index (..))
+import qualified Stage2.Index.Type0 as Type0
 import qualified Stage2.Index.Type2 as Type2
 import Stage2.Resolve.Bindings (Bindings (Bindings))
 import qualified Stage2.Resolve.Bindings as Bindings
@@ -129,7 +129,7 @@ orphan local = \case
 bindings ::
   (Monoid stability) =>
   (Int -> Term0.Index scope) ->
-  (Int -> Type.Index scope) ->
+  (Int -> Type0.Index scope) ->
   Declarations scope ->
   Bindings stability scope
 bindings

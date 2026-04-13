@@ -12,7 +12,7 @@ import Stage1.Position (Position)
 import qualified Stage1.Tree.Declaration as Stage1 (toImport)
 import qualified Stage1.Tree.Declarations as Stage1 (Declarations (..))
 import qualified Stage2.Index.Term0 as Term0 (Index (..))
-import qualified Stage2.Index.Type as Type (Index (..))
+import qualified Stage2.Index.Type0 as Type0
 import qualified Stage2.Index.Type2 as Type2
 import qualified Stage2.Resolve.Bindings as Bindings
 import Stage2.Resolve.Context (Context (..))
@@ -73,7 +73,7 @@ resolve initial@Context {canonical, extensions} Stage1.Declarations {declaration
         imports <- pickImports (StableImports stableImports) (mapMaybe Stage1.toImport (toList declarations)) canonical,
         context <- imports Context.</> context,
         context@Context {locals} <- shift context,
-        bindings <- Complete.bindings Term0.Declaration Type.Declaration complete,
+        bindings <- Complete.bindings Term0.Declaration Type0.Declaration complete,
         context <- context {locals = bindings Bindings.</> locals} =
           context
     complete = runIdentity $ Complete.resolve context extensions (toList declarations)

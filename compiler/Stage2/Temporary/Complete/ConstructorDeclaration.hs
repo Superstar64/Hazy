@@ -22,7 +22,7 @@ import Stage1.Tree.Associativity (Associativity (..))
 import Stage1.Tree.Fixity (Fixity (..))
 import Stage1.Variable (Constructor, Variable)
 import qualified Stage2.Index.Constructor as Constructor (Index (..))
-import qualified Stage2.Index.Type as Type
+import qualified Stage2.Index.Type0 as Type0
 import qualified Stage2.Index.Type2 as Type2
 import qualified Stage2.Resolve.Binding.Constructor as Constructor (Binding (..))
 import qualified Stage2.Temporary.Partial.ConstructorDeclaration as Source
@@ -100,7 +100,7 @@ merge ~Extensions {unorderedRecords, constructorFields} entries@(entry :| _) =
           _ -> Nothing
 
 bindings ::
-  (Int -> Type.Index scope) ->
+  (Int -> Type0.Index scope) ->
   Strict.Vector ConstructorDeclaration ->
   Map Constructor (Constructor.Binding scope)
 bindings index constructors = Map.map constructorIndex (indexes constructors)
@@ -108,7 +108,11 @@ bindings index constructors = Map.map constructorIndex (indexes constructors)
     constructorIndex vectorIndex =
       Constructor.Binding
         { position,
-          index = Constructor.Index (Type2.Index $ index typeIndex) constructorIndex,
+          index =
+            Constructor.Index
+              { typeIndex = Type2.Index $ Type0.normal $ index typeIndex,
+                constructorIndex
+              },
           fixity,
           fields,
           selections,

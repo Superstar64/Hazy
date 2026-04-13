@@ -23,7 +23,7 @@ import qualified Stage2.Index.Method as Method
 import qualified Stage2.Index.Selector as Selector (Index (..))
 import qualified Stage2.Index.Term0 as Term0
 import qualified Stage2.Index.Term2 as Term2
-import qualified Stage2.Index.Type as Type
+import qualified Stage2.Index.Type0 as Type0
 import qualified Stage2.Index.Type2 as Type2
 import qualified Stage2.Resolve.Binding.Term as Term
 import qualified Stage2.Resolve.Detail.Binding.Term as Selector (Selector (..))
@@ -165,7 +165,7 @@ indexes terms = Map.fromList $ zip (name <$> toList terms) [0 ..]
 
 bindings ::
   (Int -> Term0.Index scope) ->
-  (Int -> Type.Index scope) ->
+  (Int -> Type0.Index scope) ->
   Strict.Vector (TermDeclaration scope) ->
   Map Variable (Term.Binding scope)
 bindings index index' terms = Map.fromList $ makeIndexes 0 (toList terms)
@@ -186,7 +186,11 @@ bindings index index' terms = Map.fromList $ makeIndexes 0 (toList terms)
         Select More.Selector {typeIndex, selectorIndex} ->
           (name, value) : makeIndexes n declarations
           where
-            select = Selector.Index (Type2.Index $ index' typeIndex) selectorIndex
+            select =
+              Selector.Index
+                { typeIndex = Type2.Index $ Type0.normal $ index' typeIndex,
+                  selectorIndex
+                }
             value =
               Term.Binding
                 { position,
@@ -197,7 +201,11 @@ bindings index index' terms = Map.fromList $ makeIndexes 0 (toList terms)
         Method More.Method {typeIndex, methodIndex} ->
           (name, value) : makeIndexes n declarations
           where
-            method = Method.Index (Type2.Index $ index' typeIndex) methodIndex
+            method =
+              Method.Index
+                { typeIndex = Type2.Index $ Type0.normal $ index' typeIndex,
+                  methodIndex
+                }
             value =
               Term.Binding
                 { position,
