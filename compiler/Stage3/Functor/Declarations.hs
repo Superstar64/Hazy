@@ -22,6 +22,7 @@ import qualified Stage2.Tree.TermDeclaration as Stage2 (TermDeclaration)
 import qualified Stage2.Tree.TermDeclaration as Stage2.TermDeclaration
 import qualified Stage2.Tree.TypeDeclaration as Stage2 (TypeDeclaration)
 import qualified Stage2.Tree.TypeDeclaration as Stage2.TypeDeclaration
+import qualified Stage2.Tree.TypeDeclarationExtra as Stage2 (TypeDeclarationExtra)
 import Stage3.Functor.Annotated (Annotated (..), NoLabel (..))
 import Stage3.Functor.Instance.Key (Key (..))
 
@@ -118,7 +119,7 @@ fromStage2 ::
     (Stage2.Shared scope)
     (Stage2.TypeDeclaration scope)
     (Stage2.TypeDeclaration scope)
-    (Stage2.TypeDeclaration scope)
+    (Stage2.TypeDeclarationExtra scope)
     (Stage2.Instance scope)
     (Stage2.Instance scope)
 fromStage2
@@ -126,6 +127,7 @@ fromStage2
   Stage2.Declarations
     { terms,
       types,
+      typeExtras,
       shared,
       dataInstances,
       classInstances
@@ -152,7 +154,7 @@ fromStage2
           { terms = termDeclaration <$> terms,
             types = typeDeclaration <$> types,
             shared,
-            typeExtras = types,
+            typeExtras,
             dataInstances = fmap instancex <$> dataInstances,
             classInstances = fmap instancex <$> classInstances
           }

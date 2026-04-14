@@ -9,8 +9,7 @@ import qualified Stage2.Index.Type as Type
 import qualified Stage2.Index.Type2 as Type2
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (shift)
-import qualified Stage2.Tree.Method as Stage2 (Method (..))
-import qualified Stage2.Tree.TypeDeclaration as Stage2 (TypeDeclaration (..))
+import qualified Stage2.Tree.TypeDeclarationExtra as Stage2
 import Stage3.Check.Context (Context)
 import qualified Stage3.Check.Mask as Mask
 import Stage3.Simple.SchemeOver (augment, augment')
@@ -38,7 +37,7 @@ check ::
   Context s scope ->
   Type.Index scope ->
   TypeDeclaration scope ->
-  Stage2.TypeDeclaration scope ->
+  Stage2.TypeDeclarationExtra scope ->
   ST s (TypeDeclarationExtra scope)
 check context classx proper = \case
   Stage2.ADT {} -> pure ADT
@@ -61,7 +60,7 @@ check context classx proper = \case
           context
       let go
             Method {annotation' = Simple.Scheme scheme@Simple.SchemeOver {result}}
-            Stage2.Method {position, definition} = do
+            definition = do
               for definition $ \definition -> do
                 context <- augment' position scheme Mask.Runtime context
                 definition <- Definition.check context (Simple.Type.lift result) (shift definition)

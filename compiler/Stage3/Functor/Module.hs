@@ -10,6 +10,7 @@ import qualified Stage2.Tree.Module as Stage2 (Module (..))
 import qualified Stage2.Tree.Shared as Stage2 (Shared (..))
 import qualified Stage2.Tree.TermDeclaration as Stage2 (TermDeclaration)
 import qualified Stage2.Tree.TypeDeclaration as Stage2 (TypeDeclaration)
+import qualified Stage2.Tree.TypeDeclarationExtra as Stage2 (TypeDeclarationExtra)
 import Stage3.Functor.Declarations (Declarations)
 import qualified Stage3.Functor.Declarations as Declarations
 import Stage3.Functor.Instance.Key (Key)
@@ -54,7 +55,7 @@ fromStage2 ::
     (Stage2.Shared Global)
     (Stage2.TypeDeclaration Global)
     (Stage2.TypeDeclaration Global)
-    (Stage2.TypeDeclaration Global)
+    (Stage2.TypeDeclarationExtra Global)
     (Stage2.Instance Global)
     (Stage2.Instance Global)
 fromStage2 Stage2.Module {name = name@(path :.. base), declarations}

@@ -40,7 +40,7 @@ data TypeDeclaration scope
         brand :: !Brand,
         parameters :: !(Strict.Vector (TypePattern Position)),
         constructors :: !(Strict.Vector (Constructor (Local ':+ scope))),
-        selectors :: !(Strict.Vector (Selector)),
+        selectors :: !(Strict.Vector Selector),
         annotation :: !(Strict.Maybe (Type Position scope))
       }
   | GADT

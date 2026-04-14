@@ -28,10 +28,12 @@ import Stage2.Tree.Instance (Instance)
 import Stage2.Tree.Shared (Shared)
 import Stage2.Tree.TermDeclaration (TermDeclaration)
 import Stage2.Tree.TypeDeclaration (TypeDeclaration)
+import Stage2.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 
 data Declarations scope = Declarations
   { terms :: !(Vector (TermDeclaration scope)),
     types :: !(Vector (TypeDeclaration scope)),
+    typeExtras :: !(Vector (TypeDeclarationExtra scope)),
     shared :: !(Vector (Shared scope)),
     dataInstances :: !(Vector (Map (Type2.Index scope) (Instance scope))),
     classInstances :: !(Vector (Map (Type2.Index scope) (Instance scope)))
@@ -47,6 +49,7 @@ instance Shift.Functor Declarations where
     Declarations
       { terms,
         types,
+        typeExtras,
         shared,
         dataInstances,
         classInstances
@@ -54,16 +57,18 @@ instance Shift.Functor Declarations where
       Declarations
         { terms = fmap (Shift.map category) terms,
           types = fmap (Shift.map category) types,
+          typeExtras = fmap (Shift.map category) typeExtras,
           shared = fmap (Shift.map category) shared,
           dataInstances = fmap (Shift.mapInstances category . fmap (Shift.map category)) dataInstances,
           classInstances = fmap (Shift.mapInstances category . fmap (Shift.map category)) classInstances
         }
 
 instance FreeTermVariables Declarations where
-  freeTermVariables target Declarations {terms, shared} =
+  freeTermVariables target Declarations {terms, shared, typeExtras} =
     concat
       [ foldMap (freeTermVariables target) terms,
-        foldMap (freeTermVariables target) shared
+        foldMap (freeTermVariables target) shared,
+        foldMap (freeTermVariables target) typeExtras
       ]
 
 resolve ::

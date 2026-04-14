@@ -13,15 +13,19 @@ import Stage1.Variable (Variable)
 import Stage2.Scope (Environment ((:+)), Local)
 import qualified Stage2.Temporary.Partial.Method as Partial
 import qualified Stage2.Tree.Definition as Definition (merge)
-import qualified Stage2.Tree.Method as Real
+import qualified Stage2.Tree.Definition as Real (Definition)
+import qualified Stage2.Tree.Method as Real (Method (..))
 
 data Method scope = Method
   { position :: !Position,
     name :: !Variable,
-    method :: Real.Method scope
+    method :: Real.Method scope,
+    extra :: Strict.Maybe (Real.Definition scope)
   }
 
 shrink = method
+
+shrinkExtra = extra
 
 methodIndexes :: Strict.Vector (Method scope) -> Map Variable Int
 methodIndexes methods = Map.fromList $ zip [name method | method <- toList methods] [0 ..]
@@ -35,9 +39,9 @@ merge entries@(entry :| _) =
         Real.Method
           { position,
             name,
-            annotation,
-            definition
-          }
+            annotation
+          },
+      extra = definition
     }
   where
     position = Partial.position entry

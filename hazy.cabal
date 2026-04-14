@@ -291,6 +291,7 @@ executable hazy
     Stage2.Tree.TermDeclaration
     Stage2.Tree.Type
     Stage2.Tree.TypeDeclaration
+    Stage2.Tree.TypeDeclarationExtra
     Stage2.Tree.TypePattern
     Stage3.Check.ClassInstance
     Stage3.Check.ConstructorInstance

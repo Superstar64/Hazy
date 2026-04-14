@@ -17,6 +17,7 @@ import qualified Stage2.Tree.Shared as Stage2.Shared
 import qualified Stage2.Tree.TermDeclaration as Stage2 (TermDeclaration)
 import qualified Stage2.Tree.TermDeclaration as Stage2.TermDeclaration
 import qualified Stage2.Tree.TypeDeclaration as Stage2.TypeDeclaration
+import qualified Stage2.Tree.TypeDeclarationExtra as Stage2.TypeDeclarationExtra
 import Stage3.Check.Context (globalBindings)
 import Stage3.Check.InstanceAnnotation (InstanceAnnotation)
 import qualified Stage3.Check.InstanceAnnotation as InstanceAnnotation
@@ -231,12 +232,12 @@ checkTypeDeclaration global local declaration = Formula8 {cycle, run}
 checkTypeDeclarationExtra ::
   Int ->
   Int ->
-  Stage2.TypeDeclaration.TypeDeclaration Global ->
+  Stage2.TypeDeclarationExtra.TypeDeclarationExtra Global ->
   Formula s (TypeDeclarationExtra Global)
 checkTypeDeclarationExtra global local declaration = Formula8 {cycle, run}
   where
     cycle :: a
-    cycle = cyclicalTypeChecking $ Stage2.TypeDeclaration.position declaration
+    cycle = cyclicalTypeChecking $ Stage2.TypeDeclarationExtra.position declaration
     run moduleSet@(Functor.ModuleSet modules) = do
       let Functor.Module {declarations} = modules Vector.! global
           Functor.Declarations {types} = declarations

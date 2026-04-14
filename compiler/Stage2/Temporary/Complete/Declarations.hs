@@ -32,7 +32,7 @@ import qualified Stage2.Temporary.Complete.Shared as Shared (resolve, shrink)
 import Stage2.Temporary.Complete.TermDeclaration (TermDeclaration)
 import qualified Stage2.Temporary.Complete.TermDeclaration as Term (bindings, indexes, merge, shrink)
 import Stage2.Temporary.Complete.TypeDeclaration (TypeDeclaration)
-import qualified Stage2.Temporary.Complete.TypeDeclaration as Type (bindings, indexes, merge, shrink)
+import qualified Stage2.Temporary.Complete.TypeDeclaration as Type (bindings, indexes, merge, shrink, shrinkExtra)
 import qualified Stage2.Temporary.Partial.ConstructorDeclaration as Constructor (resolve)
 import qualified Stage2.Temporary.Partial.TermDeclaration as Term (resolve)
 import qualified Stage2.Temporary.Partial.TypeDeclaration as Declaration.Type (resolve)
@@ -152,6 +152,7 @@ shrink Declarations {terms, types, shared, dataInstances, classInstances} =
   Real.Declarations
     { terms = Vector.catMaybes $ Term.shrink <$> Strict.Vector.toLazy terms,
       types = Type.shrink <$> Strict.Vector.toLazy types,
+      typeExtras = Type.shrinkExtra <$> Strict.Vector.toLazy types,
       shared = Shared.shrink <$> Strict.Vector.toLazy shared,
       dataInstances,
       classInstances

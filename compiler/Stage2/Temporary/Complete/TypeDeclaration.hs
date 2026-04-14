@@ -41,6 +41,7 @@ import qualified Stage2.Tree.Entry as Real.Entry
 import qualified Stage2.Tree.Field as Real.Field
 import qualified Stage2.Tree.StrictnessAnnotation as StrictnessAnnotation
 import qualified Stage2.Tree.TypeDeclaration as Real
+import qualified Stage2.Tree.TypeDeclarationExtra as Real.Extra
 import Verbose (Debug (resolving))
 
 data Constructors scope
@@ -50,7 +51,7 @@ data Constructors scope
 
 data Fields scope
   = Methods !(Strict.Vector (Method (Local ':+ scope)))
-  | Selectors !(Strict.Vector (Selector))
+  | Selectors !(Strict.Vector Selector)
   | NoFields
 
 data TypeDeclaration scope = TypeDeclaration
@@ -58,17 +59,32 @@ data TypeDeclaration scope = TypeDeclaration
     name :: !ConstructorIdentifier,
     fields :: !(Fields scope),
     constructors :: !(Constructors scope),
-    declaration :: Real.TypeDeclaration scope
+    declaration :: Real.TypeDeclaration scope,
+    extra :: Real.Extra.TypeDeclarationExtra scope
   }
 
 shrink :: TypeDeclaration scope -> Real.TypeDeclaration scope
 shrink = declaration
 
+shrinkExtra :: TypeDeclaration scope -> Real.Extra.TypeDeclarationExtra scope
+shrinkExtra = extra
+
 merge :: (Debug verbose) => NonEmpty (Partial.TypeDeclaration scope) -> verbose (TypeDeclaration scope)
 merge entries@(entry :| _) =
-  let typeDeclaration declaration = TypeDeclaration {position, name, fields, constructors, declaration}
+  let typeDeclaration declaration = TypeDeclaration {position, name, fields, constructors, declaration, extra}
    in typeDeclaration <$> declaration
   where
+    extra
+      | Just _ <- adt = Real.Extra.ADT
+      | Just _ <- gadt = Real.Extra.GADT
+      | Just (position, More.Class {methods}) <- classx =
+          Real.Extra.Class
+            { position,
+              methods = fmap Method.shrinkExtra methods
+            }
+      | Just _ <- synonym = Real.Extra.Synonym
+      | otherwise = seq declaration (error "bad extra")
+
     declaration = case catMaybes [fmap fst adt, fmap fst gadt, fmap fst classx, fmap fst synonym] of
       [] -> missingTypeDeclaration position
       [_]

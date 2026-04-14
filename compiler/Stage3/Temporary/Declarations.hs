@@ -23,6 +23,8 @@ import qualified Stage2.Tree.TermDeclaration as Stage2 (TermDeclaration)
 import qualified Stage2.Tree.TermDeclaration as Stage2.TermDeclaration
 import qualified Stage2.Tree.TypeDeclaration as Stage2 (TypeDeclaration)
 import qualified Stage2.Tree.TypeDeclaration as Stage2.TypeDeclaration
+import qualified Stage2.Tree.TypeDeclarationExtra as Stage2 (TypeDeclarationExtra)
+import qualified Stage2.Tree.TypeDeclarationExtra as Stage2.TypeDeclarationExtra
 import Stage3.Check.Context (Context (..), localBindings)
 import Stage3.Check.InstanceAnnotation (InstanceAnnotation)
 import qualified Stage3.Check.InstanceAnnotation as InstanceAnnotation
@@ -248,12 +250,12 @@ checkTypeDeclaration context index declaration = Formula8 {cycle, run}
 checkTypeDeclarationExtra ::
   Context s scope ->
   Int ->
-  Stage2.TypeDeclaration (Scope.Declaration ':+ scope) ->
+  Stage2.TypeDeclarationExtra (Scope.Declaration ':+ scope) ->
   Formula s scope (TypeDeclarationExtra (Scope.Declaration ':+ scope))
 checkTypeDeclarationExtra context index declaration = Formula8 {cycle, run}
   where
     cycle :: a
-    cycle = cyclicalTypeChecking $ Stage2.TypeDeclaration.position declaration
+    cycle = cyclicalTypeChecking $ Stage2.TypeDeclarationExtra.position declaration
     run declarations@Functor.Declarations {types} = do
       context <- pure $ localBindings declarations context
       let Functor.Annotated {content} = types Vector.! index
