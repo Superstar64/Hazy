@@ -1,6 +1,7 @@
 module Stage2.Tree.Definition where
 
 import Data.List.NonEmpty (NonEmpty (..))
+import Stage2.FreeVariables (FreeTermVariables (freeTermVariables))
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Tree.Function (Function)
@@ -20,6 +21,15 @@ instance Shift.Functor Definition where
       Alternative
         (Shift.map category function)
         (Shift.map category definition)
+
+instance FreeTermVariables Definition where
+  freeTermVariables target = \case
+    Definition function -> freeTermVariables target function
+    Alternative function definition ->
+      concat
+        [ freeTermVariables target function,
+          freeTermVariables target definition
+        ]
 
 merge :: NonEmpty (Function scope) -> Definition scope
 merge (definition :| []) = Definition definition

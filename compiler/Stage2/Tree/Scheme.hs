@@ -7,10 +7,12 @@ import Data.Foldable (toList)
 import qualified Data.Map as Map
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
-import Stage1.FreeVariables (FreeTypeVariables (..))
+import qualified Stage1.FreeVariables as Stage1 (FreeTypeVariables (..))
 import Stage1.Position (Position)
 import Stage1.Tree.Marked (Marked (..))
 import qualified Stage1.Tree.Scheme as Stage1 (Scheme (..))
+import Stage2.FreeVariables (FreeTypeVariables (..))
+import qualified Stage2.FreeVariables as FreeVariables
 import qualified Stage2.Index.Local as Local
 import Stage2.Resolve.Context (Context (..))
 import Stage2.Scope (Environment ((:+)), Local)
@@ -44,6 +46,13 @@ instance Shift.Functor (Scheme position) where
         constraints = fmap (Shift.map category) constraints,
         result = Shift.map (Shift.Over category) result
       }
+
+instance FreeTypeVariables (Scheme position) where
+  freeTypeVariables target Scheme {constraints, result} =
+    concat
+      [ foldMap (freeTypeVariables target) constraints,
+        freeTypeVariables (FreeVariables.Over target) result
+      ]
 
 anonymize :: Scheme position scope -> Scheme () scope
 anonymize Scheme {implicit, parameters, constraints, result} =
@@ -93,4 +102,9 @@ resolve context Stage1.Implicit {startPosition, constraints, result}
     parameters = fabricate <$> names
     fabricate name = TypePattern {position = startPosition, name}
     names = Strict.Vector.fromList $ nubOrd $ filter (`Map.notMember` localTypes context) free
-    free = map (\(_ :@ name) -> name) $ foldMap freeTypeVariables constraints <> freeTypeVariables result
+    free =
+      map (\(_ :@ name) -> name) $
+        mconcat
+          [ foldMap Stage1.freeTypeVariables constraints,
+            Stage1.freeTypeVariables result
+          ]

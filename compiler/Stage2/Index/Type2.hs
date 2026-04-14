@@ -1,6 +1,8 @@
 module Stage2.Index.Type2 where
 
+import Control.Applicative (Const (..))
 import Data.Functor.Identity (Identity (..))
+import Stage2.FreeVariables (FreeTypeVariables (..))
 import {-# SOURCE #-} qualified Stage2.Index.Constructor as Constructor
 import qualified Stage2.Index.Type as Type1
 import Stage2.Scope (Environment ((:+)), Local)
@@ -44,6 +46,9 @@ instance Shift.Functor Index where
 
 instance Shift.PartialUnshift Index where
   partialUnshift abort = traverse (Shift.partialUnshift abort)
+
+instance FreeTypeVariables Index where
+  freeTypeVariables target index = getConst $ traverse (Const . freeTypeVariables target) index
 
 map :: (Type1.Index scope -> Type1.Index scope') -> Index scope -> Index scope'
 map run = runIdentity . traverse (Identity . run)

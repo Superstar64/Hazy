@@ -18,6 +18,7 @@ import Stage1.Variable
     QualifiedConstructorIdentifier (..),
     Qualifiers (..),
   )
+import Stage2.FreeVariables (FreeTypeVariables (..))
 import qualified Stage2.Index.Constructor as Constructor
 import qualified Stage2.Index.Local as Local
 import qualified Stage2.Index.Type2 as Type2
@@ -145,6 +146,36 @@ instance Shift.Functor (Type position) where
     Large {startPosition} -> Large {startPosition}
     Universe {startPosition} -> Universe {startPosition}
     Levity {startPosition} -> Levity {startPosition}
+
+instance FreeTypeVariables (Type position) where
+  freeTypeVariables target = \case
+    Variable {} -> []
+    Constructor {constructor} -> freeTypeVariables target constructor
+    List {element} -> freeTypeVariables target element
+    Tuple {elements} -> foldMap (freeTypeVariables target) elements
+    Call {function, argument} ->
+      concat
+        [ freeTypeVariables target function,
+          freeTypeVariables target argument
+        ]
+    Function {parameter, result} ->
+      concat
+        [ freeTypeVariables target parameter,
+          freeTypeVariables target result
+        ]
+    StrictFunction {parameter, result} ->
+      concat
+        [ freeTypeVariables target parameter,
+          freeTypeVariables target result
+        ]
+    LiftedList {items} -> foldMap (freeTypeVariables target) items
+    Type {universe} -> freeTypeVariables target universe
+    SmallType {} -> []
+    Constraint {} -> []
+    Small {} -> []
+    Large {} -> []
+    Universe {} -> []
+    Levity {} -> []
 
 anonymize :: Type position scope -> Type () scope
 anonymize = \case

@@ -2,6 +2,8 @@ module Stage2.Tree.RightHandSide where
 
 import Stage1.Position (Position)
 import qualified Stage1.Tree.RightHandSide as Stage1 (RightHandSide (..))
+import Stage2.FreeVariables (FreeTermVariables (freeTermVariables))
+import qualified Stage2.FreeVariables as FreeVariables
 import Stage2.Resolve.Context (Context)
 import Stage2.Scope (Declaration, Environment ((:+)))
 import Stage2.Shift (Shift (shift), shiftDefault)
@@ -23,6 +25,13 @@ instance Shift RightHandSide where
 instance Shift.Functor RightHandSide where
   map category (RightHandSide body declarations) =
     RightHandSide (Shift.map (Shift.Over category) body) (Shift.map (Shift.Over category) declarations)
+
+instance FreeTermVariables RightHandSide where
+  freeTermVariables target (RightHandSide body declarations) =
+    concat
+      [ freeTermVariables (FreeVariables.Over target) body,
+        freeTermVariables (FreeVariables.Over target) declarations
+      ]
 
 resolve :: Context scope -> Stage1.RightHandSide Position -> RightHandSide scope
 resolve context Stage1.RightHandSide {body, declarations}

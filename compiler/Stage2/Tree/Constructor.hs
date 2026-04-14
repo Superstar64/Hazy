@@ -5,6 +5,7 @@ module Stage2.Tree.Constructor where
 import qualified Data.Vector.Strict as Strict (Vector)
 import Stage1.Position (Position)
 import qualified Stage1.Variable as Variable (Constructor)
+import Stage2.FreeVariables (FreeTypeVariables (freeTypeVariables))
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Tree.Entry (Entry)
@@ -40,3 +41,8 @@ instance Shift.Functor Constructor where
           name,
           fields = fmap (Shift.map category) fields
         }
+
+instance FreeTypeVariables Constructor where
+  freeTypeVariables target = \case
+    Constructor {entries} -> foldMap (freeTypeVariables target) entries
+    Record {fields} -> foldMap (freeTypeVariables target) fields

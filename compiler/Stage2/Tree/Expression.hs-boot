@@ -5,6 +5,7 @@ module Stage2.Tree.Expression where
 import Data.Kind (Type)
 import Stage1.Position (Position)
 import qualified Stage1.Tree.Expression as Stage1 (Expression)
+import Stage2.FreeVariables (FreeTermVariables)
 import Stage2.Resolve.Context (Context)
 import Stage2.Scope (Environment)
 import Stage2.Shift (Shift)
@@ -22,6 +23,8 @@ instance Show (Expression scope)
 instance Shift Expression
 
 instance Shift.Functor Expression
+
+instance FreeTermVariables Expression
 
 callHead_ :: CallHead scope -> Expression scope
 resolve :: Context scope -> Stage1.Expression Position -> Expression scope

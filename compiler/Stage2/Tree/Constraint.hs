@@ -4,6 +4,8 @@ import qualified Data.Vector.Strict as Strict (Vector)
 import Error (constraintNonLocal, illegalConstraint)
 import Stage1.Position (Position)
 import qualified Stage1.Tree.Constraint as Stage1 (Constraint (..))
+import Stage2.FreeVariables (FreeTypeVariables (..))
+import qualified Stage2.FreeVariables as FreeTermVariables
 import Stage2.Index.Local (Index (Local))
 import qualified Stage2.Index.Type2 as Type2
 import qualified Stage2.Index.Type3 as Type3
@@ -34,6 +36,13 @@ instance Shift.Functor (Constraint position) where
         head,
         arguments = fmap (Shift.map (Shift.Over category)) arguments
       }
+
+instance FreeTypeVariables (Constraint position) where
+  freeTypeVariables target Constraint {classx, arguments} =
+    concat
+      [ freeTypeVariables target classx,
+        foldMap (freeTypeVariables $ FreeTermVariables.Over target) arguments
+      ]
 
 anonymize :: Constraint position scope -> Constraint () scope
 anonymize Constraint {classx, head, arguments} =

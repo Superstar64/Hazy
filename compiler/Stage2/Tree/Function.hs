@@ -5,6 +5,8 @@ module Stage2.Tree.Function where
 import Stage1.Position (Position)
 import qualified Stage1.Tree.Pattern as Stage1 (Pattern (startPosition))
 import qualified Stage1.Tree.RightHandSide as Stage1 (RightHandSide (..))
+import Stage2.FreeVariables (FreeTermVariables (..))
+import qualified Stage2.FreeVariables as FreeTermVariables
 import Stage2.Resolve.Context (Context)
 import Stage2.Scope (Environment ((:+)))
 import qualified Stage2.Scope as Scope (Pattern)
@@ -37,6 +39,11 @@ instance Shift.Functor Function where
           patternx = Shift.map category patternx,
           function = Shift.map (Shift.Over category) function
         }
+
+instance FreeTermVariables Function where
+  freeTermVariables target = \case
+    Plain {rightHandSide} -> freeTermVariables target rightHandSide
+    Bound {function} -> freeTermVariables (FreeTermVariables.Over target) function
 
 newtype Resolve = Resolve
   { patterns :: [Stage1.Pattern Position]

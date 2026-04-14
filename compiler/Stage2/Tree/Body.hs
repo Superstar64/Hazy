@@ -3,6 +3,7 @@ module Stage2.Tree.Body where
 import qualified Data.Strict.Vector1 as Strict
 import Stage1.Position (Position)
 import qualified Stage1.Tree.Body as Stage1 (Body (..))
+import Stage2.FreeVariables (FreeTermVariables (..))
 import Stage2.Resolve.Context (Context)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
@@ -23,6 +24,11 @@ instance Shift.Functor Body where
   map category = \case
     Body expression -> Body (Shift.map category expression)
     Guards statements -> Guards (fmap (Shift.map category) statements)
+
+instance FreeTermVariables Body where
+  freeTermVariables target = \case
+    Body expression -> freeTermVariables target expression
+    Guards statements -> foldMap (freeTermVariables target) statements
 
 resolve :: Context scope -> Stage1.Body Position -> Body scope
 resolve context = \case

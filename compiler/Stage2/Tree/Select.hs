@@ -5,6 +5,7 @@ import Stage1.Position (Position)
 import qualified Stage1.Tree.ExpressionField as Stage1 (Field (..))
 import Stage1.Tree.Marked (Marked (..))
 import Stage1.Variable (QualifiedVariable (..), Qualifiers (..))
+import Stage2.FreeVariables (FreeTermVariables (freeTermVariables))
 import qualified Stage2.Index.Selector as Selector
 import qualified Stage2.Index.Type2 as Type2
 import Stage2.Resolve.Context (Context (..), (!-%), (!-*))
@@ -24,6 +25,9 @@ instance Shift Select where
 instance Shift.Functor Select where
   map category (Select pick record) =
     Select pick (Shift.map category record)
+
+instance FreeTermVariables Select where
+  freeTermVariables target (Select _ expression) = freeTermVariables target expression
 
 resolve :: Type2.Index scope -> Context scope -> Stage1.Field Position -> Select scope
 resolve typex context = \case

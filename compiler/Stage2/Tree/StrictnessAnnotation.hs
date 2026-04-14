@@ -1,5 +1,6 @@
 module Stage2.Tree.StrictnessAnnotation where
 
+import Stage2.FreeVariables (FreeTypeVariables (freeTypeVariables))
 import Stage2.Shift (Shift (..), shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Tree.Type (Type)
@@ -24,6 +25,12 @@ instance Shift.Functor (StrictnessAnnotation position) where
       Polymorphic
         { levity = Shift.map category levity
         }
+
+instance FreeTypeVariables (StrictnessAnnotation position) where
+  freeTypeVariables target = \case
+    Lazy -> []
+    Strict -> []
+    Polymorphic {levity} -> freeTypeVariables target levity
 
 anonymize :: StrictnessAnnotation position scope -> StrictnessAnnotation () scope
 anonymize = \case

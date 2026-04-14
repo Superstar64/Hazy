@@ -5,6 +5,7 @@ module Stage2.Tree.Declarations where
 import Data.Kind (Type)
 import Stage1.Position (Position)
 import qualified Stage1.Tree.Declarations as Stage1 (Declarations)
+import Stage2.FreeVariables (FreeTermVariables)
 import Stage2.Resolve.Context (Context)
 import Stage2.Scope (Declaration, Environment (..))
 import Stage2.Shift (Shift)
@@ -21,6 +22,8 @@ instance Show (Declarations scope)
 instance Shift Declarations
 
 instance Shift.Functor Declarations
+
+instance FreeTermVariables Declarations
 
 resolve ::
   Context scope ->

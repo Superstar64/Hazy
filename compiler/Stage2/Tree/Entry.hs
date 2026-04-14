@@ -4,6 +4,7 @@ module Stage2.Tree.Entry where
 
 import Stage1.Position (Position)
 import qualified Stage1.Tree.Entry as Stage1 (Entry (..))
+import Stage2.FreeVariables (FreeTypeVariables (..))
 import Stage2.Resolve.Context (Context)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
@@ -30,6 +31,13 @@ instance Shift.Functor (Entry position) where
         entry = Shift.map category entry,
         strict = Shift.map category strict
       }
+
+instance FreeTypeVariables (Entry position) where
+  freeTypeVariables target Entry {entry, strict} =
+    concat
+      [ freeTypeVariables target entry,
+        freeTypeVariables target strict
+      ]
 
 anonymize :: Entry position scope -> Entry () scope
 anonymize Entry {entry, strict} =

@@ -1,6 +1,9 @@
 module Stage2.Index.Term where
 
 import Data.Void (absurd)
+import Stage2.FreeVariables (FreeTermVariables (..))
+import qualified Stage2.FreeVariables as FreeVariables
+import {-# SOURCE #-} qualified Stage2.Index.Term0 as Term0
 import Stage2.Scope (Declaration, Environment (..), Global, Pattern)
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
@@ -43,6 +46,12 @@ instance Shift.Functor Index where
   map (after Shift.:. before) index = Shift.map after (Shift.map before index)
   map (Shift.Unshift _) (Shift index) = index
   map (Shift.Unshift abort) _ = absurd abort
+
+instance FreeTermVariables Index where
+  freeTermVariables FreeVariables.Target (Declaration index) = [Term0.Declaration index]
+  freeTermVariables FreeVariables.Target (Global global local) = [Term0.Global global local]
+  freeTermVariables (FreeVariables.Over free) (Shift index) = freeTermVariables free index
+  freeTermVariables _ _ = []
 
 data Bound
   = At

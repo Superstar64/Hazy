@@ -18,6 +18,8 @@ import qualified Stage1.Tree.ExpressionInfix as Stage1.Infix
 import Stage1.Tree.Fixity (Fixity (..))
 import Stage1.Tree.Marked (Marked (..))
 import Stage1.Variable (QualifiedName (..))
+import Stage2.FreeVariables (FreeTermVariables (..))
+import qualified Stage2.FreeVariables as FreeVariables
 import qualified Stage2.Index.Constructor as Constructor (Index (..), cons)
 import qualified Stage2.Index.Method as Method
 import qualified Stage2.Index.Selector as Selector
@@ -251,6 +253,50 @@ instance Shift.Functor Expression where
         { startPosition,
           imperative = Shift.map category imperative
         }
+
+instance FreeTermVariables Expression where
+  freeTermVariables target = \case
+    CallHead {callHead} -> freeTermVariables target callHead
+    Integer {} -> []
+    Float {} -> []
+    Character {} -> []
+    String {} -> []
+    Tuple {elements} -> foldMap (freeTermVariables target) elements
+    List {items} -> foldMap (freeTermVariables target) items
+    Comprehension {statements} -> freeTermVariables target statements
+    Record {fields} -> foldMap (freeTermVariables target) fields
+    Update {base, updates} ->
+      freeTermVariables target base ++ foldMap (freeTermVariables target) updates
+    Call {function, argument} -> freeTermVariables target function ++ freeTermVariables target argument
+    Let {declarations, letBody} ->
+      concat
+        [ freeTermVariables (FreeVariables.Over target) declarations,
+          freeTermVariables (FreeVariables.Over target) letBody
+        ]
+    If {condition, thenx, elsex} ->
+      concat
+        [ freeTermVariables target condition,
+          freeTermVariables target thenx,
+          freeTermVariables target elsex
+        ]
+    MultiwayIf {branches} -> foldMap (freeTermVariables target) branches
+    Case {scrutinee, cases} ->
+      concat
+        [ freeTermVariables target scrutinee,
+          foldMap (freeTermVariables target) cases
+        ]
+    Do {statements} -> freeTermVariables target statements
+    Lambda {body} ->
+      freeTermVariables (FreeVariables.Over target) body
+    LambdaCase {cases} -> foldMap (freeTermVariables target) cases
+    RightSection {left, right} ->
+      concat
+        [ freeTermVariables target left,
+          freeTermVariables target right
+        ]
+    Annotation {expression} ->
+      freeTermVariables (FreeVariables.Over target) expression
+    RunST {imperative} -> freeTermVariables target imperative
 
 callHead_ callHead = CallHead {callHead}
 

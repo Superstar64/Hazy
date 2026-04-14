@@ -11,6 +11,7 @@ import Stage1.Extensions (Extensions (Extensions, stableImports))
 import Stage1.Position (Position)
 import qualified Stage1.Tree.Declaration as Stage1 (toImport)
 import qualified Stage1.Tree.Declarations as Stage1 (Declarations (..))
+import Stage2.FreeVariables (FreeTermVariables (..))
 import qualified Stage2.Index.Term0 as Term0 (Index (..))
 import qualified Stage2.Index.Type0 as Type0
 import qualified Stage2.Index.Type2 as Type2
@@ -57,6 +58,13 @@ instance Shift.Functor Declarations where
           dataInstances = fmap (Shift.mapInstances category . fmap (Shift.map category)) dataInstances,
           classInstances = fmap (Shift.mapInstances category . fmap (Shift.map category)) classInstances
         }
+
+instance FreeTermVariables Declarations where
+  freeTermVariables target Declarations {terms, shared} =
+    concat
+      [ foldMap (freeTermVariables target) terms,
+        foldMap (freeTermVariables target) shared
+      ]
 
 resolve ::
   Context scope ->

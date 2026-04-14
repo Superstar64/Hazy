@@ -5,6 +5,8 @@ import Stage1.Position (Position)
 import qualified Stage1.Tree.Expression as Stage1 (Expression)
 import qualified Stage1.Tree.Statement as Stage1 (Statement (..))
 import qualified Stage1.Tree.Statements as Stage1 (Statements (..))
+import Stage2.FreeVariables (FreeTermVariables (..))
+import qualified Stage2.FreeVariables as FreeVariables
 import Stage2.Resolve.Context (Context (..))
 import Stage2.Scope (Environment ((:+)))
 import qualified Stage2.Scope as Scope (Declaration, Pattern)
@@ -67,6 +69,25 @@ instance Shift.Functor Statements where
           declarations = Shift.map (Shift.Over category) declarations,
           body = Shift.map (Shift.Over category) body
         }
+
+instance FreeTermVariables Statements where
+  freeTermVariables target = \case
+    Done {done} -> freeTermVariables target done
+    Run {effect, after} ->
+      concat
+        [ freeTermVariables target effect,
+          freeTermVariables target after
+        ]
+    Bind {effect, thenx} ->
+      concat
+        [ freeTermVariables target effect,
+          freeTermVariables (FreeVariables.Over target) thenx
+        ]
+    Let {declarations, body} ->
+      concat
+        [ freeTermVariables (FreeVariables.Over target) declarations,
+          freeTermVariables (FreeVariables.Over target) body
+        ]
 
 resolve :: Context scope -> Stage1.Statements Position -> Statements scope
 resolve context Stage1.Statements {body, done} = statements context (toList body) done

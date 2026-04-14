@@ -17,6 +17,8 @@ import Stage1.Variable
     QualifiedConstructorIdentifier ((:=.)),
     Qualifiers,
   )
+import Stage2.FreeVariables (FreeTypeVariables (..))
+import qualified Stage2.FreeVariables as FreeVariables
 import qualified Stage2.Label.Binding.Type as Label
 import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (Shift, shift, shiftDefault)
@@ -107,6 +109,30 @@ instance Shift.Functor TypeDeclaration where
           synonym = Shift.map (Shift.Over category) synonym,
           annotation = fmap (Shift.map category) annotation
         }
+
+instance FreeTypeVariables TypeDeclaration where
+  freeTypeVariables target = \case
+    ADT {constructors, annotation} ->
+      concat
+        [ foldMap (freeTypeVariables $ FreeVariables.Over target) constructors,
+          foldMap (freeTypeVariables target) annotation
+        ]
+    GADT {gadtConstructors, annotation} ->
+      concat
+        [ foldMap (freeTypeVariables target) gadtConstructors,
+          foldMap (freeTypeVariables target) annotation
+        ]
+    Class {methods, constraints, annotation} ->
+      concat
+        [ foldMap (freeTypeVariables $ FreeVariables.Over target) methods,
+          foldMap (freeTypeVariables target) constraints,
+          foldMap (freeTypeVariables target) annotation
+        ]
+    Synonym {synonym, annotation} ->
+      concat
+        [ freeTypeVariables (FreeVariables.Over target) synonym,
+          foldMap (freeTypeVariables target) annotation
+        ]
 
 labelBinding :: Qualifiers -> TypeDeclaration scope -> Label.TypeBinding scope'
 labelBinding path declaration = Label.TypeBinding {name = path :=. name declaration, constructorNames}

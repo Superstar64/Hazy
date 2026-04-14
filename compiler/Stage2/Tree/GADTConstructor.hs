@@ -4,6 +4,7 @@ module Stage2.Tree.GADTConstructor where
 
 import Stage1.Position (Position)
 import Stage1.Variable (Constructor)
+import Stage2.FreeVariables (FreeTypeVariables (freeTypeVariables))
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Tree.Scheme (Scheme)
@@ -25,3 +26,6 @@ instance Shift.Functor GADTConstructor where
         name,
         typex = Shift.map category typex
       }
+
+instance FreeTypeVariables GADTConstructor where
+  freeTypeVariables target GADTConstructor {typex} = freeTypeVariables target typex

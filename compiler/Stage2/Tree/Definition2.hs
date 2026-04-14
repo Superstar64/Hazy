@@ -1,6 +1,8 @@
 module Stage2.Tree.Definition2 where
 
 import Stage1.Position (Position)
+import Stage2.FreeVariables (FreeTermVariables (freeTermVariables))
+import qualified Stage2.FreeVariables as FreeTermVariables
 import qualified Stage2.Index.Term as Term
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (Shift, shiftDefault)
@@ -32,6 +34,13 @@ instance Shift.Functor (Definition2 mark) where
     Manual definition -> Manual (Shift.map (Shift.Over category) definition)
     Auto definition -> Auto (Shift.map category definition)
     Share choice -> Share (Shift.map category choice)
+
+instance FreeTermVariables (Definition2 mark) where
+  freeTermVariables target = \case
+    Manual definition ->
+      freeTermVariables (FreeTermVariables.Over target) definition
+    Auto definition -> freeTermVariables target definition
+    Share {} -> []
 
 data Choice scope = Choice
   { position :: !Position,

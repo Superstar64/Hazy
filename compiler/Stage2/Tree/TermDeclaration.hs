@@ -5,6 +5,7 @@ module Stage2.Tree.TermDeclaration where
 import Stage1.Position (Position)
 import Stage1.Tree.Fixity (Fixity (..))
 import Stage1.Variable (QualifiedVariable ((:-)), Qualifiers, Variable)
+import Stage2.FreeVariables (FreeTermVariables (..))
 import qualified Stage2.Label.Binding.Term as Label
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
@@ -34,6 +35,10 @@ instance Shift.Functor TermDeclaration where
           declaration = Shift.map category declaration
         }
 
+instance FreeTermVariables TermDeclaration where
+  freeTermVariables target TermDeclaration {declaration} =
+    freeTermVariables target declaration
+
 data TermDeclaration' scope where
   (:::) :: !(Annotation mark scope) -> !(Definition2 mark scope) -> TermDeclaration' scope
 
@@ -56,6 +61,10 @@ instance Shift TermDeclaration' where
 instance Shift.Functor TermDeclaration' where
   map category (annotation ::: definition) =
     Shift.map category annotation ::: Shift.map category definition
+
+instance FreeTermVariables TermDeclaration' where
+  freeTermVariables target (_ ::: definition) =
+    freeTermVariables target definition
 
 labelBinding :: Qualifiers -> TermDeclaration scope -> Label.TermBinding scope'
 labelBinding path declaration = Label.TermBinding {name = path :- name declaration}

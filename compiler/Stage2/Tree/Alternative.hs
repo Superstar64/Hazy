@@ -2,6 +2,8 @@ module Stage2.Tree.Alternative where
 
 import Stage1.Position (Position)
 import qualified Stage1.Tree.Alternative as Stage1 (Alternative (..))
+import Stage2.FreeVariables (FreeTermVariables (freeTermVariables))
+import qualified Stage2.FreeVariables as FreeTermVariables
 import Stage2.Resolve.Context (Context (..))
 import Stage2.Scope (Environment ((:+)))
 import qualified Stage2.Scope as Scope (Pattern)
@@ -27,6 +29,10 @@ instance Shift.Functor Alternative where
     Alternative
       (Shift.map category patternx)
       (Shift.map (Shift.Over category) rightHandSide)
+
+instance FreeTermVariables Alternative where
+  freeTermVariables target Alternative {rightHandSide} =
+    freeTermVariables (FreeTermVariables.Over target) rightHandSide
 
 resolve :: Context scope -> Stage1.Alternative Position -> Alternative scope
 resolve context (Stage1.Alternative {parameter, rightHandSide}) =

@@ -4,6 +4,7 @@ module Stage2.Tree.Field where
 
 import Stage1.Position (Position)
 import Stage1.Variable (Variable)
+import Stage2.FreeVariables (FreeTypeVariables (freeTypeVariables))
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Tree.Entry (Entry)
@@ -25,3 +26,6 @@ instance Shift.Functor Field where
         name,
         entry = Shift.map category entry
       }
+
+instance FreeTypeVariables Field where
+  freeTypeVariables target Field {entry} = freeTypeVariables target entry

@@ -8,6 +8,7 @@ import Stage1.Position (Position)
 import qualified Stage1.Tree.ExpressionField as Stage1 (Field (..))
 import Stage1.Tree.Marked (Marked (..))
 import Stage1.Variable (QualifiedVariable (..), Qualifiers (..))
+import Stage2.FreeVariables (FreeTermVariables (freeTermVariables))
 import qualified Stage2.Index.Constructor as Constructor (Index (..))
 import qualified Stage2.Index.Selector as Selector
 import qualified Stage2.Resolve.Binding.Constructor as Constructor (Binding (..))
@@ -31,6 +32,9 @@ instance Shift Field where
 instance Shift.Functor Field where
   map category (Field pick record) =
     Field pick (Shift.map category record)
+
+instance FreeTermVariables Field where
+  freeTermVariables target Field {expression} = freeTermVariables target expression
 
 resolve ::
   Context scope ->
