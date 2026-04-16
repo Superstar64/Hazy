@@ -9,8 +9,8 @@ import Stage2.FreeVariables (FreeTermVariables (..))
 import qualified Stage2.Label.Binding.Term as Label
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage2.Tree.Annotation (Annotation)
-import Stage2.Tree.Definition2 (Definition2)
+import Stage2.Tree.Definition2 (Annotated, Definition2, Inferred)
+import Stage2.Tree.Scheme (Scheme)
 import Prelude hiding (Either (Left, Right))
 
 data TermDeclaration scope
@@ -39,32 +39,35 @@ instance FreeTermVariables TermDeclaration where
   freeTermVariables target TermDeclaration {declaration} =
     freeTermVariables target declaration
 
-data TermDeclaration' scope where
-  (:::) :: !(Annotation mark scope) -> !(Definition2 mark scope) -> TermDeclaration' scope
-
-infix 9 :::
-
-instance Show (TermDeclaration' scope) where
-  showsPrec d (annotation ::: definition) =
-    showParen (d > 9) $
-      foldr
-        (.)
-        id
-        [ showsPrec 10 annotation,
-          showString " ::: ",
-          showsPrec 10 definition
-        ]
+data TermDeclaration' scope
+  = Annotated
+      { annotation :: !(Scheme Position scope),
+        definition :: !(Definition2 Annotated scope)
+      }
+  | Inferred
+      { definition' :: !(Definition2 Inferred scope)
+      }
+  deriving (Show)
 
 instance Shift TermDeclaration' where
   shift = shiftDefault
 
 instance Shift.Functor TermDeclaration' where
-  map category (annotation ::: definition) =
-    Shift.map category annotation ::: Shift.map category definition
+  map category = \case
+    Annotated {annotation, definition} ->
+      Annotated
+        { annotation = Shift.map category annotation,
+          definition = Shift.map category definition
+        }
+    Inferred {definition'} ->
+      Inferred
+        { definition' = Shift.map category definition'
+        }
 
 instance FreeTermVariables TermDeclaration' where
-  freeTermVariables target (_ ::: definition) =
-    freeTermVariables target definition
+  freeTermVariables target = \case
+    Annotated {definition} -> freeTermVariables target definition
+    Inferred {definition'} -> freeTermVariables target definition'
 
 labelBinding :: Qualifiers -> TermDeclaration scope -> Label.TermBinding scope'
 labelBinding path declaration = Label.TermBinding {name = path :- name declaration}

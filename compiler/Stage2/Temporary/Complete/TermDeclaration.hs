@@ -35,7 +35,6 @@ import qualified Stage2.Temporary.Partial.More.Selector as More.Selector
 import qualified Stage2.Temporary.Partial.More.Share as More (Shared (Shared))
 import qualified Stage2.Temporary.Partial.More.Share as More.Share
 import qualified Stage2.Temporary.Partial.TermDeclaration as Partial
-import qualified Stage2.Tree.Annotation as Real (Annotation (..))
 import qualified Stage2.Tree.Definition as Definition (merge)
 import qualified Stage2.Tree.Definition2 as Real (Choice (..), Definition2 (..))
 import Stage2.Tree.Scheme (Scheme)
@@ -78,12 +77,12 @@ merge entries@(entry :| _) =
             Nothing -> Real <$> Verbose.resolving (Variable.printLiteral' name) real
               where
                 real = Real.TermDeclaration {position, name, fixity, declaration}
-                declaration = Real.NoAnnotation Real.::: Real.Auto definition
+                declaration = Real.Inferred {definition' = Real.Auto definition}
                 definition = Definition.merge $ fmap More.Function.functionAuto body
             Just annotation -> Real <$> Verbose.resolving (Variable.printLiteral' name) real
               where
                 real = Real.TermDeclaration {position, name, fixity, declaration}
-                declaration = Real.Annotation annotation Real.::: Real.Manual definition
+                declaration = Real.Annotated {annotation, definition = Real.Manual definition}
                 definition = Definition.merge $ fmap More.Function.functionManual body
         | Just (_, More.Selector {typeIndex, selectorIndex}) <- selection,
           () <- noAnnotation ->
@@ -95,8 +94,8 @@ merge entries@(entry :| _) =
             let shared :: Real.Definition2 marked scope
                 shared = Real.Share Real.Choice {position, shareIndex, bound, patternx}
                 declaration = case annotation of
-                  Nothing -> Real.NoAnnotation Real.::: shared
-                  Just annotation -> Real.Annotation annotation Real.::: shared
+                  Nothing -> Real.Inferred {definition' = shared}
+                  Just annotation -> Real.Annotated {annotation, definition = shared}
                 real = Real.TermDeclaration {position, name, fixity, declaration}
              in Real <$> Verbose.resolving (Variable.printLiteral' name) real
         | otherwise -> error "no entry"

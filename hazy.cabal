@@ -262,7 +262,6 @@ executable hazy
     Stage2.Temporary.PatternInfix
     Stage2.Temporary.TypeInfix
     Stage2.Tree.Alternative
-    Stage2.Tree.Annotation
     Stage2.Tree.Body
     Stage2.Tree.CallHead
     Stage2.Tree.Constraint

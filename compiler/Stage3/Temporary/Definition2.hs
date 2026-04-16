@@ -5,7 +5,7 @@ import Stage1.Position (Position)
 import Stage2.Index.Term (Bound)
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (shift)
-import Stage2.Tree.Annotation (Annotated, Inferred)
+import Stage2.Tree.Definition2 (Annotated, Inferred)
 import qualified Stage2.Tree.Definition2 as Stage2
 import Stage3.Check.Context (Context)
 import Stage3.Temporary.Definition (Definition)

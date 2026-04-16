@@ -4,7 +4,6 @@ module Stage3.Check.TypeAnnotation where
 
 import Control.Monad.ST (ST)
 import Stage1.Position (Position)
-import qualified Stage2.Tree.Annotation as Stage2 (Annotation (..))
 import qualified Stage2.Tree.Scheme as Stage2 (Scheme (..))
 import qualified Stage2.Tree.TermDeclaration as Stage2 (TermDeclaration (..), TermDeclaration' (..))
 import {-# SOURCE #-} Stage3.Check.Context (Context)
@@ -34,15 +33,15 @@ checkAnnotation context annotation = do
   pure $ Annotation {annotation, annotation'}
 
 checkGlobal :: Context s scope -> Stage2.TermDeclaration scope -> ST s (GlobalTypeAnnotation scope)
-checkGlobal context Stage2.TermDeclaration {declaration = annotation Stage2.::: _} =
-  case annotation of
-    Stage2.Annotation annotation -> GlobalAnnotation <$> checkAnnotation context annotation
-    Stage2.NoAnnotation -> pure GlobalInferred
+checkGlobal context Stage2.TermDeclaration {declaration} =
+  case declaration of
+    Stage2.Annotated {annotation} -> GlobalAnnotation <$> checkAnnotation context annotation
+    Stage2.Inferred {} -> pure GlobalInferred
 
 checkLocal :: Context s scope -> Stage2.TermDeclaration scope -> ST s (LocalTypeAnnotation s scope)
-checkLocal context Stage2.TermDeclaration {declaration = annotation Stage2.::: _} =
-  case annotation of
-    Stage2.Annotation annotation -> LocalAnnotation <$> checkAnnotation context annotation
-    Stage2.NoAnnotation -> do
+checkLocal context Stage2.TermDeclaration {declaration} =
+  case declaration of
+    Stage2.Annotated {annotation} -> LocalAnnotation <$> checkAnnotation context annotation
+    Stage2.Inferred {} -> do
       typex <- Unify.fresh Unify.typex
       pure $ LocalInferred typex

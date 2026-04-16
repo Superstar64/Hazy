@@ -7,9 +7,16 @@ import qualified Stage2.Index.Term as Term
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage2.Tree.Annotation (Annotated, Inferred)
 import Stage2.Tree.Definition (Definition)
 import Stage2.Tree.Pattern (Pattern)
+
+data Mark
+  = Annotated
+  | Inferred
+
+type Annotated = 'Annotated
+
+type Inferred = 'Inferred
 
 data Definition2 mark scope where
   Manual :: Definition (Local ':+ scope) -> Definition2 Annotated scope
