@@ -45,19 +45,15 @@ instance FreeTermVariables Function where
     Plain {rightHandSide} -> freeTermVariables target rightHandSide
     Bound {function} -> freeTermVariables (FreeTermVariables.Over target) function
 
-newtype Resolve = Resolve
-  { patterns :: [Stage1.Pattern Position]
-  }
-
 -- todo complain when lambda variables shadow other lambda variables
-resolve :: Context scope -> Resolve -> Stage1.RightHandSide Position -> Function scope
-resolve context Resolve {patterns} rightHandSide1 = case patterns of
+resolve :: Context scope -> [Stage1.Pattern Position] -> Stage1.RightHandSide Position -> Function scope
+resolve context patterns rightHandSide1 = case patterns of
   [] -> Plain {rightHandSide = RightHandSide.resolve context rightHandSide1}
   (pattern1 : patterns) ->
     Bound
       { functionPosition = Stage1.startPosition pattern1,
         patternx,
-        function = resolve (Pattern.augment patternx context) Resolve {patterns} rightHandSide1
+        function = resolve (Pattern.augment patternx context) patterns rightHandSide1
       }
     where
       patternx = Pattern.resolve context pattern1

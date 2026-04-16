@@ -9,6 +9,7 @@ import qualified Stage1.Tree.LeftHandSide as Stage1 (LeftHandSide (Pattern))
 import qualified Stage1.Tree.Marked as Marked
 import qualified Stage1.Tree.Pattern as Stage1 (Pattern (..))
 import qualified Stage1.Tree.RightHandSide as Stage1.RightHandSide
+import Stage2.Resolve.Context (Context)
 import qualified Stage2.Tree.Pattern as Pattern (resolve)
 import qualified Stage2.Tree.RightHandSide as RightHandSide (resolve)
 import qualified Stage2.Tree.Shared as Real
@@ -21,6 +22,7 @@ data Shared scope = Shared
 shrink :: Shared scope -> Real.Shared scope
 shrink = share
 
+resolve :: Context scope -> [Declaration Position] -> [Shared scope]
 resolve context (Stage1.Definition {leftHandSide = Stage1.Pattern pattern1, rightHandSide} : declarations)
   | Stage1.Variable {} <- pattern1 = resolve context declarations
   | otherwise = shared : resolve context declarations
