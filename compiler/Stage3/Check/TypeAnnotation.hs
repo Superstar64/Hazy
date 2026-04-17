@@ -4,8 +4,8 @@ module Stage3.Check.TypeAnnotation where
 
 import Control.Monad.ST (ST)
 import Stage1.Position (Position)
+import qualified Stage2.Tree.Declaration as Stage2 (Declaration (..))
 import qualified Stage2.Tree.Scheme as Stage2 (Scheme (..))
-import qualified Stage2.Tree.TermDeclaration as Stage2 (TermDeclaration (..))
 import {-# SOURCE #-} Stage3.Check.Context (Context)
 import {-# SOURCE #-} qualified Stage3.Temporary.Scheme as Scheme (check, solve)
 import {-# SOURCE #-} Stage3.Tree.Scheme (Scheme)
@@ -32,12 +32,12 @@ checkAnnotation context annotation = do
   let annotation' = Simple.simplify annotation
   pure $ Annotation {annotation, annotation'}
 
-checkGlobal :: Context s scope -> Stage2.TermDeclaration scope -> ST s (GlobalTypeAnnotation scope)
+checkGlobal :: Context s scope -> Stage2.Declaration scope -> ST s (GlobalTypeAnnotation scope)
 checkGlobal context = \case
   Stage2.Annotated {annotation} -> GlobalAnnotation <$> checkAnnotation context annotation
   Stage2.Inferred {} -> pure GlobalInferred
 
-checkLocal :: Context s scope -> Stage2.TermDeclaration scope -> ST s (LocalTypeAnnotation s scope)
+checkLocal :: Context s scope -> Stage2.Declaration scope -> ST s (LocalTypeAnnotation s scope)
 checkLocal context = \case
   Stage2.Annotated {annotation} -> LocalAnnotation <$> checkAnnotation context annotation
   Stage2.Inferred {} -> do

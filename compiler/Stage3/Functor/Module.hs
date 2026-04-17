@@ -5,10 +5,10 @@ import Data.Octafunctor (Octafunctor (octamap))
 import Data.Octatraversable (Octatraversable (..), octafoldMapDefault, octamapDefault)
 import Stage1.Variable (FullQualifiers ((:..)), Qualifiers ((:.)))
 import Stage2.Scope (Global)
+import qualified Stage2.Tree.Declaration as Stage2 (Declaration)
 import qualified Stage2.Tree.Instance as Stage2 (Instance)
 import qualified Stage2.Tree.Module as Stage2 (Module (..))
 import qualified Stage2.Tree.Shared as Stage2 (Shared (..))
-import qualified Stage2.Tree.TermDeclaration as Stage2 (TermDeclaration)
 import qualified Stage2.Tree.TypeDeclaration as Stage2 (TypeDeclaration)
 import qualified Stage2.Tree.TypeDeclarationExtra as Stage2 (TypeDeclarationExtra)
 import Stage3.Functor.Declarations (Declarations)
@@ -50,8 +50,8 @@ mapWithKey f1 f2 f3 f4 f5 f6 f7 f8 Module {name, declarations} =
 fromStage2 ::
   Stage2.Module ->
   Module
-    (Stage2.TermDeclaration Global)
-    (Stage2.TermDeclaration Global)
+    (Stage2.Declaration Global)
+    (Stage2.Declaration Global)
     (Stage2.Shared Global)
     (Stage2.TypeDeclaration Global)
     (Stage2.TypeDeclaration Global)

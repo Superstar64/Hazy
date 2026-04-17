@@ -24,14 +24,14 @@ import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import {-# SOURCE #-} qualified Stage2.Temporary.Complete.Declarations as Complete
+import Stage2.Tree.Declaration (Declaration)
 import Stage2.Tree.Instance (Instance)
 import Stage2.Tree.Shared (Shared)
-import Stage2.Tree.TermDeclaration (TermDeclaration)
 import Stage2.Tree.TypeDeclaration (TypeDeclaration)
 import Stage2.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 
 data Declarations scope = Declarations
-  { terms :: !(Vector (TermDeclaration scope)),
+  { terms :: !(Vector (Declaration scope)),
     types :: !(Vector (TypeDeclaration scope)),
     typeExtras :: !(Vector (TypeDeclarationExtra scope)),
     shared :: !(Vector (Shared scope)),

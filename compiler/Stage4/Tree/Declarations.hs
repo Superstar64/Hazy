@@ -10,10 +10,10 @@ import qualified Stage3.Tree.Declarations as Stage3
 import qualified Stage4.Index.Term as Term
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
+import Stage4.Tree.Declaration (LazyTermDeclaration)
+import qualified Stage4.Tree.Declaration as Declaration
 import Stage4.Tree.Instance (Instance)
 import qualified Stage4.Tree.Instance as Instance
-import Stage4.Tree.TermDeclaration (LazyTermDeclaration)
-import qualified Stage4.Tree.TermDeclaration as TermDeclaration
 import Stage4.Tree.TypeDeclaration (LazyTypeDeclaration)
 import qualified Stage4.Tree.TypeDeclaration as TypeDeclaration
 import Stage4.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
@@ -61,7 +61,7 @@ simplify
       dataInstances
     } =
     Declarations
-      { terms = (TermDeclaration.simplify share <$> terms) <> Vector.imap TermDeclaration.simplifyShared shared,
+      { terms = (Declaration.simplify share <$> terms) <> Vector.imap Declaration.simplifyShared shared,
         types = TypeDeclaration.simplify <$> types,
         typeExtras = TypeDeclarationExtra.simplify <$> typeExtras,
         classInstances = fmap Instance.simplify <$> classInstances,

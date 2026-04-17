@@ -1,14 +1,14 @@
-module Stage4.Tree.TermDeclaration where
+module Stage4.Tree.Declaration where
 
 import Stage1.Variable (Variable)
 import qualified Stage2.Index.Term as Stage2.Term
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import qualified Stage3.Tree.Declaration as Stage3 (Declaration (..), LazyTermDeclaration (..))
 import qualified Stage3.Tree.Definition2 as Stage3 (Definition2 (..))
 import qualified Stage3.Tree.Expression as Stage3 (Expression)
 import qualified Stage3.Tree.Scheme as Stage3 (Scheme)
 import qualified Stage3.Tree.Shared as Stage3.Shared
-import qualified Stage3.Tree.TermDeclaration as Stage3 (LazyTermDeclaration (..), TermDeclaration (..))
 import qualified Stage4.Index.Term as Term
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
@@ -26,7 +26,7 @@ data Name
   deriving (Show)
 
 data LazyTermDeclaration scope
-  = !Name :^ TermDeclaration scope
+  = !Name :^ Declaration scope
   deriving (Show)
 
 infix 4 :^
@@ -43,23 +43,23 @@ instance Shift2.Functor LazyTermDeclaration where
 instance Substitute.Functor LazyTermDeclaration where
   map category (name :^ declaration) = name :^ Substitute.map category declaration
 
-data TermDeclaration scope = Definition
+data Declaration scope = Definition
   { name :: !Name,
     definition :: !(SchemeOver Expression scope),
     typex :: !(Scheme scope)
   }
   deriving (Show)
 
-instance Shift TermDeclaration where
+instance Shift Declaration where
   shift = shiftDefault
 
-instance Shift.Functor TermDeclaration where
+instance Shift.Functor Declaration where
   map = Shift2.mapDefault
 
-instance Shift2.Functor TermDeclaration where
+instance Shift2.Functor Declaration where
   map = Substitute.mapDefault
 
-instance Substitute.Functor TermDeclaration where
+instance Substitute.Functor Declaration where
   map category Definition {name, definition, typex} =
     Definition
       { name,

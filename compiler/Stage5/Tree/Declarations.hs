@@ -8,9 +8,9 @@ import qualified Data.Vector as Vector
 import qualified Javascript.Tree.Statement as Javascript
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
+import Stage4.Tree.Declaration (Declaration (Definition), LazyTermDeclaration ((:^)))
+import qualified Stage4.Tree.Declaration as Declaration
 import Stage4.Tree.Declarations (Declarations (..))
-import Stage4.Tree.TermDeclaration (LazyTermDeclaration ((:^)), TermDeclaration (Definition))
-import qualified Stage4.Tree.TermDeclaration as TermDeclaration
 import Stage5.Generate.Context (Context)
 import qualified Stage5.Generate.Context as Context
 import Stage5.Generate.LocalType (LocalType (LocalType))

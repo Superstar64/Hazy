@@ -45,6 +45,7 @@ import {-# SOURCE #-} qualified Stage4.Tree.Builtin.MonadFail as Builtin (monadF
 import {-# SOURCE #-} qualified Stage4.Tree.Builtin.Num as Builtin (num)
 import qualified Stage4.Tree.Class as Class
 import Stage4.Tree.ConstructorInfo (ConstructorInfo (..))
+import {-# SOURCE #-} qualified Stage4.Tree.Declaration as Declaration
 import {-# SOURCE #-} Stage4.Tree.Declarations (Declarations)
 import {-# SOURCE #-} qualified Stage4.Tree.Declarations as Declarations
 import Stage4.Tree.EntryInfo (EntryInfo (..))
@@ -56,7 +57,6 @@ import qualified Stage4.Tree.Instanciation as Instanciation
 import Stage4.Tree.MethodInfo (MethodInfo)
 import Stage4.Tree.Statements (Statements)
 import qualified Stage4.Tree.Statements as Statements
-import {-# SOURCE #-} qualified Stage4.Tree.TermDeclaration as TermDeclaration
 import qualified Stage4.Tree.Type as Type
 import Prelude hiding (fail)
 
@@ -592,7 +592,7 @@ simplifyWith expression [] = case expression of
   Stage3.Do {statements} -> simplify statements
   Stage3.Annotation {expression, annotation, instanciation} ->
     Let
-      { declarations = Declarations.single $ shift $ TermDeclaration.annotation expression annotation,
+      { declarations = Declarations.single $ shift $ Declaration.annotation expression annotation,
         letBody =
           Variable
             { variable = Term.Declaration 0,

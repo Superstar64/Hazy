@@ -14,13 +14,13 @@ import qualified Stage2.Index.Type as Type
 import qualified Stage2.Index.Type2 as Type2
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
+import qualified Stage2.Tree.Declaration as Stage2 (Declaration)
+import qualified Stage2.Tree.Declaration as Stage2.Declaration
 import qualified Stage2.Tree.Declarations as Stage2 (Declarations (..))
 import qualified Stage2.Tree.Instance as Stage2 (Instance)
 import qualified Stage2.Tree.Instance as Stage2.Instance
 import qualified Stage2.Tree.Shared as Stage2 (Shared (..))
 import qualified Stage2.Tree.Shared as Stage2.Shared
-import qualified Stage2.Tree.TermDeclaration as Stage2 (TermDeclaration)
-import qualified Stage2.Tree.TermDeclaration as Stage2.TermDeclaration
 import qualified Stage2.Tree.TypeDeclaration as Stage2 (TypeDeclaration)
 import qualified Stage2.Tree.TypeDeclaration as Stage2.TypeDeclaration
 import qualified Stage2.Tree.TypeDeclarationExtra as Stage2 (TypeDeclarationExtra)
@@ -36,14 +36,14 @@ import qualified Stage3.Functor.Annotated as Functor (Annotated (..), content)
 import Stage3.Functor.Declarations (mapWithKey)
 import qualified Stage3.Functor.Declarations as Functor (Declarations (..), fromStage2)
 import qualified Stage3.Functor.Instance.Key as Instance.Key
+import Stage3.Temporary.Declaration (Declaration)
+import qualified Stage3.Temporary.Declaration as Declaration
 import Stage3.Temporary.Shared (Shared (..))
 import qualified Stage3.Temporary.Shared as Shared
-import Stage3.Temporary.TermDeclaration (TermDeclaration)
-import qualified Stage3.Temporary.TermDeclaration as TermDeclaration
+import qualified Stage3.Tree.Declaration as Solved.Declaration
 import qualified Stage3.Tree.Declarations as Solved
 import Stage3.Tree.Instance (Instance)
 import qualified Stage3.Tree.Instance as Instance
-import qualified Stage3.Tree.TermDeclaration as Solved.TermDeclaration
 import Stage3.Tree.TypeDeclaration (TypeDeclaration)
 import qualified Stage3.Tree.TypeDeclaration as Solved.TypeDeclaration
 import qualified Stage3.Tree.TypeDeclaration as TypeDeclaration
@@ -53,7 +53,7 @@ import qualified Stage3.Unify as Unify
 import Prelude hiding (Functor)
 
 data Declarations s scope = Declarations
-  { terms :: !(Vector (TermDeclaration s scope)),
+  { terms :: !(Vector (Declaration s scope)),
     types :: !(Vector (TypeDeclaration scope)),
     shared :: !(Vector (Shared s scope)),
     typeExtras :: !(Vector (TypeDeclarationExtra scope)),
@@ -88,7 +88,7 @@ type Functor s scope =
   Functor.Declarations
     (Scope.Declaration ':+ scope)
     (ST s (LocalTypeAnnotation s (Scope.Declaration ':+ scope)))
-    (ST s (TermDeclaration s (Scope.Declaration ':+ scope)))
+    (ST s (Declaration s (Scope.Declaration ':+ scope)))
     (ST s (Shared s (Scope.Declaration ':+ scope)))
     (ST s (KindAnnotation (Scope.Declaration ':+ scope)))
     (ST s (TypeDeclaration (Scope.Declaration ':+ scope)))
@@ -101,7 +101,7 @@ type Formula s scope z =
     (Functor.Declarations (Scope.Declaration ':+ scope))
     s
     (LocalTypeAnnotation s (Scope.Declaration ':+ scope))
-    (TermDeclaration s (Scope.Declaration ':+ scope))
+    (Declaration s (Scope.Declaration ':+ scope))
     (Shared s (Scope.Declaration ':+ scope))
     (KindAnnotation (Scope.Declaration ':+ scope))
     (TypeDeclaration (Scope.Declaration ':+ scope))
@@ -114,7 +114,7 @@ fromFunctor ::
   Functor.Declarations
     scope
     a
-    (TermDeclaration s scope)
+    (Declaration s scope)
     (Shared s scope)
     c
     (TypeDeclaration scope)
@@ -177,12 +177,12 @@ check context declarations = do
 checkTermAnnotation ::
   Context s scope ->
   p ->
-  Stage2.TermDeclaration (Scope.Declaration ':+ scope) ->
+  Stage2.Declaration (Scope.Declaration ':+ scope) ->
   Formula s scope (LocalTypeAnnotation s (Scope.Declaration ':+ scope))
 checkTermAnnotation context _ declaration = Formula8 {cycle, run}
   where
     cycle :: a
-    cycle = cyclicalTypeChecking $ Stage2.TermDeclaration.position declaration
+    cycle = cyclicalTypeChecking $ Stage2.Declaration.position declaration
     run declarations = do
       context <- pure $ localBindings declarations context
       TypeAnnotation.checkLocal context declaration
@@ -190,12 +190,12 @@ checkTermAnnotation context _ declaration = Formula8 {cycle, run}
 checkTermDeclaration ::
   Context s scope ->
   Int ->
-  Stage2.TermDeclaration (Scope.Declaration ':+ scope) ->
-  Formula s scope (TermDeclaration s (Scope.Declaration ':+ scope))
+  Stage2.Declaration (Scope.Declaration ':+ scope) ->
+  Formula s scope (Declaration s (Scope.Declaration ':+ scope))
 checkTermDeclaration context index declaration = Formula8 {cycle, run}
   where
     cycle :: a
-    cycle = cyclicalTypeChecking $ Stage2.TermDeclaration.position declaration
+    cycle = cyclicalTypeChecking $ Stage2.Declaration.position declaration
     run declarations@Functor.Declarations {terms, shared} = do
       context <- pure $ localBindings declarations context
       let Functor.Annotated {meta} = terms Vector.! index
@@ -203,7 +203,7 @@ checkTermDeclaration context index declaration = Formula8 {cycle, run}
       let share index = do
             Shared {body} <- shared Vector.! index
             pure $ Unify.Scheme $ Unify.mapScheme (Unify.MapScheme Shared.typex) body
-      TermDeclaration.checkLocal context share annotation declaration
+      Declaration.checkLocal context share annotation declaration
 
 checkShared ::
   Context s scope ->
@@ -306,11 +306,11 @@ solve
       dataInstances,
       classInstances
     } = do
-    terms <- traverse TermDeclaration.solve terms
+    terms <- traverse Declaration.solve terms
     shared <- traverse Shared.solve shared
     pure
       Solved.Declarations
-        { terms = Solved.TermDeclaration.strict <$> terms,
+        { terms = Solved.Declaration.strict <$> terms,
           types = Solved.TypeDeclaration.strict <$> types,
           shared,
           typeExtras,

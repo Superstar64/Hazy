@@ -18,9 +18,9 @@ import qualified Stage2.Label.Context as Label (Context (Context))
 import qualified Stage2.Label.Context as Label.Context
 import Stage2.Scope (Global)
 import {-# SOURCE #-} qualified Stage2.Temporary.Complete.Module as Complete
+import qualified Stage2.Tree.Declaration as Declaration (labelBinding)
 import Stage2.Tree.Declarations (Declarations (Declarations))
 import qualified Stage2.Tree.Declarations as Declarations (Declarations (terms, types))
-import qualified Stage2.Tree.TermDeclaration as TermDeclaration (labelBinding)
 import qualified Stage2.Tree.TypeDeclaration as TypeDeclaration
 import Verbose (Debug)
 
@@ -39,7 +39,7 @@ labelContext modules =
     }
   where
     labelTerms = fmap $ \Module {name, declarations = Declarations {terms}} ->
-      TermDeclaration.labelBinding (toQualifiers name) <$> terms
+      Declaration.labelBinding (toQualifiers name) <$> terms
     labelTypes = fmap $ \Module {name, declarations = Declarations {types}} ->
       TypeDeclaration.labelBinding (toQualifiers name) <$> types
 

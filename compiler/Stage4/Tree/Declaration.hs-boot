@@ -1,6 +1,6 @@
 {-# LANGUAGE RoleAnnotations #-}
 
-module Stage4.Tree.TermDeclaration where
+module Stage4.Tree.Declaration where
 
 import Data.Kind (Type)
 import Stage2.Scope (Environment)

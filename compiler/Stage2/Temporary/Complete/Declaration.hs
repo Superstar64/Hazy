@@ -1,4 +1,4 @@
-module Stage2.Temporary.Complete.TermDeclaration where
+module Stage2.Temporary.Complete.Declaration where
 
 import Data.Foldable (toList)
 import Data.List.NonEmpty (NonEmpty (..))
@@ -27,6 +27,7 @@ import qualified Stage2.Index.Type0 as Type0
 import qualified Stage2.Index.Type2 as Type2
 import qualified Stage2.Resolve.Binding.Term as Term
 import qualified Stage2.Resolve.Detail.Binding.Term as Selector (Selector (..))
+import qualified Stage2.Temporary.Partial.Declaration as Partial
 import qualified Stage2.Temporary.Partial.More.Function as More.Function
 import qualified Stage2.Temporary.Partial.More.Method as More (Method (Method))
 import qualified Stage2.Temporary.Partial.More.Method as More.Method
@@ -34,21 +35,20 @@ import qualified Stage2.Temporary.Partial.More.Selector as More (Selector (Selec
 import qualified Stage2.Temporary.Partial.More.Selector as More.Selector
 import qualified Stage2.Temporary.Partial.More.Share as More (Shared (Shared))
 import qualified Stage2.Temporary.Partial.More.Share as More.Share
-import qualified Stage2.Temporary.Partial.TermDeclaration as Partial
+import qualified Stage2.Tree.Declaration as Real (Declaration (..))
 import qualified Stage2.Tree.Definition as Definition (merge)
 import qualified Stage2.Tree.Definition2 as Real (Choice (..), Definition2 (..))
 import Stage2.Tree.Scheme (Scheme)
-import qualified Stage2.Tree.TermDeclaration as Real (TermDeclaration (..))
 import Verbose (Debug (resolving))
 import Prelude hiding (Either (Left, Right), Real)
 
 data Real scope
-  = Real (Real.TermDeclaration scope)
+  = Real (Real.Declaration scope)
   | Select !More.Selector
   | Method !More.Method
 
-data TermDeclaration scope
-  = TermDeclaration
+data Declaration scope
+  = Declaration
   { position :: !Position,
     name :: !Variable,
     fixity :: !Fixity,
@@ -56,18 +56,18 @@ data TermDeclaration scope
     declaration :: !(Real scope)
   }
 
-shrink :: TermDeclaration scope -> Maybe (Real.TermDeclaration scope)
-shrink TermDeclaration {declaration} = case declaration of
+shrink :: Declaration scope -> Maybe (Real.Declaration scope)
+shrink Declaration {declaration} = case declaration of
   Real valid -> Just valid
   _ -> Nothing
 
 merge ::
   forall scope verbose.
   (Debug verbose) =>
-  NonEmpty (Partial.TermDeclaration scope) ->
-  verbose (TermDeclaration scope)
+  NonEmpty (Partial.Declaration scope) ->
+  verbose (Declaration scope)
 merge entries@(entry :| _) =
-  let termDeclaration declaration = TermDeclaration {position, name, fixity, annotation, declaration}
+  let termDeclaration declaration = Declaration {position, name, fixity, annotation, declaration}
    in termDeclaration <$> declaration
   where
     declaration = case catMaybes [fmap fst functions, fmap fst selection, fmap fst method, fmap fst share] of
@@ -158,19 +158,19 @@ merge entries@(entry :| _) =
       Nothing -> ()
       Just (position', _) -> duplicateAnnotationEntries [position', position]
 
-indexes :: Strict.Vector (TermDeclaration scope) -> Map Variable Int
+indexes :: Strict.Vector (Declaration scope) -> Map Variable Int
 indexes terms = Map.fromList $ zip (name <$> toList terms) [0 ..]
 
 bindings ::
   (Int -> Term0.Index scope) ->
   (Int -> Type0.Index scope) ->
-  Strict.Vector (TermDeclaration scope) ->
+  Strict.Vector (Declaration scope) ->
   Map Variable (Term.Binding scope)
 bindings index index' terms = Map.fromList $ makeIndexes 0 (toList terms)
   where
     makeIndexes n = \case
       [] -> []
-      TermDeclaration {position, name, fixity, declaration} : declarations -> case declaration of
+      Declaration {position, name, fixity, declaration} : declarations -> case declaration of
         Real _ ->
           (name, value) : makeIndexes (n + 1) declarations
           where

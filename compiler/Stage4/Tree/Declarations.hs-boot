@@ -10,7 +10,7 @@ import qualified Stage3.Tree.Declarations as Stage3
 import qualified Stage4.Index.Term as Term
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
-import {-# SOURCE #-} Stage4.Tree.TermDeclaration (LazyTermDeclaration)
+import {-# SOURCE #-} Stage4.Tree.Declaration (LazyTermDeclaration)
 
 type role Declarations nominal
 

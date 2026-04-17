@@ -4,8 +4,8 @@ import Control.Monad.ST (ST)
 import Stage2.Shift (Shift (..))
 import Stage3.Check.TypeAnnotation (Annotation (..), GlobalTypeAnnotation (..), LocalTypeAnnotation (..))
 import qualified Stage3.Functor.Annotated as Functor (Annotated (..))
-import {-# SOURCE #-} Stage3.Tree.TermDeclaration (TermDeclaration)
-import {-# SOURCE #-} qualified Stage3.Tree.TermDeclaration as TermDeclaration
+import {-# SOURCE #-} Stage3.Tree.Declaration (Declaration)
+import {-# SOURCE #-} qualified Stage3.Tree.Declaration as Declaration
 import {-# SOURCE #-} qualified Stage3.Unify as Unify
 import {-# SOURCE #-} qualified Stage4.Tree.Scheme as Simple (Scheme)
 
@@ -25,13 +25,13 @@ instance Shift (TermBinding s) where
   shift TermBinding {typex} = TermBinding {typex = fmap shift typex}
 
 rigid ::
-  Functor.Annotated name (ST s (GlobalTypeAnnotation scope)) (ST s (TermDeclaration scope)) ->
+  Functor.Annotated name (ST s (GlobalTypeAnnotation scope)) (ST s (Declaration scope)) ->
   TermBinding s scope
 rigid Functor.Annotated {meta, content} = TermBinding $ do
   annotation <- meta
   Rigid <$> case annotation of
     GlobalAnnotation Annotation {annotation'} -> pure annotation'
-    GlobalInferred -> TermDeclaration.simple <$> content
+    GlobalInferred -> Declaration.simple <$> content
 
 wobbly ::
   Functor.Annotated

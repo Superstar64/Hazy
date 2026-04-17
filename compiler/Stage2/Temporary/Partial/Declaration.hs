@@ -1,6 +1,6 @@
 {-# LANGUAGE_HAZY UnorderedRecords #-}
 
-module Stage2.Temporary.Partial.TermDeclaration where
+module Stage2.Temporary.Partial.Declaration where
 
 import Data.Foldable (toList)
 import qualified Data.Map as Map
@@ -16,15 +16,15 @@ import Stage1.Tree.Marked (Marked (..))
 import qualified Stage1.Tree.Pattern as Stage1 (Pattern (Variable))
 import Stage1.Variable (ConstructorIdentifier, Name (..), Variable)
 import Stage2.Resolve.Context (Context)
+import {-# SOURCE #-} qualified Stage2.Temporary.Complete.Declaration as Complete
+  ( Declaration (Declaration, annotation),
+  )
 import qualified Stage2.Temporary.Complete.Method as Complete (Method (Method))
 import qualified Stage2.Temporary.Complete.Method as Complete.Method
 import qualified Stage2.Temporary.Complete.Selector as Complete (Selector (Selector))
 import qualified Stage2.Temporary.Complete.Selector as Complete.Selector
 import qualified Stage2.Temporary.Complete.Shared as Complete (Shared (Shared))
 import qualified Stage2.Temporary.Complete.Shared as Complete.Shared (Shared (..))
-import {-# SOURCE #-} qualified Stage2.Temporary.Complete.TermDeclaration as Complete
-  ( TermDeclaration (TermDeclaration, annotation),
-  )
 import qualified Stage2.Temporary.Complete.TypeDeclaration as Complete (TypeDeclaration (TypeDeclaration))
 import qualified Stage2.Temporary.Complete.TypeDeclaration as Complete.TypeDeclaration
 import qualified Stage2.Temporary.Partial.Definition as Partial
@@ -41,7 +41,7 @@ import Stage2.Tree.Scheme (Scheme)
 import qualified Stage2.Tree.Scheme as Scheme
 import qualified Stage2.Tree.Shared as Shared
 
-data TermDeclaration scope
+data Declaration scope
   = Fixity
       { position :: !Position,
         name :: !Variable,
@@ -75,12 +75,12 @@ data TermDeclaration scope
 
 resolve ::
   Context scope ->
-  (Variable -> Complete.TermDeclaration scope) ->
+  (Variable -> Complete.Declaration scope) ->
   (ConstructorIdentifier -> (Int, Complete.TypeDeclaration scope)) ->
   (Int -> Complete.Shared scope) ->
   Int ->
   [Stage1.Declaration Position] ->
-  [(Variable, TermDeclaration scope)]
+  [(Variable, Declaration scope)]
 resolve
   context
   lookupTerm
@@ -132,7 +132,7 @@ resolve context lookupTerm lookupType lookupShared shareIndex (declaration : dec
         let Partial.Definition position name functionAuto =
               Partial.resolve undefined context leftHandSide rightHandSide
             functionManual = case lookupTerm name of
-              Complete.TermDeclaration {annotation = Just annotation} ->
+              Complete.Declaration {annotation = Just annotation} ->
                 let context' = Scheme.augment annotation context
                     Partial.Definition _ _ functionManual =
                       Partial.resolve undefined context' leftHandSide rightHandSide

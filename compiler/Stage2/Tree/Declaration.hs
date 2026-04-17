@@ -1,6 +1,6 @@
 {-# LANGUAGE_HAZY UnorderedRecords #-}
 
-module Stage2.Tree.TermDeclaration where
+module Stage2.Tree.Declaration where
 
 import Stage1.Position (Position)
 import Stage1.Tree.Fixity (Fixity (..))
@@ -13,7 +13,7 @@ import Stage2.Tree.Definition2 (Annotated, Definition2, Inferred)
 import Stage2.Tree.Scheme (Scheme)
 import Prelude hiding (Either (Left, Right))
 
-data TermDeclaration scope
+data Declaration scope
   = Annotated
       { position :: !Position,
         name :: !Variable,
@@ -29,10 +29,10 @@ data TermDeclaration scope
       }
   deriving (Show)
 
-instance Shift TermDeclaration where
+instance Shift Declaration where
   shift = shiftDefault
 
-instance Shift.Functor TermDeclaration where
+instance Shift.Functor Declaration where
   map category = \case
     Annotated {position, name, fixity, annotation, definition} ->
       Annotated
@@ -50,10 +50,10 @@ instance Shift.Functor TermDeclaration where
           definition' = Shift.map category definition'
         }
 
-instance FreeTermVariables TermDeclaration where
+instance FreeTermVariables Declaration where
   freeTermVariables target = \case
     Annotated {definition} -> freeTermVariables target definition
     Inferred {definition'} -> freeTermVariables target definition'
 
-labelBinding :: Qualifiers -> TermDeclaration scope -> Label.TermBinding scope'
+labelBinding :: Qualifiers -> Declaration scope -> Label.TermBinding scope'
 labelBinding path declaration = Label.TermBinding {name = path :- name declaration}

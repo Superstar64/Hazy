@@ -1,13 +1,13 @@
-module Stage3.Temporary.TermDeclaration where
+module Stage3.Temporary.Declaration where
 
 import Control.Monad.ST (ST)
 import Stage1.Position (Position)
 import Stage1.Variable (Variable)
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (shift)
+import qualified Stage2.Tree.Declaration as Stage2 (Declaration (..))
 import Stage2.Tree.Definition2 (Annotated, Inferred)
 import qualified Stage2.Tree.Definition2 as Stage2 (Definition2)
-import qualified Stage2.Tree.TermDeclaration as Stage2 (TermDeclaration (..))
 import Stage3.Check.Context (Context (..))
 import qualified Stage3.Check.Mask as Mask
 import Stage3.Check.TypeAnnotation (Annotation (..), GlobalTypeAnnotation (..), LocalTypeAnnotation (..))
@@ -16,15 +16,15 @@ import Stage3.Simple.Type (lift)
 import qualified Stage3.Simple.Type as Simple.Type
 import Stage3.Temporary.Definition2 (Definition2 (..))
 import qualified Stage3.Temporary.Definition2 as Definition2
+import qualified Stage3.Tree.Declaration as Solved (Declaration (..))
 import qualified Stage3.Tree.Scheme as Solved (Scheme (..))
 import qualified Stage3.Tree.Scheme as Solved.Scheme
-import qualified Stage3.Tree.TermDeclaration as Solved (TermDeclaration (..))
 import qualified Stage3.Tree.TypePattern as TypePattern
 import qualified Stage3.Unify as Unify
 import qualified Stage4.Tree.Constraint as Simple.Constraint (simplify)
 import qualified Stage4.Tree.Type as Simple (simplify)
 
-data TermDeclaration s scope
+data Declaration s scope
   = Auto
       { position :: !Position,
         name :: !Variable,
@@ -37,7 +37,7 @@ data TermDeclaration s scope
         annotation :: !(Solved.Scheme scope)
       }
 
-instance Unify.Zonk TermDeclaration where
+instance Unify.Zonk Declaration where
   zonk zonker = \case
     Auto {position, name, body} -> do
       body <- Unify.zonk zonker body
@@ -50,8 +50,8 @@ checkLocal ::
   Context s scope ->
   (Int -> ST s (Unify.Scheme s scope)) ->
   LocalTypeAnnotation s scope ->
-  Stage2.TermDeclaration scope ->
-  ST s (TermDeclaration s scope)
+  Stage2.Declaration scope ->
+  ST s (Declaration s scope)
 checkLocal context shared annotation declaration =
   declaration `go` annotation
   where
@@ -65,8 +65,8 @@ checkGlobal ::
   Context s scope ->
   (Int -> ST s (Unify.Scheme s scope)) ->
   GlobalTypeAnnotation scope ->
-  Stage2.TermDeclaration scope ->
-  ST s (TermDeclaration s scope)
+  Stage2.Declaration scope ->
+  ST s (Declaration s scope)
 checkGlobal context shared annotation declaration =
   declaration `go` annotation
   where
@@ -88,7 +88,7 @@ check' ::
   Position ->
   Variable ->
   Stage2.Definition2 mark scope ->
-  ST s (TermDeclaration s scope)
+  ST s (Declaration s scope)
 check'
   context
   shared
@@ -139,7 +139,7 @@ checkAnnotation
           (Simple.Constraint.lift . Simple.Constraint.simplify <$> constraints)
           definition
 
-solve :: TermDeclaration s scope -> ST s (Solved.TermDeclaration scope)
+solve :: Declaration s scope -> ST s (Solved.Declaration scope)
 solve = \case
   Manual {position, name, body, annotation} -> do
     body <- Unify.solveSchemeOver (Unify.Solve Definition2.solve) position body

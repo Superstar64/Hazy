@@ -234,6 +234,7 @@ executable hazy
     Stage2.Temporary.Complete.Constructor
     Stage2.Temporary.Complete.ConstructorDeclaration
     Stage2.Temporary.Complete.DataInstance
+    Stage2.Temporary.Complete.Declaration
     Stage2.Temporary.Complete.Declarations
     Stage2.Temporary.Complete.Field
     Stage2.Temporary.Complete.GADTConstructor
@@ -241,11 +242,11 @@ executable hazy
     Stage2.Temporary.Complete.Module
     Stage2.Temporary.Complete.Selector
     Stage2.Temporary.Complete.Shared
-    Stage2.Temporary.Complete.TermDeclaration
     Stage2.Temporary.Complete.TypeDeclaration
     Stage2.Temporary.ExpressionInfix
     Stage2.Temporary.Infix
     Stage2.Temporary.Partial.ConstructorDeclaration
+    Stage2.Temporary.Partial.Declaration
     Stage2.Temporary.Partial.Definition
     Stage2.Temporary.Partial.Method
     Stage2.Temporary.Partial.More.ADT
@@ -257,7 +258,6 @@ executable hazy
     Stage2.Temporary.Partial.More.Selector
     Stage2.Temporary.Partial.More.Share
     Stage2.Temporary.Partial.More.Synonym
-    Stage2.Temporary.Partial.TermDeclaration
     Stage2.Temporary.Partial.TypeDeclaration
     Stage2.Temporary.PatternInfix
     Stage2.Temporary.TypeInfix
@@ -266,6 +266,7 @@ executable hazy
     Stage2.Tree.CallHead
     Stage2.Tree.Constraint
     Stage2.Tree.Constructor
+    Stage2.Tree.Declaration
     Stage2.Tree.Declarations
     Stage2.Tree.Definition
     Stage2.Tree.Definition2
@@ -288,7 +289,6 @@ executable hazy
     Stage2.Tree.Shared
     Stage2.Tree.Statements
     Stage2.Tree.StrictnessAnnotation
-    Stage2.Tree.TermDeclaration
     Stage2.Tree.Type
     Stage2.Tree.TypeDeclaration
     Stage2.Tree.TypeDeclarationExtra
@@ -328,6 +328,7 @@ executable hazy
     Stage3.Temporary.Constraint
     Stage3.Temporary.Constructor
     Stage3.Temporary.ConstructorInfo
+    Stage3.Temporary.Declaration
     Stage3.Temporary.Declarations
     Stage3.Temporary.Definition
     Stage3.Temporary.Definition2
@@ -349,7 +350,6 @@ executable hazy
     Stage3.Temporary.Shared
     Stage3.Temporary.Statements
     Stage3.Temporary.StrictnessAnnotation
-    Stage3.Temporary.TermDeclaration
     Stage3.Temporary.Type
     Stage3.Temporary.TypePattern
     Stage3.Tree.Alternative
@@ -358,6 +358,7 @@ executable hazy
     Stage3.Tree.Constraint
     Stage3.Tree.Constructor
     Stage3.Tree.ConstructorInfo
+    Stage3.Tree.Declaration
     Stage3.Tree.Declarations
     Stage3.Tree.Definition
     Stage3.Tree.Definition2
@@ -382,7 +383,6 @@ executable hazy
     Stage3.Tree.Shared
     Stage3.Tree.Statements
     Stage3.Tree.StrictnessAnnotation
-    Stage3.Tree.TermDeclaration
     Stage3.Tree.Type
     Stage3.Tree.TypeDeclaration
     Stage3.Tree.TypeDeclarationExtra
@@ -427,6 +427,7 @@ executable hazy
     Stage4.Tree.Constructor
     Stage4.Tree.ConstructorInfo
     Stage4.Tree.Data
+    Stage4.Tree.Declaration
     Stage4.Tree.Declarations
     Stage4.Tree.Entry
     Stage4.Tree.EntryInfo
@@ -441,7 +442,6 @@ executable hazy
     Stage4.Tree.Scheme
     Stage4.Tree.SchemeOver
     Stage4.Tree.Statements
-    Stage4.Tree.TermDeclaration
     Stage4.Tree.Type
     Stage4.Tree.TypeDeclaration
     Stage4.Tree.TypeDeclarationExtra

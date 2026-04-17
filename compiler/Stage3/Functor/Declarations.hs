@@ -13,13 +13,13 @@ import Stage1.Variable (Qualifiers)
 import qualified Stage2.Index.Type2 as Type2
 import qualified Stage2.Label.Binding.Term as Label (TermBinding)
 import qualified Stage2.Label.Binding.Type as Label (TypeBinding)
+import qualified Stage2.Tree.Declaration as Stage2 (Declaration)
+import qualified Stage2.Tree.Declaration as Stage2.Declaration
 import qualified Stage2.Tree.Declarations as Stage2
   ( Declarations (..),
   )
 import qualified Stage2.Tree.Instance as Stage2 (Instance)
 import qualified Stage2.Tree.Shared as Stage2 (Shared (..))
-import qualified Stage2.Tree.TermDeclaration as Stage2 (TermDeclaration)
-import qualified Stage2.Tree.TermDeclaration as Stage2.TermDeclaration
 import qualified Stage2.Tree.TypeDeclaration as Stage2 (TypeDeclaration)
 import qualified Stage2.Tree.TypeDeclaration as Stage2.TypeDeclaration
 import qualified Stage2.Tree.TypeDeclarationExtra as Stage2 (TypeDeclarationExtra)
@@ -114,8 +114,8 @@ fromStage2 ::
   Stage2.Declarations scope ->
   Declarations
     scope
-    (Stage2.TermDeclaration scope)
-    (Stage2.TermDeclaration scope)
+    (Stage2.Declaration scope)
+    (Stage2.Declaration scope)
     (Stage2.Shared scope)
     (Stage2.TypeDeclaration scope)
     (Stage2.TypeDeclaration scope)
@@ -134,7 +134,7 @@ fromStage2
     } =
     let termDeclaration term@meta@content =
           Annotated
-            { label = Stage2.TermDeclaration.labelBinding path term,
+            { label = Stage2.Declaration.labelBinding path term,
               meta,
               content
             }

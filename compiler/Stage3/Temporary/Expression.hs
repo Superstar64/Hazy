@@ -35,6 +35,7 @@ import Stage3.Temporary.CallHead (CallHead)
 import qualified Stage3.Temporary.CallHead as CallHead
 import Stage3.Temporary.ConstructorInfo (ConstructorInfo)
 import qualified Stage3.Temporary.ConstructorInfo as ConstructorInfo
+import qualified Stage3.Temporary.Declaration as Declaration
 import Stage3.Temporary.Declarations (Declarations)
 import qualified Stage3.Temporary.Declarations as Declarations
 import Stage3.Temporary.Do (Do)
@@ -47,7 +48,6 @@ import Stage3.Temporary.Pattern (Pattern)
 import qualified Stage3.Temporary.Pattern as Pattern
 import Stage3.Temporary.RightHandSide (RightHandSide)
 import qualified Stage3.Temporary.RightHandSide as RightHandSide
-import qualified Stage3.Temporary.TermDeclaration as TermDeclaration
 import qualified Stage3.Tree.Expression as Solved
 import Stage3.Tree.Scheme (Scheme)
 import qualified Stage3.Unify as Unify
@@ -292,7 +292,7 @@ check context typex Stage2.RightSection {left, operatorPosition, right} = do
   pure RightSection {left, right}
 check context typex Stage2.Annotation {expression, operatorPosition, annotation} = do
   Annotation.Annotation {annotation, annotation'} <- Annotation.checkAnnotation context annotation
-  expression <- TermDeclaration.checkAnnotation context operatorPosition annotation $
+  expression <- Declaration.checkAnnotation context operatorPosition annotation $
     \context typex -> check context typex expression
   (typex', instanciation) <- instanciate context operatorPosition annotation'
   Unify.unify context operatorPosition typex typex'

@@ -27,21 +27,21 @@ import Stage2.Temporary.Complete.ConstructorDeclaration (ConstructorDeclaration)
 import qualified Stage2.Temporary.Complete.ConstructorDeclaration as Constructor (merge)
 import qualified Stage2.Temporary.Complete.ConstructorDeclaration as ConstructorDeclaration
 import qualified Stage2.Temporary.Complete.DataInstance as DataInstance
+import Stage2.Temporary.Complete.Declaration (Declaration)
+import qualified Stage2.Temporary.Complete.Declaration as Term (bindings, indexes, merge, shrink)
 import Stage2.Temporary.Complete.Shared (Shared)
 import qualified Stage2.Temporary.Complete.Shared as Shared (resolve, shrink)
-import Stage2.Temporary.Complete.TermDeclaration (TermDeclaration)
-import qualified Stage2.Temporary.Complete.TermDeclaration as Term (bindings, indexes, merge, shrink)
 import Stage2.Temporary.Complete.TypeDeclaration (TypeDeclaration)
 import qualified Stage2.Temporary.Complete.TypeDeclaration as Type (bindings, indexes, merge, shrink, shrinkExtra)
 import qualified Stage2.Temporary.Partial.ConstructorDeclaration as Constructor (resolve)
-import qualified Stage2.Temporary.Partial.TermDeclaration as Term (resolve)
+import qualified Stage2.Temporary.Partial.Declaration as Term (resolve)
 import qualified Stage2.Temporary.Partial.TypeDeclaration as Declaration.Type (resolve)
 import qualified Stage2.Tree.Declarations as Real
 import Stage2.Tree.Instance (Instance)
 import Verbose (Debug)
 
 data Declarations scope = Declarations
-  { terms :: !(Strict.Vector (TermDeclaration scope)),
+  { terms :: !(Strict.Vector (Declaration scope)),
     constructors :: !(Strict.Vector ConstructorDeclaration),
     types :: !(Strict.Vector (TypeDeclaration scope)),
     shared :: !(Strict.Vector (Shared scope)),

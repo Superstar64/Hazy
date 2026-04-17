@@ -14,10 +14,10 @@ import Stage1.Variable (FullyQualifiedConstructorIdentifier ((:.=.)))
 import qualified Stage2.Index.Type as Type (Index (..))
 import qualified Stage2.Index.Type2 as Type2
 import qualified Stage2.Scope as Scope
+import Stage4.Tree.Declaration (Declaration (Definition))
+import qualified Stage4.Tree.Declaration as Term
 import Stage4.Tree.Declarations (Declarations (..))
 import qualified Stage4.Tree.Module as Stage4 (Module (..))
-import Stage4.Tree.TermDeclaration (TermDeclaration (Definition))
-import qualified Stage4.Tree.TermDeclaration as Term
 import qualified Stage4.Tree.TypeDeclaration as Type (LazyTypeDeclaration (..))
 import qualified Stage5.Generate.Context as Context
 import Stage5.Generate.Global (Global (Global))

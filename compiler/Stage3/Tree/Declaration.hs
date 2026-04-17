@@ -1,4 +1,4 @@
-module Stage3.Tree.TermDeclaration where
+module Stage3.Tree.Declaration where
 
 import Stage1.Variable (Variable)
 import Stage3.Tree.Definition2 (Definition2 (..))
@@ -7,12 +7,12 @@ import qualified Stage4.Tree.Scheme as Simple (Scheme (Scheme))
 import qualified Stage4.Tree.SchemeOver as Simple (SchemeOver (..))
 import Prelude hiding (Maybe (Just))
 
-data LazyTermDeclaration scope = !Variable :^ TermDeclaration scope
+data LazyTermDeclaration scope = !Variable :^ Declaration scope
   deriving (Show)
 
 infix 4 :^
 
-data TermDeclaration scope
+data Declaration scope
   = Manual
       { name :: !Variable,
         body :: !(Simple.SchemeOver Definition2 scope),
@@ -26,7 +26,7 @@ data TermDeclaration scope
 
 strict declaration = name declaration :^ declaration
 
-simple :: TermDeclaration scope -> Simple.Scheme scope
+simple :: Declaration scope -> Simple.Scheme scope
 simple declaration = case body declaration of
   Simple.SchemeOver {parameters, constraints, result}
     | result <- typex result ->

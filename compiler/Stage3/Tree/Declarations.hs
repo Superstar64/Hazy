@@ -5,9 +5,9 @@ import Data.Vector (Vector)
 import qualified Stage2.Index.Type2 as Type2
 import qualified Stage3.Functor.Annotated as Functor (Annotated (..))
 import qualified Stage3.Functor.Declarations as Functor (Declarations (..))
+import Stage3.Tree.Declaration (LazyTermDeclaration)
 import {-# SOURCE #-} Stage3.Tree.Instance (Instance)
 import Stage3.Tree.Shared (Shared)
-import Stage3.Tree.TermDeclaration (LazyTermDeclaration)
 import Stage3.Tree.TypeDeclaration (LazyTypeDeclaration)
 import Stage3.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 

@@ -10,12 +10,12 @@ import qualified Graph.Topological8
 import Stage1.Variable (FullQualifiers)
 import qualified Stage2.Index.Type as Type
 import Stage2.Scope (Global)
+import qualified Stage2.Tree.Declaration as Stage2 (Declaration)
+import qualified Stage2.Tree.Declaration as Stage2.Declaration
 import qualified Stage2.Tree.Declarations as Stage2.Declarations
 import qualified Stage2.Tree.Instance as Stage2.Instance
 import qualified Stage2.Tree.Module as Stage2 (Module (..))
 import qualified Stage2.Tree.Shared as Stage2.Shared
-import qualified Stage2.Tree.TermDeclaration as Stage2 (TermDeclaration)
-import qualified Stage2.Tree.TermDeclaration as Stage2.TermDeclaration
 import qualified Stage2.Tree.TypeDeclaration as Stage2.TypeDeclaration
 import qualified Stage2.Tree.TypeDeclarationExtra as Stage2.TypeDeclarationExtra
 import Stage3.Check.Context (globalBindings)
@@ -33,16 +33,16 @@ import qualified Stage3.Functor.Module as Functor (Module (..))
 import Stage3.Functor.ModuleSet (mapWithKey)
 import qualified Stage3.Functor.ModuleSet as Functor (ModuleSet (..))
 import qualified Stage3.Simple.Scheme as Scheme
+import qualified Stage3.Temporary.Declaration as Declaration.Unsolved
 import qualified Stage3.Temporary.Shared as Temporary.Shared
-import qualified Stage3.Temporary.TermDeclaration as TermDeclaration.Unsolved
+import Stage3.Tree.Declaration (Declaration, LazyTermDeclaration)
+import qualified Stage3.Tree.Declaration as Declaration
 import Stage3.Tree.Declarations (Declarations)
 import qualified Stage3.Tree.Declarations as Declarations
 import Stage3.Tree.Instance (Instance)
 import qualified Stage3.Tree.Instance as Instance
 import Stage3.Tree.Shared (Shared (..))
 import qualified Stage3.Tree.Shared as Shared
-import Stage3.Tree.TermDeclaration (LazyTermDeclaration, TermDeclaration)
-import qualified Stage3.Tree.TermDeclaration as TermDeclaration
 import Stage3.Tree.TypeDeclaration (LazyTypeDeclaration, TypeDeclaration)
 import qualified Stage3.Tree.TypeDeclaration as TypeDeclaration
 import Stage3.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
@@ -60,7 +60,7 @@ data Module = Module
 type Functor s =
   Functor.ModuleSet
     (ST s (GlobalTypeAnnotation Global))
-    (ST s (TermDeclaration Global))
+    (ST s (Declaration Global))
     (ST s (Shared Global))
     (ST s (KindAnnotation Global))
     (ST s (TypeDeclaration Global))
@@ -73,7 +73,7 @@ type Formula s z =
     Functor.ModuleSet
     s
     (GlobalTypeAnnotation Global)
-    (TermDeclaration Global)
+    (Declaration Global)
     (Shared Global)
     (KindAnnotation Global)
     (TypeDeclaration Global)
@@ -145,7 +145,7 @@ check modules =
         declarations <- Stage2.declarations modulex,
         terms <- Stage2.Declarations.terms declarations,
         term <- terms Vector.! term =
-          Stage2.TermDeclaration.name term TermDeclaration.:^ declaration
+          Stage2.Declaration.name term Declaration.:^ declaration
 
     typex modulex typex declaration
       | modulex <- modules Vector.! modulex,
@@ -157,23 +157,23 @@ check modules =
 checkTermAnnotation ::
   p1 ->
   p2 ->
-  Stage2.TermDeclaration Global ->
+  Stage2.Declaration Global ->
   Formula s (GlobalTypeAnnotation Global)
 checkTermAnnotation _ _ declaration = Formula8 {cycle, run}
   where
     cycle :: a
-    cycle = cyclicalTypeChecking $ Stage2.TermDeclaration.position declaration
+    cycle = cyclicalTypeChecking $ Stage2.Declaration.position declaration
     run modules = TypeAnnotation.checkGlobal (globalBindings modules) declaration
 
 checkTermDeclaration ::
   Int ->
   Int ->
-  Stage2.TermDeclaration Global ->
-  Formula s (TermDeclaration Global)
+  Stage2.Declaration Global ->
+  Formula s (Declaration Global)
 checkTermDeclaration global local declaration = Formula8 {cycle, run}
   where
     cycle :: a
-    cycle = cyclicalTypeChecking $ Stage2.TermDeclaration.position declaration
+    cycle = cyclicalTypeChecking $ Stage2.Declaration.position declaration
     run moduleSet@(Functor.ModuleSet modules) = do
       let Functor.Module {declarations} = modules Vector.! global
           Functor.Declarations {terms, shared} = declarations
@@ -184,8 +184,8 @@ checkTermDeclaration global local declaration = Formula8 {cycle, run}
           share index = do
             Shared {body} <- shared Vector.! index
             pure $ Scheme.lift $ Scheme $ SchemeOver.map (SchemeOver.Map Shared.typex) body
-      unsolved <- TermDeclaration.Unsolved.checkGlobal context share annotation declaration
-      TermDeclaration.Unsolved.solve unsolved
+      unsolved <- Declaration.Unsolved.checkGlobal context share annotation declaration
+      Declaration.Unsolved.solve unsolved
 
 checkShared ::
   p1 ->

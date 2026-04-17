@@ -24,7 +24,7 @@ import Stage1.Variable (ConstructorIdentifier, FullyQualifiedConstructorIdentifi
 import qualified Stage2.Index.Constructor as Constructor
 import qualified Stage2.Index.Type as Type
 import qualified Stage2.Index.Type2 as Type2
-import Stage4.Tree.TermDeclaration (Name (..))
+import Stage4.Tree.Declaration (Name (..))
 import Stage5.Generate.Mangle.Builtin (Builtin (..), canonical)
 import qualified Stage5.Generate.Mangle.Builtin as Builtin
 import System.FilePath ((</>))

@@ -9,7 +9,8 @@ import qualified Stage2.Index.Table.Term as Term
 import qualified Stage2.Index.Table.Type as Type
 import qualified Stage2.Index.Type2 as Type2
 import qualified Stage2.Label.Context as Label
-import Stage2.Scope (Declaration, Environment (..), Global, Local)
+import Stage2.Scope (Environment (..), Global, Local)
+import qualified Stage2.Scope as Scope (Declaration)
 import qualified Stage2.Shift as Shift
 import {-# SOURCE #-} Stage3.Check.InstanceAnnotation (InstanceAnnotation)
 import {-# SOURCE #-} Stage3.Check.KindAnnotation (KindAnnotation (..))
@@ -23,7 +24,7 @@ import qualified Stage3.Check.TypeBinding as TypeBinding
 import qualified Stage3.Functor.Declarations as Functor (Declarations (..))
 import qualified Stage3.Functor.Module as Functor (Module (..))
 import qualified Stage3.Functor.ModuleSet as Functor (ModuleSet (..))
-import {-# SOURCE #-} Stage3.Tree.TermDeclaration (TermDeclaration)
+import {-# SOURCE #-} Stage3.Tree.Declaration (Declaration)
 import {-# SOURCE #-} Stage3.Tree.TypeDeclaration (TypeDeclaration)
 import {-# SOURCE #-} Stage3.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 import Stage4.Tree.Type (Type)
@@ -48,7 +49,7 @@ instance Shift.Unshift (Context s) where
 globalBindings ::
   Functor.ModuleSet
     (ST s (GlobalTypeAnnotation Global))
-    (ST s (TermDeclaration Global))
+    (ST s (Declaration Global))
     x
     (ST s (KindAnnotation Global))
     (ST s (TypeDeclaration Global))
@@ -72,17 +73,17 @@ globalBindings (Functor.ModuleSet modules) =
 
 localBindings ::
   Functor.Declarations
-    (Declaration ':+ scope)
-    (ST s (LocalTypeAnnotation s (Declaration ':+ scope)))
+    (Scope.Declaration ':+ scope)
+    (ST s (LocalTypeAnnotation s (Scope.Declaration ':+ scope)))
     x
     x'
-    (ST s (KindAnnotation (Declaration ':+ scope)))
-    (ST s (TypeDeclaration (Declaration ':+ scope)))
-    (ST s (TypeDeclarationExtra (Declaration ':+ scope)))
-    (ST s (InstanceAnnotation (Declaration ':+ scope)))
+    (ST s (KindAnnotation (Scope.Declaration ':+ scope)))
+    (ST s (TypeDeclaration (Scope.Declaration ':+ scope)))
+    (ST s (TypeDeclarationExtra (Scope.Declaration ':+ scope)))
+    (ST s (InstanceAnnotation (Scope.Declaration ':+ scope)))
     x'' ->
   Context s scope ->
-  Context s (Declaration ':+ scope)
+  Context s (Scope.Declaration ':+ scope)
 localBindings
   Functor.Declarations {terms, types, typeExtras, classInstances, dataInstances}
   Context {termEnvironment, localEnvironment, typeEnvironment} =
