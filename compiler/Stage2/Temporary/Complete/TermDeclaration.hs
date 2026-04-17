@@ -38,7 +38,7 @@ import qualified Stage2.Temporary.Partial.TermDeclaration as Partial
 import qualified Stage2.Tree.Definition as Definition (merge)
 import qualified Stage2.Tree.Definition2 as Real (Choice (..), Definition2 (..))
 import Stage2.Tree.Scheme (Scheme)
-import qualified Stage2.Tree.TermDeclaration as Real (TermDeclaration (..), TermDeclaration' (..))
+import qualified Stage2.Tree.TermDeclaration as Real (TermDeclaration (..))
 import Verbose (Debug (resolving))
 import Prelude hiding (Either (Left, Right), Real)
 
@@ -76,14 +76,14 @@ merge entries@(entry :| _) =
         | Just (position, body) <- functions -> case annotation of
             Nothing -> Real <$> Verbose.resolving (Variable.printLiteral' name) real
               where
-                real = Real.TermDeclaration {position, name, fixity, declaration}
-                declaration = Real.Inferred {definition' = Real.Auto definition}
-                definition = Definition.merge $ fmap More.Function.functionAuto body
+                real = Real.Inferred {position, name, fixity, definition'}
+                definition' = Real.Auto merged
+                merged = Definition.merge $ fmap More.Function.functionAuto body
             Just annotation -> Real <$> Verbose.resolving (Variable.printLiteral' name) real
               where
-                real = Real.TermDeclaration {position, name, fixity, declaration}
-                declaration = Real.Annotated {annotation, definition = Real.Manual definition}
-                definition = Definition.merge $ fmap More.Function.functionManual body
+                real = Real.Annotated {position, name, fixity, annotation, definition}
+                definition = Real.Manual merged
+                merged = Definition.merge $ fmap More.Function.functionManual body
         | Just (_, More.Selector {typeIndex, selectorIndex}) <- selection,
           () <- noAnnotation ->
             pure $ Select More.Selector {typeIndex, selectorIndex}
@@ -93,10 +93,9 @@ merge entries@(entry :| _) =
         | Just (position, More.Shared {shareIndex, bound, patternx}) <- share ->
             let shared :: Real.Definition2 marked scope
                 shared = Real.Share Real.Choice {position, shareIndex, bound, patternx}
-                declaration = case annotation of
-                  Nothing -> Real.Inferred {definition' = shared}
-                  Just annotation -> Real.Annotated {annotation, definition = shared}
-                real = Real.TermDeclaration {position, name, fixity, declaration}
+                real = case annotation of
+                  Nothing -> Real.Inferred {position, name, fixity, definition' = shared}
+                  Just annotation -> Real.Annotated {position, name, fixity, annotation, definition = shared}
              in Real <$> Verbose.resolving (Variable.printLiteral' name) real
         | otherwise -> error "no entry"
       entries -> duplicateVariableEntries entries

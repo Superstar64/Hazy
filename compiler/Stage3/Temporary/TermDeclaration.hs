@@ -7,7 +7,7 @@ import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (shift)
 import Stage2.Tree.Definition2 (Annotated, Inferred)
 import qualified Stage2.Tree.Definition2 as Stage2 (Definition2)
-import qualified Stage2.Tree.TermDeclaration as Stage2 (TermDeclaration (..), TermDeclaration' (..))
+import qualified Stage2.Tree.TermDeclaration as Stage2 (TermDeclaration (..))
 import Stage3.Check.Context (Context (..))
 import qualified Stage3.Check.Mask as Mask
 import Stage3.Check.TypeAnnotation (Annotation (..), GlobalTypeAnnotation (..), LocalTypeAnnotation (..))
@@ -52,12 +52,12 @@ checkLocal ::
   LocalTypeAnnotation s scope ->
   Stage2.TermDeclaration scope ->
   ST s (TermDeclaration s scope)
-checkLocal context shared annotation Stage2.TermDeclaration {position, name, declaration} =
+checkLocal context shared annotation declaration =
   declaration `go` annotation
   where
-    Stage2.Annotated {definition} `go` LocalAnnotation annotation =
+    Stage2.Annotated {position, name, definition} `go` LocalAnnotation annotation =
       check' context shared (Marked annotation) position name definition
-    Stage2.Inferred {definition'} `go` LocalInferred typex =
+    Stage2.Inferred {position, name, definition'} `go` LocalInferred typex =
       check' context shared (Local typex) position name definition'
     go _ _ = error "bad annotation"
 
@@ -67,12 +67,12 @@ checkGlobal ::
   GlobalTypeAnnotation scope ->
   Stage2.TermDeclaration scope ->
   ST s (TermDeclaration s scope)
-checkGlobal context shared annotation Stage2.TermDeclaration {position, name, declaration} =
+checkGlobal context shared annotation declaration =
   declaration `go` annotation
   where
-    Stage2.Annotated {definition} `go` GlobalAnnotation annotation =
+    Stage2.Annotated {position, name, definition} `go` GlobalAnnotation annotation =
       check' context shared (Marked annotation) position name definition
-    Stage2.Inferred {definition'} `go` GlobalInferred =
+    Stage2.Inferred {position, name, definition'} `go` GlobalInferred =
       check' context shared Global position name definition'
     go _ _ = error "bad annotation"
 

@@ -14,12 +14,19 @@ import Stage2.Tree.Scheme (Scheme)
 import Prelude hiding (Either (Left, Right))
 
 data TermDeclaration scope
-  = TermDeclaration
-  { position :: !Position,
-    name :: !Variable,
-    fixity :: !Fixity,
-    declaration :: !(TermDeclaration' scope)
-  }
+  = Annotated
+      { position :: !Position,
+        name :: !Variable,
+        fixity :: !Fixity,
+        annotation :: !(Scheme Position scope),
+        definition :: !(Definition2 Annotated scope)
+      }
+  | Inferred
+      { position :: !Position,
+        name :: !Variable,
+        fixity :: !Fixity,
+        definition' :: !(Definition2 Inferred scope)
+      }
   deriving (Show)
 
 instance Shift TermDeclaration where
@@ -27,44 +34,23 @@ instance Shift TermDeclaration where
 
 instance Shift.Functor TermDeclaration where
   map category = \case
-    TermDeclaration {position, name, fixity, declaration} ->
-      TermDeclaration
+    Annotated {position, name, fixity, annotation, definition} ->
+      Annotated
         { position,
           name,
           fixity,
-          declaration = Shift.map category declaration
+          annotation = Shift.map category annotation,
+          definition = Shift.map category definition
+        }
+    Inferred {position, name, fixity, definition'} ->
+      Inferred
+        { position,
+          name,
+          fixity,
+          definition' = Shift.map category definition'
         }
 
 instance FreeTermVariables TermDeclaration where
-  freeTermVariables target TermDeclaration {declaration} =
-    freeTermVariables target declaration
-
-data TermDeclaration' scope
-  = Annotated
-      { annotation :: !(Scheme Position scope),
-        definition :: !(Definition2 Annotated scope)
-      }
-  | Inferred
-      { definition' :: !(Definition2 Inferred scope)
-      }
-  deriving (Show)
-
-instance Shift TermDeclaration' where
-  shift = shiftDefault
-
-instance Shift.Functor TermDeclaration' where
-  map category = \case
-    Annotated {annotation, definition} ->
-      Annotated
-        { annotation = Shift.map category annotation,
-          definition = Shift.map category definition
-        }
-    Inferred {definition'} ->
-      Inferred
-        { definition' = Shift.map category definition'
-        }
-
-instance FreeTermVariables TermDeclaration' where
   freeTermVariables target = \case
     Annotated {definition} -> freeTermVariables target definition
     Inferred {definition'} -> freeTermVariables target definition'
