@@ -17,8 +17,8 @@ import qualified Stage3.Simple.Type as Simple.Type
 import {-# SOURCE #-} qualified Stage3.Temporary.Definition as Definition
 import Stage3.Tree.Definition (Definition)
 import Stage3.Tree.Method (Method (..))
-import Stage3.Tree.TypeDeclaration (TypeDeclaration)
-import qualified Stage3.Tree.TypeDeclaration as TypeDeclaration
+import Stage3.Tree.TypeDeclaration (TypeDeclaration (..))
+import qualified Stage3.Tree.TypeDefinition as TypeDefinition
 import qualified Stage4.Tree.Constraint as Simple (Constraint (..))
 import qualified Stage4.Tree.Constraint as Simple.Constraint
 import qualified Stage4.Tree.Scheme as Simple (Scheme (..))
@@ -39,12 +39,12 @@ check ::
   TypeDeclaration scope ->
   Stage2.TypeDeclarationExtra scope ->
   ST s (TypeDeclarationExtra scope)
-check context classx proper = \case
+check context classx TypeDeclaration {definition} = \case
   Stage2.ADT {} -> pure ADT
   Stage2.Synonym {} -> pure Synonym
   Stage2.GADT {} -> pure GADT
-  Stage2.Class {position, methods} -> case proper of
-    TypeDeclaration.Class {parameter, methods = base} -> do
+  Stage2.Class {position, methods} -> case definition of
+    TypeDefinition.Class {parameter, methods = base} -> do
       context <-
         augment
           position

@@ -40,8 +40,9 @@ import qualified Stage2.Tree.Constructor as Real.Constructor
 import qualified Stage2.Tree.Entry as Real.Entry
 import qualified Stage2.Tree.Field as Real.Field
 import qualified Stage2.Tree.StrictnessAnnotation as StrictnessAnnotation
-import qualified Stage2.Tree.TypeDeclaration as Real
+import qualified Stage2.Tree.TypeDeclaration as Real (TypeDeclaration (..))
 import qualified Stage2.Tree.TypeDeclarationExtra as Real.Extra
+import qualified Stage2.Tree.TypeDefinition as Real (TypeDefinition (..))
 import Verbose (Debug (resolving))
 
 data Constructors scope
@@ -123,14 +124,17 @@ merge entries@(entry :| _) =
                         | otherwise = () ->
                     seq
                       sane
-                      Real.ADT
+                      Real.TypeDeclaration
                         { position,
                           name,
-                          brand,
-                          parameters,
-                          constructors,
-                          selectors,
-                          annotation
+                          annotation,
+                          definition =
+                            Real.ADT
+                              { brand,
+                                parameters,
+                                constructors,
+                                selectors
+                              }
                         }
         | Just
             ( _,
@@ -143,13 +147,16 @@ merge entries@(entry :| _) =
             gadt ->
             Verbose.resolving
               (Variable.print' name)
-              Real.GADT
+              Real.TypeDeclaration
                 { position,
                   name,
-                  parameters,
-                  brand,
-                  gadtConstructors = fmap GADTConstructor.shrink gadtConstructors,
-                  annotation
+                  annotation,
+                  definition =
+                    Real.GADT
+                      { parameters,
+                        brand,
+                        gadtConstructors = fmap GADTConstructor.shrink gadtConstructors
+                      }
                 }
         | Just
             ( position,
@@ -162,13 +169,16 @@ merge entries@(entry :| _) =
             classx ->
             Verbose.resolving
               (Variable.print' name)
-              Real.Class
+              Real.TypeDeclaration
                 { position,
                   name,
-                  parameter,
-                  constraints,
-                  methods = fmap Method.shrink methods,
-                  annotation
+                  annotation,
+                  definition =
+                    Real.Class
+                      { parameter,
+                        constraints,
+                        methods = fmap Method.shrink methods
+                      }
                 }
         | Just
             ( _,
@@ -180,12 +190,15 @@ merge entries@(entry :| _) =
             synonym ->
             Verbose.resolving
               (Variable.print' name)
-              Real.Synonym
+              Real.TypeDeclaration
                 { position,
                   name,
-                  parameters,
-                  synonym,
-                  annotation
+                  annotation,
+                  definition =
+                    Real.Synonym
+                      { parameters,
+                        synonym
+                      }
                 }
       entries -> duplicateTypeEntries entries
     position = Partial.position entry

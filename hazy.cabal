@@ -292,6 +292,7 @@ executable hazy
     Stage2.Tree.Type
     Stage2.Tree.TypeDeclaration
     Stage2.Tree.TypeDeclarationExtra
+    Stage2.Tree.TypeDefinition
     Stage2.Tree.TypePattern
     Stage3.Check.ClassInstance
     Stage3.Check.ConstructorInstance
@@ -386,6 +387,7 @@ executable hazy
     Stage3.Tree.Type
     Stage3.Tree.TypeDeclaration
     Stage3.Tree.TypeDeclarationExtra
+    Stage3.Tree.TypeDefinition
     Stage3.Tree.TypePattern
     Stage3.Unify
     Stage3.Unify.Builtin

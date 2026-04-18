@@ -4,15 +4,8 @@ import Control.Monad.ST (ST)
 import qualified Data.Strict.Maybe as Strict
 import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (shift)
-import qualified Stage2.Tree.TypeDeclaration as Stage2
-  ( TypeDeclaration
-      ( Synonym,
-        position,
-        synonym
-      ),
-    annotation,
-    parameters,
-  )
+import qualified Stage2.Tree.TypeDeclaration as Stage2 (TypeDeclaration (..))
+import qualified Stage2.Tree.TypeDefinition as Stage2 (TypeDefinition (..))
 import Stage3.Check.Context (Context)
 import qualified Stage3.Temporary.Scheme as Unsolved.Scheme
 import qualified Stage3.Temporary.Type as Type
@@ -33,7 +26,7 @@ data KindAnnotation scope
       }
 
 check :: Context s scope -> Stage2.TypeDeclaration scope -> ST s (KindAnnotation scope)
-check context Stage2.Synonym {position, synonym, parameters, annotation} =
+check context Stage2.TypeDeclaration {position, annotation, definition = Stage2.Synonym {synonym, parameters}} =
   do
     target <- Unify.fresh (Unify.typeWith Unify.large)
     annotation <- case annotation of

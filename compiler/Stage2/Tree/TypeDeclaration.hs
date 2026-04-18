@@ -7,10 +7,8 @@ module Stage2.Tree.TypeDeclaration
 where
 
 import qualified Data.Strict.Maybe as Strict (Maybe (..))
-import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
 import Stage1.Position (Position)
-import Stage1.Tree.Brand (Brand)
 import Stage1.Variable
   ( ConstructorIdentifier,
     QualifiedConstructor ((:=)),
@@ -18,54 +16,21 @@ import Stage1.Variable
     Qualifiers,
   )
 import Stage2.FreeVariables (FreeTypeVariables (..))
-import qualified Stage2.FreeVariables as FreeVariables
 import qualified Stage2.Label.Binding.Type as Label
-import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage2.Tree.Constraint (Constraint)
-import Stage2.Tree.Constructor (Constructor)
 import qualified Stage2.Tree.Constructor as Constructor
-import Stage2.Tree.GADTConstructor (GADTConstructor)
 import qualified Stage2.Tree.GADTConstructor as GADTConstructor
-import Stage2.Tree.Method (Method)
-import Stage2.Tree.Selector (Selector)
 import Stage2.Tree.Type (Type)
-import Stage2.Tree.TypePattern (TypePattern)
+import Stage2.Tree.TypeDefinition (TypeDefinition (..))
 
 data TypeDeclaration scope
-  = ADT
-      { position :: !Position,
-        name :: !ConstructorIdentifier,
-        brand :: !Brand,
-        parameters :: !(Strict.Vector (TypePattern Position)),
-        constructors :: !(Strict.Vector (Constructor (Local ':+ scope))),
-        selectors :: !(Strict.Vector Selector),
-        annotation :: !(Strict.Maybe (Type Position scope))
-      }
-  | GADT
-      { position :: !Position,
-        name :: !ConstructorIdentifier,
-        brand :: !Brand,
-        parameters :: !(Strict.Vector (TypePattern Position)),
-        gadtConstructors :: !(Strict.Vector (GADTConstructor scope)),
-        annotation :: !(Strict.Maybe (Type Position scope))
-      }
-  | Class
-      { position :: !Position,
-        name :: !ConstructorIdentifier,
-        parameter :: !(TypePattern Position),
-        methods :: !(Strict.Vector (Method (Local ':+ scope))),
-        constraints :: !(Strict.Vector (Constraint Position scope)),
-        annotation :: !(Strict.Maybe (Type Position scope))
-      }
-  | Synonym
-      { position :: !Position,
-        name :: !ConstructorIdentifier,
-        parameters :: !(Strict.Vector (TypePattern Position)),
-        synonym :: !(Type Position (Local ':+ scope)),
-        annotation :: !(Strict.Maybe (Type Position scope))
-      }
+  = TypeDeclaration
+  { position :: !Position,
+    name :: !ConstructorIdentifier,
+    annotation :: !(Strict.Maybe (Type Position scope)),
+    definition :: !(TypeDefinition scope)
+  }
   deriving (Show)
 
 instance Shift TypeDeclaration where
@@ -73,71 +38,26 @@ instance Shift TypeDeclaration where
 
 instance Shift.Functor TypeDeclaration where
   map category = \case
-    ADT {position, name, brand, parameters, constructors, selectors, annotation} ->
-      ADT
+    TypeDeclaration {position, name, annotation, definition} ->
+      TypeDeclaration
         { position,
           name,
-          brand,
-          parameters,
-          constructors = fmap (Shift.map (Shift.Over category)) constructors,
-          selectors,
-          annotation = fmap (Shift.map category) annotation
-        }
-    GADT {position, name, brand, parameters, gadtConstructors, annotation} ->
-      GADT
-        { position,
-          name,
-          brand,
-          parameters,
-          gadtConstructors = fmap (Shift.map category) gadtConstructors,
-          annotation = fmap (Shift.map category) annotation
-        }
-    Class {position, name, parameter, methods, constraints, annotation} ->
-      Class
-        { position,
-          name,
-          parameter,
-          constraints = fmap (Shift.map category) constraints,
-          methods = fmap (Shift.map (Shift.Over category)) methods,
-          annotation = fmap (Shift.map category) annotation
-        }
-    Synonym {position, name, parameters, synonym, annotation} ->
-      Synonym
-        { position,
-          name,
-          parameters,
-          synonym = Shift.map (Shift.Over category) synonym,
-          annotation = fmap (Shift.map category) annotation
+          annotation = Shift.map category <$> annotation,
+          definition = Shift.map category definition
         }
 
 instance FreeTypeVariables TypeDeclaration where
   freeTypeVariables target = \case
-    ADT {constructors, annotation} ->
+    TypeDeclaration {annotation, definition} ->
       concat
-        [ foldMap (freeTypeVariables $ FreeVariables.Over target) constructors,
-          foldMap (freeTypeVariables target) annotation
-        ]
-    GADT {gadtConstructors, annotation} ->
-      concat
-        [ foldMap (freeTypeVariables target) gadtConstructors,
-          foldMap (freeTypeVariables target) annotation
-        ]
-    Class {methods, constraints, annotation} ->
-      concat
-        [ foldMap (freeTypeVariables $ FreeVariables.Over target) methods,
-          foldMap (freeTypeVariables target) constraints,
-          foldMap (freeTypeVariables target) annotation
-        ]
-    Synonym {synonym, annotation} ->
-      concat
-        [ freeTypeVariables (FreeVariables.Over target) synonym,
-          foldMap (freeTypeVariables target) annotation
+        [ foldMap (freeTypeVariables target) annotation,
+          freeTypeVariables target definition
         ]
 
 labelBinding :: Qualifiers -> TypeDeclaration scope -> Label.TypeBinding scope'
-labelBinding path declaration = Label.TypeBinding {name = path :=. name declaration, constructorNames}
+labelBinding path TypeDeclaration {name, definition} = Label.TypeBinding {name = path :=. name, constructorNames}
   where
-    constructorNames = case declaration of
+    constructorNames = case definition of
       ADT {constructors} -> (:=) path . Constructor.name <$> constructors
       GADT {gadtConstructors} -> (:=) path . GADTConstructor.name <$> gadtConstructors
       _ -> Strict.Vector.empty
