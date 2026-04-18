@@ -20,12 +20,14 @@ import Data.STRef
     readSTRef,
     writeSTRef,
   )
+import Data.Set (Set)
+import qualified Data.Set as Set
 import Data.Traversable (for)
 import System.IO.Unsafe (unsafeInterleaveIO, unsafePerformIO)
 
 data Component k
-  = Group [k]
-  | Link k
+  = Group !(Set k)
+  | Link !k
   deriving (Eq, Show)
 
 data State s k = State
@@ -85,7 +87,7 @@ visiter children = do
                   then run
                   else do
                     component <- readSTRef component
-                    writeSTRef (link v) $! Group component
+                    writeSTRef (link v) $! Group $ Set.fromList component
           run
       -- A pre strongly connect step is needed to make sure the result is always
       -- the same regardless of the evaluation order.
