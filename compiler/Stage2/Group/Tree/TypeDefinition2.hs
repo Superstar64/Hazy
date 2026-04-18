@@ -1,7 +1,9 @@
 module Stage2.Group.Tree.TypeDefinition2 where
 
+import qualified Data.Strict.Maybe as Strict
 import Stage1.Lexer (ConstructorIdentifier)
 import Stage1.Position (Position)
+import qualified Stage2.Tree.TypeDeclaration as Proper
 import Stage2.Tree.TypeDefinition (TypeDefinition)
 
 data TypeDefinition2 scope = Inferred
@@ -10,3 +12,8 @@ data TypeDefinition2 scope = Inferred
     definition :: !(TypeDefinition scope)
   }
   deriving (Show)
+
+group :: Proper.TypeDeclaration scope -> TypeDefinition2 scope
+group Proper.TypeDeclaration {position, name, definition, annotation = Strict.Nothing} =
+  Inferred {position, name, definition}
+group _ = error "bad group type declaration"
