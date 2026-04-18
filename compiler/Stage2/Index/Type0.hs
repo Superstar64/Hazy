@@ -11,6 +11,11 @@ instance Eq (Index scope) where
   Declaration local1 == Declaration local2 = local1 == local2
   Global global1 local1 == Global global2 local2 = global1 == global2 && local1 == local2
 
+instance Ord (Index scope) where
+  Declaration index1 `compare` Declaration index2 = index1 `compare` index2
+  Global global1 local1 `compare` Global global2 local2 =
+    compare (global1, local1) (global2, local2)
+
 instance Show (Index scope) where
   showsPrec d = \case
     Declaration local -> showParen (d > 10) $ showString "Declaration " . showsPrec 11 local

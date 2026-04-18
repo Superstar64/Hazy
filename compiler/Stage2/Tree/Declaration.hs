@@ -5,7 +5,8 @@ module Stage2.Tree.Declaration where
 import Stage1.Position (Position)
 import Stage1.Tree.Fixity (Fixity (..))
 import Stage1.Variable (QualifiedVariable ((:-)), Qualifiers, Variable)
-import Stage2.FreeVariables (FreeTermVariables (..))
+import Stage2.FreeVariables (FreeTermVariables (..), Target (..))
+import qualified Stage2.Index.Term0 as Term0
 import qualified Stage2.Label.Binding.Term as Label
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
@@ -54,6 +55,11 @@ instance FreeTermVariables Declaration where
   freeTermVariables target = \case
     Annotated {definition} -> freeTermVariables target definition
     Inferred {definition'} -> freeTermVariables target definition'
+
+freeGroupTermVariables :: Declaration scope -> [Term0.Index scope]
+freeGroupTermVariables = \case
+  Annotated {} -> []
+  declaration -> freeTermVariables Target declaration
 
 labelBinding :: Qualifiers -> Declaration scope -> Label.TermBinding scope'
 labelBinding path declaration = Label.TermBinding {name = path :- name declaration}

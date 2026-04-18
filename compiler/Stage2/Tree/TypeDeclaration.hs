@@ -2,6 +2,7 @@
 
 module Stage2.Tree.TypeDeclaration
   ( TypeDeclaration (..),
+    freeGroupTypeVariables,
     labelBinding,
   )
 where
@@ -15,7 +16,8 @@ import Stage1.Variable
     QualifiedConstructorIdentifier ((:=.)),
     Qualifiers,
   )
-import Stage2.FreeVariables (FreeTypeVariables (..))
+import Stage2.FreeVariables (FreeTypeVariables (..), Target (..))
+import qualified Stage2.Index.Type0 as Type0
 import qualified Stage2.Label.Binding.Type as Label
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
@@ -53,6 +55,11 @@ instance FreeTypeVariables TypeDeclaration where
         [ foldMap (freeTypeVariables target) annotation,
           freeTypeVariables target definition
         ]
+
+freeGroupTypeVariables :: TypeDeclaration scope -> [Type0.Index scope]
+freeGroupTypeVariables = \case
+  TypeDeclaration {annotation = Strict.Just {}} -> []
+  declaration -> freeTypeVariables Target declaration
 
 labelBinding :: Qualifiers -> TypeDeclaration scope -> Label.TypeBinding scope'
 labelBinding path TypeDeclaration {name, definition} = Label.TypeBinding {name = path :=. name, constructorNames}
