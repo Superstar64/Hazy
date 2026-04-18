@@ -176,6 +176,14 @@ executable hazy
     Stage1.Tree.TypePattern
     Stage1.Variable
     Stage2.FreeVariables
+    Stage2.Group.Index.Term0
+    Stage2.Group.Tree.Declarations
+    Stage2.Group.Tree.Definition3
+    Stage2.Group.Tree.Group
+    Stage2.Group.Tree.TermDeclaration
+    Stage2.Group.Tree.TypeDeclaration
+    Stage2.Group.Tree.TypeDefinition2
+    Stage2.Group.Tree.TypeGroup
     Stage2.Index.Constructor
     Stage2.Index.Local
     Stage2.Index.Method
