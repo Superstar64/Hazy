@@ -26,8 +26,8 @@ import Data.Traversable (for)
 import System.IO.Unsafe (unsafeInterleaveIO, unsafePerformIO)
 
 data Component k
-  = Group !(Set k)
-  | Link !k
+  = Group {link :: !k, set :: !(Set k)}
+  | Link {link :: !k}
   deriving (Eq, Show)
 
 data State s k = State
@@ -35,7 +35,7 @@ data State s k = State
     lowlink :: !(STRef s Int),
     onStack :: !(STRef s Bool),
     value :: k,
-    link :: !(STRef s (Component k))
+    result :: !(STRef s (Component k))
   }
 
 initialize :: k -> ST s (State s k)
@@ -43,8 +43,8 @@ initialize value = do
   index <- newSTRef $! negate 1
   lowlink <- newSTRef $! negate 1
   onStack <- newSTRef False
-  link <- newSTRef undefined
-  pure State {index, lowlink, onStack, value, link}
+  result <- newSTRef undefined
+  pure State {index, lowlink, onStack, value, result}
 
 visiter :: (Ord k) => (k -> [State s k]) -> ST s (State s k -> ST s ())
 visiter children = do
@@ -79,7 +79,7 @@ visiter children = do
                 let w = head stack
                 writeSTRef stackRef $! tail stack
                 writeSTRef (onStack w) False
-                writeSTRef (link w) $! Link (value v)
+                writeSTRef (result w) $! Link {link = value v}
                 modifySTRef' component (value w :)
                 loop w
               loop w =
@@ -87,7 +87,11 @@ visiter children = do
                   then run
                   else do
                     component <- readSTRef component
-                    writeSTRef (link v) $! Group $ Set.fromList component
+                    writeSTRef (result v) $!
+                      Group
+                        { link = value v,
+                          set = Set.fromList component
+                        }
           run
       -- A pre strongly connect step is needed to make sure the result is always
       -- the same regardless of the evaluation order.
@@ -127,4 +131,4 @@ tarjan Index {(!)} childrenRaw nodesRaw = unsafePerformIO $ do
   visit <- stToIO $ visiter children
   runLazyIO $ for nodes $ \node -> LazyIO $ stToIO $ do
     visit node
-    readSTRef (link node)
+    readSTRef (result node)

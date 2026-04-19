@@ -10,7 +10,8 @@ import Stage2.Tree.TypeDeclaration (TypeDeclaration)
 
 data TypeGroup scope
   = Group
-      { set :: !(Map (Type0.Index scope) (TypeDefinition2 scope))
+      { link :: !(Type0.Index scope),
+        set :: !(Map (Type0.Index scope) (TypeDefinition2 scope))
       }
   | Link
       { link :: !(Type0.Index scope)
@@ -22,5 +23,9 @@ group ::
   StronglyConnected.Component (Type0.Index scope) ->
   TypeGroup scope
 group index = \case
-  StronglyConnected.Group set -> Group {set = Map.fromSet (TypeDefinition2.group . index) set}
-  StronglyConnected.Link link -> Link {link}
+  StronglyConnected.Group {link, set} ->
+    Group
+      { link,
+        set = Map.fromSet (TypeDefinition2.group . index) set
+      }
+  StronglyConnected.Link {link} -> Link {link}

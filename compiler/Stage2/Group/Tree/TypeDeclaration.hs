@@ -27,7 +27,7 @@ group ::
   StronglyConnected.Component (Type0.Index scope) ->
   TypeDeclaration scope
 group index = \case
-  StronglyConnected.Group set
+  StronglyConnected.Group {set}
     | [single] <- Set.toList set,
       Proper.TypeDeclaration
         { position,

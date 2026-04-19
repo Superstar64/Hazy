@@ -29,7 +29,7 @@ group ::
   StronglyConnected.Component (Term0.Index scope) ->
   Declaration scope
 group index = \case
-  StronglyConnected.Group set
+  StronglyConnected.Group {set}
     | [single] <- Set.toList set,
       Temporary.Declaration
         Proper.Annotated

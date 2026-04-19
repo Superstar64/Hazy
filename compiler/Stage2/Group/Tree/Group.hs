@@ -10,7 +10,8 @@ import qualified Stage2.Group.Tree.Definition3 as Definition3
 
 data Group scope
   = Group
-      { set :: !(Map (Term0.Index scope) (Definition3 scope))
+      { link :: !(Term0.Index scope),
+        set :: !(Map (Term0.Index scope) (Definition3 scope))
       }
   | Link
       { link :: !(Term0.Index scope)
@@ -22,5 +23,9 @@ group ::
   StronglyConnected.Component (Term0.Index scope) ->
   Group scope
 group index = \case
-  StronglyConnected.Group set -> Group {set = Map.fromSet (Definition3.group . index) set}
-  StronglyConnected.Link link -> Link {link}
+  StronglyConnected.Group {link, set} ->
+    Group
+      { link,
+        set = Map.fromSet (Definition3.group . index) set
+      }
+  StronglyConnected.Link {link} -> Link {link}
