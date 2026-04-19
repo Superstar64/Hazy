@@ -21,7 +21,7 @@ instance Show (Index scope) where
     Declaration local -> showParen (d > 10) $ showString "Declaration " . showsPrec 11 local
     Global global local ->
       showParen (d > 10) $
-        showString "Global"
+        showString "Global "
           . showsPrec 11 global
           . showString " "
           . showsPrec 11 local
