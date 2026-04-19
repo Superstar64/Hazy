@@ -11,8 +11,8 @@ import Stage2.Group.Temporary.Declaration (freeGroupTermVariables)
 import qualified Stage2.Group.Temporary.Declaration as Temporary
 import Stage2.Group.Tree.Declaration (Declaration)
 import qualified Stage2.Group.Tree.Declaration as Declartion
-import Stage2.Group.Tree.Group (Group)
-import qualified Stage2.Group.Tree.Group as Group
+import Stage2.Group.Tree.Shared (Shared)
+import qualified Stage2.Group.Tree.Shared as Shared
 import Stage2.Group.Tree.TypeDeclaration (TypeDeclaration)
 import qualified Stage2.Group.Tree.TypeDeclaration as TypeDeclaration
 import qualified Stage2.Index.Term0 as Proper.Term0
@@ -30,7 +30,7 @@ data Declarations scope = Declarations
   { terms :: !(Vector (Declaration scope)),
     types :: !(Vector (TypeDeclaration scope)),
     typeExtras :: !(Vector (TypeDeclarationExtra scope)),
-    shared :: !(Vector (Group scope)),
+    shared :: !(Vector (Shared scope)),
     dataInstances :: !(Vector (Map (Type2.Index scope) (Instance scope))),
     classInstances :: !(Vector (Map (Type2.Index scope) (Instance scope)))
   }
@@ -46,18 +46,21 @@ group ::
 group
   indexTerm
   indexType
-  Functor.Term.Declarations {terms, shared}
-  Functor.Type.Declarations {types}
+  Functor.Term.Declarations {terms = functorTerms, shared = functorShared}
+  Functor.Type.Declarations {types = functorTypes}
   Proper.Declarations
-    { typeExtras,
+    { terms,
+      types,
+      shared,
+      typeExtras,
       dataInstances,
       classInstances
     } =
     Declarations
-      { terms = Declartion.group indexTerm <$> terms,
-        types = TypeDeclaration.group indexType <$> types,
+      { terms = Vector.zipWith (Declartion.group indexTerm) functorTerms terms,
+        types = Vector.zipWith (TypeDeclaration.group indexType) functorTypes types,
         typeExtras,
-        shared = Group.group indexTerm <$> shared,
+        shared = Vector.zipWith (Shared.group indexTerm) functorShared shared,
         dataInstances,
         classInstances
       }

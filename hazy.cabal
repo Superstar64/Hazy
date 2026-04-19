@@ -187,6 +187,7 @@ executable hazy
     Stage2.Group.Tree.Definition3
     Stage2.Group.Tree.Group
     Stage2.Group.Tree.Module
+    Stage2.Group.Tree.Shared
     Stage2.Group.Tree.TypeDeclaration
     Stage2.Group.Tree.TypeDefinition2
     Stage2.Group.Tree.TypeGroup

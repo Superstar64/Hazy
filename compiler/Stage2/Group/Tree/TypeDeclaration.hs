@@ -1,6 +1,5 @@
 module Stage2.Group.Tree.TypeDeclaration where
 
-import qualified Data.Set as Set
 import qualified Graph.StronglyConnected as StronglyConnected
 import Stage1.Position (Position)
 import Stage1.Variable (ConstructorIdentifier)
@@ -18,16 +17,32 @@ data TypeDeclaration scope
         annotation :: !(Type Position scope),
         definition :: !(TypeDefinition scope)
       }
-  | Group !(TypeGroup scope)
+  | Inferred
+      { position :: !Position,
+        name :: !ConstructorIdentifier,
+        definition :: !(TypeDefinition scope),
+        meta :: !(TypeGroup scope)
+      }
   deriving (Show)
 
 group ::
   (Type0.Index scope -> Proper.TypeDeclaration scope) ->
   StronglyConnected.Component (Type0.Index scope) ->
+  Proper.TypeDeclaration scope ->
   TypeDeclaration scope
-group index = \case
-  StronglyConnected.Group {set}
-    | [single] <- Set.toList set,
-      Proper.Annotated {position, name, annotation, definition} <- index single ->
-        Annotated {position, name, annotation, definition}
-  component -> Group $ TypeGroup.group index component
+group _ _ Proper.Annotated {position, name, annotation, definition} =
+  Annotated {position, name, annotation, definition}
+group index component Proper.Inferred {position, name, definition} =
+  Inferred
+    { position,
+      name,
+      definition,
+      meta = TypeGroup.group index component
+    }
+
+proper :: TypeDeclaration scope -> Proper.TypeDeclaration scope
+proper = \case
+  Annotated {position, name, annotation, definition} ->
+    Proper.Annotated {position, name, annotation, definition}
+  Inferred {position, name, definition} ->
+    Proper.Inferred {position, name, definition}
