@@ -84,18 +84,6 @@ instance Unify.Zonk Declarations where
             dataInstances
           }
 
-type Functor s scope =
-  Functor.Declarations
-    (Scope.Declaration ':+ scope)
-    (ST s (LocalTypeAnnotation s (Scope.Declaration ':+ scope)))
-    (ST s (Declaration s (Scope.Declaration ':+ scope)))
-    (ST s (Shared s (Scope.Declaration ':+ scope)))
-    (ST s (KindAnnotation (Scope.Declaration ':+ scope)))
-    (ST s (TypeDeclaration (Scope.Declaration ':+ scope)))
-    (ST s (TypeDeclarationExtra (Scope.Declaration ':+ scope)))
-    (ST s (InstanceAnnotation (Scope.Declaration ':+ scope)))
-    (ST s (Instance (Scope.Declaration ':+ scope)))
-
 type Formula s scope z =
   Formula8
     (Functor.Declarations (Scope.Declaration ':+ scope))

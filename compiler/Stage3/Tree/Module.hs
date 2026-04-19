@@ -1,6 +1,5 @@
 module Stage3.Tree.Module (Module (..), check) where
 
-import Control.Monad.ST (ST)
 import qualified Data.Map as Map
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
@@ -56,17 +55,6 @@ data Module = Module
     declarations :: Declarations Global
   }
   deriving (Show)
-
-type Functor s =
-  Functor.ModuleSet
-    (ST s (GlobalTypeAnnotation Global))
-    (ST s (Declaration Global))
-    (ST s (Shared Global))
-    (ST s (KindAnnotation Global))
-    (ST s (TypeDeclaration Global))
-    (ST s (TypeDeclarationExtra Global))
-    (ST s (InstanceAnnotation Global))
-    (ST s (Instance Global))
 
 type Formula s z =
   Formula8
