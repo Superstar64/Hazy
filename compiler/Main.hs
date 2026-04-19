@@ -33,6 +33,8 @@ import Stage1.Position (Position)
 import qualified Stage1.Tree.Module as Module (parse)
 import qualified Stage1.Tree.Module as Stage1 (Module, assumeName, name)
 import qualified Stage1.Variable as Variable
+import qualified Stage2.Group.Tree.Module as Module (connect)
+import qualified Stage2.Group.Tree.Module as Stage2.Group
 import qualified Stage2.Tree.Module as Module (resolve)
 import qualified Stage2.Tree.Module as Stage2 (Module, name)
 import qualified Stage3.Tree.Module as Module (check)
@@ -125,6 +127,9 @@ stage2 verbose = case verbose of
   Debug -> runVerbose . Module.resolve
   Normal -> pure . runIdentity . Module.resolve
 
+stage2x :: Debug -> Vector Stage2.Module -> IO (Vector Stage2.Group.Module)
+stage2x _ = pure . Module.connect
+
 stage3 :: Debug -> Vector Stage2.Module -> IO (Vector Stage3.Module)
 stage3 _ = pure . Module.check
 
@@ -169,6 +174,7 @@ data Mode
   = Help
   | Parse
   | Resolve
+  | Group
   | Check
   | Simplify
   | Generate FilePath
@@ -249,6 +255,7 @@ options =
     Option ['q'] [""] (NoArg quiet) "Don't show messages when compiling",
     Option [] ["bare"] (NoArg bare) "Don't include runtime and base package",
     Option [] ["bare-runtime"] (NoArg bareRuntime) "Don't include base package",
+    Option [] ["debug-group"] (NoArg group) "Group source",
     Option [] ["debug-simplify"] (NoArg simplify) "Simplify source",
     Option [] ["debug-message"] (NoArg debug) "Show debug messages",
     Option [] ["debug-show"] (NoArg show) "Show internal AST",
@@ -258,6 +265,7 @@ options =
     help execute = execute {mode = Help}
     parse execute = execute {mode = Parse}
     resolve execute = execute {mode = Resolve}
+    group execute = execute {mode = Group}
     check execute = execute {mode = Check}
     simplify execute = execute {mode = Simplify}
     generate path execute = execute {mode = Generate path}
@@ -338,6 +346,11 @@ main'' args = case getOpt order options args of
             all <- stage1 debug all
             all <- stage2 debug all
             forceModules "Resolving" show verbose Stage2.name (Vector.drop split all)
+          Group -> do
+            all <- stage1 debug all
+            all <- stage2 debug all
+            all <- stage2x debug all
+            forceModules "Grouping" show verbose Stage2.Group.name (Vector.drop split all)
           Check -> do
             all <- stage1 debug all
             all <- stage2 debug all
