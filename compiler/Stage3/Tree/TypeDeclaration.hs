@@ -74,93 +74,80 @@ checkHead context position annotation (parameters, target) = do
   pure (parameters, kind)
 
 check :: Context s scope -> Stage3.KindAnnotation scope -> Stage2.TypeDeclaration scope -> ST s (TypeDeclaration scope)
-check
-  context
-  annotation
-  Stage2.TypeDeclaration
-    { position,
-      name,
-      definition =
-        Stage2.ADT
-          { brand,
-            constructors,
-            selectors,
-            parameters
-          }
-    } =
-    do
-      (parameters, kind) <- checkHead context position annotation (parameters, Unify.typex)
-      context <- pure $ Unsolved.Scheme.augment parameters context
-      constructors <- traverse (Unsolved.Constructor.check context) constructors
-      constructors <- traverse (Unsolved.Constructor.solve context) constructors
-      kind' <- Unify.solve position kind
-      let solveTypePattern = Unify.solve position . Unsolved.TypePattern.typex
-      parameters <- Strict.Vector.fromList . toList <$> traverse solveTypePattern parameters
-      pure $
-        TypeDeclaration
-          { name,
-            kind',
-            kind = Strict.Nothing,
-            definition =
-              ADT
-                { brand,
-                  constructors,
-                  parameters,
-                  selectors
+check context annotation declaration
+  | position <- Stage2.position declaration,
+    name <- Stage2.name declaration = case Stage2.definition declaration of
+      Stage2.ADT
+        { brand,
+          constructors,
+          selectors,
+          parameters
+        } ->
+          do
+            (parameters, kind) <- checkHead context position annotation (parameters, Unify.typex)
+            context <- pure $ Unsolved.Scheme.augment parameters context
+            constructors <- traverse (Unsolved.Constructor.check context) constructors
+            constructors <- traverse (Unsolved.Constructor.solve context) constructors
+            kind' <- Unify.solve position kind
+            let solveTypePattern = Unify.solve position . Unsolved.TypePattern.typex
+            parameters <- Strict.Vector.fromList . toList <$> traverse solveTypePattern parameters
+            pure $
+              TypeDeclaration
+                { name,
+                  kind',
+                  kind = Strict.Nothing,
+                  definition =
+                    ADT
+                      { brand,
+                        constructors,
+                        parameters,
+                        selectors
+                      }
                 }
-          }
-check
-  context
-  annotation
-  Stage2.TypeDeclaration
-    { name,
-      position,
-      definition =
-        Stage2.Class
-          { methods,
-            constraints,
-            parameter
-          }
-    } = do
-    (Identity parameter, kind) <-
-      checkHead context position annotation (Identity parameter, Unify.constraint)
-    context <- pure $ Unsolved.Scheme.augment (Strict.Vector.singleton parameter) context
-    constraints <- traverse (Constraint.check context) constraints
-    constraints <- traverse (Constraint.solve context) constraints
-    methods <- traverse (Unsolved.Method.check context) methods
-    methods <- traverse (Unsolved.Method.solve context) methods
-    kind' <- Unify.solve position kind
-    parameter <- Unify.solve position . Unsolved.TypePattern.typex $ parameter
-    pure $
-      TypeDeclaration
-        { name,
-          kind',
-          kind = Strict.Nothing,
-          definition =
-            Class
-              { parameter,
-                constraints,
-                methods
+      Stage2.Class
+        { methods,
+          constraints,
+          parameter
+        } -> do
+          (Identity parameter, kind) <-
+            checkHead context position annotation (Identity parameter, Unify.constraint)
+          context <- pure $ Unsolved.Scheme.augment (Strict.Vector.singleton parameter) context
+          constraints <- traverse (Constraint.check context) constraints
+          constraints <- traverse (Constraint.solve context) constraints
+          methods <- traverse (Unsolved.Method.check context) methods
+          methods <- traverse (Unsolved.Method.solve context) methods
+          kind' <- Unify.solve position kind
+          parameter <- Unify.solve position . Unsolved.TypePattern.typex $ parameter
+          pure $
+            TypeDeclaration
+              { name,
+                kind',
+                kind = Strict.Nothing,
+                definition =
+                  Class
+                    { parameter,
+                      constraints,
+                      methods
+                    }
               }
-        }
-check _ annotation Stage2.TypeDeclaration {name, definition = Stage2.Synonym {}}
-  | KindAnnotation.Synonym
-      { kind',
-        kind,
-        definition,
-        definition'
-      } <-
-      annotation = do
-      pure $
-        TypeDeclaration
-          { name,
-            kind',
-            kind,
-            definition =
-              Synonym
-                { definition,
-                  definition'
+      Stage2.Synonym {}
+        | KindAnnotation.Synonym
+            { kind',
+              kind,
+              definition,
+              definition'
+            } <-
+            annotation -> do
+            pure $
+              TypeDeclaration
+                { name,
+                  kind',
+                  kind,
+                  definition =
+                    Synonym
+                      { definition,
+                        definition'
+                      }
                 }
-          }
-  | otherwise = error "bad annotation"
-check _ _ Stage2.TypeDeclaration {position, definition = Stage2.GADT {}} = unsupportedFeatureGADTs position
+        | otherwise -> error "bad annotation"
+      Stage2.GADT {} -> unsupportedFeatureGADTs position

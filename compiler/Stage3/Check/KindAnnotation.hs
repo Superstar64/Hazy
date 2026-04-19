@@ -26,27 +26,29 @@ data KindAnnotation scope
       }
 
 check :: Context s scope -> Stage2.TypeDeclaration scope -> ST s (KindAnnotation scope)
-check context Stage2.TypeDeclaration {position, annotation, definition = Stage2.Synonym {synonym, parameters}} =
-  do
-    target <- Unify.fresh (Unify.typeWith Unify.large)
-    annotation <- case annotation of
-      Strict.Nothing -> pure Inferred
-      Strict.Just annotation -> do
-        universe <- Unify.fresh Unify.universe
-        annotation <- Type.check context (Unify.typeWith universe) annotation
-        annotation <- Type.solve context annotation
-        pure Annotation {kind' = Simple.simplify annotation}
-    let unused = error "unused parameter"
-    (parameters, kind) <- TypeDeclaration.checkHead unused unused annotation (parameters, target)
-    context <- pure $ Unsolved.Scheme.augment parameters context
-    definition <- Unsolved.Type.check context (shift target) synonym
-    kind' <- Unify.solve position kind
-    definition <- Unsolved.Type.solve context definition
-    let definition' = Simple.simplify definition
-    pure Synonym {kind = Strict.Nothing, kind', definition, definition'}
-check context declaration = case Stage2.annotation declaration of
-  Strict.Nothing -> pure Inferred
-  Strict.Just annotation -> do
+check context declaration
+  | position <- Stage2.position declaration,
+    Stage2.Synonym {synonym, parameters} <- Stage2.definition declaration =
+      do
+        target <- Unify.fresh (Unify.typeWith Unify.large)
+        annotation <- case declaration of
+          Stage2.Inferred {} -> pure Inferred
+          Stage2.Annotated {annotation} -> do
+            universe <- Unify.fresh Unify.universe
+            annotation <- Type.check context (Unify.typeWith universe) annotation
+            annotation <- Type.solve context annotation
+            pure Annotation {kind' = Simple.simplify annotation}
+        let unused = error "unused parameter"
+        (parameters, kind) <- TypeDeclaration.checkHead unused unused annotation (parameters, target)
+        context <- pure $ Unsolved.Scheme.augment parameters context
+        definition <- Unsolved.Type.check context (shift target) synonym
+        kind' <- Unify.solve position kind
+        definition <- Unsolved.Type.solve context definition
+        let definition' = Simple.simplify definition
+        pure Synonym {kind = Strict.Nothing, kind', definition, definition'}
+check context declaration = case declaration of
+  Stage2.Inferred {} -> pure Inferred
+  Stage2.Annotated {annotation} -> do
     universe <- Unify.fresh Unify.universe
     annotation <- Type.check context (Unify.typeWith universe) annotation
     annotation <- Type.solve context annotation

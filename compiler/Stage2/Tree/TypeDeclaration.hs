@@ -7,7 +7,6 @@ module Stage2.Tree.TypeDeclaration
   )
 where
 
-import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import qualified Data.Vector.Strict as Strict.Vector
 import Stage1.Position (Position)
 import Stage1.Variable
@@ -27,12 +26,17 @@ import Stage2.Tree.Type (Type)
 import Stage2.Tree.TypeDefinition (TypeDefinition (..))
 
 data TypeDeclaration scope
-  = TypeDeclaration
-  { position :: !Position,
-    name :: !ConstructorIdentifier,
-    annotation :: !(Strict.Maybe (Type Position scope)),
-    definition :: !(TypeDefinition scope)
-  }
+  = Annotated
+      { position :: !Position,
+        name :: !ConstructorIdentifier,
+        annotation :: !(Type Position scope),
+        definition :: !(TypeDefinition scope)
+      }
+  | Inferred
+      { position :: !Position,
+        name :: !ConstructorIdentifier,
+        definition :: !(TypeDefinition scope)
+      }
   deriving (Show)
 
 instance Shift TypeDeclaration where
@@ -40,31 +44,38 @@ instance Shift TypeDeclaration where
 
 instance Shift.Functor TypeDeclaration where
   map category = \case
-    TypeDeclaration {position, name, annotation, definition} ->
-      TypeDeclaration
+    Annotated {position, name, annotation, definition} ->
+      Annotated
         { position,
           name,
-          annotation = Shift.map category <$> annotation,
+          annotation = Shift.map category annotation,
+          definition = Shift.map category definition
+        }
+    Inferred {position, name, definition} ->
+      Inferred
+        { position,
+          name,
           definition = Shift.map category definition
         }
 
 instance FreeTypeVariables TypeDeclaration where
   freeTypeVariables target = \case
-    TypeDeclaration {annotation, definition} ->
+    Annotated {annotation, definition} ->
       concat
-        [ foldMap (freeTypeVariables target) annotation,
+        [ freeTypeVariables target annotation,
           freeTypeVariables target definition
         ]
+    Inferred {definition} -> freeTypeVariables target definition
 
 freeGroupTypeVariables :: TypeDeclaration scope -> [Type0.Index scope]
 freeGroupTypeVariables = \case
-  TypeDeclaration {annotation = Strict.Just {}} -> []
+  Annotated {} -> []
   declaration -> freeTypeVariables Target declaration
 
 labelBinding :: Qualifiers -> TypeDeclaration scope -> Label.TypeBinding scope'
-labelBinding path TypeDeclaration {name, definition} = Label.TypeBinding {name = path :=. name, constructorNames}
+labelBinding path declaration = Label.TypeBinding {name = path :=. name declaration, constructorNames}
   where
-    constructorNames = case definition of
+    constructorNames = case definition declaration of
       ADT {constructors} -> (:=) path . Constructor.name <$> constructors
       GADT {gadtConstructors} -> (:=) path . GADTConstructor.name <$> gadtConstructors
       _ -> Strict.Vector.empty

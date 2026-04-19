@@ -1,7 +1,6 @@
 module Stage2.Group.Tree.TypeDeclaration where
 
 import qualified Data.Set as Set
-import qualified Data.Strict.Maybe as Strict
 import qualified Graph.StronglyConnected as StronglyConnected
 import Stage1.Position (Position)
 import Stage1.Variable (ConstructorIdentifier)
@@ -29,12 +28,6 @@ group ::
 group index = \case
   StronglyConnected.Group {set}
     | [single] <- Set.toList set,
-      Proper.TypeDeclaration
-        { position,
-          name,
-          annotation = Strict.Just annotation,
-          definition
-        } <-
-        index single ->
+      Proper.Annotated {position, name, annotation, definition} <- index single ->
         Annotated {position, name, annotation, definition}
   component -> Group $ TypeGroup.group index component

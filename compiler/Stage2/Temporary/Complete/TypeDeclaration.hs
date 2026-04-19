@@ -89,97 +89,74 @@ merge entries@(entry :| _) =
     declaration = case catMaybes [fmap fst adt, fmap fst gadt, fmap fst classx, fmap fst synonym] of
       [] -> missingTypeDeclaration position
       [_]
-        | Just
-            ( position,
-              More.ADT
-                { brand,
-                  parameters,
-                  constructors,
-                  selectors
-                }
-              ) <-
-            adt ->
-            Verbose.resolving
-              (Variable.print' name)
-              $ if
-                | constructors <- fmap Constructor.shrink constructors,
-                  selectors <- fmap Selector.shrink selectors,
-                  let sane
-                        | Brand.Newtype <- brand =
-                            if length constructors == 1
-                              then case Strict.Vector.head constructors of
-                                Real.Constructor.Constructor {entries}
-                                  | length entries == 1,
-                                    Real.Entry.Entry {strict} <- Strict.Vector.head entries,
-                                    StrictnessAnnotation.Lazy <- strict ->
-                                      ()
-                                Real.Constructor.Record {fields}
-                                  | length fields == 1,
-                                    Real.Field.Field {entry} <- Strict.Vector.head fields,
-                                    Real.Entry.Entry {strict} <- entry,
-                                    StrictnessAnnotation.Lazy <- strict ->
-                                      ()
-                                _ -> invalidNewtype position
-                              else invalidNewtype position
-                        | otherwise = () ->
-                    seq
-                      sane
-                      Real.TypeDeclaration
-                        { position,
-                          name,
-                          annotation,
-                          definition =
-                            Real.ADT
-                              { brand,
-                                parameters,
-                                constructors,
-                                selectors
-                              }
-                        }
-        | Just
-            ( _,
-              More.GADT
-                { brand,
-                  parameters,
-                  gadtConstructors
-                }
-              ) <-
-            gadt ->
-            Verbose.resolving
-              (Variable.print' name)
-              Real.TypeDeclaration
-                { position,
-                  name,
-                  annotation,
-                  definition =
-                    Real.GADT
-                      { parameters,
-                        brand,
-                        gadtConstructors = fmap GADTConstructor.shrink gadtConstructors
+        | Just (position, More.ADT {brand, parameters, constructors, selectors}) <- adt,
+          constructors <- fmap Constructor.shrink constructors,
+          selectors <- fmap Selector.shrink selectors ->
+            let sane
+                  | Brand.Newtype <- brand =
+                      if length constructors == 1
+                        then case Strict.Vector.head constructors of
+                          Real.Constructor.Constructor {entries}
+                            | length entries == 1,
+                              Real.Entry.Entry {strict} <- Strict.Vector.head entries,
+                              StrictnessAnnotation.Lazy <- strict ->
+                                ()
+                          Real.Constructor.Record {fields}
+                            | length fields == 1,
+                              Real.Field.Field {entry} <- Strict.Vector.head fields,
+                              Real.Entry.Entry {strict} <- entry,
+                              StrictnessAnnotation.Lazy <- strict ->
+                                ()
+                          _ -> invalidNewtype position
+                        else invalidNewtype position
+                  | otherwise = ()
+             in Verbose.resolving (Variable.print' name) $ case seq sane annotation of
+                  Strict.Nothing ->
+                    Real.Inferred
+                      { position,
+                        name,
+                        definition = Real.ADT {brand, parameters, constructors, selectors}
                       }
-                }
-        | Just
-            ( position,
-              More.Class
-                { parameter,
-                  constraints,
-                  methods
-                }
-              ) <-
-            classx ->
-            Verbose.resolving
-              (Variable.print' name)
-              Real.TypeDeclaration
-                { position,
-                  name,
-                  annotation,
-                  definition =
-                    Real.Class
-                      { parameter,
-                        constraints,
-                        methods = fmap Method.shrink methods
+                  Strict.Just annotation ->
+                    Real.Annotated
+                      { position,
+                        name,
+                        annotation,
+                        definition = Real.ADT {brand, parameters, constructors, selectors}
                       }
-                }
+        | Just (_, More.GADT {brand, parameters, gadtConstructors}) <- gadt,
+          gadtConstructors <- fmap GADTConstructor.shrink gadtConstructors ->
+            Verbose.resolving (Variable.print' name) $
+              case annotation of
+                Strict.Nothing ->
+                  Real.Inferred
+                    { position,
+                      name,
+                      definition = Real.GADT {parameters, brand, gadtConstructors}
+                    }
+                Strict.Just annotation ->
+                  Real.Annotated
+                    { position,
+                      name,
+                      annotation,
+                      definition = Real.GADT {parameters, brand, gadtConstructors}
+                    }
+        | Just (position, More.Class {parameter, constraints, methods}) <- classx,
+          methods <- fmap Method.shrink methods -> Verbose.resolving (Variable.print' name) $
+            case annotation of
+              Strict.Nothing ->
+                Real.Inferred
+                  { position,
+                    name,
+                    definition = Real.Class {parameter, constraints, methods}
+                  }
+              Strict.Just annotation ->
+                Real.Annotated
+                  { position,
+                    name,
+                    annotation,
+                    definition = Real.Class {parameter, constraints, methods}
+                  }
         | Just
             ( _,
               More.Synonym
@@ -187,18 +164,19 @@ merge entries@(entry :| _) =
                   synonym
                 }
               ) <-
-            synonym ->
-            Verbose.resolving
-              (Variable.print' name)
-              Real.TypeDeclaration
+            synonym -> Verbose.resolving (Variable.print' name) $ case annotation of
+            Strict.Nothing ->
+              Real.Inferred
+                { position,
+                  name,
+                  definition = Real.Synonym {parameters, synonym}
+                }
+            Strict.Just annotation ->
+              Real.Annotated
                 { position,
                   name,
                   annotation,
-                  definition =
-                    Real.Synonym
-                      { parameters,
-                        synonym
-                      }
+                  definition = Real.Synonym {parameters, synonym}
                 }
       entries -> duplicateTypeEntries entries
     position = Partial.position entry
