@@ -35,5 +35,4 @@ indexes index Proper.Declarations {types} =
     }
 
 (!) :: Declarations a -> Type0.Index (Scope.Declaration ':+ scope) -> a
-Declarations {types} ! index = case index of
-  Type0.Declaration index -> types Vector.! index
+Declarations {types} ! Type0.Declaration index = types Vector.! index
