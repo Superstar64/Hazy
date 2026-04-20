@@ -85,9 +85,9 @@ rigid
       kind = do
         annotation <- meta
         case annotation of
-          KindAnnotation.Annotation {kind'} -> pure kind'
-          KindAnnotation.Inferred -> TypeDeclaration.kind'_ <$> content
-          KindAnnotation.Synonym {kind'} -> pure kind'
+          KindAnnotation.Annotation {kind} -> pure kind
+          KindAnnotation.Inferred -> TypeDeclaration.kind_ <$> content
+          KindAnnotation.Synonym {kind} -> pure kind
       synonym = do
         annotation <- meta
         case annotation of

@@ -16,4 +16,4 @@ type role TypeDeclaration nominal
 type TypeDeclaration :: Environment -> Type
 data TypeDeclaration scope
 
-kind'_ :: TypeDeclaration scope -> Simple.Type scope
+kind_ :: TypeDeclaration scope -> Simple.Type scope

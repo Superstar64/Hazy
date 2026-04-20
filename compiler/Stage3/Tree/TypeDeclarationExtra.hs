@@ -18,6 +18,7 @@ import {-# SOURCE #-} qualified Stage3.Temporary.Definition as Definition
 import Stage3.Tree.Definition (Definition)
 import Stage3.Tree.Method (Method (..))
 import Stage3.Tree.TypeDeclaration (TypeDeclaration (..))
+import qualified Stage3.Tree.TypeDeclaration as TypeDeclaration
 import qualified Stage3.Tree.TypeDefinition as TypeDefinition
 import Stage3.Tree.TypePattern (TypePattern (..))
 import qualified Stage4.Tree.Constraint as Simple (Constraint (..))
@@ -40,32 +41,33 @@ check ::
   TypeDeclaration scope ->
   Stage2.TypeDeclarationExtra scope ->
   ST s (TypeDeclarationExtra scope)
-check context classx TypeDeclaration {definition} = \case
-  Stage2.ADT {} -> pure ADT
-  Stage2.Synonym {} -> pure Synonym
-  Stage2.GADT {} -> pure GADT
-  Stage2.Class {position, methods} -> case definition of
-    TypeDefinition.Class {parameter = TypePattern {typex = parameter}, methods = base} -> do
-      context <-
-        augment
-          position
-          (Strict.Vector.singleton parameter)
-          ( Strict.Vector.singleton
-              Simple.Constraint
-                { classx = Type2.Index classx,
-                  head = 0,
-                  arguments = Strict.Vector.empty
-                }
-          )
-          Mask.Inline
-          context
-      let go
-            Method {annotation' = Simple.Scheme scheme@Simple.SchemeOver {result}}
-            definition = do
-              for definition $ \definition -> do
-                context <- augment' position scheme Mask.Runtime context
-                definition <- Definition.check context (Simple.Type.lift result) (shift definition)
-                Definition.solve definition
-      defaults <- sequence $ Strict.Vector.zipWith go base methods
-      pure Class {defaults}
-    _ -> error "bad proper"
+check context classx declaration
+  | definition <- TypeDeclaration.definition declaration = \case
+      Stage2.ADT {} -> pure ADT
+      Stage2.Synonym {} -> pure Synonym
+      Stage2.GADT {} -> pure GADT
+      Stage2.Class {position, methods} -> case definition of
+        TypeDefinition.Class {parameter = TypePattern {typex = parameter}, methods = base} -> do
+          context <-
+            augment
+              position
+              (Strict.Vector.singleton parameter)
+              ( Strict.Vector.singleton
+                  Simple.Constraint
+                    { classx = Type2.Index classx,
+                      head = 0,
+                      arguments = Strict.Vector.empty
+                    }
+              )
+              Mask.Inline
+              context
+          let go
+                Method {annotation' = Simple.Scheme scheme@Simple.SchemeOver {result}}
+                definition = do
+                  for definition $ \definition -> do
+                    context <- augment' position scheme Mask.Runtime context
+                    definition <- Definition.check context (Simple.Type.lift result) (shift definition)
+                    Definition.solve definition
+          defaults <- sequence $ Strict.Vector.zipWith go base methods
+          pure Class {defaults}
+        _ -> error "bad proper"

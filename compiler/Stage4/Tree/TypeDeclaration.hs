@@ -6,7 +6,8 @@ import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Method as Solved.Method
 import qualified Stage3.Tree.TypeDeclaration as Solved (LazyTypeDeclaration (..), TypeDeclaration (..))
-import qualified Stage3.Tree.TypeDefinition as Solved (TypeDefinition (..))
+import qualified Stage3.Tree.TypeDefinition
+import qualified Stage3.Tree.TypeDefinition as Solved (TypeDefinition (ADT, Class, Synonym))
 import Stage3.Tree.TypePattern (TypePattern (..))
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
@@ -89,7 +90,7 @@ simplify :: Solved.LazyTypeDeclaration scope -> LazyTypeDeclaration scope
 simplify (name Solved.:^ declaration) = name :^ simplify' declaration
 
 simplify' :: Solved.TypeDeclaration scope -> TypeDeclaration scope
-simplify' Solved.TypeDeclaration {name, definition} = case definition of
+simplify' declaration | name <- Solved.name declaration = case Solved.definition declaration of
   Solved.ADT {parameters, constructors, selectors, brand} ->
     Data
       { name,

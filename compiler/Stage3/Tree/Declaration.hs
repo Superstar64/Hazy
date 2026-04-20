@@ -13,12 +13,12 @@ data LazyTermDeclaration scope = !Variable :^ Declaration scope
 infix 4 :^
 
 data Declaration scope
-  = Manual
+  = Annotated
       { name :: !Variable,
         body :: !(Simple.SchemeOver Definition2 scope),
         annotation :: !(Scheme scope)
       }
-  | Auto
+  | Inferred
       { name :: !Variable,
         body :: !(Simple.SchemeOver Definition2 scope)
       }

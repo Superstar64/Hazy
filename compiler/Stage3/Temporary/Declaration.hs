@@ -25,12 +25,12 @@ import qualified Stage4.Tree.Constraint as Simple.Constraint (simplify)
 import qualified Stage4.Tree.Type as Simple (simplify)
 
 data Declaration s scope
-  = Auto
+  = Inferred
       { position :: !Position,
         name :: !Variable,
         body :: !(Unify.SchemeOver Definition2 s scope)
       }
-  | Manual
+  | Annotated
       { position :: !Position,
         name :: !Variable,
         body :: !(Unify.SchemeOver Definition2 s scope),
@@ -39,12 +39,12 @@ data Declaration s scope
 
 instance Unify.Zonk Declaration where
   zonk zonker = \case
-    Auto {position, name, body} -> do
+    Inferred {position, name, body} -> do
       body <- Unify.zonk zonker body
-      pure Auto {position, name, body}
-    Manual {position, name, body, annotation} -> do
+      pure Inferred {position, name, body}
+    Annotated {position, name, body, annotation} -> do
       body <- Unify.zonk zonker body
-      pure Manual {position, name, body, annotation}
+      pure Annotated {position, name, body, annotation}
 
 checkLocal ::
   Context s scope ->
@@ -100,16 +100,16 @@ check'
       body <- Unify.generalizeOver context $ Unify.Generalize $ \context -> do
         typex <- Unify.fresh Unify.typex
         Definition2.check context shared Definition2.Auto typex definition
-      pure Auto {position, name, body}
+      pure Inferred {position, name, body}
     Local typex -> do
       body <- Unify.generalizeOver context $ Unify.Generalize $ \context -> do
         Definition2.check context shared Definition2.Auto (shift typex) definition
-      pure Auto {position, name, body}
+      pure Inferred {position, name, body}
     Marked Annotation {annotation} ->
       do
         body <- checkAnnotation context position annotation $ \context typex -> do
           Definition2.check context shared Definition2.Manual typex definition
-        pure Manual {position, name, annotation, body}
+        pure Annotated {position, name, annotation, body}
 
 checkAnnotation ::
   Context s scope ->
@@ -141,9 +141,9 @@ checkAnnotation
 
 solve :: Declaration s scope -> ST s (Solved.Declaration scope)
 solve = \case
-  Manual {position, name, body, annotation} -> do
+  Annotated {position, name, body, annotation} -> do
     body <- Unify.solveSchemeOver (Unify.Solve Definition2.solve) position body
-    pure Solved.Manual {name, body, annotation}
-  Auto {position, name, body} -> do
+    pure Solved.Annotated {name, body, annotation}
+  Inferred {position, name, body} -> do
     body <- Unify.solveSchemeOver (Unify.Solve Definition2.solve) position body
-    pure Solved.Auto {name, body}
+    pure Solved.Inferred {name, body}

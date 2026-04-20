@@ -15,20 +15,19 @@ import qualified Stage3.Temporary.Type as Type
 import qualified Stage3.Temporary.Type as Unsolved.Type
 import qualified Stage3.Temporary.TypePattern as Unsolved
 import qualified Stage3.Temporary.TypePattern as Unsolved.TypePattern
-import Stage3.Tree.Type (Type)
 import qualified Stage3.Tree.Type as Solved
 import {-# SOURCE #-} qualified Stage3.Unify as Unify
 import qualified Stage4.Tree.Type as Simple (Type, simplify)
 
 data KindAnnotation scope
   = Annotation
-      { kind :: !(Type scope),
-        kind' :: !(Simple.Type scope)
+      { annotation :: !(Solved.Type scope),
+        kind :: !(Simple.Type scope)
       }
   | Inferred
   | Synonym
-      { kindx :: !(Strict.Maybe (Solved.Type scope)),
-        kind' :: !(Simple.Type scope),
+      { annotation' :: !(Strict.Maybe (Solved.Type scope)),
+        kind :: !(Simple.Type scope),
         definition :: !(Solved.Type (Local ':+ scope)),
         definition' :: !(Simple.Type (Local ':+ scope))
       }
@@ -59,14 +58,14 @@ check context declaration
             Unify.unify context position kind (Simple.lift $ Simple.simplify annotation)
         context <- pure $ Unsolved.Scheme.augment parameters context
         definition <- Unsolved.Type.check context (shift target) synonym
-        kind' <- Unify.solve position kind
+        kind <- Unify.solve position kind
         definition <- Unsolved.Type.solve context definition
         let definition' = Simple.simplify definition
-        pure Synonym {kindx = Strict.Nothing, kind', definition, definition'}
+        pure Synonym {annotation' = Strict.Nothing, kind, definition, definition'}
 check context declaration = case declaration of
   Stage2.Inferred {} -> pure Inferred
   Stage2.Annotated {annotation} -> do
     universe <- Unify.fresh Unify.universe
     annotation <- Type.check context (Unify.typeWith universe) annotation
     annotation <- Type.solve context annotation
-    pure $ Annotation {kind = annotation, kind' = Simple.simplify annotation}
+    pure $ Annotation {annotation, kind = Simple.simplify annotation}

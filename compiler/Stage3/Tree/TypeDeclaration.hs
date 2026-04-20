@@ -21,53 +21,69 @@ data LazyTypeDeclaration scope = !ConstructorIdentifier :^ TypeDeclaration scope
 infix 4 :^
 
 data TypeDeclaration scope
-  = TypeDeclaration
-  { name :: !ConstructorIdentifier,
-    kindx :: !(Strict.Maybe (Type scope)),
-    kind' :: !(Simple.Type scope),
-    definition :: !(TypeDefinition scope)
-  }
+  = Inferred
+      { name :: !ConstructorIdentifier,
+        kind :: !(Simple.Type scope),
+        definition :: !(TypeDefinition scope)
+      }
+  | Annotated
+      { name :: !ConstructorIdentifier,
+        kind :: !(Simple.Type scope),
+        annotation :: !(Type scope),
+        definition :: !(TypeDefinition scope)
+      }
   deriving (Show)
 
 strict declaration = name declaration :^ declaration
 
-kind'_ :: TypeDeclaration scope -> Simple.Type scope
-kind'_ = kind'
+kind_ :: TypeDeclaration scope -> Simple.Type scope
+kind_ = kind
 
 check :: Context s scope -> Stage3.KindAnnotation scope -> Stage2.TypeDeclaration scope -> ST s (TypeDeclaration scope)
-check _ KindAnnotation.Synonym {kind', kindx, definition, definition'} declaration
-  | Stage2.Synonym {} <- Stage2.definition declaration =
-      pure
-        TypeDeclaration
-          { name = Stage2.name declaration,
-            kind',
-            kindx,
-            definition =
-              Synonym
-                { definition,
-                  definition'
-                }
-          }
+check _ KindAnnotation.Synonym {kind, annotation', definition, definition'} declaration
+  | Stage2.Synonym {} <- Stage2.definition declaration = case annotation' of
+      Strict.Nothing ->
+        pure
+          Inferred
+            { name = Stage2.name declaration,
+              kind,
+              definition =
+                Synonym
+                  { definition,
+                    definition'
+                  }
+            }
+      Strict.Just annotation ->
+        pure
+          Annotated
+            { name = Stage2.name declaration,
+              kind,
+              annotation,
+              definition =
+                Synonym
+                  { definition,
+                    definition'
+                  }
+            }
 check context KindAnnotation.Inferred Stage2.Inferred {position, name, definition} = do
-  kind' <- Unify.fresh Unify.kind
-  definition <- Temporary.TypeDefinition.check context kind' definition
-  kind' <- Unify.solve position kind'
+  kind <- Unify.fresh Unify.kind
+  definition <- Temporary.TypeDefinition.check context kind definition
+  kind <- Unify.solve position kind
   definition <- Temporary.TypeDefinition.solve context definition
   pure
-    TypeDeclaration
+    Inferred
       { name,
-        kindx = Strict.Nothing,
-        kind',
+        kind,
         definition
       }
-check context KindAnnotation.Annotation {kind, kind'} Stage2.Annotated {name, definition} = do
-  definition <- Temporary.TypeDefinition.check context (Simple.Type.lift kind') definition
+check context KindAnnotation.Annotation {annotation, kind} Stage2.Annotated {name, definition} = do
+  definition <- Temporary.TypeDefinition.check context (Simple.Type.lift kind) definition
   definition <- Temporary.TypeDefinition.solve context definition
   pure
-    TypeDeclaration
+    Annotated
       { name,
-        kindx = Strict.Just kind,
-        kind',
+        annotation,
+        kind,
         definition
       }
 check _ _ _ = error "bad type declaration check"
