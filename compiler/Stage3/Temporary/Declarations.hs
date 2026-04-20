@@ -38,6 +38,7 @@ import qualified Stage3.Functor.Declarations as Functor (Declarations (..), from
 import qualified Stage3.Functor.Instance.Key as Instance.Key
 import Stage3.Temporary.Declaration (Declaration)
 import qualified Stage3.Temporary.Declaration as Declaration
+import qualified Stage3.Temporary.RightHandSide2 as RightHandSide2
 import Stage3.Temporary.Shared (Shared (..))
 import qualified Stage3.Temporary.Shared as Shared
 import qualified Stage3.Tree.Declaration as Solved.Declaration
@@ -190,7 +191,7 @@ checkTermDeclaration context index declaration = Formula8 {cycle, run}
       annotation <- meta
       let share index = do
             Shared {body} <- shared Vector.! index
-            pure $ Unify.Scheme $ Unify.mapScheme (Unify.MapScheme Shared.typex) body
+            pure $ Unify.Scheme $ Unify.mapScheme (Unify.MapScheme RightHandSide2.typex) body
       Declaration.checkLocal context share annotation declaration
 
 checkShared ::

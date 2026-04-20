@@ -360,6 +360,7 @@ executable hazy
     Stage3.Temporary.Pattern
     Stage3.Temporary.PatternField
     Stage3.Temporary.RightHandSide
+    Stage3.Temporary.RightHandSide2
     Stage3.Temporary.Scheme
     Stage3.Temporary.Select
     Stage3.Temporary.SelectorInfo
@@ -394,6 +395,7 @@ executable hazy
     Stage3.Tree.Pattern
     Stage3.Tree.PatternField
     Stage3.Tree.RightHandSide
+    Stage3.Tree.RightHandSide2
     Stage3.Tree.Scheme
     Stage3.Tree.SelectorInfo
     Stage3.Tree.Shared

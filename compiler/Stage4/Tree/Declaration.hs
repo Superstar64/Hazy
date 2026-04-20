@@ -7,6 +7,8 @@ import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Declaration as Stage3 (Declaration (..), LazyTermDeclaration (..))
 import qualified Stage3.Tree.Definition2 as Stage3 (Definition2 (..))
 import qualified Stage3.Tree.Expression as Stage3 (Expression)
+import qualified Stage3.Tree.RightHandSide2
+import qualified Stage3.Tree.RightHandSide2 as Stage3 (RightHandSide2 (RightHandSide2))
 import qualified Stage3.Tree.Scheme as Stage3 (Scheme)
 import qualified Stage3.Tree.Shared as Stage3.Shared
 import qualified Stage4.Index.Term as Term
@@ -113,21 +115,21 @@ simplifyShared :: Int -> Stage3.Shared.Shared scope -> LazyTermDeclaration scope
 simplifyShared index shared =
   Unnamed index :^ case shared of
     Stage3.Shared.Shared {body} -> case body of
-      SchemeOver {parameters, constraints, result} ->
+      SchemeOver {parameters, constraints, result = Stage3.RightHandSide2 {typex, definition}} ->
         Definition
           { name = Unnamed index,
             definition =
               SchemeOver
                 { parameters,
                   constraints,
-                  result = Expression.simplify $ Stage3.Shared.definition result
+                  result = Expression.simplify definition
                 },
             typex =
               Scheme
                 SchemeOver
                   { parameters,
                     constraints,
-                    result = Stage3.Shared.typex result
+                    result = typex
                   }
           }
 

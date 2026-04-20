@@ -40,8 +40,8 @@ import Stage3.Tree.Declarations (Declarations)
 import qualified Stage3.Tree.Declarations as Declarations
 import Stage3.Tree.Instance (Instance)
 import qualified Stage3.Tree.Instance as Instance
+import qualified Stage3.Tree.RightHandSide2 as RightHandSide2
 import Stage3.Tree.Shared (Shared (..))
-import qualified Stage3.Tree.Shared as Shared
 import Stage3.Tree.TypeDeclaration (LazyTypeDeclaration, TypeDeclaration)
 import qualified Stage3.Tree.TypeDeclaration as TypeDeclaration
 import Stage3.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
@@ -171,7 +171,7 @@ checkTermDeclaration global local declaration = Formula8 {cycle, run}
           -- todo, augment context with self to allow basic recursive inference
           share index = do
             Shared {body} <- shared Vector.! index
-            pure $ Scheme.lift $ Scheme $ SchemeOver.map (SchemeOver.Map Shared.typex) body
+            pure $ Scheme.lift $ Scheme $ SchemeOver.map (SchemeOver.Map RightHandSide2.typex) body
       unsolved <- Declaration.Unsolved.checkGlobal context share annotation declaration
       Declaration.Unsolved.solve unsolved
 
