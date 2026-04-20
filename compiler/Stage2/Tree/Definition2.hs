@@ -21,7 +21,7 @@ type Inferred = 'Inferred
 data Definition2 mark scope where
   Manual :: Definition (Local ':+ scope) -> Definition2 Annotated scope
   Auto :: !(Definition scope) -> Definition2 Inferred scope
-  Share :: !(Choice scope) -> Definition2 mark scope
+  Piece :: !(Choice scope) -> Definition2 mark scope
 
 instance Show (Definition2 mark scope) where
   showsPrec d (Manual definition) =
@@ -30,7 +30,7 @@ instance Show (Definition2 mark scope) where
   showsPrec d (Auto definition) =
     showParen (d > 10) $
       showString "Auto " . showsPrec 11 definition
-  showsPrec d (Share choice) =
+  showsPrec d (Piece choice) =
     showParen (d > 10) $ showString "Share " . showsPrec 11 choice
 
 instance Shift (Definition2 mark) where
@@ -40,14 +40,14 @@ instance Shift.Functor (Definition2 mark) where
   map category = \case
     Manual definition -> Manual (Shift.map (Shift.Over category) definition)
     Auto definition -> Auto (Shift.map category definition)
-    Share choice -> Share (Shift.map category choice)
+    Piece choice -> Piece (Shift.map category choice)
 
 instance FreeTermVariables (Definition2 mark) where
   freeTermVariables target = \case
     Manual definition ->
       freeTermVariables (FreeTermVariables.Over target) definition
     Auto definition -> freeTermVariables target definition
-    Share {} -> []
+    Piece {} -> []
 
 data Choice scope = Choice
   { position :: !Position,

@@ -13,7 +13,7 @@ data Definition2 scope
       { definition :: !(Definition scope),
         typex :: !(Simple.Type scope)
       }
-  | Shared
+  | Piece
       { shareIndex :: !Int,
         instanciation :: !(Simple.Instanciation scope),
         patternx :: !(Pattern scope),

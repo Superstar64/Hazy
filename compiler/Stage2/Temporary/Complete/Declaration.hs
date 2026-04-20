@@ -92,7 +92,7 @@ merge entries@(entry :| _) =
             pure $ Method More.Method {typeIndex, methodIndex}
         | Just (position, More.Shared {shareIndex, bound, patternx}) <- share ->
             let shared :: Real.Definition2 marked scope
-                shared = Real.Share Real.Choice {position, shareIndex, bound, patternx}
+                shared = Real.Piece Real.Choice {position, shareIndex, bound, patternx}
                 real = case annotation of
                   Nothing -> Real.Inferred {position, name, fixity, definition' = shared}
                   Just annotation -> Real.Annotated {position, name, fixity, annotation, definition = shared}

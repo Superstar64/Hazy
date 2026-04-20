@@ -20,7 +20,7 @@ data Definition2 s scope
       { definition :: !(Definition s scope),
         typex :: !(Unify.Type s scope)
       }
-  | Shared
+  | Piece
       { shareIndex :: !Int,
         instanciation :: !(Unify.Instanciation s scope),
         patternx :: !(Pattern s scope),
@@ -34,11 +34,11 @@ instance Unify.Zonk Definition2 where
       definition <- Unify.zonk zonker definition
       typex <- Unify.zonk zonker typex
       pure Body {definition, typex}
-    Shared {shareIndex, instanciation, patternx, bound, typex} -> do
+    Piece {shareIndex, instanciation, patternx, bound, typex} -> do
       instanciation <- Unify.zonk zonker instanciation
       patternx <- Unify.zonk zonker patternx
       typex <- Unify.zonk zonker typex
-      pure Shared {shareIndex, instanciation, patternx, bound, typex}
+      pure Piece {shareIndex, instanciation, patternx, bound, typex}
 
 instance Unify.Generalizable Definition2 where
   collect collector body = Unify.collect collector (typex body)
@@ -61,13 +61,13 @@ check context _ Manual typex (Stage2.Manual definition) = do
   definition <- Definition.check context typex definition
   pure Body {definition, typex}
 check context shared _ typex declaration = case declaration of
-  Stage2.Share Stage2.Choice {position, shareIndex, patternx, bound} -> do
+  Stage2.Piece Stage2.Choice {position, shareIndex, patternx, bound} -> do
     target <- shared shareIndex
     (full, instanciation) <- Unify.instanciate context position (shift target)
     patternx <- Pattern.check context full (shift patternx)
     let typex' = patternx Pattern.! bound
     Unify.unify context position typex typex'
-    pure Shared {shareIndex, instanciation, patternx, bound, typex}
+    pure Piece {shareIndex, instanciation, patternx, bound, typex}
 
 solve :: Position -> Definition2 s scope -> ST s (Solved.Definition2 scope)
 solve position = \case
@@ -75,8 +75,8 @@ solve position = \case
     definition <- Definition.solve definition
     typex <- Unify.solve position typex
     pure Solved.Body {definition, typex}
-  Shared {shareIndex, instanciation, patternx, bound, typex} -> do
+  Piece {shareIndex, instanciation, patternx, bound, typex} -> do
     instanciation <- Unify.solveInstanciation position instanciation
     patternx <- Pattern.solve patternx
     typex <- Unify.solve position typex
-    pure Solved.Shared {shareIndex, instanciation, patternx, bound, typex}
+    pure Solved.Piece {shareIndex, instanciation, patternx, bound, typex}

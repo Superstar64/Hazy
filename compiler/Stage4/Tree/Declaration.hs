@@ -85,7 +85,7 @@ simplify share (name Stage3.:^ declaration) =
                   constraints,
                   result = case result of
                     Stage3.Body {definition} -> Expression.simplify definition
-                    Stage3.Shared {shareIndex, instanciation, patternx, bound} ->
+                    Stage3.Piece {shareIndex, instanciation, patternx, bound} ->
                       Expression.Join
                         { statements =
                             Statements.bind
