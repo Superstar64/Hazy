@@ -5,21 +5,29 @@ import qualified Data.Strict.Maybe as Strict
 import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (shift)
 import qualified Stage2.Tree.TypeDeclaration as Stage2 (TypeDeclaration (..))
-import qualified Stage2.Tree.TypeDefinition as Stage2 (TypeDefinition (..))
+import qualified Stage2.Tree.TypeDefinition as Stage2 (TypeDefinition (Synonym, parameters, synonym))
+import qualified Stage2.Tree.TypePattern
+import qualified Stage2.Tree.TypePattern as Stage2 (TypePattern (TypePattern))
 import Stage3.Check.Context (Context)
+import qualified Stage3.Simple.Type as Simple (lift)
 import qualified Stage3.Temporary.Scheme as Unsolved.Scheme
 import qualified Stage3.Temporary.Type as Type
 import qualified Stage3.Temporary.Type as Unsolved.Type
+import qualified Stage3.Temporary.TypePattern as Unsolved
+import qualified Stage3.Temporary.TypePattern as Unsolved.TypePattern
+import Stage3.Tree.Type (Type)
 import qualified Stage3.Tree.Type as Solved
-import {-# SOURCE #-} qualified Stage3.Tree.TypeDeclaration as TypeDeclaration
 import {-# SOURCE #-} qualified Stage3.Unify as Unify
 import qualified Stage4.Tree.Type as Simple (Type, simplify)
 
 data KindAnnotation scope
-  = Annotation {kind' :: !(Simple.Type scope)}
+  = Annotation
+      { kind :: !(Type scope),
+        kind' :: !(Simple.Type scope)
+      }
   | Inferred
   | Synonym
-      { kind :: !(Strict.Maybe (Solved.Type scope)),
+      { kindx :: !(Strict.Maybe (Solved.Type scope)),
         kind' :: !(Simple.Type scope),
         definition :: !(Solved.Type (Local ':+ scope)),
         definition' :: !(Simple.Type (Local ':+ scope))
@@ -30,26 +38,35 @@ check context declaration
   | position <- Stage2.position declaration,
     Stage2.Synonym {synonym, parameters} <- Stage2.definition declaration =
       do
+        let fresh Stage2.TypePattern {name, position} = do
+              level <- Unify.fresh Unify.universe
+              typex <- Unify.fresh (Unify.typeWith level)
+              pure
+                Unsolved.TypePattern
+                  { name,
+                    typex,
+                    position
+                  }
+        parameters <- traverse fresh parameters
         target <- Unify.fresh (Unify.typeWith Unify.large)
-        annotation <- case declaration of
-          Stage2.Inferred {} -> pure Inferred
+        let kind = foldr (Unify.function . Unsolved.TypePattern.typex) target parameters
+        case declaration of
+          Stage2.Inferred {} -> pure ()
           Stage2.Annotated {annotation} -> do
             universe <- Unify.fresh Unify.universe
             annotation <- Type.check context (Unify.typeWith universe) annotation
             annotation <- Type.solve context annotation
-            pure Annotation {kind' = Simple.simplify annotation}
-        let unused = error "unused parameter"
-        (parameters, kind) <- TypeDeclaration.checkHead unused unused annotation (parameters, target)
+            Unify.unify context position kind (Simple.lift $ Simple.simplify annotation)
         context <- pure $ Unsolved.Scheme.augment parameters context
         definition <- Unsolved.Type.check context (shift target) synonym
         kind' <- Unify.solve position kind
         definition <- Unsolved.Type.solve context definition
         let definition' = Simple.simplify definition
-        pure Synonym {kind = Strict.Nothing, kind', definition, definition'}
+        pure Synonym {kindx = Strict.Nothing, kind', definition, definition'}
 check context declaration = case declaration of
   Stage2.Inferred {} -> pure Inferred
   Stage2.Annotated {annotation} -> do
     universe <- Unify.fresh Unify.universe
     annotation <- Type.check context (Unify.typeWith universe) annotation
     annotation <- Type.solve context annotation
-    pure $ Annotation {kind' = Simple.simplify annotation}
+    pure $ Annotation {kind = annotation, kind' = Simple.simplify annotation}

@@ -18,18 +18,21 @@ import Stage2.Tree.TypePattern (TypePattern)
 
 data TypeDefinition scope
   = ADT
-      { brand :: !Brand,
+      { position :: !Position,
+        brand :: !Brand,
         parameters :: !(Strict.Vector (TypePattern Position)),
         constructors :: !(Strict.Vector (Constructor (Local ':+ scope))),
         selectors :: !(Strict.Vector Selector)
       }
   | GADT
-      { brand :: !Brand,
+      { position :: !Position,
+        brand :: !Brand,
         parameters :: !(Strict.Vector (TypePattern Position)),
         gadtConstructors :: !(Strict.Vector (GADTConstructor scope))
       }
   | Class
-      { parameter :: !(TypePattern Position),
+      { position :: !Position,
+        parameter :: !(TypePattern Position),
         methods :: !(Strict.Vector (Method (Local ':+ scope))),
         constraints :: !(Strict.Vector (Constraint Position scope))
       }
@@ -44,22 +47,25 @@ instance Shift TypeDefinition where
 
 instance Shift.Functor TypeDefinition where
   map category = \case
-    ADT {brand, parameters, constructors, selectors} ->
+    ADT {position, brand, parameters, constructors, selectors} ->
       ADT
-        { brand,
+        { position,
+          brand,
           parameters,
           constructors = fmap (Shift.map (Shift.Over category)) constructors,
           selectors
         }
-    GADT {brand, parameters, gadtConstructors} ->
+    GADT {position, brand, parameters, gadtConstructors} ->
       GADT
-        { brand,
+        { position,
+          brand,
           parameters,
           gadtConstructors = fmap (Shift.map category) gadtConstructors
         }
-    Class {parameter, methods, constraints} ->
+    Class {position, parameter, methods, constraints} ->
       Class
-        { parameter,
+        { position,
+          parameter,
           constraints = fmap (Shift.map category) constraints,
           methods = fmap (Shift.map (Shift.Over category)) methods
         }

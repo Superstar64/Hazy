@@ -16,13 +16,15 @@ import qualified Stage2.Tree.Scheme as Stage2 (Scheme (..))
 import qualified Stage2.Tree.TypePattern as Stage2 (TypePattern (..))
 import Stage3.Check.Context (Context (..))
 import Stage3.Check.LocalBinding (LocalBinding (Wobbly, label, wobbly))
+import qualified Stage3.Simple.Type as Simple.Type
 import Stage3.Temporary.Constraint (Constraint)
 import qualified Stage3.Temporary.Constraint as Constraint
 import Stage3.Temporary.Type (Type)
 import {-# SOURCE #-} qualified Stage3.Temporary.Type as Type (check, solve)
 import Stage3.Temporary.TypePattern (TypePattern (TypePattern))
 import qualified Stage3.Temporary.TypePattern as TypePattern
-import qualified Stage3.Tree.Scheme as Solved
+import qualified Stage3.Tree.Scheme as Solved (Scheme (..))
+import qualified Stage3.Tree.TypePattern as Solved (TypePattern (..))
 import qualified Stage3.Unify as Unify
 
 data Scheme s scope = Scheme
@@ -59,6 +61,24 @@ augment scheme Context {termEnvironment, localEnvironment, typeEnvironment}
         }
   where
     wobbly
-      TypePattern {name, typex = wobbly}
-        | wobbly <- shift wobbly =
-            Wobbly {label = Label.LocalBinding {name}, wobbly}
+      TypePattern {name, typex = wobbly} =
+        Wobbly
+          { label = Label.LocalBinding {name},
+            wobbly = shift wobbly
+          }
+
+augmentSolve :: Strict.Vector (Solved.TypePattern scope) -> Context s scope -> Context s (Local ':+ scope)
+augmentSolve scheme Context {termEnvironment, localEnvironment, typeEnvironment}
+  | scheme <- Strict.Vector.toLazy scheme =
+      Context
+        { termEnvironment = Term.Local termEnvironment,
+          localEnvironment = Local.Local (fmap wobbly scheme) localEnvironment,
+          typeEnvironment = Type.Local typeEnvironment
+        }
+  where
+    wobbly
+      Solved.TypePattern {name, typex = wobbly} =
+        Wobbly
+          { label = Label.LocalBinding {name},
+            wobbly = Simple.Type.lift $ shift wobbly
+          }

@@ -7,6 +7,7 @@ import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Method as Solved.Method
 import qualified Stage3.Tree.TypeDeclaration as Solved (LazyTypeDeclaration (..), TypeDeclaration (..))
 import qualified Stage3.Tree.TypeDefinition as Solved (TypeDefinition (..))
+import Stage3.Tree.TypePattern (TypePattern (..))
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
 import Stage4.Tree.Class (Class)
@@ -94,13 +95,13 @@ simplify' Solved.TypeDeclaration {name, definition} = case definition of
       { name,
         datax =
           Data.Data
-            { parameters,
+            { parameters = fmap typex parameters,
               constructors = Constructor.simplify <$> constructors,
               selectors,
               brand
             }
       }
-  Solved.Class {parameter, constraints, methods} ->
+  Solved.Class {parameter = TypePattern {typex = parameter}, constraints, methods} ->
     Class
       { name,
         classx =

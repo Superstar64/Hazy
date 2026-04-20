@@ -1,28 +1,15 @@
 module Stage3.Tree.TypeDeclaration where
 
 import Control.Monad.ST (ST)
-import Data.Foldable (Foldable (toList))
-import Data.Functor.Identity (Identity (..))
 import qualified Data.Strict.Maybe as Strict (Maybe (..))
-import qualified Data.Vector.Strict as Strict.Vector
-import Error (unsupportedFeatureGADTs)
-import Stage1.Position (Position)
 import Stage1.Variable (ConstructorIdentifier)
 import qualified Stage2.Tree.TypeDeclaration as Stage2 (TypeDeclaration (..))
 import qualified Stage2.Tree.TypeDefinition as Stage2 (TypeDefinition (..))
-import qualified Stage2.Tree.TypePattern as Stage2 (TypePattern (TypePattern))
-import qualified Stage2.Tree.TypePattern as Stage2.TypePattern
 import Stage3.Check.Context (Context (..))
-import Stage3.Check.KindAnnotation (KindAnnotation)
 import qualified Stage3.Check.KindAnnotation as KindAnnotation
 import qualified Stage3.Check.KindAnnotation as Stage3
-import qualified Stage3.Simple.Type as Simple (lift)
-import qualified Stage3.Temporary.Constraint as Constraint
-import qualified Stage3.Temporary.Constructor as Unsolved.Constructor
-import qualified Stage3.Temporary.Method as Unsolved.Method
-import qualified Stage3.Temporary.Scheme as Unsolved.Scheme
-import qualified Stage3.Temporary.TypePattern as Unsolved (TypePattern (TypePattern))
-import qualified Stage3.Temporary.TypePattern as Unsolved.TypePattern
+import qualified Stage3.Simple.Type as Simple.Type
+import qualified Stage3.Temporary.TypeDefinition as Temporary.TypeDefinition
 import Stage3.Tree.Type (Type)
 import Stage3.Tree.TypeDefinition (TypeDefinition (..))
 import qualified Stage3.Unify as Unify
@@ -36,7 +23,7 @@ infix 4 :^
 data TypeDeclaration scope
   = TypeDeclaration
   { name :: !ConstructorIdentifier,
-    kind :: !(Strict.Maybe (Type scope)),
+    kindx :: !(Strict.Maybe (Type scope)),
     kind' :: !(Simple.Type scope),
     definition :: !(TypeDefinition scope)
   }
@@ -47,107 +34,40 @@ strict declaration = name declaration :^ declaration
 kind'_ :: TypeDeclaration scope -> Simple.Type scope
 kind'_ = kind'
 
-checkHead ::
-  (Traversable t) =>
-  Context s scope ->
-  Position ->
-  KindAnnotation scope ->
-  (t (Stage2.TypePattern Position), Unify.Type s scope) ->
-  ST s (t (Unsolved.TypePattern s scope), Unify.Type s scope)
-checkHead context position annotation (parameters, target) = do
-  let fresh Stage2.TypePattern {name, position} = do
-        level <- Unify.fresh Unify.universe
-        typex <- Unify.fresh (Unify.typeWith level)
-        pure
-          Unsolved.TypePattern
-            { name,
-              typex,
-              position
-            }
-  parameters <- traverse fresh parameters
-  let kind = foldr (Unify.function . Unsolved.TypePattern.typex) target parameters
-  case annotation of
-    KindAnnotation.Inferred -> pure ()
-    KindAnnotation.Annotation {kind'} -> do
-      Unify.unify context position kind (Simple.lift kind')
-    KindAnnotation.Synonym {} -> error "unexpected synonym annotation"
-  pure (parameters, kind)
-
 check :: Context s scope -> Stage3.KindAnnotation scope -> Stage2.TypeDeclaration scope -> ST s (TypeDeclaration scope)
-check context annotation declaration
-  | position <- Stage2.position declaration,
-    name <- Stage2.name declaration = case Stage2.definition declaration of
-      Stage2.ADT
-        { brand,
-          constructors,
-          selectors,
-          parameters
-        } ->
-          do
-            (parameters, kind) <- checkHead context position annotation (parameters, Unify.typex)
-            context <- pure $ Unsolved.Scheme.augment parameters context
-            constructors <- traverse (Unsolved.Constructor.check context) constructors
-            constructors <- traverse (Unsolved.Constructor.solve context) constructors
-            kind' <- Unify.solve position kind
-            let solveTypePattern = Unify.solve position . Unsolved.TypePattern.typex
-            parameters <- Strict.Vector.fromList . toList <$> traverse solveTypePattern parameters
-            pure $
-              TypeDeclaration
-                { name,
-                  kind',
-                  kind = Strict.Nothing,
-                  definition =
-                    ADT
-                      { brand,
-                        constructors,
-                        parameters,
-                        selectors
-                      }
+check _ KindAnnotation.Synonym {kind', kindx, definition, definition'} declaration
+  | Stage2.Synonym {} <- Stage2.definition declaration =
+      pure
+        TypeDeclaration
+          { name = Stage2.name declaration,
+            kind',
+            kindx,
+            definition =
+              Synonym
+                { definition,
+                  definition'
                 }
-      Stage2.Class
-        { methods,
-          constraints,
-          parameter
-        } -> do
-          (Identity parameter, kind) <-
-            checkHead context position annotation (Identity parameter, Unify.constraint)
-          context <- pure $ Unsolved.Scheme.augment (Strict.Vector.singleton parameter) context
-          constraints <- traverse (Constraint.check context) constraints
-          constraints <- traverse (Constraint.solve context) constraints
-          methods <- traverse (Unsolved.Method.check context) methods
-          methods <- traverse (Unsolved.Method.solve context) methods
-          kind' <- Unify.solve position kind
-          parameter <- Unify.solve position . Unsolved.TypePattern.typex $ parameter
-          pure $
-            TypeDeclaration
-              { name,
-                kind',
-                kind = Strict.Nothing,
-                definition =
-                  Class
-                    { parameter,
-                      constraints,
-                      methods
-                    }
-              }
-      Stage2.Synonym {}
-        | KindAnnotation.Synonym
-            { kind',
-              kind,
-              definition,
-              definition'
-            } <-
-            annotation -> do
-            pure $
-              TypeDeclaration
-                { name,
-                  kind',
-                  kind,
-                  definition =
-                    Synonym
-                      { definition,
-                        definition'
-                      }
-                }
-        | otherwise -> error "bad annotation"
-      Stage2.GADT {} -> unsupportedFeatureGADTs position
+          }
+check context KindAnnotation.Inferred Stage2.Inferred {position, name, definition} = do
+  kind' <- Unify.fresh Unify.kind
+  definition <- Temporary.TypeDefinition.check context kind' definition
+  kind' <- Unify.solve position kind'
+  definition <- Temporary.TypeDefinition.solve context definition
+  pure
+    TypeDeclaration
+      { name,
+        kindx = Strict.Nothing,
+        kind',
+        definition
+      }
+check context KindAnnotation.Annotation {kind, kind'} Stage2.Annotated {name, definition} = do
+  definition <- Temporary.TypeDefinition.check context (Simple.Type.lift kind') definition
+  definition <- Temporary.TypeDefinition.solve context definition
+  pure
+    TypeDeclaration
+      { name,
+        kindx = Strict.Just kind,
+        kind',
+        definition
+      }
+check _ _ _ = error "bad type declaration check"

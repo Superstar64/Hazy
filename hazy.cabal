@@ -368,6 +368,7 @@ executable hazy
     Stage3.Temporary.Statements
     Stage3.Temporary.StrictnessAnnotation
     Stage3.Temporary.Type
+    Stage3.Temporary.TypeDefinition
     Stage3.Temporary.TypePattern
     Stage3.Tree.Alternative
     Stage3.Tree.Body

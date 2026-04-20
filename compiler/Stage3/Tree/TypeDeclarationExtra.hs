@@ -19,6 +19,7 @@ import Stage3.Tree.Definition (Definition)
 import Stage3.Tree.Method (Method (..))
 import Stage3.Tree.TypeDeclaration (TypeDeclaration (..))
 import qualified Stage3.Tree.TypeDefinition as TypeDefinition
+import Stage3.Tree.TypePattern (TypePattern (..))
 import qualified Stage4.Tree.Constraint as Simple (Constraint (..))
 import qualified Stage4.Tree.Constraint as Simple.Constraint
 import qualified Stage4.Tree.Scheme as Simple (Scheme (..))
@@ -44,7 +45,7 @@ check context classx TypeDeclaration {definition} = \case
   Stage2.Synonym {} -> pure Synonym
   Stage2.GADT {} -> pure GADT
   Stage2.Class {position, methods} -> case definition of
-    TypeDefinition.Class {parameter, methods = base} -> do
+    TypeDefinition.Class {parameter = TypePattern {typex = parameter}, methods = base} -> do
       context <-
         augment
           position

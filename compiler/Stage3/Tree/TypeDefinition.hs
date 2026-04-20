@@ -9,17 +9,18 @@ import Stage3.Tree.Constraint (Constraint)
 import Stage3.Tree.Constructor (Constructor)
 import Stage3.Tree.Method (Method)
 import Stage3.Tree.Type (Type)
+import Stage3.Tree.TypePattern (TypePattern)
 import qualified Stage4.Tree.Type as Simple (Type)
 
 data TypeDefinition scope
   = ADT
       { brand :: !Brand,
-        parameters :: !(Strict.Vector (Simple.Type scope)),
+        parameters :: !(Strict.Vector (TypePattern scope)),
         constructors :: !(Strict.Vector (Constructor (Scope.Local ':+ scope))),
         selectors :: !(Strict.Vector Selector)
       }
   | Class
-      { parameter :: !(Simple.Type scope),
+      { parameter :: !(TypePattern scope),
         constraints :: !(Strict.Vector (Constraint scope)),
         methods :: !(Strict.Vector (Method (Scope.Local ':+ scope)))
       }

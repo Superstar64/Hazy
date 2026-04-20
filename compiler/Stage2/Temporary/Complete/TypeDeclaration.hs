@@ -115,14 +115,14 @@ merge entries@(entry :| _) =
                     Real.Inferred
                       { position,
                         name,
-                        definition = Real.ADT {brand, parameters, constructors, selectors}
+                        definition = Real.ADT {position, brand, parameters, constructors, selectors}
                       }
                   Strict.Just annotation ->
                     Real.Annotated
                       { position,
                         name,
                         annotation,
-                        definition = Real.ADT {brand, parameters, constructors, selectors}
+                        definition = Real.ADT {position, brand, parameters, constructors, selectors}
                       }
         | Just (_, More.GADT {brand, parameters, gadtConstructors}) <- gadt,
           gadtConstructors <- fmap GADTConstructor.shrink gadtConstructors ->
@@ -132,14 +132,14 @@ merge entries@(entry :| _) =
                   Real.Inferred
                     { position,
                       name,
-                      definition = Real.GADT {parameters, brand, gadtConstructors}
+                      definition = Real.GADT {position, parameters, brand, gadtConstructors}
                     }
                 Strict.Just annotation ->
                   Real.Annotated
                     { position,
                       name,
                       annotation,
-                      definition = Real.GADT {parameters, brand, gadtConstructors}
+                      definition = Real.GADT {position, parameters, brand, gadtConstructors}
                     }
         | Just (position, More.Class {parameter, constraints, methods}) <- classx,
           methods <- fmap Method.shrink methods -> Verbose.resolving (Variable.print' name) $
@@ -148,14 +148,14 @@ merge entries@(entry :| _) =
                 Real.Inferred
                   { position,
                     name,
-                    definition = Real.Class {parameter, constraints, methods}
+                    definition = Real.Class {position, parameter, constraints, methods}
                   }
               Strict.Just annotation ->
                 Real.Annotated
                   { position,
                     name,
                     annotation,
-                    definition = Real.Class {parameter, constraints, methods}
+                    definition = Real.Class {position, parameter, constraints, methods}
                   }
         | Just
             ( _,
