@@ -335,8 +335,11 @@ typeCheck context_ position = typeCheckWith context_
             where
               indexType index =
                 case typeEnvironment Type.Table.! index of
-                  TypeBinding {kind = kind'} -> do
-                    Simple.lift <$> kind'
+                  TypeBinding {kind} -> do
+                    kind <- kind
+                    case kind of
+                      TypeBinding.Rigid kind -> pure $ Simple.lift kind
+                      TypeBinding.Wobbly kind -> pure kind
               indexLift constructor@Constructor.Index {typeIndex} = do
                 datax <- do
                   let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
@@ -466,8 +469,11 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
               target <- fresh (Type Large)
               let indexType index =
                     case typeEnvironment Type.Table.! index of
-                      TypeBinding {kind = kind'} -> do
-                        Simple.lift <$> kind'
+                      TypeBinding {kind} -> do
+                        kind <- kind
+                        case kind of
+                          TypeBinding.Rigid kind -> pure $ Simple.lift kind
+                          TypeBinding.Wobbly wobbly -> pure wobbly
                   indexLift constructor@Constructor.Index {typeIndex} = do
                     datax <- do
                       let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)

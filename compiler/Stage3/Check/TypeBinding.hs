@@ -9,7 +9,7 @@ import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Stage2.Index.Type2 as Type2
 import qualified Stage2.Label.Binding.Type as Label
 import Stage2.Scope (Environment (..), Local)
-import Stage2.Shift (Shift (..), shiftDefault)
+import Stage2.Shift (Category (Shift), Shift (..), shiftDefault)
 import qualified Stage2.Shift as Shift
 import {-# SOURCE #-} Stage3.Check.InstanceAnnotation (InstanceAnnotation)
 import {-# SOURCE #-} qualified Stage3.Check.InstanceAnnotation as InstanceAnnotation
@@ -19,16 +19,26 @@ import qualified Stage3.Functor.Annotated as Functor (Annotated (..), NoLabel)
 import {-# SOURCE #-} Stage3.Tree.TypeDeclaration (TypeDeclaration)
 import {-# SOURCE #-} qualified Stage3.Tree.TypeDeclaration as TypeDeclaration
 import {-# SOURCE #-} Stage3.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
+import {-# SOURCE #-} qualified Stage3.Unify as Unify
 import Stage4.Tree.Constraint (Constraint)
 import qualified Stage4.Tree.Type as Simple (Type)
 import {-# SOURCE #-} qualified Stage4.Tree.TypeDeclaration as Simple (TypeDeclaration, simplify')
 import {-# SOURCE #-} qualified Stage4.Tree.TypeDeclarationExtra as Simple (TypeDeclarationExtra)
 import {-# SOURCE #-} qualified Stage4.Tree.TypeDeclarationExtra as SimpleExtra (simplify)
 
+data Kind s scope
+  = Wobbly !(Unify.Type s scope)
+  | Rigid !(Simple.Type scope)
+
+instance Shift (Kind s) where
+  shift = \case
+    Wobbly typex -> Wobbly (shift typex)
+    Rigid typex -> Rigid (shift typex)
+
 type TypeBinding :: Data.Kind.Type -> Environment -> Data.Kind.Type
 data TypeBinding s scope = TypeBinding
   { label :: !(forall scope. Label.TypeBinding scope),
-    kind :: ST s (Simple.Type scope),
+    kind :: ST s (Kind s scope),
     content :: ST s (Simple.TypeDeclaration scope),
     extra :: ST s (Simple.TypeDeclarationExtra scope),
     synonym :: ST s (Strict.Maybe (Simple.Type (Local ':+ scope))),
@@ -40,19 +50,18 @@ synonym_ :: TypeBinding s scope -> ST s (Strict.Maybe (Simple.Type (Local ':+ sc
 synonym_ = synonym
 
 instance Shift (TypeBinding s) where
-  shift = shiftDefault
-
-instance Shift.Functor (TypeBinding s) where
-  map category TypeBinding {label, kind, synonym, extra, content, dataInstances, classInstances} =
+  shift TypeBinding {label, kind, synonym, extra, content, dataInstances, classInstances} =
     TypeBinding
       { label,
-        kind = fmap (Shift.map category) kind,
+        kind = fmap shift kind,
         synonym = fmap (fmap (Shift.map (Shift.Over category))) synonym,
         content = fmap (Shift.map category) content,
         extra = fmap (Shift.map category) extra,
         dataInstances = Map.map (fmap $ Shift.map category) $ Shift.mapInstances category dataInstances,
         classInstances = Map.map (fmap $ Shift.map category) $ Shift.mapInstances category classInstances
       }
+    where
+      category = Shift
 
 rigid ::
   Functor.Annotated
@@ -84,7 +93,7 @@ rigid
     where
       kind = do
         annotation <- meta
-        case annotation of
+        Rigid <$> case annotation of
           KindAnnotation.Annotation {kind} -> pure kind
           KindAnnotation.Inferred -> TypeDeclaration.kind_ <$> content
           KindAnnotation.Synonym {kind} -> pure kind

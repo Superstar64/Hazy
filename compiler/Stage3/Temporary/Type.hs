@@ -67,9 +67,12 @@ check context@Context {localEnvironment, typeEnvironment} kind = \case
     pure Constructor {constructor}
     where
       indexType constructor
-        | TypeBinding {kind = kind'} <- typeEnvironment Type.Table.! constructor =
+        | TypeBinding {kind} <- typeEnvironment Type.Table.! constructor =
             do
-              lift <$> kind'
+              kind <- kind
+              case kind of
+                TypeBinding.Rigid kind -> pure $ lift kind
+                TypeBinding.Wobbly kind -> pure kind
       indexLift constructor@Constructor.Index {typeIndex} = do
         datax <- do
           let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
