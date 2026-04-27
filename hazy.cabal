@@ -180,6 +180,7 @@ executable hazy
     Stage2.Group.Functor.Term.ModuleSet
     Stage2.Group.Functor.Type.Declarations
     Stage2.Group.Functor.Type.ModuleSet
+    Stage2.Group.Index.Link.Term
     Stage2.Group.Index.Term0
     Stage2.Group.Temporary.Declaration
     Stage2.Group.Tree.Declaration
@@ -192,6 +193,8 @@ executable hazy
     Stage2.Group.Tree.TypeDefinition2
     Stage2.Group.Tree.TypeGroup
     Stage2.Index.Constructor
+    Stage2.Index.Link.Term
+    Stage2.Index.Link.Type
     Stage2.Index.Local
     Stage2.Index.Method
     Stage2.Index.Selector
@@ -209,6 +212,7 @@ executable hazy
     Stage2.Label.Binding.Term
     Stage2.Label.Binding.Type
     Stage2.Label.Context
+    Stage2.Locality
     Stage2.Resolve.Binding.Constructor
     Stage2.Resolve.Binding.Term
     Stage2.Resolve.Binding.Type

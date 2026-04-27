@@ -5,9 +5,8 @@ module Stage2.Group.Functor.Type.Declarations where
 import Data.Traversable (fmapDefault, foldMapDefault)
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
-import qualified Stage2.Index.Type0 as Type0
-import Stage2.Scope (Environment (..))
-import qualified Stage2.Scope as Scope
+import qualified Stage2.Index.Link.Type as Type
+import Stage2.Locality (Local)
 import qualified Stage2.Tree.Declarations as Proper
 
 newtype Declarations a = Declarations
@@ -26,13 +25,13 @@ instance Traversable Declarations where
       declarations types = Declarations {types}
 
 indexes ::
-  (Int -> Type0.Index scope) ->
+  (Int -> Type.Link locality) ->
   Proper.Declarations scope ->
-  Declarations (Type0.Index scope)
+  Declarations (Type.Link locality)
 indexes index Proper.Declarations {types} =
   Declarations
     { types = Vector.generate (length types) index
     }
 
-(!) :: Declarations a -> Type0.Index (Scope.Declaration ':+ scope) -> a
-Declarations {types} ! Type0.Declaration index = types Vector.! index
+(!) :: Declarations a -> Type.Link Local -> a
+Declarations {types} ! Type.Declaration index = types Vector.! index
