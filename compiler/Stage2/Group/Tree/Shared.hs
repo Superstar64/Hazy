@@ -19,7 +19,7 @@ data Shared locality scope = Shared
   deriving (Show)
 
 group ::
-  (Term.Link locality -> Temporary.Declaration scope) ->
+  (Term.Link locality -> Temporary.Declaration locality scope) ->
   StronglyConnected.Component (Term.Link locality) ->
   Proper.Shared scope ->
   Shared locality scope

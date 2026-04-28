@@ -17,6 +17,7 @@ import qualified Stage2.Index.Link.Term as Proper.Term
 import qualified Stage2.Index.Link.Type as Proper.Type
 import qualified Stage2.Index.Link.Type as Type
 import Stage2.Locality (Global)
+import qualified Stage2.Locality as Locality
 import qualified Stage2.Scope as Scope
 import qualified Stage2.Tree.Declarations as Proper (Declarations (..))
 import qualified Stage2.Tree.Module as Proper (Module (..))
@@ -54,7 +55,7 @@ connect modules = Vector.imap go modules
       Functor.Type.indexes
         (Proper.Type.Global index)
         (Proper.declarations $ modules Vector.! index)
-    indexTerm :: Term.Link Global -> Temporary.Declaration Scope.Global
+    indexTerm :: Term.Link Global -> Temporary.Declaration Locality.Global Scope.Global
     indexTerm = \case
       Term.Link (Proper.Term.Global global local)
         | Proper.Module {declarations = Proper.Declarations {terms}} <-
@@ -64,7 +65,7 @@ connect modules = Vector.imap go modules
         | Proper.Module {declarations = Proper.Declarations {shared}} <-
             modules Vector.! global ->
             Temporary.Shared $ shared Vector.! local
-    indexType :: Type.Link Global -> Proper.TypeDeclaration Scope.Global
+    indexType :: Type.Link Global -> Proper.TypeDeclaration Locality.Global Scope.Global
     indexType = \case
       Type.Global global local
         | Proper.Module {declarations = Proper.Declarations {types}} <-

@@ -30,9 +30,9 @@ import Stage2.Tree.Shared (Shared)
 import Stage2.Tree.TypeDeclaration (TypeDeclaration)
 import Stage2.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 
-data Declarations scope = Declarations
-  { terms :: !(Vector (Declaration scope)),
-    types :: !(Vector (TypeDeclaration scope)),
+data Declarations locality scope = Declarations
+  { terms :: !(Vector (Declaration locality scope)),
+    types :: !(Vector (TypeDeclaration locality scope)),
     typeExtras :: !(Vector (TypeDeclarationExtra scope)),
     shared :: !(Vector (Shared scope)),
     dataInstances :: !(Vector (Map (Type2.Index scope) (Instance scope))),
@@ -40,10 +40,10 @@ data Declarations scope = Declarations
   }
   deriving (Show)
 
-instance Shift Declarations where
+instance Shift (Declarations locality) where
   shift = shiftDefault
 
-instance Shift.Functor Declarations where
+instance Shift.Functor (Declarations locality) where
   map
     category
     Declarations
@@ -63,7 +63,7 @@ instance Shift.Functor Declarations where
           classInstances = fmap (Shift.mapInstances category . fmap (Shift.map category)) classInstances
         }
 
-instance FreeTermVariables Declarations where
+instance FreeTermVariables (Declarations locality) where
   freeTermVariables target Declarations {terms, shared, typeExtras} =
     concat
       [ foldMap (freeTermVariables target) terms,
@@ -75,7 +75,7 @@ resolve ::
   Context scope ->
   Stage1.Declarations Position ->
   ( Context (Scope.Declaration ':+ scope),
-    Declarations (Scope.Declaration ':+ scope)
+    Declarations locality (Scope.Declaration ':+ scope)
   )
 resolve initial@Context {canonical, extensions} Stage1.Declarations {declarations} =
   (context, Complete.shrink complete)

@@ -52,7 +52,7 @@ check ::
   (Int -> ST s (Unify.Scheme s scopes)) ->
   Which mark (scope ':+ scopes) ->
   Unify.Type s (scope ':+ scopes) ->
-  Stage2.Definition2 mark scopes ->
+  Stage2.Definition2 locality mark scopes ->
   ST s (Definition2 s (scope ':+ scopes))
 check context _ Auto typex (Stage2.Auto definition) = do
   definition <- Definition.check context typex (shift definition)

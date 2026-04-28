@@ -32,4 +32,4 @@ bindings ::
   (Int -> Type0.Index scope) ->
   Declarations scope ->
   Bindings stability scope
-shrink :: Declarations scope -> Real.Declarations scope
+shrink :: Declarations scope -> Real.Declarations locality scope

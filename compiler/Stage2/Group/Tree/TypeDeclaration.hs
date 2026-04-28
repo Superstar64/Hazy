@@ -29,9 +29,9 @@ data TypeDeclaration locality scope
   deriving (Show)
 
 group ::
-  (Type.Link locality -> Proper.TypeDeclaration scope) ->
+  (Type.Link locality -> Proper.TypeDeclaration locality scope) ->
   StronglyConnected.Component (Type.Link locality) ->
-  Proper.TypeDeclaration scope ->
+  Proper.TypeDeclaration locality scope ->
   TypeDeclaration locality scope
 group _ _ Proper.Annotated {position, name, constructorNames, annotation, definition} =
   Annotated {position, name, constructorNames, annotation, definition}
@@ -44,7 +44,7 @@ group index component Proper.Inferred {position, name, constructorNames, definit
       meta = TypeGroup.group index component
     }
 
-proper :: TypeDeclaration locality scope -> Proper.TypeDeclaration scope
+proper :: TypeDeclaration locality scope -> Proper.TypeDeclaration locality scope
 proper = \case
   Annotated {position, name, constructorNames, annotation, definition} ->
     Proper.Annotated {position, name, constructorNames, annotation, definition}

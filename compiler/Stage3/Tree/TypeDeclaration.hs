@@ -39,7 +39,11 @@ strict declaration = name declaration :^ declaration
 kind_ :: TypeDeclaration scope -> Simple.Type scope
 kind_ = kind
 
-check :: Context s scope -> Stage3.KindAnnotation scope -> Stage2.TypeDeclaration scope -> ST s (TypeDeclaration scope)
+check ::
+  Context s scope ->
+  Stage3.KindAnnotation scope ->
+  Stage2.TypeDeclaration locality scope ->
+  ST s (TypeDeclaration scope)
 check _ KindAnnotation.Synonym {kind, annotation', definition, definition'} declaration
   | Stage2.Synonym {} <- Stage2.definition declaration = case annotation' of
       Strict.Nothing ->

@@ -131,7 +131,7 @@ fromFunctor
 
 check ::
   Context s scope ->
-  Stage2.Declarations (Scope.Declaration ':+ scope) ->
+  Stage2.Declarations locality (Scope.Declaration ':+ scope) ->
   ST
     s
     ( Context s (Scope.Declaration ':+ scope),
@@ -166,7 +166,7 @@ check context declarations = do
 checkTermAnnotation ::
   Context s scope ->
   p ->
-  Stage2.Declaration (Scope.Declaration ':+ scope) ->
+  Stage2.Declaration locality (Scope.Declaration ':+ scope) ->
   Formula s scope (LocalTypeAnnotation s (Scope.Declaration ':+ scope))
 checkTermAnnotation context _ declaration = Formula8 {cycle, run}
   where
@@ -179,7 +179,7 @@ checkTermAnnotation context _ declaration = Formula8 {cycle, run}
 checkTermDeclaration ::
   Context s scope ->
   Int ->
-  Stage2.Declaration (Scope.Declaration ':+ scope) ->
+  Stage2.Declaration locality (Scope.Declaration ':+ scope) ->
   Formula s scope (Declaration s (Scope.Declaration ':+ scope))
 checkTermDeclaration context index declaration = Formula8 {cycle, run}
   where
@@ -211,7 +211,7 @@ checkShared context _ declaration = Formula8 {cycle, run}
 checkTypeAnnotation ::
   Context s scope ->
   p ->
-  Stage2.TypeDeclaration (Scope.Declaration ':+ scope) ->
+  Stage2.TypeDeclaration locality (Scope.Declaration ':+ scope) ->
   Formula s scope (KindAnnotation (Scope.Declaration ':+ scope))
 checkTypeAnnotation context _ declaration = Formula8 {cycle, run}
   where
@@ -224,7 +224,7 @@ checkTypeAnnotation context _ declaration = Formula8 {cycle, run}
 checkTypeDeclaration ::
   Context s scope ->
   Int ->
-  Stage2.TypeDeclaration (Scope.Declaration ':+ scope) ->
+  Stage2.TypeDeclaration locality (Scope.Declaration ':+ scope) ->
   Formula s scope (TypeDeclaration (Scope.Declaration ':+ scope))
 checkTypeDeclaration context index declaration = Formula8 {cycle, run}
   where

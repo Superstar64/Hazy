@@ -11,7 +11,7 @@ import qualified Stage2.Group.Tree.Definition3 as Definition3
 data Group locality scope
   = Group
       { link :: !(Term.Link locality),
-        set :: !(Map (Term.Link locality) (Definition3 scope))
+        set :: !(Map (Term.Link locality) (Definition3 locality scope))
       }
   | Link
       { link :: !(Term.Link locality)
@@ -19,7 +19,7 @@ data Group locality scope
   deriving (Show)
 
 group ::
-  (Term.Link locality -> Temporary.Declaration scope) ->
+  (Term.Link locality -> Temporary.Declaration locality scope) ->
   StronglyConnected.Component (Term.Link locality) ->
   Group locality scope
 group index = \case

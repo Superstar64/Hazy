@@ -40,7 +40,7 @@ import qualified Stage2.Tree.Constructor as Real.Constructor
 import qualified Stage2.Tree.Entry as Real.Entry
 import qualified Stage2.Tree.Field as Real.Field
 import qualified Stage2.Tree.StrictnessAnnotation as StrictnessAnnotation
-import qualified Stage2.Tree.TypeDeclaration as Real (TypeDeclaration (..))
+import qualified Stage2.Tree.TypeDeclaration as Real (TypeDeclaration (..), locality)
 import qualified Stage2.Tree.TypeDeclarationExtra as Real.Extra
 import qualified Stage2.Tree.TypeDefinition as Real (TypeDefinition (..))
 import Verbose (Debug (resolving))
@@ -60,11 +60,11 @@ data TypeDeclaration scope = TypeDeclaration
     name :: !ConstructorIdentifier,
     fields :: !(Fields scope),
     constructors :: !(Constructors scope),
-    declaration :: Real.TypeDeclaration scope,
+    declaration :: forall locality. Real.TypeDeclaration locality scope,
     extra :: Real.Extra.TypeDeclarationExtra scope
   }
 
-shrink :: TypeDeclaration scope -> Real.TypeDeclaration scope
+shrink :: TypeDeclaration scope -> Real.TypeDeclaration locality scope
 shrink = declaration
 
 shrinkExtra :: TypeDeclaration scope -> Real.Extra.TypeDeclarationExtra scope
@@ -72,7 +72,15 @@ shrinkExtra = extra
 
 merge :: (Debug verbose) => NonEmpty (Partial.TypeDeclaration scope) -> verbose (TypeDeclaration scope)
 merge entries@(entry :| _) =
-  let typeDeclaration declaration = TypeDeclaration {position, name, fields, constructors, declaration, extra}
+  let typeDeclaration declaration =
+        TypeDeclaration
+          { position,
+            name,
+            fields,
+            constructors,
+            declaration = Real.locality declaration,
+            extra
+          }
    in typeDeclaration <$> declaration
   where
     extra

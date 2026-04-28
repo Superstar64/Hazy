@@ -10,12 +10,12 @@ import Stage2.Tree.Pattern (Pattern)
 import Stage2.Tree.RightHandSide (RightHandSide)
 import qualified Stage2.Tree.Shared as Proper (Shared (..))
 
-data Definition3 scope
+data Definition3 locality scope
   = Inferred
       { position :: !Position,
         name :: !Variable,
         fixity :: !Fixity,
-        definition' :: !(Definition2 Inferred scope)
+        definition' :: !(Definition2 locality Inferred scope)
       }
   | Shared
       { equalPosition :: !Position,
@@ -24,7 +24,7 @@ data Definition3 scope
       }
   deriving (Show)
 
-group :: Temporary.Declaration scope -> Definition3 scope
+group :: Temporary.Declaration locality scope -> Definition3 locality scope
 group = \case
   Temporary.Declaration Proper.Inferred {position, name, fixity, definition'} ->
     Inferred

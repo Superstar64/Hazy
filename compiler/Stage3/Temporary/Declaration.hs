@@ -50,7 +50,7 @@ checkLocal ::
   Context s scope ->
   (Int -> ST s (Unify.Scheme s scope)) ->
   LocalTypeAnnotation s scope ->
-  Stage2.Declaration scope ->
+  Stage2.Declaration locality scope ->
   ST s (Declaration s scope)
 checkLocal context shared annotation declaration =
   declaration `go` annotation
@@ -65,7 +65,7 @@ checkGlobal ::
   Context s scope ->
   (Int -> ST s (Unify.Scheme s scope)) ->
   GlobalTypeAnnotation scope ->
-  Stage2.Declaration scope ->
+  Stage2.Declaration locality scope ->
   ST s (Declaration s scope)
 checkGlobal context shared annotation declaration =
   declaration `go` annotation
@@ -87,7 +87,7 @@ check' ::
   Which mark s scope ->
   Position ->
   Variable ->
-  Stage2.Definition2 mark scope ->
+  Stage2.Definition2 locality mark scope ->
   ST s (Declaration s scope)
 check'
   context

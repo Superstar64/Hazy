@@ -7,6 +7,7 @@ import qualified Stage1.Tree.Statement as Stage1 (Statement (..))
 import qualified Stage1.Tree.Statements as Stage1 (Statements (..))
 import Stage2.FreeVariables (FreeTermVariables (..))
 import qualified Stage2.FreeVariables as FreeVariables
+import qualified Stage2.Locality as Locality
 import Stage2.Resolve.Context (Context (..))
 import Stage2.Scope (Environment ((:+)))
 import qualified Stage2.Scope as Scope (Declaration, Pattern)
@@ -36,7 +37,7 @@ data Statements scope
       }
   | Let
       { startPosition :: !Position,
-        declarations :: !(Declarations (Scope.Declaration ':+ scope)),
+        declarations :: !(Declarations Locality.Local (Scope.Declaration ':+ scope)),
         body :: !(Statements (Scope.Declaration ':+ scope))
       }
   deriving (Show)

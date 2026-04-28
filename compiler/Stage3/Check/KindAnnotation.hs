@@ -32,7 +32,7 @@ data KindAnnotation scope
         definition' :: !(Simple.Type (Local ':+ scope))
       }
 
-check :: Context s scope -> Stage2.TypeDeclaration scope -> ST s (KindAnnotation scope)
+check :: Context s scope -> Stage2.TypeDeclaration locality scope -> ST s (KindAnnotation scope)
 check context declaration
   | position <- Stage2.position declaration,
     Stage2.Synonym {synonym, parameters} <- Stage2.definition declaration =

@@ -35,7 +35,7 @@ import qualified Stage2.Temporary.Partial.More.Selector as More (Selector (Selec
 import qualified Stage2.Temporary.Partial.More.Selector as More.Selector
 import qualified Stage2.Temporary.Partial.More.Share as More (Shared (Shared))
 import qualified Stage2.Temporary.Partial.More.Share as More.Share
-import qualified Stage2.Tree.Declaration as Real (Declaration (..))
+import qualified Stage2.Tree.Declaration as Real (Declaration (..), locality)
 import qualified Stage2.Tree.Definition as Definition (merge)
 import qualified Stage2.Tree.Definition2 as Real (Choice (..), Definition2 (..))
 import Stage2.Tree.Scheme (Scheme)
@@ -43,7 +43,7 @@ import Verbose (Debug (resolving))
 import Prelude hiding (Either (Left, Right), Real)
 
 data Real scope
-  = Real (Real.Declaration scope)
+  = Real (forall locality. Real.Declaration locality scope)
   | Select !More.Selector
   | Method !More.Method
 
@@ -56,7 +56,7 @@ data Declaration scope
     declaration :: !(Real scope)
   }
 
-shrink :: Declaration scope -> Maybe (Real.Declaration scope)
+shrink :: Declaration scope -> Maybe (Real.Declaration locality scope)
 shrink Declaration {declaration} = case declaration of
   Real valid -> Just valid
   _ -> Nothing
@@ -74,13 +74,15 @@ merge entries@(entry :| _) =
       [] -> missingVariableEntry position
       [_]
         | Just (position, body) <- functions -> case annotation of
-            Nothing -> Real <$> Verbose.resolving (Variable.printLiteral' name) real
+            Nothing -> cast <$> Verbose.resolving (Variable.printLiteral' name) real
               where
+                cast declaration = Real $ Real.locality declaration
                 real = Real.Inferred {position, name, fixity, definition'}
                 definition' = Real.Auto merged
                 merged = Definition.merge $ fmap More.Function.functionAuto body
-            Just annotation -> Real <$> Verbose.resolving (Variable.printLiteral' name) real
+            Just annotation -> cast <$> Verbose.resolving (Variable.printLiteral' name) real
               where
+                cast declaration = Real $ Real.locality declaration
                 real = Real.Annotated {position, name, fixity, annotation, definition}
                 definition = Real.Manual merged
                 merged = Definition.merge $ fmap More.Function.functionManual body
@@ -91,12 +93,13 @@ merge entries@(entry :| _) =
           () <- noAnnotation ->
             pure $ Method More.Method {typeIndex, methodIndex}
         | Just (position, More.Shared {shareIndex, bound, patternx}) <- share ->
-            let shared :: Real.Definition2 marked scope
+            let cast declaration = Real $ Real.locality declaration
+                shared :: Real.Definition2 locality marked scope
                 shared = Real.Piece Real.Choice {position, shareIndex, bound, patternx}
                 real = case annotation of
                   Nothing -> Real.Inferred {position, name, fixity, definition' = shared}
                   Just annotation -> Real.Annotated {position, name, fixity, annotation, definition = shared}
-             in Real <$> Verbose.resolving (Variable.printLiteral' name) real
+             in cast <$> Verbose.resolving (Variable.printLiteral' name) real
         | otherwise -> error "no entry"
       entries -> duplicateVariableEntries entries
     position = Partial.position entry

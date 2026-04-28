@@ -32,12 +32,12 @@ checkAnnotation context annotation = do
   let annotation' = Simple.simplify annotation
   pure $ Annotation {annotation, annotation'}
 
-checkGlobal :: Context s scope -> Stage2.Declaration scope -> ST s (GlobalTypeAnnotation scope)
+checkGlobal :: Context s scope -> Stage2.Declaration locality scope -> ST s (GlobalTypeAnnotation scope)
 checkGlobal context = \case
   Stage2.Annotated {annotation} -> GlobalAnnotation <$> checkAnnotation context annotation
   Stage2.Inferred {} -> pure GlobalInferred
 
-checkLocal :: Context s scope -> Stage2.Declaration scope -> ST s (LocalTypeAnnotation s scope)
+checkLocal :: Context s scope -> Stage2.Declaration locality scope -> ST s (LocalTypeAnnotation s scope)
 checkLocal context = \case
   Stage2.Annotated {annotation} -> LocalAnnotation <$> checkAnnotation context annotation
   Stage2.Inferred {} -> do

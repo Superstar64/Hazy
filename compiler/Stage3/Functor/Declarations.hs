@@ -111,14 +111,14 @@ mapWithKey
 
 fromStage2 ::
   Qualifiers ->
-  Stage2.Declarations scope ->
+  Stage2.Declarations locality scope ->
   Declarations
     scope
-    (Stage2.Declaration scope)
-    (Stage2.Declaration scope)
+    (Stage2.Declaration locality scope)
+    (Stage2.Declaration locality scope)
     (Stage2.Shared scope)
-    (Stage2.TypeDeclaration scope)
-    (Stage2.TypeDeclaration scope)
+    (Stage2.TypeDeclaration locality scope)
+    (Stage2.TypeDeclaration locality scope)
     (Stage2.TypeDeclarationExtra scope)
     (Stage2.Instance scope)
     (Stage2.Instance scope)

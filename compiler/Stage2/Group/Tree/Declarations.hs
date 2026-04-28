@@ -39,11 +39,11 @@ data Declarations locality scope = Declarations
   deriving (Show)
 
 group ::
-  (Term.Link locality -> Temporary.Declaration scope) ->
-  (Type.Link locality -> Proper.TypeDeclaration scope) ->
+  (Term.Link locality -> Temporary.Declaration locality scope) ->
+  (Type.Link locality -> Proper.TypeDeclaration locality scope) ->
   Functor.Term.Declarations (Component (Term.Link locality)) ->
   Functor.Type.Declarations (Component (Type.Link locality)) ->
-  Proper.Declarations scope ->
+  Proper.Declarations locality scope ->
   Declarations locality scope
 group
   indexTerm
@@ -69,7 +69,7 @@ group
 
 connect ::
   forall scope.
-  Proper.Declarations (Scope.Declaration ':+ scope) ->
+  Proper.Declarations Locality.Local (Scope.Declaration ':+ scope) ->
   Declarations Locality.Local (Scope.Declaration ':+ scope)
 connect declarations@Proper.Declarations {terms, shared, types} =
   group indexTerm indexType termGroups typeGroups declarations
@@ -88,12 +88,12 @@ connect declarations@Proper.Declarations {terms, shared, types} =
     typeIndexes = Functor.Type.indexes Type.Declaration declarations
     indexTerm ::
       Term.Link Local ->
-      Temporary.Declaration (Scope.Declaration ':+ scope)
+      Temporary.Declaration Locality.Local (Scope.Declaration ':+ scope)
     indexTerm = \case
       Term.Link (Proper.Term.Declaration index) -> Temporary.Declaration $ terms Vector.! index
       Term.Share (Proper.Term.Declaration index) -> Temporary.Shared $ shared Vector.! index
     indexType ::
       Type.Link Local ->
-      Proper.TypeDeclaration (Scope.Declaration ':+ scope)
+      Proper.TypeDeclaration Locality.Local (Scope.Declaration ':+ scope)
     indexType = \case
       Type.Declaration index -> types Vector.! index

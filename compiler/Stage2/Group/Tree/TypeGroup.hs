@@ -19,7 +19,7 @@ data TypeGroup locality scope
   deriving (Show)
 
 group ::
-  (Type.Link locality -> TypeDeclaration scope) ->
+  (Type.Link locality -> TypeDeclaration locality scope) ->
   StronglyConnected.Component (Type.Link locality) ->
   TypeGroup locality scope
 group index = \case

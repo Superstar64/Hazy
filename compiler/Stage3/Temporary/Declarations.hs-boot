@@ -20,7 +20,7 @@ instance Unify.Zonk Declarations
 
 check ::
   Context s scope ->
-  Stage2.Declarations (Scope.Declaration ':+ scope) ->
+  Stage2.Declarations locality (Scope.Declaration ':+ scope) ->
   ST
     s
     ( Context s (Scope.Declaration ':+ scope),

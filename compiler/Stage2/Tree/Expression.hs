@@ -24,6 +24,7 @@ import qualified Stage2.Index.Constructor as Constructor (Index (..), cons)
 import qualified Stage2.Index.Method as Method
 import qualified Stage2.Index.Selector as Selector
 import qualified Stage2.Index.Term2 as Term2
+import qualified Stage2.Locality as Locality
 import qualified Stage2.Resolve.Binding.Constructor as Constructor (Binding (..))
 import qualified Stage2.Resolve.Binding.Term as Term (Binding (..))
 import Stage2.Resolve.Context
@@ -109,7 +110,7 @@ data Expression scope
         argument :: !(Expression scope)
       }
   | Let
-      { declarations :: !(Declarations (Scope.Declaration ':+ scope)),
+      { declarations :: !(Declarations Locality.Local (Scope.Declaration ':+ scope)),
         letBody :: !(Expression (Scope.Declaration ':+ scope))
       }
   | If

@@ -16,6 +16,7 @@ import qualified Stage2.Index.Table.Term as Table.Term
 import qualified Stage2.Index.Table.Type as Table.Type
 import qualified Stage2.Label.Context as Label (Context (Context))
 import qualified Stage2.Label.Context as Label.Context
+import qualified Stage2.Locality as Locality
 import Stage2.Scope (Global)
 import {-# SOURCE #-} qualified Stage2.Temporary.Complete.Module as Complete
 import qualified Stage2.Tree.Declaration as Declaration (labelBinding)
@@ -26,7 +27,7 @@ import Verbose (Debug)
 
 data Module = Module
   { name :: !FullQualifiers,
-    declarations :: Declarations Global
+    declarations :: Declarations Locality.Global Global
   }
   deriving (Show)
 

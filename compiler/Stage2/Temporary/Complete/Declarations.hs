@@ -147,7 +147,7 @@ bindings
         stability = mempty
       }
 
-shrink :: Declarations scope -> Real.Declarations scope
+shrink :: Declarations scope -> Real.Declarations locality scope
 shrink Declarations {terms, types, shared, dataInstances, classInstances} =
   Real.Declarations
     { terms = Vector.catMaybes $ Term.shrink <$> Strict.Vector.toLazy terms,

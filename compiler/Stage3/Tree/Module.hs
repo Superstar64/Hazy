@@ -145,7 +145,7 @@ check modules =
 checkTermAnnotation ::
   p1 ->
   p2 ->
-  Stage2.Declaration Global ->
+  Stage2.Declaration locality Global ->
   Formula s (GlobalTypeAnnotation Global)
 checkTermAnnotation _ _ declaration = Formula8 {cycle, run}
   where
@@ -156,7 +156,7 @@ checkTermAnnotation _ _ declaration = Formula8 {cycle, run}
 checkTermDeclaration ::
   Int ->
   Int ->
-  Stage2.Declaration Global ->
+  Stage2.Declaration locality Global ->
   Formula s (Declaration Global)
 checkTermDeclaration global local declaration = Formula8 {cycle, run}
   where
@@ -191,7 +191,7 @@ checkShared _ _ declaration = Formula8 {cycle, run}
 checkTypeAnnotation ::
   p1 ->
   p2 ->
-  Stage2.TypeDeclaration.TypeDeclaration Global ->
+  Stage2.TypeDeclaration.TypeDeclaration locality Global ->
   Formula s (KindAnnotation Global)
 checkTypeAnnotation _ _ declaration = Formula8 {cycle, run}
   where
@@ -202,7 +202,7 @@ checkTypeAnnotation _ _ declaration = Formula8 {cycle, run}
 checkTypeDeclaration ::
   Int ->
   Int ->
-  Stage2.TypeDeclaration.TypeDeclaration Global ->
+  Stage2.TypeDeclaration.TypeDeclaration locality Global ->
   Formula s (TypeDeclaration Global)
 checkTypeDeclaration global local declaration = Formula8 {cycle, run}
   where

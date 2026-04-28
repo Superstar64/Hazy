@@ -18,21 +18,21 @@ data Declaration locality scope
         name :: !Variable,
         fixity :: !Fixity,
         annotation :: !(Scheme Position scope),
-        definition :: !(Definition2 Annotated scope)
+        definition :: !(Definition2 locality Annotated scope)
       }
   | Inferred
       { position :: !Position,
         name :: !Variable,
         fixity :: !Fixity,
-        definition' :: !(Definition2 Inferred scope),
+        definition' :: !(Definition2 locality Inferred scope),
         meta :: !(Group locality scope)
       }
   deriving (Show)
 
 group ::
-  (Term.Link locality -> Temporary.Declaration scope) ->
+  (Term.Link locality -> Temporary.Declaration locality scope) ->
   StronglyConnected.Component (Term.Link locality) ->
-  Proper.Declaration scope ->
+  Proper.Declaration locality scope ->
   Declaration locality scope
 group _ _ Proper.Annotated {position, name, fixity, annotation, definition} =
   Annotated {position, name, fixity, annotation, definition}
@@ -45,7 +45,7 @@ group index component Proper.Inferred {position, name, fixity, definition'} =
       meta = Group.group index component
     }
 
-proper :: Declaration locality scope -> Proper.Declaration scope
+proper :: Declaration locality scope -> Proper.Declaration locality scope
 proper = \case
   Annotated {position, name, fixity, annotation, definition} ->
     Proper.Annotated {position, name, fixity, annotation, definition}

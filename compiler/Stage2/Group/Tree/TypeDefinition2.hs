@@ -12,6 +12,6 @@ data TypeDefinition2 scope = Inferred
   }
   deriving (Show)
 
-group :: Proper.TypeDeclaration scope -> TypeDefinition2 scope
+group :: Proper.TypeDeclaration locality scope -> TypeDefinition2 scope
 group Proper.Inferred {position, name, definition} = Inferred {position, name, definition}
 group _ = error "bad group type declaration"

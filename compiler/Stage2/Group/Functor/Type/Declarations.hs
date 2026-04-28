@@ -26,7 +26,7 @@ instance Traversable Declarations where
 
 indexes ::
   (Int -> Type.Link locality) ->
-  Proper.Declarations scope ->
+  Proper.Declarations locality' scope ->
   Declarations (Type.Link locality)
 indexes index Proper.Declarations {types} =
   Declarations

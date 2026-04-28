@@ -11,29 +11,30 @@ import qualified Stage2.Label.Binding.Term as Label
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Tree.Definition2 (Annotated, Definition2, Inferred)
+import qualified Stage2.Tree.Definition2 as Definition2
 import Stage2.Tree.Scheme (Scheme)
 import Prelude hiding (Either (Left, Right))
 
-data Declaration scope
+data Declaration locality scope
   = Annotated
       { position :: !Position,
         name :: !Variable,
         fixity :: !Fixity,
         annotation :: !(Scheme Position scope),
-        definition :: !(Definition2 Annotated scope)
+        definition :: !(Definition2 locality Annotated scope)
       }
   | Inferred
       { position :: !Position,
         name :: !Variable,
         fixity :: !Fixity,
-        definition' :: !(Definition2 Inferred scope)
+        definition' :: !(Definition2 locality Inferred scope)
       }
   deriving (Show)
 
-instance Shift Declaration where
+instance Shift (Declaration locality) where
   shift = shiftDefault
 
-instance Shift.Functor Declaration where
+instance Shift.Functor (Declaration locality) where
   map category = \case
     Annotated {position, name, fixity, annotation, definition} ->
       Annotated
@@ -51,15 +52,33 @@ instance Shift.Functor Declaration where
           definition' = Shift.map category definition'
         }
 
-instance FreeTermVariables Declaration where
+instance FreeTermVariables (Declaration locality) where
   freeTermVariables target = \case
     Annotated {definition} -> freeTermVariables target definition
     Inferred {definition'} -> freeTermVariables target definition'
 
-freeGroupTermVariables :: Declaration scope -> [Term0.Index scope]
+freeGroupTermVariables :: Declaration locality scope -> [Term0.Index scope]
 freeGroupTermVariables = \case
   Annotated {} -> []
   declaration -> freeTermVariables Target declaration
 
-labelBinding :: Qualifiers -> Declaration scope -> Label.TermBinding scope'
+labelBinding :: Qualifiers -> Declaration locality scope -> Label.TermBinding scope'
 labelBinding path declaration = Label.TermBinding {name = path :- name declaration}
+
+locality :: Declaration locality scope -> Declaration locality' scope
+locality = \case
+  Annotated {position, name, fixity, annotation, definition} ->
+    Annotated
+      { position,
+        name,
+        fixity,
+        annotation,
+        definition = Definition2.locality definition
+      }
+  Inferred {position, name, fixity, definition'} ->
+    Inferred
+      { position,
+        name,
+        fixity,
+        definition' = Definition2.locality definition'
+      }
