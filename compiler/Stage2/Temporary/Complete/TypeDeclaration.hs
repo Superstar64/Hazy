@@ -90,6 +90,7 @@ merge entries@(entry :| _) =
       [] -> missingTypeDeclaration position
       [_]
         | Just (position, More.ADT {brand, parameters, constructors, selectors}) <- adt,
+          constructorNames <- Constructor.name <$> constructors,
           constructors <- fmap Constructor.shrink constructors,
           selectors <- fmap Selector.shrink selectors ->
             let sane
@@ -115,16 +116,21 @@ merge entries@(entry :| _) =
                     Real.Inferred
                       { position,
                         name,
-                        definition = Real.ADT {position, brand, parameters, constructors, selectors}
+                        constructorNames,
+                        definition =
+                          Real.ADT {position, brand, parameters, constructors, selectors}
                       }
                   Strict.Just annotation ->
                     Real.Annotated
                       { position,
                         name,
                         annotation,
-                        definition = Real.ADT {position, brand, parameters, constructors, selectors}
+                        constructorNames,
+                        definition =
+                          Real.ADT {position, brand, parameters, constructors, selectors}
                       }
         | Just (_, More.GADT {brand, parameters, gadtConstructors}) <- gadt,
+          constructorNames <- GADTConstructor.name <$> gadtConstructors,
           gadtConstructors <- fmap GADTConstructor.shrink gadtConstructors ->
             Verbose.resolving (Variable.print' name) $
               case annotation of
@@ -132,14 +138,18 @@ merge entries@(entry :| _) =
                   Real.Inferred
                     { position,
                       name,
-                      definition = Real.GADT {position, parameters, brand, gadtConstructors}
+                      constructorNames,
+                      definition =
+                        Real.GADT {position, parameters, brand, gadtConstructors}
                     }
                 Strict.Just annotation ->
                   Real.Annotated
                     { position,
                       name,
                       annotation,
-                      definition = Real.GADT {position, parameters, brand, gadtConstructors}
+                      constructorNames,
+                      definition =
+                        Real.GADT {position, parameters, brand, gadtConstructors}
                     }
         | Just (position, More.Class {parameter, constraints, methods}) <- classx,
           methods <- fmap Method.shrink methods -> Verbose.resolving (Variable.print' name) $
@@ -148,14 +158,18 @@ merge entries@(entry :| _) =
                 Real.Inferred
                   { position,
                     name,
-                    definition = Real.Class {position, parameter, constraints, methods}
+                    constructorNames = Strict.Vector.empty,
+                    definition =
+                      Real.Class {position, parameter, constraints, methods}
                   }
               Strict.Just annotation ->
                 Real.Annotated
                   { position,
                     name,
                     annotation,
-                    definition = Real.Class {position, parameter, constraints, methods}
+                    constructorNames = Strict.Vector.empty,
+                    definition =
+                      Real.Class {position, parameter, constraints, methods}
                   }
         | Just
             ( _,
@@ -169,14 +183,18 @@ merge entries@(entry :| _) =
               Real.Inferred
                 { position,
                   name,
-                  definition = Real.Synonym {parameters, synonym}
+                  constructorNames = Strict.Vector.empty,
+                  definition =
+                    Real.Synonym {parameters, synonym}
                 }
             Strict.Just annotation ->
               Real.Annotated
                 { position,
                   name,
                   annotation,
-                  definition = Real.Synonym {parameters, synonym}
+                  constructorNames = Strict.Vector.empty,
+                  definition =
+                    Real.Synonym {parameters, synonym}
                 }
       entries -> duplicateTypeEntries entries
     position = Partial.position entry

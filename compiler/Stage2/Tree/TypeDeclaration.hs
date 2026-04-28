@@ -7,10 +7,11 @@ module Stage2.Tree.TypeDeclaration
   )
 where
 
-import qualified Data.Vector.Strict as Strict.Vector
+import qualified Data.Vector.Strict as Strict
 import Stage1.Position (Position)
 import Stage1.Variable
-  ( ConstructorIdentifier,
+  ( Constructor,
+    ConstructorIdentifier,
     QualifiedConstructor ((:=)),
     QualifiedConstructorIdentifier ((:=.)),
     Qualifiers,
@@ -20,21 +21,21 @@ import qualified Stage2.Index.Type0 as Type0
 import qualified Stage2.Label.Binding.Type as Label
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import qualified Stage2.Tree.Constructor as Constructor
-import qualified Stage2.Tree.GADTConstructor as GADTConstructor
 import Stage2.Tree.Type (Type)
-import Stage2.Tree.TypeDefinition (TypeDefinition (..))
+import Stage2.Tree.TypeDefinition (TypeDefinition)
 
 data TypeDeclaration scope
   = Annotated
       { position :: !Position,
         name :: !ConstructorIdentifier,
+        constructorNames :: !(Strict.Vector Constructor),
         annotation :: !(Type Position scope),
         definition :: !(TypeDefinition scope)
       }
   | Inferred
       { position :: !Position,
         name :: !ConstructorIdentifier,
+        constructorNames :: !(Strict.Vector Constructor),
         definition :: !(TypeDefinition scope)
       }
   deriving (Show)
@@ -44,17 +45,19 @@ instance Shift TypeDeclaration where
 
 instance Shift.Functor TypeDeclaration where
   map category = \case
-    Annotated {position, name, annotation, definition} ->
+    Annotated {position, name, constructorNames, annotation, definition} ->
       Annotated
         { position,
           name,
+          constructorNames,
           annotation = Shift.map category annotation,
           definition = Shift.map category definition
         }
-    Inferred {position, name, definition} ->
+    Inferred {position, name, constructorNames, definition} ->
       Inferred
         { position,
           name,
+          constructorNames,
           definition = Shift.map category definition
         }
 
@@ -73,9 +76,8 @@ freeGroupTypeVariables = \case
   declaration -> freeTypeVariables Target declaration
 
 labelBinding :: Qualifiers -> TypeDeclaration scope -> Label.TypeBinding scope'
-labelBinding path declaration = Label.TypeBinding {name = path :=. name declaration, constructorNames}
-  where
-    constructorNames = case definition declaration of
-      ADT {constructors} -> (:=) path . Constructor.name <$> constructors
-      GADT {gadtConstructors} -> (:=) path . GADTConstructor.name <$> gadtConstructors
-      _ -> Strict.Vector.empty
+labelBinding path declaration =
+  Label.TypeBinding
+    { name = path :=. name declaration,
+      constructorNames = (path :=) <$> constructorNames declaration
+    }
