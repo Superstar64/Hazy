@@ -34,7 +34,7 @@ data Declarations locality scope = Declarations
   { terms :: !(Vector (Declaration locality scope)),
     types :: !(Vector (TypeDeclaration locality scope)),
     typeExtras :: !(Vector (TypeDeclarationExtra scope)),
-    shared :: !(Vector (Shared scope)),
+    shared :: !(Vector (Shared locality scope)),
     dataInstances :: !(Vector (Map (Type2.Index scope) (Instance scope))),
     classInstances :: !(Vector (Map (Type2.Index scope) (Instance scope)))
   }

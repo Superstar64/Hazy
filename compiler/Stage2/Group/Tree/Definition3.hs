@@ -5,9 +5,8 @@ import Stage1.Tree.Fixity (Fixity)
 import Stage1.Variable (Variable)
 import qualified Stage2.Group.Temporary.Declaration as Temporary
 import qualified Stage2.Tree.Declaration as Proper (Declaration (..))
-import Stage2.Tree.Definition2 (Definition2, Inferred)
+import Stage2.Tree.Definition2 (Definition2, Inferred, Share, Single)
 import Stage2.Tree.Pattern (Pattern)
-import Stage2.Tree.RightHandSide (RightHandSide)
 import qualified Stage2.Tree.Shared as Proper (Shared (..))
 
 data Definition3 locality scope
@@ -15,12 +14,12 @@ data Definition3 locality scope
       { position :: !Position,
         name :: !Variable,
         fixity :: !Fixity,
-        definition' :: !(Definition2 locality Inferred scope)
+        definition' :: !(Definition2 locality Single Inferred scope)
       }
   | Shared
       { equalPosition :: !Position,
         patternx :: !(Pattern scope),
-        definition :: !(RightHandSide scope)
+        definition :: !(Definition2 locality Share Inferred scope)
       }
   deriving (Show)
 

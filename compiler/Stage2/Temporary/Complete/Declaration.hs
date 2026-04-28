@@ -37,7 +37,7 @@ import qualified Stage2.Temporary.Partial.More.Share as More (Shared (Shared))
 import qualified Stage2.Temporary.Partial.More.Share as More.Share
 import qualified Stage2.Tree.Declaration as Real (Declaration (..), locality)
 import qualified Stage2.Tree.Definition as Definition (merge)
-import qualified Stage2.Tree.Definition2 as Real (Choice (..), Definition2 (..))
+import qualified Stage2.Tree.Definition2 as Real (Choice (..), Definition2 (..), Single)
 import Stage2.Tree.Scheme (Scheme)
 import Verbose (Debug (resolving))
 import Prelude hiding (Either (Left, Right), Real)
@@ -94,7 +94,7 @@ merge entries@(entry :| _) =
             pure $ Method More.Method {typeIndex, methodIndex}
         | Just (position, More.Shared {shareIndex, bound, patternx}) <- share ->
             let cast declaration = Real $ Real.locality declaration
-                shared :: Real.Definition2 locality marked scope
+                shared :: Real.Definition2 locality Real.Single marked scope
                 shared = Real.Piece Real.Choice {position, shareIndex, bound, patternx}
                 real = case annotation of
                   Nothing -> Real.Inferred {position, name, fixity, definition' = shared}

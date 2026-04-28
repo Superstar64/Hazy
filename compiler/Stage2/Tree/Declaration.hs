@@ -10,7 +10,7 @@ import qualified Stage2.Index.Term0 as Term0
 import qualified Stage2.Label.Binding.Term as Label
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage2.Tree.Definition2 (Annotated, Definition2, Inferred)
+import Stage2.Tree.Definition2 (Annotated, Definition2, Inferred, Single)
 import qualified Stage2.Tree.Definition2 as Definition2
 import Stage2.Tree.Scheme (Scheme)
 import Prelude hiding (Either (Left, Right))
@@ -21,13 +21,13 @@ data Declaration locality scope
         name :: !Variable,
         fixity :: !Fixity,
         annotation :: !(Scheme Position scope),
-        definition :: !(Definition2 locality Annotated scope)
+        definition :: !(Definition2 locality Single Annotated scope)
       }
   | Inferred
       { position :: !Position,
         name :: !Variable,
         fixity :: !Fixity,
-        definition' :: !(Definition2 locality Inferred scope)
+        definition' :: !(Definition2 locality Single Inferred scope)
       }
   deriving (Show)
 

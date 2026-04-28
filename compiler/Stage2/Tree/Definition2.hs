@@ -11,6 +11,7 @@ import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Tree.Definition (Definition)
 import Stage2.Tree.Pattern (Pattern)
+import Stage2.Tree.RightHandSide (RightHandSide)
 
 data Mark
   = Annotated
@@ -20,13 +21,22 @@ type Annotated = 'Annotated
 
 type Inferred = 'Inferred
 
-type Definition2 :: Locality -> Mark -> Environment -> Type
-data Definition2 locality mark scope where
-  Manual :: Definition (Local ':+ scope) -> Definition2 locality Annotated scope
-  Auto :: !(Definition scope) -> Definition2 locality Inferred scope
-  Piece :: !(Choice scope) -> Definition2 locality mark scope
+data Source
+  = Single
+  | Share
 
-instance Show (Definition2 locality mark scope) where
+type Single = 'Single
+
+type Share = 'Share
+
+type Definition2 :: Locality -> Source -> Mark -> Environment -> Type
+data Definition2 locality source mark scope where
+  Manual :: Definition (Local ':+ scope) -> Definition2 locality Single Annotated scope
+  Auto :: !(Definition scope) -> Definition2 locality Single Inferred scope
+  Piece :: !(Choice scope) -> Definition2 locality Single mark scope
+  Shared :: !(RightHandSide scope) -> Definition2 locality Share Inferred scope
+
+instance Show (Definition2 locality source mark scope) where
   showsPrec d (Manual definition) =
     showParen (d > 10) $
       showString "Manual " . showsPrec 11 definition
@@ -35,22 +45,26 @@ instance Show (Definition2 locality mark scope) where
       showString "Auto " . showsPrec 11 definition
   showsPrec d (Piece choice) =
     showParen (d > 10) $ showString "Piece " . showsPrec 11 choice
+  showsPrec d (Shared definition) =
+    showParen (d > 10) $ showString "Shared " . showsPrec 11 definition
 
-instance Shift (Definition2 locality mark) where
+instance Shift (Definition2 locality source mark) where
   shift = shiftDefault
 
-instance Shift.Functor (Definition2 locality mark) where
+instance Shift.Functor (Definition2 locality source mark) where
   map category = \case
     Manual definition -> Manual (Shift.map (Shift.Over category) definition)
     Auto definition -> Auto (Shift.map category definition)
     Piece choice -> Piece (Shift.map category choice)
+    Shared definition -> Shared (Shift.map category definition)
 
-instance FreeTermVariables (Definition2 locality mark) where
+instance FreeTermVariables (Definition2 locality source mark) where
   freeTermVariables target = \case
     Manual definition ->
       freeTermVariables (FreeTermVariables.Over target) definition
     Auto definition -> freeTermVariables target definition
     Piece {} -> []
+    Shared definition -> freeTermVariables target definition
 
 data Choice scope = Choice
   { position :: !Position,
@@ -72,8 +86,9 @@ instance Shift.Functor Choice where
         patternx = Shift.map category patternx
       }
 
-locality :: Definition2 locality mark scope -> Definition2 locality' mark scope
+locality :: Definition2 locality source mark scope -> Definition2 locality' source mark scope
 locality = \case
   Manual declaration -> Manual declaration
   Auto declaration -> Auto declaration
   Piece piece -> Piece piece
+  Shared definition -> Shared definition

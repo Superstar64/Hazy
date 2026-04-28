@@ -116,7 +116,7 @@ fromStage2 ::
     scope
     (Stage2.Declaration locality scope)
     (Stage2.Declaration locality scope)
-    (Stage2.Shared scope)
+    (Stage2.Shared locality scope)
     (Stage2.TypeDeclaration locality scope)
     (Stage2.TypeDeclaration locality scope)
     (Stage2.TypeDeclarationExtra scope)

@@ -6,20 +6,20 @@ import Stage1.Position (Position)
 import Stage2.FreeVariables (FreeTermVariables (..))
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage2.Tree.Definition2 (Definition2, Inferred, Share)
 import Stage2.Tree.Pattern (Pattern)
-import Stage2.Tree.RightHandSide (RightHandSide)
 
-data Shared scope = Shared
+data Shared locality scope = Shared
   { equalPosition :: !Position,
     patternx :: !(Pattern scope),
-    definition :: !(RightHandSide scope)
+    definition :: !(Definition2 locality Share Inferred scope)
   }
   deriving (Show)
 
-instance Shift Shared where
+instance Shift (Shared locality) where
   shift = shiftDefault
 
-instance Shift.Functor Shared where
+instance Shift.Functor (Shared locality) where
   map category Shared {equalPosition, patternx, definition} =
     Shared
       { equalPosition,
@@ -27,5 +27,5 @@ instance Shift.Functor Shared where
         definition = Shift.map category definition
       }
 
-instance FreeTermVariables Shared where
+instance FreeTermVariables (Shared locality) where
   freeTermVariables target Shared {definition} = freeTermVariables target definition

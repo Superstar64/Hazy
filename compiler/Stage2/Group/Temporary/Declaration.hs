@@ -7,7 +7,7 @@ import qualified Stage2.Tree.Shared as Proper (Shared)
 
 data Declaration locality scope
   = Declaration !(Proper.Declaration locality scope)
-  | Shared !(Proper.Shared scope)
+  | Shared !(Proper.Shared locality scope)
 
 freeGroupTermVariables :: Declaration locality scope -> [Term0.Index scope]
 freeGroupTermVariables = \case

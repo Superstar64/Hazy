@@ -9,7 +9,7 @@ import qualified Stage2.Group.Temporary.Declaration as Temporary (Declaration (.
 import Stage2.Group.Tree.Group (Group)
 import qualified Stage2.Group.Tree.Group as Group
 import qualified Stage2.Tree.Declaration as Proper
-import Stage2.Tree.Definition2 (Annotated, Definition2, Inferred)
+import Stage2.Tree.Definition2 (Annotated, Definition2, Inferred, Single)
 import Stage2.Tree.Scheme (Scheme)
 
 data Declaration locality scope
@@ -18,13 +18,13 @@ data Declaration locality scope
         name :: !Variable,
         fixity :: !Fixity,
         annotation :: !(Scheme Position scope),
-        definition :: !(Definition2 locality Annotated scope)
+        definition :: !(Definition2 locality Single Annotated scope)
       }
   | Inferred
       { position :: !Position,
         name :: !Variable,
         fixity :: !Fixity,
-        definition' :: !(Definition2 locality Inferred scope),
+        definition' :: !(Definition2 locality Single Inferred scope),
         meta :: !(Group locality scope)
       }
   deriving (Show)

@@ -53,7 +53,7 @@ fromStage2 ::
   Module
     (Stage2.Declaration Locality.Global Global)
     (Stage2.Declaration Locality.Global Global)
-    (Stage2.Shared Global)
+    (Stage2.Shared Locality.Global Global)
     (Stage2.TypeDeclaration Locality.Global Global)
     (Stage2.TypeDeclaration Locality.Global Global)
     (Stage2.TypeDeclarationExtra Global)

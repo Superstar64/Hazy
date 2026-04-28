@@ -178,7 +178,7 @@ checkTermDeclaration global local declaration = Formula8 {cycle, run}
 checkShared ::
   p1 ->
   p2 ->
-  Stage2.Shared.Shared Global ->
+  Stage2.Shared.Shared locality Global ->
   Formula s (Shared Global)
 checkShared _ _ declaration = Formula8 {cycle, run}
   where

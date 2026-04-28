@@ -6,7 +6,7 @@ import Stage1.Variable (Variable)
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (shift)
 import qualified Stage2.Tree.Declaration as Stage2 (Declaration (..))
-import Stage2.Tree.Definition2 (Annotated, Inferred)
+import Stage2.Tree.Definition2 (Annotated, Inferred, Single)
 import qualified Stage2.Tree.Definition2 as Stage2 (Definition2)
 import Stage3.Check.Context (Context (..))
 import qualified Stage3.Check.Mask as Mask
@@ -87,7 +87,7 @@ check' ::
   Which mark s scope ->
   Position ->
   Variable ->
-  Stage2.Definition2 locality mark scope ->
+  Stage2.Definition2 locality Single mark scope ->
   ST s (Declaration s scope)
 check'
   context
