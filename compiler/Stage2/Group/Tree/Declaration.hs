@@ -10,7 +10,8 @@ import Stage2.Group.Tree.Group (Group)
 import qualified Stage2.Group.Tree.Group as Group
 import Stage2.Layout (Normal)
 import qualified Stage2.Tree.Declaration as Proper
-import Stage2.Tree.Definition2 (Annotated, Definition2, Inferred, Single)
+import Stage2.Tree.Definition2 (Annotated, Inferred, Single)
+import Stage2.Tree.Definition3 (Definition3)
 import Stage2.Tree.Scheme (Scheme)
 
 data Declaration locality scope
@@ -19,13 +20,13 @@ data Declaration locality scope
         name :: !Variable,
         fixity :: !Fixity,
         annotation :: !(Scheme Position scope),
-        definition :: !(Definition2 locality Single Annotated Normal scope)
+        definition :: !(Definition3 locality Single Annotated Normal scope)
       }
   | Inferred
       { position :: !Position,
         name :: !Variable,
         fixity :: !Fixity,
-        definition' :: !(Definition2 locality Single Inferred Normal scope),
+        definition' :: !(Definition3 locality Single Inferred Normal scope),
         meta :: !(Group locality scope)
       }
   deriving (Show)

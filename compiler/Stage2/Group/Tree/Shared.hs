@@ -7,14 +7,15 @@ import qualified Stage2.Group.Temporary.Declaration as Temporary
 import Stage2.Group.Tree.Group (Group)
 import qualified Stage2.Group.Tree.Group as Group
 import Stage2.Layout (Normal)
-import Stage2.Tree.Definition2 (Definition2, Inferred, Share)
+import Stage2.Tree.Definition2 (Inferred, Share)
+import Stage2.Tree.Definition3 (Definition3)
 import Stage2.Tree.Pattern (Pattern)
 import qualified Stage2.Tree.Shared as Proper
 
 data Shared locality scope = Shared
   { equalPosition :: !Position,
     patternx :: !(Pattern scope),
-    definition :: !(Definition2 locality Share Inferred Normal scope),
+    definition :: !(Definition3 locality Share Inferred Normal scope),
     meta :: !(Group locality scope)
   }
   deriving (Show)

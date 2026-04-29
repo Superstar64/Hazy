@@ -11,6 +11,7 @@ import qualified Stage1.Tree.Pattern as Stage1 (Pattern (..))
 import qualified Stage1.Tree.RightHandSide as Stage1.RightHandSide
 import Stage2.Resolve.Context (Context)
 import qualified Stage2.Tree.Definition2 as Real.Definition2
+import qualified Stage2.Tree.Definition3 as Real.Definition3
 import qualified Stage2.Tree.Pattern as Pattern (resolve)
 import qualified Stage2.Tree.RightHandSide as RightHandSide (resolve)
 import qualified Stage2.Tree.Shared as Real
@@ -35,7 +36,10 @@ resolve context (Stage1.Definition {leftHandSide = Stage1.Pattern pattern1, righ
             Real.Shared
               { equalPosition = Stage1.RightHandSide.equalPosition rightHandSide,
                 patternx,
-                definition = Real.Definition2.Shared $ RightHandSide.resolve context rightHandSide
+                definition =
+                  Real.Definition3.Auto $
+                    Real.Definition2.Shared $
+                      RightHandSide.resolve context rightHandSide
               }
         }
     bindings = Strict.Vector.fromList $ termBindingVariables pattern1

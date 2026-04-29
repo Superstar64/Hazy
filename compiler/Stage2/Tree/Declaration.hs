@@ -11,8 +11,9 @@ import qualified Stage2.Label.Binding.Term as Label
 import Stage2.Layout (Normal)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage2.Tree.Definition2 (Annotated, Definition2, Inferred, Single)
-import qualified Stage2.Tree.Definition2 as Definition2
+import Stage2.Tree.Definition2 (Annotated, Inferred, Single)
+import Stage2.Tree.Definition3 (Definition3)
+import qualified Stage2.Tree.Definition3 as Definition3
 import Stage2.Tree.Scheme (Scheme)
 import Prelude hiding (Either (Left, Right))
 
@@ -22,13 +23,13 @@ data Declaration locality layout scope
         name :: !Variable,
         fixity :: !Fixity,
         annotation :: !(Scheme Position scope),
-        definition :: !(Definition2 locality Single Annotated layout scope)
+        definition :: !(Definition3 locality Single Annotated layout scope)
       }
   | Inferred
       { position :: !Position,
         name :: !Variable,
         fixity :: !Fixity,
-        definition' :: !(Definition2 locality Single Inferred layout scope)
+        definition' :: !(Definition3 locality Single Inferred layout scope)
       }
   deriving (Show)
 
@@ -74,12 +75,12 @@ locality = \case
         name,
         fixity,
         annotation,
-        definition = Definition2.locality definition
+        definition = Definition3.locality definition
       }
   Inferred {position, name, fixity, definition'} ->
     Inferred
       { position,
         name,
         fixity,
-        definition' = Definition2.locality definition'
+        definition' = Definition3.locality definition'
       }

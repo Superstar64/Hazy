@@ -38,7 +38,8 @@ import qualified Stage2.Temporary.Partial.More.Share as More (Shared (Shared))
 import qualified Stage2.Temporary.Partial.More.Share as More.Share
 import qualified Stage2.Tree.Declaration as Real (Declaration (..), locality)
 import qualified Stage2.Tree.Definition as Definition (merge)
-import qualified Stage2.Tree.Definition2 as Real (Choice (..), Definition2 (..), Single)
+import qualified Stage2.Tree.Definition2 as Real (Choice (..), Definition2 (..))
+import qualified Stage2.Tree.Definition3 as Real2
 import Stage2.Tree.Scheme (Scheme)
 import Verbose (Debug (resolving))
 import Prelude hiding (Either (Left, Right), Real)
@@ -79,13 +80,13 @@ merge entries@(entry :| _) =
               where
                 cast declaration = Real $ Real.locality declaration
                 real = Real.Inferred {position, name, fixity, definition'}
-                definition' = Real.Auto merged
+                definition' = Real2.Auto $ Real.Auto merged
                 merged = Definition.merge $ fmap More.Function.functionAuto body
             Just annotation -> cast <$> Verbose.resolving (Variable.printLiteral' name) real
               where
                 cast declaration = Real $ Real.locality declaration
                 real = Real.Annotated {position, name, fixity, annotation, definition}
-                definition = Real.Manual merged
+                definition = Real2.Manual $ Real.Manual merged
                 merged = Definition.merge $ fmap More.Function.functionManual body
         | Just (_, More.Selector {typeIndex, selectorIndex}) <- selection,
           () <- noAnnotation ->
@@ -95,11 +96,13 @@ merge entries@(entry :| _) =
             pure $ Method More.Method {typeIndex, methodIndex}
         | Just (position, More.Shared {shareIndex, bound, patternx}) <- share ->
             let cast declaration = Real $ Real.locality declaration
-                shared :: Real.Definition2 locality Real.Single marked Normal scope
-                shared = Real.Piece Real.Choice {position, shareIndex, bound, patternx}
                 real = case annotation of
-                  Nothing -> Real.Inferred {position, name, fixity, definition' = shared}
-                  Just annotation -> Real.Annotated {position, name, fixity, annotation, definition = shared}
+                  Nothing -> Real.Inferred {position, name, fixity, definition'}
+                    where
+                      definition' = Real2.Auto $ Real.Piece Real.Choice {position, shareIndex, bound, patternx}
+                  Just annotation -> Real.Annotated {position, name, fixity, annotation, definition}
+                    where
+                      definition = Real2.Manual $ Real.Piece Real.Choice {position, shareIndex, bound, patternx}
              in cast <$> Verbose.resolving (Variable.printLiteral' name) real
         | otherwise -> error "no entry"
       entries -> duplicateVariableEntries entries

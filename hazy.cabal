@@ -290,6 +290,7 @@ executable hazy
     Stage2.Tree.Declarations
     Stage2.Tree.Definition
     Stage2.Tree.Definition2
+    Stage2.Tree.Definition3
     Stage2.Tree.Entry
     Stage2.Tree.Expression
     Stage2.Tree.ExpressionField

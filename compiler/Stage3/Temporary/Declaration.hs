@@ -8,7 +8,7 @@ import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (shift)
 import qualified Stage2.Tree.Declaration as Stage2 (Declaration (..))
 import Stage2.Tree.Definition2 (Annotated, Inferred, Single)
-import qualified Stage2.Tree.Definition2 as Stage2 (Definition2)
+import qualified Stage2.Tree.Definition3 as Stage2 (Definition3 (Auto, Manual))
 import Stage3.Check.Context (Context (..))
 import qualified Stage3.Check.Mask as Mask
 import Stage3.Check.TypeAnnotation (Annotation (..), GlobalTypeAnnotation (..), LocalTypeAnnotation (..))
@@ -88,7 +88,7 @@ check' ::
   Which mark s scope ->
   Position ->
   Variable ->
-  Stage2.Definition2 locality Single mark Normal scope ->
+  Stage2.Definition3 locality Single mark Normal scope ->
   ST s (Declaration s scope)
 check'
   context
@@ -97,16 +97,16 @@ check'
   position
   name
   definition = case annotation of
-    Global -> do
+    Global | Stage2.Auto definition <- definition -> do
       body <- Unify.generalizeOver context $ Unify.Generalize $ \context -> do
         typex <- Unify.fresh Unify.typex
         Definition2.check context shared Definition2.Auto typex definition
       pure Inferred {position, name, body}
-    Local typex -> do
+    Local typex | Stage2.Auto definition <- definition -> do
       body <- Unify.generalizeOver context $ Unify.Generalize $ \context -> do
         Definition2.check context shared Definition2.Auto (shift typex) definition
       pure Inferred {position, name, body}
-    Marked Annotation {annotation} ->
+    Marked Annotation {annotation} | Stage2.Manual definition <- definition ->
       do
         body <- checkAnnotation context position annotation $ \context typex -> do
           Definition2.check context shared Definition2.Manual typex definition
