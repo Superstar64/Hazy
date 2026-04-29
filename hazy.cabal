@@ -212,6 +212,7 @@ executable hazy
     Stage2.Label.Binding.Term
     Stage2.Label.Binding.Type
     Stage2.Label.Context
+    Stage2.Layout
     Stage2.Locality
     Stage2.Resolve.Binding.Constructor
     Stage2.Resolve.Binding.Term
@@ -312,6 +313,7 @@ executable hazy
     Stage2.Tree.TypeDeclaration
     Stage2.Tree.TypeDeclarationExtra
     Stage2.Tree.TypeDefinition
+    Stage2.Tree.TypeDefinition2
     Stage2.Tree.TypePattern
     Stage3.Check.ClassInstance
     Stage3.Check.ConstructorInstance

@@ -35,6 +35,7 @@ import qualified Stage1.Tree.Module as Stage1 (Module, assumeName, name)
 import qualified Stage1.Variable as Variable
 import qualified Stage2.Group.Tree.Module as Module (connect)
 import qualified Stage2.Group.Tree.Module as Stage2.Group
+import qualified Stage2.Layout as Layout
 import qualified Stage2.Tree.Module as Module (resolve)
 import qualified Stage2.Tree.Module as Stage2 (Module, name)
 import qualified Stage3.Tree.Module as Module (check)
@@ -122,15 +123,15 @@ stage1 verbose = case verbose of
       Stage1.assumeName path
         <$> Parser.parse extensions Module.parse name contents
 
-stage2 :: Debug -> Vector (Stage1.Module Position) -> IO (Vector Stage2.Module)
+stage2 :: Debug -> Vector (Stage1.Module Position) -> IO (Vector (Stage2.Module Layout.Normal))
 stage2 verbose = case verbose of
   Debug -> runVerbose . Module.resolve
   Normal -> pure . runIdentity . Module.resolve
 
-stage2x :: Debug -> Vector Stage2.Module -> IO (Vector Stage2.Group.Module)
+stage2x :: Debug -> Vector (Stage2.Module Layout.Normal) -> IO (Vector Stage2.Group.Module)
 stage2x _ = pure . Module.connect
 
-stage3 :: Debug -> Vector Stage2.Module -> IO (Vector Stage3.Module)
+stage3 :: Debug -> Vector (Stage2.Module Layout.Normal) -> IO (Vector Stage3.Module)
 stage3 _ = pure . Module.check
 
 stage4 :: Debug -> Vector Stage3.Module -> IO (Vector Stage4.Module)

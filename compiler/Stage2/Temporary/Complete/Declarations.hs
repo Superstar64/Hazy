@@ -19,6 +19,7 @@ import Stage1.Variable (ConstructorIdentifier, QualifiedConstructorIdentifier (.
 import qualified Stage2.Index.Term0 as Term0 (Index (..))
 import qualified Stage2.Index.Type0 as Type0
 import qualified Stage2.Index.Type2 as Type2
+import Stage2.Layout (Normal)
 import Stage2.Resolve.Bindings (Bindings (Bindings))
 import qualified Stage2.Resolve.Bindings as Bindings
 import Stage2.Resolve.Context (Context (..))
@@ -147,7 +148,7 @@ bindings
         stability = mempty
       }
 
-shrink :: Declarations scope -> Real.Declarations locality scope
+shrink :: Declarations scope -> Real.Declarations locality Normal scope
 shrink Declarations {terms, types, shared, dataInstances, classInstances} =
   Real.Declarations
     { terms = Vector.catMaybes $ Term.shrink <$> Strict.Vector.toLazy terms,

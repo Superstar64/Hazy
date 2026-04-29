@@ -25,6 +25,7 @@ import qualified Stage2.Index.Term0 as Term0
 import qualified Stage2.Index.Term2 as Term2
 import qualified Stage2.Index.Type0 as Type0
 import qualified Stage2.Index.Type2 as Type2
+import Stage2.Layout (Normal)
 import qualified Stage2.Resolve.Binding.Term as Term
 import qualified Stage2.Resolve.Detail.Binding.Term as Selector (Selector (..))
 import qualified Stage2.Temporary.Partial.Declaration as Partial
@@ -43,7 +44,7 @@ import Verbose (Debug (resolving))
 import Prelude hiding (Either (Left, Right), Real)
 
 data Real scope
-  = Real (forall locality. Real.Declaration locality scope)
+  = Real (forall locality. Real.Declaration locality Normal scope)
   | Select !More.Selector
   | Method !More.Method
 
@@ -56,7 +57,7 @@ data Declaration scope
     declaration :: !(Real scope)
   }
 
-shrink :: Declaration scope -> Maybe (Real.Declaration locality scope)
+shrink :: Declaration scope -> Maybe (Real.Declaration locality Normal scope)
 shrink Declaration {declaration} = case declaration of
   Real valid -> Just valid
   _ -> Nothing
@@ -94,7 +95,7 @@ merge entries@(entry :| _) =
             pure $ Method More.Method {typeIndex, methodIndex}
         | Just (position, More.Shared {shareIndex, bound, patternx}) <- share ->
             let cast declaration = Real $ Real.locality declaration
-                shared :: Real.Definition2 locality Real.Single marked scope
+                shared :: Real.Definition2 locality Real.Single marked Normal scope
                 shared = Real.Piece Real.Choice {position, shareIndex, bound, patternx}
                 real = case annotation of
                   Nothing -> Real.Inferred {position, name, fixity, definition' = shared}

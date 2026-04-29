@@ -4,6 +4,7 @@ module Stage2.Tree.Shared where
 
 import Stage1.Position (Position)
 import Stage2.FreeVariables (FreeTermVariables (..))
+import Stage2.Layout (Normal)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Tree.Definition2 (Definition2, Inferred, Share)
@@ -12,7 +13,7 @@ import Stage2.Tree.Pattern (Pattern)
 data Shared locality scope = Shared
   { equalPosition :: !Position,
     patternx :: !(Pattern scope),
-    definition :: !(Definition2 locality Share Inferred scope)
+    definition :: !(Definition2 locality Share Inferred Normal scope)
   }
   deriving (Show)
 

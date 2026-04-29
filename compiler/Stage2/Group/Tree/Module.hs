@@ -16,6 +16,7 @@ import qualified Stage2.Group.Tree.Declarations as Declarations
 import qualified Stage2.Index.Link.Term as Proper.Term
 import qualified Stage2.Index.Link.Type as Proper.Type
 import qualified Stage2.Index.Link.Type as Type
+import Stage2.Layout (Normal)
 import Stage2.Locality (Global)
 import qualified Stage2.Locality as Locality
 import qualified Stage2.Scope as Scope
@@ -30,7 +31,7 @@ data Module = Module
   }
   deriving (Show)
 
-connect :: Vector Proper.Module -> Vector Module
+connect :: Vector (Proper.Module Normal) -> Vector Module
 connect modules = Vector.imap go modules
   where
     go index Proper.Module {name, declarations} =
@@ -65,7 +66,7 @@ connect modules = Vector.imap go modules
         | Proper.Module {declarations = Proper.Declarations {shared}} <-
             modules Vector.! global ->
             Temporary.Shared $ shared Vector.! local
-    indexType :: Type.Link Global -> Proper.TypeDeclaration Locality.Global Scope.Global
+    indexType :: Type.Link Global -> Proper.TypeDeclaration Locality.Global Normal Scope.Global
     indexType = \case
       Type.Global global local
         | Proper.Module {declarations = Proper.Declarations {types}} <-

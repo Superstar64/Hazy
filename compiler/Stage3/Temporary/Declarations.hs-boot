@@ -4,6 +4,7 @@ module Stage3.Temporary.Declarations where
 
 import Control.Monad.ST (ST)
 import Data.Kind (Type)
+import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import qualified Stage2.Tree.Declarations as Stage2 (Declarations)
@@ -20,7 +21,7 @@ instance Unify.Zonk Declarations
 
 check ::
   Context s scope ->
-  Stage2.Declarations locality (Scope.Declaration ':+ scope) ->
+  Stage2.Declarations locality Normal (Scope.Declaration ':+ scope) ->
   ST
     s
     ( Context s (Scope.Declaration ':+ scope),

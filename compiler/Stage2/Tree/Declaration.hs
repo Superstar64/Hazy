@@ -8,6 +8,7 @@ import Stage1.Variable (QualifiedVariable ((:-)), Qualifiers, Variable)
 import Stage2.FreeVariables (FreeTermVariables (..), Target (..))
 import qualified Stage2.Index.Term0 as Term0
 import qualified Stage2.Label.Binding.Term as Label
+import Stage2.Layout (Normal)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Tree.Definition2 (Annotated, Definition2, Inferred, Single)
@@ -15,26 +16,26 @@ import qualified Stage2.Tree.Definition2 as Definition2
 import Stage2.Tree.Scheme (Scheme)
 import Prelude hiding (Either (Left, Right))
 
-data Declaration locality scope
+data Declaration locality layout scope
   = Annotated
       { position :: !Position,
         name :: !Variable,
         fixity :: !Fixity,
         annotation :: !(Scheme Position scope),
-        definition :: !(Definition2 locality Single Annotated scope)
+        definition :: !(Definition2 locality Single Annotated layout scope)
       }
   | Inferred
       { position :: !Position,
         name :: !Variable,
         fixity :: !Fixity,
-        definition' :: !(Definition2 locality Single Inferred scope)
+        definition' :: !(Definition2 locality Single Inferred layout scope)
       }
   deriving (Show)
 
-instance Shift (Declaration locality) where
+instance Shift (Declaration layout locality) where
   shift = shiftDefault
 
-instance Shift.Functor (Declaration locality) where
+instance Shift.Functor (Declaration layout locality) where
   map category = \case
     Annotated {position, name, fixity, annotation, definition} ->
       Annotated
@@ -52,20 +53,20 @@ instance Shift.Functor (Declaration locality) where
           definition' = Shift.map category definition'
         }
 
-instance FreeTermVariables (Declaration locality) where
+instance FreeTermVariables (Declaration layout locality) where
   freeTermVariables target = \case
     Annotated {definition} -> freeTermVariables target definition
     Inferred {definition'} -> freeTermVariables target definition'
 
-freeGroupTermVariables :: Declaration locality scope -> [Term0.Index scope]
+freeGroupTermVariables :: Declaration locality layout scope -> [Term0.Index scope]
 freeGroupTermVariables = \case
   Annotated {} -> []
   declaration -> freeTermVariables Target declaration
 
-labelBinding :: Qualifiers -> Declaration locality scope -> Label.TermBinding scope'
+labelBinding :: Qualifiers -> Declaration locality layout scope -> Label.TermBinding scope'
 labelBinding path declaration = Label.TermBinding {name = path :- name declaration}
 
-locality :: Declaration locality scope -> Declaration locality' scope
+locality :: Declaration locality Normal scope -> Declaration locality' Normal scope
 locality = \case
   Annotated {position, name, fixity, annotation, definition} ->
     Annotated

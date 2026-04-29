@@ -2,10 +2,12 @@ module Stage3.Check.KindAnnotation where
 
 import Control.Monad.ST (ST)
 import qualified Data.Strict.Maybe as Strict
+import Stage2.Layout (Normal)
 import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (shift)
 import qualified Stage2.Tree.TypeDeclaration as Stage2 (TypeDeclaration (..))
 import qualified Stage2.Tree.TypeDefinition as Stage2 (TypeDefinition (Synonym, parameters, synonym))
+import qualified Stage2.Tree.TypeDefinition2 as Stage2 (TypeDefinition2 (..))
 import qualified Stage2.Tree.TypePattern
 import qualified Stage2.Tree.TypePattern as Stage2 (TypePattern (TypePattern))
 import Stage3.Check.Context (Context)
@@ -32,10 +34,12 @@ data KindAnnotation scope
         definition' :: !(Simple.Type (Local ':+ scope))
       }
 
-check :: Context s scope -> Stage2.TypeDeclaration locality scope -> ST s (KindAnnotation scope)
+check :: Context s scope -> Stage2.TypeDeclaration locality Normal scope -> ST s (KindAnnotation scope)
 check context declaration
   | position <- Stage2.position declaration,
-    Stage2.Synonym {synonym, parameters} <- Stage2.definition declaration =
+    Stage2.Synonym {synonym, parameters} <- case declaration of
+      Stage2.Annotated {definition = Stage2.Manual definition} -> definition
+      Stage2.Inferred {definition' = Stage2.Auto definition} -> definition =
       do
         let fresh Stage2.TypePattern {name, position} = do
               level <- Unify.fresh Unify.universe

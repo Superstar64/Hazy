@@ -8,6 +8,7 @@ import qualified Stage2.Group.Index.Link.Term as Term
 import qualified Stage2.Group.Temporary.Declaration as Temporary (Declaration (..))
 import Stage2.Group.Tree.Group (Group)
 import qualified Stage2.Group.Tree.Group as Group
+import Stage2.Layout (Normal)
 import qualified Stage2.Tree.Declaration as Proper
 import Stage2.Tree.Definition2 (Annotated, Definition2, Inferred, Single)
 import Stage2.Tree.Scheme (Scheme)
@@ -18,13 +19,13 @@ data Declaration locality scope
         name :: !Variable,
         fixity :: !Fixity,
         annotation :: !(Scheme Position scope),
-        definition :: !(Definition2 locality Single Annotated scope)
+        definition :: !(Definition2 locality Single Annotated Normal scope)
       }
   | Inferred
       { position :: !Position,
         name :: !Variable,
         fixity :: !Fixity,
-        definition' :: !(Definition2 locality Single Inferred scope),
+        definition' :: !(Definition2 locality Single Inferred Normal scope),
         meta :: !(Group locality scope)
       }
   deriving (Show)
@@ -32,7 +33,7 @@ data Declaration locality scope
 group ::
   (Term.Link locality -> Temporary.Declaration locality scope) ->
   StronglyConnected.Component (Term.Link locality) ->
-  Proper.Declaration locality scope ->
+  Proper.Declaration locality Normal scope ->
   Declaration locality scope
 group _ _ Proper.Annotated {position, name, fixity, annotation, definition} =
   Annotated {position, name, fixity, annotation, definition}
@@ -45,7 +46,7 @@ group index component Proper.Inferred {position, name, fixity, definition'} =
       meta = Group.group index component
     }
 
-proper :: Declaration locality scope -> Proper.Declaration locality scope
+proper :: Declaration locality scope -> Proper.Declaration locality Normal scope
 proper = \case
   Annotated {position, name, fixity, annotation, definition} ->
     Proper.Annotated {position, name, fixity, annotation, definition}

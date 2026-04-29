@@ -4,6 +4,7 @@ import Stage1.Position (Position)
 import qualified Stage1.Tree.RightHandSide as Stage1 (RightHandSide (..))
 import Stage2.FreeVariables (FreeTermVariables (freeTermVariables))
 import qualified Stage2.FreeVariables as FreeVariables
+import Stage2.Layout (Normal)
 import qualified Stage2.Locality as Locality
 import Stage2.Resolve.Context (Context)
 import Stage2.Scope (Declaration, Environment ((:+)))
@@ -17,7 +18,7 @@ import {-# SOURCE #-} qualified Stage2.Tree.Declarations as Declarations
 data RightHandSide scope
   = RightHandSide
       !(Body (Declaration ':+ scope))
-      !(Declarations Locality.Local (Declaration ':+ scope))
+      !(Declarations Locality.Local Normal (Declaration ':+ scope))
   deriving (Show)
 
 instance Shift RightHandSide where

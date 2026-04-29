@@ -17,6 +17,7 @@ import qualified Stage1.Variable as Variable
 import qualified Stage2.Index.Type0 as Type0
 import qualified Stage2.Index.Type2 as Type2
 import qualified Stage2.Index.Type3 as Type3
+import Stage2.Layout (Normal)
 import qualified Stage2.Resolve.Binding.Type as Type (Binding (..))
 import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Temporary.Complete.Constructor (Constructor (Constructor))
@@ -43,6 +44,7 @@ import qualified Stage2.Tree.StrictnessAnnotation as StrictnessAnnotation
 import qualified Stage2.Tree.TypeDeclaration as Real (TypeDeclaration (..), locality)
 import qualified Stage2.Tree.TypeDeclarationExtra as Real.Extra
 import qualified Stage2.Tree.TypeDefinition as Real (TypeDefinition (..))
+import qualified Stage2.Tree.TypeDefinition2 as Real (TypeDefinition2 (..))
 import Verbose (Debug (resolving))
 
 data Constructors scope
@@ -60,11 +62,11 @@ data TypeDeclaration scope = TypeDeclaration
     name :: !ConstructorIdentifier,
     fields :: !(Fields scope),
     constructors :: !(Constructors scope),
-    declaration :: forall locality. Real.TypeDeclaration locality scope,
+    declaration :: forall locality. Real.TypeDeclaration locality Normal scope,
     extra :: Real.Extra.TypeDeclarationExtra scope
   }
 
-shrink :: TypeDeclaration scope -> Real.TypeDeclaration locality scope
+shrink :: TypeDeclaration scope -> Real.TypeDeclaration locality Normal scope
 shrink = declaration
 
 shrinkExtra :: TypeDeclaration scope -> Real.Extra.TypeDeclarationExtra scope
@@ -125,8 +127,8 @@ merge entries@(entry :| _) =
                       { position,
                         name,
                         constructorNames,
-                        definition =
-                          Real.ADT {position, brand, parameters, constructors, selectors}
+                        definition' =
+                          Real.Auto Real.ADT {position, brand, parameters, constructors, selectors}
                       }
                   Strict.Just annotation ->
                     Real.Annotated
@@ -135,7 +137,7 @@ merge entries@(entry :| _) =
                         annotation,
                         constructorNames,
                         definition =
-                          Real.ADT {position, brand, parameters, constructors, selectors}
+                          Real.Manual Real.ADT {position, brand, parameters, constructors, selectors}
                       }
         | Just (_, More.GADT {brand, parameters, gadtConstructors}) <- gadt,
           constructorNames <- GADTConstructor.name <$> gadtConstructors,
@@ -147,8 +149,8 @@ merge entries@(entry :| _) =
                     { position,
                       name,
                       constructorNames,
-                      definition =
-                        Real.GADT {position, parameters, brand, gadtConstructors}
+                      definition' =
+                        Real.Auto Real.GADT {position, parameters, brand, gadtConstructors}
                     }
                 Strict.Just annotation ->
                   Real.Annotated
@@ -157,7 +159,7 @@ merge entries@(entry :| _) =
                       annotation,
                       constructorNames,
                       definition =
-                        Real.GADT {position, parameters, brand, gadtConstructors}
+                        Real.Manual Real.GADT {position, parameters, brand, gadtConstructors}
                     }
         | Just (position, More.Class {parameter, constraints, methods}) <- classx,
           methods <- fmap Method.shrink methods -> Verbose.resolving (Variable.print' name) $
@@ -167,8 +169,8 @@ merge entries@(entry :| _) =
                   { position,
                     name,
                     constructorNames = Strict.Vector.empty,
-                    definition =
-                      Real.Class {position, parameter, constraints, methods}
+                    definition' =
+                      Real.Auto Real.Class {position, parameter, constraints, methods}
                   }
               Strict.Just annotation ->
                 Real.Annotated
@@ -177,7 +179,7 @@ merge entries@(entry :| _) =
                     annotation,
                     constructorNames = Strict.Vector.empty,
                     definition =
-                      Real.Class {position, parameter, constraints, methods}
+                      Real.Manual Real.Class {position, parameter, constraints, methods}
                   }
         | Just
             ( _,
@@ -192,8 +194,8 @@ merge entries@(entry :| _) =
                 { position,
                   name,
                   constructorNames = Strict.Vector.empty,
-                  definition =
-                    Real.Synonym {parameters, synonym}
+                  definition' =
+                    Real.Auto Real.Synonym {parameters, synonym}
                 }
             Strict.Just annotation ->
               Real.Annotated
@@ -202,7 +204,7 @@ merge entries@(entry :| _) =
                   annotation,
                   constructorNames = Strict.Vector.empty,
                   definition =
-                    Real.Synonym {parameters, synonym}
+                    Real.Manual Real.Synonym {parameters, synonym}
                 }
       entries -> duplicateTypeEntries entries
     position = Partial.position entry

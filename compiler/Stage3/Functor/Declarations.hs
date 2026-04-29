@@ -13,6 +13,7 @@ import Stage1.Variable (Qualifiers)
 import qualified Stage2.Index.Type2 as Type2
 import qualified Stage2.Label.Binding.Term as Label (TermBinding)
 import qualified Stage2.Label.Binding.Type as Label (TypeBinding)
+import Stage2.Layout (Normal)
 import qualified Stage2.Tree.Declaration as Stage2 (Declaration)
 import qualified Stage2.Tree.Declaration as Stage2.Declaration
 import qualified Stage2.Tree.Declarations as Stage2
@@ -111,14 +112,14 @@ mapWithKey
 
 fromStage2 ::
   Qualifiers ->
-  Stage2.Declarations locality scope ->
+  Stage2.Declarations locality Normal scope ->
   Declarations
     scope
-    (Stage2.Declaration locality scope)
-    (Stage2.Declaration locality scope)
+    (Stage2.Declaration locality Normal scope)
+    (Stage2.Declaration locality Normal scope)
     (Stage2.Shared locality scope)
-    (Stage2.TypeDeclaration locality scope)
-    (Stage2.TypeDeclaration locality scope)
+    (Stage2.TypeDeclaration locality Normal scope)
+    (Stage2.TypeDeclaration locality Normal scope)
     (Stage2.TypeDeclarationExtra scope)
     (Stage2.Instance scope)
     (Stage2.Instance scope)

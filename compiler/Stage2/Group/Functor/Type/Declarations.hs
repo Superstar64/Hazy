@@ -6,6 +6,7 @@ import Data.Traversable (fmapDefault, foldMapDefault)
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import qualified Stage2.Index.Link.Type as Type
+import Stage2.Layout (Normal)
 import Stage2.Locality (Local)
 import qualified Stage2.Tree.Declarations as Proper
 
@@ -26,7 +27,7 @@ instance Traversable Declarations where
 
 indexes ::
   (Int -> Type.Link locality) ->
-  Proper.Declarations locality' scope ->
+  Proper.Declarations locality' Normal scope ->
   Declarations (Type.Link locality)
 indexes index Proper.Declarations {types} =
   Declarations

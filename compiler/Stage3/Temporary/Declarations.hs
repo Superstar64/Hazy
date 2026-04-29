@@ -12,6 +12,7 @@ import qualified Graph.Topological8
 import Stage1.Variable (Qualifiers (Local))
 import qualified Stage2.Index.Type as Type
 import qualified Stage2.Index.Type2 as Type2
+import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import qualified Stage2.Tree.Declaration as Stage2 (Declaration)
@@ -131,7 +132,7 @@ fromFunctor
 
 check ::
   Context s scope ->
-  Stage2.Declarations locality (Scope.Declaration ':+ scope) ->
+  Stage2.Declarations locality Normal (Scope.Declaration ':+ scope) ->
   ST
     s
     ( Context s (Scope.Declaration ':+ scope),
@@ -166,7 +167,7 @@ check context declarations = do
 checkTermAnnotation ::
   Context s scope ->
   p ->
-  Stage2.Declaration locality (Scope.Declaration ':+ scope) ->
+  Stage2.Declaration locality Normal (Scope.Declaration ':+ scope) ->
   Formula s scope (LocalTypeAnnotation s (Scope.Declaration ':+ scope))
 checkTermAnnotation context _ declaration = Formula8 {cycle, run}
   where
@@ -179,7 +180,7 @@ checkTermAnnotation context _ declaration = Formula8 {cycle, run}
 checkTermDeclaration ::
   Context s scope ->
   Int ->
-  Stage2.Declaration locality (Scope.Declaration ':+ scope) ->
+  Stage2.Declaration locality Normal (Scope.Declaration ':+ scope) ->
   Formula s scope (Declaration s (Scope.Declaration ':+ scope))
 checkTermDeclaration context index declaration = Formula8 {cycle, run}
   where
@@ -211,7 +212,7 @@ checkShared context _ declaration = Formula8 {cycle, run}
 checkTypeAnnotation ::
   Context s scope ->
   p ->
-  Stage2.TypeDeclaration locality (Scope.Declaration ':+ scope) ->
+  Stage2.TypeDeclaration locality Normal (Scope.Declaration ':+ scope) ->
   Formula s scope (KindAnnotation (Scope.Declaration ':+ scope))
 checkTypeAnnotation context _ declaration = Formula8 {cycle, run}
   where
@@ -224,7 +225,7 @@ checkTypeAnnotation context _ declaration = Formula8 {cycle, run}
 checkTypeDeclaration ::
   Context s scope ->
   Int ->
-  Stage2.TypeDeclaration locality (Scope.Declaration ':+ scope) ->
+  Stage2.TypeDeclaration locality Normal (Scope.Declaration ':+ scope) ->
   Formula s scope (TypeDeclaration (Scope.Declaration ':+ scope))
 checkTypeDeclaration context index declaration = Formula8 {cycle, run}
   where

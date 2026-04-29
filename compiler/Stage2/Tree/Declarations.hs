@@ -15,6 +15,7 @@ import Stage2.FreeVariables (FreeTermVariables (..))
 import qualified Stage2.Index.Term0 as Term0 (Index (..))
 import qualified Stage2.Index.Type0 as Type0
 import qualified Stage2.Index.Type2 as Type2
+import Stage2.Layout (Normal)
 import qualified Stage2.Resolve.Bindings as Bindings
 import Stage2.Resolve.Context (Context (..))
 import qualified Stage2.Resolve.Context as Context
@@ -30,9 +31,9 @@ import Stage2.Tree.Shared (Shared)
 import Stage2.Tree.TypeDeclaration (TypeDeclaration)
 import Stage2.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 
-data Declarations locality scope = Declarations
-  { terms :: !(Vector (Declaration locality scope)),
-    types :: !(Vector (TypeDeclaration locality scope)),
+data Declarations locality layout scope = Declarations
+  { terms :: !(Vector (Declaration locality layout scope)),
+    types :: !(Vector (TypeDeclaration locality layout scope)),
     typeExtras :: !(Vector (TypeDeclarationExtra scope)),
     shared :: !(Vector (Shared locality scope)),
     dataInstances :: !(Vector (Map (Type2.Index scope) (Instance scope))),
@@ -40,10 +41,10 @@ data Declarations locality scope = Declarations
   }
   deriving (Show)
 
-instance Shift (Declarations locality) where
+instance Shift (Declarations locality layout) where
   shift = shiftDefault
 
-instance Shift.Functor (Declarations locality) where
+instance Shift.Functor (Declarations locality layout) where
   map
     category
     Declarations
@@ -63,7 +64,7 @@ instance Shift.Functor (Declarations locality) where
           classInstances = fmap (Shift.mapInstances category . fmap (Shift.map category)) classInstances
         }
 
-instance FreeTermVariables (Declarations locality) where
+instance FreeTermVariables (Declarations locality layout) where
   freeTermVariables target Declarations {terms, shared, typeExtras} =
     concat
       [ foldMap (freeTermVariables target) terms,
@@ -75,7 +76,7 @@ resolve ::
   Context scope ->
   Stage1.Declarations Position ->
   ( Context (Scope.Declaration ':+ scope),
-    Declarations locality (Scope.Declaration ':+ scope)
+    Declarations locality Normal (Scope.Declaration ':+ scope)
   )
 resolve initial@Context {canonical, extensions} Stage1.Declarations {declarations} =
   (context, Complete.shrink complete)

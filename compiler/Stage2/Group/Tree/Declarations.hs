@@ -18,6 +18,7 @@ import qualified Stage2.Group.Tree.TypeDeclaration as TypeDeclaration
 import qualified Stage2.Index.Link.Term as Proper.Term
 import qualified Stage2.Index.Link.Type as Type
 import qualified Stage2.Index.Type2 as Type2
+import Stage2.Layout (Normal)
 import Stage2.Locality (Local)
 import qualified Stage2.Locality as Locality
 import Stage2.Scope (Environment (..))
@@ -40,10 +41,10 @@ data Declarations locality scope = Declarations
 
 group ::
   (Term.Link locality -> Temporary.Declaration locality scope) ->
-  (Type.Link locality -> Proper.TypeDeclaration locality scope) ->
+  (Type.Link locality -> Proper.TypeDeclaration locality Normal scope) ->
   Functor.Term.Declarations (Component (Term.Link locality)) ->
   Functor.Type.Declarations (Component (Type.Link locality)) ->
-  Proper.Declarations locality scope ->
+  Proper.Declarations locality Normal scope ->
   Declarations locality scope
 group
   indexTerm
@@ -69,7 +70,7 @@ group
 
 connect ::
   forall scope.
-  Proper.Declarations Locality.Local (Scope.Declaration ':+ scope) ->
+  Proper.Declarations Locality.Local Normal (Scope.Declaration ':+ scope) ->
   Declarations Locality.Local (Scope.Declaration ':+ scope)
 connect declarations@Proper.Declarations {terms, shared, types} =
   group indexTerm indexType termGroups typeGroups declarations
@@ -94,6 +95,6 @@ connect declarations@Proper.Declarations {terms, shared, types} =
       Term.Share (Proper.Term.Declaration index) -> Temporary.Shared $ shared Vector.! index
     indexType ::
       Type.Link Local ->
-      Proper.TypeDeclaration Locality.Local (Scope.Declaration ':+ scope)
+      Proper.TypeDeclaration Locality.Local Normal (Scope.Declaration ':+ scope)
     indexType = \case
       Type.Declaration index -> types Vector.! index

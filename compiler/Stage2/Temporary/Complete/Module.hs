@@ -16,6 +16,7 @@ import Stage1.Variable (FullQualifiers)
 import qualified Stage1.Variable as Variable
 import qualified Stage2.Index.Term0 as Term0 (Index (..))
 import qualified Stage2.Index.Type0 as Type0
+import Stage2.Layout (Normal)
 import Stage2.Resolve.Bindings (Bindings)
 import qualified Stage2.Resolve.Bindings as Bindings
 import Stage2.Resolve.Canonical (Canonical)
@@ -105,7 +106,7 @@ resolve modules = mfix $ \main ->
             Stage1.Module {modulePosition = right} <- modules Vector.! right =
               duplicateModuleEntries [left, right]
 
-shrink :: Module -> Real.Module
+shrink :: Module -> Real.Module Normal
 shrink Module {name, declarations} =
   Real.Module
     { name,

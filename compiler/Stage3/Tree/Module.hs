@@ -8,6 +8,7 @@ import Graph.Topological (Formula8 (..), Loeb8 (..), loeb8)
 import qualified Graph.Topological8
 import Stage1.Variable (FullQualifiers)
 import qualified Stage2.Index.Type as Type
+import Stage2.Layout (Normal)
 import Stage2.Scope (Global)
 import qualified Stage2.Tree.Declaration as Stage2 (Declaration)
 import qualified Stage2.Tree.Declaration as Stage2.Declaration
@@ -100,7 +101,7 @@ fromFunctors ::
   Vector Module
 fromFunctors (Functor.ModuleSet modules) = fmap fromFunctor modules
 
-check :: Vector Stage2.Module -> Vector Module
+check :: Vector (Stage2.Module Normal) -> Vector Module
 check modules =
   fromFunctors
     $ mapWithKey
@@ -145,7 +146,7 @@ check modules =
 checkTermAnnotation ::
   p1 ->
   p2 ->
-  Stage2.Declaration locality Global ->
+  Stage2.Declaration locality Normal Global ->
   Formula s (GlobalTypeAnnotation Global)
 checkTermAnnotation _ _ declaration = Formula8 {cycle, run}
   where
@@ -156,7 +157,7 @@ checkTermAnnotation _ _ declaration = Formula8 {cycle, run}
 checkTermDeclaration ::
   Int ->
   Int ->
-  Stage2.Declaration locality Global ->
+  Stage2.Declaration locality Normal Global ->
   Formula s (Declaration Global)
 checkTermDeclaration global local declaration = Formula8 {cycle, run}
   where
@@ -191,7 +192,7 @@ checkShared _ _ declaration = Formula8 {cycle, run}
 checkTypeAnnotation ::
   p1 ->
   p2 ->
-  Stage2.TypeDeclaration.TypeDeclaration locality Global ->
+  Stage2.TypeDeclaration.TypeDeclaration locality Normal Global ->
   Formula s (KindAnnotation Global)
 checkTypeAnnotation _ _ declaration = Formula8 {cycle, run}
   where
@@ -202,7 +203,7 @@ checkTypeAnnotation _ _ declaration = Formula8 {cycle, run}
 checkTypeDeclaration ::
   Int ->
   Int ->
-  Stage2.TypeDeclaration.TypeDeclaration locality Global ->
+  Stage2.TypeDeclaration.TypeDeclaration locality Normal Global ->
   Formula s (TypeDeclaration Global)
 checkTypeDeclaration global local declaration = Formula8 {cycle, run}
   where

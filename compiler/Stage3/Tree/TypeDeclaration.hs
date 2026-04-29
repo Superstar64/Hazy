@@ -3,8 +3,9 @@ module Stage3.Tree.TypeDeclaration where
 import Control.Monad.ST (ST)
 import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import Stage1.Variable (ConstructorIdentifier)
+import Stage2.Layout (Normal)
 import qualified Stage2.Tree.TypeDeclaration as Stage2 (TypeDeclaration (..))
-import qualified Stage2.Tree.TypeDefinition as Stage2 (TypeDefinition (..))
+import qualified Stage2.Tree.TypeDefinition2 as Stage2 (TypeDefinition2 (..))
 import Stage3.Check.Context (Context (..))
 import qualified Stage3.Check.KindAnnotation as KindAnnotation
 import qualified Stage3.Check.KindAnnotation as Stage3
@@ -42,52 +43,58 @@ kind_ = kind
 check ::
   Context s scope ->
   Stage3.KindAnnotation scope ->
-  Stage2.TypeDeclaration locality scope ->
+  Stage2.TypeDeclaration locality Normal scope ->
   ST s (TypeDeclaration scope)
-check _ KindAnnotation.Synonym {kind, annotation', definition, definition'} declaration
-  | Stage2.Synonym {} <- Stage2.definition declaration = case annotation' of
-      Strict.Nothing ->
-        pure
-          Inferred
-            { name = Stage2.name declaration,
-              kind,
-              definition =
-                Synonym
-                  { definition,
-                    definition'
-                  }
-            }
-      Strict.Just annotation ->
-        pure
-          Annotated
-            { name = Stage2.name declaration,
-              kind,
-              annotation,
-              definition =
-                Synonym
-                  { definition,
-                    definition'
-                  }
-            }
-check context KindAnnotation.Inferred Stage2.Inferred {position, name, definition} = do
-  kind <- Unify.fresh Unify.kind
-  definition <- Temporary.TypeDefinition.check context kind definition
-  kind <- Unify.solve position kind
-  definition <- Temporary.TypeDefinition.solve context definition
-  pure
-    Inferred
-      { name,
-        kind,
-        definition
-      }
-check context KindAnnotation.Annotation {annotation, kind} Stage2.Annotated {name, definition} = do
-  definition <- Temporary.TypeDefinition.check context (Simple.Type.lift kind) definition
-  definition <- Temporary.TypeDefinition.solve context definition
-  pure
-    Annotated
-      { name,
-        annotation,
-        kind,
-        definition
-      }
+check _ KindAnnotation.Synonym {kind, annotation', definition, definition'} declaration =
+  case annotation' of
+    Strict.Nothing ->
+      pure
+        Inferred
+          { name = Stage2.name declaration,
+            kind,
+            definition =
+              Synonym
+                { definition,
+                  definition'
+                }
+          }
+    Strict.Just annotation ->
+      pure
+        Annotated
+          { name = Stage2.name declaration,
+            kind,
+            annotation,
+            definition =
+              Synonym
+                { definition,
+                  definition'
+                }
+          }
+check
+  context
+  KindAnnotation.Inferred
+  Stage2.Inferred {position, name, definition' = Stage2.Auto definition} = do
+    kind <- Unify.fresh Unify.kind
+    definition <- Temporary.TypeDefinition.check context kind definition
+    kind <- Unify.solve position kind
+    definition <- Temporary.TypeDefinition.solve context definition
+    pure
+      Inferred
+        { name,
+          kind,
+          definition
+        }
+check
+  context
+  KindAnnotation.Annotation {annotation, kind}
+  Stage2.Annotated {name, definition = Stage2.Manual definition} = do
+    definition <- Temporary.TypeDefinition.check context (Simple.Type.lift kind) definition
+    definition <- Temporary.TypeDefinition.solve context definition
+    pure
+      Annotated
+        { name,
+          annotation,
+          kind,
+          definition
+        }
 check _ _ _ = error "bad type declaration check"

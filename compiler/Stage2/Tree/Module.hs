@@ -16,6 +16,7 @@ import qualified Stage2.Index.Table.Term as Table.Term
 import qualified Stage2.Index.Table.Type as Table.Type
 import qualified Stage2.Label.Context as Label (Context (Context))
 import qualified Stage2.Label.Context as Label.Context
+import Stage2.Layout (Normal)
 import qualified Stage2.Locality as Locality
 import Stage2.Scope (Global)
 import {-# SOURCE #-} qualified Stage2.Temporary.Complete.Module as Complete
@@ -25,13 +26,13 @@ import qualified Stage2.Tree.Declarations as Declarations (Declarations (terms, 
 import qualified Stage2.Tree.TypeDeclaration as TypeDeclaration
 import Verbose (Debug)
 
-data Module = Module
+data Module layout = Module
   { name :: !FullQualifiers,
-    declarations :: Declarations Locality.Global Global
+    declarations :: Declarations Locality.Global layout Global
   }
   deriving (Show)
 
-labelContext :: Vector Module -> Label.Context Global
+labelContext :: Vector (Module Normal) -> Label.Context Global
 labelContext modules =
   Label.Context
     { terms = Table.Term.Global $ labelTerms modules,
@@ -44,5 +45,5 @@ labelContext modules =
     labelTypes = fmap $ \Module {name, declarations = Declarations {types}} ->
       TypeDeclaration.labelBinding (toQualifiers name) <$> types
 
-resolve :: (Debug verbose) => Vector (Stage1.Module Position) -> verbose (Vector Module)
+resolve :: (Debug verbose) => Vector (Stage1.Module Position) -> verbose (Vector (Module Normal))
 resolve modules = fmap Complete.shrink <$> Complete.resolve modules

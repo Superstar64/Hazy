@@ -3,6 +3,7 @@ module Stage3.Temporary.Declaration where
 import Control.Monad.ST (ST)
 import Stage1.Position (Position)
 import Stage1.Variable (Variable)
+import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (shift)
 import qualified Stage2.Tree.Declaration as Stage2 (Declaration (..))
@@ -50,7 +51,7 @@ checkLocal ::
   Context s scope ->
   (Int -> ST s (Unify.Scheme s scope)) ->
   LocalTypeAnnotation s scope ->
-  Stage2.Declaration locality scope ->
+  Stage2.Declaration locality Normal scope ->
   ST s (Declaration s scope)
 checkLocal context shared annotation declaration =
   declaration `go` annotation
@@ -65,7 +66,7 @@ checkGlobal ::
   Context s scope ->
   (Int -> ST s (Unify.Scheme s scope)) ->
   GlobalTypeAnnotation scope ->
-  Stage2.Declaration locality scope ->
+  Stage2.Declaration locality Normal scope ->
   ST s (Declaration s scope)
 checkGlobal context shared annotation declaration =
   declaration `go` annotation
@@ -87,7 +88,7 @@ check' ::
   Which mark s scope ->
   Position ->
   Variable ->
-  Stage2.Definition2 locality Single mark scope ->
+  Stage2.Definition2 locality Single mark Normal scope ->
   ST s (Declaration s scope)
 check'
   context

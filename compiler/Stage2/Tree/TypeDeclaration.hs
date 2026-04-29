@@ -21,34 +21,36 @@ import Stage1.Variable
 import Stage2.FreeVariables (FreeTypeVariables (..), Target (..))
 import qualified Stage2.Index.Type0 as Type0
 import qualified Stage2.Label.Binding.Type as Label
+import Stage2.Layout (Layout, Normal)
 import Stage2.Locality (Locality)
 import Stage2.Scope (Environment)
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Tree.Type (Type)
-import Stage2.Tree.TypeDefinition (TypeDefinition)
+import Stage2.Tree.TypeDefinition2 (Annotated, Inferred, TypeDefinition2)
+import qualified Stage2.Tree.TypeDefinition2 as TypeDefinition2
 
-type TypeDeclaration :: Locality -> Environment -> Data.Kind.Type
-data TypeDeclaration locality scope
+type TypeDeclaration :: Locality -> Layout -> Environment -> Data.Kind.Type
+data TypeDeclaration locality layout scope
   = Annotated
       { position :: !Position,
         name :: !ConstructorIdentifier,
         constructorNames :: !(Strict.Vector Constructor),
         annotation :: !(Type Position scope),
-        definition :: !(TypeDefinition scope)
+        definition :: !(TypeDefinition2 locality Annotated layout scope)
       }
   | Inferred
       { position :: !Position,
         name :: !ConstructorIdentifier,
         constructorNames :: !(Strict.Vector Constructor),
-        definition :: !(TypeDefinition scope)
+        definition' :: !(TypeDefinition2 locality Inferred layout scope)
       }
   deriving (Show)
 
-instance Shift (TypeDeclaration locality) where
+instance Shift (TypeDeclaration locality layout) where
   shift = shiftDefault
 
-instance Shift.Functor (TypeDeclaration locality) where
+instance Shift.Functor (TypeDeclaration locality layout) where
   map category = \case
     Annotated {position, name, constructorNames, annotation, definition} ->
       Annotated
@@ -58,36 +60,36 @@ instance Shift.Functor (TypeDeclaration locality) where
           annotation = Shift.map category annotation,
           definition = Shift.map category definition
         }
-    Inferred {position, name, constructorNames, definition} ->
+    Inferred {position, name, constructorNames, definition'} ->
       Inferred
         { position,
           name,
           constructorNames,
-          definition = Shift.map category definition
+          definition' = Shift.map category definition'
         }
 
-instance FreeTypeVariables (TypeDeclaration locality) where
+instance FreeTypeVariables (TypeDeclaration locality layout) where
   freeTypeVariables target = \case
     Annotated {annotation, definition} ->
       concat
         [ freeTypeVariables target annotation,
           freeTypeVariables target definition
         ]
-    Inferred {definition} -> freeTypeVariables target definition
+    Inferred {definition'} -> freeTypeVariables target definition'
 
-freeGroupTypeVariables :: TypeDeclaration locality scope -> [Type0.Index scope]
+freeGroupTypeVariables :: TypeDeclaration locality layout scope -> [Type0.Index scope]
 freeGroupTypeVariables = \case
   Annotated {} -> []
   declaration -> freeTypeVariables Target declaration
 
-labelBinding :: Qualifiers -> TypeDeclaration locality scope -> Label.TypeBinding scope'
+labelBinding :: Qualifiers -> TypeDeclaration locality layout scope -> Label.TypeBinding scope'
 labelBinding path declaration =
   Label.TypeBinding
     { name = path :=. name declaration,
       constructorNames = (path :=) <$> constructorNames declaration
     }
 
-locality :: TypeDeclaration locality scope -> TypeDeclaration locality' scope
+locality :: TypeDeclaration locality Normal scope -> TypeDeclaration locality' Normal scope
 locality = \case
   Annotated {position, name, constructorNames, annotation, definition} ->
     Annotated
@@ -95,12 +97,12 @@ locality = \case
         name,
         constructorNames,
         annotation,
-        definition
+        definition = TypeDefinition2.locality definition
       }
-  Inferred {position, name, constructorNames, definition} ->
+  Inferred {position, name, constructorNames, definition'} ->
     Inferred
       { position,
         name,
         constructorNames,
-        definition
+        definition' = TypeDefinition2.locality definition'
       }
