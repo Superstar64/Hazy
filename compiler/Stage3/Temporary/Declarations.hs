@@ -198,7 +198,7 @@ checkTermDeclaration context index declaration = Formula8 {cycle, run}
 checkShared ::
   Context s scope ->
   p ->
-  Stage2.Shared locality (Scope.Declaration ':+ scope) ->
+  Stage2.Shared locality Normal (Scope.Declaration ':+ scope) ->
   Formula s scope (Shared s (Scope.Declaration ':+ scope))
 checkShared context _ declaration = Formula8 {cycle, run}
   where

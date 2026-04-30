@@ -182,16 +182,6 @@ executable hazy
     Stage2.Group.Functor.Type.ModuleSet
     Stage2.Group.Index.Link.Term
     Stage2.Group.Index.Term0
-    Stage2.Group.Temporary.Declaration
-    Stage2.Group.Tree.Declaration
-    Stage2.Group.Tree.Declarations
-    Stage2.Group.Tree.Definition3
-    Stage2.Group.Tree.Group
-    Stage2.Group.Tree.Module
-    Stage2.Group.Tree.Shared
-    Stage2.Group.Tree.TypeDeclaration
-    Stage2.Group.Tree.TypeDefinition2
-    Stage2.Group.Tree.TypeGroup
     Stage2.Index.Constructor
     Stage2.Index.Link.Term
     Stage2.Index.Link.Type

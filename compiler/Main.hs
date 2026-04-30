@@ -33,10 +33,8 @@ import Stage1.Position (Position)
 import qualified Stage1.Tree.Module as Module (parse)
 import qualified Stage1.Tree.Module as Stage1 (Module, assumeName, name)
 import qualified Stage1.Variable as Variable
-import qualified Stage2.Group.Tree.Module as Module (connect)
-import qualified Stage2.Group.Tree.Module as Stage2.Group
 import qualified Stage2.Layout as Layout
-import qualified Stage2.Tree.Module as Module (resolve)
+import qualified Stage2.Tree.Module as Module (connect, resolve)
 import qualified Stage2.Tree.Module as Stage2 (Module, name)
 import qualified Stage3.Tree.Module as Module (check)
 import qualified Stage3.Tree.Module as Stage3 (Module, name)
@@ -128,7 +126,7 @@ stage2 verbose = case verbose of
   Debug -> runVerbose . Module.resolve
   Normal -> pure . runIdentity . Module.resolve
 
-stage2x :: Debug -> Vector (Stage2.Module Layout.Normal) -> IO (Vector Stage2.Group.Module)
+stage2x :: Debug -> Vector (Stage2.Module Layout.Normal) -> IO (Vector (Stage2.Module Layout.Group))
 stage2x _ = pure . Module.connect
 
 stage3 :: Debug -> Vector (Stage2.Module Layout.Normal) -> IO (Vector Stage3.Module)
@@ -351,7 +349,7 @@ main'' args = case getOpt order options args of
             all <- stage1 debug all
             all <- stage2 debug all
             all <- stage2x debug all
-            forceModules "Grouping" show verbose Stage2.Group.name (Vector.drop split all)
+            forceModules "Grouping" show verbose Stage2.name (Vector.drop split all)
           Check -> do
             all <- stage1 debug all
             all <- stage2 debug all

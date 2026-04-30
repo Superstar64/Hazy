@@ -2,6 +2,7 @@ module Stage3.Temporary.Shared where
 
 import Control.Monad.ST (ST)
 import Stage1.Position (Position)
+import Stage2.Layout (Normal)
 import Stage2.Shift (shift)
 import qualified Stage2.Tree.Definition2 as Stage2.Definition2
 import qualified Stage2.Tree.Definition3 as Stage2.Definition3
@@ -23,7 +24,11 @@ instance Unify.Zonk Shared where
     body <- Unify.zonk zonker body
     pure Shared {equalPosition, body}
 
-check :: Context s scopes -> Maybe (Unify.Type s scopes) -> Stage2.Shared locality scopes -> ST s (Shared s scopes)
+check ::
+  Context s scopes ->
+  Maybe (Unify.Type s scopes) ->
+  Stage2.Shared locality Normal scopes ->
+  ST s (Shared s scopes)
 check
   context
   annotation

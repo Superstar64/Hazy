@@ -2,6 +2,8 @@ module Stage2.Tree.TypeDefinition2 where
 
 import Data.Kind (Type)
 import Data.Map (Map)
+import qualified Data.Map as Map
+import qualified Graph.StronglyConnected as StronglyConnected
 import Stage2.FreeVariables (FreeTypeVariables (..))
 import qualified Stage2.Index.Link.Type as Type
 import Stage2.Layout (Group, Layout, Normal)
@@ -26,7 +28,7 @@ data TypeDefinition2 locality mark layout scope where
   Link :: !(Type.Link locality) -> TypeDefinition2 locality Inferred Group scope
   Group ::
     !(Type.Link locality) ->
-    !(Map (Type.Link locality) (TypeDefinition2 locality' Inferred Normal scope)) ->
+    !(Map (Type.Link locality) (TypeDefinition scope)) ->
     TypeDefinition2 locality Inferred Group scope
 
 instance Show (TypeDefinition2 locality mark layout scope) where
@@ -62,3 +64,14 @@ locality :: TypeDefinition2 locality mark Normal scope -> TypeDefinition2 locali
 locality = \case
   Manual definition -> Manual definition
   Auto definition -> Auto definition
+
+group ::
+  (Type.Link locality -> TypeDefinition scope) ->
+  StronglyConnected.Component (Type.Link locality) ->
+  TypeDefinition2 locality mark Normal scope ->
+  TypeDefinition2 locality mark Group scope
+group _ _ (Manual definition) = Manual definition
+group index group Auto {} = case group of
+  StronglyConnected.Group {link, set} ->
+    Group link $ Map.fromSet index set
+  StronglyConnected.Link {link} -> Link link

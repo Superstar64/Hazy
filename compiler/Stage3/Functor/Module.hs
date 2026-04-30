@@ -54,7 +54,7 @@ fromStage2 ::
   Module
     (Stage2.Declaration Locality.Global Normal Global)
     (Stage2.Declaration Locality.Global Normal Global)
-    (Stage2.Shared Locality.Global Global)
+    (Stage2.Shared Locality.Global Normal Global)
     (Stage2.TypeDeclaration Locality.Global Normal Global)
     (Stage2.TypeDeclaration Locality.Global Normal Global)
     (Stage2.TypeDeclarationExtra Global)

@@ -2,16 +2,18 @@
 
 module Stage2.Tree.Declaration where
 
+import qualified Graph.StronglyConnected as StronglyConnected
 import Stage1.Position (Position)
 import Stage1.Tree.Fixity (Fixity (..))
 import Stage1.Variable (QualifiedVariable ((:-)), Qualifiers, Variable)
-import Stage2.FreeVariables (FreeTermVariables (..), Target (..))
-import qualified Stage2.Index.Term0 as Term0
+import Stage2.FreeVariables (FreeTermVariables (..))
+import qualified Stage2.Group.Index.Link.Term as Group.Term
 import qualified Stage2.Label.Binding.Term as Label
-import Stage2.Layout (Normal)
+import Stage2.Layout (Group, Normal)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Tree.Definition2 (Annotated, Inferred, Single)
+import qualified Stage2.Tree.Definition2 as Definition2
 import Stage2.Tree.Definition3 (Definition3)
 import qualified Stage2.Tree.Definition3 as Definition3
 import Stage2.Tree.Scheme (Scheme)
@@ -59,11 +61,6 @@ instance FreeTermVariables (Declaration layout locality) where
     Annotated {definition} -> freeTermVariables target definition
     Inferred {definition'} -> freeTermVariables target definition'
 
-freeGroupTermVariables :: Declaration locality layout scope -> [Term0.Index scope]
-freeGroupTermVariables = \case
-  Annotated {} -> []
-  declaration -> freeTermVariables Target declaration
-
 labelBinding :: Qualifiers -> Declaration locality layout scope -> Label.TermBinding scope'
 labelBinding path declaration = Label.TermBinding {name = path :- name declaration}
 
@@ -83,4 +80,26 @@ locality = \case
         name,
         fixity,
         definition' = Definition3.locality definition'
+      }
+
+group ::
+  (Group.Term.Link locality -> Definition2.Auto scope) ->
+  StronglyConnected.Component (Group.Term.Link locality) ->
+  Declaration locality Normal scope ->
+  Declaration locality Group scope
+group index group = \case
+  Annotated {position, name, fixity, annotation, definition} ->
+    Annotated
+      { position,
+        name,
+        fixity,
+        annotation,
+        definition = Definition3.group index group definition
+      }
+  Inferred {position, name, fixity, definition'} ->
+    Inferred
+      { position,
+        name,
+        fixity,
+        definition' = Definition3.group index group definition'
       }

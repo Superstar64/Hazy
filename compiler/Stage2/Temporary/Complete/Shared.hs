@@ -9,6 +9,7 @@ import qualified Stage1.Tree.LeftHandSide as Stage1 (LeftHandSide (Pattern))
 import qualified Stage1.Tree.Marked as Marked
 import qualified Stage1.Tree.Pattern as Stage1 (Pattern (..))
 import qualified Stage1.Tree.RightHandSide as Stage1.RightHandSide
+import Stage2.Layout (Normal)
 import Stage2.Resolve.Context (Context)
 import qualified Stage2.Tree.Definition2 as Real.Definition2
 import qualified Stage2.Tree.Definition3 as Real.Definition3
@@ -18,10 +19,10 @@ import qualified Stage2.Tree.Shared as Real
 
 data Shared scope = Shared
   { bindings :: !(Strict.Vector (Marked.Variable Position)),
-    share :: forall locality. Real.Shared locality scope
+    share :: forall locality. Real.Shared locality Normal scope
   }
 
-shrink :: Shared scope -> Real.Shared locality scope
+shrink :: Shared scope -> Real.Shared locality Normal scope
 shrink = share
 
 resolve :: Context scope -> [Declaration Position] -> [Shared scope]

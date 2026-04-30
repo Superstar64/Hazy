@@ -2,14 +2,15 @@
 
 module Stage2.Tree.TypeDeclaration
   ( TypeDeclaration (..),
-    freeGroupTypeVariables,
     labelBinding,
     locality,
+    group,
   )
 where
 
 import qualified Data.Kind
 import qualified Data.Vector.Strict as Strict
+import qualified Graph.StronglyConnected as StronglyConnected
 import Stage1.Position (Position)
 import Stage1.Variable
   ( Constructor,
@@ -18,15 +19,16 @@ import Stage1.Variable
     QualifiedConstructorIdentifier ((:=.)),
     Qualifiers,
   )
-import Stage2.FreeVariables (FreeTypeVariables (..), Target (..))
-import qualified Stage2.Index.Type0 as Type0
+import Stage2.FreeVariables (FreeTypeVariables (..))
+import qualified Stage2.Index.Link.Type as Type
 import qualified Stage2.Label.Binding.Type as Label
-import Stage2.Layout (Layout, Normal)
+import Stage2.Layout (Group, Layout, Normal)
 import Stage2.Locality (Locality)
 import Stage2.Scope (Environment)
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Tree.Type (Type)
+import Stage2.Tree.TypeDefinition (TypeDefinition)
 import Stage2.Tree.TypeDefinition2 (Annotated, Inferred, TypeDefinition2)
 import qualified Stage2.Tree.TypeDefinition2 as TypeDefinition2
 
@@ -77,11 +79,6 @@ instance FreeTypeVariables (TypeDeclaration locality layout) where
         ]
     Inferred {definition'} -> freeTypeVariables target definition'
 
-freeGroupTypeVariables :: TypeDeclaration locality layout scope -> [Type0.Index scope]
-freeGroupTypeVariables = \case
-  Annotated {} -> []
-  declaration -> freeTypeVariables Target declaration
-
 labelBinding :: Qualifiers -> TypeDeclaration locality layout scope -> Label.TypeBinding scope'
 labelBinding path declaration =
   Label.TypeBinding
@@ -105,4 +102,26 @@ locality = \case
         name,
         constructorNames,
         definition' = TypeDefinition2.locality definition'
+      }
+
+group ::
+  (Type.Link locality -> TypeDefinition scope) ->
+  StronglyConnected.Component (Type.Link locality) ->
+  TypeDeclaration locality Normal scope ->
+  TypeDeclaration locality Group scope
+group index group = \case
+  Annotated {position, name, constructorNames, annotation, definition} ->
+    Annotated
+      { position,
+        name,
+        constructorNames,
+        annotation,
+        definition = TypeDefinition2.group index group definition
+      }
+  Inferred {position, name, constructorNames, definition'} ->
+    Inferred
+      { position,
+        name,
+        constructorNames,
+        definition' = TypeDefinition2.group index group definition'
       }
