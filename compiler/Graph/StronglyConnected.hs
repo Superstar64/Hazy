@@ -13,6 +13,8 @@ import Control.Applicative (liftA)
 import Control.Monad (when)
 import Control.Monad.ST (ST, stToIO)
 import Data.Foldable (for_)
+import Data.List.NonEmpty (NonEmpty (..), sortOn)
+import qualified Data.List.NonEmpty as NonEmpty
 import Data.STRef
   ( STRef,
     modifySTRef',
@@ -26,7 +28,7 @@ import Data.Traversable (for)
 import System.IO.Unsafe (unsafeInterleaveIO, unsafePerformIO)
 
 data Component k
-  = Group {link :: !k, set :: !(Set k)}
+  = Group {set :: !(Set k)}
   | Link {link :: !k}
   deriving (Eq, Show)
 
@@ -73,32 +75,24 @@ visiter children = do
         lowlinkv <- readSTRef (lowlink v)
         indexv <- readSTRef (index v)
         when (lowlinkv == indexv) $ do
-          component <- newSTRef []
-          let run = do
-                stack <- readSTRef stackRef
-                let w = head stack
-                writeSTRef stackRef $! tail stack
-                writeSTRef (onStack w) False
-                writeSTRef (result w) $! Link {link = value v}
-                modifySTRef' component (value w :)
-                loop w
-              loop w =
-                if value v /= value w
-                  then run
-                  else do
-                    component <- readSTRef component
-                    writeSTRef (result v) $!
-                      Group
-                        { link = value v,
-                          set = Set.fromList component
-                        }
-          run
-      -- A pre strongly connect step is needed to make sure the result is always
-      -- the same regardless of the evaluation order.
+          nodes <- collect
+          let root :| children = sortOn value nodes
+              set = Set.fromAscList (value root : map value children)
+          writeSTRef (result root) Group {set}
+          for_ children $ \child ->
+            writeSTRef (result child) Link {link = value root}
+        where
+          collect = do
+            stack <- readSTRef stackRef
+            let w = head stack
+            writeSTRef stackRef $! tail stack
+            writeSTRef (onStack w) False
+            if value v /= value w
+              then
+                NonEmpty.cons w <$> collect
+              else
+                pure $ w :| []
       preconnect v = do
-        for_ (children $ value v) $ \w -> when (value v > value w) $ do
-          indexw <- readSTRef (index w)
-          when (indexw == negate 1) $ preconnect w
         indexv <- readSTRef (index v)
         when (indexv == negate 1) $ strongconnect v
   pure preconnect

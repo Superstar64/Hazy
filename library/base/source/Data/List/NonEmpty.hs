@@ -20,6 +20,7 @@ module Data.List.NonEmpty
     uncons,
     unfoldr,
     sort,
+    sortOn,
     reverse,
     inits,
     tails,
@@ -131,6 +132,9 @@ unfoldr = placeholder
 
 sort :: (Ord a) => NonEmpty a -> NonEmpty a
 sort = placeholder
+
+sortOn :: (Ord b) => (a -> b) -> NonEmpty a -> NonEmpty a
+sortOn = placeholder
 
 reverse :: NonEmpty a -> NonEmpty a
 reverse = placeholder

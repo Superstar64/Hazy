@@ -20,7 +20,6 @@ data Definition3 locality source mark layout scope where
   Auto :: !(Definition2 source Inferred scope) -> Definition3 locality source Inferred Normal scope
   Link :: !(Group.Term.Link locality) -> Definition3 locality source Inferred Group scope
   Group ::
-    !(Group.Term.Link locality) ->
     !(Map (Group.Term.Link locality) (Definition2.Auto scope)) ->
     Definition3 locality source Inferred Group scope
 
@@ -32,12 +31,7 @@ instance Show (Definition3 locality source mark layout scope) where
     showParen (d > 10) $
       showString "Auto " . showsPrec 11 definition
   showsPrec d (Link link) = showParen (d > 10) $ showString "Link " . showsPrec 11 link
-  showsPrec d (Group link set) =
-    showParen (d > 10) $
-      showString "Group "
-        . showsPrec 11 link
-        . showString " "
-        . showsPrec 11 set
+  showsPrec d (Group set) = showParen (d > 10) $ showString "Group " . showsPrec 11 set
 
 instance Shift (Definition3 locality source layout mark) where
   shift = shiftDefault
@@ -47,14 +41,14 @@ instance Shift.Functor (Definition3 locality source layout mark) where
     Manual definition -> Manual (Shift.map category definition)
     Auto definition -> Auto (Shift.map category definition)
     Link link -> Link link
-    Group link set -> Group link (Shift.map category <$> set)
+    Group set -> Group (Shift.map category <$> set)
 
 instance FreeTermVariables (Definition3 locality source layout mark) where
   freeTermVariables target = \case
     Manual definition -> freeTermVariables target definition
     Auto definition -> freeTermVariables target definition
     Link {} -> []
-    Group _ set -> foldMap (freeTermVariables target) set
+    Group set -> foldMap (freeTermVariables target) set
 
 locality :: Definition3 locality source mark Normal scope -> Definition3 locality' source mark Normal scope
 locality = \case
@@ -68,6 +62,6 @@ group ::
   Definition3 locality source mark Group scope
 group _ _ (Manual definition) = Manual definition
 group index group Auto {} = case group of
-  StronglyConnected.Group {link, set} ->
-    Group link $ Map.fromSet index set
+  StronglyConnected.Group {set} ->
+    Group $ Map.fromSet index set
   StronglyConnected.Link {link} -> Link link

@@ -27,7 +27,6 @@ data TypeDefinition2 locality mark layout scope where
   Auto :: !(TypeDefinition scope) -> TypeDefinition2 locality Inferred Normal scope
   Link :: !(Type.Link locality) -> TypeDefinition2 locality Inferred Group scope
   Group ::
-    !(Type.Link locality) ->
     !(Map (Type.Link locality) (TypeDefinition scope)) ->
     TypeDefinition2 locality Inferred Group scope
 
@@ -36,12 +35,7 @@ instance Show (TypeDefinition2 locality mark layout scope) where
     Manual definition -> showParen (d > 10) $ showString "Manual " . showsPrec 11 definition
     Auto definition -> showParen (d > 10) $ showString "Auto " . showsPrec 11 definition
     Link link -> showParen (d > 10) $ showString "Link " . showsPrec 11 link
-    Group link set ->
-      showParen (d > 10) $
-        showString "Group "
-          . showsPrec 11 link
-          . showString " "
-          . showsPrec 11 set
+    Group set -> showParen (d > 10) $ showString "Group " . showsPrec 11 set
 
 instance Shift (TypeDefinition2 locality mark layout) where
   shift = shiftDefault
@@ -51,14 +45,14 @@ instance Shift.Functor (TypeDefinition2 locality mark layout) where
     Manual definition -> Manual (Shift.map category definition)
     Auto definition -> Auto (Shift.map category definition)
     Link link -> Link link
-    Group link set -> Group link $ Shift.map category <$> set
+    Group set -> Group $ Shift.map category <$> set
 
 instance FreeTypeVariables (TypeDefinition2 locality mark layout) where
   freeTypeVariables target = \case
     Manual definition -> freeTypeVariables target definition
     Auto definition -> freeTypeVariables target definition
     Link {} -> []
-    Group _ set -> foldMap (freeTypeVariables target) set
+    Group set -> foldMap (freeTypeVariables target) set
 
 locality :: TypeDefinition2 locality mark Normal scope -> TypeDefinition2 locality' mark Normal scope
 locality = \case
@@ -72,6 +66,6 @@ group ::
   TypeDefinition2 locality mark Group scope
 group _ _ (Manual definition) = Manual definition
 group index group Auto {} = case group of
-  StronglyConnected.Group {link, set} ->
-    Group link $ Map.fromSet index set
+  StronglyConnected.Group {set} ->
+    Group $ Map.fromSet index set
   StronglyConnected.Link {link} -> Link link
