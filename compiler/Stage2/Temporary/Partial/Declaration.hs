@@ -6,6 +6,7 @@ import Data.Foldable (toList)
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import Error (missingMethodEntry)
+import Stage1.FreeVariables (TermBindingVariables (..))
 import Stage1.Position (Position)
 import qualified Stage1.Tree.ClassDeclaration as Stage1.ClassDefinition
 import qualified Stage1.Tree.ClassDeclarations as Stage1 (ClassDeclarations (..))
@@ -100,7 +101,7 @@ resolve
       entry = do
         let Shared.Shared {patternx} = share
             selections = Pattern.selections patternx
-        (position :@ name) <- toList bindings
+        (position :@ name) <- termBindingVariables pattern1
         let _ :@ bound = selections Map.! name
         pure
           ( name,
@@ -115,8 +116,7 @@ resolve
                     }
               }
           )
-      Complete.Shared {bindings, share} =
-        lookupShared shareIndex
+      Complete.Shared {share} = lookupShared shareIndex
 resolve context lookupTerm lookupType lookupShared shareIndex (declaration : declarations) =
   main ++ resolve context lookupTerm lookupType lookupShared shareIndex declarations
   where
