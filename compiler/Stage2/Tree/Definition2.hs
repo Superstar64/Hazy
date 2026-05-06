@@ -4,7 +4,6 @@ import Data.Kind (Type)
 import Stage1.Position (Position)
 import Stage2.FreeVariables (FreeTermVariables (freeTermVariables), Target (..))
 import qualified Stage2.FreeVariables as FreeTermVariables
-import qualified Stage2.Group.Index.Term0 as Group.Term0
 import qualified Stage2.Index.Term as Term
 import qualified Stage2.Index.Term0 as Term0
 import Stage2.Scope (Environment (..), Local)
@@ -104,8 +103,8 @@ instance Shift.Functor Auto where
 instance FreeTermVariables Auto where
   freeTermVariables target (AnyAuto definition) = freeTermVariables target definition
 
-freeGroupTermVariables :: (Int -> Term0.Index scope) -> Auto scope -> [Group.Term0.Index scope]
+freeGroupTermVariables :: (Int -> Term0.Index scope) -> Auto scope -> [Term0.Index scope]
 freeGroupTermVariables index (AnyAuto declaration) = case declaration of
-  Piece Choice {shareIndex} -> [Group.Term0.Share (index shareIndex)]
-  Auto definition -> map Group.Term0.Index (freeTermVariables Target definition)
-  Shared definition -> map Group.Term0.Index (freeTermVariables Target definition)
+  Piece Choice {shareIndex} -> [index shareIndex]
+  Auto definition -> freeTermVariables Target definition
+  Shared definition -> freeTermVariables Target definition

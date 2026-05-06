@@ -5,43 +5,59 @@ import Stage1.Position (Position)
 import Stage2.Index.Term (Bound)
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (shift)
-import Stage2.Tree.Definition2 (Annotated, Inferred, Single)
+import Stage2.Tree.Definition2 (Annotated, Inferred, Share, Single)
 import qualified Stage2.Tree.Definition2 as Stage2
 import Stage3.Check.Context (Context)
 import Stage3.Temporary.Definition (Definition)
 import qualified Stage3.Temporary.Definition as Definition
 import Stage3.Temporary.Pattern (Pattern)
 import qualified Stage3.Temporary.Pattern as Pattern
-import qualified Stage3.Tree.Definition2 as Solved (Definition2 (..))
+import Stage3.Temporary.RightHandSide (RightHandSide)
+import qualified Stage3.Temporary.RightHandSide as RightHandSide
+import qualified Stage3.Tree.Definition2 as Solved (Choice (..), Definition2 (..))
 import qualified Stage3.Unify as Unify
 
-data Definition2 s scope
-  = Body
-      { definition :: !(Definition s scope),
-        typex :: !(Unify.Type s scope)
-      }
-  | Piece
-      { shareIndex :: !Int,
-        instanciation :: !(Unify.Instanciation s scope),
-        patternx :: !(Pattern s scope),
-        bound :: !Bound,
-        typex :: !(Unify.Type s scope)
-      }
+data Definition2 source s scope where
+  Definition :: !(Definition s scope) -> !(Unify.Type s scope) -> Definition2 Single s scope
+  Piece :: !(Choice s scope) -> !(Unify.Type s scope) -> Definition2 Single s scope
+  Shared :: !(RightHandSide s scope) -> !(Unify.Type s scope) -> Definition2 Share s scope
 
-instance Unify.Zonk Definition2 where
+instance Unify.Zonk (Definition2 source) where
   zonk zonker = \case
-    Body {definition, typex} -> do
+    Definition definition typex -> do
       definition <- Unify.zonk zonker definition
       typex <- Unify.zonk zonker typex
-      pure Body {definition, typex}
-    Piece {shareIndex, instanciation, patternx, bound, typex} -> do
-      instanciation <- Unify.zonk zonker instanciation
-      patternx <- Unify.zonk zonker patternx
+      pure $ Definition definition typex
+    Piece choice typex -> do
+      choice <- Unify.zonk zonker choice
       typex <- Unify.zonk zonker typex
-      pure Piece {shareIndex, instanciation, patternx, bound, typex}
+      pure $ Piece choice typex
+    Shared shared typex -> do
+      shared <- Unify.zonk zonker shared
+      typex <- Unify.zonk zonker typex
+      pure $ Shared shared typex
 
-instance Unify.Generalizable Definition2 where
+instance Unify.Generalizable (Definition2 source) where
   collect collector body = Unify.collect collector (typex body)
+
+typex :: Definition2 source s scope -> Unify.Type s scope
+typex = \case
+  Definition _ typex -> typex
+  Piece _ typex -> typex
+  Shared _ typex -> typex
+
+data Choice s scope = Choice
+  { shareIndex :: !Int,
+    instanciation :: !(Unify.Instanciation s scope),
+    patternx :: !(Pattern s scope),
+    bound :: !Bound
+  }
+
+instance Unify.Zonk Choice where
+  zonk zonker Choice {shareIndex, instanciation, patternx, bound} = do
+    instanciation <- Unify.zonk zonker instanciation
+    patternx <- Unify.zonk zonker patternx
+    pure Choice {shareIndex, instanciation, patternx, bound}
 
 data Which mark scope where
   Manual :: Which Annotated (Local ':+ scope)
@@ -52,14 +68,17 @@ check ::
   (Int -> ST s (Unify.Scheme s scopes)) ->
   Which mark (scope ':+ scopes) ->
   Unify.Type s (scope ':+ scopes) ->
-  Stage2.Definition2 Single mark scopes ->
-  ST s (Definition2 s (scope ':+ scopes))
+  Stage2.Definition2 source mark scopes ->
+  ST s (Definition2 source s (scope ':+ scopes))
 check context _ Auto typex (Stage2.Auto definition) = do
   definition <- Definition.check context typex (shift definition)
-  pure $ Body {definition, typex}
+  pure $ Definition definition typex
 check context _ Manual typex (Stage2.Manual definition) = do
   definition <- Definition.check context typex definition
-  pure Body {definition, typex}
+  pure $ Definition definition typex
+check context _ Auto typex (Stage2.Shared definition) = do
+  definition <- RightHandSide.check context typex (shift definition)
+  pure $ Shared definition typex
 check context shared _ typex declaration = case declaration of
   Stage2.Piece Stage2.Choice {position, shareIndex, patternx, bound} -> do
     target <- shared shareIndex
@@ -67,16 +86,20 @@ check context shared _ typex declaration = case declaration of
     patternx <- Pattern.check context full (shift patternx)
     let typex' = patternx Pattern.! bound
     Unify.unify context position typex typex'
-    pure Piece {shareIndex, instanciation, patternx, bound, typex}
+    pure $ Piece Choice {shareIndex, instanciation, patternx, bound} typex
 
-solve :: Position -> Definition2 s scope -> ST s (Solved.Definition2 scope)
+solve :: Position -> Definition2 source s scope -> ST s (Solved.Definition2 source scope)
 solve position = \case
-  Body {definition, typex} -> do
+  Definition definition typex -> do
     definition <- Definition.solve definition
     typex <- Unify.solve position typex
-    pure Solved.Body {definition, typex}
-  Piece {shareIndex, instanciation, patternx, bound, typex} -> do
+    pure $ Solved.Definition definition typex
+  Piece Choice {shareIndex, instanciation, patternx, bound} typex -> do
     instanciation <- Unify.solveInstanciation position instanciation
     patternx <- Pattern.solve patternx
     typex <- Unify.solve position typex
-    pure Solved.Piece {shareIndex, instanciation, patternx, bound, typex}
+    pure $ Solved.Piece Solved.Choice {shareIndex, instanciation, patternx, bound} typex
+  Shared shared typex -> do
+    shared <- RightHandSide.solve shared
+    typex <- Unify.solve position typex
+    pure $ Solved.Shared shared typex

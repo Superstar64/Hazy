@@ -1,14 +1,14 @@
 module Stage3.Temporary.Declarations (Declarations (..), check, solve) where
 
 import Control.Monad.ST (ST)
+import Data.Heptafunctor (heptamap)
 import Data.Map (Map)
 import qualified Data.Map as Map
-import Data.Octafunctor (octamap)
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Error (cyclicalTypeChecking)
-import Graph.Topological (Formula8 (..), loebST8)
-import qualified Graph.Topological8
+import Graph.Topological (Formula7 (..), loebST7)
+import qualified Graph.Topological7
 import Stage1.Variable (Qualifiers (Local))
 import qualified Stage2.Index.Type as Type
 import qualified Stage2.Index.Type2 as Type2
@@ -20,8 +20,6 @@ import qualified Stage2.Tree.Declaration as Stage2.Declaration
 import qualified Stage2.Tree.Declarations as Stage2 (Declarations (..))
 import qualified Stage2.Tree.Instance as Stage2 (Instance)
 import qualified Stage2.Tree.Instance as Stage2.Instance
-import qualified Stage2.Tree.Shared as Stage2 (Shared (..))
-import qualified Stage2.Tree.Shared as Stage2.Shared
 import qualified Stage2.Tree.TypeDeclaration as Stage2 (TypeDeclaration)
 import qualified Stage2.Tree.TypeDeclaration as Stage2.TypeDeclaration
 import qualified Stage2.Tree.TypeDeclarationExtra as Stage2 (TypeDeclarationExtra)
@@ -37,11 +35,9 @@ import qualified Stage3.Functor.Annotated as Functor (Annotated (..), content)
 import Stage3.Functor.Declarations (mapWithKey)
 import qualified Stage3.Functor.Declarations as Functor (Declarations (..), fromStage2)
 import qualified Stage3.Functor.Instance.Key as Instance.Key
-import Stage3.Temporary.Declaration (Declaration)
+import Stage3.Temporary.Declaration (Declaration (Shared))
 import qualified Stage3.Temporary.Declaration as Declaration
-import qualified Stage3.Temporary.RightHandSide2 as RightHandSide2
-import Stage3.Temporary.Shared (Shared (..))
-import qualified Stage3.Temporary.Shared as Shared
+import qualified Stage3.Temporary.Definition2 as Definition2
 import qualified Stage3.Tree.Declaration as Solved.Declaration
 import qualified Stage3.Tree.Declarations as Solved
 import Stage3.Tree.Instance (Instance)
@@ -57,7 +53,6 @@ import Prelude hiding (Functor)
 data Declarations s scope = Declarations
   { terms :: !(Vector (Declaration s scope)),
     types :: !(Vector (TypeDeclaration scope)),
-    shared :: !(Vector (Shared s scope)),
     typeExtras :: !(Vector (TypeDeclarationExtra scope)),
     classInstances :: !(Vector (Map (Type2.Index scope) (Instance scope))),
     dataInstances :: !(Vector (Map (Type2.Index scope) (Instance scope)))
@@ -69,17 +64,14 @@ instance Unify.Zonk Declarations where
     Declarations
       { terms,
         types,
-        shared,
         typeExtras,
         classInstances,
         dataInstances
       } = do
       terms <- traverse (Unify.zonk zonker) terms
-      shared <- traverse (Unify.zonk zonker) shared
       pure
         Declarations
           { terms,
-            shared,
             types,
             typeExtras,
             classInstances,
@@ -87,12 +79,11 @@ instance Unify.Zonk Declarations where
           }
 
 type Formula s scope z =
-  Formula8
+  Formula7
     (Functor.Declarations (Scope.Declaration ':+ scope))
     s
     (LocalTypeAnnotation s (Scope.Declaration ':+ scope))
     (Declaration s (Scope.Declaration ':+ scope))
-    (Shared s (Scope.Declaration ':+ scope))
     (KindAnnotation (Scope.Declaration ':+ scope))
     (TypeDeclaration (Scope.Declaration ':+ scope))
     (TypeDeclarationExtra (Scope.Declaration ':+ scope))
@@ -105,18 +96,16 @@ fromFunctor ::
     scope
     a
     (Declaration s scope)
-    (Shared s scope)
-    c
+    b
     (TypeDeclaration scope)
     (TypeDeclarationExtra scope)
-    e
+    c
     (Instance scope) ->
   Declarations s scope
 fromFunctor
   Functor.Declarations
     { terms,
       types,
-      shared,
       typeExtras,
       classInstances,
       dataInstances
@@ -124,7 +113,6 @@ fromFunctor
     Declarations
       { terms = Functor.content <$> terms,
         types = Functor.content <$> types,
-        shared,
         typeExtras,
         dataInstances = fmap (fmap Functor.content) dataInstances,
         classInstances = fmap (fmap Functor.content) classInstances
@@ -140,11 +128,10 @@ check ::
     )
 check context declarations = do
   functor <-
-    loebST8
+    loebST7
       $ mapWithKey
         (checkTermAnnotation context)
         (checkTermDeclaration context)
-        (checkShared context)
         (checkTypeAnnotation context)
         (checkTypeDeclaration context)
         (checkTypeDeclarationExtra context)
@@ -152,9 +139,8 @@ check context declarations = do
         (checkInstanceDeclaration context)
       $ Functor.fromStage2 Local declarations
   let lifted =
-        octamap
+        heptamap
           pure
-          (const ())
           (const ())
           pure
           pure
@@ -169,7 +155,7 @@ checkTermAnnotation ::
   p ->
   Stage2.Declaration locality Normal (Scope.Declaration ':+ scope) ->
   Formula s scope (LocalTypeAnnotation s (Scope.Declaration ':+ scope))
-checkTermAnnotation context _ declaration = Formula8 {cycle, run}
+checkTermAnnotation context _ declaration = Formula7 {cycle, run}
   where
     cycle :: a
     cycle = cyclicalTypeChecking $ Stage2.Declaration.position declaration
@@ -182,39 +168,29 @@ checkTermDeclaration ::
   Int ->
   Stage2.Declaration locality Normal (Scope.Declaration ':+ scope) ->
   Formula s scope (Declaration s (Scope.Declaration ':+ scope))
-checkTermDeclaration context index declaration = Formula8 {cycle, run}
+checkTermDeclaration context index declaration = Formula7 {cycle, run}
   where
     cycle :: a
     cycle = cyclicalTypeChecking $ Stage2.Declaration.position declaration
-    run declarations@Functor.Declarations {terms, shared} = do
+    run declarations@Functor.Declarations {terms} = do
       context <- pure $ localBindings declarations context
       let Functor.Annotated {meta} = terms Vector.! index
       annotation <- meta
-      let share index = do
-            Shared {body} <- shared Vector.! index
-            pure $ Unify.Scheme $ Unify.mapScheme (Unify.MapScheme RightHandSide2.typex) body
+      let share index = case terms Vector.! index of
+            Functor.Annotated {content} -> do
+              term <- content
+              case term of
+                Shared {body'} ->
+                  pure $ Unify.Scheme $ Unify.mapScheme (Unify.MapScheme Definition2.typex) body'
+                _ -> error "non shared lookup"
       Declaration.checkLocal context share annotation declaration
-
-checkShared ::
-  Context s scope ->
-  p ->
-  Stage2.Shared locality Normal (Scope.Declaration ':+ scope) ->
-  Formula s scope (Shared s (Scope.Declaration ':+ scope))
-checkShared context _ declaration = Formula8 {cycle, run}
-  where
-    cycle :: a
-    cycle = cyclicalTypeChecking $ Stage2.Shared.equalPosition declaration
-    run declarations = do
-      context <- pure $ localBindings declarations context
-      typex <- Unify.fresh Unify.typex
-      Shared.check context (Just typex) declaration
 
 checkTypeAnnotation ::
   Context s scope ->
   p ->
   Stage2.TypeDeclaration locality Normal (Scope.Declaration ':+ scope) ->
   Formula s scope (KindAnnotation (Scope.Declaration ':+ scope))
-checkTypeAnnotation context _ declaration = Formula8 {cycle, run}
+checkTypeAnnotation context _ declaration = Formula7 {cycle, run}
   where
     cycle :: a
     cycle = cyclicalTypeChecking $ Stage2.TypeDeclaration.position declaration
@@ -227,7 +203,7 @@ checkTypeDeclaration ::
   Int ->
   Stage2.TypeDeclaration locality Normal (Scope.Declaration ':+ scope) ->
   Formula s scope (TypeDeclaration (Scope.Declaration ':+ scope))
-checkTypeDeclaration context index declaration = Formula8 {cycle, run}
+checkTypeDeclaration context index declaration = Formula7 {cycle, run}
   where
     cycle :: a
     cycle = cyclicalTypeChecking $ Stage2.TypeDeclaration.position declaration
@@ -242,7 +218,7 @@ checkTypeDeclarationExtra ::
   Int ->
   Stage2.TypeDeclarationExtra (Scope.Declaration ':+ scope) ->
   Formula s scope (TypeDeclarationExtra (Scope.Declaration ':+ scope))
-checkTypeDeclarationExtra context index declaration = Formula8 {cycle, run}
+checkTypeDeclarationExtra context index declaration = Formula7 {cycle, run}
   where
     cycle :: a
     cycle = cyclicalTypeChecking $ Stage2.TypeDeclarationExtra.position declaration
@@ -257,7 +233,7 @@ checkInstanceAnnotation ::
   p ->
   Stage2.Instance.Instance (Scope.Declaration ':+ scope) ->
   Formula s scope (InstanceAnnotation (Scope.Declaration ':+ scope))
-checkInstanceAnnotation context _ declaration = Formula8 {cycle, run}
+checkInstanceAnnotation context _ declaration = Formula7 {cycle, run}
   where
     cycle :: a
     cycle = cyclicalTypeChecking $ Stage2.Instance.startPosition declaration
@@ -268,7 +244,7 @@ checkInstanceDeclaration ::
   Instance.Key.Key (Scope.Declaration ':+ scope) ->
   Stage2.Instance (Scope.Declaration ':+ scope) ->
   Formula s scope (Instance (Scope.Declaration ':+ scope))
-checkInstanceDeclaration context key declaration = Formula8 {cycle, run}
+checkInstanceDeclaration context key declaration = Formula7 {cycle, run}
   where
     cycle :: a
     cycle = cyclicalTypeChecking $ Stage2.Instance.startPosition declaration
@@ -291,18 +267,15 @@ solve
   Declarations
     { terms,
       types,
-      shared,
       typeExtras,
       dataInstances,
       classInstances
     } = do
     terms <- traverse Declaration.solve terms
-    shared <- traverse Shared.solve shared
     pure
       Solved.Declarations
         { terms = Solved.Declaration.strict <$> terms,
           types = Solved.TypeDeclaration.strict <$> types,
-          shared,
           typeExtras,
           dataInstances,
           classInstances

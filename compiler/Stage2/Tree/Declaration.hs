@@ -7,17 +7,23 @@ import Stage1.Position (Position)
 import Stage1.Tree.Fixity (Fixity (..))
 import Stage1.Variable (QualifiedVariable ((:-)), Qualifiers, Variable)
 import Stage2.FreeVariables (FreeTermVariables (..))
-import qualified Stage2.Group.Index.Link.Term as Group.Term
+import qualified Stage2.Index.Link.Term as Term
 import qualified Stage2.Label.Binding.Term as Label
 import Stage2.Layout (Group, Normal)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage2.Tree.Definition2 (Annotated, Inferred, Single)
+import Stage2.Tree.Definition2 (Annotated, Inferred, Share, Single)
 import qualified Stage2.Tree.Definition2 as Definition2
 import Stage2.Tree.Definition3 (Definition3)
 import qualified Stage2.Tree.Definition3 as Definition3
+import Stage2.Tree.Pattern (Pattern)
 import Stage2.Tree.Scheme (Scheme)
 import Prelude hiding (Either (Left, Right))
+
+data Key
+  = Named !Variable
+  | Unnamed !Int
+  deriving (Eq, Ord, Show)
 
 data Declaration locality layout scope
   = Annotated
@@ -33,7 +39,19 @@ data Declaration locality layout scope
         fixity :: !Fixity,
         definition' :: !(Definition3 locality Single Inferred layout scope)
       }
+  | Shared
+      { position :: !Position,
+        index :: !Int,
+        patternx :: !(Pattern scope),
+        definition'' :: !(Definition3 locality Share Inferred layout scope)
+      }
   deriving (Show)
+
+key :: Declaration locality layout scope -> Key
+key = \case
+  Annotated {name} -> Named name
+  Inferred {name} -> Named name
+  Shared {index} -> Unnamed index
 
 instance Shift (Declaration layout locality) where
   shift = shiftDefault
@@ -55,14 +73,24 @@ instance Shift.Functor (Declaration layout locality) where
           fixity,
           definition' = Shift.map category definition'
         }
+    Shared {position, index, patternx, definition''} ->
+      Shared
+        { position,
+          index,
+          patternx = Shift.map category patternx,
+          definition'' = Shift.map category definition''
+        }
 
 instance FreeTermVariables (Declaration layout locality) where
   freeTermVariables target = \case
     Annotated {definition} -> freeTermVariables target definition
     Inferred {definition'} -> freeTermVariables target definition'
+    Shared {definition''} -> freeTermVariables target definition''
 
 labelBinding :: Qualifiers -> Declaration locality layout scope -> Label.TermBinding scope'
-labelBinding path declaration = Label.TermBinding {name = path :- name declaration}
+labelBinding path declaration = case key declaration of
+  Named name -> Label.TermBinding {name = path :- name}
+  Unnamed _ -> Label.SharedTermBinding
 
 locality :: Declaration locality Normal scope -> Declaration locality' Normal scope
 locality = \case
@@ -81,25 +109,39 @@ locality = \case
         fixity,
         definition' = Definition3.locality definition'
       }
+  Shared {position, index, patternx, definition''} ->
+    Shared
+      { position,
+        index,
+        patternx,
+        definition'' = Definition3.locality definition''
+      }
 
 group ::
-  (Group.Term.Link locality -> Definition2.Auto scope) ->
-  StronglyConnected.Component (Group.Term.Link locality) ->
+  (Term.Link locality -> Definition2.Auto scope) ->
+  StronglyConnected.Component (Term.Link locality) ->
   Declaration locality Normal scope ->
   Declaration locality Group scope
-group index group = \case
+group index' group = \case
   Annotated {position, name, fixity, annotation, definition} ->
     Annotated
       { position,
         name,
         fixity,
         annotation,
-        definition = Definition3.group index group definition
+        definition = Definition3.group index' group definition
       }
   Inferred {position, name, fixity, definition'} ->
     Inferred
       { position,
         name,
         fixity,
-        definition' = Definition3.group index group definition'
+        definition' = Definition3.group index' group definition'
+      }
+  Shared {position, index, patternx, definition''} ->
+    Shared
+      { position,
+        index,
+        patternx,
+        definition'' = Definition3.group index' group definition''
       }

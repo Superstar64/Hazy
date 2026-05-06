@@ -1,16 +1,14 @@
 module Stage4.Tree.Declaration where
 
-import Stage1.Variable (Variable)
 import qualified Stage2.Index.Term as Stage2.Term
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import qualified Stage3.Tree.Declaration as Stage3 (Declaration (..), LazyTermDeclaration (..))
-import qualified Stage3.Tree.Definition2 as Stage3 (Definition2 (..))
+import Stage2.Tree.Declaration (Key (..))
+import qualified Stage3.Tree.Declaration as Stage3 (Declaration (..), LazyTermDeclaration (..), key)
+import qualified Stage3.Tree.Definition2 as Stage3 (Choice (..), Definition2 (Definition, Piece), typex)
+import qualified Stage3.Tree.Definition2 as Stage3.Definition2
 import qualified Stage3.Tree.Expression as Stage3 (Expression)
-import qualified Stage3.Tree.RightHandSide2
-import qualified Stage3.Tree.RightHandSide2 as Stage3 (RightHandSide2 (RightHandSide2))
 import qualified Stage3.Tree.Scheme as Stage3 (Scheme)
-import qualified Stage3.Tree.Shared as Stage3.Shared
 import qualified Stage4.Index.Term as Term
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
@@ -22,13 +20,8 @@ import qualified Stage4.Tree.Scheme as Scheme
 import Stage4.Tree.SchemeOver (SchemeOver (..))
 import qualified Stage4.Tree.Statements as Statements
 
-data Name
-  = Name !Variable
-  | Unnamed !Int
-  deriving (Show)
-
 data LazyTermDeclaration scope
-  = !Name :^ Declaration scope
+  = !Key :^ Declaration scope
   deriving (Show)
 
 infix 4 :^
@@ -46,7 +39,7 @@ instance Substitute.Functor LazyTermDeclaration where
   map category (name :^ declaration) = name :^ Substitute.map category declaration
 
 data Declaration scope = Definition
-  { name :: !Name,
+  { name :: !Key,
     definition :: !(SchemeOver Expression scope),
     typex :: !(Scheme scope)
   }
@@ -69,69 +62,58 @@ instance Substitute.Functor Declaration where
         typex = Substitute.map category typex
       }
 
-simplify :: (Int -> Term.Index scope) -> Stage3.LazyTermDeclaration scope -> LazyTermDeclaration scope
+simplify ::
+  forall scope.
+  (Int -> Term.Index scope) ->
+  Stage3.LazyTermDeclaration scope ->
+  LazyTermDeclaration scope
 simplify share (name Stage3.:^ declaration) =
-  Name name :^ case Stage3.body declaration of
-    SchemeOver
-      { parameters,
-        constraints,
-        result
-      } ->
-        Definition
-          { name = Name $ Stage3.name declaration,
-            definition =
-              SchemeOver
-                { parameters,
-                  constraints,
-                  result = case result of
-                    Stage3.Body {definition} -> Expression.simplify definition
-                    Stage3.Piece {shareIndex, instanciation, patternx, bound} ->
-                      Expression.Join
-                        { statements =
-                            Statements.bind
-                              (Pattern.simplify patternx)
-                              Expression.Variable
-                                { variable = shift $ share shareIndex,
-                                  instanciation
-                                }
-                              Statements.Done
-                                { done =
-                                    Expression.monoVariable $
-                                      Term.from $
-                                        Stage2.Term.Pattern bound
-                                }
-                        }
-                },
-            typex =
-              Scheme
+  name :^ case declaration of
+    Stage3.Annotated {body} -> go body
+    Stage3.Inferred {body} -> go body
+    Stage3.Shared {body'} -> go body'
+  where
+    go :: SchemeOver (Stage3.Definition2 source) scope -> Declaration scope
+    go = \case
+      SchemeOver
+        { parameters,
+          constraints,
+          result
+        } ->
+          Definition
+            { name = Stage3.key declaration,
+              definition =
                 SchemeOver
                   { parameters,
                     constraints,
-                    result = Stage3.typex result
-                  }
-          }
-
-simplifyShared :: Int -> Stage3.Shared.Shared scope -> LazyTermDeclaration scope
-simplifyShared index shared =
-  Unnamed index :^ case shared of
-    Stage3.Shared.Shared {body} -> case body of
-      SchemeOver {parameters, constraints, result = Stage3.RightHandSide2 {typex, definition}} ->
-        Definition
-          { name = Unnamed index,
-            definition =
-              SchemeOver
-                { parameters,
-                  constraints,
-                  result = Expression.simplify definition
-                },
-            typex =
-              Scheme
-                SchemeOver
-                  { parameters,
-                    constraints,
-                    result = typex
-                  }
-          }
+                    result = case result of
+                      Stage3.Definition definition _ -> Expression.simplify definition
+                      Stage3.Piece Stage3.Choice {shareIndex, instanciation, patternx, bound} _ ->
+                        Expression.Join
+                          { statements =
+                              Statements.bind
+                                (Pattern.simplify patternx)
+                                Expression.Variable
+                                  { variable = shift $ share shareIndex,
+                                    instanciation
+                                  }
+                                Statements.Done
+                                  { done =
+                                      Expression.monoVariable $
+                                        Term.from $
+                                          Stage2.Term.Pattern bound
+                                  }
+                          }
+                      Stage3.Definition2.Shared shared _ -> Expression.simplify shared
+                  },
+              typex =
+                Scheme
+                  SchemeOver
+                    { parameters,
+                      constraints,
+                      result = Stage3.typex result
+                    }
+            }
 
 annotation :: SchemeOver Stage3.Expression scope -> Stage3.Scheme scope -> LazyTermDeclaration scope
 annotation SchemeOver {parameters, constraints, result} scheme =

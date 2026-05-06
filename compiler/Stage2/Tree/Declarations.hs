@@ -17,7 +17,6 @@ import qualified Stage1.Tree.Declarations as Stage1 (Declarations (..))
 import Stage2.FreeVariables (FreeTermVariables (..), FreeTypeVariables (..), Target (..))
 import {-# SOURCE #-} qualified Stage2.Group.Functor.Term.Declarations as Functor.Term
 import {-# SOURCE #-} qualified Stage2.Group.Functor.Type.Declarations as Functor.Type
-import qualified Stage2.Group.Index.Link.Term as Group.Term
 import qualified Stage2.Index.Link.Term as Term
 import qualified Stage2.Index.Link.Type as Type
 import qualified Stage2.Index.Term0 as Term0 (Index (..))
@@ -40,8 +39,6 @@ import Stage2.Tree.Definition2 (freeGroupTermVariables)
 import qualified Stage2.Tree.Definition2 as Definition2
 import qualified Stage2.Tree.Definition3 as Definition3
 import Stage2.Tree.Instance (Instance)
-import Stage2.Tree.Shared (Shared (..))
-import qualified Stage2.Tree.Shared as Shared
 import Stage2.Tree.TypeDeclaration (TypeDeclaration)
 import qualified Stage2.Tree.TypeDeclaration as TypeDeclaration
 import Stage2.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
@@ -52,7 +49,6 @@ data Declarations locality layout scope = Declarations
   { terms :: !(Vector (Declaration locality layout scope)),
     types :: !(Vector (TypeDeclaration locality layout scope)),
     typeExtras :: !(Vector (TypeDeclarationExtra scope)),
-    shared :: !(Vector (Shared locality layout scope)),
     dataInstances :: !(Vector (Map (Type2.Index scope) (Instance scope))),
     classInstances :: !(Vector (Map (Type2.Index scope) (Instance scope)))
   }
@@ -68,7 +64,6 @@ instance Shift.Functor (Declarations locality layout) where
       { terms,
         types,
         typeExtras,
-        shared,
         dataInstances,
         classInstances
       } =
@@ -76,16 +71,14 @@ instance Shift.Functor (Declarations locality layout) where
         { terms = fmap (Shift.map category) terms,
           types = fmap (Shift.map category) types,
           typeExtras = fmap (Shift.map category) typeExtras,
-          shared = fmap (Shift.map category) shared,
           dataInstances = fmap (Shift.mapInstances category . fmap (Shift.map category)) dataInstances,
           classInstances = fmap (Shift.mapInstances category . fmap (Shift.map category)) classInstances
         }
 
 instance FreeTermVariables (Declarations locality layout) where
-  freeTermVariables target Declarations {terms, shared, typeExtras} =
+  freeTermVariables target Declarations {terms, typeExtras} =
     concat
       [ foldMap (freeTermVariables target) terms,
-        foldMap (freeTermVariables target) shared,
         foldMap (freeTermVariables target) typeExtras
       ]
 
@@ -110,21 +103,20 @@ resolve initial@Context {canonical, extensions} Stage1.Declarations {declaration
     complete = runIdentity $ Complete.resolve context extensions (toList declarations)
 
 group ::
-  (Group.Term.Link locality -> Definition2.Auto scope) ->
+  (Term.Link locality -> Definition2.Auto scope) ->
   (Type.Link locality -> TypeDefinition scope) ->
-  Functor.Term.Declarations (StronglyConnected.Component (Group.Term.Link locality)) ->
+  Functor.Term.Declarations (StronglyConnected.Component (Term.Link locality)) ->
   Functor.Type.Declarations (StronglyConnected.Component (Type.Link locality)) ->
   Declarations locality Normal scope ->
   Declarations locality Group scope
 group
   indexTerm
   indexType
-  Functor.Term.Declarations {terms = functorTerms, shared = functorShared}
+  Functor.Term.Declarations {terms = functorTerms}
   Functor.Type.Declarations {types = functorTypes}
   Declarations
     { terms,
       types,
-      shared,
       typeExtras,
       dataInstances,
       classInstances
@@ -133,7 +125,6 @@ group
       { terms = Vector.zipWith (Declaration.group indexTerm) functorTerms terms,
         types = Vector.zipWith (TypeDeclaration.group indexType) functorTypes types,
         typeExtras,
-        shared = Vector.zipWith (Shared.group indexTerm) functorShared shared,
         dataInstances,
         classInstances
       }
@@ -142,7 +133,7 @@ connect ::
   forall scope.
   Declarations Local Normal (Scope.Declaration ':+ scope) ->
   Declarations Local Group (Scope.Declaration ':+ scope)
-connect declarations@Declarations {terms, shared, types} =
+connect declarations@Declarations {terms, types} =
   group indexTerm' indexType' termGroups typeGroups declarations
   where
     termIndexes = Functor.Term.indexes Term.Declaration declarations
@@ -151,7 +142,7 @@ connect declarations@Declarations {terms, shared, types} =
     termGroups =
       tarjan
         Index {(!) = (Functor.Term.!)}
-        (fmap Group.Term.local . freeTerm . indexTerm)
+        (fmap Term.local . freeTerm . indexTerm)
         termIndexes
     typeGroups =
       tarjan
@@ -164,14 +155,13 @@ connect declarations@Declarations {terms, shared, types} =
 
     indexTerm' = fromJust . indexTerm
     indexType' = fromJust . indexType
-    indexTerm :: Group.Term.Link Local -> Maybe (Definition2.Auto (Scope.Declaration ':+ scope))
+    indexTerm :: Term.Link Local -> Maybe (Definition2.Auto (Scope.Declaration ':+ scope))
     indexTerm = \case
-      Group.Term.Link (Term.Declaration index) -> case terms Vector.! index of
+      Term.Declaration index -> case terms Vector.! index of
         Declaration.Inferred {definition' = Definition3.Auto definition} ->
           Just $ Definition2.AnyAuto definition
         Declaration.Annotated {} -> Nothing
-      Group.Term.Share (Term.Declaration index) -> case shared Vector.! index of
-        Shared {definition = Definition3.Auto definition} ->
+        Declaration.Shared {definition'' = Definition3.Auto definition} ->
           Just $ Definition2.AnyAuto definition
     indexType :: Type.Link Local -> Maybe (TypeDefinition (Scope.Declaration ':+ scope))
     indexType = \case

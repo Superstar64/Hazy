@@ -9,7 +9,7 @@ import qualified Stage1.Tree.ClassDeclaration as Stage1 (ClassDeclaration (..))
 import Stage1.Tree.Marked (Marked (..))
 import Stage1.Variable (Variable)
 import Stage2.Resolve.Context (Context (..))
-import qualified Stage2.Temporary.Partial.Definition as Partial
+import qualified Stage2.Temporary.Complete.Definition as Complete
 import Stage2.Tree.Function (Function)
 import Stage2.Tree.Scheme (Scheme)
 import Stage2.Tree.Scheme as Scheme (resolve)
@@ -33,6 +33,6 @@ resolve context' entry = case entry of
     annotation <- pure $ Scheme.resolve context' annotation
     pure (name, Annotation {position, name, annotation})
   Stage1.Definition {startPosition, leftHandSide, rightHandSide} ->
-    case Partial.resolve (patternInMethod startPosition) context' leftHandSide rightHandSide of
-      Partial.Definition position name function -> [(name, Function {position, name, function})]
+    case Complete.resolve (patternInMethod startPosition) context' leftHandSide rightHandSide of
+      Complete.Definition position name function -> [(name, Function {position, name, function})]
   Stage1.Infix {} -> []

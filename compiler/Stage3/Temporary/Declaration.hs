@@ -7,7 +7,7 @@ import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (shift)
 import qualified Stage2.Tree.Declaration as Stage2 (Declaration (..))
-import Stage2.Tree.Definition2 (Annotated, Inferred, Single)
+import Stage2.Tree.Definition2 (Annotated, Inferred, Share, Single)
 import qualified Stage2.Tree.Definition3 as Stage2 (Definition3 (Auto, Manual))
 import Stage3.Check.Context (Context (..))
 import qualified Stage3.Check.Mask as Mask
@@ -15,7 +15,7 @@ import Stage3.Check.TypeAnnotation (Annotation (..), GlobalTypeAnnotation (..), 
 import qualified Stage3.Simple.Constraint as Simple.Constraint (lift)
 import Stage3.Simple.Type (lift)
 import qualified Stage3.Simple.Type as Simple.Type
-import Stage3.Temporary.Definition2 (Definition2 (..))
+import Stage3.Temporary.Definition2 (Definition2)
 import qualified Stage3.Temporary.Definition2 as Definition2
 import qualified Stage3.Tree.Declaration as Solved (Declaration (..))
 import qualified Stage3.Tree.Scheme as Solved (Scheme (..))
@@ -29,13 +29,18 @@ data Declaration s scope
   = Inferred
       { position :: !Position,
         name :: !Variable,
-        body :: !(Unify.SchemeOver Definition2 s scope)
+        body :: !(Unify.SchemeOver (Definition2 Single) s scope)
       }
   | Annotated
       { position :: !Position,
         name :: !Variable,
-        body :: !(Unify.SchemeOver Definition2 s scope),
+        body :: !(Unify.SchemeOver (Definition2 Single) s scope),
         annotation :: !(Solved.Scheme scope)
+      }
+  | Shared
+      { position :: !Position,
+        index :: !Int,
+        body' :: !(Unify.SchemeOver (Definition2 Share) s scope)
       }
 
 instance Unify.Zonk Declaration where
@@ -46,6 +51,9 @@ instance Unify.Zonk Declaration where
     Annotated {position, name, body, annotation} -> do
       body <- Unify.zonk zonker body
       pure Annotated {position, name, body, annotation}
+    Shared {position, index, body'} -> do
+      body' <- Unify.zonk zonker body'
+      pure Shared {position, index, body'}
 
 checkLocal ::
   Context s scope ->
@@ -60,6 +68,8 @@ checkLocal context shared annotation declaration =
       check' context shared (Marked annotation) position name definition
     Stage2.Inferred {position, name, definition'} `go` LocalInferred typex =
       check' context shared (Local typex) position name definition'
+    Stage2.Shared {position, index, definition''} `go` LocalInferred typex =
+      check'' context shared (Local typex) position index definition''
     go _ _ = error "bad annotation"
 
 checkGlobal ::
@@ -75,6 +85,8 @@ checkGlobal context shared annotation declaration =
       check' context shared (Marked annotation) position name definition
     Stage2.Inferred {position, name, definition'} `go` GlobalInferred =
       check' context shared Global position name definition'
+    Stage2.Shared {position, index, definition''} `go` GlobalInferred =
+      check'' context shared Global position index definition''
     go _ _ = error "bad annotation"
 
 data Which mark s scope where
@@ -112,6 +124,31 @@ check'
           Definition2.check context shared Definition2.Manual typex definition
         pure Annotated {position, name, annotation, body}
 
+check'' ::
+  Context s scope ->
+  (Int -> ST s (Unify.Scheme s scope)) ->
+  Which mark s scope ->
+  Position ->
+  Int ->
+  Stage2.Definition3 locality Share mark Normal scope ->
+  ST s (Declaration s scope)
+check''
+  context
+  shared
+  annotation
+  position
+  index
+  definition = case definition of
+    Stage2.Auto definition | Global <- annotation -> do
+      body' <- Unify.generalizeOver context $ Unify.Generalize $ \context -> do
+        typex <- Unify.fresh Unify.typex
+        Definition2.check context shared Definition2.Auto typex definition
+      pure Shared {position, index, body'}
+    Stage2.Auto definition | Local typex <- annotation -> do
+      body' <- Unify.generalizeOver context $ Unify.Generalize $ \context -> do
+        Definition2.check context shared Definition2.Auto (shift typex) definition
+      pure Shared {position, index, body'}
+
 checkAnnotation ::
   Context s scope ->
   Position ->
@@ -148,3 +185,6 @@ solve = \case
   Inferred {position, name, body} -> do
     body <- Unify.solveSchemeOver (Unify.Solve Definition2.solve) position body
     pure Solved.Inferred {name, body}
+  Shared {position, index, body'} -> do
+    body' <- Unify.solveSchemeOver (Unify.Solve Definition2.solve) position body'
+    pure Solved.Shared {index, body'}

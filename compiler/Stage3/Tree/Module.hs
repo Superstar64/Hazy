@@ -4,8 +4,8 @@ import qualified Data.Map as Map
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Error (cyclicalTypeChecking)
-import Graph.Topological (Formula8 (..), Loeb8 (..), loeb8)
-import qualified Graph.Topological8
+import Graph.Topological (Formula7 (..), Loeb7 (..), loeb7)
+import qualified Graph.Topological7
 import Stage1.Variable (FullQualifiers)
 import qualified Stage2.Index.Type as Type
 import Stage2.Layout (Normal)
@@ -15,7 +15,6 @@ import qualified Stage2.Tree.Declaration as Stage2.Declaration
 import qualified Stage2.Tree.Declarations as Stage2.Declarations
 import qualified Stage2.Tree.Instance as Stage2.Instance
 import qualified Stage2.Tree.Module as Stage2 (Module (..))
-import qualified Stage2.Tree.Shared as Stage2.Shared
 import qualified Stage2.Tree.TypeDeclaration as Stage2.TypeDeclaration
 import qualified Stage2.Tree.TypeDeclarationExtra as Stage2.TypeDeclarationExtra
 import Stage3.Check.Context (globalBindings)
@@ -34,15 +33,13 @@ import Stage3.Functor.ModuleSet (mapWithKey)
 import qualified Stage3.Functor.ModuleSet as Functor (ModuleSet (..))
 import qualified Stage3.Simple.Scheme as Scheme
 import qualified Stage3.Temporary.Declaration as Declaration.Unsolved
-import qualified Stage3.Temporary.Shared as Temporary.Shared
-import Stage3.Tree.Declaration (Declaration, LazyTermDeclaration)
+import Stage3.Tree.Declaration (Declaration (Shared), LazyTermDeclaration)
 import qualified Stage3.Tree.Declaration as Declaration
 import Stage3.Tree.Declarations (Declarations)
 import qualified Stage3.Tree.Declarations as Declarations
+import qualified Stage3.Tree.Definition2 as Definition2
 import Stage3.Tree.Instance (Instance)
 import qualified Stage3.Tree.Instance as Instance
-import qualified Stage3.Tree.RightHandSide2 as RightHandSide2
-import Stage3.Tree.Shared (Shared (..))
 import Stage3.Tree.TypeDeclaration (LazyTypeDeclaration, TypeDeclaration)
 import qualified Stage3.Tree.TypeDeclaration as TypeDeclaration
 import Stage3.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
@@ -58,12 +55,11 @@ data Module = Module
   deriving (Show)
 
 type Formula s z =
-  Formula8
+  Formula7
     Functor.ModuleSet
     s
     (GlobalTypeAnnotation Global)
     (Declaration Global)
-    (Shared Global)
     (KindAnnotation Global)
     (TypeDeclaration Global)
     (TypeDeclarationExtra Global)
@@ -75,11 +71,10 @@ fromFunctor ::
   Functor.Module
     a
     (LazyTermDeclaration Global)
-    (Shared Global)
-    c
+    b
     (LazyTypeDeclaration Global)
     (TypeDeclarationExtra Global)
-    e
+    c
     (Instance Global) ->
   Module
 fromFunctor (Functor.Module {name, declarations}) =
@@ -92,11 +87,10 @@ fromFunctors ::
   Functor.ModuleSet
     a
     (LazyTermDeclaration Global)
-    (Shared Global)
-    c
+    b
     (LazyTypeDeclaration Global)
     (TypeDeclarationExtra Global)
-    e
+    c
     (Instance Global) ->
   Vector Module
 fromFunctors (Functor.ModuleSet modules) = fmap fromFunctor modules
@@ -108,17 +102,15 @@ check modules =
       pass
       term
       pass
-      pass
       typex
       pass
       pass
       pass
-    $ loeb8
-    $ Loeb8
+    $ loeb7
+    $ Loeb7
     $ mapWithKey
       checkTermAnnotation
       checkTermDeclaration
-      checkShared
       checkTypeAnnotation
       checkTypeDeclaration
       checkTypeDeclarationExtra
@@ -134,7 +126,7 @@ check modules =
         declarations <- Stage2.declarations modulex,
         terms <- Stage2.Declarations.terms declarations,
         term <- terms Vector.! term =
-          Stage2.Declaration.name term Declaration.:^ declaration
+          Stage2.Declaration.key term Declaration.:^ declaration
 
     typex modulex typex declaration
       | modulex <- modules Vector.! modulex,
@@ -148,7 +140,7 @@ checkTermAnnotation ::
   p2 ->
   Stage2.Declaration locality Normal Global ->
   Formula s (GlobalTypeAnnotation Global)
-checkTermAnnotation _ _ declaration = Formula8 {cycle, run}
+checkTermAnnotation _ _ declaration = Formula7 {cycle, run}
   where
     cycle :: a
     cycle = cyclicalTypeChecking $ Stage2.Declaration.position declaration
@@ -159,42 +151,32 @@ checkTermDeclaration ::
   Int ->
   Stage2.Declaration locality Normal Global ->
   Formula s (Declaration Global)
-checkTermDeclaration global local declaration = Formula8 {cycle, run}
+checkTermDeclaration global local declaration = Formula7 {cycle, run}
   where
     cycle :: a
     cycle = cyclicalTypeChecking $ Stage2.Declaration.position declaration
     run moduleSet@(Functor.ModuleSet modules) = do
       let Functor.Module {declarations} = modules Vector.! global
-          Functor.Declarations {terms, shared} = declarations
+          Functor.Declarations {terms} = declarations
           Functor.Annotated {meta} = terms Vector.! local
       annotation <- meta
       let context = globalBindings moduleSet
-          -- todo, augment context with self to allow basic recursive inference
-          share index = do
-            Shared {body} <- shared Vector.! index
-            pure $ Scheme.lift $ Scheme $ SchemeOver.map (SchemeOver.Map RightHandSide2.typex) body
+      let share index = case terms Vector.! index of
+            Functor.Annotated {content} -> do
+              term <- content
+              case term of
+                Shared {body'} ->
+                  pure $ Scheme.lift $ Scheme $ SchemeOver.map (SchemeOver.Map Definition2.typex) body'
+                _ -> error "non shared lookup"
       unsolved <- Declaration.Unsolved.checkGlobal context share annotation declaration
       Declaration.Unsolved.solve unsolved
-
-checkShared ::
-  p1 ->
-  p2 ->
-  Stage2.Shared.Shared locality Normal Global ->
-  Formula s (Shared Global)
-checkShared _ _ declaration = Formula8 {cycle, run}
-  where
-    cycle :: a
-    cycle = cyclicalTypeChecking $ Stage2.Shared.equalPosition declaration
-    run modules = do
-      shared <- Temporary.Shared.check (globalBindings modules) Nothing declaration
-      Temporary.Shared.solve shared
 
 checkTypeAnnotation ::
   p1 ->
   p2 ->
   Stage2.TypeDeclaration.TypeDeclaration locality Normal Global ->
   Formula s (KindAnnotation Global)
-checkTypeAnnotation _ _ declaration = Formula8 {cycle, run}
+checkTypeAnnotation _ _ declaration = Formula7 {cycle, run}
   where
     cycle :: a
     cycle = cyclicalTypeChecking $ Stage2.TypeDeclaration.position declaration
@@ -205,7 +187,7 @@ checkTypeDeclaration ::
   Int ->
   Stage2.TypeDeclaration.TypeDeclaration locality Normal Global ->
   Formula s (TypeDeclaration Global)
-checkTypeDeclaration global local declaration = Formula8 {cycle, run}
+checkTypeDeclaration global local declaration = Formula7 {cycle, run}
   where
     cycle :: a
     cycle = cyclicalTypeChecking $ Stage2.TypeDeclaration.position declaration
@@ -223,7 +205,7 @@ checkTypeDeclarationExtra ::
   Int ->
   Stage2.TypeDeclarationExtra.TypeDeclarationExtra Global ->
   Formula s (TypeDeclarationExtra Global)
-checkTypeDeclarationExtra global local declaration = Formula8 {cycle, run}
+checkTypeDeclarationExtra global local declaration = Formula7 {cycle, run}
   where
     cycle :: a
     cycle = cyclicalTypeChecking $ Stage2.TypeDeclarationExtra.position declaration
@@ -240,7 +222,7 @@ checkInstanceAnnotation ::
   p2 ->
   Stage2.Instance.Instance Global ->
   Formula s (InstanceAnnotation Global)
-checkInstanceAnnotation _ _ declaration = Formula8 {cycle, run}
+checkInstanceAnnotation _ _ declaration = Formula7 {cycle, run}
   where
     cycle :: a
     cycle = cyclicalTypeChecking $ Stage2.Instance.startPosition declaration
@@ -251,7 +233,7 @@ checkInstanceDeclaration ::
   Instance.Key.Key Global ->
   Stage2.Instance.Instance Global ->
   Formula s (Instance Global)
-checkInstanceDeclaration global key declaration = Formula8 {cycle, run}
+checkInstanceDeclaration global key declaration = Formula7 {cycle, run}
   where
     cycle :: a
     cycle = cyclicalTypeChecking $ Stage2.Instance.startPosition declaration

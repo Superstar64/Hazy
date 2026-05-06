@@ -56,20 +56,16 @@ simplify
     { terms,
       types,
       typeExtras,
-      shared,
       classInstances,
       dataInstances
     } =
     Declarations
-      { terms = (Declaration.simplify share <$> terms) <> Vector.imap Declaration.simplifyShared shared,
+      { terms = Declaration.simplify declaration <$> terms,
         types = TypeDeclaration.simplify <$> types,
         typeExtras = TypeDeclarationExtra.simplify <$> typeExtras,
         classInstances = fmap Instance.simplify <$> classInstances,
         dataInstances = fmap Instance.simplify <$> dataInstances
       }
-    where
-      count = length terms
-      share index = declaration (count + index)
 
 single :: LazyTermDeclaration scope -> Declarations scope
 single term =

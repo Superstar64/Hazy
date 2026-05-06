@@ -24,7 +24,7 @@ import Stage1.Variable (ConstructorIdentifier, FullyQualifiedConstructorIdentifi
 import qualified Stage2.Index.Constructor as Constructor
 import qualified Stage2.Index.Type as Type
 import qualified Stage2.Index.Type2 as Type2
-import Stage4.Tree.Declaration (Name (..))
+import Stage2.Tree.Declaration (Key (..))
 import Stage5.Generate.Mangle.Builtin (Builtin (..), canonical)
 import qualified Stage5.Generate.Mangle.Builtin as Builtin
 import System.FilePath ((</>))
@@ -49,10 +49,10 @@ data Brand
   = Class
   | Data
 
-mangle :: Name -> Text
+mangle :: Key -> Text
 mangle = \case
-  Name (VariableIdentifier name) -> runVariableIdentifier name
-  Name (VariableSymbol name) -> runVariableSymbol name
+  Named (VariableIdentifier name) -> runVariableIdentifier name
+  Named (VariableSymbol name) -> runVariableSymbol name
   Unnamed index -> pack $ show index
 
 mangleInstance ::

@@ -5,15 +5,13 @@ module Stage2.Group.Functor.Term.Declarations where
 import Data.Traversable (fmapDefault, foldMapDefault)
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
-import qualified Stage2.Group.Index.Link.Term as Term
-import qualified Stage2.Index.Link.Term as Proper.Term
+import qualified Stage2.Index.Link.Term as Term
 import Stage2.Layout (Normal)
 import Stage2.Locality (Local)
 import qualified Stage2.Tree.Declarations as Proper
 
-data Declarations a = Declarations
-  { terms :: !(Vector a),
-    shared :: !(Vector a)
+newtype Declarations a = Declarations
+  { terms :: Vector a
   }
 
 instance Functor Declarations where
@@ -23,21 +21,19 @@ instance Foldable Declarations where
   foldMap = foldMapDefault
 
 instance Traversable Declarations where
-  traverse f Declarations {terms, shared} = declarations <$> traverse f terms <*> traverse f shared
+  traverse f Declarations {terms} = declarations <$> traverse f terms
     where
-      declarations terms shared = Declarations {terms, shared}
+      declarations terms = Declarations {terms}
 
 indexes ::
-  (Int -> Proper.Term.Link locality) ->
+  (Int -> Term.Link locality) ->
   Proper.Declarations locality' Normal scope ->
   Declarations (Term.Link locality)
-indexes index Proper.Declarations {terms, shared} =
+indexes index Proper.Declarations {terms} =
   Declarations
-    { terms = Vector.generate (length terms) (Term.Link . index),
-      shared = Vector.generate (length shared) (Term.Share . index)
+    { terms = Vector.generate (length terms) index
     }
 
 (!) :: Declarations a -> Term.Link Local -> a
-Declarations {terms, shared} ! index = case index of
-  Term.Link (Proper.Term.Declaration index) -> terms Vector.! index
-  Term.Share (Proper.Term.Declaration index) -> shared Vector.! index
+Declarations {terms} ! index = case index of
+  Term.Declaration index -> terms Vector.! index

@@ -28,14 +28,15 @@ import qualified Stage2.Index.Type2 as Type2
 import Stage2.Layout (Normal)
 import qualified Stage2.Resolve.Binding.Term as Term
 import qualified Stage2.Resolve.Detail.Binding.Term as Selector (Selector (..))
+import Stage2.Temporary.Partial.Declaration (Key (..))
 import qualified Stage2.Temporary.Partial.Declaration as Partial
+import qualified Stage2.Temporary.Partial.More.Choice as More (Choice (Choice))
+import qualified Stage2.Temporary.Partial.More.Choice as More.Choice
 import qualified Stage2.Temporary.Partial.More.Function as More.Function
 import qualified Stage2.Temporary.Partial.More.Method as More (Method (Method))
 import qualified Stage2.Temporary.Partial.More.Method as More.Method
 import qualified Stage2.Temporary.Partial.More.Selector as More (Selector (Selector))
 import qualified Stage2.Temporary.Partial.More.Selector as More.Selector
-import qualified Stage2.Temporary.Partial.More.Share as More (Shared (Shared))
-import qualified Stage2.Temporary.Partial.More.Share as More.Share
 import qualified Stage2.Tree.Declaration as Real (Declaration (..), locality)
 import qualified Stage2.Tree.Definition as Definition (merge)
 import qualified Stage2.Tree.Definition2 as Real (Choice (..), Definition2 (..))
@@ -52,7 +53,7 @@ data Real scope
 data Declaration scope
   = Declaration
   { position :: !Position,
-    name :: !Variable,
+    name :: !Key,
     fixity :: !Fixity,
     annotation :: !(Maybe (Scheme Position scope)),
     declaration :: !(Real scope)
@@ -69,10 +70,16 @@ merge ::
   NonEmpty (Partial.Declaration scope) ->
   verbose (Declaration scope)
 merge entries@(entry :| _) =
-  let termDeclaration declaration = Declaration {position, name, fixity, annotation, declaration}
+  let termDeclaration declaration = Declaration {position, name = key, fixity, annotation, declaration}
    in termDeclaration <$> declaration
   where
-    declaration = case catMaybes [fmap fst functions, fmap fst selection, fmap fst method, fmap fst share] of
+    declaration = case catMaybes
+      [ fmap fst functions,
+        fmap fst selection,
+        fmap fst method,
+        fmap fst choice
+      ] of
+      _ | Partial.Shared {shared} :| [] <- entries -> pure $ Real shared
       [] -> missingVariableEntry position
       [_]
         | Just (position, body) <- functions -> case annotation of
@@ -88,13 +95,13 @@ merge entries@(entry :| _) =
                 real = Real.Annotated {position, name, fixity, annotation, definition}
                 definition = Real2.Manual $ Real.Manual merged
                 merged = Definition.merge $ fmap More.Function.functionManual body
-        | Just (_, More.Selector {typeIndex, selectorIndex}) <- selection,
+        | Just (_, selector) <- selection,
           () <- noAnnotation ->
-            pure $ Select More.Selector {typeIndex, selectorIndex}
-        | Just (_, More.Method {typeIndex, methodIndex}) <- method,
+            pure $ Select selector
+        | Just (_, method) <- method,
           () <- noAnnotation ->
-            pure $ Method More.Method {typeIndex, methodIndex}
-        | Just (position, More.Shared {shareIndex, bound, patternx}) <- share ->
+            pure $ Method method
+        | Just (position, More.Choice {shareIndex, bound, patternx}) <- choice ->
             let cast declaration = Real $ Real.locality declaration
                 real = case annotation of
                   Nothing -> Real.Inferred {position, name, fixity, definition'}
@@ -105,9 +112,13 @@ merge entries@(entry :| _) =
                       definition = Real2.Manual $ Real.Piece Real.Choice {position, shareIndex, bound, patternx}
              in cast <$> Verbose.resolving (Variable.printLiteral' name) real
         | otherwise -> error "no entry"
+        where
+          name = case key of
+            Named name -> name
+            Unnamed _ -> error "bad name"
       entries -> duplicateVariableEntries entries
     position = Partial.position entry
-    name = Partial.name entry
+    key = Partial.name entry
     fixity = case mapMaybe fixity (toList entries) of
       [] -> Fixity {associativity = Left, precedence = 9}
       [(_, fixity)] -> fixity
@@ -152,28 +163,30 @@ merge entries@(entry :| _) =
             Just (position, method)
           _ -> Nothing
 
-    share = case mapMaybe shared (toList entries) of
+    choice = case mapMaybe choice (toList entries) of
       [] -> Nothing
-      [share] -> Just share
-      shared -> duplicateVariableEntries (map fst shared)
+      [choice] -> Just choice
+      choice -> duplicateVariableEntries (map fst choice)
       where
-        shared = \case
-          Partial.Shared {position, share} ->
-            Just (position, share)
+        choice = \case
+          Partial.Choice {position, choice} ->
+            Just (position, choice)
           _ -> Nothing
+
     noAnnotation = case annotation' of
       Nothing -> ()
       Just (position', _) -> duplicateAnnotationEntries [position', position]
 
 indexes :: Strict.Vector (Declaration scope) -> Map Variable Int
-indexes terms = Map.fromList $ zip (name <$> toList terms) [0 ..]
+indexes terms = Map.fromList [(name, index) | (Named name, index) <- zip (name <$> toList terms) [0 ..]]
 
 bindings ::
   (Int -> Term0.Index scope) ->
   (Int -> Type0.Index scope) ->
   Strict.Vector (Declaration scope) ->
   Map Variable (Term.Binding scope)
-bindings index index' terms = Map.fromList $ makeIndexes 0 (toList terms)
+bindings index index' terms =
+  Map.fromList $ [(name, binding) | (Named name, binding) <- makeIndexes 0 (toList terms)]
   where
     makeIndexes n = \case
       [] -> []

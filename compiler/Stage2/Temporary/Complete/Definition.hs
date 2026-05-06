@@ -1,4 +1,4 @@
-module Stage2.Temporary.Partial.Definition where
+module Stage2.Temporary.Complete.Definition where
 
 import Data.Foldable (toList)
 import Stage1.Position (Position)

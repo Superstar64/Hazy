@@ -37,10 +37,14 @@ checkGlobal :: Context s scope -> Stage2.Declaration locality Normal scope -> ST
 checkGlobal context = \case
   Stage2.Annotated {annotation} -> GlobalAnnotation <$> checkAnnotation context annotation
   Stage2.Inferred {} -> pure GlobalInferred
+  Stage2.Shared {} -> pure GlobalInferred
 
 checkLocal :: Context s scope -> Stage2.Declaration locality Normal scope -> ST s (LocalTypeAnnotation s scope)
 checkLocal context = \case
   Stage2.Annotated {annotation} -> LocalAnnotation <$> checkAnnotation context annotation
   Stage2.Inferred {} -> do
+    typex <- Unify.fresh Unify.typex
+    pure $ LocalInferred typex
+  Stage2.Shared {} -> do
     typex <- Unify.fresh Unify.typex
     pure $ LocalInferred typex

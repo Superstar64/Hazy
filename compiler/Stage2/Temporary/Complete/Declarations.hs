@@ -28,13 +28,12 @@ import Stage2.Temporary.Complete.ConstructorDeclaration (ConstructorDeclaration)
 import qualified Stage2.Temporary.Complete.ConstructorDeclaration as Constructor (merge)
 import qualified Stage2.Temporary.Complete.ConstructorDeclaration as ConstructorDeclaration
 import qualified Stage2.Temporary.Complete.DataInstance as DataInstance
-import Stage2.Temporary.Complete.Declaration (Declaration)
+import Stage2.Temporary.Complete.Declaration (Declaration (Declaration), name)
 import qualified Stage2.Temporary.Complete.Declaration as Term (bindings, indexes, merge, shrink)
-import Stage2.Temporary.Complete.Shared (Shared)
-import qualified Stage2.Temporary.Complete.Shared as Shared (resolve, shrink)
 import Stage2.Temporary.Complete.TypeDeclaration (TypeDeclaration)
 import qualified Stage2.Temporary.Complete.TypeDeclaration as Type (bindings, indexes, merge, shrink, shrinkExtra)
 import qualified Stage2.Temporary.Partial.ConstructorDeclaration as Constructor (resolve)
+import Stage2.Temporary.Partial.Declaration (Key (Unnamed))
 import qualified Stage2.Temporary.Partial.Declaration as Term (resolve)
 import qualified Stage2.Temporary.Partial.TypeDeclaration as Declaration.Type (resolve)
 import qualified Stage2.Tree.Declarations as Real
@@ -45,7 +44,6 @@ data Declarations scope = Declarations
   { terms :: !(Strict.Vector (Declaration scope)),
     constructors :: !(Strict.Vector ConstructorDeclaration),
     types :: !(Strict.Vector (TypeDeclaration scope)),
-    shared :: !(Strict.Vector (Shared scope)),
     dataInstances :: !(Vector (Map (Type2.Index scope) (Instance scope))),
     classInstances :: !(Vector (Map (Type2.Index scope) (Instance scope)))
   }
@@ -76,7 +74,6 @@ resolve context extensions declarations = do
               Just (index, types Strict.Vector.! index)
           | otherwise = Nothing
     pure $ orderNonEmpty' (Constructor.merge extensions) $ foldMap (Constructor.resolve lookup) declarations
-  let shared = Strict.Vector.fromList (Shared.resolve context declarations)
   classInstances <- do
     let instances = foldMap (ClassInstance.resolve context lookup) declarations
         lookup name
@@ -93,10 +90,11 @@ resolve context extensions declarations = do
         unique instances = overlappingInstances (DataInstance.classPosition <$> toList instances)
     pure $ fmap (fmap unique) ordered
   terms <- mfix $ \terms -> do
-    let entries = Term.resolve context lookupTerm lookupType lookupShared 0 declarations
+    let entries = Term.resolve context lookupTerm lookupType lookupShared declarations
         lookupTerm name = terms Strict.Vector.! (termIndexes Map.! name)
         lookupType name = let index = typeIndexes Map.! name in (index, types Strict.Vector.! index)
-        lookupShared index = shared Strict.Vector.! index
+        lookupShared temporary = shared Strict.Vector.! temporary
+        shared = Strict.Vector.fromList [index | (Declaration {name = Unnamed _}, index) <- zip (toList terms) [0 ..]]
         termIndexes = Term.indexes terms
     Strict.Vector.fromLazy <$> sequence (orderNonEmpty Term.merge entries)
   let noOrphans = foldr (seq . orphan (`Map.member` typeIndexes)) () declarations
@@ -107,7 +105,6 @@ resolve context extensions declarations = do
         { terms,
           constructors,
           types,
-          shared,
           dataInstances,
           classInstances
         }
@@ -149,12 +146,11 @@ bindings
       }
 
 shrink :: Declarations scope -> Real.Declarations locality Normal scope
-shrink Declarations {terms, types, shared, dataInstances, classInstances} =
+shrink Declarations {terms, types, dataInstances, classInstances} =
   Real.Declarations
     { terms = Vector.catMaybes $ Term.shrink <$> Strict.Vector.toLazy terms,
       types = Type.shrink <$> Strict.Vector.toLazy types,
       typeExtras = Type.shrinkExtra <$> Strict.Vector.toLazy types,
-      shared = Shared.shrink <$> Strict.Vector.toLazy shared,
       dataInstances,
       classInstances
     }

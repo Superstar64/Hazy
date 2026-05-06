@@ -5,8 +5,8 @@ import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Stage2.Group.Functor.Term.Declarations (Declarations)
 import qualified Stage2.Group.Functor.Term.Declarations as Declarations
-import qualified Stage2.Group.Index.Link.Term as Term
 import qualified Stage2.Index.Link.Term as Proper.Term
+import qualified Stage2.Index.Link.Term as Term
 import qualified Stage2.Locality as Locality
 
 newtype ModuleSet a = ModuleSet (Vector (Declarations a))
@@ -22,7 +22,5 @@ instance Traversable ModuleSet where
 
 (!) :: ModuleSet a -> Term.Link Locality.Global -> a
 ModuleSet vector ! index = case index of
-  Term.Link (Proper.Term.Global global local) ->
+  Proper.Term.Global global local ->
     Declarations.terms (vector Vector.! global) Vector.! local
-  Term.Share (Proper.Term.Global global local) ->
-    Declarations.shared (vector Vector.! global) Vector.! local

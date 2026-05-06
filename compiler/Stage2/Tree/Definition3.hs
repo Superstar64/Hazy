@@ -5,7 +5,7 @@ import Data.Map (Map)
 import qualified Data.Map as Map
 import qualified Graph.StronglyConnected as StronglyConnected
 import Stage2.FreeVariables (FreeTermVariables (freeTermVariables))
-import qualified Stage2.Group.Index.Link.Term as Group.Term
+import qualified Stage2.Index.Link.Term as Term
 import Stage2.Layout (Group, Layout, Normal)
 import Stage2.Locality (Locality)
 import Stage2.Scope (Environment (..))
@@ -18,9 +18,9 @@ type Definition3 :: Locality -> Source -> Mark -> Layout -> Environment -> Type
 data Definition3 locality source mark layout scope where
   Manual :: !(Definition2 source Annotated scope) -> Definition3 locality source Annotated layout scope
   Auto :: !(Definition2 source Inferred scope) -> Definition3 locality source Inferred Normal scope
-  Link :: !(Group.Term.Link locality) -> Definition3 locality source Inferred Group scope
+  Link :: !(Term.Link locality) -> Definition3 locality source Inferred Group scope
   Group ::
-    !(Map (Group.Term.Link locality) (Definition2.Auto scope)) ->
+    !(Map (Term.Link locality) (Definition2.Auto scope)) ->
     Definition3 locality source Inferred Group scope
 
 instance Show (Definition3 locality source mark layout scope) where
@@ -56,8 +56,8 @@ locality = \case
   Auto declaration -> Auto declaration
 
 group ::
-  (Group.Term.Link locality -> Definition2.Auto scope) ->
-  StronglyConnected.Component (Group.Term.Link locality) ->
+  (Term.Link locality -> Definition2.Auto scope) ->
+  StronglyConnected.Component (Term.Link locality) ->
   Definition3 locality source mark Normal scope ->
   Definition3 locality source mark Group scope
 group _ _ (Manual definition) = Manual definition

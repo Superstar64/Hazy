@@ -50,12 +50,11 @@ globalBindings ::
   Functor.ModuleSet
     (ST s (GlobalTypeAnnotation Global))
     (ST s (Declaration Global))
-    x
     (ST s (KindAnnotation Global))
     (ST s (TypeDeclaration Global))
     (ST s (TypeDeclarationExtra Global))
     (ST s (InstanceAnnotation Global))
-    x' ->
+    x ->
   Context s Global
 globalBindings (Functor.ModuleSet modules) =
   Context
@@ -76,12 +75,11 @@ localBindings ::
     (Scope.Declaration ':+ scope)
     (ST s (LocalTypeAnnotation s (Scope.Declaration ':+ scope)))
     x
-    x'
     (ST s (KindAnnotation (Scope.Declaration ':+ scope)))
     (ST s (TypeDeclaration (Scope.Declaration ':+ scope)))
     (ST s (TypeDeclarationExtra (Scope.Declaration ':+ scope)))
     (ST s (InstanceAnnotation (Scope.Declaration ':+ scope)))
-    x'' ->
+    x' ->
   Context s scope ->
   Context s (Scope.Declaration ':+ scope)
 localBindings

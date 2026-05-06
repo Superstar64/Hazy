@@ -20,7 +20,7 @@ import Stage2.Resolve.Context (Context)
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import qualified Stage2.Temporary.Partial.Definition as Partial (Definition (..), resolve)
+import qualified Stage2.Temporary.Complete.Definition as Complete (Definition (..), resolve)
 import Stage2.Tree.Constraint (Constraint)
 import qualified Stage2.Tree.Constraint as Constraint
 import Stage2.Tree.Definition (Definition)
@@ -77,12 +77,12 @@ resolve
                 members = map member (toList declarations)
                 member = \case
                   Stage1.Definition {startPosition, leftHandSide, rightHandSide} ->
-                    case Partial.resolve
+                    case Complete.resolve
                       (patternInMethod startPosition)
                       (Scheme.augmentWith parameters context)
                       leftHandSide
                       rightHandSide of
-                      Partial.Definition _ name function
+                      Complete.Definition _ name function
                         | Just index <- Map.lookup name memberMethods -> (index, function)
                         | otherwise -> notClassMethod startPosition
          in Instance

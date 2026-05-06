@@ -180,8 +180,6 @@ executable hazy
     Stage2.Group.Functor.Term.ModuleSet
     Stage2.Group.Functor.Type.Declarations
     Stage2.Group.Functor.Type.ModuleSet
-    Stage2.Group.Index.Link.Term
-    Stage2.Group.Index.Term0
     Stage2.Index.Constructor
     Stage2.Index.Link.Term
     Stage2.Index.Link.Type
@@ -246,27 +244,26 @@ executable hazy
     Stage2.Temporary.Complete.DataInstance
     Stage2.Temporary.Complete.Declaration
     Stage2.Temporary.Complete.Declarations
+    Stage2.Temporary.Complete.Definition
     Stage2.Temporary.Complete.Field
     Stage2.Temporary.Complete.GADTConstructor
     Stage2.Temporary.Complete.Method
     Stage2.Temporary.Complete.Module
     Stage2.Temporary.Complete.Selector
-    Stage2.Temporary.Complete.Shared
     Stage2.Temporary.Complete.TypeDeclaration
     Stage2.Temporary.ExpressionInfix
     Stage2.Temporary.Infix
     Stage2.Temporary.Partial.ConstructorDeclaration
     Stage2.Temporary.Partial.Declaration
-    Stage2.Temporary.Partial.Definition
     Stage2.Temporary.Partial.Method
     Stage2.Temporary.Partial.More.ADT
+    Stage2.Temporary.Partial.More.Choice
     Stage2.Temporary.Partial.More.Class
     Stage2.Temporary.Partial.More.Constructor
     Stage2.Temporary.Partial.More.Function
     Stage2.Temporary.Partial.More.GADT
     Stage2.Temporary.Partial.More.Method
     Stage2.Temporary.Partial.More.Selector
-    Stage2.Temporary.Partial.More.Share
     Stage2.Temporary.Partial.More.Synonym
     Stage2.Temporary.Partial.TypeDeclaration
     Stage2.Temporary.PatternInfix
@@ -297,7 +294,6 @@ executable hazy
     Stage2.Tree.Scheme
     Stage2.Tree.Select
     Stage2.Tree.Selector
-    Stage2.Tree.Shared
     Stage2.Tree.Statements
     Stage2.Tree.StrictnessAnnotation
     Stage2.Tree.Type
@@ -357,11 +353,9 @@ executable hazy
     Stage3.Temporary.Pattern
     Stage3.Temporary.PatternField
     Stage3.Temporary.RightHandSide
-    Stage3.Temporary.RightHandSide2
     Stage3.Temporary.Scheme
     Stage3.Temporary.Select
     Stage3.Temporary.SelectorInfo
-    Stage3.Temporary.Shared
     Stage3.Temporary.Statements
     Stage3.Temporary.StrictnessAnnotation
     Stage3.Temporary.Type
@@ -393,10 +387,8 @@ executable hazy
     Stage3.Tree.Pattern
     Stage3.Tree.PatternField
     Stage3.Tree.RightHandSide
-    Stage3.Tree.RightHandSide2
     Stage3.Tree.Scheme
     Stage3.Tree.SelectorInfo
-    Stage3.Tree.Shared
     Stage3.Tree.Statements
     Stage3.Tree.StrictnessAnnotation
     Stage3.Tree.Type
