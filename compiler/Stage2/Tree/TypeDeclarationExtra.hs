@@ -11,13 +11,13 @@ import qualified Stage2.Shift as Shift
 import Stage2.Tree.Definition (Definition)
 
 data TypeDeclarationExtra scope
-  = ADT
+  = ADT {position :: !Position}
   | Class
       { position :: !Position,
         methods :: !(Strict.Vector (Strict.Maybe (Definition (Local ':+ scope))))
       }
-  | Synonym
-  | GADT
+  | Synonym {position :: !Position}
+  | GADT {position :: !Position}
   deriving (Show)
 
 instance Shift TypeDeclarationExtra where
@@ -25,18 +25,18 @@ instance Shift TypeDeclarationExtra where
 
 instance Shift.Functor TypeDeclarationExtra where
   map category = \case
-    ADT -> ADT
+    ADT {position} -> ADT {position}
     Class {position, methods} ->
       Class
         { position,
           methods = fmap (Shift.map (Shift.Over category)) <$> methods
         }
-    Synonym -> Synonym
-    GADT -> GADT
+    Synonym {position} -> Synonym {position}
+    GADT {position} -> GADT {position}
 
 instance FreeTermVariables TypeDeclarationExtra where
   freeTermVariables target = \case
-    ADT -> []
+    ADT {} -> []
     Class {methods} -> foldMap (foldMap (freeTermVariables $ FreeTypeVariables.Over target)) methods
-    Synonym -> []
-    GADT -> []
+    Synonym {} -> []
+    GADT {} -> []

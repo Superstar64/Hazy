@@ -57,7 +57,8 @@ fixWith = Infix.fixWith position fixity operator
       where
         call function argument =
           Type.Call
-            { function,
+            { startPosition = Type.startPosition function,
+              function,
               argument
             }
 

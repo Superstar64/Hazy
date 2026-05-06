@@ -51,16 +51,19 @@ data Type position scope
         elements :: !(Strict.Vector2 (Type position scope))
       }
   | Call
-      { function :: !(Type position scope),
+      { startPosition :: !position,
+        function :: !(Type position scope),
         argument :: !(Type position scope)
       }
   | Function
-      { parameter :: !(Type position scope),
+      { startPosition :: !position,
+        parameter :: !(Type position scope),
         operatorPosition :: !position,
         result :: !(Type position scope)
       }
   | StrictFunction
-      { parameter :: !(Type position scope),
+      { startPosition :: !position,
+        parameter :: !(Type position scope),
         operatorPosition :: !position,
         result :: !(Type position scope)
       }
@@ -113,20 +116,23 @@ instance Shift.Functor (Type position) where
         { startPosition,
           elements = fmap (Shift.map category) elements
         }
-    Call {function, argument} ->
+    Call {startPosition, function, argument} ->
       Call
-        { function = Shift.map category function,
+        { startPosition,
+          function = Shift.map category function,
           argument = Shift.map category argument
         }
-    Function {parameter, operatorPosition, result} ->
+    Function {startPosition, parameter, operatorPosition, result} ->
       Function
-        { parameter = Shift.map category parameter,
+        { startPosition,
+          parameter = Shift.map category parameter,
           operatorPosition,
           result = Shift.map category result
         }
-    StrictFunction {parameter, operatorPosition, result} ->
+    StrictFunction {startPosition, parameter, operatorPosition, result} ->
       StrictFunction
-        { parameter = Shift.map category parameter,
+        { startPosition,
+          parameter = Shift.map category parameter,
           operatorPosition,
           result = Shift.map category result
         }
@@ -202,18 +208,21 @@ anonymize = \case
       }
   Call {function, argument} ->
     Call
-      { function = anonymize function,
+      { startPosition = (),
+        function = anonymize function,
         argument = anonymize argument
       }
   Function {parameter, result} ->
     Function
-      { parameter = anonymize parameter,
+      { startPosition = (),
+        parameter = anonymize parameter,
         operatorPosition = (),
         result = anonymize result
       }
   StrictFunction {parameter, result} ->
     StrictFunction
-      { parameter = anonymize parameter,
+      { startPosition = (),
+        parameter = anonymize parameter,
         operatorPosition = (),
         result = anonymize result
       }
@@ -289,20 +298,23 @@ resolve context = \case
       { startPosition,
         elements = fmap (resolve context) elements
       }
-  Stage1.Call {function, argument} ->
+  Stage1.Call {startPosition, function, argument} ->
     Call
-      { function = resolve context function,
+      { startPosition,
+        function = resolve context function,
         argument = resolve context argument
       }
-  Stage1.Function {parameter, operatorPosition, result} ->
+  Stage1.Function {startPosition, parameter, operatorPosition, result} ->
     Function
-      { parameter = resolve context parameter,
+      { startPosition,
+        parameter = resolve context parameter,
         operatorPosition,
         result = resolve context result
       }
-  Stage1.StrictFunction {parameter, operatorPosition, result} ->
+  Stage1.StrictFunction {startPosition, parameter, operatorPosition, result} ->
     StrictFunction
-      { parameter = resolve context parameter,
+      { startPosition,
+        parameter = resolve context parameter,
         operatorPosition,
         result = resolve context result
       }

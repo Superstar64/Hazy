@@ -149,13 +149,19 @@ abort position = \case
       Call function argument -> do
         function <- fabricate category names function
         argument <- fabricate category names argument
-        pure $ Stage2.Call {function, argument}
+        pure $
+          Stage2.Call
+            { startPosition = (),
+              function,
+              argument
+            }
       Function parameter result -> do
         parameter <- fabricate category names parameter
         result <- fabricate category names result
         pure $
           Stage2.Function
-            { parameter,
+            { startPosition = (),
+              parameter,
               operatorPosition = (),
               result
             }

@@ -9,8 +9,7 @@ import qualified Stage2.Index.Term as Term (Index)
 import qualified Stage2.Index.Type as Type (Index)
 import Stage2.Label.Binding.Local (LocalBinding)
 import qualified Stage2.Label.Binding.Local as LocalBinding
-import Stage2.Label.Binding.Term (TermBinding)
-import qualified Stage2.Label.Binding.Term as TermBinding
+import Stage2.Label.Binding.Term (TermBinding (..))
 import Stage2.Label.Binding.Type (TypeBinding)
 import qualified Stage2.Label.Binding.Type as TypeBinding (name)
 
@@ -24,7 +23,9 @@ data Context scope = Context
 Context {terms} !- index = terms Term.! index
 
 (!-*) :: Context scope -> Term.Index scope -> QualifiedVariable
-(!-*) = (TermBinding.name .) . (!-)
+context !-* index = case context !- index of
+  TermBinding {name} -> name
+  _ -> error "bad label term binding"
 
 (!-.) :: Context scope -> Local.Index scope -> LocalBinding scope
 Context {locals} !-. index = locals Local.! index

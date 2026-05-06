@@ -86,14 +86,14 @@ merge entries@(entry :| _) =
    in typeDeclaration <$> declaration
   where
     extra
-      | Just _ <- adt = Real.Extra.ADT
-      | Just _ <- gadt = Real.Extra.GADT
+      | Just _ <- adt = Real.Extra.ADT {position}
+      | Just _ <- gadt = Real.Extra.GADT {position}
       | Just (position, More.Class {methods}) <- classx =
           Real.Extra.Class
             { position,
               methods = fmap Method.shrinkExtra methods
             }
-      | Just _ <- synonym = Real.Extra.Synonym
+      | Just _ <- synonym = Real.Extra.Synonym {position}
       | otherwise = seq declaration (error "bad extra")
 
     declaration = case catMaybes [fmap fst adt, fmap fst gadt, fmap fst classx, fmap fst synonym] of
