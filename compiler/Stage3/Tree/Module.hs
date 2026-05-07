@@ -33,11 +33,13 @@ import Stage3.Functor.ModuleSet (mapWithKey)
 import qualified Stage3.Functor.ModuleSet as Functor (ModuleSet (..))
 import qualified Stage3.Simple.Scheme as Scheme
 import qualified Stage3.Temporary.Declaration as Declaration.Unsolved
-import Stage3.Tree.Declaration (Declaration (Shared), LazyTermDeclaration)
+import Stage3.Tree.Declaration (Declaration (..), LazyTermDeclaration)
 import qualified Stage3.Tree.Declaration as Declaration
 import Stage3.Tree.Declarations (Declarations)
 import qualified Stage3.Tree.Declarations as Declarations
 import qualified Stage3.Tree.Definition2 as Definition2
+import Stage3.Tree.Definition3 (Definition3 (..))
+import Stage3.Tree.Definition4 (Definition4 (..))
 import Stage3.Tree.Instance (Instance)
 import qualified Stage3.Tree.Instance as Instance
 import Stage3.Tree.TypeDeclaration (LazyTypeDeclaration, TypeDeclaration)
@@ -126,7 +128,7 @@ check modules =
         declarations <- Stage2.declarations modulex,
         terms <- Stage2.Declarations.terms declarations,
         term <- terms Vector.! term =
-          Stage2.Declaration.key term Declaration.:^ declaration
+          Stage2.Declaration.name term Declaration.:^ declaration
 
     typex modulex typex declaration
       | modulex <- modules Vector.! modulex,
@@ -163,11 +165,8 @@ checkTermDeclaration global local declaration = Formula7 {cycle, run}
       let context = globalBindings moduleSet
       let share index = case terms Vector.! index of
             Functor.Annotated {content} -> do
-              term <- content
-              case term of
-                Shared {body'} ->
-                  pure $ Scheme.lift $ Scheme $ SchemeOver.map (SchemeOver.Map Definition2.typex) body'
-                _ -> error "non shared lookup"
+              Declaration {definition = _ ::: _ ::@ definition} <- content
+              pure $ Scheme.lift $ Scheme $ SchemeOver.map (SchemeOver.Map Definition2.typex) definition
       unsolved <- Declaration.Unsolved.checkGlobal context share annotation declaration
       Declaration.Unsolved.solve unsolved
 

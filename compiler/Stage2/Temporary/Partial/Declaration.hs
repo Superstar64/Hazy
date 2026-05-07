@@ -43,9 +43,10 @@ import qualified Stage2.Temporary.Partial.More.Method as More.Method
 import qualified Stage2.Temporary.Partial.More.Selector as More (Selector (Selector))
 import qualified Stage2.Temporary.Partial.More.Selector as More.Selector
 import Stage2.Tree.Declaration (Key (..))
-import qualified Stage2.Tree.Declaration as Real
-import qualified Stage2.Tree.Definition2 as Real.Definition2
-import qualified Stage2.Tree.Definition3 as Real.Definition3
+import qualified Stage2.Tree.Declaration as Real (Declaration (..))
+import qualified Stage2.Tree.Definition2 as Real (Definition2 (Shared))
+import qualified Stage2.Tree.Definition3 as Real (Definition3 (..), Info (..))
+import qualified Stage2.Tree.Definition4 as Real (Annotation (..), Definition4 (..))
 import qualified Stage2.Tree.Pattern as Pattern
 import qualified Stage2.Tree.RightHandSide as RightHandSide
 import Stage2.Tree.Scheme (Scheme)
@@ -129,15 +130,15 @@ resolve'
           { position = Stage1.RightHandSide.equalPosition rightHandSide,
             name = Unnamed temporary,
             shared =
-              Real.Shared
-                { position = Stage1.RightHandSide.equalPosition rightHandSide,
-                  index = lookupShare temporary,
-                  patternx = Pattern.resolve context pattern1,
-                  definition'' =
-                    Real.Definition3.Auto $
-                      Real.Definition2.Shared $
-                        RightHandSide.resolve context rightHandSide
-                }
+              let index = lookupShare temporary
+               in Real.Declaration
+                    { position = Stage1.RightHandSide.equalPosition rightHandSide,
+                      name = Unnamed index,
+                      definition =
+                        Real.Inferred
+                          Real.::: Real.Index index
+                          Real.::@ Real.Shared (RightHandSide.resolve context rightHandSide)
+                    }
           }
       entry = do
         let selections = Pattern.selections patternx

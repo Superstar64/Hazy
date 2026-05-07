@@ -27,26 +27,18 @@ import Stage2.Locality (Locality)
 import Stage2.Scope (Environment)
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage2.Tree.Type (Type)
 import Stage2.Tree.TypeDefinition (TypeDefinition)
-import Stage2.Tree.TypeDefinition2 (Annotated, Inferred, TypeDefinition2)
+import Stage2.Tree.TypeDefinition2 (TypeDefinition2)
 import qualified Stage2.Tree.TypeDefinition2 as TypeDefinition2
 
 type TypeDeclaration :: Locality -> Layout -> Environment -> Data.Kind.Type
 data TypeDeclaration locality layout scope
-  = Annotated
-      { position :: !Position,
-        name :: !ConstructorIdentifier,
-        constructorNames :: !(Strict.Vector Constructor),
-        annotation :: !(Type Position scope),
-        definition :: !(TypeDefinition2 locality Annotated layout scope)
-      }
-  | Inferred
-      { position :: !Position,
-        name :: !ConstructorIdentifier,
-        constructorNames :: !(Strict.Vector Constructor),
-        definition' :: !(TypeDefinition2 locality Inferred layout scope)
-      }
+  = TypeDeclaration
+  { position :: !Position,
+    name :: !ConstructorIdentifier,
+    constructorNames :: !(Strict.Vector Constructor),
+    definition :: !(TypeDefinition2 locality layout scope)
+  }
   deriving (Show)
 
 instance Shift (TypeDeclaration locality layout) where
@@ -54,30 +46,17 @@ instance Shift (TypeDeclaration locality layout) where
 
 instance Shift.Functor (TypeDeclaration locality layout) where
   map category = \case
-    Annotated {position, name, constructorNames, annotation, definition} ->
-      Annotated
+    TypeDeclaration {position, name, constructorNames, definition} ->
+      TypeDeclaration
         { position,
           name,
           constructorNames,
-          annotation = Shift.map category annotation,
           definition = Shift.map category definition
-        }
-    Inferred {position, name, constructorNames, definition'} ->
-      Inferred
-        { position,
-          name,
-          constructorNames,
-          definition' = Shift.map category definition'
         }
 
 instance FreeTypeVariables (TypeDeclaration locality layout) where
   freeTypeVariables target = \case
-    Annotated {annotation, definition} ->
-      concat
-        [ freeTypeVariables target annotation,
-          freeTypeVariables target definition
-        ]
-    Inferred {definition'} -> freeTypeVariables target definition'
+    TypeDeclaration {definition} -> freeTypeVariables target definition
 
 labelBinding :: Qualifiers -> TypeDeclaration locality layout scope -> Label.TypeBinding scope'
 labelBinding path declaration =
@@ -88,20 +67,12 @@ labelBinding path declaration =
 
 locality :: TypeDeclaration locality Normal scope -> TypeDeclaration locality' Normal scope
 locality = \case
-  Annotated {position, name, constructorNames, annotation, definition} ->
-    Annotated
+  TypeDeclaration {position, name, constructorNames, definition} ->
+    TypeDeclaration
       { position,
         name,
         constructorNames,
-        annotation,
         definition = TypeDefinition2.locality definition
-      }
-  Inferred {position, name, constructorNames, definition'} ->
-    Inferred
-      { position,
-        name,
-        constructorNames,
-        definition' = TypeDefinition2.locality definition'
       }
 
 group ::
@@ -110,18 +81,10 @@ group ::
   TypeDeclaration locality Normal scope ->
   TypeDeclaration locality Group scope
 group index group = \case
-  Annotated {position, name, constructorNames, annotation, definition} ->
-    Annotated
+  TypeDeclaration {position, name, constructorNames, definition} ->
+    TypeDeclaration
       { position,
         name,
         constructorNames,
-        annotation,
         definition = TypeDefinition2.group index group definition
-      }
-  Inferred {position, name, constructorNames, definition'} ->
-    Inferred
-      { position,
-        name,
-        constructorNames,
-        definition' = TypeDefinition2.group index group definition'
       }

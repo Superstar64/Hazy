@@ -4,7 +4,6 @@ module Stage2.Tree.Declaration where
 
 import qualified Graph.StronglyConnected as StronglyConnected
 import Stage1.Position (Position)
-import Stage1.Tree.Fixity (Fixity (..))
 import Stage1.Variable (QualifiedVariable ((:-)), Qualifiers, Variable)
 import Stage2.FreeVariables (FreeTermVariables (..))
 import qualified Stage2.Index.Link.Term as Term
@@ -12,12 +11,10 @@ import qualified Stage2.Label.Binding.Term as Label
 import Stage2.Layout (Group, Normal)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage2.Tree.Definition2 (Annotated, Inferred, Share, Single)
-import qualified Stage2.Tree.Definition2 as Definition2
+import Stage2.Tree.Definition2 (Inferred)
 import Stage2.Tree.Definition3 (Definition3)
-import qualified Stage2.Tree.Definition3 as Definition3
-import Stage2.Tree.Pattern (Pattern)
-import Stage2.Tree.Scheme (Scheme)
+import Stage2.Tree.Definition4 (Definition4)
+import qualified Stage2.Tree.Definition4 as Definition4
 import Prelude hiding (Either (Left, Right))
 
 data Key
@@ -26,122 +23,50 @@ data Key
   deriving (Eq, Ord, Show)
 
 data Declaration locality layout scope
-  = Annotated
-      { position :: !Position,
-        name :: !Variable,
-        fixity :: !Fixity,
-        annotation :: !(Scheme Position scope),
-        definition :: !(Definition3 locality Single Annotated layout scope)
-      }
-  | Inferred
-      { position :: !Position,
-        name :: !Variable,
-        fixity :: !Fixity,
-        definition' :: !(Definition3 locality Single Inferred layout scope)
-      }
-  | Shared
-      { position :: !Position,
-        index :: !Int,
-        patternx :: !(Pattern scope),
-        definition'' :: !(Definition3 locality Share Inferred layout scope)
-      }
+  = Declaration
+  { position :: !Position,
+    name :: !Key,
+    definition :: !(Definition4 locality layout scope)
+  }
   deriving (Show)
-
-key :: Declaration locality layout scope -> Key
-key = \case
-  Annotated {name} -> Named name
-  Inferred {name} -> Named name
-  Shared {index} -> Unnamed index
 
 instance Shift (Declaration layout locality) where
   shift = shiftDefault
 
 instance Shift.Functor (Declaration layout locality) where
-  map category = \case
-    Annotated {position, name, fixity, annotation, definition} ->
-      Annotated
-        { position,
-          name,
-          fixity,
-          annotation = Shift.map category annotation,
-          definition = Shift.map category definition
-        }
-    Inferred {position, name, fixity, definition'} ->
-      Inferred
-        { position,
-          name,
-          fixity,
-          definition' = Shift.map category definition'
-        }
-    Shared {position, index, patternx, definition''} ->
-      Shared
-        { position,
-          index,
-          patternx = Shift.map category patternx,
-          definition'' = Shift.map category definition''
-        }
+  map category Declaration {position, name, definition} =
+    Declaration
+      { position,
+        name,
+        definition = Shift.map category definition
+      }
 
 instance FreeTermVariables (Declaration layout locality) where
-  freeTermVariables target = \case
-    Annotated {definition} -> freeTermVariables target definition
-    Inferred {definition'} -> freeTermVariables target definition'
-    Shared {definition''} -> freeTermVariables target definition''
+  freeTermVariables target Declaration {definition} = freeTermVariables target definition
 
 labelBinding :: Qualifiers -> Declaration locality layout scope -> Label.TermBinding scope'
-labelBinding path declaration = case key declaration of
+labelBinding path declaration = case name declaration of
   Named name -> Label.TermBinding {name = path :- name}
   Unnamed _ -> Label.SharedTermBinding
 
 locality :: Declaration locality Normal scope -> Declaration locality' Normal scope
 locality = \case
-  Annotated {position, name, fixity, annotation, definition} ->
-    Annotated
+  Declaration {position, name, definition} ->
+    Declaration
       { position,
         name,
-        fixity,
-        annotation,
-        definition = Definition3.locality definition
-      }
-  Inferred {position, name, fixity, definition'} ->
-    Inferred
-      { position,
-        name,
-        fixity,
-        definition' = Definition3.locality definition'
-      }
-  Shared {position, index, patternx, definition''} ->
-    Shared
-      { position,
-        index,
-        patternx,
-        definition'' = Definition3.locality definition''
+        definition = Definition4.locality definition
       }
 
 group ::
-  (Term.Link locality -> Definition2.Auto scope) ->
+  (Term.Link locality -> Definition3 Inferred scope) ->
   StronglyConnected.Component (Term.Link locality) ->
   Declaration locality Normal scope ->
   Declaration locality Group scope
 group index' group = \case
-  Annotated {position, name, fixity, annotation, definition} ->
-    Annotated
+  Declaration {position, name, definition} ->
+    Declaration
       { position,
         name,
-        fixity,
-        annotation,
-        definition = Definition3.group index' group definition
-      }
-  Inferred {position, name, fixity, definition'} ->
-    Inferred
-      { position,
-        name,
-        fixity,
-        definition' = Definition3.group index' group definition'
-      }
-  Shared {position, index, patternx, definition''} ->
-    Shared
-      { position,
-        index,
-        patternx,
-        definition'' = Definition3.group index' group definition''
+        definition = Definition4.group index' group definition
       }

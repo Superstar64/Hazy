@@ -11,8 +11,9 @@ import qualified Stage3.Check.KindAnnotation as KindAnnotation
 import qualified Stage3.Check.KindAnnotation as Stage3
 import qualified Stage3.Simple.Type as Simple.Type
 import qualified Stage3.Temporary.TypeDefinition as Temporary.TypeDefinition
-import Stage3.Tree.Type (Type)
 import Stage3.Tree.TypeDefinition (TypeDefinition (..))
+import Stage3.Tree.TypeDefinition2 (Annotation (..), TypeDefinition2 (..))
+import qualified Stage3.Tree.TypeDefinition2 as TypeDefinition2
 import qualified Stage3.Unify as Unify
 import qualified Stage4.Tree.Type as Simple (Type)
 
@@ -22,79 +23,71 @@ data LazyTypeDeclaration scope = !ConstructorIdentifier :^ TypeDeclaration scope
 infix 4 :^
 
 data TypeDeclaration scope
-  = Inferred
-      { name :: !ConstructorIdentifier,
-        kind :: !(Simple.Type scope),
-        definition :: !(TypeDefinition scope)
-      }
-  | Annotated
-      { name :: !ConstructorIdentifier,
-        kind :: !(Simple.Type scope),
-        annotation :: !(Type scope),
-        definition :: !(TypeDefinition scope)
-      }
+  = TypeDeclaration
+  { name :: !ConstructorIdentifier,
+    definition :: !(TypeDefinition2 scope)
+  }
   deriving (Show)
 
-strict declaration = name declaration :^ declaration
+strict declaration@TypeDeclaration {name} = name :^ declaration
 
 kind_ :: TypeDeclaration scope -> Simple.Type scope
-kind_ = kind
+kind_ = \case
+  TypeDeclaration {definition = annotation ::: _} -> TypeDefinition2.kind annotation
 
 check ::
   Context s scope ->
   Stage3.KindAnnotation scope ->
   Stage2.TypeDeclaration locality Normal scope ->
   ST s (TypeDeclaration scope)
-check _ KindAnnotation.Synonym {kind, annotation', definition, definition'} declaration =
-  case annotation' of
-    Strict.Nothing ->
-      pure
-        Inferred
-          { name = Stage2.name declaration,
-            kind,
-            definition =
-              Synonym
-                { definition,
-                  definition'
-                }
-          }
-    Strict.Just annotation ->
-      pure
-        Annotated
-          { name = Stage2.name declaration,
-            kind,
-            annotation,
-            definition =
-              Synonym
-                { definition,
-                  definition'
-                }
-          }
+check
+  _
+  KindAnnotation.Synonym {kind, annotation', definition, definition'}
+  Stage2.TypeDeclaration {name} =
+    case annotation' of
+      Strict.Nothing ->
+        pure
+          TypeDeclaration
+            { name,
+              definition =
+                Inferred {kind}
+                  ::: Synonym
+                    { definition,
+                      definition'
+                    }
+            }
+      Strict.Just annotation ->
+        pure
+          TypeDeclaration
+            { name,
+              definition =
+                Annotated {kind, annotation}
+                  ::: Synonym
+                    { definition,
+                      definition'
+                    }
+            }
 check
   context
   KindAnnotation.Inferred
-  Stage2.Inferred {position, name, definition' = Stage2.Auto definition} = do
+  Stage2.TypeDeclaration {position, name, definition = _ Stage2.::: definition} = do
     kind <- Unify.fresh Unify.kind
     definition <- Temporary.TypeDefinition.check context kind definition
     kind <- Unify.solve position kind
     definition <- Temporary.TypeDefinition.solve context definition
     pure
-      Inferred
+      TypeDeclaration
         { name,
-          kind,
-          definition
+          definition = Inferred {kind} ::: definition
         }
 check
   context
   KindAnnotation.Annotation {annotation, kind}
-  Stage2.Annotated {name, definition = Stage2.Manual definition} = do
+  Stage2.TypeDeclaration {name, definition = _ Stage2.::: definition} = do
     definition <- Temporary.TypeDefinition.check context (Simple.Type.lift kind) definition
     definition <- Temporary.TypeDefinition.solve context definition
     pure
-      Annotated
+      TypeDeclaration
         { name,
-          annotation,
-          kind,
-          definition
+          definition = Annotated {kind, annotation} ::: definition
         }
-check _ _ _ = error "bad type declaration check"

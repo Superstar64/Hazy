@@ -14,7 +14,7 @@ import Stage1.Variable (FullyQualifiedConstructorIdentifier ((:.=.)))
 import qualified Stage2.Index.Type as Type (Index (..))
 import qualified Stage2.Index.Type2 as Type2
 import qualified Stage2.Scope as Scope
-import Stage4.Tree.Declaration (Declaration (Definition))
+import Stage4.Tree.Declaration (Declaration (..))
 import qualified Stage4.Tree.Declaration as Term
 import Stage4.Tree.Declarations (Declarations (..))
 import qualified Stage4.Tree.Module as Stage4 (Module (..))
@@ -99,7 +99,7 @@ generate'
       dataInstances
     } = do
     context <- Context.start precontext
-    statements <- for (zip [0 ..] (toList terms)) $ \(termIndex, _ Term.:^ Definition {definition}) ->
+    statements <- for (zip [0 ..] (toList terms)) $ \(termIndex, _ Term.:^ Declaration {definition}) ->
       do
         thunk <- Expression.declaration context definition
         source <- Context.fresh context

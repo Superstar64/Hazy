@@ -40,7 +40,8 @@ import qualified Stage2.Temporary.Partial.More.Selector as More.Selector
 import qualified Stage2.Tree.Declaration as Real (Declaration (..), locality)
 import qualified Stage2.Tree.Definition as Definition (merge)
 import qualified Stage2.Tree.Definition2 as Real (Choice (..), Definition2 (..))
-import qualified Stage2.Tree.Definition3 as Real2
+import qualified Stage2.Tree.Definition3 as Real (Definition3 (..), Info (..))
+import qualified Stage2.Tree.Definition4 as Real (Annotation (..), Definition4 (..))
 import Stage2.Tree.Scheme (Scheme)
 import Verbose (Debug (resolving))
 import Prelude hiding (Either (Left, Right), Real)
@@ -70,7 +71,7 @@ merge ::
   NonEmpty (Partial.Declaration scope) ->
   verbose (Declaration scope)
 merge entries@(entry :| _) =
-  let termDeclaration declaration = Declaration {position, name = key, fixity, annotation, declaration}
+  let termDeclaration declaration = Declaration {position, name, fixity, annotation, declaration}
    in termDeclaration <$> declaration
   where
     declaration = case catMaybes
@@ -83,17 +84,31 @@ merge entries@(entry :| _) =
       [] -> missingVariableEntry position
       [_]
         | Just (position, body) <- functions -> case annotation of
-            Nothing -> cast <$> Verbose.resolving (Variable.printLiteral' name) real
+            Nothing -> cast <$> Verbose.resolving (Variable.printLiteral' properName) real
               where
                 cast declaration = Real $ Real.locality declaration
-                real = Real.Inferred {position, name, fixity, definition'}
-                definition' = Real2.Auto $ Real.Auto merged
+                real =
+                  Real.Declaration
+                    { position,
+                      name,
+                      definition =
+                        Real.Inferred
+                          Real.::: Real.Name properName fixity
+                          Real.::@ Real.Auto merged
+                    }
                 merged = Definition.merge $ fmap More.Function.functionAuto body
-            Just annotation -> cast <$> Verbose.resolving (Variable.printLiteral' name) real
+            Just annotation -> cast <$> Verbose.resolving (Variable.printLiteral' properName) real
               where
                 cast declaration = Real $ Real.locality declaration
-                real = Real.Annotated {position, name, fixity, annotation, definition}
-                definition = Real2.Manual $ Real.Manual merged
+                real =
+                  Real.Declaration
+                    { position,
+                      name,
+                      definition =
+                        Real.Annotated annotation
+                          Real.::: Real.Name properName fixity
+                          Real.::@ Real.Manual merged
+                    }
                 merged = Definition.merge $ fmap More.Function.functionManual body
         | Just (_, selector) <- selection,
           () <- noAnnotation ->
@@ -104,21 +119,33 @@ merge entries@(entry :| _) =
         | Just (position, More.Choice {shareIndex, bound, patternx}) <- choice ->
             let cast declaration = Real $ Real.locality declaration
                 real = case annotation of
-                  Nothing -> Real.Inferred {position, name, fixity, definition'}
-                    where
-                      definition' = Real2.Auto $ Real.Piece Real.Choice {position, shareIndex, bound, patternx}
-                  Just annotation -> Real.Annotated {position, name, fixity, annotation, definition}
-                    where
-                      definition = Real2.Manual $ Real.Piece Real.Choice {position, shareIndex, bound, patternx}
-             in cast <$> Verbose.resolving (Variable.printLiteral' name) real
+                  Nothing ->
+                    Real.Declaration
+                      { position,
+                        name,
+                        definition =
+                          Real.Inferred
+                            Real.::: Real.Name properName fixity
+                            Real.::@ Real.Piece Real.Choice {position, shareIndex, bound, patternx}
+                      }
+                  Just annotation ->
+                    Real.Declaration
+                      { position,
+                        name,
+                        definition =
+                          Real.Annotated annotation
+                            Real.::: Real.Name properName fixity
+                            Real.::@ Real.Piece Real.Choice {position, shareIndex, bound, patternx}
+                      }
+             in cast <$> Verbose.resolving (Variable.printLiteral' properName) real
         | otherwise -> error "no entry"
         where
-          name = case key of
+          properName = case name of
             Named name -> name
             Unnamed _ -> error "bad name"
       entries -> duplicateVariableEntries entries
     position = Partial.position entry
-    key = Partial.name entry
+    name = Partial.name entry
     fixity = case mapMaybe fixity (toList entries) of
       [] -> Fixity {associativity = Left, precedence = 9}
       [(_, fixity)] -> fixity

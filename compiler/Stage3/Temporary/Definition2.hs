@@ -17,12 +17,12 @@ import qualified Stage3.Temporary.RightHandSide as RightHandSide
 import qualified Stage3.Tree.Definition2 as Solved (Choice (..), Definition2 (..))
 import qualified Stage3.Unify as Unify
 
-data Definition2 source s scope where
-  Definition :: !(Definition s scope) -> !(Unify.Type s scope) -> Definition2 Single s scope
-  Piece :: !(Choice s scope) -> !(Unify.Type s scope) -> Definition2 Single s scope
-  Shared :: !(RightHandSide s scope) -> !(Unify.Type s scope) -> Definition2 Share s scope
+data Definition2 source mark s scope where
+  Definition :: !(Definition s scope) -> !(Unify.Type s scope) -> Definition2 Single mark s scope
+  Piece :: !(Choice s scope) -> !(Unify.Type s scope) -> Definition2 Single mark s scope
+  Shared :: !(RightHandSide s scope) -> !(Unify.Type s scope) -> Definition2 Share Inferred s scope
 
-instance Unify.Zonk (Definition2 source) where
+instance Unify.Zonk (Definition2 source mark) where
   zonk zonker = \case
     Definition definition typex -> do
       definition <- Unify.zonk zonker definition
@@ -37,10 +37,10 @@ instance Unify.Zonk (Definition2 source) where
       typex <- Unify.zonk zonker typex
       pure $ Shared shared typex
 
-instance Unify.Generalizable (Definition2 source) where
+instance Unify.Generalizable (Definition2 source mark) where
   collect collector body = Unify.collect collector (typex body)
 
-typex :: Definition2 source s scope -> Unify.Type s scope
+typex :: Definition2 source mark s scope -> Unify.Type s scope
 typex = \case
   Definition _ typex -> typex
   Piece _ typex -> typex
@@ -69,7 +69,7 @@ check ::
   Which mark (scope ':+ scopes) ->
   Unify.Type s (scope ':+ scopes) ->
   Stage2.Definition2 source mark scopes ->
-  ST s (Definition2 source s (scope ':+ scopes))
+  ST s (Definition2 source mark s (scope ':+ scopes))
 check context _ Auto typex (Stage2.Auto definition) = do
   definition <- Definition.check context typex (shift definition)
   pure $ Definition definition typex
@@ -88,7 +88,7 @@ check context shared _ typex declaration = case declaration of
     Unify.unify context position typex typex'
     pure $ Piece Choice {shareIndex, instanciation, patternx, bound} typex
 
-solve :: Position -> Definition2 source s scope -> ST s (Solved.Definition2 source scope)
+solve :: Position -> Definition2 source mark s scope -> ST s (Solved.Definition2 source mark scope)
 solve position = \case
   Definition definition typex -> do
     definition <- Definition.solve definition

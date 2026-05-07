@@ -4,9 +4,11 @@ import qualified Stage2.Index.Term as Stage2.Term
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Tree.Declaration (Key (..))
-import qualified Stage3.Tree.Declaration as Stage3 (Declaration (..), LazyTermDeclaration (..), key)
+import qualified Stage3.Tree.Declaration as Stage3 (Declaration (..), LazyTermDeclaration (..))
 import qualified Stage3.Tree.Definition2 as Stage3 (Choice (..), Definition2 (Definition, Piece), typex)
 import qualified Stage3.Tree.Definition2 as Stage3.Definition2
+import qualified Stage3.Tree.Definition3 as Stage3 (Definition3 (..))
+import qualified Stage3.Tree.Definition4 as Stage3 (Definition4 (..))
 import qualified Stage3.Tree.Expression as Stage3 (Expression)
 import qualified Stage3.Tree.Scheme as Stage3 (Scheme)
 import qualified Stage4.Index.Term as Term
@@ -38,7 +40,7 @@ instance Shift2.Functor LazyTermDeclaration where
 instance Substitute.Functor LazyTermDeclaration where
   map category (name :^ declaration) = name :^ Substitute.map category declaration
 
-data Declaration scope = Definition
+data Declaration scope = Declaration
   { name :: !Key,
     definition :: !(SchemeOver Expression scope),
     typex :: !(Scheme scope)
@@ -55,8 +57,8 @@ instance Shift2.Functor Declaration where
   map = Substitute.mapDefault
 
 instance Substitute.Functor Declaration where
-  map category Definition {name, definition, typex} =
-    Definition
+  map category Declaration {name, definition, typex} =
+    Declaration
       { name,
         definition = Substitute.map category definition,
         typex = Substitute.map category typex
@@ -69,56 +71,55 @@ simplify ::
   LazyTermDeclaration scope
 simplify share (name Stage3.:^ declaration) =
   name :^ case declaration of
-    Stage3.Annotated {body} -> go body
-    Stage3.Inferred {body} -> go body
-    Stage3.Shared {body'} -> go body'
-  where
-    go :: SchemeOver (Stage3.Definition2 source) scope -> Declaration scope
-    go = \case
-      SchemeOver
-        { parameters,
-          constraints,
-          result
-        } ->
-          Definition
-            { name = Stage3.key declaration,
-              definition =
+    Stage3.Declaration
+      { name,
+        definition =
+          _ Stage3.::: _
+            Stage3.::@ SchemeOver
+              { parameters,
+                constraints,
+                result
+              }
+      } ->
+        Declaration
+          { name,
+            definition =
+              SchemeOver
+                { parameters,
+                  constraints,
+                  result = case result of
+                    Stage3.Definition definition _ -> Expression.simplify definition
+                    Stage3.Piece Stage3.Choice {shareIndex, instanciation, patternx, bound} _ ->
+                      Expression.Join
+                        { statements =
+                            Statements.bind
+                              (Pattern.simplify patternx)
+                              Expression.Variable
+                                { variable = shift $ share shareIndex,
+                                  instanciation
+                                }
+                              Statements.Done
+                                { done =
+                                    Expression.monoVariable $
+                                      Term.from $
+                                        Stage2.Term.Pattern bound
+                                }
+                        }
+                    Stage3.Definition2.Shared shared _ -> Expression.simplify shared
+                },
+            typex =
+              Scheme
                 SchemeOver
                   { parameters,
                     constraints,
-                    result = case result of
-                      Stage3.Definition definition _ -> Expression.simplify definition
-                      Stage3.Piece Stage3.Choice {shareIndex, instanciation, patternx, bound} _ ->
-                        Expression.Join
-                          { statements =
-                              Statements.bind
-                                (Pattern.simplify patternx)
-                                Expression.Variable
-                                  { variable = shift $ share shareIndex,
-                                    instanciation
-                                  }
-                                Statements.Done
-                                  { done =
-                                      Expression.monoVariable $
-                                        Term.from $
-                                          Stage2.Term.Pattern bound
-                                  }
-                          }
-                      Stage3.Definition2.Shared shared _ -> Expression.simplify shared
-                  },
-              typex =
-                Scheme
-                  SchemeOver
-                    { parameters,
-                      constraints,
-                      result = Stage3.typex result
-                    }
-            }
+                    result = Stage3.typex result
+                  }
+          }
 
 annotation :: SchemeOver Stage3.Expression scope -> Stage3.Scheme scope -> LazyTermDeclaration scope
 annotation SchemeOver {parameters, constraints, result} scheme =
   Unnamed 0
-    :^ Definition
+    :^ Declaration
       { name = Unnamed 0,
         definition =
           SchemeOver

@@ -6,6 +6,7 @@ import Control.Monad.ST (ST)
 import Stage1.Position (Position)
 import Stage2.Layout (Normal)
 import qualified Stage2.Tree.Declaration as Stage2 (Declaration (..))
+import qualified Stage2.Tree.Definition4 as Stage2 (Annotation (..), Definition4 (..))
 import qualified Stage2.Tree.Scheme as Stage2 (Scheme (..))
 import {-# SOURCE #-} Stage3.Check.Context (Context)
 import {-# SOURCE #-} qualified Stage3.Temporary.Scheme as Scheme (check, solve)
@@ -34,17 +35,13 @@ checkAnnotation context annotation = do
   pure $ Annotation {annotation, annotation'}
 
 checkGlobal :: Context s scope -> Stage2.Declaration locality Normal scope -> ST s (GlobalTypeAnnotation scope)
-checkGlobal context = \case
-  Stage2.Annotated {annotation} -> GlobalAnnotation <$> checkAnnotation context annotation
-  Stage2.Inferred {} -> pure GlobalInferred
-  Stage2.Shared {} -> pure GlobalInferred
+checkGlobal context Stage2.Declaration {definition} = case definition of
+  Stage2.Annotated annotation Stage2.::: _ -> GlobalAnnotation <$> checkAnnotation context annotation
+  Stage2.Inferred {} Stage2.::: _ -> pure GlobalInferred
 
 checkLocal :: Context s scope -> Stage2.Declaration locality Normal scope -> ST s (LocalTypeAnnotation s scope)
-checkLocal context = \case
-  Stage2.Annotated {annotation} -> LocalAnnotation <$> checkAnnotation context annotation
-  Stage2.Inferred {} -> do
-    typex <- Unify.fresh Unify.typex
-    pure $ LocalInferred typex
-  Stage2.Shared {} -> do
+checkLocal context Stage2.Declaration {definition} = case definition of
+  Stage2.Annotated annotation Stage2.::: _ -> LocalAnnotation <$> checkAnnotation context annotation
+  Stage2.Inferred {} Stage2.::: _ -> do
     typex <- Unify.fresh Unify.typex
     pure $ LocalInferred typex

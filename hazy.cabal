@@ -278,6 +278,7 @@ executable hazy
     Stage2.Tree.Definition
     Stage2.Tree.Definition2
     Stage2.Tree.Definition3
+    Stage2.Tree.Definition4
     Stage2.Tree.Entry
     Stage2.Tree.Expression
     Stage2.Tree.ExpressionField
@@ -341,6 +342,8 @@ executable hazy
     Stage3.Temporary.Declarations
     Stage3.Temporary.Definition
     Stage3.Temporary.Definition2
+    Stage3.Temporary.Definition3
+    Stage3.Temporary.Definition4
     Stage3.Temporary.Do
     Stage3.Temporary.Entry
     Stage3.Temporary.EntryInfo
@@ -371,6 +374,8 @@ executable hazy
     Stage3.Tree.Declarations
     Stage3.Tree.Definition
     Stage3.Tree.Definition2
+    Stage3.Tree.Definition3
+    Stage3.Tree.Definition4
     Stage3.Tree.Do
     Stage3.Tree.Entry
     Stage3.Tree.EntryInfo
@@ -395,6 +400,7 @@ executable hazy
     Stage3.Tree.TypeDeclaration
     Stage3.Tree.TypeDeclarationExtra
     Stage3.Tree.TypeDefinition
+    Stage3.Tree.TypeDefinition2
     Stage3.Tree.TypePattern
     Stage3.Unify
     Stage3.Unify.Builtin

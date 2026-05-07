@@ -2,10 +2,9 @@ module Stage2.Tree.Definition2 where
 
 import Data.Kind (Type)
 import Stage1.Position (Position)
-import Stage2.FreeVariables (FreeTermVariables (freeTermVariables), Target (..))
+import Stage2.FreeVariables (FreeTermVariables (..))
 import qualified Stage2.FreeVariables as FreeTermVariables
 import qualified Stage2.Index.Term as Term
-import qualified Stage2.Index.Term0 as Term0
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
@@ -85,26 +84,3 @@ instance Shift.Functor Choice where
         bound,
         patternx = Shift.map category patternx
       }
-
-data Auto scope where
-  AnyAuto :: Definition2 source Inferred scope -> Auto scope
-
-instance Show (Auto scope) where
-  showsPrec d (AnyAuto definition) =
-    showParen (d > 10) $
-      showString "AnyAuto " . showsPrec 11 definition
-
-instance Shift Auto where
-  shift = shiftDefault
-
-instance Shift.Functor Auto where
-  map category (AnyAuto definition) = AnyAuto (Shift.map category definition)
-
-instance FreeTermVariables Auto where
-  freeTermVariables target (AnyAuto definition) = freeTermVariables target definition
-
-freeGroupTermVariables :: (Int -> Term0.Index scope) -> Auto scope -> [Term0.Index scope]
-freeGroupTermVariables index (AnyAuto declaration) = case declaration of
-  Piece Choice {shareIndex} -> [index shareIndex]
-  Auto definition -> freeTermVariables Target definition
-  Shared definition -> freeTermVariables Target definition

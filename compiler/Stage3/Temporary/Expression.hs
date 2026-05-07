@@ -35,9 +35,9 @@ import Stage3.Temporary.CallHead (CallHead)
 import qualified Stage3.Temporary.CallHead as CallHead
 import Stage3.Temporary.ConstructorInfo (ConstructorInfo)
 import qualified Stage3.Temporary.ConstructorInfo as ConstructorInfo
-import qualified Stage3.Temporary.Declaration as Declaration
 import Stage3.Temporary.Declarations (Declarations)
 import qualified Stage3.Temporary.Declarations as Declarations
+import qualified Stage3.Temporary.Definition3 as Definition3
 import Stage3.Temporary.Do (Do)
 import qualified Stage3.Temporary.Do as Do
 import Stage3.Temporary.ExpressionField (Field)
@@ -292,7 +292,7 @@ check context typex Stage2.RightSection {left, operatorPosition, right} = do
   pure RightSection {left, right}
 check context typex Stage2.Annotation {expression, operatorPosition, annotation} = do
   Annotation.Annotation {annotation, annotation'} <- Annotation.checkAnnotation context annotation
-  expression <- Declaration.checkAnnotation context operatorPosition annotation $
+  expression <- Definition3.checkAnnotation context operatorPosition annotation $
     \context typex -> check context typex expression
   (typex', instanciation) <- instanciate context operatorPosition annotation'
   Unify.unify context operatorPosition typex typex'

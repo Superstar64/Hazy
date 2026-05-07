@@ -1,67 +1,43 @@
 module Stage2.Tree.Definition3 where
 
-import Data.Kind (Type)
-import Data.Map (Map)
-import qualified Data.Map as Map
-import qualified Graph.StronglyConnected as StronglyConnected
-import Stage2.FreeVariables (FreeTermVariables (freeTermVariables))
-import qualified Stage2.Index.Link.Term as Term
-import Stage2.Layout (Group, Layout, Normal)
-import Stage2.Locality (Locality)
-import Stage2.Scope (Environment (..))
-import Stage2.Shift (Shift, shiftDefault)
+import Stage1.Tree.Fixity (Fixity)
+import Stage1.Variable (Variable)
+import Stage2.FreeVariables (FreeTermVariables (..), Target (..))
+import qualified Stage2.Index.Term0 as Term0
+import Stage2.Shift (Shift (..), shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage2.Tree.Definition2 (Annotated, Definition2, Inferred, Mark, Source)
-import qualified Stage2.Tree.Definition2 as Definition2
+import Stage2.Tree.Definition2 (Choice (..), Definition2 (..), Inferred, Share, Single)
 
-type Definition3 :: Locality -> Source -> Mark -> Layout -> Environment -> Type
-data Definition3 locality source mark layout scope where
-  Manual :: !(Definition2 source Annotated scope) -> Definition3 locality source Annotated layout scope
-  Auto :: !(Definition2 source Inferred scope) -> Definition3 locality source Inferred Normal scope
-  Link :: !(Term.Link locality) -> Definition3 locality source Inferred Group scope
-  Group ::
-    !(Map (Term.Link locality) (Definition2.Auto scope)) ->
-    Definition3 locality source Inferred Group scope
+data Definition3 mark scope where
+  (::@) :: !(Info source) -> !(Definition2 source mark scope) -> Definition3 mark scope
 
-instance Show (Definition3 locality source mark layout scope) where
-  showsPrec d (Manual definition) =
-    showParen (d > 10) $
-      showString "Manual " . showsPrec 11 definition
-  showsPrec d (Auto definition) =
-    showParen (d > 10) $
-      showString "Auto " . showsPrec 11 definition
-  showsPrec d (Link link) = showParen (d > 10) $ showString "Link " . showsPrec 11 link
-  showsPrec d (Group set) = showParen (d > 10) $ showString "Group " . showsPrec 11 set
+infixr 5 ::@
 
-instance Shift (Definition3 locality source layout mark) where
+instance Show (Definition3 mark scope) where
+  showsPrec d (info ::@ definition) =
+    showParen (d > 5) $
+      showsPrec 6 info . showString " ::@ " . showsPrec 6 definition
+
+instance Shift (Definition3 mark) where
   shift = shiftDefault
 
-instance Shift.Functor (Definition3 locality source layout mark) where
-  map category = \case
-    Manual definition -> Manual (Shift.map category definition)
-    Auto definition -> Auto (Shift.map category definition)
-    Link link -> Link link
-    Group set -> Group (Shift.map category <$> set)
+instance Shift.Functor (Definition3 mark) where
+  map category (info ::@ definition) = info ::@ Shift.map category definition
 
-instance FreeTermVariables (Definition3 locality source layout mark) where
-  freeTermVariables target = \case
-    Manual definition -> freeTermVariables target definition
-    Auto definition -> freeTermVariables target definition
-    Link {} -> []
-    Group set -> foldMap (freeTermVariables target) set
+instance FreeTermVariables (Definition3 mark) where
+  freeTermVariables target (_ ::@ definition) = freeTermVariables target definition
 
-locality :: Definition3 locality source mark Normal scope -> Definition3 locality' source mark Normal scope
-locality = \case
-  Manual declaration -> Manual declaration
-  Auto declaration -> Auto declaration
+data Info source where
+  Name :: !Variable -> !Fixity -> Info Single
+  Index :: !Int -> Info Share
 
-group ::
-  (Term.Link locality -> Definition2.Auto scope) ->
-  StronglyConnected.Component (Term.Link locality) ->
-  Definition3 locality source mark Normal scope ->
-  Definition3 locality source mark Group scope
-group _ _ (Manual definition) = Manual definition
-group index group Auto {} = case group of
-  StronglyConnected.Group {set} ->
-    Group $ Map.fromSet index set
-  StronglyConnected.Link {link} -> Link link
+instance Show (Info source) where
+  showsPrec d info = showParen (d > 10) $ case info of
+    Name name fixity -> showString "Name " . showsPrec 11 name . showString " " . showsPrec 11 fixity
+    Index index -> showString "Index " . showsPrec 11 index
+
+freeGroupTermVariables :: (Int -> Term0.Index scope) -> Definition3 Inferred scope -> [Term0.Index scope]
+freeGroupTermVariables index (_ ::@ declaration) = case declaration of
+  Piece Choice {shareIndex} -> [index shareIndex]
+  Auto definition -> freeTermVariables Target definition
+  Shared definition -> freeTermVariables Target definition

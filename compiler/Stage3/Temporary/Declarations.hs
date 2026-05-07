@@ -35,9 +35,11 @@ import qualified Stage3.Functor.Annotated as Functor (Annotated (..), content)
 import Stage3.Functor.Declarations (mapWithKey)
 import qualified Stage3.Functor.Declarations as Functor (Declarations (..), fromStage2)
 import qualified Stage3.Functor.Instance.Key as Instance.Key
-import Stage3.Temporary.Declaration (Declaration (Shared))
+import Stage3.Temporary.Declaration (Declaration (..))
 import qualified Stage3.Temporary.Declaration as Declaration
 import qualified Stage3.Temporary.Definition2 as Definition2
+import Stage3.Temporary.Definition3 (Definition3 (..))
+import Stage3.Temporary.Definition4 (Definition4 (..))
 import qualified Stage3.Tree.Declaration as Solved.Declaration
 import qualified Stage3.Tree.Declarations as Solved
 import Stage3.Tree.Instance (Instance)
@@ -178,11 +180,8 @@ checkTermDeclaration context index declaration = Formula7 {cycle, run}
       annotation <- meta
       let share index = case terms Vector.! index of
             Functor.Annotated {content} -> do
-              term <- content
-              case term of
-                Shared {body'} ->
-                  pure $ Unify.Scheme $ Unify.mapScheme (Unify.MapScheme Definition2.typex) body'
-                _ -> error "non shared lookup"
+              Declaration {definition = _ ::: _ ::@ definition} <- content
+              pure $ Unify.Scheme $ Unify.mapScheme (Unify.MapScheme Definition2.typex) definition
       Declaration.checkLocal context share annotation declaration
 
 checkTypeAnnotation ::

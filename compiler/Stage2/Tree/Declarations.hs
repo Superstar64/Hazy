@@ -33,13 +33,13 @@ import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import {-# SOURCE #-} qualified Stage2.Temporary.Complete.Declarations as Complete
-import Stage2.Tree.Declaration (Declaration)
+import Stage2.Tree.Declaration (Declaration (..))
 import qualified Stage2.Tree.Declaration as Declaration
-import Stage2.Tree.Definition2 (freeGroupTermVariables)
-import qualified Stage2.Tree.Definition2 as Definition2
-import qualified Stage2.Tree.Definition3 as Definition3
+import Stage2.Tree.Definition2 (Inferred)
+import Stage2.Tree.Definition3 (Definition3 (..), freeGroupTermVariables)
+import qualified Stage2.Tree.Definition4 as Definition4
 import Stage2.Tree.Instance (Instance)
-import Stage2.Tree.TypeDeclaration (TypeDeclaration)
+import Stage2.Tree.TypeDeclaration (TypeDeclaration (..))
 import qualified Stage2.Tree.TypeDeclaration as TypeDeclaration
 import Stage2.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 import Stage2.Tree.TypeDefinition (TypeDefinition)
@@ -103,7 +103,7 @@ resolve initial@Context {canonical, extensions} Stage1.Declarations {declaration
     complete = runIdentity $ Complete.resolve context extensions (toList declarations)
 
 group ::
-  (Term.Link locality -> Definition2.Auto scope) ->
+  (Term.Link locality -> Definition3 Inferred scope) ->
   (Type.Link locality -> TypeDefinition scope) ->
   Functor.Term.Declarations (StronglyConnected.Component (Term.Link locality)) ->
   Functor.Type.Declarations (StronglyConnected.Component (Type.Link locality)) ->
@@ -155,17 +155,17 @@ connect declarations@Declarations {terms, types} =
 
     indexTerm' = fromJust . indexTerm
     indexType' = fromJust . indexType
-    indexTerm :: Term.Link Local -> Maybe (Definition2.Auto (Scope.Declaration ':+ scope))
+    indexTerm :: Term.Link Local -> Maybe (Definition3 Inferred (Scope.Declaration ':+ scope))
     indexTerm = \case
-      Term.Declaration index -> case terms Vector.! index of
-        Declaration.Inferred {definition' = Definition3.Auto definition} ->
-          Just $ Definition2.AnyAuto definition
-        Declaration.Annotated {} -> Nothing
-        Declaration.Shared {definition'' = Definition3.Auto definition} ->
-          Just $ Definition2.AnyAuto definition
+      Term.Declaration index
+        | Declaration {definition} <- terms Vector.! index -> case definition of
+            Definition4.Inferred Definition4.::: definition ->
+              Just definition
+            Definition4.Annotated {} Definition4.::: _ -> Nothing
     indexType :: Type.Link Local -> Maybe (TypeDefinition (Scope.Declaration ':+ scope))
     indexType = \case
-      Type.Declaration index -> case types Vector.! index of
-        TypeDeclaration.Inferred {definition' = TypeDefinition2.Auto definition} ->
-          Just definition
-        TypeDeclaration.Annotated {} -> Nothing
+      Type.Declaration index
+        | TypeDeclaration {definition} <- types Vector.! index -> case definition of
+            TypeDefinition2.Inferred TypeDefinition2.::: definition ->
+              Just definition
+            TypeDefinition2.Annotated {} TypeDefinition2.::: _ -> Nothing

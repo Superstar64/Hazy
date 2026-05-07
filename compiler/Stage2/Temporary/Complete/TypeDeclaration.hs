@@ -44,7 +44,7 @@ import qualified Stage2.Tree.StrictnessAnnotation as StrictnessAnnotation
 import qualified Stage2.Tree.TypeDeclaration as Real (TypeDeclaration (..), locality)
 import qualified Stage2.Tree.TypeDeclarationExtra as Real.Extra
 import qualified Stage2.Tree.TypeDefinition as Real (TypeDefinition (..))
-import qualified Stage2.Tree.TypeDefinition2 as Real (TypeDefinition2 (..))
+import qualified Stage2.Tree.TypeDefinition2 as Real (Annotation (..), TypeDefinition2 (..))
 import Verbose (Debug (resolving))
 
 data Constructors scope
@@ -123,21 +123,22 @@ merge entries@(entry :| _) =
                   | otherwise = ()
              in Verbose.resolving (Variable.print' name) $ case seq sane annotation of
                   Strict.Nothing ->
-                    Real.Inferred
+                    Real.TypeDeclaration
                       { position,
                         name,
-                        constructorNames,
-                        definition' =
-                          Real.Auto Real.ADT {position, brand, parameters, constructors, selectors}
-                      }
-                  Strict.Just annotation ->
-                    Real.Annotated
-                      { position,
-                        name,
-                        annotation,
                         constructorNames,
                         definition =
-                          Real.Manual Real.ADT {position, brand, parameters, constructors, selectors}
+                          Real.Inferred
+                            Real.::: Real.ADT {position, brand, parameters, constructors, selectors}
+                      }
+                  Strict.Just annotation ->
+                    Real.TypeDeclaration
+                      { position,
+                        name,
+                        constructorNames,
+                        definition =
+                          Real.Annotated annotation
+                            Real.::: Real.ADT {position, brand, parameters, constructors, selectors}
                       }
         | Just (_, More.GADT {brand, parameters, gadtConstructors}) <- gadt,
           constructorNames <- GADTConstructor.name <$> gadtConstructors,
@@ -145,41 +146,43 @@ merge entries@(entry :| _) =
             Verbose.resolving (Variable.print' name) $
               case annotation of
                 Strict.Nothing ->
-                  Real.Inferred
+                  Real.TypeDeclaration
                     { position,
                       name,
-                      constructorNames,
-                      definition' =
-                        Real.Auto Real.GADT {position, parameters, brand, gadtConstructors}
-                    }
-                Strict.Just annotation ->
-                  Real.Annotated
-                    { position,
-                      name,
-                      annotation,
                       constructorNames,
                       definition =
-                        Real.Manual Real.GADT {position, parameters, brand, gadtConstructors}
+                        Real.Inferred
+                          Real.::: Real.GADT {position, parameters, brand, gadtConstructors}
+                    }
+                Strict.Just annotation ->
+                  Real.TypeDeclaration
+                    { position,
+                      name,
+                      constructorNames,
+                      definition =
+                        Real.Annotated annotation
+                          Real.::: Real.GADT {position, parameters, brand, gadtConstructors}
                     }
         | Just (position, More.Class {parameter, constraints, methods}) <- classx,
           methods <- fmap Method.shrink methods -> Verbose.resolving (Variable.print' name) $
             case annotation of
               Strict.Nothing ->
-                Real.Inferred
+                Real.TypeDeclaration
                   { position,
                     name,
-                    constructorNames = Strict.Vector.empty,
-                    definition' =
-                      Real.Auto Real.Class {position, parameter, constraints, methods}
-                  }
-              Strict.Just annotation ->
-                Real.Annotated
-                  { position,
-                    name,
-                    annotation,
                     constructorNames = Strict.Vector.empty,
                     definition =
-                      Real.Manual Real.Class {position, parameter, constraints, methods}
+                      Real.Inferred
+                        Real.::: Real.Class {position, parameter, constraints, methods}
+                  }
+              Strict.Just annotation ->
+                Real.TypeDeclaration
+                  { position,
+                    name,
+                    constructorNames = Strict.Vector.empty,
+                    definition =
+                      Real.Annotated annotation
+                        Real.::: Real.Class {position, parameter, constraints, methods}
                   }
         | Just
             ( _,
@@ -190,21 +193,20 @@ merge entries@(entry :| _) =
               ) <-
             synonym -> Verbose.resolving (Variable.print' name) $ case annotation of
             Strict.Nothing ->
-              Real.Inferred
+              Real.TypeDeclaration
                 { position,
                   name,
-                  constructorNames = Strict.Vector.empty,
-                  definition' =
-                    Real.Auto Real.Synonym {parameters, synonym}
-                }
-            Strict.Just annotation ->
-              Real.Annotated
-                { position,
-                  name,
-                  annotation,
                   constructorNames = Strict.Vector.empty,
                   definition =
-                    Real.Manual Real.Synonym {parameters, synonym}
+                    Real.Inferred Real.::: Real.Synonym {parameters, synonym}
+                }
+            Strict.Just annotation ->
+              Real.TypeDeclaration
+                { position,
+                  name,
+                  constructorNames = Strict.Vector.empty,
+                  definition =
+                    Real.Annotated annotation Real.::: Real.Synonym {parameters, synonym}
                 }
       entries -> duplicateTypeEntries entries
     position = Partial.position entry

@@ -33,12 +33,14 @@ import qualified Stage2.Locality as Locality
 import Stage2.Scope (Global)
 import qualified Stage2.Scope as Scope
 import {-# SOURCE #-} qualified Stage2.Temporary.Complete.Module as Complete
+import Stage2.Tree.Declaration (Declaration (..))
 import qualified Stage2.Tree.Declaration as Declaration
 import Stage2.Tree.Declarations (Declarations (..))
 import qualified Stage2.Tree.Declarations as Declarations (group)
-import Stage2.Tree.Definition2 (freeGroupTermVariables)
-import qualified Stage2.Tree.Definition2 as Definition2
-import qualified Stage2.Tree.Definition3 as Definition3
+import Stage2.Tree.Definition2 (Inferred)
+import Stage2.Tree.Definition3 (Definition3, freeGroupTermVariables)
+import qualified Stage2.Tree.Definition4 as Definition4
+import Stage2.Tree.TypeDeclaration (TypeDeclaration (..))
 import qualified Stage2.Tree.TypeDeclaration as TypeDeclaration
 import Stage2.Tree.TypeDefinition (TypeDefinition)
 import qualified Stage2.Tree.TypeDefinition2 as TypeDefinition2
@@ -107,21 +109,21 @@ connect modules = Vector.imap go modules
         (declarations $ modules Vector.! index)
     indexTerm' = fromJust . indexTerm
     indexType' = fromJust . indexType
-    indexTerm :: Term.Link Locality.Global -> Maybe (Definition2.Auto Scope.Global)
+    indexTerm :: Term.Link Locality.Global -> Maybe (Definition3 Inferred Scope.Global)
     indexTerm = \case
       Term.Global global local
-        | Module {declarations = Declarations {terms}} <- modules Vector.! global ->
-            case terms Vector.! local of
-              Declaration.Inferred {definition' = Definition3.Auto definition} ->
-                Just $ Definition2.AnyAuto definition
-              Declaration.Annotated {} -> Nothing
-              Declaration.Shared {definition'' = Definition3.Auto definition} ->
-                Just $ Definition2.AnyAuto definition
+        | Module {declarations = Declarations {terms}} <- modules Vector.! global,
+          Declaration {definition} <- terms Vector.! local ->
+            case definition of
+              Definition4.Inferred Definition4.::: definition ->
+                Just definition
+              Definition4.Annotated {} Definition4.::: _ -> Nothing
     indexType :: Type.Link Locality.Global -> Maybe (TypeDefinition Scope.Global)
     indexType = \case
       Type.Global global local
-        | Module {declarations = Declarations {types}} <- modules Vector.! global ->
-            case types Vector.! local of
-              TypeDeclaration.Inferred {definition' = TypeDefinition2.Auto definition} ->
+        | Module {declarations = Declarations {types}} <- modules Vector.! global,
+          TypeDeclaration {definition} <- types Vector.! local ->
+            case definition of
+              TypeDefinition2.Inferred TypeDefinition2.::: definition ->
                 Just definition
-              TypeDeclaration.Annotated {} -> Nothing
+              TypeDefinition2.Annotated {} TypeDefinition2.::: _ -> Nothing

@@ -7,7 +7,7 @@ import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (shift)
 import qualified Stage2.Tree.TypeDeclaration as Stage2 (TypeDeclaration (..))
 import qualified Stage2.Tree.TypeDefinition as Stage2 (TypeDefinition (Synonym, parameters, synonym))
-import qualified Stage2.Tree.TypeDefinition2 as Stage2 (TypeDefinition2 (..))
+import qualified Stage2.Tree.TypeDefinition2 as Stage2 (Annotation (..), TypeDefinition2 (..))
 import qualified Stage2.Tree.TypePattern
 import qualified Stage2.Tree.TypePattern as Stage2 (TypePattern (TypePattern))
 import Stage3.Check.Context (Context)
@@ -35,11 +35,8 @@ data KindAnnotation scope
       }
 
 check :: Context s scope -> Stage2.TypeDeclaration locality Normal scope -> ST s (KindAnnotation scope)
-check context declaration
-  | position <- Stage2.position declaration,
-    Stage2.Synonym {synonym, parameters} <- case declaration of
-      Stage2.Annotated {definition = Stage2.Manual definition} -> definition
-      Stage2.Inferred {definition' = Stage2.Auto definition} -> definition =
+check context Stage2.TypeDeclaration {position, definition = annotation Stage2.::: definition}
+  | Stage2.Synonym {synonym, parameters} <- definition =
       do
         let fresh Stage2.TypePattern {name, position} = do
               level <- Unify.fresh Unify.universe
@@ -53,9 +50,9 @@ check context declaration
         parameters <- traverse fresh parameters
         target <- Unify.fresh (Unify.typeWith Unify.large)
         let kind = foldr (Unify.function . Unsolved.TypePattern.typex) target parameters
-        case declaration of
+        case annotation of
           Stage2.Inferred {} -> pure ()
-          Stage2.Annotated {annotation} -> do
+          Stage2.Annotated annotation -> do
             universe <- Unify.fresh Unify.universe
             annotation <- Type.check context (Unify.typeWith universe) annotation
             annotation <- Type.solve context annotation
@@ -66,9 +63,9 @@ check context declaration
         definition <- Unsolved.Type.solve context definition
         let definition' = Simple.simplify definition
         pure Synonym {annotation' = Strict.Nothing, kind, definition, definition'}
-check context declaration = case declaration of
-  Stage2.Inferred {} -> pure Inferred
-  Stage2.Annotated {annotation} -> do
+check context Stage2.TypeDeclaration {definition} = case definition of
+  Stage2.Inferred Stage2.::: _ -> pure Inferred
+  Stage2.Annotated annotation Stage2.::: _ -> do
     universe <- Unify.fresh Unify.universe
     annotation <- Type.check context (Unify.typeWith universe) annotation
     annotation <- Type.solve context annotation
