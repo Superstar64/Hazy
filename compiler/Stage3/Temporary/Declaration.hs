@@ -7,6 +7,7 @@ import Stage2.Tree.Declaration (Key)
 import qualified Stage2.Tree.Declaration as Stage2 (Declaration (..))
 import qualified Stage2.Tree.Definition4 as Stage2 (Annotation (..), Definition4 (..))
 import Stage3.Check.Context (Context (..))
+import Stage3.Check.ShareContext (ShareContext)
 import Stage3.Check.TypeAnnotation (Annotation (..), GlobalTypeAnnotation (..), LocalTypeAnnotation (..))
 import qualified Stage3.Temporary.Definition3 as Definition3
 import Stage3.Temporary.Definition4 (Definition4 (..))
@@ -35,7 +36,7 @@ instance Unify.Zonk Declaration where
 
 checkLocal ::
   Context s scope ->
-  (Int -> ST s (Unify.Scheme s scope)) ->
+  ShareContext s scope ->
   LocalTypeAnnotation s scope ->
   Stage2.Declaration locality Normal scope ->
   ST s (Declaration s scope)
@@ -59,7 +60,7 @@ checkLocal context shared annotation Stage2.Declaration {position, name, definit
 
 checkGlobal ::
   Context s scope ->
-  (Int -> ST s (Unify.Scheme s scope)) ->
+  ShareContext s scope ->
   GlobalTypeAnnotation scope ->
   Stage2.Declaration locality Normal scope ->
   ST s (Declaration s scope)

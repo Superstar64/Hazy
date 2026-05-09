@@ -22,6 +22,7 @@ import Stage3.Check.InstanceAnnotation (InstanceAnnotation)
 import qualified Stage3.Check.InstanceAnnotation as InstanceAnnotation
 import Stage3.Check.KindAnnotation (KindAnnotation)
 import qualified Stage3.Check.KindAnnotation as KindAnnotation
+import qualified Stage3.Check.ShareContext as ShareContext
 import Stage3.Check.TypeAnnotation (GlobalTypeAnnotation)
 import qualified Stage3.Check.TypeAnnotation as TypeAnnotation
 import qualified Stage3.Functor.Annotated as Functor (Annotated (..))
@@ -31,23 +32,17 @@ import Stage3.Functor.Module (fromStage2)
 import qualified Stage3.Functor.Module as Functor (Module (..))
 import Stage3.Functor.ModuleSet (mapWithKey)
 import qualified Stage3.Functor.ModuleSet as Functor (ModuleSet (..))
-import qualified Stage3.Simple.Scheme as Scheme
 import qualified Stage3.Temporary.Declaration as Declaration.Unsolved
 import Stage3.Tree.Declaration (Declaration (..), LazyTermDeclaration)
 import qualified Stage3.Tree.Declaration as Declaration
 import Stage3.Tree.Declarations (Declarations)
 import qualified Stage3.Tree.Declarations as Declarations
-import qualified Stage3.Tree.Definition2 as Definition2
-import Stage3.Tree.Definition3 (Definition3 (..))
-import Stage3.Tree.Definition4 (Definition4 (..))
 import Stage3.Tree.Instance (Instance)
 import qualified Stage3.Tree.Instance as Instance
 import Stage3.Tree.TypeDeclaration (LazyTypeDeclaration, TypeDeclaration)
 import qualified Stage3.Tree.TypeDeclaration as TypeDeclaration
 import Stage3.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 import qualified Stage3.Tree.TypeDeclarationExtra as TypeDeclarationExtra
-import Stage4.Tree.Scheme (Scheme (Scheme))
-import qualified Stage4.Tree.SchemeOver as SchemeOver
 import Prelude hiding (Functor)
 
 data Module = Module
@@ -163,10 +158,7 @@ checkTermDeclaration global local declaration = Formula7 {cycle, run}
           Functor.Annotated {meta} = terms Vector.! local
       annotation <- meta
       let context = globalBindings moduleSet
-      let share index = case terms Vector.! index of
-            Functor.Annotated {content} -> do
-              Declaration {definition = _ ::: _ ::@ definition} <- content
-              pure $ Scheme.lift $ Scheme $ SchemeOver.map (SchemeOver.Map Definition2.typex) definition
+          share = ShareContext.globalBindings context global
       unsolved <- Declaration.Unsolved.checkGlobal context share annotation declaration
       Declaration.Unsolved.solve unsolved
 

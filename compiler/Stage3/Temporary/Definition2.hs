@@ -8,6 +8,10 @@ import Stage2.Shift (shift)
 import Stage2.Tree.Definition2 (Annotated, Inferred, Share, Single)
 import qualified Stage2.Tree.Definition2 as Stage2
 import Stage3.Check.Context (Context)
+import Stage3.Check.ShareContext (ShareContext (..))
+import qualified Stage3.Check.ShareContext as ShareContext
+import Stage3.Check.TermBinding (TermBinding (TermBinding), Type (..))
+import Stage3.Simple.Scheme (instanciate)
 import Stage3.Temporary.Definition (Definition)
 import qualified Stage3.Temporary.Definition as Definition
 import Stage3.Temporary.Pattern (Pattern)
@@ -65,7 +69,7 @@ data Which mark scope where
 
 check ::
   Context s (scope ':+ scopes) ->
-  (Int -> ST s (Unify.Scheme s scopes)) ->
+  ShareContext s scopes ->
   Which mark (scope ':+ scopes) ->
   Unify.Type s (scope ':+ scopes) ->
   Stage2.Definition2 source mark scopes ->
@@ -81,8 +85,11 @@ check context _ Auto typex (Stage2.Shared definition) = do
   pure $ Shared definition typex
 check context shared _ typex declaration = case declaration of
   Stage2.Piece Stage2.Choice {position, shareIndex, patternx, bound} -> do
-    target <- shared shareIndex
-    (full, instanciation) <- Unify.instanciate context position (shift target)
+    let TermBinding binding = shared ShareContext.! shareIndex
+    (full, instanciation) <-
+      binding >>= \case
+        Wobbly typex -> Unify.instanciate context position (Unify.monoScheme $ shift typex)
+        Rigid scheme -> instanciate context position (shift scheme)
     patternx <- Pattern.check context full (shift patternx)
     let typex' = patternx Pattern.! bound
     Unify.unify context position typex typex'

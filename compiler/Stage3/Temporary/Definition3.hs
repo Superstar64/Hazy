@@ -9,6 +9,7 @@ import Stage2.Tree.Definition3 (Info)
 import qualified Stage2.Tree.Definition3 as Stage2
 import Stage3.Check.Context (Context)
 import qualified Stage3.Check.Mask as Mask
+import Stage3.Check.ShareContext (ShareContext)
 import qualified Stage3.Simple.Constraint as Simple.Constraint (lift)
 import Stage3.Simple.Type (lift)
 import Stage3.Temporary.Definition2 (Definition2)
@@ -38,7 +39,7 @@ data Which mark s scope where
 
 check ::
   Context s scope ->
-  (Int -> ST s (Unify.Scheme s scope)) ->
+  ShareContext s scope ->
   Which mark s scope ->
   Position ->
   Stage2.Definition3 mark scope ->

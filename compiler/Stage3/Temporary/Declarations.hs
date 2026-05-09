@@ -29,6 +29,7 @@ import Stage3.Check.InstanceAnnotation (InstanceAnnotation)
 import qualified Stage3.Check.InstanceAnnotation as InstanceAnnotation
 import Stage3.Check.KindAnnotation (KindAnnotation)
 import qualified Stage3.Check.KindAnnotation as KindAnnotation
+import qualified Stage3.Check.ShareContext as ShareContext
 import Stage3.Check.TypeAnnotation (LocalTypeAnnotation)
 import qualified Stage3.Check.TypeAnnotation as TypeAnnotation
 import qualified Stage3.Functor.Annotated as Functor (Annotated (..), content)
@@ -37,9 +38,6 @@ import qualified Stage3.Functor.Declarations as Functor (Declarations (..), from
 import qualified Stage3.Functor.Instance.Key as Instance.Key
 import Stage3.Temporary.Declaration (Declaration (..))
 import qualified Stage3.Temporary.Declaration as Declaration
-import qualified Stage3.Temporary.Definition2 as Definition2
-import Stage3.Temporary.Definition3 (Definition3 (..))
-import Stage3.Temporary.Definition4 (Definition4 (..))
 import qualified Stage3.Tree.Declaration as Solved.Declaration
 import qualified Stage3.Tree.Declarations as Solved
 import Stage3.Tree.Instance (Instance)
@@ -176,12 +174,9 @@ checkTermDeclaration context index declaration = Formula7 {cycle, run}
     cycle = cyclicalTypeChecking $ Stage2.Declaration.position declaration
     run declarations@Functor.Declarations {terms} = do
       context <- pure $ localBindings declarations context
+      let share = ShareContext.localBindings context
       let Functor.Annotated {meta} = terms Vector.! index
       annotation <- meta
-      let share index = case terms Vector.! index of
-            Functor.Annotated {content} -> do
-              Declaration {definition = _ ::: _ ::@ definition} <- content
-              pure $ Unify.Scheme $ Unify.mapScheme (Unify.MapScheme Definition2.typex) definition
       Declaration.checkLocal context share annotation declaration
 
 checkTypeAnnotation ::
