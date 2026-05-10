@@ -82,7 +82,7 @@ visiter children = do
           let root :| children = sortOn value nodes
               set = Set.fromAscList (value root : map value children)
           writeSTRef (result root) Group {set}
-          for_ (zip [0 ..] children) $ \(id, child) ->
+          for_ (zip [1 ..] children) $ \(id, child) ->
             writeSTRef (result child) Link {link = value root, id}
         where
           collect = do
