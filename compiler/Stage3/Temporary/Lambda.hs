@@ -1,6 +1,7 @@
 module Stage3.Temporary.Lambda where
 
 import Control.Monad.ST (ST)
+import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope (Pattern)
 import Stage2.Shift (shift)
@@ -32,7 +33,7 @@ instance Unify.Zonk Lambda where
       body <- Unify.zonk zonker body
       pure Bound {parameter, body}
 
-check :: Context s scope -> Unify.Type s scope -> Stage2.Lambda scope -> ST s (Lambda s scope)
+check :: Context s scope -> Unify.Type s scope -> Stage2.Lambda Normal scope -> ST s (Lambda s scope)
 check context typex = \case
   Stage2.Plain {plain} -> do
     plain <- Expression.check context typex plain

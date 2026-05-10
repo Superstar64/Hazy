@@ -12,6 +12,7 @@ import Stage1.Tree.Marked (Marked (..))
 import Stage1.Variable (ConstructorIdentifier, QualifiedConstructorIdentifier ((:=.)), Qualifiers (Local))
 import qualified Stage2.Index.Type2 as Type2
 import qualified Stage2.Index.Type3 as Type3
+import Stage2.Layout (Normal)
 import qualified Stage2.Resolve.Binding.Type as Type
 import Stage2.Resolve.Context (Context, (!=.))
 import qualified Stage2.Tree.Instance as Real
@@ -20,10 +21,10 @@ data DataInstance scope = DataInstance
   { classPosition :: !Position,
     dataIndex :: !Int,
     classIndex :: !(Type2.Index scope),
-    instancex :: Real.Instance scope
+    instancex :: Real.Instance Normal scope
   }
 
-shrink :: DataInstance scope -> Real.Instance scope
+shrink :: DataInstance scope -> Real.Instance Normal scope
 shrink = instancex
 
 prepare :: DataInstance scope -> (Int, Map (Type2.Index scope) (NonEmpty.NonEmpty (DataInstance scope)))

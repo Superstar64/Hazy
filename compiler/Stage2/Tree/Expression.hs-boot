@@ -6,25 +6,26 @@ import Data.Kind (Type)
 import Stage1.Position (Position)
 import qualified Stage1.Tree.Expression as Stage1 (Expression)
 import Stage2.FreeVariables (FreeTermVariables)
+import Stage2.Layout (Layout, Normal)
 import Stage2.Resolve.Context (Context)
 import Stage2.Scope (Environment)
 import Stage2.Shift (Shift)
 import qualified Stage2.Shift as Shift
 import Stage2.Tree.CallHead (CallHead)
 
-type Expression :: Environment -> Type
+type Expression :: Layout -> Environment -> Type
 
-type role Expression nominal
+type role Expression nominal nominal
 
-data Expression scope
+data Expression layout scope
 
-instance Show (Expression scope)
+instance Show (Expression layout scope)
 
-instance Shift Expression
+instance Shift (Expression layout)
 
-instance Shift.Functor Expression
+instance Shift.Functor (Expression layout)
 
-instance FreeTermVariables Expression
+instance FreeTermVariables (Expression layout)
 
-callHead_ :: CallHead scope -> Expression scope
-resolve :: Context scope -> Stage1.Expression Position -> Expression scope
+callHead_ :: CallHead scope -> Expression Normal scope
+resolve :: Context scope -> Stage1.Expression Position -> Expression Normal scope

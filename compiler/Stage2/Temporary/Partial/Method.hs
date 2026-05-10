@@ -8,6 +8,7 @@ import Stage1.Position (Position)
 import qualified Stage1.Tree.ClassDeclaration as Stage1 (ClassDeclaration (..))
 import Stage1.Tree.Marked (Marked (..))
 import Stage1.Variable (Variable)
+import Stage2.Layout (Normal)
 import Stage2.Resolve.Context (Context (..))
 import qualified Stage2.Temporary.Complete.Definition as Complete
 import Stage2.Tree.Function (Function)
@@ -23,7 +24,7 @@ data Method scope
   | Function
       { position :: !Position,
         name :: !Variable,
-        function :: Function scope
+        function :: Function Normal scope
       }
 
 resolve :: Context scope -> Stage1.ClassDeclaration Position -> [(Variable, Method scope)]

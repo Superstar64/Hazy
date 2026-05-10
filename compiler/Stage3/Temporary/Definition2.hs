@@ -5,6 +5,7 @@ import Stage1.Position (Position)
 import qualified Stage2.Index.Table.Term as Term ((!))
 import Stage2.Index.Term (Bound)
 import qualified Stage2.Index.Term as Term (Index)
+import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (shift)
 import Stage2.Tree.Definition2 (Annotated, Inferred, Share, Single)
@@ -71,7 +72,7 @@ check ::
   Context s (scope ':+ scopes) ->
   Which mark (scope ':+ scopes) ->
   Unify.Type s (scope ':+ scopes) ->
-  Stage2.Definition2 source mark scopes ->
+  Stage2.Definition2 source mark Normal scopes ->
   ST s (Definition2 source mark s (scope ':+ scopes))
 check context Auto typex (Stage2.Auto definition) = do
   definition <- Definition.check context typex (shift definition)

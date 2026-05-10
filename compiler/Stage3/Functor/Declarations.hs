@@ -110,9 +110,9 @@ fromStage2 ::
     (Stage2.Declaration locality Normal scope)
     (Stage2.TypeDeclaration locality Normal scope)
     (Stage2.TypeDeclaration locality Normal scope)
-    (Stage2.TypeDeclarationExtra scope)
-    (Stage2.Instance scope)
-    (Stage2.Instance scope)
+    (Stage2.TypeDeclarationExtra Normal scope)
+    (Stage2.Instance Normal scope)
+    (Stage2.Instance Normal scope)
 fromStage2
   path
   Stage2.Declarations

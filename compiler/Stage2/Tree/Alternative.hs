@@ -4,6 +4,7 @@ import Stage1.Position (Position)
 import qualified Stage1.Tree.Alternative as Stage1 (Alternative (..))
 import Stage2.FreeVariables (FreeTermVariables (freeTermVariables))
 import qualified Stage2.FreeVariables as FreeTermVariables
+import Stage2.Layout (Normal)
 import Stage2.Resolve.Context (Context (..))
 import Stage2.Scope (Environment ((:+)))
 import qualified Stage2.Scope as Scope (Pattern)
@@ -14,27 +15,27 @@ import qualified Stage2.Tree.Pattern as Pattern (augment, resolve)
 import Stage2.Tree.RightHandSide (RightHandSide)
 import qualified Stage2.Tree.RightHandSide as RightHandSide (resolve)
 
-data Alternative scope
+data Alternative layout scope
   = Alternative
   { parameter :: !(Pattern scope),
-    rightHandSide :: !(RightHandSide (Scope.Pattern ':+ scope))
+    rightHandSide :: !(RightHandSide layout (Scope.Pattern ':+ scope))
   }
   deriving (Show)
 
-instance Shift Alternative where
+instance Shift (Alternative layout) where
   shift = shiftDefault
 
-instance Shift.Functor Alternative where
+instance Shift.Functor (Alternative layout) where
   map category (Alternative patternx rightHandSide) =
     Alternative
       (Shift.map category patternx)
       (Shift.map (Shift.Over category) rightHandSide)
 
-instance FreeTermVariables Alternative where
+instance FreeTermVariables (Alternative layout) where
   freeTermVariables target Alternative {rightHandSide} =
     freeTermVariables (FreeTermVariables.Over target) rightHandSide
 
-resolve :: Context scope -> Stage1.Alternative Position -> Alternative scope
+resolve :: Context scope -> Stage1.Alternative Position -> Alternative Normal scope
 resolve context (Stage1.Alternative {parameter, rightHandSide}) =
   Alternative pattern' (RightHandSide.resolve (Pattern.augment pattern' context) rightHandSide)
   where

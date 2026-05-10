@@ -8,6 +8,7 @@ import qualified Stage1.Tree.Pattern as Stage1 (Pattern (..))
 import qualified Stage1.Tree.Pattern as Stage1.Pattern
 import Stage2.FreeVariables (FreeTermVariables (..))
 import qualified Stage2.FreeVariables as FreeTermVariables
+import Stage2.Layout (Normal)
 import Stage2.Resolve.Context (Context (..))
 import Stage2.Scope (Environment ((:+)))
 import qualified Stage2.Scope as Scope (Pattern)
@@ -18,21 +19,21 @@ import {-# SOURCE #-} qualified Stage2.Tree.Expression as Expression (resolve)
 import Stage2.Tree.Pattern (Pattern)
 import qualified Stage2.Tree.Pattern as Pattern (augment, resolve)
 
-data Lambda scope
+data Lambda layout scope
   = Plain
-      { plain :: !(Expression scope)
+      { plain :: !(Expression layout scope)
       }
   | Bound
       { boundPosition :: !Position,
         parameter :: !(Pattern scope),
-        body :: !(Lambda (Scope.Pattern ':+ scope))
+        body :: !(Lambda layout (Scope.Pattern ':+ scope))
       }
   deriving (Show)
 
-instance Shift Lambda where
+instance Shift (Lambda layout) where
   shift = shiftDefault
 
-instance Shift.Functor Lambda where
+instance Shift.Functor (Lambda layout) where
   map category = \case
     Plain {plain} -> Plain {plain = Shift.map category plain}
     Bound {boundPosition, parameter, body} ->
@@ -42,13 +43,13 @@ instance Shift.Functor Lambda where
           body = Shift.map (Shift.Over category) body
         }
 
-instance FreeTermVariables Lambda where
+instance FreeTermVariables (Lambda layout) where
   freeTermVariables target = \case
     Plain {plain} -> freeTermVariables target plain
     Bound {body} -> freeTermVariables (FreeTermVariables.Over target) body
 
 -- todo complain when lambda variables shadow other lambda variables
-resolve :: Context scope -> [Stage1.Pattern Position] -> Stage1.Expression Position -> Lambda scope
+resolve :: Context scope -> [Stage1.Pattern Position] -> Stage1.Expression Position -> Lambda Normal scope
 resolve context patterns expression = case patterns of
   [] -> Plain {plain = Expression.resolve context expression}
   (patternx : patterns)

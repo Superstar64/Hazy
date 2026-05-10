@@ -17,6 +17,7 @@ import Stage1.Position (Position)
 import qualified Stage2.Index.Constructor as Constructor
 import qualified Stage2.Index.Table.Type as Type
 import qualified Stage2.Index.Type2 as Type2
+import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (shift)
@@ -185,7 +186,7 @@ instance Unify.Zonk Expression where
       right <- Unify.zonk zonker right
       pure RightSection {left, right}
 
-check :: Context s scope -> Unify.Type s scope -> Stage2.Expression scope -> ST s (Expression s scope)
+check :: Context s scope -> Unify.Type s scope -> Stage2.Expression Normal scope -> ST s (Expression s scope)
 check context typex Stage2.CallHead {callHead} = do
   callHead <- CallHead.check context typex callHead
   pure CallHead {callHead}

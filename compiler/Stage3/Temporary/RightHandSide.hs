@@ -1,6 +1,7 @@
 module Stage3.Temporary.RightHandSide where
 
 import Control.Monad.ST (ST)
+import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope (Declaration)
 import Stage2.Shift (shift)
@@ -24,7 +25,11 @@ instance Unify.Zonk RightHandSide where
     declarations <- Unify.zonk zonker declarations
     pure $ RightHandSide body declarations
 
-check :: Context s scope -> Unify.Type s scope -> Stage2.RightHandSide scope -> ST s (RightHandSide s scope)
+check ::
+  Context s scope ->
+  Unify.Type s scope ->
+  Stage2.RightHandSide Normal scope ->
+  ST s (RightHandSide s scope)
 check context typex (Stage2.RightHandSide body declarations) = do
   (context, declarations) <- Declarations.check context declarations
   body <- Body.check context (shift typex) body

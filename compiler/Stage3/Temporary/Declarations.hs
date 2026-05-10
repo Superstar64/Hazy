@@ -208,7 +208,7 @@ checkTypeDeclaration context index declaration = Formula7 {cycle, run}
 checkTypeDeclarationExtra ::
   Context s scope ->
   Int ->
-  Stage2.TypeDeclarationExtra (Scope.Declaration ':+ scope) ->
+  Stage2.TypeDeclarationExtra Normal (Scope.Declaration ':+ scope) ->
   Formula s scope (TypeDeclarationExtra (Scope.Declaration ':+ scope))
 checkTypeDeclarationExtra context index declaration = Formula7 {cycle, run}
   where
@@ -223,7 +223,7 @@ checkTypeDeclarationExtra context index declaration = Formula7 {cycle, run}
 checkInstanceAnnotation ::
   Context s scope ->
   p ->
-  Stage2.Instance.Instance (Scope.Declaration ':+ scope) ->
+  Stage2.Instance.Instance Normal (Scope.Declaration ':+ scope) ->
   Formula s scope (InstanceAnnotation (Scope.Declaration ':+ scope))
 checkInstanceAnnotation context _ declaration = Formula7 {cycle, run}
   where
@@ -234,7 +234,7 @@ checkInstanceAnnotation context _ declaration = Formula7 {cycle, run}
 checkInstanceDeclaration ::
   Context s scope ->
   Instance.Key.Key (Scope.Declaration ':+ scope) ->
-  Stage2.Instance (Scope.Declaration ':+ scope) ->
+  Stage2.Instance Normal (Scope.Declaration ':+ scope) ->
   Formula s scope (Instance (Scope.Declaration ':+ scope))
 checkInstanceDeclaration context key declaration = Formula7 {cycle, run}
   where

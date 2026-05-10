@@ -6,6 +6,7 @@ import Data.Kind (Type)
 import Stage1.Position (Position)
 import Stage1.Tree.Associativity (Associativity)
 import qualified Stage1.Tree.ExpressionInfix as Stage1 (Infix)
+import Stage2.Layout (Normal)
 import Stage2.Resolve.Context (Context)
 import Stage2.Scope (Environment)
 import Stage2.Temporary.Infix (Infix)
@@ -16,6 +17,10 @@ type role Index nominal
 type Index :: Environment -> Type
 data Index scope
 
-resolve :: Context scope -> Stage1.Infix Position -> Infix (Index scope) (Expression scope)
-fix :: Infix (Index scope) (Expression scope) -> Expression scope
-fixWith :: Maybe Associativity -> Int -> Infix (Index scope) (Expression scope) -> Expression scope
+resolve :: Context scope -> Stage1.Infix Position -> Infix (Index scope) (Expression Normal scope)
+fix :: Infix (Index scope) (Expression Normal scope) -> Expression Normal scope
+fixWith ::
+  Maybe Associativity ->
+  Int ->
+  Infix (Index scope) (Expression Normal scope) ->
+  Expression Normal scope

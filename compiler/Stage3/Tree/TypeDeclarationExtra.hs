@@ -7,6 +7,7 @@ import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
 import qualified Stage2.Index.Type as Type
 import qualified Stage2.Index.Type2 as Type2
+import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (shift)
 import qualified Stage2.Tree.TypeDeclarationExtra as Stage2
@@ -40,7 +41,7 @@ check ::
   Context s scope ->
   Type.Index scope ->
   TypeDeclaration scope ->
-  Stage2.TypeDeclarationExtra scope ->
+  Stage2.TypeDeclarationExtra Normal scope ->
   ST s (TypeDeclarationExtra scope)
 check context classx declaration
   | definition <- TypeDeclaration.definition declaration = \case

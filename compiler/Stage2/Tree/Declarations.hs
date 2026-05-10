@@ -49,9 +49,9 @@ import qualified Stage2.Tree.TypeDefinition2 as TypeDefinition2
 data Declarations locality layout scope = Declarations
   { terms :: !(Vector (Declaration locality layout scope)),
     types :: !(Vector (TypeDeclaration locality layout scope)),
-    typeExtras :: !(Vector (TypeDeclarationExtra scope)),
-    dataInstances :: !(Vector (Map (Type2.Index scope) (Instance scope))),
-    classInstances :: !(Vector (Map (Type2.Index scope) (Instance scope)))
+    typeExtras :: !(Vector (TypeDeclarationExtra Normal scope)),
+    dataInstances :: !(Vector (Map (Type2.Index scope) (Instance Normal scope))),
+    classInstances :: !(Vector (Map (Type2.Index scope) (Instance Normal scope)))
   }
   deriving (Show)
 
@@ -106,7 +106,7 @@ resolve initial@Context {canonical, extensions} Stage1.Declarations {declaration
 group ::
   (Term0.Index scope -> Term.Link locality) ->
   (Type0.Index scope -> Type.Link locality) ->
-  (Term.Link locality -> Definition3 Inferred scope) ->
+  (Term.Link locality -> Definition3 Inferred Normal scope) ->
   (Type.Link locality -> TypeDefinition scope) ->
   Functor.Term.Declarations (StronglyConnected.Component (Term.Link locality)) ->
   Functor.Type.Declarations (StronglyConnected.Component (Type.Link locality)) ->
@@ -160,7 +160,7 @@ connect declarations@Declarations {terms, types} =
 
     indexTerm' = fromJust . indexTerm
     indexType' = fromJust . indexType
-    indexTerm :: Term.Link Local -> Maybe (Definition3 Inferred (Scope.Declaration ':+ scope))
+    indexTerm :: Term.Link Local -> Maybe (Definition3 Inferred Normal (Scope.Declaration ':+ scope))
     indexTerm = \case
       Term.Declaration index
         | Declaration {definition} <- terms Vector.! index -> case definition of

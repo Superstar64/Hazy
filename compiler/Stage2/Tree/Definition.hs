@@ -6,15 +6,15 @@ import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Tree.Function (Function)
 
-data Definition scope
-  = Definition !(Function scope)
-  | Alternative !(Function scope) !(Definition scope)
+data Definition layout scope
+  = Definition !(Function layout scope)
+  | Alternative !(Function layout scope) !(Definition layout scope)
   deriving (Show)
 
-instance Shift Definition where
+instance Shift (Definition layout) where
   shift = shiftDefault
 
-instance Shift.Functor Definition where
+instance Shift.Functor (Definition layout) where
   map category = \case
     Definition function -> Definition (Shift.map category function)
     Alternative function definition ->
@@ -22,7 +22,7 @@ instance Shift.Functor Definition where
         (Shift.map category function)
         (Shift.map category definition)
 
-instance FreeTermVariables Definition where
+instance FreeTermVariables (Definition layout) where
   freeTermVariables target = \case
     Definition function -> freeTermVariables target function
     Alternative function definition ->
@@ -31,7 +31,7 @@ instance FreeTermVariables Definition where
           freeTermVariables target definition
         ]
 
-merge :: NonEmpty (Function scope) -> Definition scope
+merge :: NonEmpty (Function layout scope) -> Definition layout scope
 merge (definition :| []) = Definition definition
 merge (definition1 :| (definition2 : definitions)) =
   Alternative definition1 (merge (definition2 :| definitions))

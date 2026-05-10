@@ -61,7 +61,7 @@ locality = \case
 
 group ::
   (Term0.Index scope -> Term.Link locality) ->
-  (Term.Link locality -> Definition3 Inferred scope) ->
+  (Term.Link locality -> Definition3 Inferred Normal scope) ->
   StronglyConnected.Component (Term.Link locality) ->
   Declaration locality Normal scope ->
   Declaration locality Group scope

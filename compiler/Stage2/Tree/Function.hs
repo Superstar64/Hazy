@@ -7,6 +7,7 @@ import qualified Stage1.Tree.Pattern as Stage1 (Pattern (startPosition))
 import qualified Stage1.Tree.RightHandSide as Stage1 (RightHandSide (..))
 import Stage2.FreeVariables (FreeTermVariables (..))
 import qualified Stage2.FreeVariables as FreeTermVariables
+import Stage2.Layout (Normal)
 import Stage2.Resolve.Context (Context)
 import Stage2.Scope (Environment ((:+)))
 import qualified Stage2.Scope as Scope (Pattern)
@@ -17,20 +18,20 @@ import qualified Stage2.Tree.Pattern as Pattern (augment, resolve)
 import Stage2.Tree.RightHandSide (RightHandSide)
 import qualified Stage2.Tree.RightHandSide as RightHandSide (resolve)
 
-data Function scope
+data Function layout scope
   = Plain
-      {rightHandSide :: !(RightHandSide scope)}
+      {rightHandSide :: !(RightHandSide layout scope)}
   | Bound
       { functionPosition :: !Position,
         patternx :: !(Pattern scope),
-        function :: !(Function (Scope.Pattern ':+ scope))
+        function :: !(Function layout (Scope.Pattern ':+ scope))
       }
   deriving (Show)
 
-instance Shift Function where
+instance Shift (Function layout) where
   shift = shiftDefault
 
-instance Shift.Functor Function where
+instance Shift.Functor (Function layout) where
   map category = \case
     Plain {rightHandSide} -> Plain {rightHandSide = Shift.map category rightHandSide}
     Bound {functionPosition, patternx, function} ->
@@ -40,13 +41,17 @@ instance Shift.Functor Function where
           function = Shift.map (Shift.Over category) function
         }
 
-instance FreeTermVariables Function where
+instance FreeTermVariables (Function layout) where
   freeTermVariables target = \case
     Plain {rightHandSide} -> freeTermVariables target rightHandSide
     Bound {function} -> freeTermVariables (FreeTermVariables.Over target) function
 
 -- todo complain when lambda variables shadow other lambda variables
-resolve :: Context scope -> [Stage1.Pattern Position] -> Stage1.RightHandSide Position -> Function scope
+resolve ::
+  Context scope ->
+  [Stage1.Pattern Position] ->
+  Stage1.RightHandSide Position ->
+  Function Normal scope
 resolve context patterns rightHandSide1 = case patterns of
   [] -> Plain {rightHandSide = RightHandSide.resolve context rightHandSide1}
   (pattern1 : patterns) ->

@@ -8,6 +8,7 @@ import Stage1.Variable (QualifiedVariable (..), Qualifiers (..))
 import Stage2.FreeVariables (FreeTermVariables (freeTermVariables))
 import qualified Stage2.Index.Selector as Selector
 import qualified Stage2.Index.Type2 as Type2
+import Stage2.Layout (Normal)
 import Stage2.Resolve.Context (Context (..), (!-%), (!-*))
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
@@ -15,21 +16,21 @@ import qualified Stage2.Tree.CallHead as CallHead
 import {-# SOURCE #-} Stage2.Tree.Expression (Expression)
 import {-# SOURCE #-} Stage2.Tree.Expression as Expression (callHead_, resolve)
 
-data Select scope
-  = Select !Int !(Expression scope)
+data Select layout scope
+  = Select !Int !(Expression layout scope)
   deriving (Show)
 
-instance Shift Select where
+instance Shift (Select layout) where
   shift = shiftDefault
 
-instance Shift.Functor Select where
+instance Shift.Functor (Select layout) where
   map category (Select pick record) =
     Select pick (Shift.map category record)
 
-instance FreeTermVariables Select where
+instance FreeTermVariables (Select layout) where
   freeTermVariables target (Select _ expression) = freeTermVariables target expression
 
-resolve :: Type2.Index scope -> Context scope -> Stage1.Field Position -> Select scope
+resolve :: Type2.Index scope -> Context scope -> Stage1.Field Position -> Select Normal scope
 resolve typex context = \case
   Stage1.Field {variable, field} -> make variable (Expression.resolve context field)
   Stage1.Pun {variable = variable@(position :@ _ :- localName)} ->

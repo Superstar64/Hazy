@@ -10,6 +10,7 @@ import qualified Data.Vector.Strict as Strict (Vector)
 import Error (duplicateMethodEntries, missingMethodEntry)
 import Stage1.Position (Position)
 import Stage1.Variable (Variable)
+import Stage2.Layout (Normal)
 import Stage2.Scope (Environment ((:+)), Local)
 import qualified Stage2.Temporary.Partial.Method as Partial
 import qualified Stage2.Tree.Definition as Definition (merge)
@@ -20,7 +21,7 @@ data Method scope = Method
   { position :: !Position,
     name :: !Variable,
     method :: Real.Method scope,
-    extra :: Strict.Maybe (Real.Definition scope)
+    extra :: Strict.Maybe (Real.Definition Normal scope)
   }
 
 shrink = method

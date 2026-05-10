@@ -63,13 +63,13 @@ data TypeDeclaration scope = TypeDeclaration
     fields :: !(Fields scope),
     constructors :: !(Constructors scope),
     declaration :: forall locality. Real.TypeDeclaration locality Normal scope,
-    extra :: Real.Extra.TypeDeclarationExtra scope
+    extra :: Real.Extra.TypeDeclarationExtra Normal scope
   }
 
 shrink :: TypeDeclaration scope -> Real.TypeDeclaration locality Normal scope
 shrink = declaration
 
-shrinkExtra :: TypeDeclaration scope -> Real.Extra.TypeDeclarationExtra scope
+shrinkExtra :: TypeDeclaration scope -> Real.Extra.TypeDeclarationExtra Normal scope
 shrinkExtra = extra
 
 merge :: (Debug verbose) => NonEmpty (Partial.TypeDeclaration scope) -> verbose (TypeDeclaration scope)

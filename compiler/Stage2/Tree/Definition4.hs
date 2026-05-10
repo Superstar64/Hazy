@@ -24,9 +24,9 @@ import Stage2.Tree.Scheme (Scheme)
 
 type Definition4 :: Locality -> Layout -> Environment -> Type
 data Definition4 locality layout scope where
-  (:::) :: !(Annotation mark layout scope) -> !(Definition3 mark scope) -> Definition4 locality layout scope
+  (:::) :: !(Annotation mark layout scope) -> !(Definition3 mark Normal scope) -> Definition4 locality layout scope
   Link :: !(Term.Link locality) -> !Int -> Definition4 locality Group scope
-  Group :: !(Strict.Vector (Definition3 Inferred (Scope.Group ':+ scope))) -> Definition4 locality Group scope
+  Group :: !(Strict.Vector (Definition3 Inferred Normal (Scope.Group ':+ scope))) -> Definition4 locality Group scope
 
 infixr 5 :::
 
@@ -80,7 +80,7 @@ locality = \case
 
 group ::
   (Term0.Index scope -> Term.Link locality) ->
-  (Term.Link locality -> Definition3 Inferred scope) ->
+  (Term.Link locality -> Definition3 Inferred Normal scope) ->
   StronglyConnected.Component (Term.Link locality) ->
   Definition4 locality Normal scope ->
   Definition4 locality Group scope

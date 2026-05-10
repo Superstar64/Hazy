@@ -3,6 +3,7 @@ module Stage3.Temporary.Do where
 import Control.Monad.ST (ST)
 import Stage1.Position (Position)
 import qualified Stage2.Index.Type2 as Type2
+import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (shift)
@@ -60,7 +61,7 @@ instance Unify.Zonk Do where
       letBody <- Unify.zonk zonker letBody
       pure Let {declarations, letBody}
 
-check :: Context s scope -> Unify.Type s scope -> Stage2.Statements scope -> ST s (Do s scope)
+check :: Context s scope -> Unify.Type s scope -> Stage2.Statements Normal scope -> ST s (Do s scope)
 check context typex = \case
   Stage2.Done {done} -> do
     done <- Expression.check context typex done

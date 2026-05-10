@@ -10,20 +10,20 @@ import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Tree.Definition (Definition)
 
-data TypeDeclarationExtra scope
+data TypeDeclarationExtra layout scope
   = ADT {position :: !Position}
   | Class
       { position :: !Position,
-        methods :: !(Strict.Vector (Strict.Maybe (Definition (Local ':+ scope))))
+        methods :: !(Strict.Vector (Strict.Maybe (Definition layout (Local ':+ scope))))
       }
   | Synonym {position :: !Position}
   | GADT {position :: !Position}
   deriving (Show)
 
-instance Shift TypeDeclarationExtra where
+instance Shift (TypeDeclarationExtra layout) where
   shift = shiftDefault
 
-instance Shift.Functor TypeDeclarationExtra where
+instance Shift.Functor (TypeDeclarationExtra layout) where
   map category = \case
     ADT {position} -> ADT {position}
     Class {position, methods} ->
@@ -34,7 +34,7 @@ instance Shift.Functor TypeDeclarationExtra where
     Synonym {position} -> Synonym {position}
     GADT {position} -> GADT {position}
 
-instance FreeTermVariables TypeDeclarationExtra where
+instance FreeTermVariables (TypeDeclarationExtra layout) where
   freeTermVariables target = \case
     ADT {} -> []
     Class {methods} -> foldMap (foldMap (freeTermVariables $ FreeTypeVariables.Over target)) methods

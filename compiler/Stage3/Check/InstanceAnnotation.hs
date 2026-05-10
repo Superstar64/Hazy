@@ -2,6 +2,7 @@ module Stage3.Check.InstanceAnnotation where
 
 import Control.Monad.ST (ST)
 import qualified Data.Vector.Strict as Strict (Vector)
+import Stage2.Layout (Normal)
 import qualified Stage2.Tree.Instance as Stage2 (Instance (..))
 import qualified Stage2.Tree.TypePattern as Stage2 (TypePattern (TypePattern))
 import qualified Stage2.Tree.TypePattern as Stage2.TypePattern
@@ -24,7 +25,10 @@ data InstanceAnnotation scope = InstanceAnnotation
 
 prerequisites'_ = prerequisites'
 
-check :: Context s scope -> Stage2.Instance scope -> ST s (InstanceAnnotation scope)
+check ::
+  Context s scope ->
+  Stage2.Instance Normal scope ->
+  ST s (InstanceAnnotation scope)
 check context Stage2.Instance {parameters, prerequisites} = do
   let fresh Stage2.TypePattern {name, position} = do
         level <- Unify.fresh Unify.universe

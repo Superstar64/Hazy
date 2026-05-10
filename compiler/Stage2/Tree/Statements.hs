@@ -21,32 +21,32 @@ import {-# SOURCE #-} qualified Stage2.Tree.Expression as Expression (resolve)
 import Stage2.Tree.Pattern (Pattern)
 import qualified Stage2.Tree.Pattern as Pattern (augment, resolve)
 
-data Statements scope
+data Statements layout scope
   = Done
-      { done :: !(Expression scope)
+      { done :: !(Expression layout scope)
       }
   | Run
       { startPosition :: !Position,
-        effect :: !(Expression scope),
-        after :: !(Statements scope)
+        effect :: !(Expression layout scope),
+        after :: !(Statements layout scope)
       }
   | Bind
       { startPosition :: !Position,
         patternx :: !(Pattern scope),
-        effect :: !(Expression scope),
-        thenx :: !(Statements (Scope.Pattern ':+ scope))
+        effect :: !(Expression layout scope),
+        thenx :: !(Statements layout (Scope.Pattern ':+ scope))
       }
   | Let
       { startPosition :: !Position,
-        declarations :: !(Declarations Locality.Local Normal (Scope.Declaration ':+ scope)),
-        body :: !(Statements (Scope.Declaration ':+ scope))
+        declarations :: !(Declarations Locality.Local layout (Scope.Declaration ':+ scope)),
+        body :: !(Statements layout (Scope.Declaration ':+ scope))
       }
   deriving (Show)
 
-instance Shift Statements where
+instance Shift (Statements layout) where
   shift = shiftDefault
 
-instance Shift.Functor Statements where
+instance Shift.Functor (Statements layout) where
   map category = \case
     Done {done} ->
       Done
@@ -72,7 +72,7 @@ instance Shift.Functor Statements where
           body = Shift.map (Shift.Over category) body
         }
 
-instance FreeTermVariables Statements where
+instance FreeTermVariables (Statements layout) where
   freeTermVariables target = \case
     Done {done} -> freeTermVariables target done
     Run {effect, after} ->
@@ -91,10 +91,14 @@ instance FreeTermVariables Statements where
           freeTermVariables (FreeVariables.Over target) body
         ]
 
-resolve :: Context scope -> Stage1.Statements Position -> Statements scope
+resolve :: Context scope -> Stage1.Statements Position -> Statements Normal scope
 resolve context Stage1.Statements {body, done} = statements context (toList body) done
   where
-    statements :: Context scope -> [Stage1.Statement Position] -> Stage1.Expression Position -> Statements scope
+    statements ::
+      Context scope ->
+      [Stage1.Statement Position] ->
+      Stage1.Expression Position ->
+      Statements Normal scope
     statements context [] done =
       Done
         { done = Expression.resolve context done

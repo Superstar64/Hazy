@@ -1,6 +1,7 @@
 module Stage3.Temporary.Alternative where
 
 import Control.Monad.ST (ST)
+import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope (Pattern)
 import Stage2.Shift (shift)
@@ -30,7 +31,7 @@ check ::
   Context s scope ->
   Unify.Type s scope ->
   Unify.Type s scope ->
-  Stage2.Alternative scope ->
+  Stage2.Alternative Normal scope ->
   ST s (Alternative s scope)
 check context typex binder Stage2.Alternative {parameter, rightHandSide} = do
   parameter <- Pattern.check context binder parameter

@@ -1,6 +1,7 @@
 module Stage3.Temporary.Function where
 
 import Control.Monad.ST (ST)
+import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope (Pattern)
 import Stage2.Shift (shift)
@@ -27,7 +28,7 @@ instance Unify.Zonk Function where
       function <- Unify.zonk zonker function
       pure $ Bound patternx function
 
-check :: Context s scope -> Unify.Type s scope -> Stage2.Function scope -> ST s (Function s scope)
+check :: Context s scope -> Unify.Type s scope -> Stage2.Function Normal scope -> ST s (Function s scope)
 check context typex = \case
   Stage2.Plain {rightHandSide} -> Plain <$> RightHandSide.check context typex rightHandSide
   Stage2.Bound {functionPosition, patternx, function} -> do

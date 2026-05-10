@@ -15,27 +15,27 @@ import qualified Stage2.Tree.Body as Body (resolve)
 import {-# SOURCE #-} Stage2.Tree.Declarations (Declarations)
 import {-# SOURCE #-} qualified Stage2.Tree.Declarations as Declarations
 
-data RightHandSide scope
+data RightHandSide layout scope
   = RightHandSide
-      !(Body (Declaration ':+ scope))
-      !(Declarations Locality.Local Normal (Declaration ':+ scope))
+      !(Body layout (Declaration ':+ scope))
+      !(Declarations Locality.Local layout (Declaration ':+ scope))
   deriving (Show)
 
-instance Shift RightHandSide where
+instance Shift (RightHandSide layout) where
   shift = shiftDefault
 
-instance Shift.Functor RightHandSide where
+instance Shift.Functor (RightHandSide layout) where
   map category (RightHandSide body declarations) =
     RightHandSide (Shift.map (Shift.Over category) body) (Shift.map (Shift.Over category) declarations)
 
-instance FreeTermVariables RightHandSide where
+instance FreeTermVariables (RightHandSide layout) where
   freeTermVariables target (RightHandSide body declarations) =
     concat
       [ freeTermVariables (FreeVariables.Over target) body,
         freeTermVariables (FreeVariables.Over target) declarations
       ]
 
-resolve :: Context scope -> Stage1.RightHandSide Position -> RightHandSide scope
+resolve :: Context scope -> Stage1.RightHandSide Position -> RightHandSide Normal scope
 resolve context Stage1.RightHandSide {body, declarations}
   | (context, locals) <- Declarations.resolve context declarations =
       RightHandSide (Body.resolve context body) locals

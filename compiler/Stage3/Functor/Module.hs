@@ -54,9 +54,9 @@ fromStage2 ::
     (Stage2.Declaration Locality.Global Normal Global)
     (Stage2.TypeDeclaration Locality.Global Normal Global)
     (Stage2.TypeDeclaration Locality.Global Normal Global)
-    (Stage2.TypeDeclarationExtra Global)
-    (Stage2.Instance Global)
-    (Stage2.Instance Global)
+    (Stage2.TypeDeclarationExtra Normal Global)
+    (Stage2.Instance Normal Global)
+    (Stage2.Instance Normal Global)
 fromStage2 Stage2.Module {name = name@(path :.. base), declarations}
   | let root = path :. base =
       Module

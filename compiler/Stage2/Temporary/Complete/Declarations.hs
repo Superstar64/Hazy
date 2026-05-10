@@ -45,8 +45,8 @@ data Declarations scope = Declarations
   { terms :: !(Strict.Vector (Declaration scope)),
     constructors :: !(Strict.Vector ConstructorDeclaration),
     types :: !(Strict.Vector (TypeDeclaration scope)),
-    dataInstances :: !(Vector (Map (Type2.Index scope) (Instance scope))),
-    classInstances :: !(Vector (Map (Type2.Index scope) (Instance scope)))
+    dataInstances :: !(Vector (Map (Type2.Index scope) (Instance Normal scope))),
+    classInstances :: !(Vector (Map (Type2.Index scope) (Instance Normal scope)))
   }
 
 {-

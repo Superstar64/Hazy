@@ -7,23 +7,23 @@ import Stage2.Shift (Shift (..), shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Tree.Definition2 (Definition2 (..), Share, Single)
 
-data Definition3 mark scope where
-  (::@) :: !(Info source) -> !(Definition2 source mark scope) -> Definition3 mark scope
+data Definition3 mark layout scope where
+  (::@) :: !(Info source) -> !(Definition2 source mark layout scope) -> Definition3 mark layout scope
 
 infixr 5 ::@
 
-instance Show (Definition3 mark scope) where
+instance Show (Definition3 mark layout scope) where
   showsPrec d (info ::@ definition) =
     showParen (d > 5) $
       showsPrec 6 info . showString " ::@ " . showsPrec 6 definition
 
-instance Shift (Definition3 mark) where
+instance Shift (Definition3 mark layout) where
   shift = shiftDefault
 
-instance Shift.Functor (Definition3 mark) where
+instance Shift.Functor (Definition3 mark layout) where
   map category (info ::@ definition) = info ::@ Shift.map category definition
 
-instance FreeTermVariables (Definition3 mark) where
+instance FreeTermVariables (Definition3 mark layout) where
   freeTermVariables target (_ ::@ definition) = freeTermVariables target definition
 
 data Info source where

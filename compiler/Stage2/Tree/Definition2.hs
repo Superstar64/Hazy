@@ -5,6 +5,7 @@ import Stage1.Position (Position)
 import Stage2.FreeVariables (FreeTermVariables (..))
 import qualified Stage2.FreeVariables as FreeTermVariables
 import qualified Stage2.Index.Term as Term
+import Stage2.Layout (Layout)
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
@@ -28,14 +29,14 @@ type Single = 'Single
 
 type Share = 'Share
 
-type Definition2 :: Source -> Mark -> Environment -> Type
-data Definition2 source mark scope where
-  Manual :: Definition (Local ':+ scope) -> Definition2 Single Annotated scope
-  Auto :: !(Definition scope) -> Definition2 Single Inferred scope
-  Piece :: !(Choice scope) -> Definition2 Single mark scope
-  Shared :: !(RightHandSide scope) -> Definition2 Share Inferred scope
+type Definition2 :: Source -> Mark -> Layout -> Environment -> Type
+data Definition2 source mark layout scope where
+  Manual :: Definition layout (Local ':+ scope) -> Definition2 Single Annotated layout scope
+  Auto :: !(Definition layout scope) -> Definition2 Single Inferred layout scope
+  Piece :: !(Choice scope) -> Definition2 Single mark layout scope
+  Shared :: !(RightHandSide layout scope) -> Definition2 Share Inferred layout scope
 
-instance Show (Definition2 source mark scope) where
+instance Show (Definition2 source mark layout scope) where
   showsPrec d (Manual definition) =
     showParen (d > 10) $
       showString "Manual " . showsPrec 11 definition
@@ -47,17 +48,17 @@ instance Show (Definition2 source mark scope) where
   showsPrec d (Shared definition) =
     showParen (d > 10) $ showString "Shared " . showsPrec 11 definition
 
-instance Shift (Definition2 source mark) where
+instance Shift (Definition2 source mark layout) where
   shift = shiftDefault
 
-instance Shift.Functor (Definition2 source mark) where
+instance Shift.Functor (Definition2 source mark layout) where
   map category = \case
     Manual definition -> Manual (Shift.map (Shift.Over category) definition)
     Auto definition -> Auto (Shift.map category definition)
     Piece choice -> Piece (Shift.map category choice)
     Shared definition -> Shared (Shift.map category definition)
 
-instance FreeTermVariables (Definition2 source mark) where
+instance FreeTermVariables (Definition2 source mark layout) where
   freeTermVariables target = \case
     Manual definition ->
       freeTermVariables (FreeTermVariables.Over target) definition

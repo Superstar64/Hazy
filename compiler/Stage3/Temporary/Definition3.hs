@@ -2,6 +2,7 @@ module Stage3.Temporary.Definition3 where
 
 import Control.Monad.ST (ST)
 import Stage1.Position (Position)
+import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (shift)
 import Stage2.Tree.Definition2 (Annotated, Inferred)
@@ -40,7 +41,7 @@ check ::
   Context s scope ->
   Which mark s scope ->
   Position ->
-  Stage2.Definition3 mark scope ->
+  Stage2.Definition3 mark Normal scope ->
   ST s (Definition3 mark s scope)
 check context annotation position (info Stage2.::@ definition) =
   (info ::@) <$> case annotation of

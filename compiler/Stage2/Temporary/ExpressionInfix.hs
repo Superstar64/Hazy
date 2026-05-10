@@ -10,6 +10,7 @@ import Stage1.Variable
   ( QualifiedName (..),
   )
 import qualified Stage2.Index.Constructor as Constructor (cons)
+import Stage2.Layout (Normal)
 import qualified Stage2.Resolve.Binding.Constructor as Constructor (Binding (..))
 import qualified Stage2.Resolve.Binding.Term as Term
 import Stage2.Resolve.Context
@@ -32,7 +33,7 @@ data Index scope
   | Constructor !Position !(Constructor.Binding scope)
   | Cons !Position
 
-resolve :: Context scope -> Stage1.Infix Position -> Infix (Index scope) (Expression scope)
+resolve :: Context scope -> Stage1.Infix Position -> Infix (Index scope) (Expression Normal scope)
 resolve context = \case
   Stage1.Expression expression1 -> Single (Expression.resolve context expression1)
   Stage1.Infix {left, operator, right} ->
@@ -46,10 +47,14 @@ resolve context = \case
   Stage1.InfixCons {head, operatorPosition, tail} ->
     Infix (Expression.resolve context head) (Cons operatorPosition) (resolve context tail)
 
-fix :: Infix (Index scope) (Expression scope) -> Expression scope
+fix :: Infix (Index scope) (Expression Normal scope) -> Expression Normal scope
 fix = fixWith Nothing 0
 
-fixWith :: Maybe Associativity -> Int -> Infix (Index scope) (Expression scope) -> Expression scope
+fixWith ::
+  Maybe Associativity ->
+  Int ->
+  Infix (Index scope) (Expression Normal scope) ->
+  Expression Normal scope
 fixWith = Infix.fixWith position fixity operator
   where
     position = \case
@@ -60,7 +65,7 @@ fixWith = Infix.fixWith position fixity operator
       Term _ Term.Binding {fixity} -> fixity
       Constructor _ Constructor.Binding {fixity} -> fixity
       Cons _ -> Fixity {associativity = Right, precedence = 5}
-    operator :: Expression scope -> Index scope -> Expression scope -> Expression scope
+    operator :: Expression Normal scope -> Index scope -> Expression Normal scope -> Expression Normal scope
     operator left index right = case index of
       Term position Term.Binding {index} ->
         Expression.resolveTerm2 position index (Nil :> left :> right)
