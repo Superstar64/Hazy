@@ -1,6 +1,7 @@
 module Stage3.Tree.Definition2 where
 
 import Stage2.Index.Term (Bound)
+import qualified Stage2.Index.Term as Term
 import qualified Stage2.Scope as Scope (Show (..))
 import Stage2.Tree.Definition2 (Inferred, Share, Single)
 import Stage3.Tree.Definition (Definition)
@@ -46,7 +47,7 @@ instance Scope.Show (Definition2 mark source) where
   showsPrec = showsPrec
 
 data Choice scope = Choice
-  { shareIndex :: !Int,
+  { index :: !(Term.Index scope),
     instanciation :: !(Simple.Instanciation scope),
     patternx :: !(Pattern scope),
     bound :: !Bound

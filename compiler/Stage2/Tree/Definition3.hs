@@ -2,11 +2,10 @@ module Stage2.Tree.Definition3 where
 
 import Stage1.Tree.Fixity (Fixity)
 import Stage1.Variable (Variable)
-import Stage2.FreeVariables (FreeTermVariables (..), Target (..))
-import qualified Stage2.Index.Term0 as Term0
+import Stage2.FreeVariables (FreeTermVariables (..))
 import Stage2.Shift (Shift (..), shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage2.Tree.Definition2 (Choice (..), Definition2 (..), Inferred, Share, Single)
+import Stage2.Tree.Definition2 (Definition2 (..), Share, Single)
 
 data Definition3 mark scope where
   (::@) :: !(Info source) -> !(Definition2 source mark scope) -> Definition3 mark scope
@@ -29,15 +28,9 @@ instance FreeTermVariables (Definition3 mark) where
 
 data Info source where
   Name :: !Variable -> !Fixity -> Info Single
-  Index :: !Int -> Info Share
+  Unnamed :: !Int -> Info Share
 
 instance Show (Info source) where
   showsPrec d info = showParen (d > 10) $ case info of
     Name name fixity -> showString "Name " . showsPrec 11 name . showString " " . showsPrec 11 fixity
-    Index index -> showString "Index " . showsPrec 11 index
-
-freeGroupTermVariables :: (Int -> Term0.Index scope) -> Definition3 Inferred scope -> [Term0.Index scope]
-freeGroupTermVariables index (_ ::@ declaration) = case declaration of
-  Piece Choice {shareIndex} -> [index shareIndex]
-  Auto definition -> freeTermVariables Target definition
-  Shared definition -> freeTermVariables Target definition
+    Unnamed index -> showString "Unnamed " . showsPrec 11 index

@@ -19,6 +19,7 @@ import {-# SOURCE #-} qualified Stage2.Group.Functor.Term.Declarations as Functo
 import {-# SOURCE #-} qualified Stage2.Group.Functor.Type.Declarations as Functor.Type
 import qualified Stage2.Index.Link.Term as Term
 import qualified Stage2.Index.Link.Type as Type
+import qualified Stage2.Index.Term as Index.Term
 import qualified Stage2.Index.Term0 as Term0 (Index (..))
 import qualified Stage2.Index.Type0 as Type0
 import qualified Stage2.Index.Type2 as Type2
@@ -36,7 +37,7 @@ import {-# SOURCE #-} qualified Stage2.Temporary.Complete.Declarations as Comple
 import Stage2.Tree.Declaration (Declaration (..))
 import qualified Stage2.Tree.Declaration as Declaration
 import Stage2.Tree.Definition2 (Inferred)
-import Stage2.Tree.Definition3 (Definition3 (..), freeGroupTermVariables)
+import Stage2.Tree.Definition3 (Definition3 (..))
 import qualified Stage2.Tree.Definition4 as Definition4
 import Stage2.Tree.Instance (Instance)
 import Stage2.Tree.TypeDeclaration (TypeDeclaration (..))
@@ -100,7 +101,7 @@ resolve initial@Context {canonical, extensions} Stage1.Declarations {declaration
         bindings <- Complete.bindings Term0.Declaration Type0.Declaration complete,
         context <- context {locals = bindings Bindings.</> locals} =
           context
-    complete = runIdentity $ Complete.resolve context extensions (toList declarations)
+    complete = runIdentity $ Complete.resolve context extensions Index.Term.Declaration (toList declarations)
 
 group ::
   (Term0.Index scope -> Term.Link locality) ->
@@ -154,7 +155,7 @@ connect declarations@Declarations {terms, types} =
         (map Type.local . freeType . indexType)
         typeIndexes
 
-    freeTerm = foldMap (freeGroupTermVariables Term0.Declaration)
+    freeTerm = foldMap (freeTermVariables Target)
     freeType = foldMap (freeTypeVariables Target)
 
     indexTerm' = fromJust . indexTerm

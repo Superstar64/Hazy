@@ -62,12 +62,12 @@ instance FreeTermVariables (Definition2 source mark) where
     Manual definition ->
       freeTermVariables (FreeTermVariables.Over target) definition
     Auto definition -> freeTermVariables target definition
-    Piece {} -> []
+    Piece Choice {index} -> freeTermVariables target index
     Shared definition -> freeTermVariables target definition
 
 data Choice scope = Choice
   { position :: !Position,
-    shareIndex :: !Int,
+    index :: !(Term.Index scope),
     bound :: !Term.Bound,
     patternx :: Pattern scope
   }
@@ -77,10 +77,10 @@ instance Shift Choice where
   shift = shiftDefault
 
 instance Shift.Functor Choice where
-  map category Choice {position, shareIndex, bound, patternx} =
+  map category Choice {position, index, bound, patternx} =
     Choice
       { position,
-        shareIndex,
+        index = Shift.map category index,
         bound,
         patternx = Shift.map category patternx
       }

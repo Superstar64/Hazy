@@ -22,6 +22,7 @@ import Stage1.Tree.Marked (Marked (..))
 import qualified Stage1.Tree.Pattern as Stage1 (Pattern (Variable))
 import qualified Stage1.Tree.RightHandSide as Stage1.RightHandSide
 import Stage1.Variable (ConstructorIdentifier, Name (..), Variable)
+import qualified Stage2.Index.Term as Term
 import Stage2.Layout (Normal)
 import Stage2.Resolve.Context (Context)
 import {-# SOURCE #-} qualified Stage2.Temporary.Complete.Declaration as Complete
@@ -93,7 +94,7 @@ resolve ::
   Context scope ->
   (Variable -> Complete.Declaration scope) ->
   (ConstructorIdentifier -> (Int, Complete.TypeDeclaration.TypeDeclaration scope)) ->
-  (Int -> Int) ->
+  (Int -> Term.Index scope) ->
   [Stage1.Declaration Position] ->
   [(Key, Declaration scope)]
 resolve = resolve' 0
@@ -103,7 +104,7 @@ resolve' ::
   Context scope ->
   (Variable -> Complete.Declaration scope) ->
   (ConstructorIdentifier -> (Int, Complete.TypeDeclaration scope)) ->
-  (Int -> Int) ->
+  (Int -> Term.Index scope) ->
   [Stage1.Declaration Position] ->
   [(Key, Declaration scope)]
 resolve'
@@ -130,15 +131,14 @@ resolve'
           { position = Stage1.RightHandSide.equalPosition rightHandSide,
             name = Unnamed temporary,
             shared =
-              let index = lookupShare temporary
-               in Real.Declaration
-                    { position = Stage1.RightHandSide.equalPosition rightHandSide,
-                      name = Unnamed index,
-                      definition =
-                        Real.Inferred
-                          Real.::: Real.Index index
-                          Real.::@ Real.Shared (RightHandSide.resolve context rightHandSide)
-                    }
+              Real.Declaration
+                { position = Stage1.RightHandSide.equalPosition rightHandSide,
+                  name = Unnamed temporary,
+                  definition =
+                    Real.Inferred
+                      Real.::: Real.Unnamed temporary
+                      Real.::@ Real.Shared (RightHandSide.resolve context rightHandSide)
+                }
           }
       entry = do
         let selections = Pattern.selections patternx
@@ -152,7 +152,7 @@ resolve'
                 choice =
                   More.Choice
                     { temporary,
-                      shareIndex = lookupShare temporary,
+                      index = lookupShare temporary,
                       bound,
                       patternx
                     }

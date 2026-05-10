@@ -14,6 +14,7 @@ import qualified Stage1.Tree.Declarations as Stage1 (Declarations (..))
 import qualified Stage1.Tree.Module as Stage1 (Module (..), declarations, name)
 import Stage1.Variable (FullQualifiers)
 import qualified Stage1.Variable as Variable
+import qualified Stage2.Index.Term as Term
 import qualified Stage2.Index.Term0 as Term0 (Index (..))
 import qualified Stage2.Index.Type0 as Type0
 import Stage2.Layout (Normal)
@@ -80,7 +81,7 @@ resolve modules = mfix $ \main ->
             resolved :: verbose (Declarations Global)
             resolved =
               creatingIndexes (Variable.print' name) $
-                Declarations.resolve context extensions (toList declarations)
+                Declarations.resolve context extensions (Term.Global index) (toList declarations)
             context :: Context Global
             context
               | imports <- pickImports (StableImports stableImports) (toList imports) canonical =

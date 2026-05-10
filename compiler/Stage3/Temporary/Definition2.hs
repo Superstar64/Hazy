@@ -2,14 +2,14 @@ module Stage3.Temporary.Definition2 where
 
 import Control.Monad.ST (ST)
 import Stage1.Position (Position)
+import qualified Stage2.Index.Table.Term as Term ((!))
 import Stage2.Index.Term (Bound)
+import qualified Stage2.Index.Term as Term (Index)
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (shift)
 import Stage2.Tree.Definition2 (Annotated, Inferred, Share, Single)
 import qualified Stage2.Tree.Definition2 as Stage2
-import Stage3.Check.Context (Context)
-import Stage3.Check.ShareContext (ShareContext (..))
-import qualified Stage3.Check.ShareContext as ShareContext
+import Stage3.Check.Context (Context (..))
 import Stage3.Check.TermBinding (TermBinding (TermBinding), Type (..))
 import Stage3.Simple.Scheme (instanciate)
 import Stage3.Temporary.Definition (Definition)
@@ -51,17 +51,17 @@ typex = \case
   Shared _ typex -> typex
 
 data Choice s scope = Choice
-  { shareIndex :: !Int,
+  { index :: !(Term.Index scope),
     instanciation :: !(Unify.Instanciation s scope),
     patternx :: !(Pattern s scope),
     bound :: !Bound
   }
 
 instance Unify.Zonk Choice where
-  zonk zonker Choice {shareIndex, instanciation, patternx, bound} = do
+  zonk zonker Choice {index, instanciation, patternx, bound} = do
     instanciation <- Unify.zonk zonker instanciation
     patternx <- Unify.zonk zonker patternx
-    pure Choice {shareIndex, instanciation, patternx, bound}
+    pure Choice {index, instanciation, patternx, bound}
 
 data Which mark scope where
   Manual :: Which Annotated (Local ':+ scope)
@@ -69,31 +69,30 @@ data Which mark scope where
 
 check ::
   Context s (scope ':+ scopes) ->
-  ShareContext s scopes ->
   Which mark (scope ':+ scopes) ->
   Unify.Type s (scope ':+ scopes) ->
   Stage2.Definition2 source mark scopes ->
   ST s (Definition2 source mark s (scope ':+ scopes))
-check context _ Auto typex (Stage2.Auto definition) = do
+check context Auto typex (Stage2.Auto definition) = do
   definition <- Definition.check context typex (shift definition)
   pure $ Definition definition typex
-check context _ Manual typex (Stage2.Manual definition) = do
+check context Manual typex (Stage2.Manual definition) = do
   definition <- Definition.check context typex definition
   pure $ Definition definition typex
-check context _ Auto typex (Stage2.Shared definition) = do
+check context Auto typex (Stage2.Shared definition) = do
   definition <- RightHandSide.check context typex (shift definition)
   pure $ Shared definition typex
-check context shared _ typex declaration = case declaration of
-  Stage2.Piece Stage2.Choice {position, shareIndex, patternx, bound} -> do
-    let TermBinding binding = shared ShareContext.! shareIndex
+check context@Context {termEnvironment} _ typex declaration = case declaration of
+  Stage2.Piece Stage2.Choice {position, index, patternx, bound} -> do
+    let TermBinding binding = termEnvironment Term.! shift index
     (full, instanciation) <-
       binding >>= \case
-        Wobbly typex -> Unify.instanciate context position (Unify.monoScheme $ shift typex)
-        Rigid scheme -> instanciate context position (shift scheme)
+        Wobbly typex -> Unify.instanciate context position (Unify.monoScheme typex)
+        Rigid scheme -> instanciate context position scheme
     patternx <- Pattern.check context full (shift patternx)
     let typex' = patternx Pattern.! bound
     Unify.unify context position typex typex'
-    pure $ Piece Choice {shareIndex, instanciation, patternx, bound} typex
+    pure $ Piece Choice {index = shift index, instanciation, patternx, bound} typex
 
 solve :: Position -> Definition2 source mark s scope -> ST s (Solved.Definition2 source mark scope)
 solve position = \case
@@ -101,11 +100,11 @@ solve position = \case
     definition <- Definition.solve definition
     typex <- Unify.solve position typex
     pure $ Solved.Definition definition typex
-  Piece Choice {shareIndex, instanciation, patternx, bound} typex -> do
+  Piece Choice {index, instanciation, patternx, bound} typex -> do
     instanciation <- Unify.solveInstanciation position instanciation
     patternx <- Pattern.solve patternx
     typex <- Unify.solve position typex
-    pure $ Solved.Piece Solved.Choice {shareIndex, instanciation, patternx, bound} typex
+    pure $ Solved.Piece Solved.Choice {index, instanciation, patternx, bound} typex
   Shared shared typex -> do
     shared <- RightHandSide.solve shared
     typex <- Unify.solve position typex

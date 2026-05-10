@@ -22,7 +22,6 @@ import Stage3.Check.InstanceAnnotation (InstanceAnnotation)
 import qualified Stage3.Check.InstanceAnnotation as InstanceAnnotation
 import Stage3.Check.KindAnnotation (KindAnnotation)
 import qualified Stage3.Check.KindAnnotation as KindAnnotation
-import qualified Stage3.Check.ShareContext as ShareContext
 import Stage3.Check.TypeAnnotation (GlobalTypeAnnotation)
 import qualified Stage3.Check.TypeAnnotation as TypeAnnotation
 import qualified Stage3.Functor.Annotated as Functor (Annotated (..))
@@ -158,8 +157,7 @@ checkTermDeclaration global local declaration = Formula7 {cycle, run}
           Functor.Annotated {meta} = terms Vector.! local
       annotation <- meta
       let context = globalBindings moduleSet
-          share = ShareContext.globalBindings context global
-      unsolved <- Declaration.Unsolved.checkGlobal context share annotation declaration
+      unsolved <- Declaration.Unsolved.checkGlobal context annotation declaration
       Declaration.Unsolved.solve unsolved
 
 checkTypeAnnotation ::

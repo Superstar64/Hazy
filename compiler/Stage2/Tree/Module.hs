@@ -15,7 +15,7 @@ import Error (Position)
 import Graph.StronglyConnected (Index (..), tarjan)
 import qualified Stage1.Tree.Module as Stage1 (Module)
 import Stage1.Variable (FullQualifiers, toQualifiers)
-import Stage2.FreeVariables (FreeTypeVariables (..), Target (..))
+import Stage2.FreeVariables (FreeTypeVariables (..), Target (..), freeTermVariables)
 import qualified Stage2.Group.Functor.Term.Declarations as Functor.Term (indexes)
 import qualified Stage2.Group.Functor.Term.ModuleSet as Functor.Term (ModuleSet (..), (!))
 import qualified Stage2.Group.Functor.Type.Declarations as Functor.Type (indexes)
@@ -25,7 +25,6 @@ import qualified Stage2.Index.Link.Type as Type
 import qualified Stage2.Index.Table.Local as Local.Table
 import qualified Stage2.Index.Table.Term as Table.Term
 import qualified Stage2.Index.Table.Type as Table.Type
-import qualified Stage2.Index.Term0 as Term0
 import qualified Stage2.Label.Context as Label (Context (Context))
 import qualified Stage2.Label.Context as Label.Context
 import Stage2.Layout (Group, Normal)
@@ -38,7 +37,7 @@ import qualified Stage2.Tree.Declaration as Declaration
 import Stage2.Tree.Declarations (Declarations (..))
 import qualified Stage2.Tree.Declarations as Declarations (group)
 import Stage2.Tree.Definition2 (Inferred)
-import Stage2.Tree.Definition3 (Definition3, freeGroupTermVariables)
+import Stage2.Tree.Definition3 (Definition3)
 import qualified Stage2.Tree.Definition4 as Definition4
 import Stage2.Tree.TypeDeclaration (TypeDeclaration (..))
 import qualified Stage2.Tree.TypeDeclaration as TypeDeclaration
@@ -90,7 +89,7 @@ connect modules = Vector.imap go modules
     Functor.Term.ModuleSet termGroups =
       tarjan
         Index {(!) = (Functor.Term.!)}
-        (\index -> map Term.global . freeTerm (context index) . indexTerm $ index)
+        (map Term.global . freeTerm . indexTerm)
         termIndexes
     Functor.Type.ModuleSet typeGroups =
       tarjan
@@ -98,11 +97,7 @@ connect modules = Vector.imap go modules
         (map Type.global . freeType . indexType)
         typeIndexes
 
-    context :: Term.Link Locality.Global -> Int
-    context = \case
-      Term.Global global _ -> global
-
-    freeTerm index = foldMap (freeGroupTermVariables (Term0.Global index))
+    freeTerm = foldMap (freeTermVariables Target)
     freeType = foldMap (freeTypeVariables Target)
 
     termIndexes = Functor.Term.ModuleSet $ Vector.generate (length modules) termIndex

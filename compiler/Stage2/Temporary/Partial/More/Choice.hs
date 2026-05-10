@@ -1,11 +1,11 @@
 module Stage2.Temporary.Partial.More.Choice where
 
-import qualified Stage2.Index.Term as Term (Bound (..))
+import qualified Stage2.Index.Term as Term (Bound (..), Index)
 import Stage2.Tree.Pattern (Pattern)
 
 data Choice scope = Choice
   { temporary :: !Int,
-    shareIndex :: Int,
+    index :: Term.Index scope,
     bound :: Term.Bound,
     patternx :: Pattern scope
   }

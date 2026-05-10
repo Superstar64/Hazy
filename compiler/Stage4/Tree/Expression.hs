@@ -369,7 +369,7 @@ instance Simplify Stage3.Do where
     Stage3.Do.Done {done} -> simplify done
     Stage3.Do.Let {declarations, letBody} ->
       Let
-        { declarations = Declarations.simplify Term.Declaration declarations,
+        { declarations = Declarations.simplify declarations,
           letBody = simplify letBody
         }
     Stage3.Do.Run {evidence, effect, after} ->
@@ -525,7 +525,7 @@ simplifyWith expression [] = case expression of
     foldr (cons . simplify) nil items
   Stage3.Let {declarations, letBody} ->
     Let
-      { declarations = Declarations.simplify Term.Declaration declarations,
+      { declarations = Declarations.simplify declarations,
         letBody = simplify letBody
       }
   Stage3.If {condition, thenx, elsex} ->

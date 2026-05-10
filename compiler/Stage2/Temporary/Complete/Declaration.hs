@@ -116,7 +116,7 @@ merge entries@(entry :| _) =
         | Just (_, method) <- method,
           () <- noAnnotation ->
             pure $ Method method
-        | Just (position, More.Choice {shareIndex, bound, patternx}) <- choice ->
+        | Just (position, More.Choice {index, bound, patternx}) <- choice ->
             let cast declaration = Real $ Real.locality declaration
                 real = case annotation of
                   Nothing ->
@@ -126,7 +126,7 @@ merge entries@(entry :| _) =
                         definition =
                           Real.Inferred
                             Real.::: Real.Name properName fixity
-                            Real.::@ Real.Piece Real.Choice {position, shareIndex, bound, patternx}
+                            Real.::@ Real.Piece Real.Choice {position, index, bound, patternx}
                       }
                   Just annotation ->
                     Real.Declaration
@@ -135,7 +135,7 @@ merge entries@(entry :| _) =
                         definition =
                           Real.Annotated annotation
                             Real.::: Real.Name properName fixity
-                            Real.::@ Real.Piece Real.Choice {position, shareIndex, bound, patternx}
+                            Real.::@ Real.Piece Real.Choice {position, index, bound, patternx}
                       }
              in cast <$> Verbose.resolving (Variable.printLiteral' properName) real
         | otherwise -> error "no entry"

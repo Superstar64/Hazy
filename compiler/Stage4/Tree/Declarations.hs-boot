@@ -7,7 +7,6 @@ import Stage2.Scope (Environment)
 import Stage2.Shift (Shift)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Declarations as Stage3
-import qualified Stage4.Index.Term as Term
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
 import {-# SOURCE #-} Stage4.Tree.Declaration (LazyTermDeclaration)
@@ -27,5 +26,5 @@ instance Shift2.Functor Declarations
 
 instance Substitute.Functor Declarations
 
-simplify :: (Int -> Term.Index scope) -> Stage3.Declarations scope -> Declarations scope
+simplify :: Stage3.Declarations scope -> Declarations scope
 single :: LazyTermDeclaration scope -> Declarations scope

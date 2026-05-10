@@ -133,7 +133,7 @@ stage3 :: Debug -> Vector (Stage2.Module Layout.Normal) -> IO (Vector Stage3.Mod
 stage3 _ = pure . Module.check
 
 stage4 :: Debug -> Vector Stage3.Module -> IO (Vector Stage4.Module)
-stage4 _ = pure . Vector.imap Module.simplify
+stage4 _ = pure . Vector.map Module.simplify
 
 stage5 :: Debug -> Vector Stage4.Module -> IO (Vector Stage5.Module)
 stage5 _ = pure . Module.generate

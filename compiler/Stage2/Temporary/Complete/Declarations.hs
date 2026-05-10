@@ -16,6 +16,7 @@ import Stage1.Position (Position)
 import qualified Stage1.Tree.Declaration as Stage1 (Declaration (..))
 import Stage1.Tree.InstanceHead (InstanceHead (..))
 import Stage1.Variable (ConstructorIdentifier, QualifiedConstructorIdentifier (..), Qualifiers (..))
+import qualified Stage2.Index.Term as Term (Index)
 import qualified Stage2.Index.Term0 as Term0 (Index (..))
 import qualified Stage2.Index.Type0 as Type0
 import qualified Stage2.Index.Type2 as Type2
@@ -61,9 +62,10 @@ resolve ::
   (Debug verbose) =>
   Context scope ->
   Extensions ->
+  (Int -> Term.Index scope) ->
   [Stage1.Declaration Position] ->
   verbose (Declarations scope)
-resolve context extensions declarations = do
+resolve context extensions share declarations = do
   types <- do
     let entries = foldMap (Declaration.Type.resolve context) declarations
     Strict.Vector.fromLazy <$> sequence (orderNonEmpty Type.merge entries)
@@ -94,7 +96,9 @@ resolve context extensions declarations = do
         lookupTerm name = terms Strict.Vector.! (termIndexes Map.! name)
         lookupType name = let index = typeIndexes Map.! name in (index, types Strict.Vector.! index)
         lookupShared temporary = shared Strict.Vector.! temporary
-        shared = Strict.Vector.fromList [index | (Declaration {name = Unnamed _}, index) <- zip (toList terms) [0 ..]]
+        shared = Strict.Vector.fromList $ do
+          (Declaration {name = Unnamed _}, index) <- zip (toList terms) [0 ..]
+          pure $ share index
         termIndexes = Term.indexes terms
     Strict.Vector.fromLazy <$> sequence (orderNonEmpty Term.merge entries)
   let noOrphans = foldr (seq . orphan (`Map.member` typeIndexes)) () declarations

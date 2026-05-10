@@ -29,7 +29,6 @@ import Stage3.Check.InstanceAnnotation (InstanceAnnotation)
 import qualified Stage3.Check.InstanceAnnotation as InstanceAnnotation
 import Stage3.Check.KindAnnotation (KindAnnotation)
 import qualified Stage3.Check.KindAnnotation as KindAnnotation
-import qualified Stage3.Check.ShareContext as ShareContext
 import Stage3.Check.TypeAnnotation (LocalTypeAnnotation)
 import qualified Stage3.Check.TypeAnnotation as TypeAnnotation
 import qualified Stage3.Functor.Annotated as Functor (Annotated (..), content)
@@ -174,10 +173,9 @@ checkTermDeclaration context index declaration = Formula7 {cycle, run}
     cycle = cyclicalTypeChecking $ Stage2.Declaration.position declaration
     run declarations@Functor.Declarations {terms} = do
       context <- pure $ localBindings declarations context
-      let share = ShareContext.localBindings context
       let Functor.Annotated {meta} = terms Vector.! index
       annotation <- meta
-      Declaration.checkLocal context share annotation declaration
+      Declaration.checkLocal context annotation declaration
 
 checkTypeAnnotation ::
   Context s scope ->

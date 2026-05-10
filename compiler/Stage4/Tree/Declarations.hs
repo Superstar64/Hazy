@@ -7,7 +7,6 @@ import qualified Stage2.Index.Type2 as Type2
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Declarations as Stage3
-import qualified Stage4.Index.Term as Term
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
 import Stage4.Tree.Declaration (LazyTermDeclaration)
@@ -49,9 +48,8 @@ instance Substitute.Functor Declarations where
           Substitute.mapInstances category . fmap (Substitute.map category) <$> dataInstances
       }
 
-simplify :: (Int -> Term.Index scope) -> Stage3.Declarations scope -> Declarations scope
+simplify :: Stage3.Declarations scope -> Declarations scope
 simplify
-  declaration
   Stage3.Declarations
     { terms,
       types,
@@ -60,7 +58,7 @@ simplify
       dataInstances
     } =
     Declarations
-      { terms = Declaration.simplify declaration <$> terms,
+      { terms = Declaration.simplify <$> terms,
         types = TypeDeclaration.simplify <$> types,
         typeExtras = TypeDeclarationExtra.simplify <$> typeExtras,
         classInstances = fmap Instance.simplify <$> classInstances,

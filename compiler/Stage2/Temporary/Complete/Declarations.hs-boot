@@ -6,6 +6,7 @@ import Data.Kind (Type)
 import Stage1.Extensions (Extensions)
 import Stage1.Position (Position)
 import qualified Stage1.Tree.Declaration as Stage1
+import qualified Stage2.Index.Term as Term
 import qualified Stage2.Index.Term0 as Term0
 import qualified Stage2.Index.Type0 as Type0
 import Stage2.Layout (Normal)
@@ -25,6 +26,7 @@ resolve ::
   (Debug verbose) =>
   Context scope ->
   Extensions ->
+  (Int -> Term.Index scope) ->
   [Stage1.Declaration Position] ->
   verbose (Declarations scope)
 bindings ::

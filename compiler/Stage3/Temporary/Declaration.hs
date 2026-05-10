@@ -7,7 +7,6 @@ import Stage2.Tree.Declaration (Key)
 import qualified Stage2.Tree.Declaration as Stage2 (Declaration (..))
 import qualified Stage2.Tree.Definition4 as Stage2 (Annotation (..), Definition4 (..))
 import Stage3.Check.Context (Context (..))
-import Stage3.Check.ShareContext (ShareContext)
 import Stage3.Check.TypeAnnotation (Annotation (..), GlobalTypeAnnotation (..), LocalTypeAnnotation (..))
 import qualified Stage3.Temporary.Definition3 as Definition3
 import Stage3.Temporary.Definition4 (Definition4 (..))
@@ -36,11 +35,10 @@ instance Unify.Zonk Declaration where
 
 checkLocal ::
   Context s scope ->
-  ShareContext s scope ->
   LocalTypeAnnotation s scope ->
   Stage2.Declaration locality Normal scope ->
   ST s (Declaration s scope)
-checkLocal context shared annotation Stage2.Declaration {position, name, definition} = do
+checkLocal context annotation Stage2.Declaration {position, name, definition} = do
   definition <- definition `go` annotation
   pure
     Declaration
@@ -51,20 +49,19 @@ checkLocal context shared annotation Stage2.Declaration {position, name, definit
   where
     infix 0 `go`
     Stage2.Annotated {} Stage2.::: definition `go` LocalAnnotation Annotation {annotation} = do
-      definition <- Definition3.check context shared (Definition3.Marked annotation) position definition
+      definition <- Definition3.check context (Definition3.Marked annotation) position definition
       pure $ Annotated annotation ::: definition
     Stage2.Inferred {} Stage2.::: definition `go` LocalInferred typex = do
-      definition <- Definition3.check context shared (Definition3.Local typex) position definition
+      definition <- Definition3.check context (Definition3.Local typex) position definition
       pure $ Inferred ::: definition
     go _ _ = error "bad annotation"
 
 checkGlobal ::
   Context s scope ->
-  ShareContext s scope ->
   GlobalTypeAnnotation scope ->
   Stage2.Declaration locality Normal scope ->
   ST s (Declaration s scope)
-checkGlobal context shared annotation Stage2.Declaration {position, name, definition} = do
+checkGlobal context annotation Stage2.Declaration {position, name, definition} = do
   definition <- definition `go` annotation
   pure
     Declaration
@@ -75,10 +72,10 @@ checkGlobal context shared annotation Stage2.Declaration {position, name, defini
   where
     infix 0 `go`
     Stage2.Annotated {} Stage2.::: definition `go` GlobalAnnotation Annotation {annotation} = do
-      definition <- Definition3.check context shared (Definition3.Marked annotation) position definition
+      definition <- Definition3.check context (Definition3.Marked annotation) position definition
       pure $ Annotated annotation ::: definition
     Stage2.Inferred {} Stage2.::: definition `go` GlobalInferred = do
-      definition <- Definition3.check context shared Definition3.Global position definition
+      definition <- Definition3.check context Definition3.Global position definition
       pure $ Inferred ::: definition
     go _ _ = error "bad annotation"
 

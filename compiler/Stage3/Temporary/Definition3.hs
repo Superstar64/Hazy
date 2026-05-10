@@ -9,7 +9,6 @@ import Stage2.Tree.Definition3 (Info)
 import qualified Stage2.Tree.Definition3 as Stage2
 import Stage3.Check.Context (Context)
 import qualified Stage3.Check.Mask as Mask
-import Stage3.Check.ShareContext (ShareContext)
 import qualified Stage3.Simple.Constraint as Simple.Constraint (lift)
 import Stage3.Simple.Type (lift)
 import Stage3.Temporary.Definition2 (Definition2)
@@ -39,21 +38,20 @@ data Which mark s scope where
 
 check ::
   Context s scope ->
-  ShareContext s scope ->
   Which mark s scope ->
   Position ->
   Stage2.Definition3 mark scope ->
   ST s (Definition3 mark s scope)
-check context shared annotation position (info Stage2.::@ definition) =
+check context annotation position (info Stage2.::@ definition) =
   (info ::@) <$> case annotation of
     Global -> Unify.generalizeOver context $ Unify.Generalize $ \context -> do
       typex <- Unify.fresh Unify.typex
-      Definition2.check context shared Definition2.Auto typex definition
+      Definition2.check context Definition2.Auto typex definition
     Local typex -> Unify.generalizeOver context $ Unify.Generalize $ \context -> do
-      Definition2.check context shared Definition2.Auto (shift typex) definition
+      Definition2.check context Definition2.Auto (shift typex) definition
     Marked annotation ->
       checkAnnotation context position annotation $ \context typex -> do
-        Definition2.check context shared Definition2.Manual typex definition
+        Definition2.check context Definition2.Manual typex definition
 
 checkAnnotation ::
   Context s scope ->

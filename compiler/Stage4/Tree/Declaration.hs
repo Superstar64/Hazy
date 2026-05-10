@@ -66,10 +66,9 @@ instance Substitute.Functor Declaration where
 
 simplify ::
   forall scope.
-  (Int -> Term.Index scope) ->
   Stage3.LazyTermDeclaration scope ->
   LazyTermDeclaration scope
-simplify share (name Stage3.:^ declaration) =
+simplify (name Stage3.:^ declaration) =
   name :^ case declaration of
     Stage3.Declaration
       { name,
@@ -89,13 +88,13 @@ simplify share (name Stage3.:^ declaration) =
                   constraints,
                   result = case result of
                     Stage3.Definition definition _ -> Expression.simplify definition
-                    Stage3.Piece Stage3.Choice {shareIndex, instanciation, patternx, bound} _ ->
+                    Stage3.Piece Stage3.Choice {index, instanciation, patternx, bound} _ ->
                       Expression.Join
                         { statements =
                             Statements.bind
                               (Pattern.simplify patternx)
                               Expression.Variable
-                                { variable = shift $ share shareIndex,
+                                { variable = Term.from index,
                                   instanciation
                                 }
                               Statements.Done
