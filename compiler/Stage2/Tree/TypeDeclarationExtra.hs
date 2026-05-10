@@ -3,6 +3,7 @@ module Stage2.Tree.TypeDeclarationExtra where
 import qualified Data.Strict.Maybe as Strict (Maybe)
 import qualified Data.Vector.Strict as Strict (Vector)
 import Stage1.Position (Position)
+import Stage2.Connect (Connect (..))
 import Stage2.FreeVariables (FreeTermVariables (freeTermVariables))
 import qualified Stage2.FreeVariables as FreeTypeVariables
 import Stage2.Scope (Environment (..), Local)
@@ -40,3 +41,14 @@ instance FreeTermVariables (TypeDeclarationExtra layout) where
     Class {methods} -> foldMap (foldMap (freeTermVariables $ FreeTypeVariables.Over target)) methods
     Synonym {} -> []
     GADT {} -> []
+
+instance Connect TypeDeclarationExtra where
+  connect = \case
+    ADT {position} -> ADT {position}
+    Class {position, methods} ->
+      Class
+        { position,
+          methods = fmap connect <$> methods
+        }
+    Synonym {position} -> Synonym {position}
+    GADT {position} -> GADT {position}

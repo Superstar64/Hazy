@@ -7,6 +7,7 @@ import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
 import qualified Graph.StronglyConnected as StronglyConnected
 import Stage1.Position (Position)
+import Stage2.Connect (connect)
 import Stage2.FreeVariables (FreeTermVariables (freeTermVariables))
 import qualified Stage2.FreeVariables as FreeVariables
 import qualified Stage2.Index.Link.Term as Term
@@ -24,9 +25,9 @@ import Stage2.Tree.Scheme (Scheme)
 
 type Definition4 :: Locality -> Layout -> Environment -> Type
 data Definition4 locality layout scope where
-  (:::) :: !(Annotation mark layout scope) -> !(Definition3 mark Normal scope) -> Definition4 locality layout scope
+  (:::) :: !(Annotation mark layout scope) -> !(Definition3 mark layout scope) -> Definition4 locality layout scope
   Link :: !(Term.Link locality) -> !Int -> Definition4 locality Group scope
-  Group :: !(Strict.Vector (Definition3 Inferred Normal (Scope.Group ':+ scope))) -> Definition4 locality Group scope
+  Group :: !(Strict.Vector (Definition3 Inferred Group (Scope.Group ':+ scope))) -> Definition4 locality Group scope
 
 infixr 5 :::
 
@@ -84,11 +85,11 @@ group ::
   StronglyConnected.Component (Term.Link locality) ->
   Definition4 locality Normal scope ->
   Definition4 locality Group scope
-group _ _ _ (Annotated annotation ::: definition) = Annotated annotation ::: definition
+group _ _ _ (Annotated annotation ::: definition) = Annotated annotation ::: connect definition
 group link index group (Inferred ::: _) = case group of
   StronglyConnected.Group {set} ->
     Group $ Strict.Vector.fromList $ map (transform . index) $ Set.toList set
     where
-      transform = Shift.map (Shift.GroupTerm lookup)
+      transform = Shift.map (Shift.GroupTerm lookup) . connect
       lookup index = Strict.Maybe.fromLazy $ Set.lookupIndex (link index) set
   StronglyConnected.Link {link, id} -> Link link id

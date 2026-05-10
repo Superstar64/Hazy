@@ -3,6 +3,7 @@ module Stage2.Tree.Body where
 import qualified Data.Strict.Vector1 as Strict
 import Stage1.Position (Position)
 import qualified Stage1.Tree.Body as Stage1 (Body (..))
+import Stage2.Connect (Connect (..))
 import Stage2.FreeVariables (FreeTermVariables (..))
 import Stage2.Layout (Normal)
 import Stage2.Resolve.Context (Context)
@@ -30,6 +31,11 @@ instance FreeTermVariables (Body layout) where
   freeTermVariables target = \case
     Body expression -> freeTermVariables target expression
     Guards statements -> foldMap (freeTermVariables target) statements
+
+instance Connect Body where
+  connect = \case
+    Body expression -> Body (connect expression)
+    Guards statements -> Guards (fmap connect statements)
 
 resolve :: Context scope -> Stage1.Body Position -> Body Normal scope
 resolve context = \case

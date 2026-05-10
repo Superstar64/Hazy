@@ -2,6 +2,7 @@ module Stage2.Tree.Definition3 where
 
 import Stage1.Tree.Fixity (Fixity)
 import Stage1.Variable (Variable)
+import Stage2.Connect (Connect (..))
 import Stage2.FreeVariables (FreeTermVariables (..))
 import Stage2.Shift (Shift (..), shiftDefault)
 import qualified Stage2.Shift as Shift
@@ -25,6 +26,9 @@ instance Shift.Functor (Definition3 mark layout) where
 
 instance FreeTermVariables (Definition3 mark layout) where
   freeTermVariables target (_ ::@ definition) = freeTermVariables target definition
+
+instance Connect (Definition3 mark) where
+  connect (info ::@ definition) = info ::@ connect definition
 
 data Info source where
   Name :: !Variable -> !Fixity -> Info Single

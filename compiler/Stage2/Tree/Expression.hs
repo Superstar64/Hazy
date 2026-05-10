@@ -18,6 +18,7 @@ import qualified Stage1.Tree.ExpressionInfix as Stage1.Infix
 import Stage1.Tree.Fixity (Fixity (..))
 import Stage1.Tree.Marked (Marked (..))
 import Stage1.Variable (QualifiedName (..))
+import Stage2.Connect (Connect (..))
 import Stage2.FreeVariables (FreeTermVariables (..))
 import qualified Stage2.FreeVariables as FreeVariables
 import qualified Stage2.Index.Constructor as Constructor (Index (..), cons)
@@ -299,6 +300,119 @@ instance FreeTermVariables (Expression layout) where
     Annotation {expression} ->
       freeTermVariables (FreeVariables.Over target) expression
     RunST {imperative} -> freeTermVariables target imperative
+
+instance Connect Expression where
+  connect = \case
+    CallHead {callHead} ->
+      CallHead
+        { callHead
+        }
+    Integer {startPosition, integer} ->
+      Integer
+        { startPosition,
+          integer
+        }
+    Float {startPosition, float} ->
+      Float
+        { startPosition,
+          float
+        }
+    Character {startPosition, character} ->
+      Character
+        { startPosition,
+          character
+        }
+    String {startPosition, string} ->
+      String
+        { startPosition,
+          string
+        }
+    Tuple {startPosition, elements} ->
+      Tuple
+        { startPosition,
+          elements = connect <$> elements
+        }
+    List {startPosition, items} ->
+      List
+        { startPosition,
+          items = connect <$> items
+        }
+    Comprehension {startPosition, statements} ->
+      Comprehension
+        { startPosition,
+          statements = connect statements
+        }
+    Record {constructorPosition, constructor, fields} ->
+      Record
+        { constructorPosition,
+          constructor,
+          fields = connect <$> fields
+        }
+    Update {base, updatePosition, updates} ->
+      Update
+        { base = connect base,
+          updatePosition,
+          updates = connect <$> updates
+        }
+    Call {function, argument} ->
+      Call
+        { function = connect function,
+          argument = connect argument
+        }
+    Let {declarations, letBody} ->
+      Let
+        { declarations = Declarations.connect declarations,
+          letBody = connect letBody
+        }
+    If {condition, thenx, elsex} ->
+      If
+        { condition = connect condition,
+          thenx = connect thenx,
+          elsex = connect elsex
+        }
+    MultiwayIf {branches} ->
+      MultiwayIf
+        { branches = connect <$> branches
+        }
+    Case {startPosition, scrutinee, cases} ->
+      Case
+        { startPosition,
+          scrutinee = connect scrutinee,
+          cases = connect <$> cases
+        }
+    Do {startPosition, statements} ->
+      Do
+        { startPosition,
+          statements = connect statements
+        }
+    Lambda {startPosition, parameter, body} ->
+      Lambda
+        { startPosition,
+          parameter,
+          body = connect body
+        }
+    LambdaCase {startPosition, cases} ->
+      LambdaCase
+        { startPosition,
+          cases = connect <$> cases
+        }
+    RightSection {operatorPosition, left, right} ->
+      RightSection
+        { operatorPosition,
+          left,
+          right = connect right
+        }
+    Annotation {expression, operatorPosition, annotation} ->
+      Annotation
+        { expression = connect expression,
+          operatorPosition,
+          annotation
+        }
+    RunST {startPosition, imperative} ->
+      RunST
+        { startPosition,
+          imperative = connect imperative
+        }
 
 callHead_ :: CallHead scope -> Expression Normal scope
 callHead_ callHead = CallHead {callHead}

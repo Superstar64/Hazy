@@ -175,6 +175,7 @@ executable hazy
     Stage1.Tree.TypeInfix
     Stage1.Tree.TypePattern
     Stage1.Variable
+    Stage2.Connect
     Stage2.FreeVariables
     Stage2.Group.Functor.Term.Declarations
     Stage2.Group.Functor.Term.ModuleSet

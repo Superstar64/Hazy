@@ -8,6 +8,7 @@ import Stage1.Position (Position)
 import qualified Stage1.Tree.ExpressionField as Stage1 (Field (..))
 import Stage1.Tree.Marked (Marked (..))
 import Stage1.Variable (QualifiedVariable (..), Qualifiers (..))
+import Stage2.Connect (Connect (..))
 import Stage2.FreeVariables (FreeTermVariables (freeTermVariables))
 import qualified Stage2.Index.Constructor as Constructor (Index (..))
 import qualified Stage2.Index.Selector as Selector
@@ -36,6 +37,13 @@ instance Shift.Functor (Field layout) where
 
 instance FreeTermVariables (Field layout) where
   freeTermVariables target Field {expression} = freeTermVariables target expression
+
+instance Connect Field where
+  connect Field {index, expression} =
+    Field
+      { index,
+        expression = connect expression
+      }
 
 resolve ::
   Context scope ->

@@ -5,6 +5,7 @@ import Stage1.Position (Position)
 import qualified Stage1.Tree.ExpressionField as Stage1 (Field (..))
 import Stage1.Tree.Marked (Marked (..))
 import Stage1.Variable (QualifiedVariable (..), Qualifiers (..))
+import Stage2.Connect (Connect (..))
 import Stage2.FreeVariables (FreeTermVariables (freeTermVariables))
 import qualified Stage2.Index.Selector as Selector
 import qualified Stage2.Index.Type2 as Type2
@@ -29,6 +30,9 @@ instance Shift.Functor (Select layout) where
 
 instance FreeTermVariables (Select layout) where
   freeTermVariables target (Select _ expression) = freeTermVariables target expression
+
+instance Connect Select where
+  connect (Select pick record) = Select pick (connect record)
 
 resolve :: Type2.Index scope -> Context scope -> Stage1.Field Position -> Select Normal scope
 resolve typex context = \case

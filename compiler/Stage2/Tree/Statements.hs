@@ -5,6 +5,7 @@ import Stage1.Position (Position)
 import qualified Stage1.Tree.Expression as Stage1 (Expression)
 import qualified Stage1.Tree.Statement as Stage1 (Statement (..))
 import qualified Stage1.Tree.Statements as Stage1 (Statements (..))
+import Stage2.Connect (Connect (..))
 import Stage2.FreeVariables (FreeTermVariables (..))
 import qualified Stage2.FreeVariables as FreeVariables
 import Stage2.Layout (Normal)
@@ -90,6 +91,32 @@ instance FreeTermVariables (Statements layout) where
         [ freeTermVariables (FreeVariables.Over target) declarations,
           freeTermVariables (FreeVariables.Over target) body
         ]
+
+instance Connect Statements where
+  connect = \case
+    Done {done} ->
+      Done
+        { done = connect done
+        }
+    Run {startPosition, effect, after} ->
+      Run
+        { startPosition,
+          effect = connect effect,
+          after = connect after
+        }
+    Bind {startPosition, patternx, effect, thenx} ->
+      Bind
+        { startPosition,
+          patternx,
+          effect = connect effect,
+          thenx = connect thenx
+        }
+    Let {startPosition, declarations, body} ->
+      Let
+        { startPosition,
+          declarations = Declarations.connect declarations,
+          body = connect body
+        }
 
 resolve :: Context scope -> Stage1.Statements Position -> Statements Normal scope
 resolve context Stage1.Statements {body, done} = statements context (toList body) done

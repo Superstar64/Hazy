@@ -6,6 +6,7 @@ import Stage1.Position (Position)
 import qualified Stage1.Tree.Expression as Stage1 (Expression (..))
 import qualified Stage1.Tree.Pattern as Stage1 (Pattern (..))
 import qualified Stage1.Tree.Pattern as Stage1.Pattern
+import Stage2.Connect (Connect (..))
 import Stage2.FreeVariables (FreeTermVariables (..))
 import qualified Stage2.FreeVariables as FreeTermVariables
 import Stage2.Layout (Normal)
@@ -47,6 +48,19 @@ instance FreeTermVariables (Lambda layout) where
   freeTermVariables target = \case
     Plain {plain} -> freeTermVariables target plain
     Bound {body} -> freeTermVariables (FreeTermVariables.Over target) body
+
+instance Connect Lambda where
+  connect = \case
+    Plain {plain} ->
+      Plain
+        { plain = connect plain
+        }
+    Bound {boundPosition, parameter, body} ->
+      Bound
+        { boundPosition,
+          parameter,
+          body = connect body
+        }
 
 -- todo complain when lambda variables shadow other lambda variables
 resolve :: Context scope -> [Stage1.Pattern Position] -> Stage1.Expression Position -> Lambda Normal scope

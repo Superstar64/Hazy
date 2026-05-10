@@ -16,6 +16,7 @@ import qualified Stage1.Tree.InstanceDeclaration as Stage1 (InstanceDeclaration 
 import qualified Stage1.Tree.InstanceDeclarations as Stage1 (InstanceDeclarations (..))
 import qualified Stage1.Tree.TypePattern as Stage1 (TypePattern)
 import Stage1.Variable (Variable)
+import Stage2.Connect (Connect (..))
 import Stage2.Layout (Normal)
 import Stage2.Resolve.Context (Context)
 import Stage2.Scope (Environment (..), Local)
@@ -50,6 +51,16 @@ instance Shift.Functor (Instance layout) where
         classPosition,
         parameters,
         members = fmap (fmap (Shift.map (Shift.Over category))) members
+      }
+
+instance Connect Instance where
+  connect Instance {startPosition, prerequisites, classPosition, parameters, members} =
+    Instance
+      { startPosition,
+        prerequisites,
+        classPosition,
+        parameters,
+        members = fmap connect <$> members
       }
 
 resolve ::

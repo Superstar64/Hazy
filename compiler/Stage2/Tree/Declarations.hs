@@ -14,6 +14,7 @@ import Stage1.Extensions (Extensions (Extensions, stableImports))
 import Stage1.Position (Position)
 import qualified Stage1.Tree.Declaration as Stage1 (toImport)
 import qualified Stage1.Tree.Declarations as Stage1 (Declarations (..))
+import qualified Stage2.Connect as Connect
 import Stage2.FreeVariables (FreeTermVariables (..), FreeTypeVariables (..), Target (..))
 import {-# SOURCE #-} qualified Stage2.Group.Functor.Term.Declarations as Functor.Term
 import {-# SOURCE #-} qualified Stage2.Group.Functor.Type.Declarations as Functor.Type
@@ -49,9 +50,9 @@ import qualified Stage2.Tree.TypeDefinition2 as TypeDefinition2
 data Declarations locality layout scope = Declarations
   { terms :: !(Vector (Declaration locality layout scope)),
     types :: !(Vector (TypeDeclaration locality layout scope)),
-    typeExtras :: !(Vector (TypeDeclarationExtra Normal scope)),
-    dataInstances :: !(Vector (Map (Type2.Index scope) (Instance Normal scope))),
-    classInstances :: !(Vector (Map (Type2.Index scope) (Instance Normal scope)))
+    typeExtras :: !(Vector (TypeDeclarationExtra layout scope)),
+    dataInstances :: !(Vector (Map (Type2.Index scope) (Instance layout scope))),
+    classInstances :: !(Vector (Map (Type2.Index scope) (Instance layout scope)))
   }
   deriving (Show)
 
@@ -129,9 +130,9 @@ group
     Declarations
       { terms = Vector.zipWith (Declaration.group linkTerm indexTerm) functorTerms terms,
         types = Vector.zipWith (TypeDeclaration.group linkType indexType) functorTypes types,
-        typeExtras,
-        dataInstances,
-        classInstances
+        typeExtras = Connect.connect <$> typeExtras,
+        dataInstances = fmap Connect.connect <$> dataInstances,
+        classInstances = fmap Connect.connect <$> classInstances
       }
 
 connect ::

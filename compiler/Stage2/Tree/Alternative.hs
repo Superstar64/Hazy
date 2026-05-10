@@ -2,6 +2,7 @@ module Stage2.Tree.Alternative where
 
 import Stage1.Position (Position)
 import qualified Stage1.Tree.Alternative as Stage1 (Alternative (..))
+import Stage2.Connect (Connect (..))
 import Stage2.FreeVariables (FreeTermVariables (freeTermVariables))
 import qualified Stage2.FreeVariables as FreeTermVariables
 import Stage2.Layout (Normal)
@@ -34,6 +35,13 @@ instance Shift.Functor (Alternative layout) where
 instance FreeTermVariables (Alternative layout) where
   freeTermVariables target Alternative {rightHandSide} =
     freeTermVariables (FreeTermVariables.Over target) rightHandSide
+
+instance Connect Alternative where
+  connect Alternative {parameter, rightHandSide} =
+    Alternative
+      { parameter,
+        rightHandSide = connect rightHandSide
+      }
 
 resolve :: Context scope -> Stage1.Alternative Position -> Alternative Normal scope
 resolve context (Stage1.Alternative {parameter, rightHandSide}) =

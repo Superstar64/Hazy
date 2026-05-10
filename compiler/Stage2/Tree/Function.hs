@@ -5,6 +5,7 @@ module Stage2.Tree.Function where
 import Stage1.Position (Position)
 import qualified Stage1.Tree.Pattern as Stage1 (Pattern (startPosition))
 import qualified Stage1.Tree.RightHandSide as Stage1 (RightHandSide (..))
+import Stage2.Connect (Connect (..))
 import Stage2.FreeVariables (FreeTermVariables (..))
 import qualified Stage2.FreeVariables as FreeTermVariables
 import Stage2.Layout (Normal)
@@ -45,6 +46,19 @@ instance FreeTermVariables (Function layout) where
   freeTermVariables target = \case
     Plain {rightHandSide} -> freeTermVariables target rightHandSide
     Bound {function} -> freeTermVariables (FreeTermVariables.Over target) function
+
+instance Connect Function where
+  connect = \case
+    Plain {rightHandSide} ->
+      Plain
+        { rightHandSide = connect rightHandSide
+        }
+    Bound {functionPosition, patternx, function} ->
+      Bound
+        { functionPosition,
+          patternx,
+          function = connect function
+        }
 
 -- todo complain when lambda variables shadow other lambda variables
 resolve ::

@@ -6,8 +6,8 @@ import Data.Kind (Type)
 import Stage1.Position (Position)
 import qualified Stage1.Tree.Declarations as Stage1 (Declarations)
 import Stage2.FreeVariables (FreeTermVariables)
-import Stage2.Layout (Layout, Normal)
-import Stage2.Locality (Locality)
+import Stage2.Layout (Group, Layout, Normal)
+import Stage2.Locality (Local, Locality)
 import Stage2.Resolve.Context (Context)
 import Stage2.Scope (Declaration, Environment (..))
 import Stage2.Shift (Shift)
@@ -33,3 +33,7 @@ resolve ::
   ( Context (Declaration ':+ scope),
     Declarations locality Normal (Declaration ':+ scope)
   )
+connect ::
+  forall scope.
+  Declarations Local Normal (Declaration ':+ scope) ->
+  Declarations Local Group (Declaration ':+ scope)

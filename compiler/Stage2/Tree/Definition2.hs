@@ -2,6 +2,7 @@ module Stage2.Tree.Definition2 where
 
 import Data.Kind (Type)
 import Stage1.Position (Position)
+import Stage2.Connect (Connect (..))
 import Stage2.FreeVariables (FreeTermVariables (..))
 import qualified Stage2.FreeVariables as FreeTermVariables
 import qualified Stage2.Index.Term as Term
@@ -65,6 +66,13 @@ instance FreeTermVariables (Definition2 source mark layout) where
     Auto definition -> freeTermVariables target definition
     Piece Choice {index} -> freeTermVariables target index
     Shared definition -> freeTermVariables target definition
+
+instance Connect (Definition2 source mark) where
+  connect = \case
+    Manual definition -> Manual (connect definition)
+    Auto definition -> Auto (connect definition)
+    Piece choice -> Piece choice
+    Shared definition -> Shared (connect definition)
 
 data Choice scope = Choice
   { position :: !Position,

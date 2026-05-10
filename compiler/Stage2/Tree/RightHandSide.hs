@@ -2,6 +2,7 @@ module Stage2.Tree.RightHandSide where
 
 import Stage1.Position (Position)
 import qualified Stage1.Tree.RightHandSide as Stage1 (RightHandSide (..))
+import Stage2.Connect (Connect (..))
 import Stage2.FreeVariables (FreeTermVariables (freeTermVariables))
 import qualified Stage2.FreeVariables as FreeVariables
 import Stage2.Layout (Normal)
@@ -34,6 +35,10 @@ instance FreeTermVariables (RightHandSide layout) where
       [ freeTermVariables (FreeVariables.Over target) body,
         freeTermVariables (FreeVariables.Over target) declarations
       ]
+
+instance Connect RightHandSide where
+  connect (RightHandSide body declarations) =
+    RightHandSide (connect body) (Declarations.connect declarations)
 
 resolve :: Context scope -> Stage1.RightHandSide Position -> RightHandSide Normal scope
 resolve context Stage1.RightHandSide {body, declarations}

@@ -1,6 +1,7 @@
 module Stage2.Tree.Definition where
 
 import Data.List.NonEmpty (NonEmpty (..))
+import Stage2.Connect (Connect (..))
 import Stage2.FreeVariables (FreeTermVariables (freeTermVariables))
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
@@ -30,6 +31,11 @@ instance FreeTermVariables (Definition layout) where
         [ freeTermVariables target function,
           freeTermVariables target definition
         ]
+
+instance Connect Definition where
+  connect = \case
+    Definition function -> Definition (connect function)
+    Alternative function definition -> Alternative (connect function) (connect definition)
 
 merge :: NonEmpty (Function layout scope) -> Definition layout scope
 merge (definition :| []) = Definition definition
