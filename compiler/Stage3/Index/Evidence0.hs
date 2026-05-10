@@ -38,6 +38,8 @@ instance Shift.Functor Index where
   map (category1 Shift.:. category2) index = Shift.map category1 $ Shift.map category2 index
   map (Shift.Unshift _) (Shift index) = index
   map (Shift.Unshift abort) Assumed {} = absurd abort
+  map Shift.GroupTerm {} index = Shift index
+  map Shift.GroupType {} index = Shift index
 
 instance Shift.PartialUnshift Index where
   partialUnshift abort (Assumed _) = vacuous abort

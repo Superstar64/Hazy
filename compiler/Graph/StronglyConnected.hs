@@ -29,7 +29,10 @@ import System.IO.Unsafe (unsafeInterleaveIO, unsafePerformIO)
 
 data Component k
   = Group {set :: !(Set k)}
-  | Link {link :: !k}
+  | Link
+      { link :: !k,
+        id :: !Int
+      }
   deriving (Eq, Show)
 
 data State s k = State
@@ -79,8 +82,8 @@ visiter children = do
           let root :| children = sortOn value nodes
               set = Set.fromAscList (value root : map value children)
           writeSTRef (result root) Group {set}
-          for_ children $ \child ->
-            writeSTRef (result child) Link {link = value root}
+          for_ (zip [0 ..] children) $ \(id, child) ->
+            writeSTRef (result child) Link {link = value root, id}
         where
           collect = do
             stack <- readSTRef stackRef

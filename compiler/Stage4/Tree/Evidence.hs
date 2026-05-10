@@ -54,6 +54,7 @@ instance Substitute.Functor Evidence where
                 map1 (Substitute category _ _) index = Shift.map category $ Type.unlocal index
                 map1 (Substitute.Over category) (Type.Shift index) = Type.Shift $ map1 category index
                 map1 Substitute.Over {} (Type.Declaration index) = Type.Declaration index
+                map1 Substitute.Over {} (Type.Group index) = Type.Group index
                 map2 :: Category scope1 scope2 -> Type2.Index scope1 -> Type2.Index scope2
                 map2 = Type2.map . map1
                 map3 :: Category scope1 scope2 -> Evidence0.Index scope1 -> Evidence0.Index scope2

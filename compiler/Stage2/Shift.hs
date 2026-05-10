@@ -10,9 +10,13 @@ module Stage2.Shift
 where
 
 import qualified Data.Map as Map
+import qualified Data.Strict.Maybe as Strict
 import Data.Void (Void)
+import {-# SOURCE #-} qualified Stage2.Index.Term0 as Term0
+import {-# SOURCE #-} qualified Stage2.Index.Type0 as Type0
 import {-# SOURCE #-} Stage2.Index.Type2 as Type2 (Index)
 import Stage2.Scope (Environment ((:+)))
+import qualified Stage2.Scope as Scope
 import Prelude hiding (Functor, id, map, (.))
 
 class Shift f where
@@ -24,6 +28,12 @@ data Category scope scope' where
   Over :: Category scopes scopes' -> Category (scope1 ':+ scopes) (scope1 ':+ scopes')
   (:.) :: Category scope' scope'' -> Category scope scope' -> Category scope scope''
   Unshift :: Void -> Category (scope ':+ scopes) scopes
+  GroupTerm ::
+    (Term0.Index scope -> Strict.Maybe Int) ->
+    Category scope (Scope.Group ':+ scope)
+  GroupType ::
+    (Type0.Index scope -> Strict.Maybe Int) ->
+    Category scope (Scope.Group ':+ scope)
 
 infixr 9 :.
 
@@ -34,6 +44,8 @@ mapInstances ::
   Category scope scope' ->
   Map.Map (Type2.Index scope) a ->
   Map.Map (Type2.Index scope') a
+mapInstances GroupType {} =
+  error "group type shifts are not monotonic"
 mapInstances category = Map.mapKeysMonotonic (map category)
 
 shiftDefault :: (Functor f) => f scopes -> f (scope ':+ scopes)

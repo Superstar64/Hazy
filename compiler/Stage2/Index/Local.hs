@@ -32,6 +32,8 @@ instance Shift.Functor Index where
   map (after Shift.:. before) index = Shift.map after (Shift.map before index)
   map (Shift.Unshift _) (Shift index) = index
   map (Shift.Unshift abort) Local {} = absurd abort
+  map (Shift.GroupTerm _) index = Shift index
+  map (Shift.GroupType _) index = Shift index
 
 instance Shift.PartialUnshift Index where
   partialUnshift _ (Shift index) = pure index

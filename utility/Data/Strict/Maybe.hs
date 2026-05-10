@@ -1,6 +1,7 @@
 module Data.Strict.Maybe where
 
 import Prelude hiding (Maybe (Just, Nothing))
+import qualified Prelude
 
 data Maybe e
   = Nothing
@@ -24,3 +25,8 @@ isNothing _ = False
 
 isJust Nothing = False
 isJust _ = True
+
+fromLazy :: Prelude.Maybe a -> Maybe a
+fromLazy = \case
+  Prelude.Nothing -> Nothing
+  Prelude.Just a -> Just a

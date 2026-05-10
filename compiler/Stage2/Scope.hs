@@ -4,6 +4,7 @@ module Stage2.Scope
     Local,
     Declaration,
     Pattern,
+    Group,
     SimplePattern,
     SimpleDeclaration,
     Global,
@@ -27,6 +28,7 @@ data Scope
   = Local
   | Declaration
   | Pattern
+  | Group
   | SimplePattern
   | SimpleDeclaration
 
@@ -35,6 +37,8 @@ type Local = 'Local
 type Declaration = 'Declaration
 
 type Pattern = 'Pattern
+
+type Group = 'Group
 
 type SimplePattern = 'SimplePattern
 

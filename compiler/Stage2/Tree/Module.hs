@@ -74,7 +74,15 @@ connect modules = Vector.imap go modules
     go index Module {name, declarations} =
       Module
         { name,
-          declarations = Declarations.group indexTerm' indexType' termGroup typeGroup declarations
+          declarations =
+            Declarations.group
+              Term.global
+              Type.global
+              indexTerm'
+              indexType'
+              termGroup
+              typeGroup
+              declarations
         }
       where
         termGroup = termGroups Vector.! index

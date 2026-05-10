@@ -21,6 +21,7 @@ import Stage1.Variable
   )
 import Stage2.FreeVariables (FreeTypeVariables (..))
 import qualified Stage2.Index.Link.Type as Type
+import qualified Stage2.Index.Type0 as Type0
 import qualified Stage2.Label.Binding.Type as Label
 import Stage2.Layout (Group, Layout, Normal)
 import Stage2.Locality (Locality)
@@ -76,15 +77,16 @@ locality = \case
       }
 
 group ::
+  (Type0.Index scope -> Type.Link locality) ->
   (Type.Link locality -> TypeDefinition scope) ->
   StronglyConnected.Component (Type.Link locality) ->
   TypeDeclaration locality Normal scope ->
   TypeDeclaration locality Group scope
-group index group = \case
+group link index group = \case
   TypeDeclaration {position, name, constructorNames, definition} ->
     TypeDeclaration
       { position,
         name,
         constructorNames,
-        definition = TypeDefinition2.group index group definition
+        definition = TypeDefinition2.group link index group definition
       }

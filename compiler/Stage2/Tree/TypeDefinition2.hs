@@ -1,15 +1,20 @@
 module Stage2.Tree.TypeDefinition2 where
 
 import qualified Data.Kind
-import Data.Map (Map)
-import qualified Data.Map as Map
+import qualified Data.Set as Set
+import qualified Data.Strict.Maybe as Strict.Maybe
+import qualified Data.Vector.Strict as Strict
+import qualified Data.Vector.Strict as Strict.Vector
 import qualified Graph.StronglyConnected as StronglyConnected
 import Stage1.Position (Position)
 import Stage2.FreeVariables (FreeTypeVariables (..))
+import qualified Stage2.FreeVariables as FreeVariables
 import qualified Stage2.Index.Link.Type as Type
+import qualified Stage2.Index.Type0 as Type0
 import Stage2.Layout (Group, Layout, Normal)
 import Stage2.Locality (Locality)
-import Stage2.Scope (Environment)
+import Stage2.Scope (Environment (..))
+import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Tree.Type (Type)
@@ -18,10 +23,8 @@ import Stage2.Tree.TypeDefinition (TypeDefinition)
 type TypeDefinition2 :: Locality -> Layout -> Environment -> Data.Kind.Type
 data TypeDefinition2 locality layout scope where
   (:::) :: !(Annotation layout scope) -> !(TypeDefinition scope) -> TypeDefinition2 locality layout scope
-  Link :: !(Type.Link locality) -> TypeDefinition2 locality Group scope
-  Group ::
-    !(Map (Type.Link locality) (TypeDefinition scope)) ->
-    TypeDefinition2 locality Group scope
+  Link :: !(Type.Link locality) -> !Int -> TypeDefinition2 locality Group scope
+  Group :: !(Strict.Vector (TypeDefinition (Scope.Group ':+ scope))) -> TypeDefinition2 locality Group scope
 
 infix 5 :::
 
@@ -30,7 +33,12 @@ instance Show (TypeDefinition2 locality layout scope) where
     annotation ::: definition ->
       showParen (d > 5) $
         showsPrec 6 annotation . showString " ::: " . showsPrec 6 definition
-    Link link -> showParen (d > 10) $ showString "Link " . showsPrec 11 link
+    Link link id ->
+      showParen (d > 10) $
+        showString "Link "
+          . showsPrec 11 link
+          . showString " "
+          . showsPrec 11 id
     Group set -> showParen (d > 10) $ showString "Group " . showsPrec 11 set
 
 instance Shift (TypeDefinition2 locality layout) where
@@ -39,15 +47,15 @@ instance Shift (TypeDefinition2 locality layout) where
 instance Shift.Functor (TypeDefinition2 locality layout) where
   map category = \case
     annotation ::: definition -> Shift.map category annotation ::: Shift.map category definition
-    Link link -> Link link
-    Group set -> Group $ Shift.map category <$> set
+    Link link id -> Link link id
+    Group set -> Group $ Shift.map (Shift.Over category) <$> set
 
 instance FreeTypeVariables (TypeDefinition2 locality layout) where
   freeTypeVariables target = \case
     annotation ::: definition ->
       freeTypeVariables target annotation ++ freeTypeVariables target definition
     Link {} -> []
-    Group set -> foldMap (freeTypeVariables target) set
+    Group set -> foldMap (freeTypeVariables (FreeVariables.Over target)) set
 
 data Annotation layout scope where
   Annotated :: !(Type Position scope) -> Annotation layout scope
@@ -76,12 +84,16 @@ locality = \case
   annotation ::: definition -> annotation ::: definition
 
 group ::
+  (Type0.Index scope -> Type.Link locality) ->
   (Type.Link locality -> TypeDefinition scope) ->
   StronglyConnected.Component (Type.Link locality) ->
   TypeDefinition2 locality Normal scope ->
   TypeDefinition2 locality Group scope
-group _ _ (Annotated typex ::: definition) = Annotated typex ::: definition
-group index group (Inferred ::: _) = case group of
+group _ _ _ (Annotated typex ::: definition) = Annotated typex ::: definition
+group link index group (Inferred ::: _) = case group of
   StronglyConnected.Group {set} ->
-    Group $ Map.fromSet index set
-  StronglyConnected.Link {link} -> Link link
+    Group $ Strict.Vector.fromList $ map (transform . index) $ Set.toList set
+    where
+      transform = Shift.map (Shift.GroupType lookup)
+      lookup index = Strict.Maybe.fromLazy $ Set.lookupIndex (link index) set
+  StronglyConnected.Link {link, id} -> Link link id

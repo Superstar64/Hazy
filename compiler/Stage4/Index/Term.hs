@@ -42,6 +42,7 @@ from = \case
   Stage2.Pattern patternx -> Pattern patternx
   Stage2.Shift index -> Shift (from index)
   Stage2.Global global local -> Global global local
+  Stage2.Group {} -> error "no group in stage4"
 
 instance Shift Index where
   shift = shiftDefault
@@ -57,6 +58,8 @@ instance Shift.Functor Index where
   map (after Shift.:. before) index = Shift.map after (Shift.map before index)
   map (Shift.Unshift _) (Shift index) = index
   map (Shift.Unshift abort) _ = absurd abort
+  map Shift.GroupTerm {} index = Shift index
+  map Shift.GroupType {} index = Shift index
 
 instance Functor Index where
   map (Lift category) index = Shift.map category index

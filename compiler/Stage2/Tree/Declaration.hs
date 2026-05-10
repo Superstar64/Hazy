@@ -7,6 +7,7 @@ import Stage1.Position (Position)
 import Stage1.Variable (QualifiedVariable ((:-)), Qualifiers, Variable)
 import Stage2.FreeVariables (FreeTermVariables (..))
 import qualified Stage2.Index.Link.Term as Term
+import qualified Stage2.Index.Term0 as Term0
 import qualified Stage2.Label.Binding.Term as Label
 import Stage2.Layout (Group, Normal)
 import Stage2.Shift (Shift, shiftDefault)
@@ -59,14 +60,15 @@ locality = \case
       }
 
 group ::
+  (Term0.Index scope -> Term.Link locality) ->
   (Term.Link locality -> Definition3 Inferred scope) ->
   StronglyConnected.Component (Term.Link locality) ->
   Declaration locality Normal scope ->
   Declaration locality Group scope
-group index' group = \case
+group link index' group = \case
   Declaration {position, name, definition} ->
     Declaration
       { position,
         name,
-        definition = Definition4.group index' group definition
+        definition = Definition4.group link index' group definition
       }

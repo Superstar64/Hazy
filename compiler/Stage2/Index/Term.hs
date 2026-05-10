@@ -1,10 +1,11 @@
 module Stage2.Index.Term where
 
+import qualified Data.Strict.Maybe as Strict
 import Data.Void (absurd)
 import Stage2.FreeVariables (FreeTermVariables (..))
 import qualified Stage2.FreeVariables as FreeVariables
 import {-# SOURCE #-} qualified Stage2.Index.Term0 as Term0
-import Stage2.Scope (Declaration, Environment (..), Global, Pattern)
+import Stage2.Scope (Declaration, Environment (..), Global, Group, Pattern)
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Prelude hiding (Functor, map)
@@ -14,6 +15,7 @@ data Index scopes where
   Pattern :: !Bound -> Index (Pattern ':+ scopes)
   Shift :: !(Index scopes) -> Index (scope ':+ scopes)
   Global :: !Int -> !Int -> Index Global
+  Group :: !Int -> Index (Group ':+ scope)
 
 instance Eq (Index scope) where
   Declaration local1 == Declaration local2 = local1 == local2
@@ -27,6 +29,7 @@ instance Show (Index scope) where
     Declaration local -> showParen (d > 10) $ showString "Declaration " . showsPrec 11 local
     Pattern bound -> showParen (d > 10) $ showString "Pattern " . showsPrec 11 bound
     Shift index -> showParen (d > 10) $ showString "Shift " . showsPrec 11 index
+    Group index -> showParen (d > 10) $ showString "Group " . showsPrec 11 index
     Global global local ->
       showParen (d > 10) $
         showString "Global "
@@ -43,9 +46,16 @@ instance Shift.Functor Index where
   map (Shift.Over category) (Shift index) = Shift $ Shift.map category index
   map (Shift.Over _) (Declaration index) = Declaration index
   map (Shift.Over _) (Pattern bound) = Pattern bound
+  map (Shift.Over _) (Group index) = Group index
   map (after Shift.:. before) index = Shift.map after (Shift.map before index)
   map (Shift.Unshift _) (Shift index) = index
   map (Shift.Unshift abort) _ = absurd abort
+  map (Shift.GroupTerm term) (Declaration index)
+    | Strict.Just index <- term (Term0.Declaration index) = Group index
+  map (Shift.GroupTerm term) (Global global local)
+    | Strict.Just index <- term (Term0.Global global local) = Group index
+  map Shift.GroupTerm {} index = Shift index
+  map Shift.GroupType {} index = Shift index
 
 instance FreeTermVariables Index where
   freeTermVariables FreeVariables.Target (Declaration index) = [Term0.Declaration index]

@@ -103,6 +103,8 @@ resolve initial@Context {canonical, extensions} Stage1.Declarations {declaration
     complete = runIdentity $ Complete.resolve context extensions (toList declarations)
 
 group ::
+  (Term0.Index scope -> Term.Link locality) ->
+  (Type0.Index scope -> Type.Link locality) ->
   (Term.Link locality -> Definition3 Inferred scope) ->
   (Type.Link locality -> TypeDefinition scope) ->
   Functor.Term.Declarations (StronglyConnected.Component (Term.Link locality)) ->
@@ -110,6 +112,8 @@ group ::
   Declarations locality Normal scope ->
   Declarations locality Group scope
 group
+  linkTerm
+  linkType
   indexTerm
   indexType
   Functor.Term.Declarations {terms = functorTerms}
@@ -122,8 +126,8 @@ group
       classInstances
     } =
     Declarations
-      { terms = Vector.zipWith (Declaration.group indexTerm) functorTerms terms,
-        types = Vector.zipWith (TypeDeclaration.group indexType) functorTypes types,
+      { terms = Vector.zipWith (Declaration.group linkTerm indexTerm) functorTerms terms,
+        types = Vector.zipWith (TypeDeclaration.group linkType indexType) functorTypes types,
         typeExtras,
         dataInstances,
         classInstances
@@ -134,7 +138,7 @@ connect ::
   Declarations Local Normal (Scope.Declaration ':+ scope) ->
   Declarations Local Group (Scope.Declaration ':+ scope)
 connect declarations@Declarations {terms, types} =
-  group indexTerm' indexType' termGroups typeGroups declarations
+  group Term.local Type.local indexTerm' indexType' termGroups typeGroups declarations
   where
     termIndexes = Functor.Term.indexes Term.Declaration declarations
     typeIndexes = Functor.Type.indexes Type.Declaration declarations
