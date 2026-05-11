@@ -31,7 +31,7 @@ rigid Functor.Annotated {meta, content} = TermBinding $ do
   annotation <- meta
   Rigid <$> case annotation of
     GlobalAnnotation Annotation {annotation'} -> pure annotation'
-    GlobalInferred -> Declaration.simple <$> content
+    GlobalInferred -> Declaration.typex_ <$> content
 
 wobbly ::
   Functor.Annotated

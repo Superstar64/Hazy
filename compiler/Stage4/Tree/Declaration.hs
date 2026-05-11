@@ -5,7 +5,7 @@ import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Tree.Declaration (Key (..))
 import qualified Stage3.Tree.Declaration as Stage3 (Declaration (..), LazyTermDeclaration (..))
-import qualified Stage3.Tree.Definition2 as Stage3 (Choice (..), Definition2 (Definition, Piece), typex)
+import qualified Stage3.Tree.Definition2 as Stage3 (Choice (..), Definition2 (Definition, Piece))
 import qualified Stage3.Tree.Definition2 as Stage3.Definition2
 import qualified Stage3.Tree.Definition3 as Stage3 (Definition3 (..))
 import qualified Stage3.Tree.Definition4 as Stage3 (Definition4 (..))
@@ -17,9 +17,10 @@ import qualified Stage4.Substitute as Substitute
 import qualified Stage4.Temporary.Pattern as Pattern
 import Stage4.Tree.Expression (Expression)
 import qualified Stage4.Tree.Expression as Expression
-import Stage4.Tree.Scheme (Scheme (Scheme))
+import Stage4.Tree.Scheme (Scheme)
 import qualified Stage4.Tree.Scheme as Scheme
 import Stage4.Tree.SchemeOver (SchemeOver (..))
+import qualified Stage4.Tree.SchemeOver as SchemeOver
 import qualified Stage4.Tree.Statements as Statements
 
 data LazyTermDeclaration scope
@@ -72,48 +73,35 @@ simplify (name Stage3.:^ declaration) =
   name :^ case declaration of
     Stage3.Declaration
       { name,
-        definition =
-          _ Stage3.::: _
-            Stage3.::@ SchemeOver
-              { parameters,
-                constraints,
-                result
-              }
+        definition = _ Stage3.::: _ Stage3.::@ definition,
+        typex
       } ->
         Declaration
           { name,
-            definition =
-              SchemeOver
-                { parameters,
-                  constraints,
-                  result = case result of
-                    Stage3.Definition definition _ -> Expression.simplify definition
-                    Stage3.Piece Stage3.Choice {index, instanciation, patternx, bound} _ ->
-                      Expression.Join
-                        { statements =
-                            Statements.bind
-                              (Pattern.simplify patternx)
-                              Expression.Variable
-                                { variable = Term.from index,
-                                  instanciation
-                                }
-                              Statements.Done
-                                { done =
-                                    Expression.monoVariable $
-                                      Term.from $
-                                        Stage2.Term.Pattern bound
-                                }
-                        }
-                    Stage3.Definition2.Shared shared _ -> Expression.simplify shared
-                },
-            typex =
-              Scheme
-                SchemeOver
-                  { parameters,
-                    constraints,
-                    result = Stage3.typex result
+            definition = SchemeOver.map go definition,
+            typex
+          }
+  where
+    go :: SchemeOver.Map (Stage3.Definition2 source mark) Expression
+    go = SchemeOver.Map $ \case
+      Stage3.Definition definition _ -> Expression.simplify definition
+      Stage3.Piece Stage3.Choice {index, instanciation, patternx, bound} _ ->
+        Expression.Join
+          { statements =
+              Statements.bind
+                (Pattern.simplify patternx)
+                Expression.Variable
+                  { variable = Term.from index,
+                    instanciation
+                  }
+                Statements.Done
+                  { done =
+                      Expression.monoVariable $
+                        Term.from $
+                          Stage2.Term.Pattern bound
                   }
           }
+      Stage3.Definition2.Shared shared _ -> Expression.simplify shared
 
 annotation :: SchemeOver Stage3.Expression scope -> Stage3.Scheme scope -> LazyTermDeclaration scope
 annotation SchemeOver {parameters, constraints, result} scheme =

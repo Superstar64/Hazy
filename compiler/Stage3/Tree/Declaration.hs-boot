@@ -11,4 +11,4 @@ type role Declaration nominal
 type Declaration :: Environment -> Type
 data Declaration scope
 
-simple :: Declaration scope -> Simple.Scheme scope
+typex_ :: Declaration scope -> Simple.Scheme scope

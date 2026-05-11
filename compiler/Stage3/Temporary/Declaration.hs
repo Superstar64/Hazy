@@ -8,6 +8,8 @@ import qualified Stage2.Tree.Declaration as Stage2 (Declaration (..))
 import qualified Stage2.Tree.Definition4 as Stage2 (Annotation (..), Definition4 (..))
 import Stage3.Check.Context (Context (..))
 import Stage3.Check.TypeAnnotation (Annotation (..), GlobalTypeAnnotation (..), LocalTypeAnnotation (..))
+import qualified Stage3.Temporary.Definition2 as Definition2
+import Stage3.Temporary.Definition3 (Definition3 (..))
 import qualified Stage3.Temporary.Definition3 as Definition3
 import Stage3.Temporary.Definition4 (Definition4 (..))
 import qualified Stage3.Temporary.Definition4 as Definition4
@@ -19,18 +21,21 @@ data Declaration s scope
   = Declaration
   { position :: !Position,
     name :: !Key,
-    definition :: !(Definition4 s scope)
+    definition :: !(Definition4 s scope),
+    typex :: !(Unify.Scheme s scope)
   }
 
 instance Unify.Zonk Declaration where
   zonk zonker = \case
-    Declaration {position, name, definition} -> do
+    Declaration {position, name, definition, typex} -> do
       definition <- Unify.zonk zonker definition
+      typex <- Unify.zonk zonker typex
       pure
         Declaration
           { position,
             name,
-            definition
+            definition,
+            typex
           }
 
 checkLocal ::
@@ -39,12 +44,13 @@ checkLocal ::
   Stage2.Declaration locality Normal scope ->
   ST s (Declaration s scope)
 checkLocal context annotation Stage2.Declaration {position, name, definition} = do
-  definition <- definition `go` annotation
+  definition@(_ ::: _ ::@ inner) <- definition `go` annotation
   pure
     Declaration
       { position,
         name,
-        definition
+        definition,
+        typex = Unify.Scheme $ Unify.mapScheme (Unify.MapScheme Definition2.typex) inner
       }
   where
     infix 0 `go`
@@ -62,12 +68,13 @@ checkGlobal ::
   Stage2.Declaration locality Normal scope ->
   ST s (Declaration s scope)
 checkGlobal context annotation Stage2.Declaration {position, name, definition} = do
-  definition <- definition `go` annotation
+  definition@(_ ::: _ ::@ inner) <- definition `go` annotation
   pure
     Declaration
       { position,
         name,
-        definition
+        definition,
+        typex = Unify.Scheme $ Unify.mapScheme (Unify.MapScheme Definition2.typex) inner
       }
   where
     infix 0 `go`
@@ -80,6 +87,7 @@ checkGlobal context annotation Stage2.Declaration {position, name, definition} =
     go _ _ = error "bad annotation"
 
 solve :: Declaration s scope -> ST s (Solved.Declaration scope)
-solve Declaration {position, name, definition} = do
+solve Declaration {position, name, definition, typex} = do
   definition <- Definition4.solve position definition
-  pure Solved.Declaration {name, definition}
+  typex <- Unify.solveScheme position typex
+  pure Solved.Declaration {name, definition, typex}

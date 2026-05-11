@@ -50,6 +50,7 @@ module Stage3.Unify
     solveInstanciation,
     Solve (..),
     solveSchemeOver,
+    solveScheme,
     instanciate,
     Functor (..),
     Category,
@@ -98,6 +99,7 @@ import Stage3.Unify.Type
 import qualified Stage4.Tree.Constraint as Simple (Constraint)
 import qualified Stage4.Tree.Evidence as Simple (Evidence)
 import qualified Stage4.Tree.Instanciation as Simple (Instanciation)
+import qualified Stage4.Tree.Scheme as Simple (Scheme (..))
 import qualified Stage4.Tree.SchemeOver as Simple (SchemeOver)
 import Prelude hiding (Functor, head)
 
@@ -107,6 +109,11 @@ newtype Scheme s scope = Scheme
 
 instance Shift (Scheme s) where
   shift (Scheme scheme) = Scheme (shift scheme)
+
+instance Zonk Scheme where
+  zonk zonker (Scheme scheme) = do
+    scheme <- zonk zonker scheme
+    pure (Scheme scheme)
 
 type MapScheme ::
   (Data.Kind.Type -> Environment -> Data.Kind.Type) ->
@@ -253,6 +260,8 @@ solveInstanciation = Instanciation.solve
 
 solveConstraint :: Position -> Constraint s scope -> ST s (Simple.Constraint scope)
 solveConstraint = Constraint.solve
+
+solveScheme position (Scheme scheme) = Simple.Scheme <$> solveSchemeOver (Solve solve) position scheme
 
 solveSchemeOver ::
   Solve source target ->
