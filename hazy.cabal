@@ -526,6 +526,7 @@ executable hazy
     -Werror=incomplete-patterns
     -Werror=missing-fields
     -Werror=incomplete-record-selectors
+    -Werror=incomplete-record-updates
 
 test-suite hazy-test
   type: exitcode-stdio-1.0
