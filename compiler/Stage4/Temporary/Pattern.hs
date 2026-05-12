@@ -14,7 +14,10 @@ import Stage4.Tree.Evidence (Evidence)
 
 data Pattern scope
   = Wildcard
-  | Match {match :: !(Bindings scope), irrefutable :: !Prelude.Bool}
+  | Match
+      { match :: !(Bindings scope),
+        irrefutable :: !Prelude.Bool
+      }
   deriving (Show)
 
 data Bindings scope
@@ -40,7 +43,7 @@ data Bindings scope
       }
   | List {items :: !(Strict.Vector1 (Pattern scope))}
   | Character {character :: !Char}
-  | String {text :: !Text}
+  | String {string :: !Text}
   deriving (Show)
 
 instance Shift Pattern where
@@ -95,7 +98,7 @@ instance Shift2.Functor Bindings where
           equal = Shift2.map category equal
         }
     Character {character} -> Character {character}
-    String {text} -> String {text}
+    String {string} -> String {string}
 
 instance Shift Field where
   shift = shiftDefault
@@ -110,46 +113,43 @@ data Field scope = Field !Int !(Pattern scope)
   deriving (Show)
 
 simplify :: Stage3.Pattern scope -> Pattern scope
-simplify (Stage3.At match) = case match of
-  Stage3.Wildcard -> Wildcard
-  Stage3.Match {match, irrefutable} ->
+simplify = \case
+  Stage3.Wildcard {} -> Wildcard
+  patternx ->
     Match
-      { match = simplifyBindings match,
-        irrefutable
+      { match = case patternx of
+          Stage3.Constructor {constructor, patterns, constructorInfo} ->
+            Constructor
+              { constructor,
+                patterns = simplify <$> patterns,
+                constructorInfo
+              }
+          Stage3.Record {constructor, fields, constructorInfo} ->
+            Record
+              { constructor,
+                fields = resolveField <$> fields,
+                constructorInfo
+              }
+          Stage3.List {items} ->
+            List
+              { items = simplify <$> items
+              }
+          Stage3.Integer {integer, evidence, equal} ->
+            Integer
+              { integer,
+                evidence,
+                equal
+              }
+          Stage3.Float {float, evidence, equal} ->
+            Float
+              { float,
+                evidence,
+                equal
+              }
+          Stage3.Character {character} -> Character {character}
+          Stage3.String {string} -> String {string},
+        irrefutable = Stage3.irrefutable patternx
       }
-
-simplifyBindings :: Stage3.Bindings scope -> Bindings scope
-simplifyBindings = \case
-  Stage3.Constructor {constructor, patterns, constructorInfo} ->
-    Constructor
-      { constructor,
-        patterns = simplify <$> patterns,
-        constructorInfo
-      }
-  Stage3.Record {constructor, fields, constructorInfo} ->
-    Record
-      { constructor,
-        fields = resolveField <$> fields,
-        constructorInfo
-      }
-  Stage3.List {items} ->
-    List
-      { items = simplify <$> items
-      }
-  Stage3.Integer {integer, evidence, equal} ->
-    Integer
-      { integer,
-        evidence,
-        equal
-      }
-  Stage3.Float {float, evidence, equal} ->
-    Float
-      { float,
-        evidence,
-        equal
-      }
-  Stage3.Character {character} -> Character {character}
-  Stage3.String {text} -> String {text}
 
 resolveField :: Stage3.Field.Field scope -> Field scope
 resolveField (Stage3.Field.Field index patternx) = Field index (simplify patternx)

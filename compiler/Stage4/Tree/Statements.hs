@@ -169,11 +169,11 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
           },
       cons <- Pattern.Match {match, irrefutable} ->
         bind cons check (Shift2.map Shift2.SimplifyList thenx)
-  Pattern.String {text}
+  Pattern.String {string}
     | let wrap character
             | match <- Pattern.Character {character} =
                 Pattern.Match {match, irrefutable},
-      characters <- map wrap $ unpack text,
+      characters <- map wrap $ unpack string,
       match <- case characters of
         (head : tail) -> Pattern.List {items = Strict.Vector1.fromList' head tail}
         [] ->

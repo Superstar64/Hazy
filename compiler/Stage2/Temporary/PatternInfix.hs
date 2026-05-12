@@ -8,13 +8,10 @@ import Stage1.Tree.Fixity (Fixity (..))
 import qualified Stage1.Tree.PatternInfix as Stage1 (Infix (..))
 import qualified Stage2.Index.Constructor as Constructor (cons)
 import qualified Stage2.Resolve.Binding.Constructor as Constructor (Binding (..))
-import Stage2.Resolve.Context
-  ( Context (..),
-    (!=~),
-  )
+import Stage2.Resolve.Context (Context (..), (!=~))
 import Stage2.Temporary.Infix (Infix (..))
 import qualified Stage2.Temporary.Infix as Infix
-import Stage2.Tree.Pattern (Match (..), Pattern (..))
+import Stage2.Tree.Pattern (Pattern ())
 import qualified Stage2.Tree.Pattern as Pattern
 import Prelude hiding (Either (Left, Right))
 
@@ -44,28 +41,22 @@ fixWith = Infix.fixWith position fixity operators
       Cons _ -> Fixity {associativity = Right, precedence = 5}
     operators pattern1 index pattern2 = case index of
       Constructor position Constructor.Binding {index, single} ->
-        At
+        Pattern.Constructor
           { names = Map.empty,
-            match =
-              Match $
-                Pattern.Constructor
-                  { constructorPosition = position,
-                    constructor = index,
-                    patterns = Strict.Vector.fromList [pattern1, pattern2],
-                    single
-                  }
+            irrefutable = Prelude.False,
+            constructorPosition = position,
+            constructor = index,
+            patterns = Strict.Vector.fromList [pattern1, pattern2],
+            single
           }
       Cons constructorPosition ->
-        At
+        Pattern.Constructor
           { names = Map.empty,
-            match =
-              Match $
-                Pattern.Constructor
-                  { constructorPosition,
-                    constructor = Constructor.cons,
-                    patterns = Strict.Vector.fromList [pattern1, pattern2],
-                    single = False
-                  }
+            irrefutable = Prelude.False,
+            constructorPosition,
+            constructor = Constructor.cons,
+            patterns = Strict.Vector.fromList [pattern1, pattern2],
+            single = False
           }
 
 fix :: Infix (Index scope) (Pattern scope) -> Pattern scope

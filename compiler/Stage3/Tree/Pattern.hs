@@ -10,40 +10,42 @@ import Stage4.Tree.Evidence (Evidence)
 import Prelude hiding (Bool (False, True))
 import qualified Prelude
 
-newtype Pattern scope
-  = At (Match scope)
-  deriving (Show)
-
-data Match scope
-  = Wildcard
-  | Match
-      { match :: !(Bindings scope),
-        irrefutable :: !Prelude.Bool
-      }
-  deriving (Show)
-
-data Bindings scope
-  = Constructor
-      { constructor :: !(Constructor.Index scope),
+data Pattern scope
+  = Wildcard {}
+  | Constructor
+      { irrefutable :: !Prelude.Bool,
+        constructor :: !(Constructor.Index scope),
         patterns :: !(Strict.Vector (Pattern scope)),
         constructorInfo :: !(ConstructorInfo scope)
       }
   | Record
-      { constructor :: !(Constructor.Index scope),
+      { irrefutable :: !Prelude.Bool,
+        constructor :: !(Constructor.Index scope),
         fields :: !(Strict.Vector (Field scope)),
         constructorInfo :: !(ConstructorInfo scope)
       }
-  | List {items :: !(Strict.Vector1 (Pattern scope))}
+  | List
+      { irrefutable :: !Prelude.Bool,
+        items :: !(Strict.Vector1 (Pattern scope))
+      }
   | Integer
-      { integer :: !Integer,
+      { irrefutable :: !Prelude.Bool,
+        integer :: !Integer,
         evidence :: !(Evidence scope),
         equal :: !(Evidence scope)
       }
   | Float
-      { float :: !Rational,
+      { irrefutable :: !Prelude.Bool,
+        float :: !Rational,
         evidence :: !(Evidence scope),
         equal :: !(Evidence scope)
       }
-  | Character {character :: !Char}
-  | String {text :: !Text}
+  | Character
+      { irrefutable :: !Prelude.Bool,
+        character :: !Char
+      }
+  | String
+      { irrefutable :: !Prelude.Bool,
+        string :: !Text
+      }
   deriving (Show)
