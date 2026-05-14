@@ -1,0 +1,180 @@
+module Stage3.Temporary.Instance where
+
+import Control.Monad.ST (ST)
+import qualified Data.Strict.Maybe as Strict (Maybe (..))
+import Data.Traversable (for)
+import qualified Data.Vector as Vector
+import Data.Vector.Strict (izipWithM)
+import qualified Data.Vector.Strict as Strict (Vector)
+import qualified Data.Vector.Strict as Strict.Vector
+import qualified Stage2.Index.Local as Local
+import qualified Stage2.Index.Table.Type as Table.Type
+import qualified Stage2.Index.Type as Type
+import qualified Stage2.Index.Type2 as Type2
+import Stage2.Layout (Normal)
+import Stage2.Scope (Environment ((:+)), Local)
+import Stage2.Shift (shift)
+import qualified Stage2.Shift as Shift
+import qualified Stage2.Tree.Instance as Stage2
+import Stage3.Check.Context (Context (..))
+import Stage3.Check.InstanceAnnotation (InstanceAnnotation (InstanceAnnotation))
+import qualified Stage3.Check.InstanceAnnotation as InstanceAnnotation
+import qualified Stage3.Check.Mask as Mask
+import qualified Stage3.Check.TypeBinding as TypeBinding
+import qualified Stage3.Index.Evidence as Evidence
+import qualified Stage3.Index.Evidence0 as Evidence0
+import qualified Stage3.Simple.Scheme as Simple.Scheme (augment')
+import qualified Stage3.Simple.Type as Simple.Type (lift)
+import qualified Stage3.Temporary.Definition as Definition
+import Stage3.Temporary.InstanceMethod (InstanceMethod (..))
+import qualified Stage3.Temporary.InstanceMethod as InstanceMethod
+import qualified Stage3.Tree.Instance as Solved
+import qualified Stage3.Tree.Scheme as Scheme
+import qualified Stage3.Unify as Unify
+import Stage4.Substitute (Category (Substitute))
+import qualified Stage4.Substitute as Substitute
+import {-# SOURCE #-} qualified Stage4.Tree.Builtin as Builtin
+import {-# SOURCE #-} qualified Stage4.Tree.Class as Simple.Class
+import Stage4.Tree.ClassExtra (ClassExtra (..))
+import qualified Stage4.Tree.Constraint as Simple (Constraint (Constraint))
+import qualified Stage4.Tree.Constraint as Simple.Constraint
+import qualified Stage4.Tree.Evidence as Simple (Evidence)
+import qualified Stage4.Tree.Evidence as Simple.Evidence
+import {-# SOURCE #-} qualified Stage4.Tree.Expression as Simple.Expression
+import qualified Stage4.Tree.Instanciation as Simple (Instanciation (Instanciation))
+import qualified Stage4.Tree.Instanciation as Simple.Instanciation
+import qualified Stage4.Tree.Scheme as Simple (Scheme (..))
+import qualified Stage4.Tree.SchemeOver as Simple (SchemeOver (..))
+import qualified Stage4.Tree.Type as Simple.Type (Type (..))
+import Stage4.Tree.TypeDeclaration (assumeClass)
+import qualified Stage4.Tree.TypeDeclarationExtra as Extra
+import Prelude hiding (head)
+
+data Key scope
+  = Data
+      { index1 :: !(Type2.Index scope),
+        head1 :: !(Type.Index scope)
+      }
+  | Class
+      { index2 :: !(Type.Index scope),
+        head2 :: !(Type2.Index scope)
+      }
+
+index :: Key scope -> Type2.Index scope
+index = \case
+  Data {index1} -> index1
+  Class {index2} -> Type2.Index index2
+
+head :: Key scope -> Type2.Index scope
+head = \case
+  Data {head1} -> Type2.Index head1
+  Class {head2} -> head2
+
+data Instance s scope = Instance
+  { evidence :: !(Strict.Vector (Simple.Evidence (Local ':+ scope))),
+    prerequisitesCount :: !Int,
+    members :: !(Strict.Vector (InstanceMethod s scope))
+  }
+
+instance Unify.Zonk Instance where
+  zonk zonker Instance {evidence, prerequisitesCount, members} = do
+    members <- traverse (Unify.zonk zonker) members
+    pure Instance {evidence, prerequisitesCount, members}
+
+check ::
+  Context s scope ->
+  Key scope ->
+  InstanceAnnotation scope ->
+  Stage2.Instance Normal scope ->
+  ST s (Instance s scope)
+check
+  context@Context {typeEnvironment}
+  key
+  InstanceAnnotation
+    { parameters,
+      prerequisites
+    }
+  Stage2.Instance
+    { startPosition,
+      members
+    }
+    | index <- index key,
+      head <- head key = do
+        let prerequisitesCount = length prerequisites
+        classx <- do
+          let get index = assumeClass <$> TypeBinding.content (typeEnvironment Table.Type.! index)
+          Builtin.index pure get index
+        Unify.Delay extra <- do
+          let get index = do
+                Unify.Delay extra <- TypeBinding.extra (typeEnvironment Table.Type.! index)
+                pure $ Unify.Delay (Extra.assumeClass <$> extra)
+          Builtin.index (pure . Unify.Delay . pure) get index
+        let Simple.Class.Class {constraints, methods} = classx
+            base = foldl Simple.Type.Call (shift $ Simple.Type.Constructor head) variables
+              where
+                variables = [Simple.Type.Variable $ Local.Local i | i <- [0 .. length parameters - 1]]
+            self = Simple.Evidence.Variable {variable = shift variable, instanciation}
+              where
+                variable = case key of
+                  Data {index1, head1} -> Evidence.Data index1 head1
+                  Class {index2, head2} -> Evidence.Class index2 head2
+                instanciation = Simple.Instanciation $ Strict.Vector.fromList $ do
+                  i <- [0 .. length prerequisites - 1]
+                  pure
+                    Simple.Evidence.Variable
+                      { variable = Evidence.Index (Evidence0.Assumed i),
+                        instanciation = Simple.Instanciation.empty
+                      }
+        context <- Scheme.augment startPosition parameters prerequisites Mask.Runtime context
+        {-
+          instances where the constraints contain the variable in the non head part
+          should not kind check, so we should be able to safely ignore them
+          For example:
+          > instance (F a (a)) => G (H a)
+        -}
+        methods <-
+          pure $
+            let replacements = Vector.singleton base
+                category = Substitute.Over $ Substitute Shift.Shift replacements (error "no evidence")
+                substitute (Simple.Scheme Simple.SchemeOver {parameters, constraints, result}) =
+                  Simple.Scheme
+                    Simple.SchemeOver
+                      { parameters,
+                        constraints,
+                        result = Substitute.map category result
+                      }
+             in substitute <$> methods
+
+        evidence <- for constraints $
+          \Simple.Constraint {classx, arguments} -> do
+            let parameter = foldl Simple.Type.Call base arguments
+            evidence <- Unify.constrain context startPosition (shift classx) (Simple.Type.lift parameter)
+            Unify.solveEvidence startPosition evidence
+        let check _ scheme (Strict.Just member) = do
+              let Simple.Scheme Simple.SchemeOver {parameters, constraints, result} = scheme
+              result <- pure $ Simple.Type.lift result
+              context <- Simple.Scheme.augment' startPosition scheme Mask.Runtime context
+              definition <- Definition.check context result member
+              let definition' = Unify.Delay $ do
+                    definition <- Definition.solve definition
+                    let result = Simple.Expression.simplify definition
+                    pure $ Simple.SchemeOver {parameters, constraints, result}
+              pure Definition {definition, definition'}
+            check index scheme Strict.Nothing = do
+              let definition' = Unify.Delay $ do
+                    ClassExtra {defaults} <- extra
+                    let defaultx = defaults Strict.Vector.! index
+                    let typeReplacements = Vector.singleton base
+                        evidenceReplacements = Vector.singleton self
+                        category = Substitute.Over $ Substitute Shift.Shift typeReplacements evidenceReplacements
+                        Simple.Scheme Simple.SchemeOver {parameters, constraints} = scheme
+                        result = Substitute.map category defaultx
+                    pure Simple.SchemeOver {parameters, constraints, result}
+              pure Default {definition'}
+        members <- izipWithM check methods (fmap shift <$> members)
+        pure Instance {evidence, prerequisitesCount, members}
+
+solve :: Instance s scope -> ST s (Solved.Instance scope)
+solve Instance {evidence, prerequisitesCount, members} = do
+  members <- traverse InstanceMethod.solve members
+  pure Solved.Instance {evidence, prerequisitesCount, members}

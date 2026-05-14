@@ -352,6 +352,8 @@ executable hazy
     Stage3.Temporary.ExpressionField
     Stage3.Temporary.Field
     Stage3.Temporary.Function
+    Stage3.Temporary.Instance
+    Stage3.Temporary.InstanceMethod
     Stage3.Temporary.Lambda
     Stage3.Temporary.Method
     Stage3.Temporary.Pattern
@@ -363,6 +365,7 @@ executable hazy
     Stage3.Temporary.Statements
     Stage3.Temporary.StrictnessAnnotation
     Stage3.Temporary.Type
+    Stage3.Temporary.TypeDeclarationExtra
     Stage3.Temporary.TypeDefinition
     Stage3.Temporary.TypePattern
     Stage3.Tree.Alternative

@@ -56,6 +56,7 @@ module Stage3.Unify
     Category,
     MapScheme (..),
     mapScheme,
+    Delay (..),
   )
 where
 
@@ -75,6 +76,7 @@ import Stage3.Check.Context (Context (..))
 import qualified Stage3.Index.Evidence as Evidence (Index (..))
 import Stage3.Unify.Class
   ( Category,
+    Delay (..),
     Functor (..),
     Generalizable (collect),
     Zonk (..),

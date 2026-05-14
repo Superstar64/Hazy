@@ -32,16 +32,16 @@ import qualified Stage3.Functor.Module as Functor (Module (..))
 import Stage3.Functor.ModuleSet (mapWithKey)
 import qualified Stage3.Functor.ModuleSet as Functor (ModuleSet (..))
 import qualified Stage3.Temporary.Declaration as Declaration.Unsolved
+import qualified Stage3.Temporary.Instance as Instance (Key (..), check, solve)
+import qualified Stage3.Temporary.TypeDeclarationExtra as TypeDeclarationExtra
 import Stage3.Tree.Declaration (Declaration (..), LazyTermDeclaration)
 import qualified Stage3.Tree.Declaration as Declaration
 import Stage3.Tree.Declarations (Declarations)
 import qualified Stage3.Tree.Declarations as Declarations
 import Stage3.Tree.Instance (Instance)
-import qualified Stage3.Tree.Instance as Instance
 import Stage3.Tree.TypeDeclaration (LazyTypeDeclaration, TypeDeclaration)
 import qualified Stage3.Tree.TypeDeclaration as TypeDeclaration
 import Stage3.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
-import qualified Stage3.Tree.TypeDeclarationExtra as TypeDeclarationExtra
 import Prelude hiding (Functor)
 
 data Module = Module
@@ -204,7 +204,8 @@ checkTypeDeclarationExtra global local declaration = Formula7 {cycle, run}
           Functor.Annotated {content} = types Vector.! local
       proper <- content
       let context = globalBindings moduleSet
-      TypeDeclarationExtra.check context (Type.Global global local) proper declaration
+      extra <- TypeDeclarationExtra.check context (Type.Global global local) proper declaration
+      TypeDeclarationExtra.solve extra
 
 checkInstanceAnnotation ::
   p1 ->
@@ -234,9 +235,11 @@ checkInstanceDeclaration global key declaration = Formula7 {cycle, run}
           let Functor.Annotated {meta} = dataInstances Vector.! index Map.! classKey
               key = Instance.Data {index1 = classKey, head1 = Type.Global global index}
           annotation <- meta
-          Instance.check (globalBindings moduleSet) key annotation declaration
+          instancex <- Instance.check (globalBindings moduleSet) key annotation declaration
+          Instance.solve instancex
         Instance.Key.Class {index, dataKey} -> do
           let Functor.Annotated {meta} = classInstances Vector.! index Map.! dataKey
               key = Instance.Class {index2 = Type.Global global index, head2 = dataKey}
           annotation <- meta
-          Instance.check (globalBindings moduleSet) key annotation declaration
+          instancex <- Instance.check (globalBindings moduleSet) key annotation declaration
+          Instance.solve instancex

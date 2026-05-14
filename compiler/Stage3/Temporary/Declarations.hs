@@ -37,24 +37,24 @@ import qualified Stage3.Functor.Declarations as Functor (Declarations (..), from
 import qualified Stage3.Functor.Instance.Key as Instance.Key
 import Stage3.Temporary.Declaration (Declaration (..))
 import qualified Stage3.Temporary.Declaration as Declaration
+import Stage3.Temporary.Instance (Instance)
+import qualified Stage3.Temporary.Instance as Instance
+import Stage3.Temporary.TypeDeclarationExtra (TypeDeclarationExtra)
+import qualified Stage3.Temporary.TypeDeclarationExtra as TypeDeclarationExtra
 import qualified Stage3.Tree.Declaration as Solved.Declaration
 import qualified Stage3.Tree.Declarations as Solved
-import Stage3.Tree.Instance (Instance)
-import qualified Stage3.Tree.Instance as Instance
 import Stage3.Tree.TypeDeclaration (TypeDeclaration)
 import qualified Stage3.Tree.TypeDeclaration as Solved.TypeDeclaration
 import qualified Stage3.Tree.TypeDeclaration as TypeDeclaration
-import Stage3.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
-import qualified Stage3.Tree.TypeDeclarationExtra as TypeDeclarationExtra
 import qualified Stage3.Unify as Unify
 import Prelude hiding (Functor)
 
 data Declarations s scope = Declarations
   { terms :: !(Vector (Declaration s scope)),
     types :: !(Vector (TypeDeclaration scope)),
-    typeExtras :: !(Vector (TypeDeclarationExtra scope)),
-    classInstances :: !(Vector (Map (Type2.Index scope) (Instance scope))),
-    dataInstances :: !(Vector (Map (Type2.Index scope) (Instance scope)))
+    typeExtras :: !(Vector (TypeDeclarationExtra s scope)),
+    classInstances :: !(Vector (Map (Type2.Index scope) (Instance s scope))),
+    dataInstances :: !(Vector (Map (Type2.Index scope) (Instance s scope)))
   }
 
 instance Unify.Zonk Declarations where
@@ -68,6 +68,9 @@ instance Unify.Zonk Declarations where
         dataInstances
       } = do
       terms <- traverse (Unify.zonk zonker) terms
+      typeExtras <- traverse (Unify.zonk zonker) typeExtras
+      classInstances <- traverse (traverse (Unify.zonk zonker)) classInstances
+      dataInstances <- traverse (traverse (Unify.zonk zonker)) dataInstances
       pure
         Declarations
           { terms,
@@ -85,9 +88,9 @@ type Formula s scope z =
     (Declaration s (Scope.Declaration ':+ scope))
     (KindAnnotation (Scope.Declaration ':+ scope))
     (TypeDeclaration (Scope.Declaration ':+ scope))
-    (TypeDeclarationExtra (Scope.Declaration ':+ scope))
+    (TypeDeclarationExtra s (Scope.Declaration ':+ scope))
     (InstanceAnnotation (Scope.Declaration ':+ scope))
-    (Instance (Scope.Declaration ':+ scope))
+    (Instance s (Scope.Declaration ':+ scope))
     z
 
 fromFunctor ::
@@ -97,9 +100,9 @@ fromFunctor ::
     (Declaration s scope)
     b
     (TypeDeclaration scope)
-    (TypeDeclarationExtra scope)
+    (TypeDeclarationExtra s scope)
     c
-    (Instance scope) ->
+    (Instance s scope) ->
   Declarations s scope
 fromFunctor
   Functor.Declarations
@@ -209,7 +212,7 @@ checkTypeDeclarationExtra ::
   Context s scope ->
   Int ->
   Stage2.TypeDeclarationExtra Normal (Scope.Declaration ':+ scope) ->
-  Formula s scope (TypeDeclarationExtra (Scope.Declaration ':+ scope))
+  Formula s scope (TypeDeclarationExtra s (Scope.Declaration ':+ scope))
 checkTypeDeclarationExtra context index declaration = Formula7 {cycle, run}
   where
     cycle :: a
@@ -235,7 +238,7 @@ checkInstanceDeclaration ::
   Context s scope ->
   Instance.Key.Key (Scope.Declaration ':+ scope) ->
   Stage2.Instance Normal (Scope.Declaration ':+ scope) ->
-  Formula s scope (Instance (Scope.Declaration ':+ scope))
+  Formula s scope (Instance s (Scope.Declaration ':+ scope))
 checkInstanceDeclaration context key declaration = Formula7 {cycle, run}
   where
     cycle :: a
@@ -264,6 +267,9 @@ solve
       classInstances
     } = do
     terms <- traverse Declaration.solve terms
+    typeExtras <- traverse TypeDeclarationExtra.solve typeExtras
+    dataInstances <- traverse (traverse Instance.solve) dataInstances
+    classInstances <- traverse (traverse Instance.solve) classInstances
     pure
       Solved.Declarations
         { terms = Solved.Declaration.strict <$> terms,

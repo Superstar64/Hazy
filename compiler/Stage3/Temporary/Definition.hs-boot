@@ -16,6 +16,8 @@ type role Definition nominal nominal
 type Definition :: Type -> Environment -> Type
 data Definition s scope
 
+instance Unify.Zonk Definition
+
 check ::
   Context s scope ->
   Unify.Type s scope ->

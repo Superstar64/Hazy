@@ -12,6 +12,7 @@ module Stage3.Unify
     solve,
     mark,
     unify,
+    Delay (..),
   )
 where
 
@@ -71,7 +72,6 @@ schemeOver ::
   Strict.Vector (Constraint s scope) ->
   typex s (Scope.Local ':+ scope) ->
   SchemeOver typex s scope
-constrain :: Context s scope -> Position -> Type2.Index scope -> Type s scope -> ST s (Evidence s scope)
 constraintx ::
   Type2.Index scope ->
   Int ->

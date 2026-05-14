@@ -24,6 +24,7 @@ import qualified Stage3.Check.TypeBinding as TypeBinding
 import qualified Stage3.Functor.Declarations as Functor (Declarations (..))
 import qualified Stage3.Functor.Module as Functor (Module (..))
 import qualified Stage3.Functor.ModuleSet as Functor (ModuleSet (..))
+import {-# SOURCE #-} qualified Stage3.Temporary.TypeDeclarationExtra as Temporary
 import {-# SOURCE #-} Stage3.Tree.Declaration (Declaration)
 import {-# SOURCE #-} Stage3.Tree.TypeDeclaration (TypeDeclaration)
 import {-# SOURCE #-} Stage3.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
@@ -77,7 +78,7 @@ localBindings ::
     x
     (ST s (KindAnnotation (Scope.Declaration ':+ scope)))
     (ST s (TypeDeclaration (Scope.Declaration ':+ scope)))
-    (ST s (TypeDeclarationExtra (Scope.Declaration ':+ scope)))
+    (ST s (Temporary.TypeDeclarationExtra s (Scope.Declaration ':+ scope)))
     (ST s (InstanceAnnotation (Scope.Declaration ':+ scope)))
     x' ->
   Context s scope ->
@@ -92,7 +93,7 @@ localBindings
       }
     where
       termBindings = TermBinding.wobbly <$> terms
-      typeBindings = Vector.zipWith4 TypeBinding.rigid types typeExtras dataInstances classInstances
+      typeBindings = Vector.zipWith4 TypeBinding.wobbly types typeExtras dataInstances classInstances
 
 label :: Context s scope -> Label.Context scope
 label Context {termEnvironment, localEnvironment, typeEnvironment} =

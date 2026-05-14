@@ -16,6 +16,7 @@ import {-# SOURCE #-} qualified Stage3.Check.InstanceAnnotation as InstanceAnnot
 import {-# SOURCE #-} Stage3.Check.KindAnnotation (KindAnnotation)
 import {-# SOURCE #-} qualified Stage3.Check.KindAnnotation as KindAnnotation
 import qualified Stage3.Functor.Annotated as Functor (Annotated (..), NoLabel)
+import {-# SOURCE #-} qualified Stage3.Temporary.TypeDeclarationExtra as Temporary
 import {-# SOURCE #-} Stage3.Tree.TypeDeclaration (TypeDeclaration)
 import {-# SOURCE #-} qualified Stage3.Tree.TypeDeclaration as TypeDeclaration
 import {-# SOURCE #-} Stage3.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
@@ -40,7 +41,7 @@ data TypeBinding s scope = TypeBinding
   { label :: !(forall scope. Label.TypeBinding scope),
     kind :: ST s (Kind s scope),
     content :: ST s (Simple.TypeDeclaration scope),
-    extra :: ST s (Simple.TypeDeclarationExtra scope),
+    extra :: ST s (Unify.Delay Simple.TypeDeclarationExtra s scope),
     synonym :: ST s (Strict.Maybe (Simple.Type (Local ':+ scope))),
     dataInstances :: Map (Type2.Index scope) (ST s (Instance scope)),
     classInstances :: Map (Type2.Index scope) (ST s (Instance scope))
@@ -72,7 +73,25 @@ rigid ::
   Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) b) ->
   Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) d) ->
   TypeBinding s scope
-rigid
+rigid = bindingImpl (Unify.Delay . pure . SimpleExtra.simplify)
+
+wobbly ::
+  Functor.Annotated
+    Label.TypeBinding
+    (ST s (KindAnnotation scope))
+    (ST s (TypeDeclaration scope)) ->
+  ST s (Temporary.TypeDeclarationExtra s scope) ->
+  Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) b) ->
+  Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) d) ->
+  TypeBinding s scope
+wobbly = bindingImpl (Unify.Delay . go)
+  where
+    go extra = do
+      extra <- Temporary.solve extra
+      pure $ SimpleExtra.simplify extra
+
+bindingImpl
+  simpleExtra
   Functor.Annotated
     { label,
       meta,
@@ -86,7 +105,7 @@ rigid
         kind,
         synonym,
         content = Simple.simplify' <$> content,
-        extra = SimpleExtra.simplify <$> extra,
+        extra = simpleExtra <$> extra,
         dataInstances = Map.map (fmap (Instance . InstanceAnnotation.prerequisites'_) . Functor.meta) dataInstances,
         classInstances = Map.map (fmap (Instance . InstanceAnnotation.prerequisites'_) . Functor.meta) classInstances
       }

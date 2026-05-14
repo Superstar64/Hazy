@@ -9,7 +9,7 @@ import qualified Stage3.Check.ClassInstance as ClassInstance
 import Stage3.Check.Context (Context)
 import qualified Stage3.Simple.Scheme as Simple.Scheme
 import qualified Stage3.Simple.Type as Type
-import {-# SOURCE #-} qualified Stage3.Unify as Unify
+import qualified Stage3.Unify as Unify
 import {-# SOURCE #-} Stage4.Tree.Class (Class (..))
 
 instanciate :: Context s scope -> Position -> Type2.Index scope -> Class scope -> ST s (ClassInstance s scope)

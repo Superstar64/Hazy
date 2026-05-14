@@ -35,6 +35,22 @@ type Zonk :: (Data.Kind.Type -> Environment -> Data.Kind.Type) -> Data.Kind.Cons
 class Zonk typex where
   zonk :: Zonker s s' -> typex s scope -> ST s (typex s' scope)
 
+-- |
+-- This is used for delaying a unification answer and storing it in a zonkable
+-- AST. The wrapped action should _only_ use `solve` set of  functions and
+-- _should not_ do any unification.
+type Delay :: (Environment -> Data.Kind.Type) -> Data.Kind.Type -> Environment -> Data.Kind.Type
+newtype Delay f s scope = Delay {solveDelay :: ST s (f scope)}
+
+instance Zonk (Delay f) where
+  zonk Zonker (Delay f) = pure $ Delay f
+
+instance (Shift f) => Shift (Delay f s) where
+  shift (Delay f) = Delay (Shift.shift <$> f)
+
+instance (Shift.Functor f) => Shift.Functor (Delay f s) where
+  map category (Delay f) = Delay (Shift.map category <$> f)
+
 -- todo, this is O(n^2) due to STRefs not having an order
 -- especially not a heterogeneous order
 
