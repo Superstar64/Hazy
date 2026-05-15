@@ -21,6 +21,7 @@ import qualified Stage2.Shift as Shift
 import Stage2.Stage (Resolve)
 import Stage2.Tree.Constraint (Constraint)
 import qualified Stage2.Tree.Constraint as Constraint
+import Stage2.Tree.Inferred (Inferred (Infer))
 import Stage2.Tree.Type (Type)
 import Stage2.Tree.Type as Type (anonymize, resolve)
 import Stage2.Tree.TypePattern (TypePattern (TypePattern))
@@ -29,7 +30,7 @@ import qualified Stage2.Tree.TypePattern as TypePattern
 data Scheme position scope = Scheme
   { startPosition :: !position,
     implicit :: !Bool,
-    parameters :: !(Strict.Vector (TypePattern position)),
+    parameters :: !(Strict.Vector (TypePattern position Resolve scope)),
     constraints :: !(Strict.Vector (Constraint position scope)),
     result :: !(Type position Resolve (Local ':+ scope))
   }
@@ -43,7 +44,7 @@ instance Shift.Functor (Scheme position) where
     Scheme
       { startPosition,
         implicit,
-        parameters,
+        parameters = Shift.map category <$> parameters,
         constraints = fmap (Shift.map category) constraints,
         result = Shift.map (Shift.Over category) result
       }
@@ -69,7 +70,7 @@ augment :: Scheme Position scope -> Context scope -> Context (Local ':+ scope)
 augment Scheme {implicit = False, parameters} = augmentWith parameters
 augment Scheme {implicit = True} = augmentWith Strict.Vector.empty
 
-augmentWith :: Strict.Vector (TypePattern position) -> Context scopes -> Context (Local ':+ scopes)
+augmentWith :: Strict.Vector (TypePattern position Resolve scope') -> Context scopes -> Context (Local ':+ scopes)
 augmentWith parameters context = case shift context of
   context@Context {localTypes} -> context {localTypes = Map.fromList (zip (toList variables) indexes) <> localTypes}
   where
@@ -101,7 +102,12 @@ resolve context Stage1.Implicit {startPosition, constraints, result}
   where
     implicit = True
     parameters = fabricate <$> names
-    fabricate name = TypePattern {position = startPosition, name}
+    fabricate name =
+      TypePattern
+        { position = startPosition,
+          name,
+          typex = Infer
+        }
     names = Strict.Vector.fromList $ nubOrd $ filter (`Map.notMember` localTypes context) free
     free =
       map (\(_ :@ name) -> name) $

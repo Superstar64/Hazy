@@ -3,8 +3,8 @@ module Stage4.Tree.Scheme (Scheme (..), mono, constraintCount, simplify) where
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import qualified Stage2.Tree.TypePattern as Solved.TypePattern
 import qualified Stage3.Tree.Scheme as Solved
-import qualified Stage3.Tree.TypePattern as Solved.TypePattern
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
 import qualified Stage4.Tree.Constraint as Constraint
@@ -41,7 +41,7 @@ constraintCount (Scheme scheme) = SchemeOver.constraintCount scheme
 
 simplify :: Solved.Scheme scope -> Scheme scope
 simplify Solved.Scheme {parameters, constraints, result}
-  | parameters <- fmap Solved.TypePattern._type parameters,
+  | parameters <- fmap Solved.TypePattern.typex' parameters,
     constraints <- fmap Constraint.simplify constraints,
     result <- Type.simplify result =
       Scheme

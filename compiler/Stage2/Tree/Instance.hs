@@ -22,6 +22,7 @@ import Stage2.Resolve.Context (Context)
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Resolve)
 import qualified Stage2.Temporary.Complete.Definition as Complete (Definition (..), resolve)
 import Stage2.Tree.Constraint (Constraint)
 import qualified Stage2.Tree.Constraint as Constraint
@@ -35,7 +36,7 @@ data Instance layout scope = Instance
   { startPosition :: !Position,
     prerequisites :: !(Strict.Vector (Constraint Position scope)),
     classPosition :: !Position,
-    parameters :: !(Strict.Vector (TypePattern Position)),
+    parameters :: !(Strict.Vector (TypePattern Position Resolve scope)),
     members :: !(Strict.Vector (Strict.Maybe (Definition layout (Local ':+ scope))))
   }
   deriving (Show)
@@ -49,7 +50,7 @@ instance Shift.Functor (Instance layout) where
       { startPosition,
         prerequisites = fmap (Shift.map category) prerequisites,
         classPosition,
-        parameters,
+        parameters = Shift.map category <$> parameters,
         members = fmap (fmap (Shift.map (Shift.Over category))) members
       }
 

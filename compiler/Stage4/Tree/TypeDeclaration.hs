@@ -4,12 +4,13 @@ import Stage1.Lexer (ConstructorIdentifier)
 import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage2.Tree.Inferred (Inferred (..))
+import Stage2.Tree.TypePattern (TypePattern (..), typex')
 import qualified Stage3.Tree.Method as Solved.Method
 import qualified Stage3.Tree.TypeDeclaration as Solved (LazyTypeDeclaration (..), TypeDeclaration (..))
 import qualified Stage3.Tree.TypeDefinition
 import qualified Stage3.Tree.TypeDefinition as Solved (TypeDefinition (ADT, Class, Synonym))
 import Stage3.Tree.TypeDefinition2 (TypeDefinition2 (..))
-import Stage3.Tree.TypePattern (TypePattern (..))
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
 import Stage4.Tree.Class (Class)
@@ -97,13 +98,13 @@ simplify' Solved.TypeDeclaration {name, definition = _ ::: definition} = case de
       { name,
         datax =
           Data.Data
-            { parameters = fmap typex parameters,
+            { parameters = fmap typex' parameters,
               constructors = Constructor.simplify <$> constructors,
               selectors,
               brand
             }
       }
-  Solved.Class {parameter = TypePattern {typex = parameter}, constraints, methods} ->
+  Solved.Class {parameter = TypePattern {typex = Solved parameter}, constraints, methods} ->
     Class
       { name,
         classx =

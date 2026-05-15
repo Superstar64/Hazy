@@ -21,24 +21,24 @@ data TypeDefinition scope
   = ADT
       { position :: !Position,
         brand :: !Brand,
-        parameters :: !(Strict.Vector (TypePattern Position)),
+        parameters :: !(Strict.Vector (TypePattern Position Resolve scope)),
         constructors :: !(Strict.Vector (Constructor (Local ':+ scope))),
         selectors :: !(Strict.Vector Selector)
       }
   | GADT
       { position :: !Position,
         brand :: !Brand,
-        parameters :: !(Strict.Vector (TypePattern Position)),
+        parameters :: !(Strict.Vector (TypePattern Position Resolve scope)),
         gadtConstructors :: !(Strict.Vector (GADTConstructor scope))
       }
   | Class
       { position :: !Position,
-        parameter :: !(TypePattern Position),
+        parameter :: !(TypePattern Position Resolve scope),
         methods :: !(Strict.Vector (Method (Local ':+ scope))),
         constraints :: !(Strict.Vector (Constraint Position scope))
       }
   | Synonym
-      { parameters :: !(Strict.Vector (TypePattern Position)),
+      { parameters :: !(Strict.Vector (TypePattern Position Resolve scope)),
         synonym :: !(Type Position Resolve (Local ':+ scope))
       }
   deriving (Show)
@@ -52,7 +52,7 @@ instance Shift.Functor TypeDefinition where
       ADT
         { position,
           brand,
-          parameters,
+          parameters = Shift.map category <$> parameters,
           constructors = fmap (Shift.map (Shift.Over category)) constructors,
           selectors
         }
@@ -60,19 +60,19 @@ instance Shift.Functor TypeDefinition where
       GADT
         { position,
           brand,
-          parameters,
+          parameters = Shift.map category <$> parameters,
           gadtConstructors = fmap (Shift.map category) gadtConstructors
         }
     Class {position, parameter, methods, constraints} ->
       Class
         { position,
-          parameter,
+          parameter = Shift.map category parameter,
           constraints = fmap (Shift.map category) constraints,
           methods = fmap (Shift.map (Shift.Over category)) methods
         }
     Synonym {parameters, synonym} ->
       Synonym
-        { parameters,
+        { parameters = Shift.map category <$> parameters,
           synonym = Shift.map (Shift.Over category) synonym
         }
 

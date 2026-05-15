@@ -8,6 +8,7 @@ import Stage2.Shift (shift)
 import Stage2.Tree.Definition2 (Annotated, Inferred)
 import Stage2.Tree.Definition3 (Info)
 import qualified Stage2.Tree.Definition3 as Stage2
+import qualified Stage2.Tree.TypePattern as TypePattern
 import Stage3.Check.Context (Context)
 import qualified Stage3.Check.Mask as Mask
 import qualified Stage3.Simple.Constraint as Simple.Constraint (lift)
@@ -17,7 +18,6 @@ import qualified Stage3.Temporary.Definition2 as Definition2
 import qualified Stage3.Tree.Definition3 as Solved (Definition3 (..))
 import qualified Stage3.Tree.Scheme as Solved (Scheme (..))
 import qualified Stage3.Tree.Scheme as Solved.Scheme
-import qualified Stage3.Tree.TypePattern as TypePattern
 import qualified Stage3.Unify as Unify
 import qualified Stage4.Tree.Constraint as Simple.Constraint (simplify)
 import qualified Stage4.Tree.Type as Simple (simplify)
@@ -78,7 +78,7 @@ checkAnnotation
       definition <- go context typex
       pure $
         Unify.schemeOver
-          (lift . TypePattern.typex <$> parameters)
+          (lift . TypePattern.typex' <$> parameters)
           (Simple.Constraint.lift . Simple.Constraint.simplify <$> constraints)
           definition
 

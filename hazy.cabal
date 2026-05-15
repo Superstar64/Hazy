@@ -287,6 +287,7 @@ executable hazy
     Stage2.Tree.Field
     Stage2.Tree.Function
     Stage2.Tree.GADTConstructor
+    Stage2.Tree.Inferred
     Stage2.Tree.Instance
     Stage2.Tree.Lambda
     Stage2.Tree.Method
@@ -405,7 +406,6 @@ executable hazy
     Stage3.Tree.TypeDeclarationExtra
     Stage3.Tree.TypeDefinition
     Stage3.Tree.TypeDefinition2
-    Stage3.Tree.TypePattern
     Stage3.Unify
     Stage3.Unify.Builtin
     Stage3.Unify.Class

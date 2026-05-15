@@ -12,7 +12,10 @@ import qualified Stage2.Index.Table.Type as Type (Table (..))
 import qualified Stage2.Label.Binding.Local as Label
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (Shift (..))
+import Stage2.Stage (Check)
+import Stage2.Tree.Inferred (Inferred (..))
 import qualified Stage2.Tree.Scheme as Stage2 (Scheme (..))
+import qualified Stage2.Tree.TypePattern as Solved (TypePattern (..))
 import qualified Stage2.Tree.TypePattern as Stage2 (TypePattern (..))
 import Stage3.Check.Context (Context (..))
 import Stage3.Check.LocalBinding (LocalBinding (Wobbly, label, wobbly))
@@ -24,7 +27,6 @@ import {-# SOURCE #-} qualified Stage3.Temporary.Type as Type (check, solve)
 import Stage3.Temporary.TypePattern (TypePattern (TypePattern))
 import qualified Stage3.Temporary.TypePattern as TypePattern
 import qualified Stage3.Tree.Scheme as Solved (Scheme (..))
-import qualified Stage3.Tree.TypePattern as Solved (TypePattern (..))
 import qualified Stage3.Unify as Unify
 
 data Scheme s scope = Scheme
@@ -67,7 +69,11 @@ augment scheme Context {termEnvironment, localEnvironment, typeEnvironment}
             wobbly = shift wobbly
           }
 
-augmentSolve :: Strict.Vector (Solved.TypePattern scope) -> Context s scope -> Context s (Local ':+ scope)
+augmentSolve ::
+  forall s scope.
+  Strict.Vector (Solved.TypePattern Position Check scope) ->
+  Context s scope ->
+  Context s (Local ':+ scope)
 augmentSolve scheme Context {termEnvironment, localEnvironment, typeEnvironment}
   | scheme <- Strict.Vector.toLazy scheme =
       Context
@@ -76,8 +82,9 @@ augmentSolve scheme Context {termEnvironment, localEnvironment, typeEnvironment}
           typeEnvironment = Type.Local typeEnvironment
         }
   where
+    wobbly :: Solved.TypePattern position Check scope -> LocalBinding s (scope' ':+ scope)
     wobbly
-      Solved.TypePattern {name, typex = wobbly} =
+      Solved.TypePattern {name, typex = Solved wobbly} =
         Wobbly
           { label = Label.LocalBinding {name},
             wobbly = Simple.Type.lift $ shift wobbly

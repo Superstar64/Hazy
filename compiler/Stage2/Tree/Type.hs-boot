@@ -5,7 +5,7 @@ module Stage2.Tree.Type where
 import qualified Data.Kind as Kind (Type)
 import Stage1.Position (Position)
 import qualified Stage1.Tree.Type as Stage1 (Type)
-import Stage2.Resolve.Context (Context)
+import {-# SOURCE #-} Stage2.Resolve.Context (Context)
 import Stage2.Scope (Environment)
 import Stage2.Stage (Resolve, Stage)
 

@@ -53,6 +53,7 @@ import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope (Local)
 import Stage2.Shift (Shift (..), shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Resolve)
 import Stage2.Tree.TypePattern (TypePattern)
 import qualified Stage2.Tree.TypePattern as TypePattern
 import Prelude hiding (Either (Left, Right))
@@ -93,7 +94,10 @@ empty extensions =
       extensions
     }
 
-augmentLocalTypes :: Strict.Vector (TypePattern position) -> Context scope -> Context (Scope.Local ':+ scope)
+augmentLocalTypes ::
+  Strict.Vector (TypePattern position Resolve scope') ->
+  Context scope ->
+  Context (Scope.Local ':+ scope)
 augmentLocalTypes parameters context
   | context@Context {localTypes} <- shift context =
       context

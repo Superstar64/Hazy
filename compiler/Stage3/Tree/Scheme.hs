@@ -7,17 +7,17 @@ import Stage1.Position (Position)
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Stage (Check)
 import Stage2.Tree.Type (Type)
+import Stage2.Tree.TypePattern (TypePattern (TypePattern))
+import qualified Stage2.Tree.TypePattern as TypePattern
 import Stage3.Check.Context (Context (..))
 import Stage3.Check.Mask (Mask)
 import Stage3.Simple.SchemeOver (augmentNamed)
 import Stage3.Tree.Constraint (Constraint (..))
-import Stage3.Tree.TypePattern (TypePattern (TypePattern))
-import qualified Stage3.Tree.TypePattern as TypePattern
 import qualified Stage4.Tree.Constraint as Simple.Constraint
 import Prelude hiding (head)
 
 data Scheme scope = Scheme
-  { parameters :: !(Strict.Vector (TypePattern scope)),
+  { parameters :: !(Strict.Vector (TypePattern Position Check scope)),
     constraints :: !(Strict.Vector (Constraint scope)),
     result :: !(Type Position Check (Local ':+ scope))
   }
@@ -25,7 +25,7 @@ data Scheme scope = Scheme
 
 augment ::
   Position ->
-  Strict.Vector (TypePattern scope) ->
+  Strict.Vector (TypePattern Position Check scope) ->
   Strict.Vector (Constraint scope) ->
   Mask ->
   Context s scope ->
@@ -34,7 +34,7 @@ augment position parameters constraints =
   augmentNamed
     name
     position
-    (TypePattern.typex <$> parameters)
+    (TypePattern.typex' <$> parameters)
     (Simple.Constraint.simplify <$> constraints)
   where
     name i = case parameters Strict.Vector.! i of

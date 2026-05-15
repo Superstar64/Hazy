@@ -8,6 +8,6 @@ import Stage2.Tree.Type (Type)
 import Stage2.Tree.TypePattern (TypePattern)
 
 data Synonym scope = Synonym
-  { parameters :: !(Strict.Vector (TypePattern Position)),
+  { parameters :: !(Strict.Vector (TypePattern Position Resolve scope)),
     synonym :: Type Position Resolve (Local ':+ scope)
   }
