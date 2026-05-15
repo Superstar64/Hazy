@@ -1,7 +1,6 @@
 module Stage4.Tree.Type where
 
 import qualified Data.Vector as Vector
-import Stage1.Position (Position)
 import qualified Stage2.Index.Constructor as Constructor
 import Stage2.Index.Local (Index (Local, Shift))
 import qualified Stage2.Index.Local as Local
@@ -66,10 +65,10 @@ instance Substitute.Functor Type where
     Universe -> Universe
     Levity -> Levity
 
-simplify :: Solved.Type Position Check scope -> Type scope
+simplify :: Solved.Type position Check scope -> Type scope
 simplify typex = simplifyWith typex []
 
-simplifyWith :: Solved.Type Position Check scope -> [Type scope] -> Type scope
+simplifyWith :: Solved.Type position Check scope -> [Type scope] -> Type scope
 simplifyWith Solved.Constructor {constructor, synonym} arguments = case synonym of
   Solved.Synonym synonym -> map category synonym
     where

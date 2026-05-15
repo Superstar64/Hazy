@@ -2,7 +2,6 @@
 
 module Stage4.Tree.Type where
 
-import Stage1.Position (Position)
 import qualified Stage2.Index.Local as Local
 import qualified Stage2.Index.Type2 as Type2
 import Stage2.Shift (Shift)
@@ -31,4 +30,4 @@ instance Shift Type
 instance Shift.Functor Type
 
 smallType :: Type scope
-simplify :: Stage3.Type Position Check scope -> Type scope
+simplify :: Stage3.Type position Check scope -> Type scope

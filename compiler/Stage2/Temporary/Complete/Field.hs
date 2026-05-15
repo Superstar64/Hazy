@@ -9,16 +9,17 @@ import qualified Stage1.Tree.Field as Stage1
 import Stage1.Tree.Marked (Marked ((:@)))
 import Stage1.Variable (Variable)
 import Stage2.Resolve.Context (Context)
+import Stage2.Stage (Resolve)
 import qualified Stage2.Tree.Entry as Entry
 import qualified Stage2.Tree.Field as Real
 
 data Field scope = Field
   { position :: !Position,
     name :: !Variable,
-    field :: Real.Field scope
+    field :: Real.Field Resolve scope
   }
 
-shrink :: Field scope -> Real.Field scope
+shrink :: Field scope -> Real.Field Resolve scope
 shrink = field
 
 indexes :: [Field scope] -> Map Variable Int

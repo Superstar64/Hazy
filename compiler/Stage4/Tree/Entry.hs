@@ -3,8 +3,10 @@ module Stage4.Tree.Entry where
 import qualified Stage2.Index.Type2 as Type2
 import Stage2.Shift (Shift (..), shiftDefault)
 import qualified Stage2.Shift as Shift
-import qualified Stage3.Tree.Entry as Solved
-import Stage3.Tree.StrictnessAnnotation (StrictnessAnnotation (..))
+import Stage2.Stage (Check)
+import Stage2.Tree.Entry (Restricted (..))
+import qualified Stage2.Tree.Entry as Solved
+import Stage2.Tree.StrictnessAnnotation (StrictnessAnnotation (..))
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
 import Stage4.Tree.Type (Type)
@@ -32,8 +34,8 @@ instance Substitute.Functor Entry where
         strict = Substitute.map category strict
       }
 
-simplify :: Solved.Entry scope -> Entry scope
-simplify Solved.Entry {entry, strict} =
+simplify :: Solved.Entry position Check scope -> Entry scope
+simplify Solved.Entry {entry = Restricted entry, strict} =
   Entry
     { entry = Type.simplify entry,
       strict = case strict of

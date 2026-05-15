@@ -13,6 +13,7 @@ import Stage1.Tree.Marked (Marked ((:@)))
 import Stage1.Variable (Variable)
 import qualified Stage1.Variable as Variable (Constructor)
 import Stage2.Resolve.Context (Context)
+import Stage2.Stage (Resolve)
 import Stage2.Temporary.Complete.Field (Field)
 import qualified Stage2.Temporary.Complete.Field as Field
 import qualified Stage2.Tree.Constructor as Real
@@ -24,7 +25,7 @@ data Constructor scope
     name :: !Variable.Constructor,
     fields :: !(Strict.Vector (Field scope)),
     selections :: Strict.Vector (Strict.Maybe Int),
-    constructor :: Real.Constructor scope
+    constructor :: Real.Constructor Resolve scope
   }
 
 shrink = constructor

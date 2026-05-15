@@ -3,8 +3,9 @@ module Stage4.Tree.Constructor where
 import qualified Data.Vector.Strict as Strict
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import qualified Stage3.Tree.Constructor as Solved
-import qualified Stage3.Tree.Field as Solved.Field
+import Stage2.Stage (Check)
+import qualified Stage2.Tree.Constructor as Solved
+import qualified Stage2.Tree.Field as Solved.Field
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
 import Stage4.Tree.Entry (Entry)
@@ -30,7 +31,7 @@ instance Substitute.Functor Constructor where
       { entries = Substitute.map category <$> entries
       }
 
-simplify :: Solved.Constructor scope -> Constructor scope
+simplify :: Solved.Constructor Check scope -> Constructor scope
 simplify = \case
   Solved.Constructor {entries} ->
     Constructor

@@ -6,11 +6,11 @@ import Stage1.Tree.Brand (Brand)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Stage (Check)
+import Stage2.Tree.Constructor (Constructor)
 import Stage2.Tree.Selector (Selector)
 import Stage2.Tree.Type (Type)
 import Stage2.Tree.TypePattern (TypePattern)
 import Stage3.Tree.Constraint (Constraint)
-import Stage3.Tree.Constructor (Constructor)
 import Stage3.Tree.Method (Method)
 import qualified Stage4.Tree.Type as Simple (Type)
 
@@ -18,7 +18,7 @@ data TypeDefinition scope
   = ADT
       { brand :: !Brand,
         parameters :: !(Strict.Vector (TypePattern Position Check scope)),
-        constructors :: !(Strict.Vector (Constructor (Scope.Local ':+ scope))),
+        constructors :: !(Strict.Vector (Constructor Check (Scope.Local ':+ scope))),
         selectors :: !(Strict.Vector Selector)
       }
   | Class

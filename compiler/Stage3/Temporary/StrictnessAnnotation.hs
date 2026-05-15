@@ -2,11 +2,12 @@ module Stage3.Temporary.StrictnessAnnotation where
 
 import Control.Monad.ST (ST)
 import Stage1.Position (Position)
+import Stage2.Stage (Check, Resolve)
+import qualified Stage2.Tree.StrictnessAnnotation as Solved
 import qualified Stage2.Tree.StrictnessAnnotation as Stage2
 import Stage3.Check.Context (Context)
 import Stage3.Temporary.Type (Type)
 import qualified Stage3.Temporary.Type as Type
-import qualified Stage3.Tree.StrictnessAnnotation as Solved
 import qualified Stage3.Unify as Unify
 
 data StrictnessAnnotation s scope
@@ -16,7 +17,7 @@ data StrictnessAnnotation s scope
       { levity :: !(Type s scope)
       }
 
-check :: Context s scope -> Stage2.StrictnessAnnotation Position scope -> ST s (StrictnessAnnotation s scope)
+check :: Context s scope -> Stage2.StrictnessAnnotation Position Resolve scope -> ST s (StrictnessAnnotation s scope)
 check context = \case
   Stage2.Lazy -> pure Lazy
   Stage2.Strict -> pure Strict
@@ -24,7 +25,7 @@ check context = \case
     levity <- Type.check context Unify.levity levity
     pure Polymorphic {levity}
 
-solve :: Context s scope -> StrictnessAnnotation s scope -> ST s (Solved.StrictnessAnnotation scope)
+solve :: Context s scope -> StrictnessAnnotation s scope -> ST s (Solved.StrictnessAnnotation Position Check scope)
 solve context = \case
   Lazy -> pure Solved.Lazy
   Strict -> pure Solved.Strict

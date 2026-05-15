@@ -11,23 +11,23 @@ import qualified Stage2.Shift as Shift
 import Stage2.Tree.Entry (Entry)
 import Stage2.Tree.Field (Field)
 
-data Constructor scope
+data Constructor stage scope
   = Constructor
       { position :: !Position,
         name :: !Variable.Constructor,
-        entries :: !(Strict.Vector (Entry Position scope))
+        entries :: !(Strict.Vector (Entry Position stage scope))
       }
   | Record
       { position :: !Position,
         name :: !Variable.Constructor,
-        fields :: !(Strict.Vector (Field scope))
+        fields :: !(Strict.Vector (Field stage scope))
       }
   deriving (Show)
 
-instance Shift Constructor where
+instance Shift (Constructor stage) where
   shift = shiftDefault
 
-instance Shift.Functor Constructor where
+instance Shift.Functor (Constructor stage) where
   map category = \case
     Constructor {position, name, entries} ->
       Constructor
@@ -42,7 +42,7 @@ instance Shift.Functor Constructor where
           fields = fmap (Shift.map category) fields
         }
 
-instance FreeTypeVariables Constructor where
+instance FreeTypeVariables (Constructor stage) where
   freeTypeVariables target = \case
     Constructor {entries} -> foldMap (freeTypeVariables target) entries
     Record {fields} -> foldMap (freeTypeVariables target) fields

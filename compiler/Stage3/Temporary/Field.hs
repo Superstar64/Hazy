@@ -1,24 +1,27 @@
 module Stage3.Temporary.Field where
 
 import Control.Monad.ST (ST)
+import Stage1.Position (Position)
 import Stage1.Variable (Variable)
+import Stage2.Stage (Check, Resolve)
+import qualified Stage2.Tree.Field as Solved
 import qualified Stage2.Tree.Field as Stage2
 import Stage3.Check.Context (Context)
 import Stage3.Temporary.Entry (Entry)
 import qualified Stage3.Temporary.Entry as Entry
-import qualified Stage3.Tree.Field as Solved
 
 data Field s scope = Field
-  { name :: !Variable,
+  { position :: !Position,
+    name :: !Variable,
     entry :: !(Entry s scope)
   }
 
-check :: Context s scope -> Stage2.Field scope -> ST s (Field s scope)
-check context Stage2.Field {name, entry} = do
+check :: Context s scope -> Stage2.Field Resolve scope -> ST s (Field s scope)
+check context Stage2.Field {position, name, entry} = do
   entry <- Entry.check context entry
-  pure Field {name, entry}
+  pure Field {position, name, entry}
 
-solve :: Context s scope -> Field s scope -> ST s (Solved.Field scope)
-solve context Field {name, entry} = do
+solve :: Context s scope -> Field s scope -> ST s (Solved.Field Check scope)
+solve context Field {position, name, entry} = do
   entry <- Entry.solve context entry
-  pure Solved.Field {name, entry}
+  pure Solved.Field {position, name, entry}

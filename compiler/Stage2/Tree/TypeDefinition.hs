@@ -22,7 +22,7 @@ data TypeDefinition scope
       { position :: !Position,
         brand :: !Brand,
         parameters :: !(Strict.Vector (TypePattern Position Resolve scope)),
-        constructors :: !(Strict.Vector (Constructor (Local ':+ scope))),
+        constructors :: !(Strict.Vector (Constructor Resolve (Local ':+ scope))),
         selectors :: !(Strict.Vector Selector)
       }
   | GADT
