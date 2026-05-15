@@ -2,9 +2,12 @@ module Stage3.Check.KindAnnotation where
 
 import Control.Monad.ST (ST)
 import qualified Data.Strict.Maybe as Strict
+import Stage1.Position (Position)
 import Stage2.Layout (Normal)
 import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (shift)
+import Stage2.Stage (Check)
+import qualified Stage2.Tree.Type as Solved
 import qualified Stage2.Tree.TypeDeclaration as Stage2 (TypeDeclaration (..))
 import qualified Stage2.Tree.TypeDefinition as Stage2 (TypeDefinition (Synonym, parameters, synonym))
 import qualified Stage2.Tree.TypeDefinition2 as Stage2 (Annotation (..), TypeDefinition2 (..))
@@ -17,20 +20,19 @@ import qualified Stage3.Temporary.Type as Type
 import qualified Stage3.Temporary.Type as Unsolved.Type
 import qualified Stage3.Temporary.TypePattern as Unsolved
 import qualified Stage3.Temporary.TypePattern as Unsolved.TypePattern
-import qualified Stage3.Tree.Type as Solved
 import {-# SOURCE #-} qualified Stage3.Unify as Unify
 import qualified Stage4.Tree.Type as Simple (Type, simplify)
 
 data KindAnnotation scope
   = Annotation
-      { annotation :: !(Solved.Type scope),
+      { annotation :: !(Solved.Type Position Check scope),
         kind :: !(Simple.Type scope)
       }
   | Inferred
   | Synonym
-      { annotation' :: !(Strict.Maybe (Solved.Type scope)),
+      { annotation' :: !(Strict.Maybe (Solved.Type Position Check scope)),
         kind :: !(Simple.Type scope),
-        definition :: !(Solved.Type (Local ':+ scope)),
+        definition :: !(Solved.Type Position Check (Local ':+ scope)),
         definition' :: !(Simple.Type (Local ':+ scope))
       }
 

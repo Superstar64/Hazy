@@ -17,6 +17,7 @@ import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Resolve)
 import Stage2.Tree.Type (Type)
 import Stage2.Tree.TypeDefinition (TypeDefinition)
 
@@ -58,7 +59,7 @@ instance FreeTypeVariables (TypeDefinition2 locality layout) where
     Group set -> foldMap (freeTypeVariables (FreeVariables.Over target)) set
 
 data Annotation layout scope where
-  Annotated :: !(Type Position scope) -> Annotation layout scope
+  Annotated :: !(Type Position Resolve scope) -> Annotation layout scope
   Inferred :: Annotation Normal scope
 
 instance Show (Annotation mark scope) where

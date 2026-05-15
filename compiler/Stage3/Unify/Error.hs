@@ -27,6 +27,8 @@ import qualified Stage2.Label.Context as Label (Context (..))
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Resolve, Unsupported (..))
+import Stage2.Tree.Type (Synonym (NoSynonym))
 import qualified Stage2.Tree.Type as Stage2
 import Stage3.Check.Context (Context)
 import qualified Stage3.Check.Context as Context
@@ -116,7 +118,7 @@ abort position = \case
       Shift.Category scope scope' ->
       [(Collected s scope, Local.Index scope')] ->
       Type s scope ->
-      ST s (Stage2.Type () scope')
+      ST s (Stage2.Type () Resolve scope')
     fabricate category names = \case
       Logical reference ->
         readSTRef reference >>= \case
@@ -144,7 +146,8 @@ abort position = \case
             Stage2.Constructor
               { startPosition = (),
                 constructorPosition = (),
-                constructor
+                constructor,
+                synonym = NoSynonym
               }
       Call function argument -> do
         function <- fabricate category names function
@@ -170,10 +173,11 @@ abort position = \case
         pure $
           Stage2.Type
             { startPosition = (),
-              universe
+              universe,
+              unsupported = Placeholder
             }
       Constraint -> pure $ Stage2.Constraint {startPosition = ()}
-      Small -> pure $ Stage2.Small {startPosition = ()}
-      Large -> pure $ Stage2.Large {startPosition = ()}
-      Universe -> pure $ Stage2.Universe {startPosition = ()}
+      Small -> pure $ Stage2.Small {startPosition = (), unsupported = Placeholder}
+      Large -> pure $ Stage2.Large {startPosition = (), unsupported = Placeholder}
+      Universe -> pure $ Stage2.Universe {startPosition = (), unsupported = Placeholder}
       Levity -> pure $ Stage2.Levity {startPosition = ()}

@@ -19,6 +19,7 @@ import qualified Stage1.Tree.Declaration as Stage1 (Declaration (..))
 import Stage1.Tree.Marked (Marked (..))
 import Stage1.Variable (ConstructorIdentifier)
 import Stage2.Resolve.Context (Context (..), augmentLocalTypes)
+import Stage2.Stage (Resolve)
 import Stage2.Temporary.Complete.Constructor (Constructor (Constructor))
 import qualified Stage2.Temporary.Complete.Constructor as Constructor
 import qualified Stage2.Temporary.Complete.Field as Complete (Field (Field))
@@ -69,7 +70,7 @@ data TypeDeclaration scope
   | Annotation
       { position :: !Position,
         name :: !ConstructorIdentifier,
-        annotation :: Type Position scope
+        annotation :: Type Position Resolve scope
       }
 
 resolve ::

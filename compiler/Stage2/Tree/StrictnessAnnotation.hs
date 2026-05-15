@@ -3,6 +3,7 @@ module Stage2.Tree.StrictnessAnnotation where
 import Stage2.FreeVariables (FreeTypeVariables (freeTypeVariables))
 import Stage2.Shift (Shift (..), shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Resolve)
 import Stage2.Tree.Type (Type)
 import qualified Stage2.Tree.Type as Type
 
@@ -10,7 +11,7 @@ data StrictnessAnnotation position scope
   = Lazy
   | Strict
   | Polymorphic
-      { levity :: !(Type position scope)
+      { levity :: !(Type position Resolve scope)
       }
   deriving (Show, Eq)
 

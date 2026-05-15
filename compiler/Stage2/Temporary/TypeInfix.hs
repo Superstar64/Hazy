@@ -12,11 +12,21 @@ import Stage2.Resolve.Context
   ( Context (..),
     (!=~),
   )
+import Stage2.Stage (Resolve)
 import Stage2.Temporary.Infix (Infix (..))
 import qualified Stage2.Temporary.Infix as Infix
-import Stage2.Tree.Type (Type)
+import Stage2.Tree.Type (Synonym (..), Type)
 import qualified Stage2.Tree.Type as Type
-  ( Type (Call, Constructor, argument, constructor, constructorPosition, function, startPosition),
+  ( Type
+      ( Call,
+        Constructor,
+        argument,
+        constructor,
+        constructorPosition,
+        function,
+        startPosition,
+        synonym
+      ),
     resolve,
   )
 import Prelude hiding (Either (Left, Right))
@@ -25,7 +35,11 @@ data Index scope
   = Constructor !Position !(Constructor.Binding scope)
   | Cons !Position
 
-fixWith :: Maybe Associativity -> Int -> Infix (Index scope) (Type Position scope) -> Type Position scope
+fixWith ::
+  Maybe Associativity ->
+  Int ->
+  Infix (Index scope) (Type Position Resolve scope) ->
+  Type Position Resolve scope
 fixWith = Infix.fixWith position fixity operator
   where
     position = \case
@@ -36,13 +50,18 @@ fixWith = Infix.fixWith position fixity operator
       Constructor _ Constructor.Binding {fixity} -> fixity
       Cons _ -> Fixity {associativity = Right, precedence = 5}
 
-    operator :: Type Position scope -> Index scope -> Type Position scope -> Type Position scope
+    operator ::
+      Type Position Resolve scope ->
+      Index scope ->
+      Type Position Resolve scope ->
+      Type Position Resolve scope
     operator left operator right = case operator of
       Constructor constructorPosition Constructor.Binding {index} ->
         Type.Constructor
           { startPosition = Type.startPosition left,
             constructorPosition,
-            constructor = Type2.Lifted index
+            constructor = Type2.Lifted index,
+            synonym = NoSynonym
           }
           `call` left
           `call` right
@@ -50,7 +69,8 @@ fixWith = Infix.fixWith position fixity operator
         Type.Constructor
           { startPosition = Type.startPosition left,
             constructorPosition,
-            constructor = Type2.Lifted Constructor.cons
+            constructor = Type2.Lifted Constructor.cons,
+            synonym = NoSynonym
           }
           `call` left
           `call` right
@@ -62,10 +82,10 @@ fixWith = Infix.fixWith position fixity operator
               argument
             }
 
-fix :: Infix (Index scope) (Type Position scope) -> Type Position scope
+fix :: Infix (Index scope) (Type Position Resolve scope) -> Type Position Resolve scope
 fix = fixWith Nothing 0
 
-resolve :: Context scope -> Stage1.Infix Position -> Infix (Index scope) (Type Position scope)
+resolve :: Context scope -> Stage1.Infix Position -> Infix (Index scope) (Type Position Resolve scope)
 resolve context = \case
   Stage1.Type type1 -> Single (Type.resolve context type1)
   Stage1.Infix {left, operator = operator@(operatorPosition :@ _), right} ->

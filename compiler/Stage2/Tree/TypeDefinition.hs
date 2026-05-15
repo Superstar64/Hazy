@@ -8,6 +8,7 @@ import qualified Stage2.FreeVariables as FreeVariables
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (Shift (..), shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Resolve)
 import Stage2.Tree.Constraint (Constraint)
 import Stage2.Tree.Constructor (Constructor)
 import Stage2.Tree.GADTConstructor (GADTConstructor)
@@ -38,7 +39,7 @@ data TypeDefinition scope
       }
   | Synonym
       { parameters :: !(Strict.Vector (TypePattern Position)),
-        synonym :: !(Type Position (Local ':+ scope))
+        synonym :: !(Type Position Resolve (Local ':+ scope))
       }
   deriving (Show)
 

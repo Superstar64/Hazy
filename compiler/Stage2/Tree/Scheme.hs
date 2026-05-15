@@ -18,6 +18,7 @@ import Stage2.Resolve.Context (Context (..))
 import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Resolve)
 import Stage2.Tree.Constraint (Constraint)
 import qualified Stage2.Tree.Constraint as Constraint
 import Stage2.Tree.Type (Type)
@@ -30,7 +31,7 @@ data Scheme position scope = Scheme
     implicit :: !Bool,
     parameters :: !(Strict.Vector (TypePattern position)),
     constraints :: !(Strict.Vector (Constraint position scope)),
-    result :: !(Type position (Local ':+ scope))
+    result :: !(Type position Resolve (Local ':+ scope))
   }
   deriving (Show, Eq)
 

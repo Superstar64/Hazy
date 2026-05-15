@@ -239,6 +239,7 @@ executable hazy
     Stage2.Resolve.Stability
     Stage2.Scope
     Stage2.Shift
+    Stage2.Stage
     Stage2.Temporary.Complete.ClassInstance
     Stage2.Temporary.Complete.Constructor
     Stage2.Temporary.Complete.ConstructorDeclaration
@@ -400,7 +401,6 @@ executable hazy
     Stage3.Tree.SelectorInfo
     Stage3.Tree.Statements
     Stage3.Tree.StrictnessAnnotation
-    Stage3.Tree.Type
     Stage3.Tree.TypeDeclaration
     Stage3.Tree.TypeDeclarationExtra
     Stage3.Tree.TypeDefinition

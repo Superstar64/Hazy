@@ -13,6 +13,7 @@ import Stage2.Resolve.Context (Context (..), (!$), (!=.*))
 import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Resolve)
 import Stage2.Tree.Type (Type)
 import qualified Stage2.Tree.Type as Type (anonymize, resolve)
 import Prelude hiding (head)
@@ -21,7 +22,7 @@ data Constraint position scope = Constraint
   { startPosition :: !position,
     classx :: !(Type2.Index scope),
     head :: !Int,
-    arguments :: !(Strict.Vector (Type position (Local ':+ scope)))
+    arguments :: !(Strict.Vector (Type position Resolve (Local ':+ scope)))
   }
   deriving (Show, Eq)
 

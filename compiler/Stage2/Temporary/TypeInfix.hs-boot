@@ -8,6 +8,7 @@ import Stage1.Tree.Associativity (Associativity)
 import qualified Stage1.Tree.TypeInfix as Stage1 (Infix)
 import Stage2.Resolve.Context (Context)
 import Stage2.Scope (Environment)
+import Stage2.Stage (Resolve)
 import Stage2.Temporary.Infix (Infix)
 import {-# SOURCE #-} Stage2.Tree.Type (Type)
 
@@ -16,6 +17,12 @@ type role Index nominal
 type Index :: Environment -> Kind.Type
 data Index scope
 
-fixWith :: Maybe Associativity -> Int -> Infix (Index scope) (Type Position scope) -> Type Position scope
-fix :: Infix (Index scope) (Type Position scope) -> Type Position scope
-resolve :: Context scope -> Stage1.Infix Position -> Infix (Index scope) (Type Position scope)
+fixWith ::
+  Maybe Associativity ->
+  Int ->
+  Infix
+    (Index scope)
+    (Type Position Resolve scope) ->
+  Type Position Resolve scope
+fix :: Infix (Index scope) (Type Position Resolve scope) -> Type Position Resolve scope
+resolve :: Context scope -> Stage1.Infix Position -> Infix (Index scope) (Type Position Resolve scope)

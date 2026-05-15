@@ -1,10 +1,12 @@
 module Stage3.Tree.Entry where
 
+import Stage1.Position (Position)
+import Stage2.Stage (Check)
+import Stage2.Tree.Type (Type)
 import Stage3.Tree.StrictnessAnnotation (StrictnessAnnotation)
-import Stage3.Tree.Type (Type)
 
 data Entry scope = Entry
-  { entry :: !(Type scope),
+  { entry :: !(Type Position Check scope),
     strict :: !(StrictnessAnnotation scope)
   }
   deriving (Show)

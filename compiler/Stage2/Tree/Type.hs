@@ -27,12 +27,17 @@ import qualified Stage2.Label.Binding.Type as Label (TypeBinding (..))
 import qualified Stage2.Label.Context as Label (Context, (!-.*), (!=.), (!=.*))
 import Stage2.Resolve.Context ((!$), (!=*~))
 import qualified Stage2.Resolve.Context as Resolved (Context, (!=.*))
+import Stage2.Scope (Environment (..))
+import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift (..), shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Check, Exclusive (..), Resolve, Unsupported (..))
 import {-# SOURCE #-} qualified Stage2.Temporary.TypeInfix as Infix (fix, resolve)
+import {-# SOURCE #-} qualified Stage4.Tree.Type as Simple
 import Prelude hiding (Bool (False, True))
+import qualified Prelude
 
-data Type position scope
+data Type position stage scope
   = Variable
       { startPosition :: !position,
         variable :: !(Local.Index scope)
@@ -40,40 +45,43 @@ data Type position scope
   | Constructor
       { startPosition :: !position,
         constructorPosition :: !position,
-        constructor :: !(Type2.Index scope)
+        constructor :: !(Type2.Index scope),
+        synonym :: !(Synonym stage scope)
       }
   | List
       { startPosition :: !position,
-        element :: !(Type position scope)
+        element :: !(Type position stage scope)
       }
   | Tuple
       { startPosition :: !position,
-        elements :: !(Strict.Vector2 (Type position scope))
+        elements :: !(Strict.Vector2 (Type position stage scope))
       }
   | Call
       { startPosition :: !position,
-        function :: !(Type position scope),
-        argument :: !(Type position scope)
+        function :: !(Type position stage scope),
+        argument :: !(Type position stage scope)
       }
   | Function
       { startPosition :: !position,
-        parameter :: !(Type position scope),
+        parameter :: !(Type position stage scope),
         operatorPosition :: !position,
-        result :: !(Type position scope)
+        result :: !(Type position stage scope)
       }
   | StrictFunction
       { startPosition :: !position,
-        parameter :: !(Type position scope),
+        parameter :: !(Type position stage scope),
         operatorPosition :: !position,
-        result :: !(Type position scope)
+        result :: !(Type position stage scope),
+        unsupported :: !(Unsupported stage)
       }
   | LiftedList
       { startPosition :: !position,
-        items :: !(Strict.Vector1 (Type position scope))
+        items :: !(Strict.Vector1 (Type position stage scope))
       }
   | Type
       { startPosition :: !position,
-        universe :: !(Type position scope)
+        universe :: !(Type position stage scope),
+        unsupported :: !(Unsupported stage)
       }
   | SmallType
       { startPosition :: !position
@@ -81,30 +89,37 @@ data Type position scope
   | Constraint
       {startPosition :: !position}
   | Small
-      {startPosition :: !position}
+      { startPosition :: !position,
+        unsupported :: !(Unsupported stage)
+      }
   | Large
-      {startPosition :: !position}
+      { startPosition :: !position,
+        unsupported :: !(Unsupported stage)
+      }
   | Universe
-      {startPosition :: !position}
+      { startPosition :: !position,
+        unsupported :: !(Unsupported stage)
+      }
   | Levity
       {startPosition :: !position}
   deriving (Show, Eq)
 
-instance Shift (Type position) where
+instance Shift (Type stage position) where
   shift = shiftDefault
 
-instance Shift.Functor (Type position) where
+instance Shift.Functor (Type stage position) where
   map category = \case
     Variable {startPosition, variable} ->
       Variable
         { startPosition,
           variable = Shift.map category variable
         }
-    Constructor {startPosition, constructorPosition, constructor} ->
+    Constructor {startPosition, constructorPosition, constructor, synonym} ->
       Constructor
         { startPosition,
           constructorPosition,
-          constructor = Shift.map category constructor
+          constructor = Shift.map category constructor,
+          synonym = Shift.map category synonym
         }
     List {startPosition, element} ->
       List
@@ -129,31 +144,33 @@ instance Shift.Functor (Type position) where
           operatorPosition,
           result = Shift.map category result
         }
-    StrictFunction {startPosition, parameter, operatorPosition, result} ->
+    StrictFunction {startPosition, parameter, operatorPosition, result, unsupported} ->
       StrictFunction
         { startPosition,
           parameter = Shift.map category parameter,
           operatorPosition,
-          result = Shift.map category result
+          result = Shift.map category result,
+          unsupported
         }
     LiftedList {startPosition, items} ->
       LiftedList
         { startPosition,
           items = fmap (Shift.map category) items
         }
-    Type {startPosition, universe} ->
+    Type {startPosition, universe, unsupported} ->
       Type
         { startPosition,
-          universe = Shift.map category universe
+          universe = Shift.map category universe,
+          unsupported
         }
     SmallType {startPosition} -> SmallType {startPosition}
     Constraint {startPosition} -> Constraint {startPosition}
-    Small {startPosition} -> Small {startPosition}
-    Large {startPosition} -> Large {startPosition}
-    Universe {startPosition} -> Universe {startPosition}
+    Small {startPosition, unsupported} -> Small {startPosition, unsupported}
+    Large {startPosition, unsupported} -> Large {startPosition, unsupported}
+    Universe {startPosition, unsupported} -> Universe {startPosition, unsupported}
     Levity {startPosition} -> Levity {startPosition}
 
-instance FreeTypeVariables (Type position) where
+instance FreeTypeVariables (Type stage position) where
   freeTypeVariables target = \case
     Variable {} -> []
     Constructor {constructor} -> freeTypeVariables target constructor
@@ -183,18 +200,43 @@ instance FreeTypeVariables (Type position) where
     Universe {} -> []
     Levity {} -> []
 
-anonymize :: Type position scope -> Type () scope
+data Synonym stage scope where
+  NoSynonym :: Synonym stage scope
+  Synonym :: !(Simple.Type (Scope.Local ':+ scope)) -> Synonym Check scope
+
+instance Show (Synonym stage scope) where
+  showsPrec d = \case
+    NoSynonym -> showString "NoSynonym"
+    Synonym synonym -> showParen (d > 10) $ showsPrec 11 "Synonym " . showsPrec 11 synonym
+
+instance (Exclusive stage) => Eq (Synonym stage scope) where
+  synonym == synonym'
+    | Placeholder <- exclusive :: Unsupported stage,
+      NoSynonym <- synonym,
+      NoSynonym <- synonym' =
+        Prelude.True
+
+instance Shift (Synonym stage) where
+  shift = shiftDefault
+
+instance Shift.Functor (Synonym stage) where
+  map category = \case
+    NoSynonym -> NoSynonym
+    Synonym synonym -> Synonym (Shift.map (Shift.Over category) synonym)
+
+anonymize :: Type position stage scope -> Type () stage scope
 anonymize = \case
   Variable {variable} ->
     Variable
       { startPosition = (),
         variable
       }
-  Constructor {constructor} ->
+  Constructor {constructor, synonym} ->
     Constructor
       { startPosition = (),
         constructorPosition = (),
-        constructor
+        constructor,
+        synonym
       }
   List {element} ->
     List
@@ -219,31 +261,33 @@ anonymize = \case
         operatorPosition = (),
         result = anonymize result
       }
-  StrictFunction {parameter, result} ->
+  StrictFunction {parameter, result, unsupported} ->
     StrictFunction
       { startPosition = (),
         parameter = anonymize parameter,
         operatorPosition = (),
-        result = anonymize result
+        result = anonymize result,
+        unsupported
       }
   LiftedList {items} ->
     LiftedList
       { startPosition = (),
         items = fmap anonymize items
       }
-  Type {universe} ->
+  Type {universe, unsupported} ->
     Type
       { startPosition = (),
-        universe = anonymize universe
+        universe = anonymize universe,
+        unsupported
       }
   SmallType {} -> SmallType {startPosition = ()}
   Constraint {} -> Constraint {startPosition = ()}
-  Small {} -> Small {startPosition = ()}
-  Large {} -> Large {startPosition = ()}
-  Universe {} -> Universe {startPosition = ()}
+  Small {unsupported} -> Small {startPosition = (), unsupported}
+  Large {unsupported} -> Large {startPosition = (), unsupported}
+  Universe {unsupported} -> Universe {startPosition = (), unsupported}
   Levity {} -> Levity {startPosition = ()}
 
-resolve :: Resolved.Context scope -> Stage1.Type Position -> Type Position scope
+resolve :: Resolved.Context scope -> Stage1.Type Position -> Type Position Resolve scope
 resolve context = \case
   Stage1.Variable {startPosition, variable} ->
     Variable
@@ -256,37 +300,42 @@ resolve context = \case
         Constructor
           { startPosition,
             constructorPosition,
-            constructor
+            constructor,
+            synonym = NoSynonym
           }
       Type3.Type -> SmallType {startPosition}
       Type3.Constraint -> Constraint {startPosition}
-      Type3.Small -> Small {startPosition}
-      Type3.Large -> Large {startPosition}
-      Type3.Universe -> Universe {startPosition}
+      Type3.Small -> Small {startPosition, unsupported = Placeholder}
+      Type3.Large -> Large {startPosition, unsupported = Placeholder}
+      Type3.Universe -> Universe {startPosition, unsupported = Placeholder}
       Type3.Levity -> Levity {startPosition}
   Stage1.Unit {startPosition = constructorPosition@startPosition} ->
     Constructor
       { startPosition,
         constructorPosition,
-        constructor = Type2.Tuple 0
+        constructor = Type2.Tuple 0,
+        synonym = NoSynonym
       }
   Stage1.Arrow {startPosition = constructorPosition@startPosition} ->
     Constructor
       { startPosition,
         constructorPosition,
-        constructor = Type2.Arrow
+        constructor = Type2.Arrow,
+        synonym = NoSynonym
       }
   Stage1.Listing {startPosition = constructorPosition@startPosition} ->
     Constructor
       { startPosition,
         constructorPosition,
-        constructor = Type2.List
+        constructor = Type2.List,
+        synonym = NoSynonym
       }
   Stage1.Tupling {startPosition = constructorPosition@startPosition, count} ->
     Constructor
       { startPosition,
         constructorPosition,
-        constructor = Type2.Tuple count
+        constructor = Type2.Tuple count,
+        synonym = NoSynonym
       }
   Stage1.List {startPosition, element} ->
     List
@@ -316,22 +365,31 @@ resolve context = \case
       { startPosition,
         parameter = resolve context parameter,
         operatorPosition,
-        result = resolve context result
+        result = resolve context result,
+        unsupported = Placeholder
       }
   Stage1.Lifted {startPosition = constructorPosition@startPosition, lifted} ->
     Constructor
       { startPosition,
         constructorPosition,
-        constructor = Type2.Lifted (context !=*~ lifted)
+        constructor = Type2.Lifted (context !=*~ lifted),
+        synonym = NoSynonym
       }
   Stage1.LiftedCons {startPosition = constructorPosition@startPosition} ->
     Constructor
       { startPosition,
         constructorPosition,
-        constructor = Type2.Lifted Constructor.cons
+        constructor = Type2.Lifted Constructor.cons,
+        synonym = NoSynonym
       }
   Stage1.LiftedList {startPosition = constructorPosition@startPosition, items}
-    | null items -> Constructor {startPosition, constructorPosition, constructor = Type2.Lifted Constructor.nil}
+    | null items ->
+        Constructor
+          { startPosition,
+            constructorPosition,
+            constructor = Type2.Lifted Constructor.nil,
+            synonym = NoSynonym
+          }
     | otherwise ->
         LiftedList
           { startPosition,
@@ -362,11 +420,12 @@ resolve context = \case
   Stage1.Type {startPosition, universe} ->
     Type
       { startPosition,
-        universe = resolve context universe
+        universe = resolve context universe,
+        unsupported = Placeholder
       }
   Stage1.Star {startPosition} -> SmallType {startPosition}
 
-label :: Label.Context scope -> Type unit scope -> Stage1.Type ()
+label :: Label.Context scope -> Type unit Resolve scope -> Stage1.Type ()
 label context = \case
   Variable {variable} ->
     Stage1.Variable
