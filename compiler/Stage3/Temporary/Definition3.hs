@@ -5,6 +5,7 @@ import Stage1.Position (Position)
 import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (shift)
+import Stage2.Stage (Check)
 import Stage2.Tree.Definition2 (Annotated, Inferred)
 import Stage2.Tree.Definition3 (Info)
 import qualified Stage2.Tree.Definition3 as Stage2
@@ -35,7 +36,7 @@ instance Unify.Zonk (Definition3 mark) where
 data Which mark s scope where
   Global :: Which Inferred s scope
   Local :: !(Unify.Type s scope) -> Which Inferred s scope
-  Marked :: !(Solved.Scheme scope) -> Which Annotated s scope
+  Marked :: !(Solved.Scheme Position Check scope) -> Which Annotated s scope
 
 check ::
   Context s scope ->
@@ -57,7 +58,7 @@ check context annotation position (info Stage2.::@ definition) =
 checkAnnotation ::
   Context s scope ->
   Position ->
-  Solved.Scheme scope ->
+  Solved.Scheme Position Check scope ->
   ( Context s (Local ':+ scope) ->
     Unify.Type s (Local ':+ scope) ->
     ST s (typex s (Local ':+ scope))

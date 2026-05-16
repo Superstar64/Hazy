@@ -42,6 +42,7 @@ import Stage2.Scope as Null (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift (shift), shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Resolve)
 import {-# SOURCE #-} qualified Stage2.Temporary.ExpressionInfix as Infix (fix, fixWith, resolve)
 import Stage2.Tree.Alternative (Alternative (..))
 import qualified Stage2.Tree.Alternative as Alternative (resolve)
@@ -149,7 +150,7 @@ data Expression layout scope
   | Annotation
       { expression :: !(Expression layout (Scope.Local ':+ scope)),
         operatorPosition :: !Position,
-        annotation :: !(Scheme Position scope)
+        annotation :: !(Scheme Position Resolve scope)
       }
   | RunST
       { startPosition :: !Position,

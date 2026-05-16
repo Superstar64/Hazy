@@ -3,6 +3,7 @@ module Stage2.Temporary.Complete.Declaration where
 import Stage1.Position (Position)
 import Stage1.Tree.Fixity (Fixity)
 import Stage2.Layout (Normal)
+import Stage2.Stage (Resolve)
 import qualified Stage2.Temporary.Partial.More.Method as More
 import qualified Stage2.Temporary.Partial.More.Selector as More
 import Stage2.Tree.Declaration (Key)
@@ -20,6 +21,6 @@ data Declaration scope
   { position :: !Position,
     name :: !Key,
     fixity :: !Fixity,
-    annotation :: !(Maybe (Scheme Position scope)),
+    annotation :: !(Maybe (Scheme Position Resolve scope)),
     declaration :: !(Real scope)
   }

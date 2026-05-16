@@ -10,6 +10,7 @@ import Stage1.Tree.Marked (Marked (..))
 import Stage1.Variable (Variable)
 import Stage2.Layout (Normal)
 import Stage2.Resolve.Context (Context (..))
+import Stage2.Stage (Resolve)
 import qualified Stage2.Temporary.Complete.Definition as Complete
 import Stage2.Tree.Function (Function)
 import Stage2.Tree.Scheme (Scheme)
@@ -19,7 +20,7 @@ data Method scope
   = Annotation
       { position :: !Position,
         name :: !Variable,
-        annotation :: Scheme Position scope
+        annotation :: Scheme Position Resolve scope
       }
   | Function
       { position :: !Position,

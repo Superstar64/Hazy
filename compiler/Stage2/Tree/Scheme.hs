@@ -27,19 +27,19 @@ import Stage2.Tree.Type as Type (anonymize, resolve)
 import Stage2.Tree.TypePattern (TypePattern (TypePattern))
 import qualified Stage2.Tree.TypePattern as TypePattern
 
-data Scheme position scope = Scheme
+data Scheme position stage scope = Scheme
   { startPosition :: !position,
     implicit :: !Bool,
-    parameters :: !(Strict.Vector (TypePattern position Resolve scope)),
-    constraints :: !(Strict.Vector (Constraint position scope)),
-    result :: !(Type position Resolve (Local ':+ scope))
+    parameters :: !(Strict.Vector (TypePattern position stage scope)),
+    constraints :: !(Strict.Vector (Constraint position stage scope)),
+    result :: !(Type position stage (Local ':+ scope))
   }
   deriving (Show, Eq)
 
-instance Shift (Scheme position) where
+instance Shift (Scheme position stage) where
   shift = shiftDefault
 
-instance Shift.Functor (Scheme position) where
+instance Shift.Functor (Scheme position stage) where
   map category Scheme {startPosition, implicit, parameters, constraints, result} =
     Scheme
       { startPosition,
@@ -49,14 +49,14 @@ instance Shift.Functor (Scheme position) where
         result = Shift.map (Shift.Over category) result
       }
 
-instance FreeTypeVariables (Scheme position) where
+instance FreeTypeVariables (Scheme position stage) where
   freeTypeVariables target Scheme {constraints, result} =
     concat
       [ foldMap (freeTypeVariables target) constraints,
         freeTypeVariables (FreeVariables.Over target) result
       ]
 
-anonymize :: Scheme position scope -> Scheme () scope
+anonymize :: Scheme position stage scope -> Scheme () stage scope
 anonymize Scheme {implicit, parameters, constraints, result} =
   Scheme
     { startPosition = (),
@@ -66,7 +66,7 @@ anonymize Scheme {implicit, parameters, constraints, result} =
       result = Type.anonymize result
     }
 
-augment :: Scheme Position scope -> Context scope -> Context (Local ':+ scope)
+augment :: Scheme Position Resolve scope -> Context scope -> Context (Local ':+ scope)
 augment Scheme {implicit = False, parameters} = augmentWith parameters
 augment Scheme {implicit = True} = augmentWith Strict.Vector.empty
 
@@ -77,7 +77,7 @@ augmentWith parameters context = case shift context of
     variables = TypePattern.name <$> parameters
     indexes = Local.Local <$> [0 ..]
 
-resolve :: Context scope -> Stage1.Scheme Position -> Scheme Position scope
+resolve :: Context scope -> Stage1.Scheme Position -> Scheme Position Resolve scope
 resolve context (Stage1.Explicit {startPosition, parameters, constraints, result})
   | parameters <- TypePattern.resolve <$> parameters,
     context <- augmentWith parameters context =

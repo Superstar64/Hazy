@@ -1,5 +1,7 @@
 module Stage3.Tree.Definition4 where
 
+import Stage1.Position (Position)
+import Stage2.Stage (Check)
 import qualified Stage2.Tree.Definition2 as Mark
 import Stage3.Tree.Definition3 (Definition3)
 import Stage3.Tree.Scheme (Scheme)
@@ -15,7 +17,7 @@ instance Show (Definition4 scope) where
 infixr 5 :::
 
 data Annotation mark scope where
-  Annotated :: !(Scheme scope) -> Annotation Mark.Annotated scope
+  Annotated :: !(Scheme Position Check scope) -> Annotation Mark.Annotated scope
   Inferred :: Annotation Mark.Inferred scope
 
 instance Show (Annotation mark scope) where

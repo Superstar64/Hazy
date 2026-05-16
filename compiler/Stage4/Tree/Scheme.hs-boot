@@ -6,6 +6,7 @@ import Data.Kind (Type)
 import Stage2.Scope (Environment)
 import Stage2.Shift (Shift)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Check)
 import {-# SOURCE #-} qualified Stage3.Tree.Scheme as Solved
 import qualified Stage4.Shift as Shift2
 
@@ -22,4 +23,4 @@ instance Shift.Functor Scheme
 
 instance Shift2.Functor Scheme
 
-simplify :: Solved.Scheme scope -> Scheme scope
+simplify :: Solved.Scheme position Check scope -> Scheme scope

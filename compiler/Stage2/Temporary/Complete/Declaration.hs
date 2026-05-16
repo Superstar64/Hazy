@@ -28,6 +28,7 @@ import qualified Stage2.Index.Type2 as Type2
 import Stage2.Layout (Normal)
 import qualified Stage2.Resolve.Binding.Term as Term
 import qualified Stage2.Resolve.Detail.Binding.Term as Selector (Selector (..))
+import Stage2.Stage (Resolve)
 import Stage2.Temporary.Partial.Declaration (Key (..))
 import qualified Stage2.Temporary.Partial.Declaration as Partial
 import qualified Stage2.Temporary.Partial.More.Choice as More (Choice (Choice))
@@ -56,7 +57,7 @@ data Declaration scope
   { position :: !Position,
     name :: !Key,
     fixity :: !Fixity,
-    annotation :: !(Maybe (Scheme Position scope)),
+    annotation :: !(Maybe (Scheme Position Resolve scope)),
     declaration :: !(Real scope)
   }
 

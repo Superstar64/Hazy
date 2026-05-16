@@ -25,6 +25,7 @@ import Stage1.Variable (ConstructorIdentifier, Name (..), Variable)
 import qualified Stage2.Index.Term as Term
 import Stage2.Layout (Normal)
 import Stage2.Resolve.Context (Context)
+import Stage2.Stage (Resolve)
 import {-# SOURCE #-} qualified Stage2.Temporary.Complete.Declaration as Complete
   ( Declaration (Declaration, annotation),
   )
@@ -62,7 +63,7 @@ data Declaration scope
   | Annotation
       { position :: !Position,
         name :: !Key,
-        annotation :: Scheme Position scope
+        annotation :: Scheme Position Resolve scope
       }
   | Function
       { position :: !Position,

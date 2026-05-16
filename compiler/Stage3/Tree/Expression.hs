@@ -4,9 +4,11 @@ import qualified Data.Strict.Vector1 as Strict (Vector1)
 import qualified Data.Strict.Vector2 as Strict (Vector2)
 import Data.Text (Text)
 import qualified Data.Vector.Strict as Strict (Vector)
+import Stage1.Position (Position)
 import qualified Stage2.Index.Constructor as Constructor
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
+import Stage2.Stage (Check)
 import Stage3.Tree.Alternative (Alternative)
 import Stage3.Tree.CallHead (CallHead)
 import Stage3.Tree.ConstructorInfo (ConstructorInfo)
@@ -75,7 +77,7 @@ data Expression scope
       }
   | Annotation
       { expression :: !(Simple.SchemeOver Expression scope),
-        annotation :: !(Scheme scope),
+        annotation :: !(Scheme Position Check scope),
         instanciation :: !(Simple.Instanciation scope)
       }
   | RightSection

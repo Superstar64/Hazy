@@ -10,6 +10,6 @@ import Stage2.Tree.TypePattern (TypePattern)
 
 data Class scope = Class
   { parameter :: !(TypePattern Position Resolve scope),
-    constraints :: Strict.Vector (Constraint Position scope),
+    constraints :: Strict.Vector (Constraint Position Resolve scope),
     methods :: !(Strict.Vector (Method (Local ':+ scope)))
   }

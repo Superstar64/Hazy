@@ -5,6 +5,7 @@ module Stage3.Check.TypeAnnotation where
 import Control.Monad.ST (ST)
 import Stage1.Position (Position)
 import Stage2.Layout (Normal)
+import Stage2.Stage (Check, Resolve)
 import qualified Stage2.Tree.Declaration as Stage2 (Declaration (..))
 import qualified Stage2.Tree.Definition4 as Stage2 (Annotation (..), Definition4 (..))
 import qualified Stage2.Tree.Scheme as Stage2 (Scheme (..))
@@ -15,7 +16,7 @@ import {-# SOURCE #-} qualified Stage3.Unify as Unify
 import {-# SOURCE #-} qualified Stage4.Tree.Scheme as Simple
 
 data Annotation scope = Annotation
-  { annotation :: !(Scheme scope),
+  { annotation :: !(Scheme Position Check scope),
     annotation' :: !(Simple.Scheme scope)
   }
 
@@ -27,7 +28,7 @@ data LocalTypeAnnotation s scope
   = LocalAnnotation !(Annotation scope)
   | LocalInferred !(Unify.Type s scope)
 
-checkAnnotation :: Context s scope -> Stage2.Scheme Position scope -> ST s (Annotation scope)
+checkAnnotation :: Context s scope -> Stage2.Scheme Position Resolve scope -> ST s (Annotation scope)
 checkAnnotation context annotation = do
   annotation <- Scheme.check context annotation
   annotation <- Scheme.solve context annotation

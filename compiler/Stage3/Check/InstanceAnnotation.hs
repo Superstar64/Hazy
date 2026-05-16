@@ -5,6 +5,7 @@ import qualified Data.Vector.Strict as Strict (Vector)
 import Stage1.Position (Position)
 import Stage2.Layout (Normal)
 import Stage2.Stage (Check)
+import qualified Stage2.Tree.Constraint as Solved (Constraint)
 import qualified Stage2.Tree.Instance as Stage2 (Instance (..))
 import qualified Stage2.Tree.TypePattern as Solved (TypePattern)
 import qualified Stage2.Tree.TypePattern as Stage2 (TypePattern (TypePattern))
@@ -14,14 +15,13 @@ import qualified Stage3.Temporary.Constraint as Unsolved.Constraint
 import qualified Stage3.Temporary.Scheme as Unsolved.Scheme
 import qualified Stage3.Temporary.TypePattern as Unsolved
 import qualified Stage3.Temporary.TypePattern as Unsolved.TypePattern
-import qualified Stage3.Tree.Constraint as Solved (Constraint)
 import qualified Stage3.Unify as Unify
 import qualified Stage4.Tree.Constraint as Simple
 import qualified Stage4.Tree.Constraint as Simple.Constraint
 
 data InstanceAnnotation scope = InstanceAnnotation
   { parameters :: !(Strict.Vector (Solved.TypePattern Position Check scope)),
-    prerequisites :: !(Strict.Vector (Solved.Constraint scope)),
+    prerequisites :: !(Strict.Vector (Solved.Constraint Position Check scope)),
     prerequisites' :: !(Strict.Vector (Simple.Constraint scope))
   }
 

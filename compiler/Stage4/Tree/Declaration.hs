@@ -3,6 +3,7 @@ module Stage4.Tree.Declaration where
 import qualified Stage2.Index.Term as Stage2.Term
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Check)
 import Stage2.Tree.Declaration (Key (..))
 import qualified Stage3.Tree.Declaration as Stage3 (Declaration (..), LazyTermDeclaration (..))
 import qualified Stage3.Tree.Definition2 as Stage3 (Choice (..), Definition2 (Definition, Piece))
@@ -103,7 +104,7 @@ simplify (name Stage3.:^ declaration) =
           }
       Stage3.Definition2.Shared shared _ -> Expression.simplify shared
 
-annotation :: SchemeOver Stage3.Expression scope -> Stage3.Scheme scope -> LazyTermDeclaration scope
+annotation :: SchemeOver Stage3.Expression scope -> Stage3.Scheme position Check scope -> LazyTermDeclaration scope
 annotation SchemeOver {parameters, constraints, result} scheme =
   Unnamed 0
     :^ Declaration

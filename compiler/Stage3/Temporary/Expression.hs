@@ -21,6 +21,7 @@ import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (shift)
+import Stage2.Stage (Check)
 import qualified Stage2.Tree.Expression as Stage2 (Expression (..))
 import qualified Stage3.Check.ConstructorInstance as ConstructorInstance
 import Stage3.Check.Context (Context (..))
@@ -116,7 +117,7 @@ data Expression s scope
   | Annotation
       { expression :: !(Unify.SchemeOver Expression s scope),
         operatorPosition :: !Position,
-        annotation :: !(Scheme scope),
+        annotation :: !(Scheme Position Check scope),
         instanciation :: !(Unify.Instanciation s scope)
       }
   | RightSection

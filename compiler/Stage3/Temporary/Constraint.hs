@@ -14,6 +14,8 @@ import qualified Stage2.Index.Table.Type as Type.Table
 import qualified Stage2.Index.Type2 as Type2
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (shift)
+import Stage2.Stage (Check, Resolve)
+import qualified Stage2.Tree.Constraint as Solved
 import qualified Stage2.Tree.Constraint as Stage2
 import Stage3.Check.Context (Context (..))
 import qualified Stage3.Check.DataInstance as DataInstance
@@ -25,21 +27,21 @@ import Stage3.Simple.Type (lift)
 import qualified Stage3.Simple.Type as Simple (lift)
 import Stage3.Temporary.Type (Type)
 import qualified Stage3.Temporary.Type as Type (check, solve)
-import qualified Stage3.Tree.Constraint as Solved
 import qualified Stage3.Unify as Unify
 import {-# SOURCE #-} qualified Stage4.Tree.Builtin as Builtin
 import {-# SOURCE #-} Stage4.Tree.TypeDeclaration (assumeData)
 import Prelude hiding (head)
 
 data Constraint s scope = Constraint
-  { classx :: !(Type2.Index scope),
+  { startPosition :: !Position,
+    classx :: !(Type2.Index scope),
     head :: !Int,
     arguments :: !(Strict.Vector (Type s (Local ':+ scope)))
   }
 
 check ::
   Context s (Local ':+ scope) ->
-  Stage2.Constraint Position scope ->
+  Stage2.Constraint Position Resolve scope ->
   ST s (Constraint s scope)
 check
   context@Context {localEnvironment, typeEnvironment}
@@ -82,14 +84,15 @@ check
 
     arguments <- Strict.Vector.fromList . toList <$> check context target (Reverse.fromList $ toList arguments)
 
-    pure $ Constraint {classx, head, arguments}
+    pure $ Constraint {startPosition, classx, head, arguments}
 
-solve :: Context s (Local ':+ scope) -> Constraint s scope -> ST s (Solved.Constraint scope)
-solve context Constraint {classx, head, arguments} = do
+solve :: Context s (Local ':+ scope) -> Constraint s scope -> ST s (Solved.Constraint Position Check scope)
+solve context Constraint {startPosition, classx, head, arguments} = do
   arguments <- traverse (Type.solve context) arguments
   pure
     Solved.Constraint
-      { classx,
+      { startPosition,
+        classx,
         head,
         arguments
       }

@@ -18,6 +18,7 @@ import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Resolve)
 import Stage2.Tree.Definition2 (Inferred)
 import qualified Stage2.Tree.Definition2 as Mark
 import Stage2.Tree.Definition3 (Definition3)
@@ -59,7 +60,7 @@ instance FreeTermVariables (Definition4 locality layout) where
     Group set -> foldMap (freeTermVariables (FreeVariables.Over target)) set
 
 data Annotation mark layout scope where
-  Annotated :: !(Scheme Position scope) -> Annotation Mark.Annotated layout scope
+  Annotated :: !(Scheme Position Resolve scope) -> Annotation Mark.Annotated layout scope
   Inferred :: Annotation Mark.Inferred Normal scope
 
 instance Shift (Annotation mark layout) where

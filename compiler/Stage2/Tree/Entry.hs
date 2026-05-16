@@ -45,7 +45,7 @@ instance FreeTypeVariables (Entry position stage) where
 -- This type is here as a temporary measure until polymorphic components are
 -- supported
 data Restricted position stage scope where
-  Canonical :: !(Scheme position scope) -> Restricted position Resolve scope
+  Canonical :: !(Scheme position Resolve scope) -> Restricted position Resolve scope
   Restricted :: !(Type position Check scope) -> Restricted position Check scope
 
 instance (Show position) => Show (Restricted position stage scope) where

@@ -34,7 +34,7 @@ import qualified Stage2.Tree.TypePattern as TypePattern
 
 data Instance layout scope = Instance
   { startPosition :: !Position,
-    prerequisites :: !(Strict.Vector (Constraint Position scope)),
+    prerequisites :: !(Strict.Vector (Constraint Position Resolve scope)),
     classPosition :: !Position,
     parameters :: !(Strict.Vector (TypePattern Position Resolve scope)),
     members :: !(Strict.Vector (Strict.Maybe (Definition layout (Local ':+ scope))))

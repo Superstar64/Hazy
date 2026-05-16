@@ -18,18 +18,18 @@ import Stage2.Tree.Type (Type)
 import qualified Stage2.Tree.Type as Type (anonymize, resolve)
 import Prelude hiding (head)
 
-data Constraint position scope = Constraint
+data Constraint position stage scope = Constraint
   { startPosition :: !position,
     classx :: !(Type2.Index scope),
     head :: !Int,
-    arguments :: !(Strict.Vector (Type position Resolve (Local ':+ scope)))
+    arguments :: !(Strict.Vector (Type position stage (Local ':+ scope)))
   }
   deriving (Show, Eq)
 
-instance Shift (Constraint position) where
+instance Shift (Constraint position stage) where
   shift = shiftDefault
 
-instance Shift.Functor (Constraint position) where
+instance Shift.Functor (Constraint position stage) where
   map category Constraint {startPosition, classx, head, arguments} =
     Constraint
       { startPosition,
@@ -38,14 +38,14 @@ instance Shift.Functor (Constraint position) where
         arguments = fmap (Shift.map (Shift.Over category)) arguments
       }
 
-instance FreeTypeVariables (Constraint position) where
+instance FreeTypeVariables (Constraint position stage) where
   freeTypeVariables target Constraint {classx, arguments} =
     concat
       [ freeTypeVariables target classx,
         foldMap (freeTypeVariables $ FreeTermVariables.Over target) arguments
       ]
 
-anonymize :: Constraint position scope -> Constraint () scope
+anonymize :: Constraint position stage scope -> Constraint () stage scope
 anonymize Constraint {classx, head, arguments} =
   Constraint
     { startPosition = (),
@@ -54,7 +54,7 @@ anonymize Constraint {classx, head, arguments} =
       arguments = Type.anonymize <$> arguments
     }
 
-resolve :: Context (Local ':+ scope) -> Stage1.Constraint Position -> Constraint Position scope
+resolve :: Context (Local ':+ scope) -> Stage1.Constraint Position -> Constraint Position Resolve scope
 resolve context Stage1.Constraint {startPosition, classVariable, typeVariable, arguments}
   | Local head <- context !$ typeVariable =
       case context !=.* classVariable of

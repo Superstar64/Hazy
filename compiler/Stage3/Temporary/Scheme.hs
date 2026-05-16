@@ -12,7 +12,7 @@ import qualified Stage2.Index.Table.Type as Type (Table (..))
 import qualified Stage2.Label.Binding.Local as Label
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (Shift (..))
-import Stage2.Stage (Check)
+import Stage2.Stage (Check, Resolve)
 import Stage2.Tree.Inferred (Inferred (..))
 import qualified Stage2.Tree.Scheme as Stage2 (Scheme (..))
 import qualified Stage2.Tree.TypePattern as Solved (TypePattern (..))
@@ -30,13 +30,15 @@ import qualified Stage3.Tree.Scheme as Solved (Scheme (..))
 import qualified Stage3.Unify as Unify
 
 data Scheme s scope = Scheme
-  { parameters :: !(Strict.Vector (TypePattern s scope)),
+  { startPosition :: !Position,
+    implicit :: !Bool,
+    parameters :: !(Strict.Vector (TypePattern s scope)),
     constraints :: !(Strict.Vector (Constraint s scope)),
     result :: !(Type s (Local ':+ scope))
   }
 
-check :: Context s scope -> Stage2.Scheme Position scope -> ST s (Scheme s scope)
-check context (Stage2.Scheme {parameters, constraints, result}) = do
+check :: Context s scope -> Stage2.Scheme Position Resolve scope -> ST s (Scheme s scope)
+check context (Stage2.Scheme {startPosition, implicit, parameters, constraints, result}) = do
   let fresh Stage2.TypePattern {position, name} = do
         level <- Unify.fresh Unify.universe
         typex <- Unify.fresh (Unify.typeWith level)
@@ -44,14 +46,14 @@ check context (Stage2.Scheme {parameters, constraints, result}) = do
   parameters <- traverse fresh parameters
   constraints <- traverse (Constraint.check (augment parameters context)) constraints
   result <- Type.check (augment parameters context) Unify.typex result
-  pure $ Scheme {parameters, constraints, result}
+  pure $ Scheme {startPosition, implicit, parameters, constraints, result}
 
-solve :: Context s scope -> Scheme s scope -> ST s (Solved.Scheme scope)
-solve context Scheme {parameters = wobbly, constraints, result} = do
+solve :: Context s scope -> Scheme s scope -> ST s (Solved.Scheme Position Check scope)
+solve context Scheme {startPosition, implicit, parameters = wobbly, constraints, result} = do
   parameters <- traverse TypePattern.solve wobbly
   constraints <- traverse (Constraint.solve (augment wobbly context)) constraints
   result <- Type.solve (augment wobbly context) result
-  pure $ Solved.Scheme {parameters, constraints, result}
+  pure $ Solved.Scheme {startPosition, implicit, parameters, constraints, result}
 
 augment :: Strict.Vector (TypePattern s scope) -> Context s scope -> Context s (Local ':+ scope)
 augment scheme Context {termEnvironment, localEnvironment, typeEnvironment}

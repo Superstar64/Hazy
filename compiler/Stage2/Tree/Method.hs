@@ -7,12 +7,13 @@ import Stage1.Variable (Variable)
 import Stage2.FreeVariables (FreeTypeVariables (freeTypeVariables))
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Resolve)
 import Stage2.Tree.Scheme (Scheme)
 
 data Method scope = Method
   { position :: !Position,
     name :: !Variable,
-    annotation :: !(Scheme Position scope)
+    annotation :: !(Scheme Position Resolve scope)
   }
   deriving (Show)
 

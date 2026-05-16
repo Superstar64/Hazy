@@ -6,7 +6,8 @@ import qualified Stage2.Index.Type2 as Type2
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import qualified Stage3.Tree.Constraint as Solved
+import Stage2.Stage (Check)
+import qualified Stage2.Tree.Constraint as Solved
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
 import Stage4.Tree.Type (Type (Call, Variable))
@@ -40,7 +41,7 @@ argument :: Constraint scope -> Type (Local ':+ scope)
 argument Constraint {head, arguments} =
   foldl Call (Variable (Local.Local head)) arguments
 
-simplify :: Solved.Constraint scope -> Constraint scope
+simplify :: Solved.Constraint position Check scope -> Constraint scope
 simplify Solved.Constraint {classx, head, arguments} = do
   Constraint
     { classx,
