@@ -4,7 +4,7 @@ import Stage1.Lexer (ConstructorIdentifier)
 import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage2.Tree.Inferred (Inferred (..))
+import Stage2.Tree.Combinators.Inferred (Inferred (..))
 import Stage2.Tree.TypePattern (TypePattern (..), typex')
 import qualified Stage3.Tree.Method as Solved.Method
 import qualified Stage3.Tree.TypeDeclaration as Solved (LazyTypeDeclaration (..), TypeDeclaration (..))

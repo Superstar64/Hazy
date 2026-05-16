@@ -19,9 +19,9 @@ import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Resolve)
+import Stage2.Tree.Combinators.Inferred (Inferred (..))
 import Stage2.Tree.Constraint (Constraint)
 import qualified Stage2.Tree.Constraint as Constraint
-import Stage2.Tree.Inferred (Inferred (Infer))
 import Stage2.Tree.Type (Type)
 import Stage2.Tree.Type as Type (anonymize, resolve)
 import Stage2.Tree.TypePattern (TypePattern (TypePattern))
@@ -106,7 +106,7 @@ resolve context Stage1.Implicit {startPosition, constraints, result}
       TypePattern
         { position = startPosition,
           name,
-          typex = Infer
+          typex = Inferred
         }
     names = Strict.Vector.fromList $ nubOrd $ filter (`Map.notMember` localTypes context) free
     free =

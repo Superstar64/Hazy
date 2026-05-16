@@ -4,7 +4,7 @@ import Control.Monad.ST (ST)
 import Stage1.Lexer (VariableIdentifier)
 import Stage1.Position (Position)
 import Stage2.Stage (Check)
-import Stage2.Tree.Inferred (Inferred (..))
+import Stage2.Tree.Combinators.Inferred (Inferred (..))
 import qualified Stage2.Tree.TypePattern as Solved
 import qualified Stage3.Unify as Unify
 

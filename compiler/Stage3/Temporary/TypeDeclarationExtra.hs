@@ -10,7 +10,7 @@ import qualified Stage2.Index.Type2 as Type2
 import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (shift)
-import Stage2.Tree.Inferred (Inferred (..))
+import Stage2.Tree.Combinators.Inferred (Inferred (..))
 import qualified Stage2.Tree.TypeDeclarationExtra as Stage2
 import Stage2.Tree.TypePattern (TypePattern (..))
 import Stage3.Check.Context (Context)

@@ -5,13 +5,13 @@ import Stage1.Variable (VariableIdentifier)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Check, Resolve)
-import Stage2.Tree.Inferred (Inferred (..), get)
+import Stage2.Tree.Combinators.Inferred (Inferred (..), get)
 import {-# SOURCE #-} Stage4.Tree.Type as Simple (Type)
 
 data TypePattern position stage scope = TypePattern
   { position :: !position,
     name :: !VariableIdentifier,
-    typex :: !(Inferred stage scope)
+    typex :: !(Inferred Simple.Type stage scope)
   }
   deriving (Show)
 
@@ -44,7 +44,7 @@ resolve Stage1.TypePattern {position, name} =
   TypePattern
     { position,
       name,
-      typex = Infer
+      typex = Inferred
     }
 
 typex' :: TypePattern position Check scope -> Simple.Type scope

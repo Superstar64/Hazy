@@ -273,6 +273,7 @@ executable hazy
     Stage2.Tree.Alternative
     Stage2.Tree.Body
     Stage2.Tree.CallHead
+    Stage2.Tree.Combinators.Inferred
     Stage2.Tree.Constraint
     Stage2.Tree.Constructor
     Stage2.Tree.Declaration
@@ -287,7 +288,6 @@ executable hazy
     Stage2.Tree.Field
     Stage2.Tree.Function
     Stage2.Tree.GADTConstructor
-    Stage2.Tree.Inferred
     Stage2.Tree.Instance
     Stage2.Tree.Lambda
     Stage2.Tree.Method

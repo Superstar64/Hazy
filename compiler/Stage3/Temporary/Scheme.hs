@@ -13,7 +13,7 @@ import qualified Stage2.Label.Binding.Local as Label
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (Shift (..))
 import Stage2.Stage (Check, Resolve)
-import Stage2.Tree.Inferred (Inferred (..))
+import Stage2.Tree.Combinators.Inferred (Inferred (..))
 import qualified Stage2.Tree.Scheme as Stage2 (Scheme (..))
 import qualified Stage2.Tree.TypePattern as Solved (TypePattern (..))
 import qualified Stage2.Tree.TypePattern as Stage2 (TypePattern (..))
