@@ -7,6 +7,7 @@ import qualified Data.Vector as Vector
 import Data.Vector.Strict (izipWithM)
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
+import Stage1.Position (Position)
 import qualified Stage2.Index.Local as Local
 import qualified Stage2.Index.Table.Type as Table.Type
 import qualified Stage2.Index.Type as Type
@@ -15,7 +16,10 @@ import Stage2.Layout (Normal)
 import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (shift)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Check)
+import qualified Stage2.Tree.Constraint as Solved (Constraint)
 import qualified Stage2.Tree.Instance as Stage2
+import qualified Stage2.Tree.TypePattern as Solved (TypePattern)
 import Stage3.Check.Context (Context (..))
 import Stage3.Check.InstanceAnnotation (InstanceAnnotation (InstanceAnnotation))
 import qualified Stage3.Check.InstanceAnnotation as InstanceAnnotation
@@ -28,7 +32,7 @@ import qualified Stage3.Simple.Type as Simple.Type (lift)
 import qualified Stage3.Temporary.Definition as Definition
 import Stage3.Temporary.InstanceMethod (InstanceMethod (..))
 import qualified Stage3.Temporary.InstanceMethod as InstanceMethod
-import qualified Stage3.Tree.Instance as Solved
+import qualified Stage3.Tree.Instance as Solved (Instance (..))
 import qualified Stage3.Tree.Scheme as Scheme
 import qualified Stage3.Unify as Unify
 import Stage4.Substitute (Category (Substitute))
@@ -71,15 +75,16 @@ head = \case
   Class {head2} -> head2
 
 data Instance s scope = Instance
-  { evidence :: !(Strict.Vector (Simple.Evidence (Local ':+ scope))),
-    prerequisitesCount :: !Int,
+  { parameters :: !(Strict.Vector (Solved.TypePattern Position Check scope)),
+    prerequisites :: !(Strict.Vector (Solved.Constraint Position Check scope)),
+    evidence :: !(Strict.Vector (Simple.Evidence (Local ':+ scope))),
     members :: !(Strict.Vector (InstanceMethod s scope))
   }
 
 instance Unify.Zonk Instance where
-  zonk zonker Instance {evidence, prerequisitesCount, members} = do
+  zonk zonker Instance {parameters, prerequisites, evidence, members} = do
     members <- traverse (Unify.zonk zonker) members
-    pure Instance {evidence, prerequisitesCount, members}
+    pure Instance {parameters, prerequisites, evidence, members}
 
 check ::
   Context s scope ->
@@ -100,7 +105,6 @@ check
     }
     | index <- index key,
       head <- head key = do
-        let prerequisitesCount = length prerequisites
         classx <- do
           let get index = assumeClass <$> TypeBinding.content (typeEnvironment Table.Type.! index)
           Builtin.index pure get index
@@ -172,9 +176,9 @@ check
                     pure Simple.SchemeOver {parameters, constraints, result}
               pure Default {definition'}
         members <- izipWithM check methods (fmap shift <$> members)
-        pure Instance {evidence, prerequisitesCount, members}
+        pure Instance {parameters, prerequisites, evidence, members}
 
 solve :: Instance s scope -> ST s (Solved.Instance scope)
-solve Instance {evidence, prerequisitesCount, members} = do
+solve Instance {parameters, prerequisites, evidence, members} = do
   members <- traverse InstanceMethod.solve members
-  pure Solved.Instance {evidence, prerequisitesCount, members}
+  pure Solved.Instance {parameters, prerequisites, evidence, members}

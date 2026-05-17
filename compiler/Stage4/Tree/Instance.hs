@@ -36,9 +36,9 @@ instance Substitute.Functor Instance where
       }
 
 simplify :: Stage3.Instance scope -> Instance scope
-simplify Stage3.Instance {evidence, prerequisitesCount, members} =
+simplify Stage3.Instance {evidence, prerequisites, members} =
   Instance
     { evidence,
-      prerequisitesCount,
+      prerequisitesCount = length prerequisites,
       members = InstanceMethod.simplify <$> members
     }
