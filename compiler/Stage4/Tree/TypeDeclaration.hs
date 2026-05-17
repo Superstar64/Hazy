@@ -19,6 +19,7 @@ import qualified Stage4.Tree.Constraint as Constraint
 import qualified Stage4.Tree.Constructor as Constructor
 import Stage4.Tree.Data (Data)
 import qualified Stage4.Tree.Data as Data
+import qualified Stage4.Tree.Scheme as Scheme
 import Stage4.Tree.Type (Type)
 
 data LazyTypeDeclaration scope = !ConstructorIdentifier :^ TypeDeclaration scope
@@ -111,7 +112,7 @@ simplify' Solved.TypeDeclaration {name, definition = _ ::: definition} = case de
           Class.Class
             { parameter,
               constraints = Constraint.simplify <$> constraints,
-              methods = Solved.Method.annotation' <$> methods
+              methods = Scheme.simplify . Solved.Method.annotation <$> methods
             }
       }
   Solved.Synonym {definition' = definition} -> Synonym {name, definition}

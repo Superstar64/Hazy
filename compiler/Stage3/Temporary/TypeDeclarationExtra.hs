@@ -30,6 +30,7 @@ import qualified Stage3.Unify as Unify
 import qualified Stage4.Tree.Constraint as Simple (Constraint (..))
 import qualified Stage4.Tree.Constraint as Simple.Constraint
 import qualified Stage4.Tree.Scheme as Simple (Scheme (..))
+import qualified Stage4.Tree.Scheme as Simple.Scheme
 import qualified Stage4.Tree.SchemeOver as Simple (SchemeOver (..))
 
 data TypeDeclarationExtra s scope
@@ -79,11 +80,13 @@ check context classx declaration
               Mask.Inline
               context
           let go
-                Method {annotation' = Simple.Scheme scheme@Simple.SchemeOver {result}}
-                definition = do
-                  for definition $ \definition -> do
-                    context <- augment' position scheme Mask.Runtime context
-                    Definition.check context (Simple.Type.lift result) (shift definition)
+                Method {annotation}
+                definition
+                  | Simple.Scheme scheme@Simple.SchemeOver {result} <-
+                      Simple.Scheme.simplify annotation = do
+                      for definition $ \definition -> do
+                        context <- augment' position scheme Mask.Runtime context
+                        Definition.check context (Simple.Type.lift result) (shift definition)
           defaults <- sequence $ Strict.Vector.zipWith go base methods
           pure Class {defaults}
         _ -> error "bad proper"

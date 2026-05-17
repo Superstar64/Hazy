@@ -7,7 +7,6 @@ import Stage3.Check.Context (Context)
 import Stage3.Temporary.Scheme (Scheme)
 import qualified Stage3.Temporary.Scheme as Scheme
 import qualified Stage3.Tree.Method as Solved (Method (..))
-import qualified Stage4.Tree.Scheme as Simple (simplify)
 
 data Method s scope = Method
   { position :: !Position,
@@ -22,5 +21,4 @@ check context Stage2.Method {position, annotation} = do
 solve :: Context s scope -> Method s scope -> ST s (Solved.Method scope)
 solve context Method {annotation} = do
   annotation <- Scheme.solve context annotation
-  let annotation' = Simple.simplify annotation
-  pure $ Solved.Method {annotation, annotation'}
+  pure $ Solved.Method {annotation}
