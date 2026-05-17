@@ -11,6 +11,7 @@ import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (shift)
 import Stage2.Tree.Combinators.Inferred (Inferred (..))
+import Stage2.Tree.Method (Method (..))
 import qualified Stage2.Tree.TypeDeclarationExtra as Stage2
 import Stage2.Tree.TypePattern (TypePattern (..))
 import Stage3.Check.Context (Context)
@@ -19,7 +20,6 @@ import Stage3.Simple.SchemeOver (augment, augment')
 import qualified Stage3.Simple.Type as Simple.Type
 import Stage3.Temporary.Definition (Definition)
 import {-# SOURCE #-} qualified Stage3.Temporary.Definition as Definition
-import Stage3.Tree.Method (Method (..))
 import Stage3.Tree.TypeDeclaration (TypeDeclaration (..))
 import qualified Stage3.Tree.TypeDeclaration as TypeDeclaration
 import qualified Stage3.Tree.TypeDeclarationExtra as Solved

@@ -7,20 +7,19 @@ import Stage1.Variable (Variable)
 import Stage2.FreeVariables (FreeTypeVariables (freeTypeVariables))
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage2.Stage (Resolve)
 import Stage2.Tree.Scheme (Scheme)
 
-data Method scope = Method
+data Method stage scope = Method
   { position :: !Position,
     name :: !Variable,
-    annotation :: !(Scheme Position Resolve scope)
+    annotation :: !(Scheme Position stage scope)
   }
   deriving (Show)
 
-instance Shift Method where
+instance Shift (Method stage) where
   shift = shiftDefault
 
-instance Shift.Functor Method where
+instance Shift.Functor (Method stage) where
   map category Method {position, name, annotation} =
     Method
       { position,
@@ -28,5 +27,5 @@ instance Shift.Functor Method where
         annotation = Shift.map category annotation
       }
 
-instance FreeTypeVariables Method where
+instance FreeTypeVariables (Method stage) where
   freeTypeVariables target Method {annotation} = freeTypeVariables target annotation

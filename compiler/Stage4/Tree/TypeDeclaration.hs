@@ -5,8 +5,8 @@ import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Tree.Combinators.Inferred (Inferred (..))
+import qualified Stage2.Tree.Method as Solved.Method
 import Stage2.Tree.TypePattern (TypePattern (..), typex')
-import qualified Stage3.Tree.Method as Solved.Method
 import qualified Stage3.Tree.TypeDeclaration as Solved (LazyTypeDeclaration (..), TypeDeclaration (..))
 import qualified Stage3.Tree.TypeDefinition
 import qualified Stage3.Tree.TypeDefinition as Solved (TypeDefinition (ADT, Class, Synonym))

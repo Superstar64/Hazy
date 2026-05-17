@@ -8,10 +8,10 @@ import qualified Stage2.Scope as Scope
 import Stage2.Stage (Check)
 import Stage2.Tree.Constraint (Constraint)
 import Stage2.Tree.Constructor (Constructor)
+import Stage2.Tree.Method (Method)
 import Stage2.Tree.Selector (Selector)
 import Stage2.Tree.Type (Type)
 import Stage2.Tree.TypePattern (TypePattern)
-import Stage3.Tree.Method (Method)
 import qualified Stage4.Tree.Type as Simple (Type)
 
 data TypeDefinition scope
@@ -24,7 +24,7 @@ data TypeDefinition scope
   | Class
       { parameter :: !(TypePattern Position Check scope),
         constraints :: !(Strict.Vector (Constraint Position Check scope)),
-        methods :: !(Strict.Vector (Method (Scope.Local ':+ scope)))
+        methods :: !(Strict.Vector (Method Check (Scope.Local ':+ scope)))
       }
   | Synonym
       { definition :: !(Type Position Check (Scope.Local ':+ scope)),

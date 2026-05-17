@@ -12,6 +12,7 @@ import Stage1.Position (Position)
 import Stage1.Variable (Variable)
 import Stage2.Layout (Normal)
 import Stage2.Scope (Environment ((:+)), Local)
+import Stage2.Stage (Resolve)
 import qualified Stage2.Temporary.Partial.Method as Partial
 import qualified Stage2.Tree.Definition as Definition (merge)
 import qualified Stage2.Tree.Definition as Real (Definition)
@@ -20,7 +21,7 @@ import qualified Stage2.Tree.Method as Real (Method (..))
 data Method scope = Method
   { position :: !Position,
     name :: !Variable,
-    method :: Real.Method scope,
+    method :: Real.Method Resolve scope,
     extra :: Strict.Maybe (Real.Definition Normal scope)
   }
 

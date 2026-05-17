@@ -34,7 +34,7 @@ data TypeDefinition scope
   | Class
       { position :: !Position,
         parameter :: !(TypePattern Position Resolve scope),
-        methods :: !(Strict.Vector (Method (Local ':+ scope))),
+        methods :: !(Strict.Vector (Method Resolve (Local ':+ scope))),
         constraints :: !(Strict.Vector (Constraint Position Resolve scope))
       }
   | Synonym
