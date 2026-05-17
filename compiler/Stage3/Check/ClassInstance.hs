@@ -12,7 +12,7 @@ data ClassInstance s scope = ClassInstance
     constraintCount :: !Int
   }
 
-info :: ClassInstance s scope -> MethodInfo
+info :: ClassInstance s scope -> MethodInfo scope
 info ClassInstance {constraintCount} = MethodInfo {constraintCount}
 
 methodFunction :: ClassInstance s scope -> Int -> Unify.Scheme s scope

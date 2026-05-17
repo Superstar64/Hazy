@@ -79,7 +79,7 @@ data Expression scope
       { method :: !(Method.Index scope),
         evidence :: !(Evidence scope),
         instanciation :: !(Instanciation scope),
-        methodInfo :: !MethodInfo
+        methodInfo :: !(MethodInfo scope)
       }
   | Integer
       { integer :: !Integer
@@ -150,7 +150,7 @@ instance Substitute.Functor Expression where
         { method = Substitute.map category method,
           evidence = Substitute.map category evidence,
           instanciation = Substitute.map category instanciation,
-          methodInfo
+          methodInfo = Substitute.map category methodInfo
         }
     Integer {integer} ->
       Integer

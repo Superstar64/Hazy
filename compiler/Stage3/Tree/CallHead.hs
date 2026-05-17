@@ -27,6 +27,6 @@ data CallHead scope
       { method :: !(Method.Index scope),
         evidence :: !(Simple.Evidence scope),
         instanciation :: !(Simple.Instanciation scope),
-        methodInfo :: !MethodInfo
+        methodInfo :: !(MethodInfo scope)
       }
   deriving (Show)

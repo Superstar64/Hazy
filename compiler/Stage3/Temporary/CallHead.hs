@@ -49,7 +49,7 @@ data CallHead s scope
         method :: !(Method.Index scope),
         evidence :: !(Unify.Evidence s scope),
         instanciation :: !(Unify.Instanciation s scope),
-        methodInfo :: !MethodInfo
+        methodInfo :: !(MethodInfo scope)
       }
 
 instance Unify.Zonk CallHead where

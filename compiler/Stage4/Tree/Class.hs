@@ -39,5 +39,5 @@ instance Substitute.Functor Class where
 kind :: Class scope -> Type scope
 kind Class {parameter} = Type.Function parameter Type.Constraint
 
-info :: Class scope -> MethodInfo
+info :: Class scope -> MethodInfo scope
 info Class {constraints} = MethodInfo {constraintCount = length constraints}
