@@ -13,7 +13,6 @@ import qualified Stage3.Check.KindAnnotation as Stage3
 import qualified Stage3.Simple.Type as Simple.Type
 import qualified Stage3.Temporary.TypeDefinition as Temporary.TypeDefinition
 import Stage3.Tree.TypeDefinition2 (Annotation (..), TypeDefinition2 (..))
-import qualified Stage3.Tree.TypeDefinition2 as TypeDefinition2
 import qualified Stage3.Unify as Unify
 import qualified Stage4.Tree.Type as Simple (Type)
 
@@ -25,15 +24,15 @@ infix 4 :^
 data TypeDeclaration scope
   = TypeDeclaration
   { name :: !ConstructorIdentifier,
-    definition :: !(TypeDefinition2 scope)
+    definition :: !(TypeDefinition2 scope),
+    kind :: !(Simple.Type scope)
   }
   deriving (Show)
 
 strict declaration@TypeDeclaration {name} = name :^ declaration
 
 kind_ :: TypeDeclaration scope -> Simple.Type scope
-kind_ = \case
-  TypeDeclaration {definition = annotation ::: _} -> TypeDefinition2.kind annotation
+kind_ = kind
 
 check ::
   Context s scope ->
@@ -49,13 +48,15 @@ check
         pure
           TypeDeclaration
             { name,
-              definition = Inferred {kind} ::: Synonym {parameters, synonym}
+              definition = Inferred ::: Synonym {parameters, synonym},
+              kind
             }
       Strict.Just annotation ->
         pure
           TypeDeclaration
             { name,
-              definition = Annotated {kind, annotation} ::: Synonym {parameters, synonym}
+              definition = Annotated annotation ::: Synonym {parameters, synonym},
+              kind
             }
 check
   context
@@ -68,7 +69,8 @@ check
     pure
       TypeDeclaration
         { name,
-          definition = Inferred {kind} ::: definition
+          definition = Inferred ::: definition,
+          kind
         }
 check
   context
@@ -79,5 +81,6 @@ check
     pure
       TypeDeclaration
         { name,
-          definition = Annotated {kind, annotation} ::: definition
+          definition = Annotated annotation ::: definition,
+          kind
         }
