@@ -31,7 +31,7 @@ import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift (..), shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage2.Stage (Check, Exclusive (..), Resolve, Unsupported (..))
+import Stage2.Stage (Check, Equal (..), IsResolve (..), Resolve, Unsupported)
 import {-# SOURCE #-} qualified Stage2.Temporary.TypeInfix as Infix (fix, resolve)
 import {-# SOURCE #-} qualified Stage4.Tree.Type as Simple
 import Prelude hiding (Bool (False, True))
@@ -209,9 +209,9 @@ instance Show (Synonym stage scope) where
     NoSynonym -> showString "NoSynonym"
     Synonym synonym -> showParen (d > 10) $ showsPrec 11 "Synonym " . showsPrec 11 synonym
 
-instance (Exclusive stage) => Eq (Synonym stage scope) where
+instance (IsResolve stage) => Eq (Synonym stage scope) where
   synonym == synonym'
-    | Placeholder <- exclusive :: Unsupported stage,
+    | Refl <- isResolve :: Unsupported stage,
       NoSynonym <- synonym,
       NoSynonym <- synonym' =
         Prelude.True
@@ -305,9 +305,9 @@ resolve context = \case
           }
       Type3.Type -> SmallType {startPosition}
       Type3.Constraint -> Constraint {startPosition}
-      Type3.Small -> Small {startPosition, unsupported = Placeholder}
-      Type3.Large -> Large {startPosition, unsupported = Placeholder}
-      Type3.Universe -> Universe {startPosition, unsupported = Placeholder}
+      Type3.Small -> Small {startPosition, unsupported = Refl}
+      Type3.Large -> Large {startPosition, unsupported = Refl}
+      Type3.Universe -> Universe {startPosition, unsupported = Refl}
       Type3.Levity -> Levity {startPosition}
   Stage1.Unit {startPosition = constructorPosition@startPosition} ->
     Constructor
@@ -366,7 +366,7 @@ resolve context = \case
         parameter = resolve context parameter,
         operatorPosition,
         result = resolve context result,
-        unsupported = Placeholder
+        unsupported = Refl
       }
   Stage1.Lifted {startPosition = constructorPosition@startPosition, lifted} ->
     Constructor
@@ -421,7 +421,7 @@ resolve context = \case
     Type
       { startPosition,
         universe = resolve context universe,
-        unsupported = Placeholder
+        unsupported = Refl
       }
   Stage1.Star {startPosition} -> SmallType {startPosition}
 

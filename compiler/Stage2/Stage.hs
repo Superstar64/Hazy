@@ -1,6 +1,6 @@
 module Stage2.Stage where
 
-import Data.Kind (Constraint)
+import Data.Kind (Constraint, Type)
 
 data Stage
   = Resolve
@@ -12,18 +12,28 @@ type Check = 'Check
 
 -- |
 -- For constructs that are currently unsupported in Stage3
-data Unsupported stage where
-  Placeholder :: Unsupported Resolve
+type Unsupported = Equal Resolve
 
-instance Show (Unsupported stage) where
-  showsPrec _ Placeholder = showString "Placeholder"
+type Equal :: Stage -> Stage -> Type
+data Equal stage1 stage2 where
+  Refl :: Equal stage stage
 
-instance Eq (Unsupported stage) where
-  Placeholder == Placeholder = True
+instance Show (Equal stage1 stage2) where
+  showsPrec _ Refl = showString "Refl"
 
-type Exclusive :: Stage -> Constraint
-class Exclusive stage where
-  exclusive :: Unsupported stage
+instance Eq (Equal stage1 stage2) where
+  Refl == Refl = True
 
-instance Exclusive 'Resolve where
-  exclusive = Placeholder
+type IsResolve :: Stage -> Constraint
+class IsResolve stage where
+  isResolve :: Unsupported stage
+
+instance IsResolve 'Resolve where
+  isResolve = Refl
+
+type IsCheck :: Stage -> Constraint
+class IsCheck stage where
+  isCheck :: Equal Check stage
+
+instance IsCheck 'Check where
+  isCheck = Refl

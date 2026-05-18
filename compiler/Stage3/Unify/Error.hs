@@ -27,7 +27,7 @@ import qualified Stage2.Label.Context as Label (Context (..))
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import qualified Stage2.Shift as Shift
-import Stage2.Stage (Resolve, Unsupported (..))
+import Stage2.Stage (Equal (..), Resolve)
 import Stage2.Tree.Type (Synonym (NoSynonym))
 import qualified Stage2.Tree.Type as Stage2
 import Stage3.Check.Context (Context)
@@ -174,10 +174,10 @@ abort position = \case
           Stage2.Type
             { startPosition = (),
               universe,
-              unsupported = Placeholder
+              unsupported = Refl
             }
       Constraint -> pure $ Stage2.Constraint {startPosition = ()}
-      Small -> pure $ Stage2.Small {startPosition = (), unsupported = Placeholder}
-      Large -> pure $ Stage2.Large {startPosition = (), unsupported = Placeholder}
-      Universe -> pure $ Stage2.Universe {startPosition = (), unsupported = Placeholder}
+      Small -> pure $ Stage2.Small {startPosition = (), unsupported = Refl}
+      Large -> pure $ Stage2.Large {startPosition = (), unsupported = Refl}
+      Universe -> pure $ Stage2.Universe {startPosition = (), unsupported = Refl}
       Levity -> pure $ Stage2.Levity {startPosition = ()}

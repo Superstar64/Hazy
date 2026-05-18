@@ -8,7 +8,7 @@ import Stage2.FreeVariables (FreeTypeVariables (..))
 import Stage2.Resolve.Context (Context)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage2.Stage (Check, Exclusive, Resolve)
+import Stage2.Stage (Check, IsResolve, Resolve)
 import Stage2.Tree.Scheme (Scheme)
 import qualified Stage2.Tree.Scheme as Scheme
 import Stage2.Tree.StrictnessAnnotation (StrictnessAnnotation (..))
@@ -53,7 +53,7 @@ instance (Show position) => Show (Restricted position stage scope) where
     Canonical scheme -> showParen (d > 10) $ showString "Canonical " . showsPrec 11 scheme
     Restricted typex -> showParen (d > 10) $ showString "Restricted " . showsPrec 11 typex
 
-instance (Eq position, Exclusive stage) => Eq (Restricted position stage scope) where
+instance (Eq position, IsResolve stage) => Eq (Restricted position stage scope) where
   Canonical scheme1 == Canonical scheme2 = scheme1 == scheme2
   Restricted type1 == Restricted type2 = type1 == type2
 
