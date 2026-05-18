@@ -2,6 +2,7 @@ module Stage4.Tree.Instanciation (Instanciation (..), null, empty) where
 
 import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
+import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift (..), shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage4.Shift as Shift2
@@ -14,6 +15,9 @@ newtype Instanciation scope = Instanciation
   { runInstanciation :: Strict.Vector (Evidence scope)
   }
   deriving (Show)
+
+instance Scope.Show Instanciation where
+  showsPrec = showsPrec
 
 instance Shift Instanciation where
   shift = shiftDefault

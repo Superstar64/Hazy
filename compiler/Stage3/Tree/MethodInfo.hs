@@ -2,6 +2,7 @@ module Stage3.Tree.MethodInfo where
 
 import Data.Kind (Type)
 import Stage2.Scope (Environment)
+import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage4.Shift as Shift2
@@ -12,6 +13,9 @@ newtype MethodInfo scope = MethodInfo
   { constraintCount :: Int
   }
   deriving (Show)
+
+instance Scope.Show MethodInfo where
+  showsPrec = showsPrec
 
 instance Shift MethodInfo where
   shift = shiftDefault

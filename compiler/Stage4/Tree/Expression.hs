@@ -17,8 +17,10 @@ import Stage2.Scope (Environment ((:+)))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Check, Equal (..), IsCheck (..))
+import qualified Stage2.Tree.CallHead as Stage3 (CallHead (..))
+import Stage2.Tree.Combinators.Inferred (Inferred (..))
 import qualified Stage3.Index.Evidence as Index.Evidence
-import qualified Stage3.Tree.CallHead as Stage3 (CallHead (..))
 import qualified Stage3.Tree.ConstructorInfo as Stage3 (ConstructorInfo (ConstructorInfo))
 import qualified Stage3.Tree.ConstructorInfo as Stage3.ConstructorInfo
 import qualified Stage3.Tree.Definition as Stage3 (Definition)
@@ -333,25 +335,30 @@ class Simplify source where
 instance Simplify Stage3.Expression where
   simplify expression = simplifyWith expression []
 
-instance Simplify Stage3.CallHead where
-  simplify = \case
-    Stage3.Variable {variable, instanciation} ->
+instance (IsCheck stage) => Simplify (Stage3.CallHead stage) where
+  simplify | Refl <- isCheck :: Equal Check stage = \case
+    Stage3.Variable {variable, instanciation = Solved instanciation} ->
       Variable
         { variable = Term.from variable,
           instanciation
         }
-    Stage3.Selector {selector, selectorInfo} ->
+    Stage3.Selector {selector, selectorInfo = Solved selectorInfo} ->
       Lambda
         { body = simplifySelector (shift selector) (shift selectorInfo) lambdaVariable
         }
-    Stage3.Method {method, evidence, instanciation, methodInfo} ->
-      Method
-        { method,
-          evidence,
-          instanciation,
-          methodInfo
-        }
-    Stage3.Constructor {constructor, constructorInfo} ->
+    Stage3.Method
+      { method,
+        evidence = Solved evidence,
+        instanciation = Solved instanciation,
+        methodInfo = Solved methodInfo
+      } ->
+        Method
+          { method,
+            evidence,
+            instanciation,
+            methodInfo
+          }
+    Stage3.Constructor {constructor, constructorInfo = Solved constructorInfo} ->
       simplifyConstructor constructor constructorInfo 0 Reverse.Nil
 
 instance Simplify Stage3.Definition where
@@ -484,8 +491,12 @@ simplifyWith ::
   Expression scope
 simplifyWith Stage3.Call {function, argument} arguments =
   simplifyWith function (simplify argument : arguments)
-simplifyWith Stage3.CallHead {callHead = Stage3.Constructor {constructor, constructorInfo}} arguments =
-  simplifyConstructor constructor constructorInfo (length arguments) (Reverse.fromList arguments)
+simplifyWith
+  Stage3.CallHead
+    { callHead = Stage3.Constructor {constructor, constructorInfo = Solved constructorInfo}
+    }
+  arguments =
+    simplifyConstructor constructor constructorInfo (length arguments) (Reverse.fromList arguments)
 simplifyWith expression arguments@(_ : _) =
   foldl Call (simplify expression) arguments
 simplifyWith expression [] = case expression of

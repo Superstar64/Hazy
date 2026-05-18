@@ -10,95 +10,122 @@ import qualified Stage2.Index.Term as Term
 import qualified Stage2.Index.Term2 as Term2
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Resolve)
+import Stage2.Tree.Combinators.Inferred (Inferred (Inferred))
+import Stage3.Tree.ConstructorInfo (ConstructorInfo)
+import Stage3.Tree.MethodInfo (MethodInfo)
+import Stage3.Tree.SelectorInfo (SelectorInfo)
+import qualified Stage4.Tree.Evidence as Simple (Evidence)
+import qualified Stage4.Tree.Instanciation as Simple (Instanciation)
 
-data CallHead scope
+data CallHead stage scope
   = Variable
       { variablePosition :: !Position,
-        variable :: !(Term.Index scope)
+        variable :: !(Term.Index scope),
+        instanciation :: !(Inferred Simple.Instanciation stage scope)
       }
   | Constructor
       { constructorPosition :: !Position,
-        constructor :: !(Constructor.Index scope)
+        constructor :: !(Constructor.Index scope),
+        constructorInfo :: !(Inferred ConstructorInfo stage scope)
       }
   | Selector
       { selectorPosition :: !Position,
-        selector :: !(Selector.Index scope)
+        selector :: !(Selector.Index scope),
+        selectorInfo :: !(Inferred SelectorInfo stage scope)
       }
   | Method
       { methodPosition :: !Position,
-        method :: !(Method.Index scope)
+        method :: !(Method.Index scope),
+        evidence :: !(Inferred Simple.Evidence stage scope),
+        instanciation :: !(Inferred Simple.Instanciation stage scope),
+        methodInfo :: !(Inferred MethodInfo stage scope)
       }
   deriving (Show)
 
-instance Shift CallHead where
+instance Shift (CallHead stage) where
   shift = shiftDefault
 
-instance Shift.Functor CallHead where
+instance Shift.Functor (CallHead stage) where
   map category = \case
-    Variable {variablePosition, variable} ->
+    Variable {variablePosition, variable, instanciation} ->
       Variable
         { variablePosition,
-          variable = Shift.map category variable
+          variable = Shift.map category variable,
+          instanciation = Shift.map category instanciation
         }
-    Constructor {constructorPosition, constructor} ->
+    Constructor {constructorPosition, constructor, constructorInfo} ->
       Constructor
         { constructorPosition,
-          constructor = Shift.map category constructor
+          constructor = Shift.map category constructor,
+          constructorInfo = Shift.map category constructorInfo
         }
-    Selector {selectorPosition, selector} ->
+    Selector {selectorPosition, selector, selectorInfo} ->
       Selector
         { selectorPosition,
-          selector = Shift.map category selector
+          selector = Shift.map category selector,
+          selectorInfo = Shift.map category selectorInfo
         }
-    Method {methodPosition, method} ->
+    Method {methodPosition, method, evidence, instanciation, methodInfo} ->
       Method
         { methodPosition,
-          method = Shift.map category method
+          method = Shift.map category method,
+          evidence = Shift.map category evidence,
+          instanciation = Shift.map category instanciation,
+          methodInfo = Shift.map category methodInfo
         }
 
-instance FreeTermVariables CallHead where
+instance FreeTermVariables (CallHead stage) where
   freeTermVariables target = \case
     Variable {variable} -> freeTermVariables target variable
     Constructor {} -> []
     Selector {} -> []
     Method {} -> []
 
-resolveVariable :: Position -> Term2.Index scope -> CallHead scope
+resolveVariable :: Position -> Term2.Index scope -> CallHead Resolve scope
 resolveVariable variablePosition@selectorPosition@methodPosition = \case
   Term2.Index variable ->
     Variable
       { variablePosition,
-        variable
+        variable,
+        instanciation = Inferred
       }
   Term2.Select selector ->
     Selector
       { selectorPosition,
-        selector
+        selector,
+        selectorInfo = Inferred
       }
   Term2.Method method ->
     Method
       { methodPosition,
-        method
+        method,
+        evidence = Inferred,
+        instanciation = Inferred,
+        methodInfo = Inferred
       }
   Term2.RunST -> badRunSTCall variablePosition
 
-resolveConstructor :: Position -> Constructor.Index scope -> CallHead scope
+resolveConstructor :: Position -> Constructor.Index scope -> CallHead Resolve scope
 resolveConstructor constructorPosition constructor =
   Constructor
     { constructorPosition,
-      constructor
+      constructor,
+      constructorInfo = Inferred
     }
 
-resolveTupling :: Position -> Int -> CallHead scope
+resolveTupling :: Position -> Int -> CallHead Resolve scope
 resolveTupling constructorPosition count =
   Constructor
     { constructorPosition,
-      constructor = Constructor.tuple count
+      constructor = Constructor.tuple count,
+      constructorInfo = Inferred
     }
 
-resolveCons :: Position -> CallHead scope
+resolveCons :: Position -> CallHead Resolve scope
 resolveCons constructorPosition =
   Constructor
     { constructorPosition,
-      constructor = Constructor.cons
+      constructor = Constructor.cons,
+      constructorInfo = Inferred
     }

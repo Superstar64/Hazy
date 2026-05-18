@@ -68,7 +68,7 @@ import Prelude hiding (Bool (False, True), Either (Left, Right))
 
 data Expression layout scope
   = CallHead
-      { callHead :: !(CallHead scope)
+      { callHead :: !(CallHead Resolve scope)
       }
   | Integer
       { startPosition :: !Position,
@@ -144,7 +144,7 @@ data Expression layout scope
       }
   | RightSection
       { operatorPosition :: !Position,
-        left :: !(CallHead scope),
+        left :: !(CallHead Resolve scope),
         right :: !(Expression layout scope)
       }
   | Annotation
@@ -415,7 +415,7 @@ instance Connect Expression where
           imperative = connect imperative
         }
 
-callHead_ :: CallHead scope -> Expression Normal scope
+callHead_ :: CallHead Resolve scope -> Expression Normal scope
 callHead_ callHead = CallHead {callHead}
 
 resolveTerm2 ::

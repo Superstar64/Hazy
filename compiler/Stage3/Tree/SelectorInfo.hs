@@ -2,6 +2,7 @@ module Stage3.Tree.SelectorInfo where
 
 import qualified Data.Strict.Maybe as Strict (Maybe)
 import qualified Data.Vector.Strict as Strict (Vector)
+import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift (..), shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage3.Tree.ConstructorInfo (ConstructorInfo)
@@ -16,6 +17,9 @@ data SelectorInfo scope
       { select :: !(Strict.Vector (Select scope))
       }
   deriving (Show)
+
+instance Scope.Show SelectorInfo where
+  showsPrec = showsPrec
 
 data Select scope
   = Select

@@ -9,9 +9,9 @@ import qualified Stage2.Index.Constructor as Constructor
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Stage (Check)
+import Stage2.Tree.CallHead (CallHead)
 import Stage2.Tree.Pattern (Pattern)
 import Stage3.Tree.Alternative (Alternative)
-import Stage3.Tree.CallHead (CallHead)
 import Stage3.Tree.ConstructorInfo (ConstructorInfo)
 import Stage3.Tree.Declarations (Declarations)
 import Stage3.Tree.Do (Do)
@@ -26,7 +26,7 @@ import Prelude hiding (Bool (False, True))
 
 data Expression scope
   = CallHead
-      { callHead :: !(CallHead scope)
+      { callHead :: !(CallHead Check scope)
       }
   | Record
       { constructor :: !(Constructor.Index scope),
@@ -81,7 +81,7 @@ data Expression scope
         instanciation :: !(Simple.Instanciation scope)
       }
   | RightSection
-      { left :: !(CallHead scope),
+      { left :: !(CallHead Check scope),
         right :: !(Expression scope)
       }
   deriving (Show)

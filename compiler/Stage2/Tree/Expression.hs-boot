@@ -12,6 +12,7 @@ import Stage2.Resolve.Context (Context)
 import Stage2.Scope (Environment)
 import Stage2.Shift (Shift)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Resolve)
 import Stage2.Tree.CallHead (CallHead)
 
 type Expression :: Layout -> Environment -> Type
@@ -30,5 +31,5 @@ instance FreeTermVariables (Expression layout)
 
 instance Connect Expression
 
-callHead_ :: CallHead scope -> Expression Normal scope
+callHead_ :: CallHead Resolve scope -> Expression Normal scope
 resolve :: Context scope -> Stage1.Expression Position -> Expression Normal scope
