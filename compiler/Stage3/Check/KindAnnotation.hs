@@ -1,17 +1,19 @@
 module Stage3.Check.KindAnnotation where
 
 import Control.Monad.ST (ST)
-import qualified Data.Strict.Maybe as Strict
+import qualified Data.Strict.Maybe as Strict (Maybe (..))
+import qualified Data.Vector.Strict as Strict (Vector)
 import Stage1.Position (Position)
 import Stage2.Layout (Normal)
 import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (shift)
 import Stage2.Stage (Check)
-import qualified Stage2.Tree.Type as Solved
+import qualified Stage2.Tree.Type as Solved (Type)
 import qualified Stage2.Tree.TypeDeclaration as Stage2 (TypeDeclaration (..))
 import qualified Stage2.Tree.TypeDefinition as Stage2 (TypeDefinition (Synonym, parameters, synonym))
 import qualified Stage2.Tree.TypeDefinition2 as Stage2 (Annotation (..), TypeDefinition2 (..))
 import qualified Stage2.Tree.TypePattern
+import qualified Stage2.Tree.TypePattern as Solved (TypePattern)
 import qualified Stage2.Tree.TypePattern as Stage2 (TypePattern (TypePattern))
 import Stage3.Check.Context (Context)
 import qualified Stage3.Simple.Type as Simple (lift)
@@ -32,8 +34,8 @@ data KindAnnotation scope
   | Synonym
       { annotation' :: !(Strict.Maybe (Solved.Type Position Check scope)),
         kind :: !(Simple.Type scope),
-        definition :: !(Solved.Type Position Check (Local ':+ scope)),
-        definition' :: !(Simple.Type (Local ':+ scope))
+        parameters :: !(Strict.Vector (Solved.TypePattern Position Check scope)),
+        synonym :: !(Solved.Type Position Check (Local ':+ scope))
       }
 
 check :: Context s scope -> Stage2.TypeDeclaration locality Normal scope -> ST s (KindAnnotation scope)
@@ -60,11 +62,11 @@ check context Stage2.TypeDeclaration {position, definition = annotation Stage2.:
             annotation <- Type.solve context annotation
             Unify.unify context position kind (Simple.lift $ Simple.simplify annotation)
         context <- pure $ Unsolved.Scheme.augment parameters context
-        definition <- Unsolved.Type.check context (shift target) synonym
+        synonym <- Unsolved.Type.check context (shift target) synonym
         kind <- Unify.solve position kind
-        definition <- Unsolved.Type.solve context definition
-        let definition' = Simple.simplify definition
-        pure Synonym {annotation' = Strict.Nothing, kind, definition, definition'}
+        parameters <- traverse Unsolved.TypePattern.solve parameters
+        synonym <- Unsolved.Type.solve context synonym
+        pure Synonym {annotation' = Strict.Nothing, kind, parameters, synonym}
 check context Stage2.TypeDeclaration {definition} = case definition of
   Stage2.Inferred Stage2.::: _ -> pure Inferred
   Stage2.Annotated annotation Stage2.::: _ -> do

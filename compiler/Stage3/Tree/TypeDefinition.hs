@@ -12,7 +12,6 @@ import Stage2.Tree.Method (Method)
 import Stage2.Tree.Selector (Selector)
 import Stage2.Tree.Type (Type)
 import Stage2.Tree.TypePattern (TypePattern)
-import qualified Stage4.Tree.Type as Simple (Type)
 
 data TypeDefinition scope
   = ADT
@@ -27,7 +26,7 @@ data TypeDefinition scope
         methods :: !(Strict.Vector (Method Check (Scope.Local ':+ scope)))
       }
   | Synonym
-      { definition :: !(Type Position Check (Scope.Local ':+ scope)),
-        definition' :: !(Simple.Type (Scope.Local ':+ scope))
+      { parameters :: !(Strict.Vector (TypePattern Position Check scope)),
+        synonym :: !(Type Position Check (Scope.Local ':+ scope))
       }
   deriving (Show)

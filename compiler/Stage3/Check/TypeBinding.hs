@@ -23,6 +23,7 @@ import {-# SOURCE #-} Stage3.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 import {-# SOURCE #-} qualified Stage3.Unify as Unify
 import Stage4.Tree.Constraint (Constraint)
 import qualified Stage4.Tree.Type as Simple (Type)
+import qualified Stage4.Tree.Type as Simple.Type
 import {-# SOURCE #-} qualified Stage4.Tree.TypeDeclaration as Simple (TypeDeclaration, simplify')
 import {-# SOURCE #-} qualified Stage4.Tree.TypeDeclarationExtra as Simple (TypeDeclarationExtra)
 import {-# SOURCE #-} qualified Stage4.Tree.TypeDeclarationExtra as SimpleExtra (simplify)
@@ -119,7 +120,7 @@ bindingImpl
       synonym = do
         annotation <- meta
         case annotation of
-          KindAnnotation.Synonym {definition'} -> pure $ Strict.Just definition'
+          KindAnnotation.Synonym {synonym} -> pure $ Strict.Just (Simple.Type.simplify synonym)
           _ -> pure Strict.Nothing
 
 newtype Instance scope = Instance (Strict.Vector (Constraint scope))

@@ -42,30 +42,20 @@ check ::
   ST s (TypeDeclaration scope)
 check
   _
-  KindAnnotation.Synonym {kind, annotation', definition, definition'}
+  KindAnnotation.Synonym {kind, annotation', parameters, synonym}
   Stage2.TypeDeclaration {name} =
     case annotation' of
       Strict.Nothing ->
         pure
           TypeDeclaration
             { name,
-              definition =
-                Inferred {kind}
-                  ::: Synonym
-                    { definition,
-                      definition'
-                    }
+              definition = Inferred {kind} ::: Synonym {parameters, synonym}
             }
       Strict.Just annotation ->
         pure
           TypeDeclaration
             { name,
-              definition =
-                Annotated {kind, annotation}
-                  ::: Synonym
-                    { definition,
-                      definition'
-                    }
+              definition = Annotated {kind, annotation} ::: Synonym {parameters, synonym}
             }
 check
   context

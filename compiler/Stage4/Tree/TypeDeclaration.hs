@@ -21,6 +21,7 @@ import Stage4.Tree.Data (Data)
 import qualified Stage4.Tree.Data as Data
 import qualified Stage4.Tree.Scheme as Scheme
 import Stage4.Tree.Type (Type)
+import qualified Stage4.Tree.Type as Type
 
 data LazyTypeDeclaration scope = !ConstructorIdentifier :^ TypeDeclaration scope
   deriving (Show)
@@ -115,4 +116,4 @@ simplify' Solved.TypeDeclaration {name, definition = _ ::: definition} = case de
               methods = Scheme.simplify . Solved.Method.annotation <$> methods
             }
       }
-  Solved.Synonym {definition' = definition} -> Synonym {name, definition}
+  Solved.Synonym {synonym} -> Synonym {name, definition = Type.simplify synonym}
