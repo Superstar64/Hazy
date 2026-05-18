@@ -15,6 +15,7 @@ import Stage2.Scope (Environment ((:+)))
 import qualified Stage2.Scope as Scope (Declaration, Pattern)
 import Stage2.Shift (Shift (..), shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Resolve)
 import {-# SOURCE #-} Stage2.Tree.Declarations (Declarations)
 import {-# SOURCE #-} qualified Stage2.Tree.Declarations as Declarations
 import {-# SOURCE #-} Stage2.Tree.Expression (Expression)
@@ -33,7 +34,7 @@ data Statements layout scope
       }
   | Bind
       { startPosition :: !Position,
-        patternx :: !(Pattern scope),
+        patternx :: !(Pattern Resolve scope),
         effect :: !(Expression layout scope),
         thenx :: !(Statements layout (Scope.Pattern ':+ scope))
       }

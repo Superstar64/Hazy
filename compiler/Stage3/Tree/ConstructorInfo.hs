@@ -1,6 +1,7 @@
 module Stage3.Tree.ConstructorInfo where
 
 import qualified Data.Vector.Strict as Strict
+import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift (..), shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage3.Tree.EntryInfo (EntryInfo)
@@ -12,6 +13,9 @@ data ConstructorInfo scope
       }
   | Newtype
   deriving (Show)
+
+instance Scope.Show ConstructorInfo where
+  showsPrec = showsPrec
 
 entryCount :: ConstructorInfo scope -> Int
 entryCount ConstructorInfo {entries} = length entries

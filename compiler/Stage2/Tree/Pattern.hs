@@ -35,13 +35,17 @@ import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope (Pattern)
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Resolve)
 import {-# SOURCE #-} qualified Stage2.Temporary.PatternInfix as Infix (fix, resolve)
+import Stage2.Tree.Combinators.Inferred (Inferred (..))
 import Stage2.Tree.PatternField (Field (..))
 import qualified Stage2.Tree.PatternField as Field (neverFails, resolve)
+import Stage3.Tree.ConstructorInfo (ConstructorInfo)
+import qualified Stage4.Tree.Evidence as Simple
 import Prelude hiding (Bool (False, True), Either (Left, Right), head, tail)
 import qualified Prelude
 
-data Pattern scope
+data Pattern stage scope
   = Wildcard
       { names :: !(Map Variable Position)
       }
@@ -50,28 +54,34 @@ data Pattern scope
         names :: !(Map Variable Position),
         irrefutable :: !Prelude.Bool,
         constructor :: !(Constructor.Index scope),
-        patterns :: !(Strict.Vector (Pattern scope)),
-        single :: !Prelude.Bool
+        patterns :: !(Strict.Vector (Pattern stage scope)),
+        single :: !Prelude.Bool,
+        constructorInfo :: !(Inferred ConstructorInfo stage scope)
       }
   | Record
       { constructorPosition :: !Position,
         names :: !(Map Variable Position),
         irrefutable :: !Prelude.Bool,
         constructor :: !(Constructor.Index scope),
-        fields :: !(Strict.Vector (Field scope)),
-        single :: !Prelude.Bool
+        fields :: !(Strict.Vector (Field stage scope)),
+        single :: !Prelude.Bool,
+        constructorInfo :: !(Inferred ConstructorInfo stage scope)
       }
   | Integer
       { startPosition :: !Position,
         names :: !(Map Variable Position),
         irrefutable :: !Prelude.Bool,
-        integer :: !Integer
+        integer :: !Integer,
+        evidence :: !(Inferred Simple.Evidence stage scope),
+        equal :: !(Inferred Simple.Evidence stage scope)
       }
   | Float
       { startPosition :: !Position,
         names :: !(Map Variable Position),
         irrefutable :: !Prelude.Bool,
-        float :: !Rational
+        float :: !Rational,
+        evidence :: !(Inferred Simple.Evidence stage scope),
+        equal :: !(Inferred Simple.Evidence stage scope)
       }
   | Character
       { startPosition :: !Position,
@@ -89,37 +99,56 @@ data Pattern scope
       { startPosition :: !Position,
         names :: !(Map Variable Position),
         irrefutable :: !Prelude.Bool,
-        items :: !(Strict.Vector1 (Pattern scope))
+        items :: !(Strict.Vector1 (Pattern stage scope))
       }
   deriving (Show)
 
-instance Shift Pattern where
+instance Shift (Pattern stage) where
   shift = shiftDefault
 
-instance Shift.Functor Pattern where
+instance Shift.Functor (Pattern stage) where
   map category = \case
     Wildcard {names} -> Wildcard {names}
-    Constructor {names, irrefutable, constructorPosition, constructor, patterns, single} ->
+    Constructor {names, irrefutable, constructorPosition, constructor, patterns, single, constructorInfo} ->
       Constructor
         { names,
           irrefutable,
           constructorPosition,
           constructor = Shift.map category constructor,
           patterns = fmap (Shift.map category) patterns,
-          single
+          single,
+          constructorInfo = Shift.map category constructorInfo
         }
-    Record {names, irrefutable, constructorPosition, constructor, fields, single} ->
+    Record {names, irrefutable, constructorPosition, constructor, fields, single, constructorInfo} ->
       Record
         { names,
           irrefutable,
           constructorPosition,
           constructor = Shift.map category constructor,
           fields = fmap (Shift.map category) fields,
-          single
+          single,
+          constructorInfo = Shift.map category constructorInfo
         }
-    Integer {names, irrefutable, startPosition, integer} -> Integer {names, irrefutable, startPosition, integer}
-    Float {names, irrefutable, startPosition, float} -> Float {names, irrefutable, startPosition, float}
-    Character {names, irrefutable, startPosition, character} -> Character {names, irrefutable, startPosition, character}
+    Integer {names, irrefutable, startPosition, integer, evidence, equal} ->
+      Integer
+        { names,
+          irrefutable,
+          startPosition,
+          integer,
+          evidence = Shift.map category evidence,
+          equal = Shift.map category equal
+        }
+    Float {names, irrefutable, startPosition, float, evidence, equal} ->
+      Float
+        { names,
+          irrefutable,
+          startPosition,
+          float,
+          evidence = Shift.map category evidence,
+          equal = Shift.map category equal
+        }
+    Character {names, irrefutable, startPosition, character} ->
+      Character {names, irrefutable, startPosition, character}
     String {names, irrefutable, startPosition, string} ->
       String
         { names,
@@ -135,29 +164,31 @@ instance Shift.Functor Pattern where
           items = fmap (Shift.map category) items
         }
 
-lazy :: Pattern scope -> Pattern scope
+lazy :: Pattern stage scope -> Pattern stage scope
 lazy = \case
   Wildcard {names} -> Wildcard {names}
-  Constructor {names, constructorPosition, constructor, patterns, single} ->
-    Constructor {names, irrefutable, constructorPosition, constructor, patterns, single}
-  Record {names, constructorPosition, constructor, fields, single} ->
-    Record {names, irrefutable, constructorPosition, constructor, fields, single}
-  Integer {names, startPosition, integer} -> Integer {names, irrefutable, startPosition, integer}
-  Float {names, startPosition, float} -> Float {names, irrefutable, startPosition, float}
+  Constructor {names, constructorPosition, constructor, patterns, single, constructorInfo} ->
+    Constructor {names, irrefutable, constructorPosition, constructor, patterns, single, constructorInfo}
+  Record {names, constructorPosition, constructor, fields, single, constructorInfo} ->
+    Record {names, irrefutable, constructorPosition, constructor, fields, single, constructorInfo}
+  Integer {names, startPosition, integer, evidence, equal} ->
+    Integer {names, irrefutable, startPosition, integer, evidence, equal}
+  Float {names, startPosition, float, evidence, equal} ->
+    Float {names, irrefutable, startPosition, float, evidence, equal}
   Character {names, startPosition, character} -> Character {names, irrefutable, startPosition, character}
   String {names, startPosition, string} -> String {names, irrefutable, startPosition, string}
   List {names, startPosition, items} -> List {names, irrefutable, startPosition, items}
   where
     irrefutable = Prelude.True
 
-augment :: Pattern scope' -> Context scope -> Context (Scope.Pattern ':+ scope)
+augment :: Pattern Resolve scope' -> Context scope -> Context (Scope.Pattern ':+ scope)
 augment patternx context
   | context@Context {locals} <- shift context =
       context
         { locals = bindings patternx </> locals
         }
 
-bindings :: (Monoid stability) => Pattern scope' -> Bindings.Bindings stability (Scope.Pattern ':+ scope)
+bindings :: (Monoid stability) => Pattern Resolve scope' -> Bindings.Bindings stability (Scope.Pattern ':+ scope)
 bindings patternx =
   Bindings.Bindings
     { terms = Map.map termIndex (selections patternx),
@@ -174,7 +205,7 @@ bindings patternx =
           selector = Term.Normal
         }
 
-selections :: Pattern scope -> Map Variable (Marked Term.Bound Position)
+selections :: Pattern Resolve scope -> Map Variable (Marked Term.Bound Position)
 selections patternx = Map.map single (selections patternx)
   where
     single = \case
@@ -182,14 +213,14 @@ selections patternx = Map.map single (selections patternx)
       [(position, patternx)] -> position :@ patternx
       patterns -> duplicateVariableEntries (map fst patterns)
 
-    selections :: Pattern scope -> Map Variable [(Position, Term.Bound)]
+    selections :: Pattern Resolve scope -> Map Variable [(Position, Term.Bound)]
     selections patternx = Map.unionWith (++) outer inner
       where
         outer = Map.map (\position -> [(position, Term.At)]) (names patternx)
-        select :: [Pattern scope] -> Map Variable [(Position, Term.Bound)]
+        select :: [Pattern Resolve scope] -> Map Variable [(Position, Term.Bound)]
         select patterns = foldr (Map.unionWith (++)) Map.empty $ zipWith pick patterns [0 ..]
           where
-            pick :: Pattern scope -> Int -> Map Variable [(Position, Term.Bound)]
+            pick :: Pattern Resolve scope -> Int -> Map Variable [(Position, Term.Bound)]
             pick patternx i = (Map.map . map) (\(position, x) -> (position, Term.Select i x)) (selections patternx)
         inner = case patternx of
           Wildcard {} -> select []
@@ -201,7 +232,7 @@ selections patternx = Map.map single (selections patternx)
           String {} -> select []
           List {items} -> select (toList items)
 
-neverFails :: Pattern scope -> Prelude.Bool
+neverFails :: Pattern stage scope -> Prelude.Bool
 neverFails = \case
   Wildcard {} -> Prelude.True
   patternx | irrefutable patternx -> Prelude.True
@@ -213,7 +244,7 @@ neverFails = \case
   String {} -> Prelude.False
   List {} -> Prelude.False
 
-resolve :: Context scope -> Stage1.Pattern Position -> Pattern scope
+resolve :: Context scope -> Stage1.Pattern Position -> Pattern Resolve scope
 resolve context = \case
   Stage1.Variable {variable = position :@ name} -> variable position name
   Stage1.At {variable = position :@ variable, patternx} ->
@@ -251,7 +282,8 @@ resolve context = \case
             constructorPosition = startPosition,
             constructor,
             patterns = fmap (resolve context) patterns,
-            single
+            single,
+            constructorInfo = Inferred
           }
   Stage1.Record {startPosition, constructor, fields} ->
     case context != startPosition :@ constructor of
@@ -265,21 +297,26 @@ resolve context = \case
               constructorPosition = startPosition,
               constructor,
               fields = fmap (Field.resolve context binding) fields,
-              single
+              single,
+              constructorInfo = Inferred
             }
   Stage1.Integer {startPosition, integer} ->
     Integer
       { names = Map.empty,
         irrefutable = Prelude.False,
         startPosition,
-        integer
+        integer,
+        evidence = Inferred,
+        equal = Inferred
       }
   Stage1.Float {startPosition, float} ->
     Float
       { names = Map.empty,
         irrefutable = Prelude.False,
         startPosition,
-        float
+        float,
+        evidence = Inferred,
+        equal = Inferred
       }
   Stage1.Character {startPosition, character} ->
     Character
@@ -302,7 +339,8 @@ resolve context = \case
         constructorPosition = startPosition,
         constructor = Constructor.tuple 0,
         patterns = Strict.Vector.empty,
-        single = Prelude.True
+        single = Prelude.True,
+        constructorInfo = Inferred
       }
   Stage1.Tuple {startPosition, elements} ->
     Constructor
@@ -311,7 +349,8 @@ resolve context = \case
         constructorPosition = startPosition,
         constructor = Constructor.tuple (length elements),
         patterns = resolve context <$> Strict.Vector2.toVector elements,
-        single = Prelude.True
+        single = Prelude.True,
+        constructorInfo = Inferred
       }
   Stage1.List {startPosition, items}
     | null items ->
@@ -321,7 +360,8 @@ resolve context = \case
             constructorPosition = startPosition,
             constructor = Constructor.nil,
             patterns = Strict.Vector.empty,
-            single = Prelude.False
+            single = Prelude.False,
+            constructorInfo = Inferred
           }
     | otherwise ->
         List
@@ -337,8 +377,9 @@ resolve context = \case
         constructorPosition = startPosition,
         constructor = Constructor.cons,
         patterns = Strict.Vector.fromList [resolve context head, resolve context tail],
-        single = Prelude.False
+        single = Prelude.False,
+        constructorInfo = Inferred
       }
 
-variable :: Position -> Variable -> Pattern scope
+variable :: Position -> Variable -> Pattern stage scope
 variable position name = Wildcard {names = Map.singleton name position}

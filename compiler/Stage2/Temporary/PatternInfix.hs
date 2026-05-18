@@ -9,8 +9,10 @@ import qualified Stage1.Tree.PatternInfix as Stage1 (Infix (..))
 import qualified Stage2.Index.Constructor as Constructor (cons)
 import qualified Stage2.Resolve.Binding.Constructor as Constructor (Binding (..))
 import Stage2.Resolve.Context (Context (..), (!=~))
+import Stage2.Stage (Resolve)
 import Stage2.Temporary.Infix (Infix (..))
 import qualified Stage2.Temporary.Infix as Infix
+import Stage2.Tree.Combinators.Inferred (Inferred (..))
 import Stage2.Tree.Pattern (Pattern ())
 import qualified Stage2.Tree.Pattern as Pattern
 import Prelude hiding (Either (Left, Right))
@@ -19,7 +21,7 @@ data Index scope
   = Constructor !Position !(Constructor.Binding scope)
   | Cons !Position
 
-resolve :: Context scope -> Stage1.Infix Position -> Infix (Index scope) (Pattern scope)
+resolve :: Context scope -> Stage1.Infix Position -> Infix (Index scope) (Pattern Resolve scope)
 resolve context = \case
   Stage1.Pattern {patternx} -> Single (Pattern.resolve context patternx)
   Stage1.Infix {left, operator, operatorPosition, right} ->
@@ -30,7 +32,7 @@ resolve context = \case
   Stage1.InfixCons {left, operatorPosition, right} ->
     Infix (Pattern.resolve context left) (Cons operatorPosition) (resolve context right)
 
-fixWith :: Maybe Associativity -> Int -> Infix (Index scope) (Pattern scope) -> Pattern scope
+fixWith :: Maybe Associativity -> Int -> Infix (Index scope) (Pattern Resolve scope) -> Pattern Resolve scope
 fixWith = Infix.fixWith position fixity operators
   where
     position = \case
@@ -47,7 +49,8 @@ fixWith = Infix.fixWith position fixity operators
             constructorPosition = position,
             constructor = index,
             patterns = Strict.Vector.fromList [pattern1, pattern2],
-            single
+            single,
+            constructorInfo = Inferred
           }
       Cons constructorPosition ->
         Pattern.Constructor
@@ -56,8 +59,9 @@ fixWith = Infix.fixWith position fixity operators
             constructorPosition,
             constructor = Constructor.cons,
             patterns = Strict.Vector.fromList [pattern1, pattern2],
-            single = False
+            single = False,
+            constructorInfo = Inferred
           }
 
-fix :: Infix (Index scope) (Pattern scope) -> Pattern scope
+fix :: Infix (Index scope) (Pattern Resolve scope) -> Pattern Resolve scope
 fix = fixWith Nothing 0

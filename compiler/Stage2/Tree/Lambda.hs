@@ -15,6 +15,7 @@ import Stage2.Scope (Environment ((:+)))
 import qualified Stage2.Scope as Scope (Pattern)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Resolve)
 import {-# SOURCE #-} Stage2.Tree.Expression (Expression)
 import {-# SOURCE #-} qualified Stage2.Tree.Expression as Expression (resolve)
 import Stage2.Tree.Pattern (Pattern)
@@ -26,7 +27,7 @@ data Lambda layout scope
       }
   | Bound
       { boundPosition :: !Position,
-        parameter :: !(Pattern scope),
+        parameter :: !(Pattern Resolve scope),
         body :: !(Lambda layout (Scope.Pattern ':+ scope))
       }
   deriving (Show)

@@ -3,9 +3,10 @@ module Stage3.Tree.Definition2 where
 import Stage2.Index.Term (Bound)
 import qualified Stage2.Index.Term as Term
 import qualified Stage2.Scope as Scope (Show (..))
+import Stage2.Stage (Check)
 import Stage2.Tree.Definition2 (Inferred, Share, Single)
+import Stage2.Tree.Pattern (Pattern)
 import Stage3.Tree.Definition (Definition)
-import Stage3.Tree.Pattern (Pattern)
 import Stage3.Tree.RightHandSide (RightHandSide)
 import qualified Stage4.Tree.Instanciation as Simple (Instanciation)
 import qualified Stage4.Tree.Type as Simple (Type)
@@ -49,7 +50,7 @@ instance Scope.Show (Definition2 mark source) where
 data Choice scope = Choice
   { index :: !(Term.Index scope),
     instanciation :: !(Simple.Instanciation scope),
-    patternx :: !(Pattern scope),
+    patternx :: !(Pattern Check scope),
     bound :: !Bound
   }
   deriving (Show)

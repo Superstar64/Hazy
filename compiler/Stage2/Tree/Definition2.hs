@@ -10,6 +10,7 @@ import Stage2.Layout (Layout)
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Resolve)
 import Stage2.Tree.Definition (Definition)
 import Stage2.Tree.Pattern (Pattern)
 import Stage2.Tree.RightHandSide (RightHandSide)
@@ -78,7 +79,7 @@ data Choice scope = Choice
   { position :: !Position,
     index :: !(Term.Index scope),
     bound :: !Term.Bound,
-    patternx :: Pattern scope
+    patternx :: Pattern Resolve scope
   }
   deriving (Show)
 

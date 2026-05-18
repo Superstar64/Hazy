@@ -3,6 +3,7 @@ module Stage4.Tree.Evidence (Evidence (..)) where
 import qualified Data.Vector as Vector
 import qualified Stage2.Index.Type as Type
 import qualified Stage2.Index.Type2 as Type2
+import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Index.Evidence as Evidence
@@ -23,6 +24,9 @@ data Evidence scope
         index :: !Int
       }
   deriving (Show)
+
+instance Scope.Show Evidence where
+  showsPrec = showsPrec
 
 instance Shift Evidence where
   shift = shiftDefault

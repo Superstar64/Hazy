@@ -135,7 +135,7 @@ data Expression layout scope
       }
   | Lambda
       { startPosition :: !Position,
-        parameter :: !(Pattern scope),
+        parameter :: !(Pattern Resolve scope),
         body :: !(Lambda layout (Scope.Pattern ':+ scope))
       }
   | LambdaCase

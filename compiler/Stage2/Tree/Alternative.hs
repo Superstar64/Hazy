@@ -11,6 +11,7 @@ import Stage2.Scope (Environment ((:+)))
 import qualified Stage2.Scope as Scope (Pattern)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Resolve)
 import Stage2.Tree.Pattern (Pattern)
 import qualified Stage2.Tree.Pattern as Pattern (augment, resolve)
 import Stage2.Tree.RightHandSide (RightHandSide)
@@ -18,7 +19,7 @@ import qualified Stage2.Tree.RightHandSide as RightHandSide (resolve)
 
 data Alternative layout scope
   = Alternative
-  { parameter :: !(Pattern scope),
+  { parameter :: !(Pattern Resolve scope),
     rightHandSide :: !(RightHandSide layout (Scope.Pattern ':+ scope))
   }
   deriving (Show)

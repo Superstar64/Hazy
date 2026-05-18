@@ -10,18 +10,19 @@ import Stage2.Resolve.Context (Context)
 import Stage2.Scope (Environment)
 import Stage2.Shift (Shift)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Resolve, Stage)
 
-type role Pattern nominal
+type role Pattern nominal nominal
 
-type Pattern :: Environment -> Type
-data Pattern scope
+type Pattern :: Stage -> Environment -> Type
+data Pattern stage scope
 
-instance Show (Pattern scope)
+instance Show (Pattern stage scope)
 
-instance Shift Pattern
+instance Shift (Pattern stage)
 
-instance Shift.Functor Pattern
+instance Shift.Functor (Pattern stage)
 
-variable :: Position -> Variable -> Pattern scope
-neverFails :: Pattern scope -> Bool
-resolve :: Context scope -> Stage1.Pattern Position -> Pattern scope
+variable :: Position -> Variable -> Pattern stage scope
+neverFails :: Pattern stage scope -> Bool
+resolve :: Context scope -> Stage1.Pattern Position -> Pattern Resolve scope

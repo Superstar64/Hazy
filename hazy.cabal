@@ -390,8 +390,6 @@ executable hazy
     Stage3.Tree.Lambda
     Stage3.Tree.MethodInfo
     Stage3.Tree.Module
-    Stage3.Tree.Pattern
-    Stage3.Tree.PatternField
     Stage3.Tree.RightHandSide
     Stage3.Tree.Scheme
     Stage3.Tree.SelectorInfo

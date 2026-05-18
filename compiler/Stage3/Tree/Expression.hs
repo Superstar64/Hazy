@@ -9,6 +9,7 @@ import qualified Stage2.Index.Constructor as Constructor
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Stage (Check)
+import Stage2.Tree.Pattern (Pattern)
 import Stage3.Tree.Alternative (Alternative)
 import Stage3.Tree.CallHead (CallHead)
 import Stage3.Tree.ConstructorInfo (ConstructorInfo)
@@ -16,7 +17,6 @@ import Stage3.Tree.Declarations (Declarations)
 import Stage3.Tree.Do (Do)
 import Stage3.Tree.ExpressionField (Field)
 import Stage3.Tree.Lambda (Lambda)
-import Stage3.Tree.Pattern (Pattern)
 import Stage3.Tree.RightHandSide (RightHandSide)
 import Stage3.Tree.Scheme (Scheme)
 import qualified Stage4.Tree.Evidence as Simple (Evidence)
@@ -61,7 +61,7 @@ data Expression scope
         cases :: !(Strict.Vector (Alternative scope))
       }
   | Lambda
-      { parameter :: !(Pattern scope),
+      { parameter :: !(Pattern Check scope),
         body :: !(Lambda (Scope.Pattern ':+ scope))
       }
   | LambdaCase

@@ -6,9 +6,11 @@ import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Stage2.Index.Constructor as Constructor
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Check)
+import Stage2.Tree.Combinators.Inferred (Inferred (..))
+import qualified Stage2.Tree.Pattern as Stage3
+import qualified Stage2.Tree.PatternField as Stage3.Field
 import Stage3.Tree.ConstructorInfo (ConstructorInfo)
-import qualified Stage3.Tree.Pattern as Stage3
-import qualified Stage3.Tree.PatternField as Stage3.Field
 import qualified Stage4.Shift as Shift2
 import Stage4.Tree.Evidence (Evidence)
 
@@ -112,19 +114,19 @@ instance Shift2.Functor Field where
 data Field scope = Field !Int !(Pattern scope)
   deriving (Show)
 
-simplify :: Stage3.Pattern scope -> Pattern scope
+simplify :: Stage3.Pattern Check scope -> Pattern scope
 simplify = \case
   Stage3.Wildcard {} -> Wildcard
   patternx ->
     Match
       { match = case patternx of
-          Stage3.Constructor {constructor, patterns, constructorInfo} ->
+          Stage3.Constructor {constructor, patterns, constructorInfo = Solved constructorInfo} ->
             Constructor
               { constructor,
                 patterns = simplify <$> patterns,
                 constructorInfo
               }
-          Stage3.Record {constructor, fields, constructorInfo} ->
+          Stage3.Record {constructor, fields, constructorInfo = Solved constructorInfo} ->
             Record
               { constructor,
                 fields = resolveField <$> fields,
@@ -134,13 +136,13 @@ simplify = \case
             List
               { items = simplify <$> items
               }
-          Stage3.Integer {integer, evidence, equal} ->
+          Stage3.Integer {integer, evidence = Solved evidence, equal = Solved equal} ->
             Integer
               { integer,
                 evidence,
                 equal
               }
-          Stage3.Float {float, evidence, equal} ->
+          Stage3.Float {float, evidence = Solved evidence, equal = Solved equal} ->
             Float
               { float,
                 evidence,
@@ -151,5 +153,5 @@ simplify = \case
         irrefutable = Stage3.irrefutable patternx
       }
 
-resolveField :: Stage3.Field.Field scope -> Field scope
+resolveField :: Stage3.Field.Field Check scope -> Field scope
 resolveField (Stage3.Field.Field index patternx) = Field index (simplify patternx)

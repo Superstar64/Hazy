@@ -4,12 +4,13 @@ import Control.Monad.ST (ST)
 import qualified Stage2.Index.Table.Term as Term
 import Stage2.Index.Term (Bound)
 import Stage2.Scope (Environment ((:+)))
+import Stage2.Stage (Check, Resolve)
+import qualified Stage2.Tree.PatternField as Solved
 import qualified Stage2.Tree.PatternField as Stage2
 import Stage3.Check.Context (Context)
 import Stage3.Check.TermBinding (TermBinding)
 import {-# SOURCE #-} Stage3.Temporary.Pattern (Pattern)
 import {-# SOURCE #-} qualified Stage3.Temporary.Pattern as Pattern
-import qualified Stage3.Tree.PatternField as Solved
 import qualified Stage3.Unify as Unify
 
 data Field s scope = Field
@@ -28,7 +29,7 @@ Field {patternx} ! bound = patternx Pattern.! bound
 augmentField :: Field s scopes -> Term.Bound (TermBinding s) (scope ':+ scopes)
 augmentField Field {patternx} = Pattern.augmentPattern patternx
 
-check :: Context s scope -> (Int -> Unify.Type s scope) -> Stage2.Field scope -> ST s (Field s scope)
+check :: Context s scope -> (Int -> Unify.Type s scope) -> Stage2.Field Resolve scope -> ST s (Field s scope)
 check context lookup Stage2.Field {index, patternx} = do
   patternx <- Pattern.check context (lookup index) patternx
   pure
@@ -37,7 +38,7 @@ check context lookup Stage2.Field {index, patternx} = do
         patternx
       }
 
-solve :: Field s scope -> ST s (Solved.Field scope)
+solve :: Field s scope -> ST s (Solved.Field Check scope)
 solve Field {index, patternx} = do
   patternx <- Pattern.solve patternx
   pure $ Solved.Field index patternx
