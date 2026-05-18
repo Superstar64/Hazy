@@ -20,6 +20,7 @@ import qualified Stage2.Index.Type3 as Type3
 import Stage2.Layout (Normal)
 import qualified Stage2.Resolve.Binding.Type as Type (Binding (..))
 import Stage2.Scope (Environment ((:+)), Local)
+import Stage2.Stage (Equal (..))
 import Stage2.Temporary.Complete.Constructor (Constructor (Constructor))
 import qualified Stage2.Temporary.Complete.Constructor as Constructor
 import Stage2.Temporary.Complete.GADTConstructor (GADTConstructor (GADTConstructor))
@@ -152,7 +153,13 @@ merge entries@(entry :| _) =
                       constructorNames,
                       definition =
                         Real.Inferred
-                          Real.::: Real.GADT {position, parameters, brand, gadtConstructors}
+                          Real.::: Real.GADT
+                            { position,
+                              parameters,
+                              brand,
+                              gadtConstructors,
+                              unsupported = Refl
+                            }
                     }
                 Strict.Just annotation ->
                   Real.TypeDeclaration
@@ -161,7 +168,13 @@ merge entries@(entry :| _) =
                       constructorNames,
                       definition =
                         Real.Annotated annotation
-                          Real.::: Real.GADT {position, parameters, brand, gadtConstructors}
+                          Real.::: Real.GADT
+                            { position,
+                              parameters,
+                              brand,
+                              gadtConstructors,
+                              unsupported = Refl
+                            }
                     }
         | Just (position, More.Class {parameter, constraints, methods}) <- classx,
           methods <- fmap Method.shrink methods -> Verbose.resolving (Variable.print' name) $

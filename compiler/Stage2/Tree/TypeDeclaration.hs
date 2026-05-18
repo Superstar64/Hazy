@@ -28,6 +28,7 @@ import Stage2.Locality (Locality)
 import Stage2.Scope (Environment)
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Resolve)
 import Stage2.Tree.TypeDefinition (TypeDefinition)
 import Stage2.Tree.TypeDefinition2 (TypeDefinition2)
 import qualified Stage2.Tree.TypeDefinition2 as TypeDefinition2
@@ -78,7 +79,7 @@ locality = \case
 
 group ::
   (Type0.Index scope -> Type.Link locality) ->
-  (Type.Link locality -> TypeDefinition scope) ->
+  (Type.Link locality -> TypeDefinition Resolve scope) ->
   StronglyConnected.Component (Type.Link locality) ->
   TypeDeclaration locality Normal scope ->
   TypeDeclaration locality Group scope

@@ -23,9 +23,9 @@ import Stage2.Tree.TypeDefinition (TypeDefinition)
 
 type TypeDefinition2 :: Locality -> Layout -> Environment -> Data.Kind.Type
 data TypeDefinition2 locality layout scope where
-  (:::) :: !(Annotation layout scope) -> !(TypeDefinition scope) -> TypeDefinition2 locality layout scope
+  (:::) :: !(Annotation layout scope) -> !(TypeDefinition Resolve scope) -> TypeDefinition2 locality layout scope
   Link :: !(Type.Link locality) -> !Int -> TypeDefinition2 locality Group scope
-  Group :: !(Strict.Vector (TypeDefinition (Scope.Group ':+ scope))) -> TypeDefinition2 locality Group scope
+  Group :: !(Strict.Vector (TypeDefinition Resolve (Scope.Group ':+ scope))) -> TypeDefinition2 locality Group scope
 
 infix 5 :::
 
@@ -86,7 +86,7 @@ locality = \case
 
 group ::
   (Type0.Index scope -> Type.Link locality) ->
-  (Type.Link locality -> TypeDefinition scope) ->
+  (Type.Link locality -> TypeDefinition Resolve scope) ->
   StronglyConnected.Component (Type.Link locality) ->
   TypeDefinition2 locality Normal scope ->
   TypeDefinition2 locality Group scope

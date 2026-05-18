@@ -5,13 +5,13 @@ import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import Stage1.Variable (ConstructorIdentifier)
 import Stage2.Layout (Normal)
 import qualified Stage2.Tree.TypeDeclaration as Stage2 (TypeDeclaration (..))
+import Stage2.Tree.TypeDefinition (TypeDefinition (..))
 import qualified Stage2.Tree.TypeDefinition2 as Stage2 (TypeDefinition2 (..))
 import Stage3.Check.Context (Context (..))
 import qualified Stage3.Check.KindAnnotation as KindAnnotation
 import qualified Stage3.Check.KindAnnotation as Stage3
 import qualified Stage3.Simple.Type as Simple.Type
 import qualified Stage3.Temporary.TypeDefinition as Temporary.TypeDefinition
-import Stage3.Tree.TypeDefinition (TypeDefinition (..))
 import Stage3.Tree.TypeDefinition2 (Annotation (..), TypeDefinition2 (..))
 import qualified Stage3.Tree.TypeDefinition2 as TypeDefinition2
 import qualified Stage3.Unify as Unify

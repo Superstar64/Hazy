@@ -13,6 +13,7 @@ import Stage2.Shift (shift)
 import Stage2.Tree.Combinators.Inferred (Inferred (..))
 import Stage2.Tree.Method (Method (..))
 import qualified Stage2.Tree.TypeDeclarationExtra as Stage2
+import qualified Stage2.Tree.TypeDefinition as TypeDefinition
 import Stage2.Tree.TypePattern (TypePattern (..))
 import Stage3.Check.Context (Context)
 import qualified Stage3.Check.Mask as Mask
@@ -23,7 +24,6 @@ import {-# SOURCE #-} qualified Stage3.Temporary.Definition as Definition
 import Stage3.Tree.TypeDeclaration (TypeDeclaration (..))
 import qualified Stage3.Tree.TypeDeclaration as TypeDeclaration
 import qualified Stage3.Tree.TypeDeclarationExtra as Solved
-import qualified Stage3.Tree.TypeDefinition as TypeDefinition
 import Stage3.Tree.TypeDefinition2 (TypeDefinition2 (..))
 import Stage3.Unify (Zonk (..))
 import qualified Stage3.Unify as Unify

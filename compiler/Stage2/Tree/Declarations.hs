@@ -34,6 +34,7 @@ import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Resolve)
 import {-# SOURCE #-} qualified Stage2.Temporary.Complete.Declarations as Complete
 import Stage2.Tree.Declaration (Declaration (..))
 import qualified Stage2.Tree.Declaration as Declaration
@@ -108,7 +109,7 @@ group ::
   (Term0.Index scope -> Term.Link locality) ->
   (Type0.Index scope -> Type.Link locality) ->
   (Term.Link locality -> Definition3 Inferred Normal scope) ->
-  (Type.Link locality -> TypeDefinition scope) ->
+  (Type.Link locality -> TypeDefinition Resolve scope) ->
   Functor.Term.Declarations (StronglyConnected.Component (Term.Link locality)) ->
   Functor.Type.Declarations (StronglyConnected.Component (Type.Link locality)) ->
   Declarations locality Normal scope ->
@@ -168,7 +169,7 @@ connect declarations@Declarations {terms, types} =
             Definition4.Inferred Definition4.::: definition ->
               Just definition
             Definition4.Annotated {} Definition4.::: _ -> Nothing
-    indexType :: Type.Link Local -> Maybe (TypeDefinition (Scope.Declaration ':+ scope))
+    indexType :: Type.Link Local -> Maybe (TypeDefinition Resolve (Scope.Declaration ':+ scope))
     indexType = \case
       Type.Declaration index
         | TypeDeclaration {definition} <- types Vector.! index -> case definition of

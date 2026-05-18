@@ -31,6 +31,7 @@ import Stage2.Layout (Group, Normal)
 import qualified Stage2.Locality as Locality
 import Stage2.Scope (Global)
 import qualified Stage2.Scope as Scope
+import Stage2.Stage (Resolve)
 import {-# SOURCE #-} qualified Stage2.Temporary.Complete.Module as Complete
 import Stage2.Tree.Declaration (Declaration (..))
 import qualified Stage2.Tree.Declaration as Declaration
@@ -121,7 +122,7 @@ connect modules = Vector.imap go modules
               Definition4.Inferred Definition4.::: definition ->
                 Just definition
               Definition4.Annotated {} Definition4.::: _ -> Nothing
-    indexType :: Type.Link Locality.Global -> Maybe (TypeDefinition Scope.Global)
+    indexType :: Type.Link Locality.Global -> Maybe (TypeDefinition Resolve Scope.Global)
     indexType = \case
       Type.Global global local
         | Module {declarations = Declarations {types}} <- modules Vector.! global,

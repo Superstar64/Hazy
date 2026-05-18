@@ -8,7 +8,7 @@ import qualified Stage2.FreeVariables as FreeVariables
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (Shift (..), shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage2.Stage (Resolve)
+import Stage2.Stage (Unsupported)
 import Stage2.Tree.Constraint (Constraint)
 import Stage2.Tree.Constructor (Constructor)
 import Stage2.Tree.GADTConstructor (GADTConstructor)
@@ -17,36 +17,37 @@ import Stage2.Tree.Selector (Selector)
 import Stage2.Tree.Type (Type)
 import Stage2.Tree.TypePattern (TypePattern)
 
-data TypeDefinition scope
+data TypeDefinition stage scope
   = ADT
       { position :: !Position,
         brand :: !Brand,
-        parameters :: !(Strict.Vector (TypePattern Position Resolve scope)),
-        constructors :: !(Strict.Vector (Constructor Resolve (Local ':+ scope))),
+        parameters :: !(Strict.Vector (TypePattern Position stage scope)),
+        constructors :: !(Strict.Vector (Constructor stage (Local ':+ scope))),
         selectors :: !(Strict.Vector Selector)
       }
   | GADT
       { position :: !Position,
         brand :: !Brand,
-        parameters :: !(Strict.Vector (TypePattern Position Resolve scope)),
-        gadtConstructors :: !(Strict.Vector (GADTConstructor scope))
+        parameters :: !(Strict.Vector (TypePattern Position stage scope)),
+        gadtConstructors :: !(Strict.Vector (GADTConstructor scope)),
+        unsupported :: !(Unsupported stage)
       }
   | Class
       { position :: !Position,
-        parameter :: !(TypePattern Position Resolve scope),
-        methods :: !(Strict.Vector (Method Resolve (Local ':+ scope))),
-        constraints :: !(Strict.Vector (Constraint Position Resolve scope))
+        parameter :: !(TypePattern Position stage scope),
+        constraints :: !(Strict.Vector (Constraint Position stage scope)),
+        methods :: !(Strict.Vector (Method stage (Local ':+ scope)))
       }
   | Synonym
-      { parameters :: !(Strict.Vector (TypePattern Position Resolve scope)),
-        synonym :: !(Type Position Resolve (Local ':+ scope))
+      { parameters :: !(Strict.Vector (TypePattern Position stage scope)),
+        synonym :: !(Type Position stage (Local ':+ scope))
       }
   deriving (Show)
 
-instance Shift TypeDefinition where
+instance Shift (TypeDefinition stage) where
   shift = shiftDefault
 
-instance Shift.Functor TypeDefinition where
+instance Shift.Functor (TypeDefinition stage) where
   map category = \case
     ADT {position, brand, parameters, constructors, selectors} ->
       ADT
@@ -56,12 +57,13 @@ instance Shift.Functor TypeDefinition where
           constructors = fmap (Shift.map (Shift.Over category)) constructors,
           selectors
         }
-    GADT {position, brand, parameters, gadtConstructors} ->
+    GADT {position, brand, parameters, gadtConstructors, unsupported} ->
       GADT
         { position,
           brand,
           parameters = Shift.map category <$> parameters,
-          gadtConstructors = fmap (Shift.map category) gadtConstructors
+          gadtConstructors = fmap (Shift.map category) gadtConstructors,
+          unsupported
         }
     Class {position, parameter, methods, constraints} ->
       Class
@@ -76,7 +78,7 @@ instance Shift.Functor TypeDefinition where
           synonym = Shift.map (Shift.Over category) synonym
         }
 
-instance FreeTypeVariables TypeDefinition where
+instance FreeTypeVariables (TypeDefinition stage) where
   freeTypeVariables target = \case
     ADT {constructors} ->
       concat
