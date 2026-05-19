@@ -11,6 +11,7 @@ import qualified Stage2.Index.Type as Type
 import Stage2.Layout (Normal)
 import qualified Stage2.Locality as Locality
 import Stage2.Scope (Global)
+import Stage2.Stage (Resolve)
 import qualified Stage2.Tree.Declaration as Stage2 (Declaration)
 import qualified Stage2.Tree.Declaration as Stage2.Declaration
 import qualified Stage2.Tree.Declarations as Stage2.Declarations
@@ -135,7 +136,7 @@ check modules =
 checkTermAnnotation ::
   p1 ->
   p2 ->
-  Stage2.Declaration locality Normal Global ->
+  Stage2.Declaration locality Normal Resolve Global ->
   Formula s (GlobalTypeAnnotation Global)
 checkTermAnnotation _ _ declaration = Formula7 {cycle, run}
   where
@@ -146,7 +147,7 @@ checkTermAnnotation _ _ declaration = Formula7 {cycle, run}
 checkTermDeclaration ::
   Int ->
   Int ->
-  Stage2.Declaration locality Normal Global ->
+  Stage2.Declaration locality Normal Resolve Global ->
   Formula s (Declaration locality Normal Global)
 checkTermDeclaration global local declaration = Formula7 {cycle, run}
   where
@@ -164,7 +165,7 @@ checkTermDeclaration global local declaration = Formula7 {cycle, run}
 checkTypeAnnotation ::
   p1 ->
   p2 ->
-  Stage2.TypeDeclaration.TypeDeclaration locality Normal Global ->
+  Stage2.TypeDeclaration.TypeDeclaration locality Normal Resolve Global ->
   Formula s (KindAnnotation Global)
 checkTypeAnnotation _ _ declaration = Formula7 {cycle, run}
   where
@@ -175,7 +176,7 @@ checkTypeAnnotation _ _ declaration = Formula7 {cycle, run}
 checkTypeDeclaration ::
   Int ->
   Int ->
-  Stage2.TypeDeclaration.TypeDeclaration locality Normal Global ->
+  Stage2.TypeDeclaration.TypeDeclaration locality Normal Resolve Global ->
   Formula s (TypeDeclaration locality Normal Global)
 checkTypeDeclaration global local declaration = Formula7 {cycle, run}
   where
@@ -193,7 +194,7 @@ checkTypeDeclaration global local declaration = Formula7 {cycle, run}
 checkTypeDeclarationExtra ::
   Int ->
   Int ->
-  Stage2.TypeDeclarationExtra.TypeDeclarationExtra Normal Global ->
+  Stage2.TypeDeclarationExtra.TypeDeclarationExtra Normal Resolve Global ->
   Formula s (TypeDeclarationExtra Global)
 checkTypeDeclarationExtra global local declaration = Formula7 {cycle, run}
   where
@@ -211,7 +212,7 @@ checkTypeDeclarationExtra global local declaration = Formula7 {cycle, run}
 checkInstanceAnnotation ::
   p1 ->
   p2 ->
-  Stage2.Instance.Instance Normal Global ->
+  Stage2.Instance.Instance Normal Resolve Global ->
   Formula s (InstanceAnnotation Global)
 checkInstanceAnnotation _ _ declaration = Formula7 {cycle, run}
   where
@@ -222,7 +223,7 @@ checkInstanceAnnotation _ _ declaration = Formula7 {cycle, run}
 checkInstanceDeclaration ::
   Int ->
   Instance.Key.Key Global ->
-  Stage2.Instance.Instance Normal Global ->
+  Stage2.Instance.Instance Normal Resolve Global ->
   Formula s (Instance Global)
 checkInstanceDeclaration global key declaration = Formula7 {cycle, run}
   where

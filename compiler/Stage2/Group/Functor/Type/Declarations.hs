@@ -8,6 +8,7 @@ import qualified Data.Vector as Vector
 import qualified Stage2.Index.Link.Type as Type
 import Stage2.Layout (Normal)
 import Stage2.Locality (Local)
+import Stage2.Stage (Resolve)
 import qualified Stage2.Tree.Declarations as Proper
 
 newtype Declarations a = Declarations
@@ -27,7 +28,7 @@ instance Traversable Declarations where
 
 indexes ::
   (Int -> Type.Link locality) ->
-  Proper.Declarations locality' Normal scope ->
+  Proper.Declarations locality' Normal Resolve scope ->
   Declarations (Type.Link locality)
 indexes index Proper.Declarations {types} =
   Declarations

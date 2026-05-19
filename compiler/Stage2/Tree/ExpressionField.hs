@@ -17,25 +17,26 @@ import qualified Stage2.Resolve.Binding.Constructor as Constructor (Binding (..)
 import Stage2.Resolve.Context (Context (..), (!-%), (!-*))
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Resolve)
 import qualified Stage2.Tree.CallHead as CallHead
 import {-# SOURCE #-} Stage2.Tree.Expression (Expression, callHead_)
 import {-# SOURCE #-} qualified Stage2.Tree.Expression as Expression (resolve)
 
-data Field layout scope
+data Field layout stage scope
   = Field
   { index :: !Int,
-    expression :: !(Expression layout scope)
+    expression :: !(Expression layout stage scope)
   }
   deriving (Show)
 
-instance Shift (Field layout) where
+instance Shift (Field layout stage) where
   shift = shiftDefault
 
-instance Shift.Functor (Field layout) where
+instance Shift.Functor (Field layout stage) where
   map category (Field pick record) =
     Field pick (Shift.map category record)
 
-instance FreeTermVariables (Field layout) where
+instance FreeTermVariables (Field layout stage) where
   freeTermVariables target Field {expression} = freeTermVariables target expression
 
 instance Connect Field where
@@ -49,7 +50,7 @@ resolve ::
   Context scope ->
   Constructor.Binding scope ->
   Stage1.Field Position ->
-  Field Normal scope
+  Field Normal Resolve scope
 resolve context binding field = case field of
   Stage1.Field {variable, field} -> make variable (Expression.resolve context field)
   Stage1.Pun {variable = variable@(position :@ _ :- localName)} ->

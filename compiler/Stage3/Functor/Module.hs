@@ -7,6 +7,7 @@ import Stage1.Variable (FullQualifiers ((:..)), Qualifiers ((:.)))
 import Stage2.Layout (Normal)
 import qualified Stage2.Locality as Locality
 import Stage2.Scope (Global)
+import Stage2.Stage (Resolve)
 import qualified Stage2.Tree.Declaration as Stage2 (Declaration)
 import qualified Stage2.Tree.Instance as Stage2 (Instance)
 import qualified Stage2.Tree.Module as Stage2 (Module (..))
@@ -50,13 +51,13 @@ mapWithKey f1 f2 f3 f4 f5 f6 f7 Module {name, declarations} =
 fromStage2 ::
   Stage2.Module Normal ->
   Module
-    (Stage2.Declaration Locality.Global Normal Global)
-    (Stage2.Declaration Locality.Global Normal Global)
-    (Stage2.TypeDeclaration Locality.Global Normal Global)
-    (Stage2.TypeDeclaration Locality.Global Normal Global)
-    (Stage2.TypeDeclarationExtra Normal Global)
-    (Stage2.Instance Normal Global)
-    (Stage2.Instance Normal Global)
+    (Stage2.Declaration Locality.Global Normal Resolve Global)
+    (Stage2.Declaration Locality.Global Normal Resolve Global)
+    (Stage2.TypeDeclaration Locality.Global Normal Resolve Global)
+    (Stage2.TypeDeclaration Locality.Global Normal Resolve Global)
+    (Stage2.TypeDeclarationExtra Normal Resolve Global)
+    (Stage2.Instance Normal Resolve Global)
+    (Stage2.Instance Normal Resolve Global)
 fromStage2 Stage2.Module {name = name@(path :.. base), declarations}
   | let root = path :. base =
       Module

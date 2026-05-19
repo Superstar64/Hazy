@@ -12,6 +12,7 @@ import qualified Stage2.Label.Binding.Term as Label
 import Stage2.Layout (Group, Normal)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Resolve)
 import Stage2.Tree.Definition2 (Inferred)
 import Stage2.Tree.Definition3 (Definition3)
 import Stage2.Tree.Definition4 (Definition4)
@@ -23,18 +24,18 @@ data Key
   | Unnamed !Int
   deriving (Eq, Ord, Show)
 
-data Declaration locality layout scope
+data Declaration locality layout stage scope
   = Declaration
   { position :: !Position,
     name :: !Key,
-    definition :: !(Definition4 locality layout scope)
+    definition :: !(Definition4 locality layout stage scope)
   }
   deriving (Show)
 
-instance Shift (Declaration layout locality) where
+instance Shift (Declaration layout locality stage) where
   shift = shiftDefault
 
-instance Shift.Functor (Declaration layout locality) where
+instance Shift.Functor (Declaration layout locality stage) where
   map category Declaration {position, name, definition} =
     Declaration
       { position,
@@ -42,15 +43,15 @@ instance Shift.Functor (Declaration layout locality) where
         definition = Shift.map category definition
       }
 
-instance FreeTermVariables (Declaration layout locality) where
+instance FreeTermVariables (Declaration layout locality stage) where
   freeTermVariables target Declaration {definition} = freeTermVariables target definition
 
-labelBinding :: Qualifiers -> Declaration locality layout scope -> Label.TermBinding scope'
+labelBinding :: Qualifiers -> Declaration locality layout stage scope -> Label.TermBinding scope'
 labelBinding path declaration = case name declaration of
   Named name -> Label.TermBinding {name = path :- name}
   Unnamed _ -> Label.SharedTermBinding
 
-locality :: Declaration locality Normal scope -> Declaration locality' Normal scope
+locality :: Declaration locality Normal stage scope -> Declaration locality' Normal stage scope
 locality = \case
   Declaration {position, name, definition} ->
     Declaration
@@ -61,10 +62,10 @@ locality = \case
 
 group ::
   (Term0.Index scope -> Term.Link locality) ->
-  (Term.Link locality -> Definition3 Inferred Normal scope) ->
+  (Term.Link locality -> Definition3 Inferred Normal Resolve scope) ->
   StronglyConnected.Component (Term.Link locality) ->
-  Declaration locality Normal scope ->
-  Declaration locality Group scope
+  Declaration locality Normal Resolve scope ->
+  Declaration locality Group Resolve scope
 group link index' group = \case
   Declaration {position, name, definition} ->
     Declaration

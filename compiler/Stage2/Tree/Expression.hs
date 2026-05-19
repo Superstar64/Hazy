@@ -66,9 +66,9 @@ import Stage2.Tree.Statements (Statements)
 import qualified Stage2.Tree.Statements as Statements (resolve)
 import Prelude hiding (Bool (False, True), Either (Left, Right))
 
-data Expression layout scope
+data Expression layout stage scope
   = CallHead
-      { callHead :: !(CallHead Resolve scope)
+      { callHead :: !(CallHead stage scope)
       }
   | Integer
       { startPosition :: !Position,
@@ -88,80 +88,80 @@ data Expression layout scope
       }
   | Tuple
       { startPosition :: !Position,
-        elements :: !(Strict.Vector2 (Expression layout scope))
+        elements :: !(Strict.Vector2 (Expression layout stage scope))
       }
   | List
       { startPosition :: !Position,
-        items :: !(Strict.Vector (Expression layout scope))
+        items :: !(Strict.Vector (Expression layout stage scope))
       }
   | Comprehension
       { startPosition :: !Position,
-        statements :: !(Statements layout scope)
+        statements :: !(Statements layout stage scope)
       }
   | Record
       { constructorPosition :: !Position,
         constructor :: !(Constructor.Index scope),
-        fields :: !(Strict.Vector (Field layout scope))
+        fields :: !(Strict.Vector (Field layout stage scope))
       }
   | Update
-      { base :: !(Expression layout scope),
+      { base :: !(Expression layout stage scope),
         updatePosition :: !Position,
-        updates :: !(Strict.Vector1 (Select layout scope))
+        updates :: !(Strict.Vector1 (Select layout stage scope))
       }
   | Call
-      { function :: !(Expression layout scope),
-        argument :: !(Expression layout scope)
+      { function :: !(Expression layout stage scope),
+        argument :: !(Expression layout stage scope)
       }
   | Let
-      { declarations :: !(Declarations Locality.Local layout (Scope.Declaration ':+ scope)),
-        letBody :: !(Expression layout (Scope.Declaration ':+ scope))
+      { declarations :: !(Declarations Locality.Local layout stage (Scope.Declaration ':+ scope)),
+        letBody :: !(Expression layout stage (Scope.Declaration ':+ scope))
       }
   | If
-      { condition :: !(Expression layout scope),
-        thenx :: !(Expression layout scope),
-        elsex :: !(Expression layout scope)
+      { condition :: !(Expression layout stage scope),
+        thenx :: !(Expression layout stage scope),
+        elsex :: !(Expression layout stage scope)
       }
   | MultiwayIf
-      { branches :: !(Strict.Vector1 (RightHandSide layout scope))
+      { branches :: !(Strict.Vector1 (RightHandSide layout stage scope))
       }
   | Case
       { startPosition :: !Position,
-        scrutinee :: !(Expression layout scope),
-        cases :: !(Strict.Vector (Alternative layout scope))
+        scrutinee :: !(Expression layout stage scope),
+        cases :: !(Strict.Vector (Alternative layout stage scope))
       }
   | Do
       { startPosition :: !Position,
-        statements :: !(Statements layout scope)
+        statements :: !(Statements layout stage scope)
       }
   | Lambda
       { startPosition :: !Position,
-        parameter :: !(Pattern Resolve scope),
-        body :: !(Lambda layout (Scope.Pattern ':+ scope))
+        parameter :: !(Pattern stage scope),
+        body :: !(Lambda layout stage (Scope.Pattern ':+ scope))
       }
   | LambdaCase
       { startPosition :: !Position,
-        cases :: !(Strict.Vector (Alternative layout scope))
+        cases :: !(Strict.Vector (Alternative layout stage scope))
       }
   | RightSection
       { operatorPosition :: !Position,
-        left :: !(CallHead Resolve scope),
-        right :: !(Expression layout scope)
+        left :: !(CallHead stage scope),
+        right :: !(Expression layout stage scope)
       }
   | Annotation
-      { expression :: !(Expression layout (Scope.Local ':+ scope)),
+      { expression :: !(Expression layout stage (Scope.Local ':+ scope)),
         operatorPosition :: !Position,
-        annotation :: !(Scheme Position Resolve scope)
+        annotation :: !(Scheme Position stage scope)
       }
   | RunST
       { startPosition :: !Position,
-        imperative :: !(Expression layout scope)
+        imperative :: !(Expression layout stage scope)
       }
   deriving (Show)
 
-instance Shift (Expression layout) where
+instance Shift (Expression layout stage) where
   shift = shiftDefault
 
-instance Shift.Functor (Expression layout) where
+instance Shift.Functor (Expression layout stage) where
   map category = \case
     CallHead {callHead} ->
       CallHead
@@ -258,7 +258,7 @@ instance Shift.Functor (Expression layout) where
           imperative = Shift.map category imperative
         }
 
-instance FreeTermVariables (Expression layout) where
+instance FreeTermVariables (Expression layout stage) where
   freeTermVariables target = \case
     CallHead {callHead} -> freeTermVariables target callHead
     Integer {} -> []
@@ -415,14 +415,14 @@ instance Connect Expression where
           imperative = connect imperative
         }
 
-callHead_ :: CallHead Resolve scope -> Expression Normal scope
+callHead_ :: CallHead Resolve scope -> Expression Normal Resolve scope
 callHead_ callHead = CallHead {callHead}
 
 resolveTerm2 ::
   Position ->
   Term2.Index scope ->
-  Reverse.List (Expression Normal scope) ->
-  Expression Normal scope
+  Reverse.List (Expression Normal Resolve scope) ->
+  Expression Normal Resolve scope
 resolveTerm2 position index Nil = CallHead {callHead = CallHead.resolveVariable position index}
 resolveTerm2 startPosition Term2.RunST (Nil :> imperative) =
   RunST
@@ -438,8 +438,8 @@ resolveTerm2 position index (arguments :> argument) =
 resolveConstructor2 ::
   Position ->
   Constructor.Index scope ->
-  Reverse.List (Expression Normal scope) ->
-  Expression Normal scope
+  Reverse.List (Expression Normal Resolve scope) ->
+  Expression Normal Resolve scope
 resolveConstructor2 position constructor Nil =
   CallHead {callHead = CallHead.resolveConstructor position constructor}
 resolveConstructor2 position index (arguments :> argument) =
@@ -448,14 +448,14 @@ resolveConstructor2 position index (arguments :> argument) =
       argument
     }
 
-resolve :: Context scope -> Stage1.Expression Position -> Expression Normal scope
+resolve :: Context scope -> Stage1.Expression Position -> Expression Normal Resolve scope
 resolve context expression = resolveWith context expression []
 
 resolveWith ::
   Context scope ->
   Stage1.Expression Position ->
-  [Expression Normal scope] ->
-  Expression Normal scope
+  [Expression Normal Resolve scope] ->
+  Expression Normal Resolve scope
 resolveWith context Stage1.Variable {variable = startPosition :@ variable} arguments =
   resolveTerm2 startPosition (context !-* startPosition :@ variable) (Reverse.fromList arguments)
 resolveWith context Stage1.Constructor {constructor = startPosition :@ constructor} arguments =

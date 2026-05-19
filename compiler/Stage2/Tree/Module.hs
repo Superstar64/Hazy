@@ -48,7 +48,7 @@ import Verbose (Debug)
 
 data Module layout = Module
   { name :: !FullQualifiers,
-    declarations :: Declarations Locality.Global layout Global
+    declarations :: Declarations Locality.Global layout Resolve Global
   }
   deriving (Show)
 
@@ -113,7 +113,7 @@ connect modules = Vector.imap go modules
         (declarations $ modules Vector.! index)
     indexTerm' = fromJust . indexTerm
     indexType' = fromJust . indexType
-    indexTerm :: Term.Link Locality.Global -> Maybe (Definition3 Inferred Normal Scope.Global)
+    indexTerm :: Term.Link Locality.Global -> Maybe (Definition3 Inferred Normal Resolve Scope.Global)
     indexTerm = \case
       Term.Global global local
         | Module {declarations = Declarations {terms}} <- modules Vector.! global,

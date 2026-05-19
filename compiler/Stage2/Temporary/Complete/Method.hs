@@ -22,7 +22,7 @@ data Method scope = Method
   { position :: !Position,
     name :: !Variable,
     method :: Real.Method Resolve scope,
-    extra :: Strict.Maybe (Real.Definition Normal scope)
+    extra :: Strict.Maybe (Real.Definition Normal Resolve scope)
   }
 
 shrink = method

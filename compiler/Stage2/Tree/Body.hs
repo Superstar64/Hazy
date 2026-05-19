@@ -9,25 +9,26 @@ import Stage2.Layout (Normal)
 import Stage2.Resolve.Context (Context)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Resolve)
 import {-# SOURCE #-} Stage2.Tree.Expression (Expression)
 import {-# SOURCE #-} qualified Stage2.Tree.Expression as Expression (resolve)
 import Stage2.Tree.Statements (Statements)
 import qualified Stage2.Tree.Statements as Statements (resolve)
 
-data Body layout scope
-  = Body !(Expression layout scope)
-  | Guards !(Strict.Vector1 (Statements layout scope))
+data Body layout stage scope
+  = Body !(Expression layout stage scope)
+  | Guards !(Strict.Vector1 (Statements layout stage scope))
   deriving (Show)
 
-instance Shift (Body layout) where
+instance Shift (Body layout stage) where
   shift = shiftDefault
 
-instance Shift.Functor (Body layout) where
+instance Shift.Functor (Body layout stage) where
   map category = \case
     Body expression -> Body (Shift.map category expression)
     Guards statements -> Guards (fmap (Shift.map category) statements)
 
-instance FreeTermVariables (Body layout) where
+instance FreeTermVariables (Body layout stage) where
   freeTermVariables target = \case
     Body expression -> freeTermVariables target expression
     Guards statements -> foldMap (freeTermVariables target) statements
@@ -37,7 +38,7 @@ instance Connect Body where
     Body expression -> Body (connect expression)
     Guards statements -> Guards (fmap connect statements)
 
-resolve :: Context scope -> Stage1.Body Position -> Body Normal scope
+resolve :: Context scope -> Stage1.Body Position -> Body Normal Resolve scope
 resolve context = \case
   Stage1.Body {expression} -> Body (Expression.resolve context expression)
   Stage1.Guards {statements} -> Guards (fmap (Statements.resolve context) statements)

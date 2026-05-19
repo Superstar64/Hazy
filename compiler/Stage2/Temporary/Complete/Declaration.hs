@@ -48,7 +48,7 @@ import Verbose (Debug (resolving))
 import Prelude hiding (Either (Left, Right), Real)
 
 data Real scope
-  = Real (forall locality. Real.Declaration locality Normal scope)
+  = Real (forall locality. Real.Declaration locality Normal Resolve scope)
   | Select !More.Selector
   | Method !More.Method
 
@@ -61,7 +61,7 @@ data Declaration scope
     declaration :: !(Real scope)
   }
 
-shrink :: Declaration scope -> Maybe (Real.Declaration locality Normal scope)
+shrink :: Declaration scope -> Maybe (Real.Declaration locality Normal Resolve scope)
 shrink Declaration {declaration} = case declaration of
   Real valid -> Just valid
   _ -> Nothing

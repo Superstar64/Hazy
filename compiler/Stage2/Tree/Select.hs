@@ -13,28 +13,29 @@ import Stage2.Layout (Normal)
 import Stage2.Resolve.Context (Context (..), (!-%), (!-*))
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Resolve)
 import qualified Stage2.Tree.CallHead as CallHead
 import {-# SOURCE #-} Stage2.Tree.Expression (Expression)
 import {-# SOURCE #-} Stage2.Tree.Expression as Expression (callHead_, resolve)
 
-data Select layout scope
-  = Select !Int !(Expression layout scope)
+data Select layout stage scope
+  = Select !Int !(Expression layout stage scope)
   deriving (Show)
 
-instance Shift (Select layout) where
+instance Shift (Select layout stage) where
   shift = shiftDefault
 
-instance Shift.Functor (Select layout) where
+instance Shift.Functor (Select layout stage) where
   map category (Select pick record) =
     Select pick (Shift.map category record)
 
-instance FreeTermVariables (Select layout) where
+instance FreeTermVariables (Select layout stage) where
   freeTermVariables target (Select _ expression) = freeTermVariables target expression
 
 instance Connect Select where
   connect (Select pick record) = Select pick (connect record)
 
-resolve :: Type2.Index scope -> Context scope -> Stage1.Field Position -> Select Normal scope
+resolve :: Type2.Index scope -> Context scope -> Stage1.Field Position -> Select Normal Resolve scope
 resolve typex context = \case
   Stage1.Field {variable, field} -> make variable (Expression.resolve context field)
   Stage1.Pun {variable = variable@(position :@ _ :- localName)} ->

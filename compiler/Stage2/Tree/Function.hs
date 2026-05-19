@@ -20,20 +20,20 @@ import qualified Stage2.Tree.Pattern as Pattern (augment, resolve)
 import Stage2.Tree.RightHandSide (RightHandSide)
 import qualified Stage2.Tree.RightHandSide as RightHandSide (resolve)
 
-data Function layout scope
+data Function layout stage scope
   = Plain
-      {rightHandSide :: !(RightHandSide layout scope)}
+      {rightHandSide :: !(RightHandSide layout stage scope)}
   | Bound
       { functionPosition :: !Position,
-        patternx :: !(Pattern Resolve scope),
-        function :: !(Function layout (Scope.Pattern ':+ scope))
+        patternx :: !(Pattern stage scope),
+        function :: !(Function layout stage (Scope.Pattern ':+ scope))
       }
   deriving (Show)
 
-instance Shift (Function layout) where
+instance Shift (Function layout stage) where
   shift = shiftDefault
 
-instance Shift.Functor (Function layout) where
+instance Shift.Functor (Function layout stage) where
   map category = \case
     Plain {rightHandSide} -> Plain {rightHandSide = Shift.map category rightHandSide}
     Bound {functionPosition, patternx, function} ->
@@ -43,7 +43,7 @@ instance Shift.Functor (Function layout) where
           function = Shift.map (Shift.Over category) function
         }
 
-instance FreeTermVariables (Function layout) where
+instance FreeTermVariables (Function layout stage) where
   freeTermVariables target = \case
     Plain {rightHandSide} -> freeTermVariables target rightHandSide
     Bound {function} -> freeTermVariables (FreeTermVariables.Over target) function
@@ -66,7 +66,7 @@ resolve ::
   Context scope ->
   [Stage1.Pattern Position] ->
   Stage1.RightHandSide Position ->
-  Function Normal scope
+  Function Normal Resolve scope
 resolve context patterns rightHandSide1 = case patterns of
   [] -> Plain {rightHandSide = RightHandSide.resolve context rightHandSide1}
   (pattern1 : patterns) ->

@@ -8,6 +8,7 @@ import Stage2.Layout (Normal)
 import Stage2.Locality (Locality)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
+import Stage2.Stage (Resolve)
 import qualified Stage2.Tree.Declarations as Stage2 (Declarations)
 import Stage3.Check.Context (Context)
 import qualified Stage3.Tree.Declarations as Solved
@@ -22,7 +23,7 @@ instance Unify.Zonk (Declarations locality)
 
 check ::
   Context s scope ->
-  Stage2.Declarations locality Normal (Scope.Declaration ':+ scope) ->
+  Stage2.Declarations locality Normal Resolve (Scope.Declaration ':+ scope) ->
   ST
     s
     ( Context s (Scope.Declaration ':+ scope),

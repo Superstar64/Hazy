@@ -12,28 +12,29 @@ import Stage2.Resolve.Context (Context)
 import Stage2.Scope (Declaration, Environment (..))
 import Stage2.Shift (Shift)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Resolve, Stage)
 
-type Declarations :: Locality -> Layout -> Environment -> Type
+type Declarations :: Locality -> Layout -> Stage -> Environment -> Type
 
-type role Declarations nominal nominal nominal
+type role Declarations nominal nominal nominal nominal
 
-data Declarations locality layout scope
+data Declarations locality layout stage scope
 
-instance Show (Declarations locality layout scope)
+instance Show (Declarations locality layout stage scope)
 
-instance Shift (Declarations locality layout)
+instance Shift (Declarations locality layout stage)
 
-instance Shift.Functor (Declarations locality layout)
+instance Shift.Functor (Declarations locality layout stage)
 
-instance FreeTermVariables (Declarations locality layout)
+instance FreeTermVariables (Declarations locality layout stage)
 
 resolve ::
   Context scope ->
   Stage1.Declarations Position ->
   ( Context (Declaration ':+ scope),
-    Declarations locality Normal (Declaration ':+ scope)
+    Declarations locality Normal Resolve (Declaration ':+ scope)
   )
 connect ::
   forall scope.
-  Declarations Local Normal (Declaration ':+ scope) ->
-  Declarations Local Group (Declaration ':+ scope)
+  Declarations Local Normal Resolve (Declaration ':+ scope) ->
+  Declarations Local Group Resolve (Declaration ':+ scope)

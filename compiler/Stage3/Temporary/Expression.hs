@@ -22,7 +22,7 @@ import Stage2.Locality (Local)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (shift)
-import Stage2.Stage (Check)
+import Stage2.Stage (Check, Resolve)
 import qualified Stage2.Tree.Expression as Stage2 (Expression (..))
 import qualified Stage3.Check.ConstructorInstance as ConstructorInstance
 import Stage3.Check.Context (Context (..))
@@ -188,7 +188,7 @@ instance Unify.Zonk Expression where
       right <- Unify.zonk zonker right
       pure RightSection {left, right}
 
-check :: Context s scope -> Unify.Type s scope -> Stage2.Expression Normal scope -> ST s (Expression s scope)
+check :: Context s scope -> Unify.Type s scope -> Stage2.Expression Normal Resolve scope -> ST s (Expression s scope)
 check context typex Stage2.CallHead {callHead} = do
   callHead <- CallHead.check context typex callHead
   pure CallHead {callHead}

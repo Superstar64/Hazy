@@ -48,19 +48,19 @@ import Stage2.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 import Stage2.Tree.TypeDefinition (TypeDefinition)
 import qualified Stage2.Tree.TypeDefinition2 as TypeDefinition2
 
-data Declarations locality layout scope = Declarations
-  { terms :: !(Vector (Declaration locality layout scope)),
-    types :: !(Vector (TypeDeclaration locality layout scope)),
-    typeExtras :: !(Vector (TypeDeclarationExtra layout scope)),
-    dataInstances :: !(Vector (Map (Type2.Index scope) (Instance layout scope))),
-    classInstances :: !(Vector (Map (Type2.Index scope) (Instance layout scope)))
+data Declarations locality layout stage scope = Declarations
+  { terms :: !(Vector (Declaration locality layout stage scope)),
+    types :: !(Vector (TypeDeclaration locality layout stage scope)),
+    typeExtras :: !(Vector (TypeDeclarationExtra layout stage scope)),
+    dataInstances :: !(Vector (Map (Type2.Index scope) (Instance layout stage scope))),
+    classInstances :: !(Vector (Map (Type2.Index scope) (Instance layout stage scope)))
   }
   deriving (Show)
 
-instance Shift (Declarations locality layout) where
+instance Shift (Declarations locality layout stage) where
   shift = shiftDefault
 
-instance Shift.Functor (Declarations locality layout) where
+instance Shift.Functor (Declarations locality layout stage) where
   map
     category
     Declarations
@@ -78,7 +78,7 @@ instance Shift.Functor (Declarations locality layout) where
           classInstances = fmap (Shift.mapInstances category . fmap (Shift.map category)) classInstances
         }
 
-instance FreeTermVariables (Declarations locality layout) where
+instance FreeTermVariables (Declarations locality layout stage) where
   freeTermVariables target Declarations {terms, typeExtras} =
     concat
       [ foldMap (freeTermVariables target) terms,
@@ -89,7 +89,7 @@ resolve ::
   Context scope ->
   Stage1.Declarations Position ->
   ( Context (Scope.Declaration ':+ scope),
-    Declarations locality Normal (Scope.Declaration ':+ scope)
+    Declarations locality Normal Resolve (Scope.Declaration ':+ scope)
   )
 resolve initial@Context {canonical, extensions} Stage1.Declarations {declarations} =
   (context, Complete.shrink complete)
@@ -108,12 +108,12 @@ resolve initial@Context {canonical, extensions} Stage1.Declarations {declaration
 group ::
   (Term0.Index scope -> Term.Link locality) ->
   (Type0.Index scope -> Type.Link locality) ->
-  (Term.Link locality -> Definition3 Inferred Normal scope) ->
+  (Term.Link locality -> Definition3 Inferred Normal Resolve scope) ->
   (Type.Link locality -> TypeDefinition Resolve scope) ->
   Functor.Term.Declarations (StronglyConnected.Component (Term.Link locality)) ->
   Functor.Type.Declarations (StronglyConnected.Component (Type.Link locality)) ->
-  Declarations locality Normal scope ->
-  Declarations locality Group scope
+  Declarations locality Normal Resolve scope ->
+  Declarations locality Group Resolve scope
 group
   linkTerm
   linkType
@@ -138,8 +138,8 @@ group
 
 connect ::
   forall scope.
-  Declarations Local Normal (Scope.Declaration ':+ scope) ->
-  Declarations Local Group (Scope.Declaration ':+ scope)
+  Declarations Local Normal Resolve (Scope.Declaration ':+ scope) ->
+  Declarations Local Group Resolve (Scope.Declaration ':+ scope)
 connect declarations@Declarations {terms, types} =
   group Term.local Type.local indexTerm' indexType' termGroups typeGroups declarations
   where
@@ -162,7 +162,7 @@ connect declarations@Declarations {terms, types} =
 
     indexTerm' = fromJust . indexTerm
     indexType' = fromJust . indexType
-    indexTerm :: Term.Link Local -> Maybe (Definition3 Inferred Normal (Scope.Declaration ':+ scope))
+    indexTerm :: Term.Link Local -> Maybe (Definition3 Inferred Normal Resolve (Scope.Declaration ':+ scope))
     indexTerm = \case
       Term.Declaration index
         | Declaration {definition} <- terms Vector.! index -> case definition of

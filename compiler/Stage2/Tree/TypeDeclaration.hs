@@ -28,25 +28,25 @@ import Stage2.Locality (Locality)
 import Stage2.Scope (Environment)
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage2.Stage (Resolve)
+import Stage2.Stage (Resolve, Stage)
 import Stage2.Tree.TypeDefinition (TypeDefinition)
 import Stage2.Tree.TypeDefinition2 (TypeDefinition2)
 import qualified Stage2.Tree.TypeDefinition2 as TypeDefinition2
 
-type TypeDeclaration :: Locality -> Layout -> Environment -> Data.Kind.Type
-data TypeDeclaration locality layout scope
+type TypeDeclaration :: Locality -> Layout -> Stage -> Environment -> Data.Kind.Type
+data TypeDeclaration locality layout stage scope
   = TypeDeclaration
   { position :: !Position,
     name :: !ConstructorIdentifier,
     constructorNames :: !(Strict.Vector Constructor),
-    definition :: !(TypeDefinition2 locality layout Resolve scope)
+    definition :: !(TypeDefinition2 locality layout stage scope)
   }
   deriving (Show)
 
-instance Shift (TypeDeclaration locality layout) where
+instance Shift (TypeDeclaration locality layout stage) where
   shift = shiftDefault
 
-instance Shift.Functor (TypeDeclaration locality layout) where
+instance Shift.Functor (TypeDeclaration locality layout stage) where
   map category = \case
     TypeDeclaration {position, name, constructorNames, definition} ->
       TypeDeclaration
@@ -56,18 +56,18 @@ instance Shift.Functor (TypeDeclaration locality layout) where
           definition = Shift.map category definition
         }
 
-instance FreeTypeVariables (TypeDeclaration locality layout) where
+instance FreeTypeVariables (TypeDeclaration locality layout stage) where
   freeTypeVariables target = \case
     TypeDeclaration {definition} -> freeTypeVariables target definition
 
-labelBinding :: Qualifiers -> TypeDeclaration locality layout scope -> Label.TypeBinding scope'
+labelBinding :: Qualifiers -> TypeDeclaration locality layout stage scope -> Label.TypeBinding scope'
 labelBinding path declaration =
   Label.TypeBinding
     { name = path :=. name declaration,
       constructorNames = (path :=) <$> constructorNames declaration
     }
 
-locality :: TypeDeclaration locality Normal scope -> TypeDeclaration locality' Normal scope
+locality :: TypeDeclaration locality Normal stage scope -> TypeDeclaration locality' Normal stage scope
 locality = \case
   TypeDeclaration {position, name, constructorNames, definition} ->
     TypeDeclaration
@@ -81,8 +81,8 @@ group ::
   (Type0.Index scope -> Type.Link locality) ->
   (Type.Link locality -> TypeDefinition Resolve scope) ->
   StronglyConnected.Component (Type.Link locality) ->
-  TypeDeclaration locality Normal scope ->
-  TypeDeclaration locality Group scope
+  TypeDeclaration locality Normal Resolve scope ->
+  TypeDeclaration locality Group Resolve scope
 group link index group = \case
   TypeDeclaration {position, name, constructorNames, definition} ->
     TypeDeclaration

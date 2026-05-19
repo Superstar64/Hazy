@@ -5,7 +5,7 @@ import Stage1.Position (Position)
 import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (shift)
-import Stage2.Stage (Check)
+import Stage2.Stage (Check, Resolve)
 import Stage2.Tree.Definition2 (Annotated, Inferred)
 import Stage2.Tree.Definition3 (Info)
 import qualified Stage2.Tree.Definition3 as Stage2
@@ -42,7 +42,7 @@ check ::
   Context s scope ->
   Which mark s scope ->
   Position ->
-  Stage2.Definition3 mark Normal scope ->
+  Stage2.Definition3 mark Normal Resolve scope ->
   ST s (Definition3 mark s scope)
 check context annotation position (info Stage2.::@ definition) =
   (info ::@) <$> case annotation of

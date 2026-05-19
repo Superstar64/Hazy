@@ -25,7 +25,7 @@ data Method scope
   | Function
       { position :: !Position,
         name :: !Variable,
-        function :: Function Normal scope
+        function :: Function Normal Resolve scope
       }
 
 resolve :: Context scope -> Stage1.ClassDeclaration Position -> [(Variable, Method scope)]

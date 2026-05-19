@@ -21,21 +21,21 @@ import {-# SOURCE #-} qualified Stage2.Tree.Expression as Expression (resolve)
 import Stage2.Tree.Pattern (Pattern)
 import qualified Stage2.Tree.Pattern as Pattern (augment, resolve)
 
-data Lambda layout scope
+data Lambda layout stage scope
   = Plain
-      { plain :: !(Expression layout scope)
+      { plain :: !(Expression layout stage scope)
       }
   | Bound
       { boundPosition :: !Position,
-        parameter :: !(Pattern Resolve scope),
-        body :: !(Lambda layout (Scope.Pattern ':+ scope))
+        parameter :: !(Pattern stage scope),
+        body :: !(Lambda layout stage (Scope.Pattern ':+ scope))
       }
   deriving (Show)
 
-instance Shift (Lambda layout) where
+instance Shift (Lambda layout stage) where
   shift = shiftDefault
 
-instance Shift.Functor (Lambda layout) where
+instance Shift.Functor (Lambda layout stage) where
   map category = \case
     Plain {plain} -> Plain {plain = Shift.map category plain}
     Bound {boundPosition, parameter, body} ->
@@ -45,7 +45,7 @@ instance Shift.Functor (Lambda layout) where
           body = Shift.map (Shift.Over category) body
         }
 
-instance FreeTermVariables (Lambda layout) where
+instance FreeTermVariables (Lambda layout stage) where
   freeTermVariables target = \case
     Plain {plain} -> freeTermVariables target plain
     Bound {body} -> freeTermVariables (FreeTermVariables.Over target) body
@@ -64,7 +64,7 @@ instance Connect Lambda where
         }
 
 -- todo complain when lambda variables shadow other lambda variables
-resolve :: Context scope -> [Stage1.Pattern Position] -> Stage1.Expression Position -> Lambda Normal scope
+resolve :: Context scope -> [Stage1.Pattern Position] -> Stage1.Expression Position -> Lambda Normal Resolve scope
 resolve context patterns expression = case patterns of
   [] -> Plain {plain = Expression.resolve context expression}
   (patternx : patterns)

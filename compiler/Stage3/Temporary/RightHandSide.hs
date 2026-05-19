@@ -6,6 +6,7 @@ import Stage2.Locality (Local)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope (Declaration)
 import Stage2.Shift (shift)
+import Stage2.Stage (Resolve)
 import qualified Stage2.Tree.RightHandSide as Stage2 (RightHandSide (..))
 import Stage3.Check.Context (Context)
 import Stage3.Temporary.Body (Body)
@@ -29,7 +30,7 @@ instance Unify.Zonk RightHandSide where
 check ::
   Context s scope ->
   Unify.Type s scope ->
-  Stage2.RightHandSide Normal scope ->
+  Stage2.RightHandSide Normal Resolve scope ->
   ST s (RightHandSide s scope)
 check context typex (Stage2.RightHandSide body declarations) = do
   (context, declarations) <- Declarations.check context declarations

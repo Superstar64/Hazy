@@ -13,6 +13,7 @@ import Stage2.Layout (Normal)
 import Stage2.Resolve.Bindings (Bindings)
 import Stage2.Resolve.Context (Context)
 import Stage2.Scope (Environment)
+import Stage2.Stage (Resolve)
 import {-# SOURCE #-} qualified Stage2.Tree.Declarations as Real
 import Verbose (Debug)
 
@@ -35,4 +36,4 @@ bindings ::
   (Int -> Type0.Index scope) ->
   Declarations scope ->
   Bindings stability scope
-shrink :: Declarations scope -> Real.Declarations locality Normal scope
+shrink :: Declarations scope -> Real.Declarations locality Normal Resolve scope

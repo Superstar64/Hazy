@@ -7,7 +7,7 @@ import Stage1.Position (Position)
 import Stage2.Layout (Normal)
 import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (shift)
-import Stage2.Stage (Check)
+import Stage2.Stage (Check, Resolve)
 import qualified Stage2.Tree.Type as Solved (Type)
 import qualified Stage2.Tree.TypeDeclaration as Stage2 (TypeDeclaration (..))
 import qualified Stage2.Tree.TypeDefinition as Stage2 (TypeDefinition (Synonym, parameters, synonym))
@@ -38,7 +38,7 @@ data KindAnnotation scope
         synonym :: !(Solved.Type Position Check (Local ':+ scope))
       }
 
-check :: Context s scope -> Stage2.TypeDeclaration locality Normal scope -> ST s (KindAnnotation scope)
+check :: Context s scope -> Stage2.TypeDeclaration locality Normal Resolve scope -> ST s (KindAnnotation scope)
 check context Stage2.TypeDeclaration {position, definition = annotation Stage2.::: definition}
   | Stage2.Synonym {synonym, parameters} <- definition =
       do

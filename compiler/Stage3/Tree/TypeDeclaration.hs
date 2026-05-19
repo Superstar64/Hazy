@@ -7,7 +7,7 @@ import Stage1.Variable (ConstructorIdentifier)
 import Stage2.Layout (Layout, Normal)
 import Stage2.Locality (Locality)
 import Stage2.Scope (Environment)
-import Stage2.Stage (Check)
+import Stage2.Stage (Check, Resolve)
 import qualified Stage2.Tree.TypeDeclaration as Stage2 (TypeDeclaration (..))
 import Stage2.Tree.TypeDefinition (TypeDefinition (..))
 import Stage2.Tree.TypeDefinition2 (Annotation (..), TypeDefinition2 (..))
@@ -42,7 +42,7 @@ kind_ = kind
 check ::
   Context s scope ->
   Stage3.KindAnnotation scope ->
-  Stage2.TypeDeclaration locality Normal scope ->
+  Stage2.TypeDeclaration locality Normal Resolve scope ->
   ST s (TypeDeclaration locality Normal scope)
 check
   _

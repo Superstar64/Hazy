@@ -4,7 +4,7 @@ import Control.Monad.ST (ST)
 import qualified Data.Vector.Strict as Strict (Vector)
 import Stage1.Position (Position)
 import Stage2.Layout (Normal)
-import Stage2.Stage (Check)
+import Stage2.Stage (Check, Resolve)
 import qualified Stage2.Tree.Constraint as Solved (Constraint)
 import qualified Stage2.Tree.Instance as Stage2 (Instance (..))
 import qualified Stage2.Tree.TypePattern as Solved (TypePattern)
@@ -29,7 +29,7 @@ prerequisites'_ = prerequisites'
 
 check ::
   Context s scope ->
-  Stage2.Instance Normal scope ->
+  Stage2.Instance Normal Resolve scope ->
   ST s (InstanceAnnotation scope)
 check context Stage2.Instance {parameters, prerequisites} = do
   let fresh Stage2.TypePattern {name, position} = do

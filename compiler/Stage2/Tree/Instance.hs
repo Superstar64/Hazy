@@ -32,19 +32,19 @@ import qualified Stage2.Tree.Scheme as Scheme
 import Stage2.Tree.TypePattern (TypePattern)
 import qualified Stage2.Tree.TypePattern as TypePattern
 
-data Instance layout scope = Instance
+data Instance layout stage scope = Instance
   { startPosition :: !Position,
     prerequisites :: !(Strict.Vector (Constraint Position Resolve scope)),
     classPosition :: !Position,
     parameters :: !(Strict.Vector (TypePattern Position Resolve scope)),
-    members :: !(Strict.Vector (Strict.Maybe (Definition layout (Local ':+ scope))))
+    members :: !(Strict.Vector (Strict.Maybe (Definition layout stage (Local ':+ scope))))
   }
   deriving (Show)
 
-instance Shift (Instance layout) where
+instance Shift (Instance layout stage) where
   shift = shiftDefault
 
-instance Shift.Functor (Instance layout) where
+instance Shift.Functor (Instance layout stage) where
   map category Instance {startPosition, prerequisites, classPosition, parameters, members} =
     Instance
       { startPosition,
@@ -72,7 +72,7 @@ resolve ::
   Strict.Vector (Stage1.TypePattern Position) ->
   Map Variable Int ->
   Stage1.InstanceDeclarations Position ->
-  Instance Normal scope
+  Instance Normal Resolve scope
 resolve
   context
   startPosition

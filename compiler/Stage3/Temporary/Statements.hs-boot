@@ -6,6 +6,7 @@ import Control.Monad.ST (ST)
 import Data.Kind (Type)
 import Stage2.Layout (Normal)
 import Stage2.Scope (Environment)
+import Stage2.Stage (Resolve)
 import qualified Stage2.Tree.Statements as Stage2
 import Stage3.Check.Context (Context)
 import qualified Stage3.Tree.Statements as Solved
@@ -21,6 +22,6 @@ instance Unify.Zonk Statements
 check ::
   Context s scope ->
   Unify.Type s scope ->
-  Stage2.Statements Normal scope ->
+  Stage2.Statements Normal Resolve scope ->
   ST s (Statements s scope)
 solve :: Statements s scope -> ST s (Solved.Statements scope)

@@ -88,7 +88,7 @@ data Declaration scope
   | Shared
       { position :: !Position,
         name :: !Key,
-        shared :: forall locality. Real.Declaration locality Normal scope
+        shared :: forall locality. Real.Declaration locality Normal Resolve scope
       }
 
 resolve ::

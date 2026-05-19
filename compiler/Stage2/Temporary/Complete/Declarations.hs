@@ -24,6 +24,7 @@ import Stage2.Layout (Normal)
 import Stage2.Resolve.Bindings (Bindings (Bindings))
 import qualified Stage2.Resolve.Bindings as Bindings
 import Stage2.Resolve.Context (Context (..))
+import Stage2.Stage (Resolve)
 import qualified Stage2.Temporary.Complete.ClassInstance as ClassInstance
 import Stage2.Temporary.Complete.ConstructorDeclaration (ConstructorDeclaration)
 import qualified Stage2.Temporary.Complete.ConstructorDeclaration as Constructor (merge)
@@ -45,8 +46,8 @@ data Declarations scope = Declarations
   { terms :: !(Strict.Vector (Declaration scope)),
     constructors :: !(Strict.Vector ConstructorDeclaration),
     types :: !(Strict.Vector (TypeDeclaration scope)),
-    dataInstances :: !(Vector (Map (Type2.Index scope) (Instance Normal scope))),
-    classInstances :: !(Vector (Map (Type2.Index scope) (Instance Normal scope)))
+    dataInstances :: !(Vector (Map (Type2.Index scope) (Instance Normal Resolve scope))),
+    classInstances :: !(Vector (Map (Type2.Index scope) (Instance Normal Resolve scope)))
   }
 
 {-
@@ -149,7 +150,7 @@ bindings
         stability = mempty
       }
 
-shrink :: Declarations scope -> Real.Declarations locality Normal scope
+shrink :: Declarations scope -> Real.Declarations locality Normal Resolve scope
 shrink Declarations {terms, types, dataInstances, classInstances} =
   Real.Declarations
     { terms = Vector.catMaybes $ Term.shrink <$> Strict.Vector.toLazy terms,

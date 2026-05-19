@@ -20,7 +20,7 @@ import qualified Stage2.Index.Type3 as Type3
 import Stage2.Layout (Normal)
 import qualified Stage2.Resolve.Binding.Type as Type (Binding (..))
 import Stage2.Scope (Environment ((:+)), Local)
-import Stage2.Stage (Equal (..))
+import Stage2.Stage (Equal (..), Resolve)
 import Stage2.Temporary.Complete.Constructor (Constructor (Constructor))
 import qualified Stage2.Temporary.Complete.Constructor as Constructor
 import Stage2.Temporary.Complete.GADTConstructor (GADTConstructor (GADTConstructor))
@@ -63,14 +63,14 @@ data TypeDeclaration scope = TypeDeclaration
     name :: !ConstructorIdentifier,
     fields :: !(Fields scope),
     constructors :: !(Constructors scope),
-    declaration :: forall locality. Real.TypeDeclaration locality Normal scope,
-    extra :: Real.Extra.TypeDeclarationExtra Normal scope
+    declaration :: forall locality. Real.TypeDeclaration locality Normal Resolve scope,
+    extra :: Real.Extra.TypeDeclarationExtra Normal Resolve scope
   }
 
-shrink :: TypeDeclaration scope -> Real.TypeDeclaration locality Normal scope
+shrink :: TypeDeclaration scope -> Real.TypeDeclaration locality Normal Resolve scope
 shrink = declaration
 
-shrinkExtra :: TypeDeclaration scope -> Real.Extra.TypeDeclarationExtra Normal scope
+shrinkExtra :: TypeDeclaration scope -> Real.Extra.TypeDeclarationExtra Normal Resolve scope
 shrinkExtra = extra
 
 merge :: (Debug verbose) => NonEmpty (Partial.TypeDeclaration scope) -> verbose (TypeDeclaration scope)

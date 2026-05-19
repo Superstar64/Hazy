@@ -18,21 +18,26 @@ import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage2.Stage (Resolve)
+import Stage2.Stage (Resolve, Stage)
 import Stage2.Tree.Definition2 (Inferred)
 import qualified Stage2.Tree.Definition2 as Mark
 import Stage2.Tree.Definition3 (Definition3)
 import Stage2.Tree.Scheme (Scheme)
 
-type Definition4 :: Locality -> Layout -> Environment -> Type
-data Definition4 locality layout scope where
-  (:::) :: !(Annotation mark layout scope) -> !(Definition3 mark layout scope) -> Definition4 locality layout scope
-  Link :: !(Term.Link locality) -> !Int -> Definition4 locality Group scope
-  Group :: !(Strict.Vector (Definition3 Inferred Group (Scope.Group ':+ scope))) -> Definition4 locality Group scope
+type Definition4 :: Locality -> Layout -> Stage -> Environment -> Type
+data Definition4 locality layout stage scope where
+  (:::) ::
+    !(Annotation mark layout stage scope) ->
+    !(Definition3 mark layout stage scope) ->
+    Definition4 locality layout stage scope
+  Link :: !(Term.Link locality) -> !Int -> Definition4 locality Group stage scope
+  Group ::
+    !(Strict.Vector (Definition3 Inferred Group stage (Scope.Group ':+ scope))) ->
+    Definition4 locality Group stage scope
 
 infixr 5 :::
 
-instance Show (Definition4 locality layout scope) where
+instance Show (Definition4 locality layout stage scope) where
   showsPrec d (annotation ::: definition) =
     showParen (d > 5) $
       showsPrec 6 annotation . showString " ::: " . showsPrec 6 definition
@@ -44,48 +49,48 @@ instance Show (Definition4 locality layout scope) where
         . showsPrec 11 id
   showsPrec d (Group set) = showParen (d > 10) $ showString "Group " . showsPrec 11 set
 
-instance Shift (Definition4 locality layout) where
+instance Shift (Definition4 locality layout stage) where
   shift = shiftDefault
 
-instance Shift.Functor (Definition4 locality layout) where
+instance Shift.Functor (Definition4 locality layout stage) where
   map category = \case
     annotation ::: definition -> Shift.map category annotation ::: Shift.map category definition
     Link link id -> Link link id
     Group set -> Group (Shift.map (Shift.Over category) <$> set)
 
-instance FreeTermVariables (Definition4 locality layout) where
+instance FreeTermVariables (Definition4 locality layout stage) where
   freeTermVariables target = \case
     _ ::: definition -> freeTermVariables target definition
     Link {} -> []
     Group set -> foldMap (freeTermVariables (FreeVariables.Over target)) set
 
-data Annotation mark layout scope where
-  Annotated :: !(Scheme Position Resolve scope) -> Annotation Mark.Annotated layout scope
-  Inferred :: Annotation Mark.Inferred Normal scope
+data Annotation mark layout stage scope where
+  Annotated :: !(Scheme Position stage scope) -> Annotation Mark.Annotated layout stage scope
+  Inferred :: Annotation Mark.Inferred Normal stage scope
 
-instance Shift (Annotation mark layout) where
+instance Shift (Annotation mark layout stage) where
   shift = shiftDefault
 
-instance Shift.Functor (Annotation mark layout) where
+instance Shift.Functor (Annotation mark layout stage) where
   map category = \case
     Annotated scheme -> Annotated (Shift.map category scheme)
     Inferred -> Inferred
 
-instance Show (Annotation mark scope layout) where
+instance Show (Annotation mark scope layout stage) where
   showsPrec d annotation = case annotation of
     Annotated scheme -> showParen (d > 10) $ showString "Annotated " . showsPrec 11 scheme
     Inferred -> showString "Inferred"
 
-locality :: Definition4 locality Normal scope -> Definition4 locality' Normal scope
+locality :: Definition4 locality Normal stage scope -> Definition4 locality' Normal stage scope
 locality = \case
   annotation ::: declaration -> annotation ::: declaration
 
 group ::
   (Term0.Index scope -> Term.Link locality) ->
-  (Term.Link locality -> Definition3 Inferred Normal scope) ->
+  (Term.Link locality -> Definition3 Inferred Normal Resolve scope) ->
   StronglyConnected.Component (Term.Link locality) ->
-  Definition4 locality Normal scope ->
-  Definition4 locality Group scope
+  Definition4 locality Normal Resolve scope ->
+  Definition4 locality Group Resolve scope
 group _ _ _ (Annotated annotation ::: definition) = Annotated annotation ::: connect definition
 group link index group (Inferred ::: _) = case group of
   StronglyConnected.Group {set} ->

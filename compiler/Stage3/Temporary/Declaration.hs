@@ -3,6 +3,7 @@ module Stage3.Temporary.Declaration where
 import Control.Monad.ST (ST)
 import Stage1.Position (Position)
 import Stage2.Layout (Normal)
+import Stage2.Stage (Resolve)
 import Stage2.Tree.Declaration (Key)
 import qualified Stage2.Tree.Declaration as Stage2 (Declaration (..))
 import qualified Stage2.Tree.Definition4 as Stage2 (Annotation (..), Definition4 (..))
@@ -41,7 +42,7 @@ instance Unify.Zonk Declaration where
 checkLocal ::
   Context s scope ->
   LocalTypeAnnotation s scope ->
-  Stage2.Declaration locality Normal scope ->
+  Stage2.Declaration locality Normal Resolve scope ->
   ST s (Declaration s scope)
 checkLocal context annotation Stage2.Declaration {position, name, definition} = do
   definition@(_ ::: _ ::@ inner) <- definition `go` annotation
@@ -65,7 +66,7 @@ checkLocal context annotation Stage2.Declaration {position, name, definition} = 
 checkGlobal ::
   Context s scope ->
   GlobalTypeAnnotation scope ->
-  Stage2.Declaration locality Normal scope ->
+  Stage2.Declaration locality Normal Resolve scope ->
   ST s (Declaration s scope)
 checkGlobal context annotation Stage2.Declaration {position, name, definition} = do
   definition@(_ ::: _ ::@ inner) <- definition `go` annotation

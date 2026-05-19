@@ -12,7 +12,7 @@ import Stage2.Tree.Scheme (Scheme)
 import Prelude hiding (Real)
 
 data Real scope
-  = Real (forall locality. Real.Declaration locality Normal scope)
+  = Real (forall locality. Real.Declaration locality Normal Resolve scope)
   | Select !More.Selector
   | Method !More.Method
 

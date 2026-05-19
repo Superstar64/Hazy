@@ -16,7 +16,7 @@ import Stage2.Layout (Normal)
 import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (shift)
 import qualified Stage2.Shift as Shift
-import Stage2.Stage (Check)
+import Stage2.Stage (Check, Resolve)
 import qualified Stage2.Tree.Constraint as Solved (Constraint)
 import qualified Stage2.Tree.Instance as Stage2
 import qualified Stage2.Tree.TypePattern as Solved (TypePattern)
@@ -89,7 +89,7 @@ check ::
   Context s scope ->
   Key scope ->
   InstanceAnnotation scope ->
-  Stage2.Instance Normal scope ->
+  Stage2.Instance Normal Resolve scope ->
   ST s (Instance s scope)
 check
   context@Context {typeEnvironment}

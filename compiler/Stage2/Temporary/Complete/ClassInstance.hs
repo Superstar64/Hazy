@@ -20,6 +20,7 @@ import Stage2.Resolve.Context
     (!=*~),
     (!=.*),
   )
+import Stage2.Stage (Resolve)
 import Stage2.Temporary.Complete.Method (Method (Method))
 import qualified Stage2.Temporary.Complete.Method as Method
 import Stage2.Temporary.Complete.TypeDeclaration (TypeDeclaration (TypeDeclaration))
@@ -30,10 +31,10 @@ data ClassInstance scope = ClassInstance
   { classPosition :: !Position,
     classIndex :: !Int,
     dataIndex :: !(Type2.Index scope),
-    instancex :: Real.Instance Normal scope
+    instancex :: Real.Instance Normal Resolve scope
   }
 
-shrink :: ClassInstance scope -> Real.Instance Normal scope
+shrink :: ClassInstance scope -> Real.Instance Normal Resolve scope
 shrink = instancex
 
 prepare :: ClassInstance scope -> (Int, Map (Type2.Index scope) (NonEmpty.NonEmpty (ClassInstance scope)))

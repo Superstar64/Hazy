@@ -12,24 +12,24 @@ import Stage2.Resolve.Context (Context)
 import Stage2.Scope (Environment)
 import Stage2.Shift (Shift)
 import qualified Stage2.Shift as Shift
-import Stage2.Stage (Resolve)
+import Stage2.Stage (Resolve, Stage)
 import Stage2.Tree.CallHead (CallHead)
 
-type Expression :: Layout -> Environment -> Type
+type Expression :: Layout -> Stage -> Environment -> Type
 
-type role Expression nominal nominal
+type role Expression nominal nominal nominal
 
-data Expression layout scope
+data Expression layout stage scope
 
-instance Show (Expression layout scope)
+instance Show (Expression layout stage scope)
 
-instance Shift (Expression layout)
+instance Shift (Expression layout stage)
 
-instance Shift.Functor (Expression layout)
+instance Shift.Functor (Expression layout stage)
 
-instance FreeTermVariables (Expression layout)
+instance FreeTermVariables (Expression layout stage)
 
 instance Connect Expression
 
-callHead_ :: CallHead Resolve scope -> Expression Normal scope
-resolve :: Context scope -> Stage1.Expression Position -> Expression Normal scope
+callHead_ :: CallHead Resolve scope -> Expression Normal Resolve scope
+resolve :: Context scope -> Stage1.Expression Position -> Expression Normal Resolve scope

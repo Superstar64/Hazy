@@ -6,6 +6,7 @@ import Stage2.Locality (Local)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope (Declaration, Pattern)
 import Stage2.Shift (shift)
+import Stage2.Stage (Resolve)
 import qualified Stage2.Tree.Statements as Stage2
 import Stage3.Check.Context (Context)
 import Stage3.Temporary.Declarations (Declarations)
@@ -40,7 +41,7 @@ instance Unify.Zonk Statements where
       statements <- Unify.zonk zonker statements
       pure $ Let declarations statements
 
-check :: Context s scope -> Unify.Type s scope -> Stage2.Statements Normal scope -> ST s (Statements s scope)
+check :: Context s scope -> Unify.Type s scope -> Stage2.Statements Normal Resolve scope -> ST s (Statements s scope)
 check context typex = \case
   Stage2.Done {done} -> Done <$> Expression.check context typex done
   Stage2.Run {effect, after} -> do
