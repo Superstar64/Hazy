@@ -14,7 +14,7 @@ data LazyTypeDeclaration locality layout scope
 
 infix 4 :^
 
-type role TypeDeclaration phantom phantom nominal
+type role TypeDeclaration nominal nominal nominal
 
 type TypeDeclaration :: Locality -> Layout -> Environment -> Type
 data TypeDeclaration locality layout scope

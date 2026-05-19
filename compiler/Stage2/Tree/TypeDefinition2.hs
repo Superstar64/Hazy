@@ -17,19 +17,24 @@ import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage2.Stage (Resolve)
+import Stage2.Stage (Resolve, Stage)
 import Stage2.Tree.Type (Type)
 import Stage2.Tree.TypeDefinition (TypeDefinition)
 
-type TypeDefinition2 :: Locality -> Layout -> Environment -> Data.Kind.Type
-data TypeDefinition2 locality layout scope where
-  (:::) :: !(Annotation layout scope) -> !(TypeDefinition Resolve scope) -> TypeDefinition2 locality layout scope
-  Link :: !(Type.Link locality) -> !Int -> TypeDefinition2 locality Group scope
-  Group :: !(Strict.Vector (TypeDefinition Resolve (Scope.Group ':+ scope))) -> TypeDefinition2 locality Group scope
+type TypeDefinition2 :: Locality -> Layout -> Stage -> Environment -> Data.Kind.Type
+data TypeDefinition2 locality layout stage scope where
+  (:::) ::
+    !(Annotation layout stage scope) ->
+    !(TypeDefinition stage scope) ->
+    TypeDefinition2 locality layout stage scope
+  Link :: !(Type.Link locality) -> !Int -> TypeDefinition2 locality Group stage scope
+  Group ::
+    !(Strict.Vector (TypeDefinition stage (Scope.Group ':+ scope))) ->
+    TypeDefinition2 locality Group stage scope
 
 infix 5 :::
 
-instance Show (TypeDefinition2 locality layout scope) where
+instance Show (TypeDefinition2 locality layout stage scope) where
   showsPrec d = \case
     annotation ::: definition ->
       showParen (d > 5) $
@@ -42,45 +47,45 @@ instance Show (TypeDefinition2 locality layout scope) where
           . showsPrec 11 id
     Group set -> showParen (d > 10) $ showString "Group " . showsPrec 11 set
 
-instance Shift (TypeDefinition2 locality layout) where
+instance Shift (TypeDefinition2 locality layout stage) where
   shift = shiftDefault
 
-instance Shift.Functor (TypeDefinition2 locality layout) where
+instance Shift.Functor (TypeDefinition2 locality layout stage) where
   map category = \case
     annotation ::: definition -> Shift.map category annotation ::: Shift.map category definition
     Link link id -> Link link id
     Group set -> Group $ Shift.map (Shift.Over category) <$> set
 
-instance FreeTypeVariables (TypeDefinition2 locality layout) where
+instance FreeTypeVariables (TypeDefinition2 locality layout stage) where
   freeTypeVariables target = \case
     annotation ::: definition ->
       freeTypeVariables target annotation ++ freeTypeVariables target definition
     Link {} -> []
     Group set -> foldMap (freeTypeVariables (FreeVariables.Over target)) set
 
-data Annotation layout scope where
-  Annotated :: !(Type Position Resolve scope) -> Annotation layout scope
-  Inferred :: Annotation Normal scope
+data Annotation layout stage scope where
+  Annotated :: !(Type Position stage scope) -> Annotation layout stage scope
+  Inferred :: Annotation Normal stage scope
 
-instance Show (Annotation mark scope) where
+instance Show (Annotation mark stage scope) where
   showsPrec d = \case
     Annotated typex -> showParen (d > 10) $ showString "Annotated " . showsPrec 11 typex
     Inferred -> showString "Inferred"
 
-instance Shift (Annotation mark) where
+instance Shift (Annotation mark stage) where
   shift = shiftDefault
 
-instance Shift.Functor (Annotation mark) where
+instance Shift.Functor (Annotation mark stage) where
   map category = \case
     Annotated typex -> Annotated (Shift.map category typex)
     Inferred -> Inferred
 
-instance FreeTypeVariables (Annotation mark) where
+instance FreeTypeVariables (Annotation mark stage) where
   freeTypeVariables target = \case
     Annotated typex -> freeTypeVariables target typex
     Inferred -> []
 
-locality :: TypeDefinition2 locality Normal scope -> TypeDefinition2 locality' Normal scope
+locality :: TypeDefinition2 locality Normal stage scope -> TypeDefinition2 locality' Normal stage scope
 locality = \case
   annotation ::: definition -> annotation ::: definition
 
@@ -88,8 +93,8 @@ group ::
   (Type0.Index scope -> Type.Link locality) ->
   (Type.Link locality -> TypeDefinition Resolve scope) ->
   StronglyConnected.Component (Type.Link locality) ->
-  TypeDefinition2 locality Normal scope ->
-  TypeDefinition2 locality Group scope
+  TypeDefinition2 locality Normal Resolve scope ->
+  TypeDefinition2 locality Group Resolve scope
 group _ _ _ (Annotated typex ::: definition) = Annotated typex ::: definition
 group link index group (Inferred ::: _) = case group of
   StronglyConnected.Group {set} ->

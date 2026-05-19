@@ -9,9 +9,9 @@ import Stage2.Tree.Combinators.Inferred (Inferred (..))
 import qualified Stage2.Tree.Method as Solved.Method
 import qualified Stage2.Tree.TypeDefinition
 import qualified Stage2.Tree.TypeDefinition as Solved (TypeDefinition (ADT, Class, Synonym))
+import Stage2.Tree.TypeDefinition2 (TypeDefinition2 (..))
 import Stage2.Tree.TypePattern (TypePattern (..), typex')
 import qualified Stage3.Tree.TypeDeclaration as Solved (LazyTypeDeclaration (..), TypeDeclaration (..))
-import Stage3.Tree.TypeDefinition2 (TypeDefinition2 (..))
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
 import Stage4.Tree.Class (Class)

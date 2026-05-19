@@ -7,7 +7,7 @@ import Stage2.Layout (Layout)
 import Stage2.Locality (Locality)
 import Stage2.Scope (Environment)
 
-type role Declarations phantom phantom nominal
+type role Declarations nominal nominal nominal
 
 type Declarations :: Locality -> Layout -> Environment -> Type
 data Declarations locality layout scope

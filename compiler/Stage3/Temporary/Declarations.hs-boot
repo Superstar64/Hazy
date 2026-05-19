@@ -13,7 +13,7 @@ import Stage3.Check.Context (Context)
 import qualified Stage3.Tree.Declarations as Solved
 import qualified Stage3.Unify as Unify
 
-type role Declarations phantom nominal nominal
+type role Declarations nominal nominal nominal
 
 type Declarations :: Locality -> Type -> Environment -> Type
 data Declarations locality s scope

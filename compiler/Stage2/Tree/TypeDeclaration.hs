@@ -39,7 +39,7 @@ data TypeDeclaration locality layout scope
   { position :: !Position,
     name :: !ConstructorIdentifier,
     constructorNames :: !(Strict.Vector Constructor),
-    definition :: !(TypeDefinition2 locality layout scope)
+    definition :: !(TypeDefinition2 locality layout Resolve scope)
   }
   deriving (Show)
 

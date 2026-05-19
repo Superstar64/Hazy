@@ -7,15 +7,16 @@ import Stage1.Variable (ConstructorIdentifier)
 import Stage2.Layout (Layout, Normal)
 import Stage2.Locality (Locality)
 import Stage2.Scope (Environment)
+import Stage2.Stage (Check)
 import qualified Stage2.Tree.TypeDeclaration as Stage2 (TypeDeclaration (..))
 import Stage2.Tree.TypeDefinition (TypeDefinition (..))
+import Stage2.Tree.TypeDefinition2 (Annotation (..), TypeDefinition2 (..))
 import qualified Stage2.Tree.TypeDefinition2 as Stage2 (TypeDefinition2 (..))
 import Stage3.Check.Context (Context (..))
 import qualified Stage3.Check.KindAnnotation as KindAnnotation
 import qualified Stage3.Check.KindAnnotation as Stage3
 import qualified Stage3.Simple.Type as Simple.Type
 import qualified Stage3.Temporary.TypeDefinition as Temporary.TypeDefinition
-import Stage3.Tree.TypeDefinition2 (Annotation (..), TypeDefinition2 (..))
 import qualified Stage3.Unify as Unify
 import qualified Stage4.Tree.Type as Simple (Type)
 
@@ -28,7 +29,7 @@ type TypeDeclaration :: Locality -> Layout -> Environment -> Type
 data TypeDeclaration locality layout scope
   = TypeDeclaration
   { name :: !ConstructorIdentifier,
-    definition :: !(TypeDefinition2 scope),
+    definition :: !(TypeDefinition2 locality layout Check scope),
     kind :: !(Simple.Type scope)
   }
   deriving (Show)

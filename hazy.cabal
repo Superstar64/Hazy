@@ -395,7 +395,6 @@ executable hazy
     Stage3.Tree.Statements
     Stage3.Tree.TypeDeclaration
     Stage3.Tree.TypeDeclarationExtra
-    Stage3.Tree.TypeDefinition2
     Stage3.Unify
     Stage3.Unify.Builtin
     Stage3.Unify.Class
