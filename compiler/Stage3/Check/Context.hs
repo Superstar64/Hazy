@@ -9,6 +9,7 @@ import qualified Stage2.Index.Table.Term as Term
 import qualified Stage2.Index.Table.Type as Type
 import qualified Stage2.Index.Type2 as Type2
 import qualified Stage2.Label.Context as Label
+import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..), Global, Local)
 import qualified Stage2.Scope as Scope (Declaration)
 import qualified Stage2.Shift as Shift
@@ -50,9 +51,9 @@ instance Shift.Unshift (Context s) where
 globalBindings ::
   Functor.ModuleSet
     (ST s (GlobalTypeAnnotation Global))
-    (ST s (Declaration Global))
+    (ST s (Declaration locality Normal Global))
     (ST s (KindAnnotation Global))
-    (ST s (TypeDeclaration Global))
+    (ST s (TypeDeclaration locality Normal Global))
     (ST s (TypeDeclarationExtra Global))
     (ST s (InstanceAnnotation Global))
     x ->
@@ -77,7 +78,7 @@ localBindings ::
     (ST s (LocalTypeAnnotation s (Scope.Declaration ':+ scope)))
     x
     (ST s (KindAnnotation (Scope.Declaration ':+ scope)))
-    (ST s (TypeDeclaration (Scope.Declaration ':+ scope)))
+    (ST s (TypeDeclaration locality Normal (Scope.Declaration ':+ scope)))
     (ST s (Temporary.TypeDeclarationExtra s (Scope.Declaration ':+ scope)))
     (ST s (InstanceAnnotation (Scope.Declaration ':+ scope)))
     x' ->

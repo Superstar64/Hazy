@@ -3,11 +3,13 @@
 module Stage3.Tree.Declarations where
 
 import Data.Kind (Type)
+import Stage2.Layout (Layout)
+import Stage2.Locality (Locality)
 import Stage2.Scope (Environment)
 
-type role Declarations nominal
+type role Declarations phantom phantom nominal
 
-type Declarations :: Environment -> Type
-data Declarations scope
+type Declarations :: Locality -> Layout -> Environment -> Type
+data Declarations locality layout scope
 
-instance Show (Declarations scope)
+instance Show (Declarations locality layout scope)

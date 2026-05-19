@@ -2,6 +2,7 @@ module Stage3.Temporary.RightHandSide where
 
 import Control.Monad.ST (ST)
 import Stage2.Layout (Normal)
+import Stage2.Locality (Local)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope (Declaration)
 import Stage2.Shift (shift)
@@ -17,7 +18,7 @@ import qualified Stage3.Unify as Unify
 data RightHandSide s scope
   = RightHandSide
       !(Body s (Scope.Declaration ':+ scope))
-      !(Declarations s (Scope.Declaration ':+ scope))
+      !(Declarations Local s (Scope.Declaration ':+ scope))
 
 instance Unify.Zonk RightHandSide where
   zonk zonker (RightHandSide body declarations) = do

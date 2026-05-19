@@ -4,6 +4,7 @@ import Control.Monad.ST (ST)
 import Stage1.Position (Position)
 import qualified Stage2.Index.Type2 as Type2
 import Stage2.Layout (Normal)
+import Stage2.Locality (Local)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (shift)
@@ -36,7 +37,7 @@ data Do s scope
         fail :: !Bool
       }
   | Let
-      { declarations :: !(Declarations s (Scope.Declaration ':+ scope)),
+      { declarations :: !(Declarations Local s (Scope.Declaration ':+ scope)),
         letBody :: !(Do s (Scope.Declaration ':+ scope))
       }
 

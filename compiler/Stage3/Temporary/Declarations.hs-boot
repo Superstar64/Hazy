@@ -5,6 +5,7 @@ module Stage3.Temporary.Declarations where
 import Control.Monad.ST (ST)
 import Data.Kind (Type)
 import Stage2.Layout (Normal)
+import Stage2.Locality (Locality)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import qualified Stage2.Tree.Declarations as Stage2 (Declarations)
@@ -12,12 +13,12 @@ import Stage3.Check.Context (Context)
 import qualified Stage3.Tree.Declarations as Solved
 import qualified Stage3.Unify as Unify
 
-type role Declarations nominal nominal
+type role Declarations phantom nominal nominal
 
-type Declarations :: Type -> Environment -> Type
-data Declarations s scope
+type Declarations :: Locality -> Type -> Environment -> Type
+data Declarations locality s scope
 
-instance Unify.Zonk Declarations
+instance Unify.Zonk (Declarations locality)
 
 check ::
   Context s scope ->
@@ -25,6 +26,6 @@ check ::
   ST
     s
     ( Context s (Scope.Declaration ':+ scope),
-      Declarations s (Scope.Declaration ':+ scope)
+      Declarations locality s (Scope.Declaration ':+ scope)
     )
-solve :: Declarations s scope -> ST s (Solved.Declarations scope)
+solve :: Declarations locality s scope -> ST s (Solved.Declarations locality Normal scope)

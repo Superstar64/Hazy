@@ -6,6 +6,8 @@ import Data.Text (Text)
 import qualified Data.Vector.Strict as Strict (Vector)
 import Stage1.Position (Position)
 import qualified Stage2.Index.Constructor as Constructor
+import Stage2.Layout (Normal)
+import Stage2.Locality (Local)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Stage (Check)
@@ -48,7 +50,7 @@ data Expression scope
         argument :: !(Expression scope)
       }
   | Let
-      { declarations :: !(Declarations (Scope.Declaration ':+ scope)),
+      { declarations :: !(Declarations Local Normal (Scope.Declaration ':+ scope)),
         letBody :: !(Expression (Scope.Declaration ':+ scope))
       }
   | If

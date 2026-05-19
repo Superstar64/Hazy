@@ -1,6 +1,7 @@
 module Stage4.Tree.TypeDeclaration where
 
 import Stage1.Variable (ConstructorIdentifier)
+import Stage2.Layout (Normal)
 import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (Shift)
 import qualified Stage2.Shift as Shift
@@ -34,4 +35,4 @@ instance Shift TypeDeclaration
 
 instance Shift.Functor TypeDeclaration
 
-simplify' :: Solved.TypeDeclaration scope -> TypeDeclaration scope
+simplify' :: Solved.TypeDeclaration locality Normal scope -> TypeDeclaration scope

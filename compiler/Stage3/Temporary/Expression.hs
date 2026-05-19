@@ -18,6 +18,7 @@ import qualified Stage2.Index.Constructor as Constructor
 import qualified Stage2.Index.Table.Type as Type
 import qualified Stage2.Index.Type2 as Type2
 import Stage2.Layout (Normal)
+import Stage2.Locality (Local)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (shift)
@@ -89,7 +90,7 @@ data Expression s scope
         argument :: !(Expression s scope)
       }
   | Let
-      { declarations :: !(Declarations s (Scope.Declaration ':+ scope)),
+      { declarations :: !(Declarations Local s (Scope.Declaration ':+ scope)),
         letBody :: !(Expression s (Scope.Declaration ':+ scope))
       }
   | If

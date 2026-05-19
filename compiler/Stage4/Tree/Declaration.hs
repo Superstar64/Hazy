@@ -1,6 +1,7 @@
 module Stage4.Tree.Declaration where
 
 import qualified Stage2.Index.Term as Stage2.Term
+import Stage2.Layout (Normal)
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Check)
@@ -67,8 +68,8 @@ instance Substitute.Functor Declaration where
       }
 
 simplify ::
-  forall scope.
-  Stage3.LazyTermDeclaration scope ->
+  forall locality scope.
+  Stage3.LazyTermDeclaration locality Normal scope ->
   LazyTermDeclaration scope
 simplify (name Stage3.:^ declaration) =
   name :^ case declaration of

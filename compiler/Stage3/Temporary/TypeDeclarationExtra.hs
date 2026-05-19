@@ -56,7 +56,7 @@ instance Zonk TypeDeclarationExtra where
 check ::
   Context s scope ->
   Type.Index scope ->
-  TypeDeclaration scope ->
+  TypeDeclaration locality Normal scope ->
   Stage2.TypeDeclarationExtra Normal scope ->
   ST s (TypeDeclarationExtra s scope)
 check context classx declaration

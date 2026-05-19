@@ -86,7 +86,7 @@ checkGlobal context annotation Stage2.Declaration {position, name, definition} =
       pure $ Inferred ::: definition
     go _ _ = error "bad annotation"
 
-solve :: Declaration s scope -> ST s (Solved.Declaration scope)
+solve :: Declaration s scope -> ST s (Solved.Declaration locality Normal scope)
 solve Declaration {position, name, definition, typex} = do
   definition <- Definition4.solve position definition
   typex <- Unify.solveScheme position typex

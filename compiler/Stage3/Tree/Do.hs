@@ -1,5 +1,7 @@
 module Stage3.Tree.Do where
 
+import Stage2.Layout (Normal)
+import Stage2.Locality (Local)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Stage (Check)
@@ -23,7 +25,7 @@ data Do scope
         fail :: !Bool
       }
   | Let
-      { declarations :: !(Declarations (Scope.Declaration ':+ scope)),
+      { declarations :: !(Declarations Local Normal (Scope.Declaration ':+ scope)),
         letBody :: !(Do (Scope.Declaration ':+ scope))
       }
   deriving (Show)

@@ -2,6 +2,7 @@ module Stage3.Temporary.Statements where
 
 import Control.Monad.ST (ST)
 import Stage2.Layout (Normal)
+import Stage2.Locality (Local)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope (Declaration, Pattern)
 import Stage2.Shift (shift)
@@ -20,7 +21,7 @@ data Statements s scope
   = Done !(Expression s scope)
   | Run !(Expression s scope) !(Statements s scope)
   | Bind !(Pattern s scope) !(Expression s scope) !(Statements s (Scope.Pattern ':+ scope))
-  | Let !(Declarations s (Scope.Declaration ':+ scope)) !(Statements s (Scope.Declaration ':+ scope))
+  | Let !(Declarations Local s (Scope.Declaration ':+ scope)) !(Statements s (Scope.Declaration ':+ scope))
 
 instance Unify.Zonk Statements where
   zonk zonker = \case

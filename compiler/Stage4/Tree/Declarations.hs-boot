@@ -3,6 +3,7 @@
 module Stage4.Tree.Declarations where
 
 import Data.Kind (Type)
+import Stage2.Layout (Normal)
 import Stage2.Scope (Environment)
 import Stage2.Shift (Shift)
 import qualified Stage2.Shift as Shift
@@ -26,5 +27,5 @@ instance Shift2.Functor Declarations
 
 instance Substitute.Functor Declarations
 
-simplify :: Stage3.Declarations scope -> Declarations scope
+simplify :: Stage3.Declarations locality Normal scope -> Declarations scope
 single :: LazyTermDeclaration scope -> Declarations scope

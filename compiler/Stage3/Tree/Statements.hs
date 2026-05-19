@@ -1,5 +1,7 @@
 module Stage3.Tree.Statements where
 
+import Stage2.Layout (Normal)
+import Stage2.Locality (Local)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope (Declaration, Pattern)
 import Stage2.Stage (Check)
@@ -19,7 +21,7 @@ data Statements scope
         thenx :: !(Statements (Scope.Pattern ':+ scope))
       }
   | Let
-      { declarations :: !(Declarations (Scope.Declaration ':+ scope)),
+      { declarations :: !(Declarations Local Normal (Scope.Declaration ':+ scope)),
         body :: !(Statements (Scope.Declaration ':+ scope))
       }
   deriving (Show)

@@ -8,6 +8,7 @@ import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Stage2.Index.Type2 as Type2
 import qualified Stage2.Label.Binding.Type as Label
+import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (Category (Shift), Shift (..), shiftDefault)
 import qualified Stage2.Shift as Shift
@@ -69,7 +70,7 @@ rigid ::
   Functor.Annotated
     Label.TypeBinding
     (ST s (KindAnnotation scope))
-    (ST s (TypeDeclaration scope)) ->
+    (ST s (TypeDeclaration locality Normal scope)) ->
   ST s (TypeDeclarationExtra scope) ->
   Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) b) ->
   Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) d) ->
@@ -80,7 +81,7 @@ wobbly ::
   Functor.Annotated
     Label.TypeBinding
     (ST s (KindAnnotation scope))
-    (ST s (TypeDeclaration scope)) ->
+    (ST s (TypeDeclaration locality Normal scope)) ->
   ST s (Temporary.TypeDeclarationExtra s scope) ->
   Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) b) ->
   Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) d) ->

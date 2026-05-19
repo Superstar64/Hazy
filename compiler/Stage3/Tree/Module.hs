@@ -9,6 +9,7 @@ import qualified Graph.Topological7
 import Stage1.Variable (FullQualifiers)
 import qualified Stage2.Index.Type as Type
 import Stage2.Layout (Normal)
+import qualified Stage2.Locality as Locality
 import Stage2.Scope (Global)
 import qualified Stage2.Tree.Declaration as Stage2 (Declaration)
 import qualified Stage2.Tree.Declaration as Stage2.Declaration
@@ -46,7 +47,7 @@ import Prelude hiding (Functor)
 
 data Module = Module
   { name :: !FullQualifiers,
-    declarations :: Declarations Global
+    declarations :: Declarations Locality.Global Normal Global
   }
   deriving (Show)
 
@@ -55,9 +56,9 @@ type Formula s z =
     Functor.ModuleSet
     s
     (GlobalTypeAnnotation Global)
-    (Declaration Global)
+    (Declaration Locality.Global Normal Global)
     (KindAnnotation Global)
-    (TypeDeclaration Global)
+    (TypeDeclaration Locality.Global Normal Global)
     (TypeDeclarationExtra Global)
     (InstanceAnnotation Global)
     (Instance Global)
@@ -66,9 +67,9 @@ type Formula s z =
 fromFunctor ::
   Functor.Module
     a
-    (LazyTermDeclaration Global)
+    (LazyTermDeclaration Locality.Global Normal Global)
     b
-    (LazyTypeDeclaration Global)
+    (LazyTypeDeclaration Locality.Global Normal Global)
     (TypeDeclarationExtra Global)
     c
     (Instance Global) ->
@@ -82,9 +83,9 @@ fromFunctor (Functor.Module {name, declarations}) =
 fromFunctors ::
   Functor.ModuleSet
     a
-    (LazyTermDeclaration Global)
+    (LazyTermDeclaration Locality.Global Normal Global)
     b
-    (LazyTypeDeclaration Global)
+    (LazyTypeDeclaration Locality.Global Normal Global)
     (TypeDeclarationExtra Global)
     c
     (Instance Global) ->
@@ -146,7 +147,7 @@ checkTermDeclaration ::
   Int ->
   Int ->
   Stage2.Declaration locality Normal Global ->
-  Formula s (Declaration Global)
+  Formula s (Declaration locality Normal Global)
 checkTermDeclaration global local declaration = Formula7 {cycle, run}
   where
     cycle :: a
@@ -175,7 +176,7 @@ checkTypeDeclaration ::
   Int ->
   Int ->
   Stage2.TypeDeclaration.TypeDeclaration locality Normal Global ->
-  Formula s (TypeDeclaration Global)
+  Formula s (TypeDeclaration locality Normal Global)
 checkTypeDeclaration global local declaration = Formula7 {cycle, run}
   where
     cycle :: a

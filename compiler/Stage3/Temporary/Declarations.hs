@@ -49,15 +49,15 @@ import qualified Stage3.Tree.TypeDeclaration as TypeDeclaration
 import qualified Stage3.Unify as Unify
 import Prelude hiding (Functor)
 
-data Declarations s scope = Declarations
+data Declarations locality s scope = Declarations
   { terms :: !(Vector (Declaration s scope)),
-    types :: !(Vector (TypeDeclaration scope)),
+    types :: !(Vector (TypeDeclaration locality Normal scope)),
     typeExtras :: !(Vector (TypeDeclarationExtra s scope)),
     classInstances :: !(Vector (Map (Type2.Index scope) (Instance s scope))),
     dataInstances :: !(Vector (Map (Type2.Index scope) (Instance s scope)))
   }
 
-instance Unify.Zonk Declarations where
+instance Unify.Zonk (Declarations locality) where
   zonk
     zonker
     Declarations
@@ -80,14 +80,14 @@ instance Unify.Zonk Declarations where
             dataInstances
           }
 
-type Formula s scope z =
+type Formula locality s scope z =
   Formula7
     (Functor.Declarations (Scope.Declaration ':+ scope))
     s
     (LocalTypeAnnotation s (Scope.Declaration ':+ scope))
     (Declaration s (Scope.Declaration ':+ scope))
     (KindAnnotation (Scope.Declaration ':+ scope))
-    (TypeDeclaration (Scope.Declaration ':+ scope))
+    (TypeDeclaration locality Normal (Scope.Declaration ':+ scope))
     (TypeDeclarationExtra s (Scope.Declaration ':+ scope))
     (InstanceAnnotation (Scope.Declaration ':+ scope))
     (Instance s (Scope.Declaration ':+ scope))
@@ -99,11 +99,11 @@ fromFunctor ::
     a
     (Declaration s scope)
     b
-    (TypeDeclaration scope)
+    (TypeDeclaration locality Normal scope)
     (TypeDeclarationExtra s scope)
     c
     (Instance s scope) ->
-  Declarations s scope
+  Declarations locality s scope
 fromFunctor
   Functor.Declarations
     { terms,
@@ -126,7 +126,7 @@ check ::
   ST
     s
     ( Context s (Scope.Declaration ':+ scope),
-      Declarations s (Scope.Declaration ':+ scope)
+      Declarations locality s (Scope.Declaration ':+ scope)
     )
 check context declarations = do
   functor <-
@@ -156,7 +156,7 @@ checkTermAnnotation ::
   Context s scope ->
   p ->
   Stage2.Declaration locality Normal (Scope.Declaration ':+ scope) ->
-  Formula s scope (LocalTypeAnnotation s (Scope.Declaration ':+ scope))
+  Formula locality s scope (LocalTypeAnnotation s (Scope.Declaration ':+ scope))
 checkTermAnnotation context _ declaration = Formula7 {cycle, run}
   where
     cycle :: a
@@ -169,7 +169,7 @@ checkTermDeclaration ::
   Context s scope ->
   Int ->
   Stage2.Declaration locality Normal (Scope.Declaration ':+ scope) ->
-  Formula s scope (Declaration s (Scope.Declaration ':+ scope))
+  Formula locality s scope (Declaration s (Scope.Declaration ':+ scope))
 checkTermDeclaration context index declaration = Formula7 {cycle, run}
   where
     cycle :: a
@@ -184,7 +184,7 @@ checkTypeAnnotation ::
   Context s scope ->
   p ->
   Stage2.TypeDeclaration locality Normal (Scope.Declaration ':+ scope) ->
-  Formula s scope (KindAnnotation (Scope.Declaration ':+ scope))
+  Formula locality s scope (KindAnnotation (Scope.Declaration ':+ scope))
 checkTypeAnnotation context _ declaration = Formula7 {cycle, run}
   where
     cycle :: a
@@ -197,7 +197,7 @@ checkTypeDeclaration ::
   Context s scope ->
   Int ->
   Stage2.TypeDeclaration locality Normal (Scope.Declaration ':+ scope) ->
-  Formula s scope (TypeDeclaration (Scope.Declaration ':+ scope))
+  Formula locality s scope (TypeDeclaration locality Normal (Scope.Declaration ':+ scope))
 checkTypeDeclaration context index declaration = Formula7 {cycle, run}
   where
     cycle :: a
@@ -212,7 +212,7 @@ checkTypeDeclarationExtra ::
   Context s scope ->
   Int ->
   Stage2.TypeDeclarationExtra Normal (Scope.Declaration ':+ scope) ->
-  Formula s scope (TypeDeclarationExtra s (Scope.Declaration ':+ scope))
+  Formula locality s scope (TypeDeclarationExtra s (Scope.Declaration ':+ scope))
 checkTypeDeclarationExtra context index declaration = Formula7 {cycle, run}
   where
     cycle :: a
@@ -227,7 +227,7 @@ checkInstanceAnnotation ::
   Context s scope ->
   p ->
   Stage2.Instance.Instance Normal (Scope.Declaration ':+ scope) ->
-  Formula s scope (InstanceAnnotation (Scope.Declaration ':+ scope))
+  Formula locality s scope (InstanceAnnotation (Scope.Declaration ':+ scope))
 checkInstanceAnnotation context _ declaration = Formula7 {cycle, run}
   where
     cycle :: a
@@ -238,7 +238,7 @@ checkInstanceDeclaration ::
   Context s scope ->
   Instance.Key.Key (Scope.Declaration ':+ scope) ->
   Stage2.Instance Normal (Scope.Declaration ':+ scope) ->
-  Formula s scope (Instance s (Scope.Declaration ':+ scope))
+  Formula locality s scope (Instance s (Scope.Declaration ':+ scope))
 checkInstanceDeclaration context key declaration = Formula7 {cycle, run}
   where
     cycle :: a
@@ -257,7 +257,7 @@ checkInstanceDeclaration context key declaration = Formula7 {cycle, run}
           annotation <- meta
           Instance.check (localBindings declarations context) key annotation declaration
 
-solve :: Declarations s scope -> ST s (Solved.Declarations scope)
+solve :: Declarations locality s scope -> ST s (Solved.Declarations locality Normal scope)
 solve
   Declarations
     { terms,

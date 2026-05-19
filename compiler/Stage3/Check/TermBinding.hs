@@ -1,6 +1,7 @@
 module Stage3.Check.TermBinding where
 
 import Control.Monad.ST (ST)
+import Stage2.Layout (Normal)
 import Stage2.Shift (Shift (..))
 import Stage3.Check.TypeAnnotation (Annotation (..), GlobalTypeAnnotation (..), LocalTypeAnnotation (..))
 import qualified Stage3.Functor.Annotated as Functor (Annotated (..))
@@ -25,7 +26,10 @@ instance Shift (TermBinding s) where
   shift TermBinding {typex} = TermBinding {typex = fmap shift typex}
 
 rigid ::
-  Functor.Annotated name (ST s (GlobalTypeAnnotation scope)) (ST s (Declaration scope)) ->
+  Functor.Annotated
+    name
+    (ST s (GlobalTypeAnnotation scope))
+    (ST s (Declaration locality Normal scope)) ->
   TermBinding s scope
 rigid Functor.Annotated {meta, content} = TermBinding $ do
   annotation <- meta

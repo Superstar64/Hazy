@@ -1,9 +1,12 @@
 module Stage3.Tree.TypeDeclaration where
 
 import Control.Monad.ST (ST)
+import Data.Kind (Type)
 import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import Stage1.Variable (ConstructorIdentifier)
-import Stage2.Layout (Normal)
+import Stage2.Layout (Layout, Normal)
+import Stage2.Locality (Locality)
+import Stage2.Scope (Environment)
 import qualified Stage2.Tree.TypeDeclaration as Stage2 (TypeDeclaration (..))
 import Stage2.Tree.TypeDefinition (TypeDefinition (..))
 import qualified Stage2.Tree.TypeDefinition2 as Stage2 (TypeDefinition2 (..))
@@ -16,12 +19,13 @@ import Stage3.Tree.TypeDefinition2 (Annotation (..), TypeDefinition2 (..))
 import qualified Stage3.Unify as Unify
 import qualified Stage4.Tree.Type as Simple (Type)
 
-data LazyTypeDeclaration scope = !ConstructorIdentifier :^ TypeDeclaration scope
+data LazyTypeDeclaration locality layout scope = !ConstructorIdentifier :^ TypeDeclaration locality layout scope
   deriving (Show)
 
 infix 4 :^
 
-data TypeDeclaration scope
+type TypeDeclaration :: Locality -> Layout -> Environment -> Type
+data TypeDeclaration locality layout scope
   = TypeDeclaration
   { name :: !ConstructorIdentifier,
     definition :: !(TypeDefinition2 scope),
@@ -31,14 +35,14 @@ data TypeDeclaration scope
 
 strict declaration@TypeDeclaration {name} = name :^ declaration
 
-kind_ :: TypeDeclaration scope -> Simple.Type scope
+kind_ :: TypeDeclaration locality layout scope -> Simple.Type scope
 kind_ = kind
 
 check ::
   Context s scope ->
   Stage3.KindAnnotation scope ->
   Stage2.TypeDeclaration locality Normal scope ->
-  ST s (TypeDeclaration scope)
+  ST s (TypeDeclaration locality Normal scope)
 check
   _
   KindAnnotation.Synonym {kind, annotation', parameters, synonym}

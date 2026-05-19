@@ -1,6 +1,7 @@
 module Stage4.Tree.TypeDeclaration where
 
 import Stage1.Lexer (ConstructorIdentifier)
+import Stage2.Layout (Normal)
 import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
@@ -90,10 +91,10 @@ instance Substitute.Functor TypeDeclaration where
           definition = Substitute.map (Substitute.Over category) definition
         }
 
-simplify :: Solved.LazyTypeDeclaration scope -> LazyTypeDeclaration scope
+simplify :: Solved.LazyTypeDeclaration locality Normal scope -> LazyTypeDeclaration scope
 simplify (name Solved.:^ declaration) = name :^ simplify' declaration
 
-simplify' :: Solved.TypeDeclaration scope -> TypeDeclaration scope
+simplify' :: Solved.TypeDeclaration locality Normal scope -> TypeDeclaration scope
 simplify' Solved.TypeDeclaration {name, definition = _ ::: definition} = case definition of
   Solved.ADT {parameters, constructors, selectors, brand} ->
     Data
