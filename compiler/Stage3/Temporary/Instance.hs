@@ -44,7 +44,6 @@ import qualified Stage4.Tree.Constraint as Simple (Constraint (Constraint))
 import qualified Stage4.Tree.Constraint as Simple.Constraint
 import qualified Stage4.Tree.Evidence as Simple (Evidence)
 import qualified Stage4.Tree.Evidence as Simple.Evidence
-import {-# SOURCE #-} qualified Stage4.Tree.Expression as Simple.Expression
 import qualified Stage4.Tree.Instanciation as Simple (Instanciation (Instanciation))
 import qualified Stage4.Tree.Instanciation as Simple.Instanciation
 import qualified Stage4.Tree.Scheme as Simple (Scheme (..))
@@ -159,22 +158,13 @@ check
               result <- pure $ Simple.Type.lift result
               context <- Simple.Scheme.augment' startPosition scheme Mask.Runtime context
               definition <- Definition.check context result member
-              let definition' = Unify.Delay $ do
-                    definition <- Definition.solve definition
-                    let result = Simple.Expression.simplify definition
-                    pure $ Simple.SchemeOver {parameters, constraints, result}
-              pure Definition {definition, definition'}
+              pure Definition {parameters, constraints, definition}
             check index scheme Strict.Nothing = do
-              let definition' = Unify.Delay $ do
+              let Simple.Scheme Simple.SchemeOver {parameters, constraints} = scheme
+                  defaultx = Unify.Delay $ do
                     ClassExtra {defaults} <- extra
-                    let defaultx = defaults Strict.Vector.! index
-                    let typeReplacements = Vector.singleton base
-                        evidenceReplacements = Vector.singleton self
-                        category = Substitute.Over $ Substitute Shift.Shift typeReplacements evidenceReplacements
-                        Simple.Scheme Simple.SchemeOver {parameters, constraints} = scheme
-                        result = Substitute.map category defaultx
-                    pure Simple.SchemeOver {parameters, constraints, result}
-              pure Default {definition'}
+                    pure $ defaults Strict.Vector.! index
+              pure Default {parameters, constraints, self, base, defaultx}
         members <- izipWithM check methods (fmap shift <$> members)
         pure Instance {parameters, prerequisites, evidence, members}
 

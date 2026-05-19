@@ -1,16 +1,24 @@
 module Stage3.Tree.InstanceMethod where
 
+import qualified Data.Vector.Strict as Strict
 import Stage2.Scope (Environment (..), Local)
 import Stage3.Tree.Definition (Definition)
+import qualified Stage4.Tree.Constraint as Simple (Constraint)
+import qualified Stage4.Tree.Evidence as Simple (Evidence)
 import {-# SOURCE #-} qualified Stage4.Tree.Expression as Simple (Expression)
-import qualified Stage4.Tree.SchemeOver as Simple (SchemeOver)
+import qualified Stage4.Tree.Type as Simple (Type)
 
 data InstanceMethod scope
   = Definition
-      { definition :: !(Definition (Local ':+ Local ':+ scope)),
-        definition' :: !(Simple.SchemeOver Simple.Expression (Local ':+ scope))
+      { parameters :: !(Strict.Vector (Simple.Type (Local ':+ scope))),
+        constraints :: !(Strict.Vector (Simple.Constraint (Local ':+ scope))),
+        definition :: !(Definition (Local ':+ Local ':+ scope))
       }
   | Default
-      { definition' :: !(Simple.SchemeOver Simple.Expression (Local ':+ scope))
+      { parameters :: !(Strict.Vector (Simple.Type (Local ':+ scope))),
+        constraints :: !(Strict.Vector (Simple.Constraint (Local ':+ scope))),
+        base :: !(Simple.Type (Local ':+ scope)),
+        self :: !(Simple.Evidence (Local ':+ scope)),
+        defaultx :: !(Simple.Expression (Local ':+ (Local ':+ scope)))
       }
   deriving (Show)
