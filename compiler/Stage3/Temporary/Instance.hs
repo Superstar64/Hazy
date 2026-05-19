@@ -30,8 +30,8 @@ import qualified Stage3.Index.Evidence0 as Evidence0
 import qualified Stage3.Simple.Scheme as Simple.Scheme (augment')
 import qualified Stage3.Simple.Type as Simple.Type (lift)
 import qualified Stage3.Temporary.Definition as Definition
-import Stage3.Temporary.InstanceMethod (InstanceMethod (..))
-import qualified Stage3.Temporary.InstanceMethod as InstanceMethod
+import Stage3.Temporary.MethodConcrete (MethodConcrete (..))
+import qualified Stage3.Temporary.MethodConcrete as MethodConcrete
 import qualified Stage3.Tree.Instance as Solved (Instance (..))
 import qualified Stage3.Tree.Scheme as Scheme
 import qualified Stage3.Unify as Unify
@@ -77,7 +77,7 @@ data Instance s scope = Instance
   { parameters :: !(Strict.Vector (Solved.TypePattern Position Check scope)),
     prerequisites :: !(Strict.Vector (Solved.Constraint Position Check scope)),
     evidence :: !(Strict.Vector (Simple.Evidence (Local ':+ scope))),
-    members :: !(Strict.Vector (InstanceMethod s scope))
+    members :: !(Strict.Vector (MethodConcrete s scope))
   }
 
 instance Unify.Zonk Instance where
@@ -170,5 +170,5 @@ check
 
 solve :: Instance s scope -> ST s (Solved.Instance scope)
 solve Instance {parameters, prerequisites, evidence, members} = do
-  members <- traverse InstanceMethod.solve members
+  members <- traverse MethodConcrete.solve members
   pure Solved.Instance {parameters, prerequisites, evidence, members}

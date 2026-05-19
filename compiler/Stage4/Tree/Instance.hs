@@ -8,13 +8,13 @@ import qualified Stage3.Tree.Instance as Stage3 (Instance (..))
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
 import Stage4.Tree.Evidence (Evidence)
-import Stage4.Tree.InstanceMethod (InstanceMethod)
-import qualified Stage4.Tree.InstanceMethod as InstanceMethod
+import Stage4.Tree.MethodConcrete (MethodConcrete)
+import qualified Stage4.Tree.MethodConcrete as MethodConcrete
 
 data Instance scope = Instance
   { evidence :: !(Strict.Vector (Evidence (Local ':+ scope))),
     prerequisitesCount :: !Int,
-    members :: !(Strict.Vector (InstanceMethod scope))
+    members :: !(Strict.Vector (MethodConcrete scope))
   }
   deriving (Show)
 
@@ -40,5 +40,5 @@ simplify Stage3.Instance {evidence, prerequisites, members} =
   Instance
     { evidence,
       prerequisitesCount = length prerequisites,
-      members = InstanceMethod.simplify <$> members
+      members = MethodConcrete.simplify <$> members
     }

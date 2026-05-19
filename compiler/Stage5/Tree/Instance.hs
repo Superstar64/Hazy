@@ -8,7 +8,7 @@ import qualified Javascript.Tree.Expression as Javascript (Expression (..))
 import qualified Javascript.Tree.Field as Javascript (Field (..))
 import qualified Javascript.Tree.Statement as Javascript (Statement (..))
 import Stage4.Tree.Instance (Instance (..))
-import Stage4.Tree.InstanceMethod (InstanceMethod (..))
+import Stage4.Tree.MethodConcrete (MethodConcrete (..))
 import Stage5.Generate.Context (Context)
 import qualified Stage5.Generate.Context as Context
 import qualified Stage5.Generate.Mangle as Mangle

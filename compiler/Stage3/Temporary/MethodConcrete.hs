@@ -1,18 +1,18 @@
-module Stage3.Temporary.InstanceMethod where
+module Stage3.Temporary.MethodConcrete where
 
 import Control.Monad.ST (ST)
 import qualified Data.Vector.Strict as Strict
 import Stage2.Scope (Environment (..), Local)
 import Stage3.Temporary.Definition (Definition)
 import qualified Stage3.Temporary.Definition as Definition
-import qualified Stage3.Tree.InstanceMethod as Solved
+import qualified Stage3.Tree.MethodConcrete as Solved
 import qualified Stage3.Unify as Unify
 import qualified Stage4.Tree.Constraint as Simple (Constraint)
 import qualified Stage4.Tree.Evidence as Simple (Evidence)
 import {-# SOURCE #-} qualified Stage4.Tree.Expression as Simple (Expression)
 import qualified Stage4.Tree.Type as Simple (Type)
 
-data InstanceMethod s scope
+data MethodConcrete s scope
   = Definition
       { parameters :: !(Strict.Vector (Simple.Type (Local ':+ scope))),
         constraints :: !(Strict.Vector (Simple.Constraint (Local ':+ scope))),
@@ -26,7 +26,7 @@ data InstanceMethod s scope
         defaultx :: !(Unify.Delay Simple.Expression s (Local ':+ (Local ':+ scope)))
       }
 
-instance Unify.Zonk InstanceMethod where
+instance Unify.Zonk MethodConcrete where
   zonk zonker = \case
     Definition {parameters, constraints, definition} -> do
       definition <- Unify.zonk zonker definition
@@ -35,7 +35,7 @@ instance Unify.Zonk InstanceMethod where
       defaultx <- Unify.zonk zonker defaultx
       pure Default {parameters, constraints, base, self, defaultx}
 
-solve :: InstanceMethod s scope -> ST s (Solved.InstanceMethod scope)
+solve :: MethodConcrete s scope -> ST s (Solved.MethodConcrete scope)
 solve = \case
   Definition {parameters, constraints, definition} -> do
     definition <- Definition.solve definition

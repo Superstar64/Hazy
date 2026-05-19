@@ -355,9 +355,9 @@ executable hazy
     Stage3.Temporary.Field
     Stage3.Temporary.Function
     Stage3.Temporary.Instance
-    Stage3.Temporary.InstanceMethod
     Stage3.Temporary.Lambda
     Stage3.Temporary.Method
+    Stage3.Temporary.MethodConcrete
     Stage3.Temporary.Pattern
     Stage3.Temporary.PatternField
     Stage3.Temporary.RightHandSide
@@ -385,8 +385,8 @@ executable hazy
     Stage3.Tree.ExpressionField
     Stage3.Tree.Function
     Stage3.Tree.Instance
-    Stage3.Tree.InstanceMethod
     Stage3.Tree.Lambda
+    Stage3.Tree.MethodConcrete
     Stage3.Tree.MethodInfo
     Stage3.Tree.Module
     Stage3.Tree.RightHandSide
@@ -443,8 +443,8 @@ executable hazy
     Stage4.Tree.Expression
     Stage4.Tree.Hook
     Stage4.Tree.Instance
-    Stage4.Tree.InstanceMethod
     Stage4.Tree.Instanciation
+    Stage4.Tree.MethodConcrete
     Stage4.Tree.MethodInfo
     Stage4.Tree.Module
     Stage4.Tree.Scheme

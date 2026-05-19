@@ -1,4 +1,4 @@
-module Stage3.Tree.InstanceMethod where
+module Stage3.Tree.MethodConcrete where
 
 import qualified Data.Vector.Strict as Strict
 import Stage2.Scope (Environment (..), Local)
@@ -8,7 +8,7 @@ import qualified Stage4.Tree.Evidence as Simple (Evidence)
 import {-# SOURCE #-} qualified Stage4.Tree.Expression as Simple (Expression)
 import qualified Stage4.Tree.Type as Simple (Type)
 
-data InstanceMethod scope
+data MethodConcrete scope
   = Definition
       { parameters :: !(Strict.Vector (Simple.Type (Local ':+ scope))),
         constraints :: !(Strict.Vector (Simple.Constraint (Local ':+ scope))),
