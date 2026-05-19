@@ -1,7 +1,6 @@
 module Stage3.Temporary.Instance where
 
 import Control.Monad.ST (ST)
-import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import Data.Traversable (for)
 import qualified Data.Vector as Vector
 import Data.Vector.Strict (izipWithM)
@@ -18,7 +17,8 @@ import Stage2.Shift (shift)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Check, Resolve)
 import qualified Stage2.Tree.Constraint as Solved (Constraint)
-import qualified Stage2.Tree.Instance as Stage2
+import qualified Stage2.Tree.Instance as Stage2 (Instance (..))
+import qualified Stage2.Tree.MethodConcrete as Stage2 (MethodConcrete (..))
 import qualified Stage2.Tree.TypePattern as Solved (TypePattern)
 import Stage3.Check.Context (Context (..))
 import Stage3.Check.InstanceAnnotation (InstanceAnnotation (InstanceAnnotation))
@@ -153,19 +153,19 @@ check
             let parameter = foldl Simple.Type.Call base arguments
             evidence <- Unify.constrain context startPosition (shift classx) (Simple.Type.lift parameter)
             Unify.solveEvidence startPosition evidence
-        let check _ scheme (Strict.Just member) = do
+        let check _ scheme Stage2.Definition {definition = member} = do
               let Simple.Scheme Simple.SchemeOver {parameters, constraints, result} = scheme
               result <- pure $ Simple.Type.lift result
               context <- Simple.Scheme.augment' startPosition scheme Mask.Runtime context
               definition <- Definition.check context result member
               pure Definition {parameters, constraints, definition}
-            check index scheme Strict.Nothing = do
+            check index scheme Stage2.Default {} = do
               let Simple.Scheme Simple.SchemeOver {parameters, constraints} = scheme
                   defaultx = Unify.Delay $ do
                     ClassExtra {defaults} <- extra
                     pure $ defaults Strict.Vector.! index
               pure Default {parameters, constraints, self, base, defaultx}
-        members <- izipWithM check methods (fmap shift <$> members)
+        members <- izipWithM check methods (shift <$> members)
         pure Instance {parameters, prerequisites, evidence, members}
 
 solve :: Instance s scope -> ST s (Solved.Instance scope)

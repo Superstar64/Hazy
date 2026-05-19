@@ -291,6 +291,7 @@ executable hazy
     Stage2.Tree.Instance
     Stage2.Tree.Lambda
     Stage2.Tree.Method
+    Stage2.Tree.MethodConcrete
     Stage2.Tree.Module
     Stage2.Tree.Pattern
     Stage2.Tree.PatternField

@@ -6,7 +6,6 @@ import Data.Foldable (toList)
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.Map (Map)
 import qualified Data.Map as Map
-import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import qualified Data.Vector.Strict as Strict (Vector)
 import Error (notClassMethod, patternInMethod)
 import Order (orderListInt')
@@ -19,15 +18,14 @@ import Stage1.Variable (Variable)
 import Stage2.Connect (Connect (..))
 import Stage2.Layout (Normal)
 import Stage2.Resolve.Context (Context)
-import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Resolve)
 import qualified Stage2.Temporary.Complete.Definition as Complete (Definition (..), resolve)
 import Stage2.Tree.Constraint (Constraint)
 import qualified Stage2.Tree.Constraint as Constraint
-import Stage2.Tree.Definition (Definition)
 import qualified Stage2.Tree.Definition as Definition (merge)
+import Stage2.Tree.MethodConcrete (MethodConcrete (..))
 import qualified Stage2.Tree.Scheme as Scheme
 import Stage2.Tree.TypePattern (TypePattern)
 import qualified Stage2.Tree.TypePattern as TypePattern
@@ -37,7 +35,7 @@ data Instance layout stage scope = Instance
     prerequisites :: !(Strict.Vector (Constraint Position Resolve scope)),
     classPosition :: !Position,
     parameters :: !(Strict.Vector (TypePattern Position Resolve scope)),
-    members :: !(Strict.Vector (Strict.Maybe (Definition layout stage (Local ':+ scope))))
+    members :: !(Strict.Vector (MethodConcrete layout stage scope))
   }
   deriving (Show)
 
@@ -51,7 +49,7 @@ instance Shift.Functor (Instance layout stage) where
         prerequisites = fmap (Shift.map category) prerequisites,
         classPosition,
         parameters = Shift.map category <$> parameters,
-        members = fmap (fmap (Shift.map (Shift.Over category))) members
+        members = fmap (Shift.map category) members
       }
 
 instance Connect Instance where
@@ -61,7 +59,7 @@ instance Connect Instance where
         prerequisites,
         classPosition,
         parameters,
-        members = fmap connect <$> members
+        members = connect <$> members
       }
 
 resolve ::
@@ -85,8 +83,8 @@ resolve
       prerequisites <- fmap (Constraint.resolve (Scheme.augmentWith parameters context)) prerequisites =
         let members = orderListInt' combine (length memberMethods) members
               where
-                combine (member : members) = Strict.Just $ Definition.merge (member :| members)
-                combine [] = Strict.Nothing
+                combine (member : members) = Definition $ Definition.merge (member :| members)
+                combine [] = Default
                 members = map member (toList declarations)
                 member = \case
                   Stage1.Definition {startPosition, leftHandSide, rightHandSide} ->
