@@ -98,16 +98,13 @@ check context@Context {termEnvironment} _ typex declaration = case declaration o
 
 solve :: Position -> Definition2 source mark s scope -> ST s (Solved.Definition2 source mark scope)
 solve position = \case
-  Definition definition typex -> do
+  Definition definition _ -> do
     definition <- Definition.solve definition
-    typex <- Unify.solve position typex
-    pure $ Solved.Definition definition typex
-  Piece Choice {index, instanciation, patternx, bound} typex -> do
+    pure $ Solved.Definition definition
+  Piece Choice {index, instanciation, patternx, bound} _ -> do
     instanciation <- Unify.solveInstanciation position instanciation
     patternx <- Pattern.solve patternx
-    typex <- Unify.solve position typex
-    pure $ Solved.Piece Solved.Choice {index, instanciation, patternx, bound} typex
-  Shared shared typex -> do
+    pure $ Solved.Piece Solved.Choice {index, instanciation, patternx, bound}
+  Shared shared _ -> do
     shared <- RightHandSide.solve shared
-    typex <- Unify.solve position typex
-    pure $ Solved.Shared shared typex
+    pure $ Solved.Shared shared

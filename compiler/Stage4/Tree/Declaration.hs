@@ -86,8 +86,8 @@ simplify (name Stage3.:^ declaration) =
   where
     go :: SchemeOver.Map (Stage3.Definition2 source mark) Expression
     go = SchemeOver.Map $ \case
-      Stage3.Definition definition _ -> Expression.simplify definition
-      Stage3.Piece Stage3.Choice {index, instanciation, patternx, bound} _ ->
+      Stage3.Definition definition -> Expression.simplify definition
+      Stage3.Piece Stage3.Choice {index, instanciation, patternx, bound} ->
         Expression.Join
           { statements =
               Statements.bind
@@ -103,7 +103,7 @@ simplify (name Stage3.:^ declaration) =
                           Stage2.Term.Pattern bound
                   }
           }
-      Stage3.Definition2.Shared shared _ -> Expression.simplify shared
+      Stage3.Definition2.Shared shared -> Expression.simplify shared
 
 annotation :: SchemeOver Stage3.Expression scope -> Stage3.Scheme position Check scope -> LazyTermDeclaration scope
 annotation SchemeOver {parameters, constraints, result} scheme =

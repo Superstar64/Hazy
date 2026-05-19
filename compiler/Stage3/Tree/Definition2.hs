@@ -9,40 +9,27 @@ import Stage2.Tree.Pattern (Pattern)
 import Stage3.Tree.Definition (Definition)
 import Stage3.Tree.RightHandSide (RightHandSide)
 import qualified Stage4.Tree.Instanciation as Simple (Instanciation)
-import qualified Stage4.Tree.Type as Simple (Type)
 import Prelude hiding (Maybe (Just))
 
 data Definition2 source mark scope where
-  Definition :: !(Definition scope) -> !(Simple.Type scope) -> Definition2 Single mark scope
-  Piece :: !(Choice scope) -> !(Simple.Type scope) -> Definition2 Single mark scope
-  Shared :: !(RightHandSide scope) -> !(Simple.Type scope) -> Definition2 Share Inferred scope
-
-typex :: Definition2 source mark scope -> Simple.Type scope
-typex = \case
-  Definition _ typex -> typex
-  Piece _ typex -> typex
-  Shared _ typex -> typex
+  Definition :: !(Definition scope) -> Definition2 Single mark scope
+  Piece :: !(Choice scope) -> Definition2 Single mark scope
+  Shared :: !(RightHandSide scope) -> Definition2 Share Inferred scope
 
 instance Show (Definition2 source mark scope) where
   showsPrec d = \case
-    Definition definition typex ->
+    Definition definition ->
       showParen (d > 10) $
         showString "Definition "
           . showsPrec 11 definition
-          . showString " "
-          . showsPrec 11 typex
-    Piece choice typex ->
+    Piece choice ->
       showParen (d > 10) $
         showString "Piece "
           . showsPrec 11 choice
-          . showString " "
-          . showsPrec 11 typex
-    Shared shared typex ->
+    Shared shared ->
       showParen (d > 10) $
         showString "Shared "
           . showsPrec 11 shared
-          . showString " "
-          . showsPrec 11 typex
 
 instance Scope.Show (Definition2 mark source) where
   showsPrec = showsPrec
