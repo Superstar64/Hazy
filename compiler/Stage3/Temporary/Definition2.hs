@@ -75,10 +75,13 @@ check ::
   Unify.Type s (scope ':+ scopes) ->
   Stage2.Definition2 source mark Normal Resolve scopes ->
   ST s (Definition2 source mark s (scope ':+ scopes))
-check context Auto typex (Stage2.Auto definition) = do
+check context Auto typex (Stage2.Definition definition) = do
   definition <- Definition.check context typex (shift definition)
   pure $ Definition definition typex
-check context Manual typex (Stage2.Manual definition) = do
+check context Manual typex (Stage2.Definition definition) = do
+  definition <- Definition.check context typex (shift definition)
+  pure $ Definition definition typex
+check context Manual typex (Stage2.Scoped definition) = do
   definition <- Definition.check context typex definition
   pure $ Definition definition typex
 check context Auto typex (Stage2.Shared definition) = do

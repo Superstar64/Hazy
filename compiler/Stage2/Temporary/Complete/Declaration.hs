@@ -44,6 +44,7 @@ import qualified Stage2.Tree.Definition2 as Real (Choice (..), Definition2 (..))
 import qualified Stage2.Tree.Definition3 as Real (Definition3 (..), Info (..))
 import qualified Stage2.Tree.Definition4 as Real (Annotation (..), Definition4 (..))
 import Stage2.Tree.Scheme (Scheme)
+import qualified Stage2.Tree.Scheme as Scheme
 import Verbose (Debug (resolving))
 import Prelude hiding (Either (Left, Right), Real)
 
@@ -84,33 +85,36 @@ merge entries@(entry :| _) =
       _ | Partial.Shared {shared} :| [] <- entries -> pure $ Real shared
       [] -> missingVariableEntry position
       [_]
-        | Just (position, body) <- functions -> case annotation of
-            Nothing -> cast <$> Verbose.resolving (Variable.printLiteral' properName) real
-              where
-                cast declaration = Real $ Real.locality declaration
-                real =
-                  Real.Declaration
-                    { position,
-                      name,
-                      definition =
-                        Real.Inferred
-                          Real.::: Real.Name properName fixity
-                          Real.::@ Real.Auto merged
-                    }
-                merged = Definition.merge $ fmap More.Function.functionAuto body
-            Just annotation -> cast <$> Verbose.resolving (Variable.printLiteral' properName) real
-              where
-                cast declaration = Real $ Real.locality declaration
-                real =
-                  Real.Declaration
-                    { position,
-                      name,
-                      definition =
-                        Real.Annotated annotation
-                          Real.::: Real.Name properName fixity
-                          Real.::@ Real.Manual merged
-                    }
-                merged = Definition.merge $ fmap More.Function.functionManual body
+        | Just (position, body) <- functions ->
+            let manual = Definition.merge $ fmap More.Function.functionManual body
+                auto = Definition.merge $ fmap More.Function.functionAuto body
+             in case annotation of
+                  Nothing -> cast <$> Verbose.resolving (Variable.printLiteral' properName) real
+                    where
+                      cast declaration = Real $ Real.locality declaration
+                      real =
+                        Real.Declaration
+                          { position,
+                            name,
+                            definition =
+                              Real.Inferred
+                                Real.::: Real.Name properName fixity
+                                Real.::@ Real.Definition auto
+                          }
+                  Just annotation -> cast <$> Verbose.resolving (Variable.printLiteral' properName) real
+                    where
+                      cast declaration = Real $ Real.locality declaration
+                      real =
+                        Real.Declaration
+                          { position,
+                            name,
+                            definition =
+                              Real.Annotated annotation
+                                Real.::: Real.Name properName fixity
+                                Real.::@ if Scheme.implicit annotation
+                                  then Real.Definition auto
+                                  else Real.Scoped manual
+                          }
         | Just (_, selector) <- selection,
           () <- noAnnotation ->
             pure $ Select selector

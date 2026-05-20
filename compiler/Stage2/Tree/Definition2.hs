@@ -10,7 +10,7 @@ import Stage2.Layout (Layout)
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage2.Stage (Stage)
+import Stage2.Stage (Resolve, Stage)
 import Stage2.Tree.Definition (Definition)
 import Stage2.Tree.Pattern (Pattern)
 import Stage2.Tree.RightHandSide (RightHandSide)
@@ -33,18 +33,18 @@ type Share = 'Share
 
 type Definition2 :: Source -> Mark -> Layout -> Stage -> Environment -> Type
 data Definition2 source mark layout stage scope where
-  Manual :: Definition layout stage (Local ':+ scope) -> Definition2 Single Annotated layout stage scope
-  Auto :: !(Definition layout stage scope) -> Definition2 Single Inferred layout stage scope
+  Scoped :: Definition layout Resolve (Local ':+ scope) -> Definition2 Single Annotated layout Resolve scope
+  Definition :: (Definition layout stage scope) -> Definition2 Single mark layout stage scope
   Piece :: !(Choice stage scope) -> Definition2 Single mark layout stage scope
   Shared :: !(RightHandSide layout stage scope) -> Definition2 Share Inferred layout stage scope
 
 instance Show (Definition2 source mark layout stage scope) where
-  showsPrec d (Manual definition) =
+  showsPrec d (Scoped definition) =
     showParen (d > 10) $
-      showString "Manual " . showsPrec 11 definition
-  showsPrec d (Auto definition) =
+      showString "Scoped " . showsPrec 11 definition
+  showsPrec d (Definition definition) =
     showParen (d > 10) $
-      showString "Auto " . showsPrec 11 definition
+      showString "Definition " . showsPrec 11 definition
   showsPrec d (Piece choice) =
     showParen (d > 10) $ showString "Piece " . showsPrec 11 choice
   showsPrec d (Shared definition) =
@@ -55,23 +55,23 @@ instance Shift (Definition2 source mark stage layout) where
 
 instance Shift.Functor (Definition2 source mark stage layout) where
   map category = \case
-    Manual definition -> Manual (Shift.map (Shift.Over category) definition)
-    Auto definition -> Auto (Shift.map category definition)
+    Scoped definition -> Scoped (Shift.map (Shift.Over category) definition)
+    Definition definition -> Definition (Shift.map category definition)
     Piece choice -> Piece (Shift.map category choice)
     Shared definition -> Shared (Shift.map category definition)
 
 instance FreeTermVariables (Definition2 source mark stage layout) where
   freeTermVariables target = \case
-    Manual definition ->
+    Scoped definition ->
       freeTermVariables (FreeTermVariables.Over target) definition
-    Auto definition -> freeTermVariables target definition
+    Definition definition -> freeTermVariables target definition
     Piece Choice {index} -> freeTermVariables target index
     Shared definition -> freeTermVariables target definition
 
 instance Connect (Definition2 source mark) where
   connect = \case
-    Manual definition -> Manual (connect definition)
-    Auto definition -> Auto (connect definition)
+    Scoped definition -> Scoped (connect definition)
+    Definition definition -> Definition (connect definition)
     Piece choice -> Piece choice
     Shared definition -> Shared (connect definition)
 
