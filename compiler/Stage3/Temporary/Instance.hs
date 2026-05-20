@@ -27,6 +27,7 @@ import qualified Stage3.Check.Mask as Mask
 import qualified Stage3.Check.TypeBinding as TypeBinding
 import qualified Stage3.Index.Evidence as Evidence
 import qualified Stage3.Index.Evidence0 as Evidence0
+import qualified Stage3.Simple.Constraint as Simple.Constraint (lift)
 import qualified Stage3.Simple.Scheme as Simple.Scheme (augment')
 import qualified Stage3.Simple.Type as Simple.Type (lift)
 import qualified Stage3.Temporary.Definition as Definition
@@ -41,7 +42,7 @@ import {-# SOURCE #-} qualified Stage4.Tree.Builtin as Builtin
 import {-# SOURCE #-} qualified Stage4.Tree.Class as Simple.Class
 import Stage4.Tree.ClassExtra (ClassExtra (..))
 import qualified Stage4.Tree.Constraint as Simple (Constraint (Constraint))
-import qualified Stage4.Tree.Constraint as Simple.Constraint
+import qualified Stage4.Tree.Constraint as Simple.Constraint (Constraint (..))
 import qualified Stage4.Tree.Evidence as Simple (Evidence)
 import qualified Stage4.Tree.Evidence as Simple.Evidence
 import qualified Stage4.Tree.Instanciation as Simple (Instanciation (Instanciation))
@@ -158,13 +159,26 @@ check
               result <- pure $ Simple.Type.lift result
               context <- Simple.Scheme.augment' startPosition scheme Mask.Runtime context
               definition <- Definition.check context result member
-              pure Definition {parameters, constraints, definition}
+              pure
+                Definition
+                  { position = startPosition,
+                    definition =
+                      Unify.schemeOver
+                        (Simple.Type.lift <$> parameters)
+                        (Simple.Constraint.lift <$> constraints)
+                        definition
+                  }
             check index scheme Stage2.Default {} = do
               let Simple.Scheme Simple.SchemeOver {parameters, constraints} = scheme
                   defaultx = Unify.Delay $ do
                     ClassExtra {defaults} <- extra
-                    pure $ defaults Strict.Vector.! index
-              pure Default {parameters, constraints, self, base, defaultx}
+                    pure $
+                      Simple.SchemeOver
+                        { parameters,
+                          constraints,
+                          result = defaults Strict.Vector.! index
+                        }
+              pure Default {self, base, defaultx}
         members <- izipWithM check methods (shift <$> members)
         pure Instance {parameters, prerequisites, evidence, members}
 

@@ -1,45 +1,42 @@
 module Stage3.Temporary.MethodConcrete where
 
 import Control.Monad.ST (ST)
-import qualified Data.Vector.Strict as Strict
+import Stage1.Position (Position)
 import Stage2.Scope (Environment (..), Local)
 import Stage3.Temporary.Definition (Definition)
 import qualified Stage3.Temporary.Definition as Definition
 import qualified Stage3.Tree.MethodConcrete as Solved
 import qualified Stage3.Unify as Unify
-import qualified Stage4.Tree.Constraint as Simple (Constraint)
 import qualified Stage4.Tree.Evidence as Simple (Evidence)
 import {-# SOURCE #-} qualified Stage4.Tree.Expression as Simple (Expression)
+import qualified Stage4.Tree.SchemeOver as Simple (SchemeOver)
 import qualified Stage4.Tree.Type as Simple (Type)
 
 data MethodConcrete s scope
   = Definition
-      { parameters :: !(Strict.Vector (Simple.Type (Local ':+ scope))),
-        constraints :: !(Strict.Vector (Simple.Constraint (Local ':+ scope))),
-        definition :: !(Definition s (Local ':+ Local ':+ scope))
+      { position :: !Position,
+        definition :: !(Unify.SchemeOver Definition s (Local ':+ scope))
       }
   | Default
-      { parameters :: !(Strict.Vector (Simple.Type (Local ':+ scope))),
-        constraints :: !(Strict.Vector (Simple.Constraint (Local ':+ scope))),
-        base :: !(Simple.Type (Local ':+ scope)),
+      { base :: !(Simple.Type (Local ':+ scope)),
         self :: !(Simple.Evidence (Local ':+ scope)),
-        defaultx :: !(Unify.Delay Simple.Expression s (Local ':+ (Local ':+ scope)))
+        defaultx :: !(Unify.Delay (Simple.SchemeOver Simple.Expression) s (Local ':+ scope))
       }
 
 instance Unify.Zonk MethodConcrete where
   zonk zonker = \case
-    Definition {parameters, constraints, definition} -> do
+    Definition {position, definition} -> do
       definition <- Unify.zonk zonker definition
-      pure Definition {parameters, constraints, definition}
-    Default {parameters, constraints, base, self, defaultx} -> do
+      pure Definition {position, definition}
+    Default {base, self, defaultx} -> do
       defaultx <- Unify.zonk zonker defaultx
-      pure Default {parameters, constraints, base, self, defaultx}
+      pure Default {base, self, defaultx}
 
 solve :: MethodConcrete s scope -> ST s (Solved.MethodConcrete scope)
 solve = \case
-  Definition {parameters, constraints, definition} -> do
-    definition <- Definition.solve definition
-    pure Solved.Definition {parameters, constraints, definition}
-  Default {parameters, constraints, base, self, defaultx = Unify.Delay defaultx} -> do
+  Definition {position, definition} -> do
+    definition <- Unify.solveSchemeOver (Unify.Solve $ const Definition.solve) position definition
+    pure Solved.Definition {definition}
+  Default {base, self, defaultx = Unify.Delay defaultx} -> do
     defaultx <- defaultx
-    pure Solved.Default {parameters, constraints, base, self, defaultx}
+    pure Solved.Default {base, self, defaultx}

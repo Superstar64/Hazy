@@ -1,5 +1,6 @@
 module Stage3.Tree.Definition where
 
+import qualified Stage2.Scope as Scope
 import Stage3.Tree.Function (Function)
 
 data Definition scope
@@ -11,3 +12,6 @@ data Definition scope
       { definition :: !(Function scope)
       }
   deriving (Show)
+
+instance Scope.Show Definition where
+  showsPrec = showsPrec
