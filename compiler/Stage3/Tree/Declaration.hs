@@ -9,22 +9,22 @@ import Stage3.Tree.Definition4 (Definition4 (..))
 import qualified Stage4.Tree.Scheme as Simple (Scheme)
 import Prelude hiding (Maybe (Just))
 
-data LazyTermDeclaration locality layout scope = !Key :^ Declaration locality layout scope
-  deriving (Show)
-
-infix 4 :^
-
 type Declaration :: Locality -> Layout -> Environment -> Type
 data Declaration locality layout scope
   = Declaration
   { name :: !Key,
-    definition :: !(Definition4 scope),
-    typex :: !(Simple.Scheme scope)
+    definition :: Definition4 scope,
+    typex :: Simple.Scheme scope
   }
   deriving (Show)
 
-strict :: Declaration locality layout scope -> LazyTermDeclaration locality layout scope
-strict declaration@Declaration {name} = name :^ declaration
+lazy :: Key -> Declaration locality layout scope -> Declaration locality layout scope
+lazy name ~Declaration {definition, typex} =
+  Declaration
+    { name,
+      definition,
+      typex
+    }
 
 typex_ :: Declaration locality layout scope -> Simple.Scheme scope
 typex_ = typex

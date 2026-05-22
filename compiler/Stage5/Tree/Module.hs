@@ -18,7 +18,7 @@ import Stage4.Tree.Declaration (Declaration (..))
 import qualified Stage4.Tree.Declaration as Term
 import Stage4.Tree.Declarations (Declarations (..))
 import qualified Stage4.Tree.Module as Stage4 (Module (..))
-import qualified Stage4.Tree.TypeDeclaration as Type (LazyTypeDeclaration (..))
+import qualified Stage4.Tree.TypeDeclaration as Type (TypeDeclaration (..))
 import qualified Stage5.Generate.Context as Context
 import Stage5.Generate.Global (Global (Global))
 import qualified Stage5.Generate.Global as Global
@@ -52,7 +52,7 @@ precontext modules =
   where
     names Stage4.Module {name = path, declarations = Declarations {terms}} = generate <$> terms
       where
-        generate (name Term.:^ _) =
+        generate Term.Declaration {name} =
           Global
             { path,
               name = Mangle.mangle name
@@ -64,7 +64,7 @@ precontext modules =
         } = Vector.zipWith3 generate types classInstances dataInstances
         where
           global name = Global {path, name}
-          generate (name Type.:^ _) classInstances dataInstances =
+          generate Type.TypeDeclaration {name} classInstances dataInstances =
             GlobalType
               { classInstances =
                   let go key _ = global $ single Mangle.Class key
@@ -83,7 +83,7 @@ precontext modules =
                     { name = targetPath,
                       declarations = Declarations {types}
                     } = modules Vector.! global
-                  targetName Type.:^ _ = types Vector.! local
+                  Type.TypeDeclaration {name = targetName} = types Vector.! local
 
 generate' :: Precontext -> FullQualifiers -> Int -> Declarations Scope.Global -> ST s [Javascript.Statement 'False]
 generate'
@@ -99,7 +99,7 @@ generate'
       dataInstances
     } = do
     context <- Context.start precontext
-    statements <- for (zip [0 ..] (toList terms)) $ \(termIndex, _ Term.:^ Declaration {definition}) ->
+    statements <- for (zip [0 ..] (toList terms)) $ \(termIndex, Declaration {definition}) ->
       do
         thunk <- Expression.declaration context definition
         source <- Context.fresh context

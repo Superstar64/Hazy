@@ -9,15 +9,15 @@ import Stage2.Locality (Locality)
 import Stage2.Scope (Environment)
 import qualified Stage3.Functor.Annotated as Functor (Annotated (..))
 import qualified Stage3.Functor.Declarations as Functor (Declarations (..))
-import Stage3.Tree.Declaration (LazyTermDeclaration)
+import Stage3.Tree.Declaration (Declaration)
 import {-# SOURCE #-} Stage3.Tree.Instance (Instance)
-import Stage3.Tree.TypeDeclaration (LazyTypeDeclaration)
+import Stage3.Tree.TypeDeclaration (TypeDeclaration)
 import Stage3.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 
 type Declarations :: Locality -> Layout -> Environment -> Type
 data Declarations locality layout scope = Declarations
-  { terms :: !(Vector (LazyTermDeclaration locality layout scope)),
-    types :: !(Vector (LazyTypeDeclaration locality layout scope)),
+  { terms :: !(Vector (Declaration locality layout scope)),
+    types :: !(Vector (TypeDeclaration locality layout scope)),
     typeExtras :: !(Vector (TypeDeclarationExtra scope)),
     classInstances :: !(Vector (Map (Type2.Index scope) (Instance scope))),
     dataInstances :: !(Vector (Map (Type2.Index scope) (Instance scope)))
@@ -28,9 +28,9 @@ fromFunctor ::
   Functor.Declarations
     scope
     a
-    (LazyTermDeclaration locality layout scope)
+    (Declaration locality layout scope)
     b
-    (LazyTypeDeclaration locality layout scope)
+    (TypeDeclaration locality layout scope)
     (TypeDeclarationExtra scope)
     d
     (Instance scope) ->

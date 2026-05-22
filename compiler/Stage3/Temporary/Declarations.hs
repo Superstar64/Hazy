@@ -42,10 +42,8 @@ import Stage3.Temporary.Instance (Instance)
 import qualified Stage3.Temporary.Instance as Instance
 import Stage3.Temporary.TypeDeclarationExtra (TypeDeclarationExtra)
 import qualified Stage3.Temporary.TypeDeclarationExtra as TypeDeclarationExtra
-import qualified Stage3.Tree.Declaration as Solved.Declaration
 import qualified Stage3.Tree.Declarations as Solved
 import Stage3.Tree.TypeDeclaration (TypeDeclaration)
-import qualified Stage3.Tree.TypeDeclaration as Solved.TypeDeclaration
 import qualified Stage3.Tree.TypeDeclaration as TypeDeclaration
 import qualified Stage3.Unify as Unify
 import Prelude hiding (Functor)
@@ -273,8 +271,8 @@ solve
     classInstances <- traverse (traverse Instance.solve) classInstances
     pure
       Solved.Declarations
-        { terms = Solved.Declaration.strict <$> terms,
-          types = Solved.TypeDeclaration.strict <$> types,
+        { terms,
+          types,
           typeExtras,
           dataInstances,
           classInstances

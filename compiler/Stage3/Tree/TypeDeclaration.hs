@@ -20,21 +20,22 @@ import qualified Stage3.Temporary.TypeDefinition as Temporary.TypeDefinition
 import qualified Stage3.Unify as Unify
 import qualified Stage4.Tree.Type as Simple (Type)
 
-data LazyTypeDeclaration locality layout scope = !ConstructorIdentifier :^ TypeDeclaration locality layout scope
-  deriving (Show)
-
-infix 4 :^
-
 type TypeDeclaration :: Locality -> Layout -> Environment -> Type
 data TypeDeclaration locality layout scope
   = TypeDeclaration
   { name :: !ConstructorIdentifier,
-    definition :: !(TypeDefinition2 locality layout Check scope),
-    kind :: !(Simple.Type scope)
+    definition :: TypeDefinition2 locality layout Check scope,
+    kind :: Simple.Type scope
   }
   deriving (Show)
 
-strict declaration@TypeDeclaration {name} = name :^ declaration
+lazy :: ConstructorIdentifier -> TypeDeclaration locality layout scope -> TypeDeclaration locality layout scope
+lazy name ~TypeDeclaration {definition, kind} =
+  TypeDeclaration
+    { name,
+      definition,
+      kind
+    }
 
 kind_ :: TypeDeclaration locality layout scope -> Simple.Type scope
 kind_ = kind

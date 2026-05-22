@@ -10,11 +10,11 @@ import qualified Stage3.Tree.Expression as Stage3
 import qualified Stage3.Tree.Scheme as Stage3
 import Stage4.Tree.SchemeOver (SchemeOver)
 
-type role LazyTermDeclaration nominal
+type role Declaration nominal
 
-type LazyTermDeclaration :: Environment -> Type
-data LazyTermDeclaration scope
+type Declaration :: Environment -> Type
+data Declaration scope
 
-instance Shift LazyTermDeclaration
+instance Shift Declaration
 
-annotation :: SchemeOver Stage3.Expression scope -> Stage3.Scheme position Check scope -> LazyTermDeclaration scope
+annotation :: SchemeOver Stage3.Expression scope -> Stage3.Scheme position Check scope -> Declaration scope

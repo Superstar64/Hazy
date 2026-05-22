@@ -25,7 +25,7 @@ import {-# SOURCE #-} qualified Stage3.Unify as Unify
 import Stage4.Tree.Constraint (Constraint)
 import qualified Stage4.Tree.Type as Simple (Type)
 import qualified Stage4.Tree.Type as Simple.Type
-import {-# SOURCE #-} qualified Stage4.Tree.TypeDeclaration as Simple (TypeDeclaration, simplify')
+import {-# SOURCE #-} qualified Stage4.Tree.TypeDeclaration as Simple (TypeDeclaration, simplify)
 import {-# SOURCE #-} qualified Stage4.Tree.TypeDeclarationExtra as Simple (TypeDeclarationExtra)
 import {-# SOURCE #-} qualified Stage4.Tree.TypeDeclarationExtra as SimpleExtra (simplify)
 
@@ -106,7 +106,7 @@ bindingImpl
       { label,
         kind,
         synonym,
-        content = Simple.simplify' <$> content,
+        content = Simple.simplify <$> content,
         extra = simpleExtra <$> extra,
         dataInstances = Map.map (fmap (Instance . InstanceAnnotation.prerequisites'_) . Functor.meta) dataInstances,
         classInstances = Map.map (fmap (Instance . InstanceAnnotation.prerequisites'_) . Functor.meta) classInstances

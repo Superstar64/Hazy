@@ -2,67 +2,29 @@ module Stage4.Tree.TypeDeclaration where
 
 import Stage1.Lexer (ConstructorIdentifier)
 import Stage2.Layout (Normal)
-import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage2.Tree.Combinators.Inferred (Inferred (..))
-import qualified Stage2.Tree.Method as Solved.Method
-import qualified Stage2.Tree.TypeDefinition
-import qualified Stage2.Tree.TypeDefinition as Solved (TypeDefinition (ADT, Class, Synonym))
 import Stage2.Tree.TypeDefinition2 (TypeDefinition2 (..))
-import Stage2.Tree.TypePattern (TypePattern (..), typex')
-import qualified Stage3.Tree.TypeDeclaration as Solved (LazyTypeDeclaration (..), TypeDeclaration (..))
+import qualified Stage3.Tree.TypeDeclaration as Solved (TypeDeclaration (..))
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
 import Stage4.Tree.Class (Class)
-import qualified Stage4.Tree.Class as Class
-import qualified Stage4.Tree.Constraint as Constraint
-import qualified Stage4.Tree.Constructor as Constructor
 import Stage4.Tree.Data (Data)
-import qualified Stage4.Tree.Data as Data
-import qualified Stage4.Tree.Scheme as Scheme
-import Stage4.Tree.Type (Type)
-import qualified Stage4.Tree.Type as Type
-
-data LazyTypeDeclaration scope = !ConstructorIdentifier :^ TypeDeclaration scope
-  deriving (Show)
-
-infix 4 :^
-
-instance Shift LazyTypeDeclaration where
-  shift = shiftDefault
-
-instance Shift.Functor LazyTypeDeclaration where
-  map = Shift2.mapDefault
-
-instance Shift2.Functor LazyTypeDeclaration where
-  map = Substitute.mapDefault
-
-instance Substitute.Functor LazyTypeDeclaration where
-  map category (name :^ declaration) = name :^ Substitute.map category declaration
+import Stage4.Tree.TypeDefinition (TypeDefinition)
+import qualified Stage4.Tree.TypeDefinition as TypeDefinition
 
 data TypeDeclaration scope
-  = Data
-      { name :: !ConstructorIdentifier,
-        datax :: !(Data scope)
-      }
-  | Class
-      { name :: !ConstructorIdentifier,
-        classx :: !(Class scope)
-      }
-  | Synonym
-      { name :: !ConstructorIdentifier,
-        definition :: !(Type (Local ':+ scope))
-      }
+  = TypeDeclaration
+  { name :: !ConstructorIdentifier,
+    definition :: TypeDefinition scope
+  }
   deriving (Show)
 
 assumeData :: TypeDeclaration scope -> Data scope
-assumeData Data {datax} = datax
-assumeData _ = error "not data"
+assumeData TypeDeclaration {definition} = TypeDefinition.assumeData definition
 
 assumeClass :: TypeDeclaration scope -> Class scope
-assumeClass Class {classx} = classx
-assumeClass _ = error "not class"
+assumeClass TypeDeclaration {definition} = TypeDefinition.assumeClass definition
 
 instance Shift TypeDeclaration where
   shift = shiftDefault
@@ -75,46 +37,16 @@ instance Shift2.Functor TypeDeclaration where
 
 instance Substitute.Functor TypeDeclaration where
   map category = \case
-    Data {name, datax} ->
-      Data
+    TypeDeclaration {name, definition} ->
+      TypeDeclaration
         { name,
-          datax = Substitute.map category datax
-        }
-    Class {name, classx} ->
-      Class
-        { name,
-          classx = Substitute.map category classx
-        }
-    Synonym {name, definition} ->
-      Synonym
-        { name,
-          definition = Substitute.map (Substitute.Over category) definition
+          definition = Substitute.map category definition
         }
 
-simplify :: Solved.LazyTypeDeclaration locality Normal scope -> LazyTypeDeclaration scope
-simplify (name Solved.:^ declaration) = name :^ simplify' declaration
-
-simplify' :: Solved.TypeDeclaration locality Normal scope -> TypeDeclaration scope
-simplify' Solved.TypeDeclaration {name, definition = _ ::: definition} = case definition of
-  Solved.ADT {parameters, constructors, selectors, brand} ->
-    Data
-      { name,
-        datax =
-          Data.Data
-            { parameters = fmap typex' parameters,
-              constructors = Constructor.simplify <$> constructors,
-              selectors,
-              brand
-            }
-      }
-  Solved.Class {parameter = TypePattern {typex = Solved parameter}, constraints, methods} ->
-    Class
-      { name,
-        classx =
-          Class.Class
-            { parameter,
-              constraints = Constraint.simplify <$> constraints,
-              methods = Scheme.simplify . Solved.Method.annotation <$> methods
-            }
-      }
-  Solved.Synonym {synonym} -> Synonym {name, definition = Type.simplify synonym}
+simplify :: Solved.TypeDeclaration locality Normal scope -> TypeDeclaration scope
+simplify Solved.TypeDeclaration {name, definition} =
+  TypeDeclaration
+    { name,
+      definition = case definition of
+        _ ::: definition -> TypeDefinition.simplify definition
+    }

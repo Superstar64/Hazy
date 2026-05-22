@@ -10,18 +10,18 @@ import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Declarations as Stage3
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
-import Stage4.Tree.Declaration (LazyTermDeclaration)
+import Stage4.Tree.Declaration (Declaration)
 import qualified Stage4.Tree.Declaration as Declaration
 import Stage4.Tree.Instance (Instance)
 import qualified Stage4.Tree.Instance as Instance
-import Stage4.Tree.TypeDeclaration (LazyTypeDeclaration)
+import Stage4.Tree.TypeDeclaration (TypeDeclaration)
 import qualified Stage4.Tree.TypeDeclaration as TypeDeclaration
 import Stage4.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 import qualified Stage4.Tree.TypeDeclarationExtra as TypeDeclarationExtra
 
 data Declarations scope = Declarations
-  { terms :: !(Vector (LazyTermDeclaration scope)),
-    types :: !(Vector (LazyTypeDeclaration scope)),
+  { terms :: !(Vector (Declaration scope)),
+    types :: !(Vector (TypeDeclaration scope)),
     typeExtras :: !(Vector (TypeDeclarationExtra scope)),
     classInstances :: !(Vector (Map (Type2.Index scope) (Instance scope))),
     dataInstances :: !(Vector (Map (Type2.Index scope) (Instance scope)))
@@ -66,7 +66,7 @@ simplify
         dataInstances = fmap Instance.simplify <$> dataInstances
       }
 
-single :: LazyTermDeclaration scope -> Declarations scope
+single :: Declaration scope -> Declarations scope
 single term =
   Declarations
     { terms = Vector.singleton term,

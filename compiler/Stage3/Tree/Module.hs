@@ -36,12 +36,12 @@ import qualified Stage3.Functor.ModuleSet as Functor (ModuleSet (..))
 import qualified Stage3.Temporary.Declaration as Declaration.Unsolved
 import qualified Stage3.Temporary.Instance as Instance (Key (..), check, solve)
 import qualified Stage3.Temporary.TypeDeclarationExtra as TypeDeclarationExtra
-import Stage3.Tree.Declaration (Declaration (..), LazyTermDeclaration)
+import Stage3.Tree.Declaration (Declaration (..))
 import qualified Stage3.Tree.Declaration as Declaration
 import Stage3.Tree.Declarations (Declarations)
 import qualified Stage3.Tree.Declarations as Declarations
 import Stage3.Tree.Instance (Instance)
-import Stage3.Tree.TypeDeclaration (LazyTypeDeclaration, TypeDeclaration)
+import Stage3.Tree.TypeDeclaration (TypeDeclaration)
 import qualified Stage3.Tree.TypeDeclaration as TypeDeclaration
 import Stage3.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 import Prelude hiding (Functor)
@@ -68,9 +68,9 @@ type Formula s z =
 fromFunctor ::
   Functor.Module
     a
-    (LazyTermDeclaration Locality.Global Normal Global)
+    (Declaration Locality.Global Normal Global)
     b
-    (LazyTypeDeclaration Locality.Global Normal Global)
+    (TypeDeclaration Locality.Global Normal Global)
     (TypeDeclarationExtra Global)
     c
     (Instance Global) ->
@@ -84,9 +84,9 @@ fromFunctor (Functor.Module {name, declarations}) =
 fromFunctors ::
   Functor.ModuleSet
     a
-    (LazyTermDeclaration Locality.Global Normal Global)
+    (Declaration Locality.Global Normal Global)
     b
-    (LazyTypeDeclaration Locality.Global Normal Global)
+    (TypeDeclaration Locality.Global Normal Global)
     (TypeDeclarationExtra Global)
     c
     (Instance Global) ->
@@ -124,14 +124,14 @@ check modules =
         declarations <- Stage2.declarations modulex,
         terms <- Stage2.Declarations.terms declarations,
         term <- terms Vector.! term =
-          Stage2.Declaration.name term Declaration.:^ declaration
+          Declaration.lazy (Stage2.Declaration.name term) declaration
 
     typex modulex typex declaration
       | modulex <- modules Vector.! modulex,
         declarations <- Stage2.declarations modulex,
         types <- Stage2.Declarations.types declarations,
         typex <- types Vector.! typex =
-          Stage2.TypeDeclaration.name typex TypeDeclaration.:^ declaration
+          TypeDeclaration.lazy (Stage2.TypeDeclaration.name typex) declaration
 
 checkTermAnnotation ::
   p1 ->

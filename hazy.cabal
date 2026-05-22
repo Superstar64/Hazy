@@ -455,6 +455,7 @@ executable hazy
     Stage4.Tree.Type
     Stage4.Tree.TypeDeclaration
     Stage4.Tree.TypeDeclarationExtra
+    Stage4.Tree.TypeDefinition
     Stage5.Generate.Binding.Evidence
     Stage5.Generate.Binding.Term
     Stage5.Generate.Binding.Type

@@ -6,7 +6,7 @@ import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Check)
 import Stage2.Tree.Declaration (Key (..))
-import qualified Stage3.Tree.Declaration as Stage3 (Declaration (..), LazyTermDeclaration (..))
+import qualified Stage3.Tree.Declaration as Stage3 (Declaration (..))
 import qualified Stage3.Tree.Definition2 as Stage3 (Choice (..), Definition2 (Definition, Piece))
 import qualified Stage3.Tree.Definition2 as Stage3.Definition2
 import qualified Stage3.Tree.Definition3 as Stage3 (Definition3 (..))
@@ -25,28 +25,10 @@ import Stage4.Tree.SchemeOver (SchemeOver (..))
 import qualified Stage4.Tree.SchemeOver as SchemeOver
 import qualified Stage4.Tree.Statements as Statements
 
-data LazyTermDeclaration scope
-  = !Key :^ Declaration scope
-  deriving (Show)
-
-infix 4 :^
-
-instance Shift LazyTermDeclaration where
-  shift = shiftDefault
-
-instance Shift.Functor LazyTermDeclaration where
-  map = Shift2.mapDefault
-
-instance Shift2.Functor LazyTermDeclaration where
-  map = Substitute.mapDefault
-
-instance Substitute.Functor LazyTermDeclaration where
-  map category (name :^ declaration) = name :^ Substitute.map category declaration
-
 data Declaration scope = Declaration
   { name :: !Key,
-    definition :: !(SchemeOver Expression scope),
-    typex :: !(Scheme scope)
+    definition :: SchemeOver Expression scope,
+    typex :: Scheme scope
   }
   deriving (Show)
 
@@ -69,20 +51,22 @@ instance Substitute.Functor Declaration where
 
 simplify ::
   forall locality scope.
-  Stage3.LazyTermDeclaration locality Normal scope ->
-  LazyTermDeclaration scope
-simplify (name Stage3.:^ declaration) =
-  name :^ case declaration of
-    Stage3.Declaration
-      { name,
-        definition = _ Stage3.::: _ Stage3.::@ definition,
-        typex
-      } ->
-        Declaration
-          { name,
-            definition = SchemeOver.map go definition,
-            typex
-          }
+  Stage3.Declaration locality Normal scope ->
+  Declaration scope
+simplify = \case
+  Stage3.Declaration
+    { name,
+      definition,
+      typex
+    } ->
+      Declaration
+        { name,
+          definition =
+            case definition of
+              _ Stage3.::: _ Stage3.::@ definition ->
+                SchemeOver.map go definition,
+          typex
+        }
   where
     go :: SchemeOver.Map (Stage3.Definition2 source mark) Expression
     go = SchemeOver.Map $ \case
@@ -105,16 +89,15 @@ simplify (name Stage3.:^ declaration) =
           }
       Stage3.Definition2.Shared shared -> Expression.simplify shared
 
-annotation :: SchemeOver Stage3.Expression scope -> Stage3.Scheme position Check scope -> LazyTermDeclaration scope
+annotation :: SchemeOver Stage3.Expression scope -> Stage3.Scheme position Check scope -> Declaration scope
 annotation SchemeOver {parameters, constraints, result} scheme =
-  Unnamed 0
-    :^ Declaration
-      { name = Unnamed 0,
-        definition =
-          SchemeOver
-            { parameters,
-              constraints,
-              result = Expression.simplify result
-            },
-        typex = Scheme.simplify scheme
-      }
+  Declaration
+    { name = Unnamed 0,
+      definition =
+        SchemeOver
+          { parameters,
+            constraints,
+            result = Expression.simplify result
+          },
+      typex = Scheme.simplify scheme
+    }

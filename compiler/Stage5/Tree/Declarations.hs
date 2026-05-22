@@ -8,7 +8,7 @@ import qualified Data.Vector as Vector
 import qualified Javascript.Tree.Statement as Javascript
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
-import Stage4.Tree.Declaration (Declaration (..), LazyTermDeclaration ((:^)))
+import Stage4.Tree.Declaration (Declaration (..))
 import Stage4.Tree.Declarations (Declarations (..))
 import Stage5.Generate.Context (Context)
 import qualified Stage5.Generate.Context as Context
@@ -30,7 +30,7 @@ generate context Declarations {terms, classInstances, dataInstances} = do
         LocalType {classInstances, dataInstances}
   context <- pure $ Context.localBindings variables instances context
   statements <- for (zip (toList variables) (toList terms)) $
-    \(name, _ :^ Declaration {definition}) -> do
+    \(name, Declaration {definition}) -> do
       thunk <- Expression.declaration context definition
       pure $ Javascript.Const name thunk
   classStatements <-

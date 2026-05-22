@@ -10,7 +10,7 @@ import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.Declarations as Stage3
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
-import {-# SOURCE #-} Stage4.Tree.Declaration (LazyTermDeclaration)
+import {-# SOURCE #-} Stage4.Tree.Declaration (Declaration)
 
 type role Declarations nominal
 
@@ -28,4 +28,4 @@ instance Shift2.Functor Declarations
 instance Substitute.Functor Declarations
 
 simplify :: Stage3.Declarations locality Normal scope -> Declarations scope
-single :: LazyTermDeclaration scope -> Declarations scope
+single :: Declaration scope -> Declarations scope
