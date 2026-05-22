@@ -273,6 +273,7 @@ executable hazy
     Stage2.Tree.Alternative
     Stage2.Tree.Body
     Stage2.Tree.CallHead
+    Stage2.Tree.Combinators.Implicit
     Stage2.Tree.Combinators.Inferred
     Stage2.Tree.Constraint
     Stage2.Tree.Constructor

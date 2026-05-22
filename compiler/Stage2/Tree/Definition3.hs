@@ -6,10 +6,14 @@ import Stage2.Connect (Connect (..))
 import Stage2.FreeVariables (FreeTermVariables (..))
 import Stage2.Shift (Shift (..), shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage2.Tree.Combinators.Implicit (Implicit (..))
 import Stage2.Tree.Definition2 (Definition2 (..), Share, Single)
 
 data Definition3 mark layout stage scope where
-  (::@) :: !(Info source) -> !(Definition2 source mark layout stage scope) -> Definition3 mark layout stage scope
+  (::@) ::
+    !(Info source) ->
+    !(Implicit (Definition2 source mark layout stage) stage scope) ->
+    Definition3 mark layout stage scope
 
 infixr 5 ::@
 
@@ -25,10 +29,10 @@ instance Shift.Functor (Definition3 mark layout stage) where
   map category (info ::@ definition) = info ::@ Shift.map category definition
 
 instance FreeTermVariables (Definition3 mark layout) where
-  freeTermVariables target (_ ::@ definition) = freeTermVariables target definition
+  freeTermVariables target (_ ::@ Resolve definition) = freeTermVariables target definition
 
 instance Connect (Definition3 mark) where
-  connect (info ::@ definition) = info ::@ connect definition
+  connect (info ::@ Resolve definition) = info ::@ Resolve (connect definition)
 
 data Info source where
   Name :: !Variable -> !Fixity -> Info Single

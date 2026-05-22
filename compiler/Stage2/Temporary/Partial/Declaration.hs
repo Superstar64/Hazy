@@ -44,6 +44,7 @@ import qualified Stage2.Temporary.Partial.More.Method as More (Method (Method))
 import qualified Stage2.Temporary.Partial.More.Method as More.Method
 import qualified Stage2.Temporary.Partial.More.Selector as More (Selector (Selector))
 import qualified Stage2.Temporary.Partial.More.Selector as More.Selector
+import qualified Stage2.Tree.Combinators.Implicit as Real (Implicit (..))
 import Stage2.Tree.Declaration (Key (..))
 import qualified Stage2.Tree.Declaration as Real (Declaration (..))
 import qualified Stage2.Tree.Definition2 as Real (Definition2 (Shared))
@@ -138,7 +139,8 @@ resolve'
                   definition =
                     Real.Inferred
                       Real.::: Real.Unnamed temporary
-                      Real.::@ Real.Shared (RightHandSide.resolve context rightHandSide)
+                      Real.::@ Real.Resolve
+                        (Real.Shared $ RightHandSide.resolve context rightHandSide)
                 }
           }
       entry = do

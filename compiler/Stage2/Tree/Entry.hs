@@ -68,7 +68,6 @@ instance Shift.Functor (Restricted position stage) where
 instance FreeTypeVariables (Restricted position) where
   freeTypeVariables target = \case
     Canonical scheme -> freeTypeVariables target scheme
-    Restricted typex -> freeTypeVariables target typex
 
 anonymize :: Entry position stage scope -> Entry () stage scope
 anonymize Entry {entry, strict} =

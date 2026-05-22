@@ -3,6 +3,7 @@ module Stage2.Tree.Definition where
 import Data.List.NonEmpty (NonEmpty (..))
 import Stage2.Connect (Connect (..))
 import Stage2.FreeVariables (FreeTermVariables (freeTermVariables))
+import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Tree.Function (Function)
@@ -11,6 +12,9 @@ data Definition layout stage scope
   = Definition !(Function layout stage scope)
   | Alternative !(Function layout stage scope) !(Definition layout stage scope)
   deriving (Show)
+
+instance Scope.Show (Definition layout stage) where
+  showsPrec = showsPrec
 
 instance Shift (Definition layout stage) where
   shift = shiftDefault

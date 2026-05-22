@@ -22,6 +22,7 @@ import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Resolve)
 import qualified Stage2.Temporary.Complete.Definition as Complete (Definition (..), resolve)
+import Stage2.Tree.Combinators.Implicit (Implicit (..))
 import Stage2.Tree.Constraint (Constraint)
 import qualified Stage2.Tree.Constraint as Constraint
 import qualified Stage2.Tree.Definition as Definition (merge)
@@ -83,7 +84,7 @@ resolve
       prerequisites <- fmap (Constraint.resolve (Scheme.augmentWith parameters context)) prerequisites =
         let members = orderListInt' combine (length memberMethods) members
               where
-                combine (member : members) = Definition $ Definition.merge (member :| members)
+                combine (member : members) = Definition $ Resolve $ Definition.merge (member :| members)
                 combine [] = Default
                 members = map member (toList declarations)
                 member = \case

@@ -4,11 +4,12 @@ import Stage2.Connect (Connect (..))
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage2.Tree.Combinators.Implicit (Implicit (..))
 import Stage2.Tree.Definition (Definition)
 
 data MethodConcrete layout stage scope
   = Definition
-      { definition :: !(Definition layout stage (Local ':+ scope))
+      { definition :: !(Implicit (Definition layout stage) stage (Local ':+ scope))
       }
   | Default {}
   deriving (Show)
@@ -26,8 +27,8 @@ instance Shift.Functor (MethodConcrete layout stage) where
 
 instance Connect MethodConcrete where
   connect = \case
-    Definition {definition} ->
+    Definition {definition = Resolve definition} ->
       Definition
-        { definition = connect definition
+        { definition = Resolve (connect definition)
         }
     Default {} -> Default {}

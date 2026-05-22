@@ -16,6 +16,7 @@ import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (shift)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Check, Resolve)
+import qualified Stage2.Tree.Combinators.Implicit as Stage2 (Implicit (..))
 import qualified Stage2.Tree.Constraint as Solved (Constraint)
 import qualified Stage2.Tree.Instance as Stage2 (Instance (..))
 import qualified Stage2.Tree.MethodConcrete as Stage2 (MethodConcrete (..))
@@ -154,7 +155,7 @@ check
             let parameter = foldl Simple.Type.Call base arguments
             evidence <- Unify.constrain context startPosition (shift classx) (Simple.Type.lift parameter)
             Unify.solveEvidence startPosition evidence
-        let check _ scheme Stage2.Definition {definition = member} = do
+        let check _ scheme Stage2.Definition {definition = Stage2.Resolve member} = do
               let Simple.Scheme Simple.SchemeOver {parameters, constraints, result} = scheme
               result <- pure $ Simple.Type.lift result
               context <- Simple.Scheme.augment' startPosition scheme Mask.Runtime context

@@ -6,9 +6,10 @@ import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (shift)
 import Stage2.Stage (Check, Resolve)
+import qualified Stage2.Tree.Combinators.Implicit as Stage2 (Implicit (..))
 import Stage2.Tree.Definition2 (Annotated, Inferred)
 import Stage2.Tree.Definition3 (Info)
-import qualified Stage2.Tree.Definition3 as Stage2
+import qualified Stage2.Tree.Definition3 as Stage2 (Definition3 (..))
 import qualified Stage2.Tree.TypePattern as TypePattern
 import Stage3.Check.Context (Context)
 import qualified Stage3.Check.Mask as Mask
@@ -44,7 +45,7 @@ check ::
   Position ->
   Stage2.Definition3 mark Normal Resolve scope ->
   ST s (Definition3 mark s scope)
-check context annotation position (info Stage2.::@ definition) =
+check context annotation position (info Stage2.::@ Stage2.Resolve definition) =
   (info ::@) <$> case annotation of
     Global -> Unify.generalizeOver context $ Unify.Generalize $ \context -> do
       typex <- Unify.fresh Unify.typex

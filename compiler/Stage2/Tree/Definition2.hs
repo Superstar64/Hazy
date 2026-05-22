@@ -9,6 +9,7 @@ import qualified Stage2.FreeVariables as FreeVariables
 import qualified Stage2.Index.Term as Term
 import Stage2.Layout (Layout)
 import Stage2.Scope (Environment (..), Local)
+import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Resolve, Stage)
@@ -35,9 +36,12 @@ type Share = 'Share
 type Definition2 :: Source -> Mark -> Layout -> Stage -> Environment -> Type
 data Definition2 source mark layout stage scope where
   Scoped :: Definition layout Resolve (Local ':+ scope) -> Definition2 Single Annotated layout Resolve scope
-  Definition :: (Definition layout stage scope) -> Definition2 Single mark layout stage scope
+  Definition :: Definition layout stage scope -> Definition2 Single mark layout stage scope
   Piece :: !(Choice stage scope) -> Definition2 Single mark layout stage scope
   Shared :: !(RightHandSide layout stage scope) -> Definition2 Share Inferred layout stage scope
+
+instance Scope.Show (Definition2 source mark layout stage) where
+  showsPrec = showsPrec
 
 instance Show (Definition2 source mark layout stage scope) where
   showsPrec d (Scoped definition) =
