@@ -18,6 +18,9 @@ data SchemeOver typex scope = SchemeOver
     result :: !(typex (Local ':+ scope))
   }
 
+instance (Scope.Show typex) => Scope.Show (SchemeOver typex) where
+  showsPrec = showsPrec
+
 instance (Scope.Show typex) => Show (SchemeOver typex scope) where
   showsPrec _ SchemeOver {parameters, constraints, result} =
     foldr

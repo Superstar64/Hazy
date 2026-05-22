@@ -23,6 +23,7 @@ import qualified Stage2.Shift as Shift
 import Stage2.Stage (Resolve)
 import qualified Stage2.Temporary.Complete.Definition as Complete (Definition (..), resolve)
 import Stage2.Tree.Combinators.Implicit (Implicit (..))
+import Stage2.Tree.Combinators.Inferred (Inferred (..))
 import Stage2.Tree.Constraint (Constraint)
 import qualified Stage2.Tree.Constraint as Constraint
 import qualified Stage2.Tree.Definition as Definition (merge)
@@ -85,7 +86,7 @@ resolve
         let members = orderListInt' combine (length memberMethods) members
               where
                 combine (member : members) = Definition $ Resolve $ Definition.merge (member :| members)
-                combine [] = Default
+                combine [] = Default {base = Inferred, self = Inferred, defaultx = Inferred}
                 members = map member (toList declarations)
                 member = \case
                   Stage1.Definition {startPosition, leftHandSide, rightHandSide} ->
