@@ -19,6 +19,7 @@ import Stage1.Variable
     Qualifiers (..),
   )
 import Stage2.FreeVariables (FreeTypeVariables (..))
+import qualified Stage2.FreeVariables as FreeVariables
 import qualified Stage2.Index.Constructor as Constructor
 import qualified Stage2.Index.Local as Local
 import qualified Stage2.Index.Type2 as Type2
@@ -170,10 +171,10 @@ instance Shift.Functor (Type stage position) where
     Universe {startPosition, unsupported} -> Universe {startPosition, unsupported}
     Levity {startPosition} -> Levity {startPosition}
 
-instance FreeTypeVariables (Type stage position) where
+instance FreeTypeVariables (Type position) where
   freeTypeVariables target = \case
     Variable {} -> []
-    Constructor {constructor} -> freeTypeVariables target constructor
+    Constructor {constructor} -> FreeVariables.type2 target constructor
     List {element} -> freeTypeVariables target element
     Tuple {elements} -> foldMap (freeTypeVariables target) elements
     Call {function, argument} ->

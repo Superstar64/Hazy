@@ -43,7 +43,7 @@ instance Shift.Functor (Declaration layout locality stage) where
         definition = Shift.map category definition
       }
 
-instance FreeTermVariables (Declaration layout locality stage) where
+instance FreeTermVariables (Declaration layout locality) where
   freeTermVariables target Declaration {definition} = freeTermVariables target definition
 
 labelBinding :: Qualifiers -> Declaration locality layout stage scope -> Label.TermBinding scope'

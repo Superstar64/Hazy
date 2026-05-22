@@ -56,7 +56,7 @@ instance Shift.Functor (TypeDefinition2 locality layout stage) where
     Link link id -> Link link id
     Group set -> Group $ Shift.map (Shift.Over category) <$> set
 
-instance FreeTypeVariables (TypeDefinition2 locality layout stage) where
+instance FreeTypeVariables (TypeDefinition2 locality layout) where
   freeTypeVariables target = \case
     annotation ::: definition ->
       freeTypeVariables target annotation ++ freeTypeVariables target definition
@@ -80,7 +80,7 @@ instance Shift.Functor (Annotation mark stage) where
     Annotated typex -> Annotated (Shift.map category typex)
     Inferred -> Inferred
 
-instance FreeTypeVariables (Annotation mark stage) where
+instance FreeTypeVariables (Annotation mark) where
   freeTypeVariables target = \case
     Annotated typex -> freeTypeVariables target typex
     Inferred -> []

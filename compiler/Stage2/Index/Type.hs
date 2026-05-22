@@ -2,8 +2,6 @@ module Stage2.Index.Type where
 
 import qualified Data.Strict.Maybe as Strict
 import Data.Void (absurd, vacuous)
-import Stage2.FreeVariables (FreeTypeVariables (..))
-import qualified Stage2.FreeVariables as FreeVariables
 import {-# SOURCE #-} qualified Stage2.Index.Type0 as Type0
 import Stage2.Scope (Declaration, Environment (..), Global, Group, Local)
 import Stage2.Shift (Shift, shiftDefault)
@@ -68,9 +66,3 @@ unlocal (Shift index) = index
 instance Shift.PartialUnshift Index where
   partialUnshift _ (Shift index) = pure index
   partialUnshift abort _ = vacuous abort
-
-instance FreeTypeVariables Index where
-  freeTypeVariables FreeVariables.Target (Declaration index) = [Type0.Declaration index]
-  freeTypeVariables FreeVariables.Target (Global global local) = [Type0.Global global local]
-  freeTypeVariables (FreeVariables.Over free) (Shift index) = freeTypeVariables free index
-  freeTypeVariables _ _ = []

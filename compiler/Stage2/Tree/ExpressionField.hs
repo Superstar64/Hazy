@@ -36,7 +36,7 @@ instance Shift.Functor (Field layout stage) where
   map category (Field pick record) =
     Field pick (Shift.map category record)
 
-instance FreeTermVariables (Field layout stage) where
+instance FreeTermVariables (Field layout) where
   freeTermVariables target Field {expression} = freeTermVariables target expression
 
 instance Connect Field where

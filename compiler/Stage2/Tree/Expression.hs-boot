@@ -27,7 +27,7 @@ instance Shift (Expression layout stage)
 
 instance Shift.Functor (Expression layout stage)
 
-instance FreeTermVariables (Expression layout stage)
+instance FreeTermVariables (Expression layout)
 
 instance Connect Expression
 

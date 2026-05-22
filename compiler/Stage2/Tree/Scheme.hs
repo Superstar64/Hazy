@@ -49,7 +49,7 @@ instance Shift.Functor (Scheme position stage) where
         result = Shift.map (Shift.Over category) result
       }
 
-instance FreeTypeVariables (Scheme position stage) where
+instance FreeTypeVariables (Scheme position) where
   freeTypeVariables target Scheme {constraints, result} =
     concat
       [ foldMap (freeTypeVariables target) constraints,

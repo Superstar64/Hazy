@@ -26,7 +26,7 @@ instance Shift.Functor (StrictnessAnnotation position stage) where
         { levity = Shift.map category levity
         }
 
-instance FreeTypeVariables (StrictnessAnnotation position stage) where
+instance FreeTypeVariables (StrictnessAnnotation position) where
   freeTypeVariables target = \case
     Lazy -> []
     Strict -> []

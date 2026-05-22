@@ -6,17 +6,18 @@ import qualified Stage1.Tree.GADTConstructor as Stage1
 import Stage1.Tree.Marked (Marked ((:@)))
 import Stage1.Variable (Constructor)
 import Stage2.Resolve.Context (Context)
+import Stage2.Stage (Resolve)
 import qualified Stage2.Tree.GADTConstructor as Real
 import qualified Stage2.Tree.Scheme as Scheme
 
 data GADTConstructor scope = GADTConstructor
   { position :: !Position,
     name :: !Constructor,
-    constructor :: Real.GADTConstructor scope
+    constructor :: Real.GADTConstructor Resolve scope
   }
   deriving (Show)
 
-shrink :: GADTConstructor scope -> Real.GADTConstructor scope
+shrink :: GADTConstructor scope -> Real.GADTConstructor Resolve scope
 shrink = constructor
 
 resolve :: Context scope -> Stage1.GADTConstructor -> [GADTConstructor scope]

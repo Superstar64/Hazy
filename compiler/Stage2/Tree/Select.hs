@@ -29,7 +29,7 @@ instance Shift.Functor (Select layout stage) where
   map category (Select pick record) =
     Select pick (Shift.map category record)
 
-instance FreeTermVariables (Select layout stage) where
+instance FreeTermVariables (Select layout) where
   freeTermVariables target (Select _ expression) = freeTermVariables target expression
 
 instance Connect Select where

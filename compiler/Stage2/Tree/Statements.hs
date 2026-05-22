@@ -74,7 +74,7 @@ instance Shift.Functor (Statements layout stage) where
           body = Shift.map (Shift.Over category) body
         }
 
-instance FreeTermVariables (Statements layout stage) where
+instance FreeTermVariables (Statements layout) where
   freeTermVariables target = \case
     Done {done} -> freeTermVariables target done
     Run {effect, after} ->

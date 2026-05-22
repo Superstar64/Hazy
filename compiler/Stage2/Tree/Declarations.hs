@@ -78,7 +78,7 @@ instance Shift.Functor (Declarations locality layout stage) where
           classInstances = fmap (Shift.mapInstances category . fmap (Shift.map category)) classInstances
         }
 
-instance FreeTermVariables (Declarations locality layout stage) where
+instance FreeTermVariables (Declarations locality layout) where
   freeTermVariables target Declarations {terms, typeExtras} =
     concat
       [ foldMap (freeTermVariables target) terms,

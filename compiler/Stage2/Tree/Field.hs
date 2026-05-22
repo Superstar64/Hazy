@@ -27,5 +27,5 @@ instance Shift.Functor (Field stage) where
         entry = Shift.map category entry
       }
 
-instance FreeTypeVariables (Field stage) where
+instance FreeTypeVariables Field where
   freeTypeVariables target Field {entry} = freeTypeVariables target entry

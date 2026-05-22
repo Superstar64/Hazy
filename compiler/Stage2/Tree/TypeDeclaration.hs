@@ -56,7 +56,7 @@ instance Shift.Functor (TypeDeclaration locality layout stage) where
           definition = Shift.map category definition
         }
 
-instance FreeTypeVariables (TypeDeclaration locality layout stage) where
+instance FreeTypeVariables (TypeDeclaration locality layout) where
   freeTypeVariables target = \case
     TypeDeclaration {definition} -> freeTypeVariables target definition
 

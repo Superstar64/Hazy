@@ -28,7 +28,7 @@ instance Shift.Functor (Body layout stage) where
     Body expression -> Body (Shift.map category expression)
     Guards statements -> Guards (fmap (Shift.map category) statements)
 
-instance FreeTermVariables (Body layout stage) where
+instance FreeTermVariables (Body layout) where
   freeTermVariables target = \case
     Body expression -> freeTermVariables target expression
     Guards statements -> foldMap (freeTermVariables target) statements

@@ -24,7 +24,7 @@ instance Shift (Definition3 mark layout stage) where
 instance Shift.Functor (Definition3 mark layout stage) where
   map category (info ::@ definition) = info ::@ Shift.map category definition
 
-instance FreeTermVariables (Definition3 mark layout stage) where
+instance FreeTermVariables (Definition3 mark layout) where
   freeTermVariables target (_ ::@ definition) = freeTermVariables target definition
 
 instance Connect (Definition3 mark) where

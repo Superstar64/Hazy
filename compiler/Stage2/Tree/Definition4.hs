@@ -58,7 +58,7 @@ instance Shift.Functor (Definition4 locality layout stage) where
     Link link id -> Link link id
     Group set -> Group (Shift.map (Shift.Over category) <$> set)
 
-instance FreeTermVariables (Definition4 locality layout stage) where
+instance FreeTermVariables (Definition4 locality layout) where
   freeTermVariables target = \case
     _ ::: definition -> freeTermVariables target definition
     Link {} -> []

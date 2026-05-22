@@ -42,7 +42,7 @@ instance Shift.Functor (Constructor stage) where
           fields = fmap (Shift.map category) fields
         }
 
-instance FreeTypeVariables (Constructor stage) where
+instance FreeTypeVariables Constructor where
   freeTypeVariables target = \case
     Constructor {entries} -> foldMap (freeTypeVariables target) entries
     Record {fields} -> foldMap (freeTypeVariables target) fields

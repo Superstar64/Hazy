@@ -5,6 +5,7 @@ import Stage1.Position (Position)
 import Stage2.Connect (Connect (..))
 import Stage2.FreeVariables (FreeTermVariables (..))
 import qualified Stage2.FreeVariables as FreeTermVariables
+import qualified Stage2.FreeVariables as FreeVariables
 import qualified Stage2.Index.Term as Term
 import Stage2.Layout (Layout)
 import Stage2.Scope (Environment (..), Local)
@@ -60,12 +61,12 @@ instance Shift.Functor (Definition2 source mark stage layout) where
     Piece choice -> Piece (Shift.map category choice)
     Shared definition -> Shared (Shift.map category definition)
 
-instance FreeTermVariables (Definition2 source mark stage layout) where
+instance FreeTermVariables (Definition2 source mark layout) where
   freeTermVariables target = \case
     Scoped definition ->
       freeTermVariables (FreeTermVariables.Over target) definition
     Definition definition -> freeTermVariables target definition
-    Piece Choice {index} -> freeTermVariables target index
+    Piece Choice {index} -> FreeVariables.term target index
     Shared definition -> freeTermVariables target definition
 
 instance Connect (Definition2 source mark) where

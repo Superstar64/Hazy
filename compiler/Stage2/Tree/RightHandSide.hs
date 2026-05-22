@@ -30,7 +30,7 @@ instance Shift.Functor (RightHandSide layout stage) where
   map category (RightHandSide body declarations) =
     RightHandSide (Shift.map (Shift.Over category) body) (Shift.map (Shift.Over category) declarations)
 
-instance FreeTermVariables (RightHandSide layout stage) where
+instance FreeTermVariables (RightHandSide layout) where
   freeTermVariables target (RightHandSide body declarations) =
     concat
       [ freeTermVariables (FreeVariables.Over target) body,

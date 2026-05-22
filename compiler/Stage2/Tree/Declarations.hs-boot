@@ -26,7 +26,7 @@ instance Shift (Declarations locality layout stage)
 
 instance Shift.Functor (Declarations locality layout stage)
 
-instance FreeTermVariables (Declarations locality layout stage)
+instance FreeTermVariables (Declarations locality layout)
 
 resolve ::
   Context scope ->

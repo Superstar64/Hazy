@@ -2,8 +2,6 @@ module Stage2.Index.Term where
 
 import qualified Data.Strict.Maybe as Strict
 import Data.Void (absurd)
-import Stage2.FreeVariables (FreeTermVariables (..))
-import qualified Stage2.FreeVariables as FreeVariables
 import {-# SOURCE #-} qualified Stage2.Index.Term0 as Term0
 import Stage2.Scope (Declaration, Environment (..), Global, Group, Pattern)
 import Stage2.Shift (Shift, shift, shiftDefault)
@@ -56,12 +54,6 @@ instance Shift.Functor Index where
     | Strict.Just index <- term (Term0.Global global local) = Group index
   map Shift.GroupTerm {} index = Shift index
   map Shift.GroupType {} index = Shift index
-
-instance FreeTermVariables Index where
-  freeTermVariables FreeVariables.Target (Declaration index) = [Term0.Declaration index]
-  freeTermVariables FreeVariables.Target (Global global local) = [Term0.Global global local]
-  freeTermVariables (FreeVariables.Over free) (Shift index) = freeTermVariables free index
-  freeTermVariables _ _ = []
 
 data Bound
   = At

@@ -27,5 +27,5 @@ instance Shift.Functor (Method stage) where
         annotation = Shift.map category annotation
       }
 
-instance FreeTypeVariables (Method stage) where
+instance FreeTypeVariables Method where
   freeTypeVariables target Method {annotation} = freeTypeVariables target annotation

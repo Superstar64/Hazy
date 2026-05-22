@@ -29,7 +29,7 @@ data TypeDefinition stage scope
       { position :: !Position,
         brand :: !Brand,
         parameters :: !(Strict.Vector (TypePattern Position stage scope)),
-        gadtConstructors :: !(Strict.Vector (GADTConstructor scope)),
+        gadtConstructors :: !(Strict.Vector (GADTConstructor stage scope)),
         unsupported :: !(Unsupported stage)
       }
   | Class
@@ -78,7 +78,7 @@ instance Shift.Functor (TypeDefinition stage) where
           synonym = Shift.map (Shift.Over category) synonym
         }
 
-instance FreeTypeVariables (TypeDefinition stage) where
+instance FreeTypeVariables TypeDefinition where
   freeTypeVariables target = \case
     ADT {constructors} ->
       concat

@@ -35,7 +35,7 @@ instance Shift.Functor (TypeDeclarationExtra layout stage) where
     Synonym {position} -> Synonym {position}
     GADT {position} -> GADT {position}
 
-instance FreeTermVariables (TypeDeclarationExtra layout stage) where
+instance FreeTermVariables (TypeDeclarationExtra layout) where
   freeTermVariables target = \case
     ADT {} -> []
     Class {methods} -> foldMap (foldMap (freeTermVariables $ FreeTypeVariables.Over target)) methods

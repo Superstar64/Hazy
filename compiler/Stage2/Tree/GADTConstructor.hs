@@ -7,20 +7,19 @@ import Stage1.Variable (Constructor)
 import Stage2.FreeVariables (FreeTypeVariables (freeTypeVariables))
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage2.Stage (Resolve)
 import Stage2.Tree.Scheme (Scheme)
 
-data GADTConstructor scope = GADTConstructor
+data GADTConstructor stage scope = GADTConstructor
   { position :: !Position,
     name :: !Constructor,
-    typex :: !(Scheme Position Resolve scope)
+    typex :: !(Scheme Position stage scope)
   }
   deriving (Show)
 
-instance Shift GADTConstructor where
+instance Shift (GADTConstructor stage) where
   shift = shiftDefault
 
-instance Shift.Functor GADTConstructor where
+instance Shift.Functor (GADTConstructor stage) where
   map category GADTConstructor {position, name, typex} =
     GADTConstructor
       { position,

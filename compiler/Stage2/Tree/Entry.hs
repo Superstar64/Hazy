@@ -34,7 +34,7 @@ instance Shift.Functor (Entry position stage) where
         strict = Shift.map category strict
       }
 
-instance FreeTypeVariables (Entry position stage) where
+instance FreeTypeVariables (Entry position) where
   freeTypeVariables target Entry {entry, strict} =
     concat
       [ freeTypeVariables target entry,
@@ -65,7 +65,7 @@ instance Shift.Functor (Restricted position stage) where
     Canonical scheme -> Canonical (Shift.map category scheme)
     Restricted typex -> Restricted (Shift.map category typex)
 
-instance FreeTypeVariables (Restricted position stage) where
+instance FreeTypeVariables (Restricted position) where
   freeTypeVariables target = \case
     Canonical scheme -> freeTypeVariables target scheme
     Restricted typex -> freeTypeVariables target typex

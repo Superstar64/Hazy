@@ -3,6 +3,7 @@ module Stage2.Tree.CallHead where
 import Error (badRunSTCall)
 import Stage1.Position (Position)
 import Stage2.FreeVariables (FreeTermVariables (..))
+import qualified Stage2.FreeVariables as FreeVariables
 import qualified Stage2.Index.Constructor as Constructor
 import qualified Stage2.Index.Method as Method
 import qualified Stage2.Index.Selector as Selector
@@ -75,9 +76,9 @@ instance Shift.Functor (CallHead stage) where
           methodInfo = Shift.map category methodInfo
         }
 
-instance FreeTermVariables (CallHead stage) where
+instance FreeTermVariables CallHead where
   freeTermVariables target = \case
-    Variable {variable} -> freeTermVariables target variable
+    Variable {variable} -> FreeVariables.term target variable
     Constructor {} -> []
     Selector {} -> []
     Method {} -> []

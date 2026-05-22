@@ -258,7 +258,7 @@ instance Shift.Functor (Expression layout stage) where
           imperative = Shift.map category imperative
         }
 
-instance FreeTermVariables (Expression layout stage) where
+instance FreeTermVariables (Expression layout) where
   freeTermVariables target = \case
     CallHead {callHead} -> freeTermVariables target callHead
     Integer {} -> []
