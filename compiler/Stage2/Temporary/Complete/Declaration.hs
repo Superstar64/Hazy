@@ -39,6 +39,7 @@ import qualified Stage2.Temporary.Partial.More.Method as More.Method
 import qualified Stage2.Temporary.Partial.More.Selector as More (Selector (Selector))
 import qualified Stage2.Temporary.Partial.More.Selector as More.Selector
 import qualified Stage2.Tree.Combinators.Implicit as Real (Implicit (..))
+import Stage2.Tree.Combinators.Inferred (Inferred (Inferred))
 import qualified Stage2.Tree.Declaration as Real (Declaration (..), locality)
 import qualified Stage2.Tree.Definition as Definition (merge)
 import qualified Stage2.Tree.Definition2 as Real (Choice (..), Definition2 (..))
@@ -100,7 +101,8 @@ merge entries@(entry :| _) =
                             definition =
                               Real.Inferred
                                 Real.::: Real.Name properName fixity
-                                Real.::@ Real.Resolve (Real.Definition auto)
+                                Real.::@ Real.Resolve (Real.Definition auto),
+                            typex = Inferred
                           }
                   Just annotation -> cast <$> Verbose.resolving (Variable.printLiteral' properName) real
                     where
@@ -114,7 +116,8 @@ merge entries@(entry :| _) =
                                 Real.::: Real.Name properName fixity
                                 Real.::@ if Scheme.implicit annotation
                                   then Real.Resolve (Real.Definition auto)
-                                  else Real.Resolve (Real.Scoped manual)
+                                  else Real.Resolve (Real.Scoped manual),
+                            typex = Inferred
                           }
         | Just (_, selector) <- selection,
           () <- noAnnotation ->
@@ -133,7 +136,8 @@ merge entries@(entry :| _) =
                           Real.Inferred
                             Real.::: Real.Name properName fixity
                             Real.::@ Real.Resolve
-                              (Real.Piece Real.Choice {position, index, bound, patternx})
+                              (Real.Piece Real.Choice {position, index, bound, patternx}),
+                        typex = Inferred
                       }
                   Just annotation ->
                     Real.Declaration
@@ -143,7 +147,8 @@ merge entries@(entry :| _) =
                           Real.Annotated annotation
                             Real.::: Real.Name properName fixity
                             Real.::@ Real.Resolve
-                              (Real.Piece Real.Choice {position, index, bound, patternx})
+                              (Real.Piece Real.Choice {position, index, bound, patternx}),
+                        typex = Inferred
                       }
              in cast <$> Verbose.resolving (Variable.printLiteral' properName) real
         | otherwise -> error "no entry"

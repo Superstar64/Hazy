@@ -12,11 +12,13 @@ import qualified Stage2.Label.Binding.Term as Label
 import Stage2.Layout (Group, Normal)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage2.Stage (Resolve)
-import Stage2.Tree.Definition2 (Inferred)
+import Stage2.Stage (Check, Resolve)
+import Stage2.Tree.Combinators.Inferred (Inferred (..))
+import qualified Stage2.Tree.Definition2 as Definition2
 import Stage2.Tree.Definition3 (Definition3)
 import Stage2.Tree.Definition4 (Definition4)
 import qualified Stage2.Tree.Definition4 as Definition4
+import {-# SOURCE #-} qualified Stage4.Tree.Scheme as Simple (Scheme)
 import Prelude hiding (Either (Left, Right))
 
 data Key
@@ -28,19 +30,36 @@ data Declaration locality layout stage scope
   = Declaration
   { position :: !Position,
     name :: !Key,
-    definition :: !(Definition4 locality layout stage scope)
+    definition :: Definition4 locality layout stage scope,
+    typex :: Inferred Simple.Scheme stage scope
   }
   deriving (Show)
+
+lazy ::
+  Declaration locality' layout' stage' scope' ->
+  Declaration locality layout stage scope ->
+  Declaration locality layout stage scope
+lazy Declaration {position, name} ~Declaration {definition, typex} =
+  Declaration
+    { position,
+      name,
+      definition,
+      typex
+    }
+
+typex' :: Declaration locality layout Check scope -> Simple.Scheme scope
+typex' Declaration {typex = Solved typex} = typex
 
 instance Shift (Declaration layout locality stage) where
   shift = shiftDefault
 
 instance Shift.Functor (Declaration layout locality stage) where
-  map category Declaration {position, name, definition} =
+  map category Declaration {position, name, definition, typex} =
     Declaration
       { position,
         name,
-        definition = Shift.map category definition
+        definition = Shift.map category definition,
+        typex = Shift.map category typex
       }
 
 instance FreeTermVariables (Declaration layout locality) where
@@ -53,16 +72,17 @@ labelBinding path declaration = case name declaration of
 
 locality :: Declaration locality Normal stage scope -> Declaration locality' Normal stage scope
 locality = \case
-  Declaration {position, name, definition} ->
+  Declaration {position, name, definition, typex} ->
     Declaration
       { position,
         name,
-        definition = Definition4.locality definition
+        definition = Definition4.locality definition,
+        typex
       }
 
 group ::
   (Term0.Index scope -> Term.Link locality) ->
-  (Term.Link locality -> Definition3 Inferred Normal Resolve scope) ->
+  (Term.Link locality -> Definition3 Definition2.Inferred Normal Resolve scope) ->
   StronglyConnected.Component (Term.Link locality) ->
   Declaration locality Normal Resolve scope ->
   Declaration locality Group Resolve scope
@@ -71,5 +91,6 @@ group link index' group = \case
     Declaration
       { position,
         name,
-        definition = Definition4.group link index' group definition
+        definition = Definition4.group link index' group definition,
+        typex = Inferred
       }

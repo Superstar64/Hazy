@@ -2,18 +2,22 @@
 
 module Stage4.Tree.Scheme where
 
-import Data.Kind (Type)
-import Stage2.Scope (Environment)
+import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Check)
 import {-# SOURCE #-} qualified Stage3.Tree.Scheme as Solved
 import qualified Stage4.Shift as Shift2
+import Stage4.Tree.SchemeOver (SchemeOver)
+import Stage4.Tree.Type (Type)
 
 type role Scheme nominal
 
-type Scheme :: Environment -> Type
-data Scheme scope
+newtype Scheme scope = Scheme
+  { runScheme :: SchemeOver Type scope
+  }
+
+instance Scope.Show Scheme
 
 instance Show (Scheme scope)
 
