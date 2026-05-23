@@ -15,7 +15,7 @@ import qualified Stage2.Index.Type2 as Type2
 import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
-import Stage2.Stage (Resolve)
+import Stage2.Stage (Check, Resolve)
 import qualified Stage2.Tree.Declaration as Stage2 (Declaration)
 import qualified Stage2.Tree.Declaration as Stage2.Declaration
 import qualified Stage2.Tree.Declarations as Stage2 (Declarations (..))
@@ -50,7 +50,7 @@ import Prelude hiding (Functor)
 
 data Declarations locality s scope = Declarations
   { terms :: !(Vector (Declaration s scope)),
-    types :: !(Vector (TypeDeclaration locality Normal scope)),
+    types :: !(Vector (TypeDeclaration locality Normal Check scope)),
     typeExtras :: !(Vector (TypeDeclarationExtra s scope)),
     classInstances :: !(Vector (Map (Type2.Index scope) (Instance s scope))),
     dataInstances :: !(Vector (Map (Type2.Index scope) (Instance s scope)))
@@ -86,7 +86,7 @@ type Formula locality s scope z =
     (LocalTypeAnnotation s (Scope.Declaration ':+ scope))
     (Declaration s (Scope.Declaration ':+ scope))
     (KindAnnotation (Scope.Declaration ':+ scope))
-    (TypeDeclaration locality Normal (Scope.Declaration ':+ scope))
+    (TypeDeclaration locality Normal Check (Scope.Declaration ':+ scope))
     (TypeDeclarationExtra s (Scope.Declaration ':+ scope))
     (InstanceAnnotation (Scope.Declaration ':+ scope))
     (Instance s (Scope.Declaration ':+ scope))
@@ -98,7 +98,7 @@ fromFunctor ::
     a
     (Declaration s scope)
     b
-    (TypeDeclaration locality Normal scope)
+    (TypeDeclaration locality Normal Check scope)
     (TypeDeclarationExtra s scope)
     c
     (Instance s scope) ->
@@ -196,7 +196,7 @@ checkTypeDeclaration ::
   Context s scope ->
   Int ->
   Stage2.TypeDeclaration locality Normal Resolve (Scope.Declaration ':+ scope) ->
-  Formula locality s scope (TypeDeclaration locality Normal (Scope.Declaration ':+ scope))
+  Formula locality s scope (TypeDeclaration locality Normal Check (Scope.Declaration ':+ scope))
 checkTypeDeclaration context index declaration = Formula7 {cycle, run}
   where
     cycle :: a

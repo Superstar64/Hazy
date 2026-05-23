@@ -11,7 +11,7 @@ import qualified Stage2.Index.Type as Type
 import Stage2.Layout (Normal)
 import qualified Stage2.Locality as Locality
 import Stage2.Scope (Global)
-import Stage2.Stage (Resolve)
+import Stage2.Stage (Check, Resolve)
 import qualified Stage2.Tree.Declaration as Stage2 (Declaration)
 import qualified Stage2.Tree.Declaration as Stage2.Declaration
 import qualified Stage2.Tree.Declarations as Stage2.Declarations
@@ -59,7 +59,7 @@ type Formula s z =
     (GlobalTypeAnnotation Global)
     (Declaration Locality.Global Normal Global)
     (KindAnnotation Global)
-    (TypeDeclaration Locality.Global Normal Global)
+    (TypeDeclaration Locality.Global Normal Check Global)
     (TypeDeclarationExtra Global)
     (InstanceAnnotation Global)
     (Instance Global)
@@ -70,7 +70,7 @@ fromFunctor ::
     a
     (Declaration Locality.Global Normal Global)
     b
-    (TypeDeclaration Locality.Global Normal Global)
+    (TypeDeclaration Locality.Global Normal Check Global)
     (TypeDeclarationExtra Global)
     c
     (Instance Global) ->
@@ -86,7 +86,7 @@ fromFunctors ::
     a
     (Declaration Locality.Global Normal Global)
     b
-    (TypeDeclaration Locality.Global Normal Global)
+    (TypeDeclaration Locality.Global Normal Check Global)
     (TypeDeclarationExtra Global)
     c
     (Instance Global) ->
@@ -131,7 +131,7 @@ check modules =
         declarations <- Stage2.declarations modulex,
         types <- Stage2.Declarations.types declarations,
         typex <- types Vector.! typex =
-          TypeDeclaration.lazy (Stage2.TypeDeclaration.name typex) declaration
+          TypeDeclaration.lazy typex declaration
 
 checkTermAnnotation ::
   p1 ->
@@ -177,7 +177,7 @@ checkTypeDeclaration ::
   Int ->
   Int ->
   Stage2.TypeDeclaration.TypeDeclaration locality Normal Resolve Global ->
-  Formula s (TypeDeclaration locality Normal Global)
+  Formula s (TypeDeclaration locality Normal Check Global)
 checkTypeDeclaration global local declaration = Formula7 {cycle, run}
   where
     cycle :: a

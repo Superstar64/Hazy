@@ -2,6 +2,8 @@
 
 module Stage2.Tree.TypeDeclaration
   ( TypeDeclaration (..),
+    kind',
+    lazy,
     labelBinding,
     locality,
     group,
@@ -28,10 +30,12 @@ import Stage2.Locality (Locality)
 import Stage2.Scope (Environment)
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage2.Stage (Resolve, Stage)
+import Stage2.Stage (Check, Resolve, Stage)
+import Stage2.Tree.Combinators.Inferred (Inferred (..))
 import Stage2.Tree.TypeDefinition (TypeDefinition)
 import Stage2.Tree.TypeDefinition2 (TypeDefinition2)
 import qualified Stage2.Tree.TypeDefinition2 as TypeDefinition2
+import qualified Stage4.Tree.Type as Simple (Type)
 
 type TypeDeclaration :: Locality -> Layout -> Stage -> Environment -> Data.Kind.Type
 data TypeDeclaration locality layout stage scope
@@ -39,7 +43,8 @@ data TypeDeclaration locality layout stage scope
   { position :: !Position,
     name :: !ConstructorIdentifier,
     constructorNames :: !(Strict.Vector Constructor),
-    definition :: !(TypeDefinition2 locality layout stage scope)
+    definition :: TypeDefinition2 locality layout stage scope,
+    kind :: Inferred Simple.Type stage scope
   }
   deriving (Show)
 
@@ -48,17 +53,28 @@ instance Shift (TypeDeclaration locality layout stage) where
 
 instance Shift.Functor (TypeDeclaration locality layout stage) where
   map category = \case
-    TypeDeclaration {position, name, constructorNames, definition} ->
+    TypeDeclaration {position, name, constructorNames, definition, kind} ->
       TypeDeclaration
         { position,
           name,
           constructorNames,
-          definition = Shift.map category definition
+          definition = Shift.map category definition,
+          kind = Shift.map category kind
         }
 
 instance FreeTypeVariables (TypeDeclaration locality layout) where
   freeTypeVariables target = \case
     TypeDeclaration {definition} -> freeTypeVariables target definition
+
+kind' :: TypeDeclaration locality layout Check scope -> Simple.Type scope
+kind' TypeDeclaration {kind = Solved kind} = kind
+
+lazy ::
+  TypeDeclaration locality' layout' stage' scope' ->
+  TypeDeclaration locality layout stage scope ->
+  TypeDeclaration locality layout stage scope
+lazy TypeDeclaration {position, name, constructorNames} ~TypeDeclaration {definition, kind} =
+  TypeDeclaration {position, name, constructorNames, definition, kind}
 
 labelBinding :: Qualifiers -> TypeDeclaration locality layout stage scope -> Label.TypeBinding scope'
 labelBinding path declaration =
@@ -69,12 +85,13 @@ labelBinding path declaration =
 
 locality :: TypeDeclaration locality Normal stage scope -> TypeDeclaration locality' Normal stage scope
 locality = \case
-  TypeDeclaration {position, name, constructorNames, definition} ->
+  TypeDeclaration {position, name, constructorNames, definition, kind} ->
     TypeDeclaration
       { position,
         name,
         constructorNames,
-        definition = TypeDefinition2.locality definition
+        definition = TypeDefinition2.locality definition,
+        kind
       }
 
 group ::
@@ -89,5 +106,6 @@ group link index group = \case
       { position,
         name,
         constructorNames,
-        definition = TypeDefinition2.group link index group definition
+        definition = TypeDefinition2.group link index group definition,
+        kind = Inferred
       }

@@ -38,6 +38,7 @@ import qualified Stage2.Temporary.Partial.More.GADT as More.GADT
 import qualified Stage2.Temporary.Partial.More.Synonym as More (Synonym (Synonym))
 import qualified Stage2.Temporary.Partial.More.Synonym as More.Synonym
 import qualified Stage2.Temporary.Partial.TypeDeclaration as Partial
+import Stage2.Tree.Combinators.Inferred (Inferred (..))
 import qualified Stage2.Tree.Constructor as Real.Constructor
 import qualified Stage2.Tree.Entry as Real.Entry
 import qualified Stage2.Tree.Field as Real.Field
@@ -130,7 +131,8 @@ merge entries@(entry :| _) =
                         constructorNames,
                         definition =
                           Real.Inferred
-                            Real.::: Real.ADT {position, brand, parameters, constructors, selectors}
+                            Real.::: Real.ADT {position, brand, parameters, constructors, selectors},
+                        kind = Inferred
                       }
                   Strict.Just annotation ->
                     Real.TypeDeclaration
@@ -139,7 +141,8 @@ merge entries@(entry :| _) =
                         constructorNames,
                         definition =
                           Real.Annotated annotation
-                            Real.::: Real.ADT {position, brand, parameters, constructors, selectors}
+                            Real.::: Real.ADT {position, brand, parameters, constructors, selectors},
+                        kind = Inferred
                       }
         | Just (_, More.GADT {brand, parameters, gadtConstructors}) <- gadt,
           constructorNames <- GADTConstructor.name <$> gadtConstructors,
@@ -159,7 +162,8 @@ merge entries@(entry :| _) =
                               brand,
                               gadtConstructors,
                               unsupported = Refl
-                            }
+                            },
+                      kind = Inferred
                     }
                 Strict.Just annotation ->
                   Real.TypeDeclaration
@@ -174,7 +178,8 @@ merge entries@(entry :| _) =
                               brand,
                               gadtConstructors,
                               unsupported = Refl
-                            }
+                            },
+                      kind = Inferred
                     }
         | Just (position, More.Class {parameter, constraints, methods}) <- classx,
           methods <- fmap Method.shrink methods -> Verbose.resolving (Variable.print' name) $
@@ -186,7 +191,8 @@ merge entries@(entry :| _) =
                     constructorNames = Strict.Vector.empty,
                     definition =
                       Real.Inferred
-                        Real.::: Real.Class {position, parameter, constraints, methods}
+                        Real.::: Real.Class {position, parameter, constraints, methods},
+                    kind = Inferred
                   }
               Strict.Just annotation ->
                 Real.TypeDeclaration
@@ -195,7 +201,8 @@ merge entries@(entry :| _) =
                     constructorNames = Strict.Vector.empty,
                     definition =
                       Real.Annotated annotation
-                        Real.::: Real.Class {position, parameter, constraints, methods}
+                        Real.::: Real.Class {position, parameter, constraints, methods},
+                    kind = Inferred
                   }
         | Just
             ( _,
@@ -211,7 +218,8 @@ merge entries@(entry :| _) =
                   name,
                   constructorNames = Strict.Vector.empty,
                   definition =
-                    Real.Inferred Real.::: Real.Synonym {parameters, synonym}
+                    Real.Inferred Real.::: Real.Synonym {parameters, synonym},
+                  kind = Inferred
                 }
             Strict.Just annotation ->
               Real.TypeDeclaration
@@ -219,7 +227,8 @@ merge entries@(entry :| _) =
                   name,
                   constructorNames = Strict.Vector.empty,
                   definition =
-                    Real.Annotated annotation Real.::: Real.Synonym {parameters, synonym}
+                    Real.Annotated annotation Real.::: Real.Synonym {parameters, synonym},
+                  kind = Inferred
                 }
       entries -> duplicateTypeEntries entries
     position = Partial.position entry

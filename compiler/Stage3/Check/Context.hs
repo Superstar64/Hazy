@@ -13,6 +13,7 @@ import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..), Global, Local)
 import qualified Stage2.Scope as Scope (Declaration)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Check)
 import {-# SOURCE #-} Stage3.Check.InstanceAnnotation (InstanceAnnotation)
 import {-# SOURCE #-} Stage3.Check.KindAnnotation (KindAnnotation (..))
 import Stage3.Check.LocalBinding (LocalBinding)
@@ -53,7 +54,7 @@ globalBindings ::
     (ST s (GlobalTypeAnnotation Global))
     (ST s (Declaration locality Normal Global))
     (ST s (KindAnnotation Global))
-    (ST s (TypeDeclaration locality Normal Global))
+    (ST s (TypeDeclaration locality Normal Check Global))
     (ST s (TypeDeclarationExtra Global))
     (ST s (InstanceAnnotation Global))
     x ->
@@ -78,7 +79,7 @@ localBindings ::
     (ST s (LocalTypeAnnotation s (Scope.Declaration ':+ scope)))
     x
     (ST s (KindAnnotation (Scope.Declaration ':+ scope)))
-    (ST s (TypeDeclaration locality Normal (Scope.Declaration ':+ scope)))
+    (ST s (TypeDeclaration locality Normal Check (Scope.Declaration ':+ scope)))
     (ST s (Temporary.TypeDeclarationExtra s (Scope.Declaration ':+ scope)))
     (ST s (InstanceAnnotation (Scope.Declaration ':+ scope)))
     x' ->

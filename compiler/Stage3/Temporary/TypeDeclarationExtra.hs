@@ -10,7 +10,7 @@ import qualified Stage2.Index.Type2 as Type2
 import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (shift)
-import Stage2.Stage (Resolve)
+import Stage2.Stage (Check, Resolve)
 import Stage2.Tree.Combinators.Inferred (Inferred (..))
 import Stage2.Tree.Method (Method (..))
 import qualified Stage2.Tree.TypeDeclarationExtra as Stage2
@@ -57,7 +57,7 @@ instance Zonk TypeDeclarationExtra where
 check ::
   Context s scope ->
   Type.Index scope ->
-  TypeDeclaration locality Normal scope ->
+  TypeDeclaration locality Normal Check scope ->
   Stage2.TypeDeclarationExtra Normal Resolve scope ->
   ST s (TypeDeclarationExtra s scope)
 check context classx declaration

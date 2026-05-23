@@ -4,6 +4,7 @@ import Stage1.Lexer (ConstructorIdentifier)
 import Stage2.Layout (Normal)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Check)
 import Stage2.Tree.TypeDefinition2 (TypeDefinition2 (..))
 import qualified Stage3.Tree.TypeDeclaration as Solved (TypeDeclaration (..))
 import qualified Stage4.Shift as Shift2
@@ -43,7 +44,7 @@ instance Substitute.Functor TypeDeclaration where
           definition = Substitute.map category definition
         }
 
-simplify :: Solved.TypeDeclaration locality Normal scope -> TypeDeclaration scope
+simplify :: Solved.TypeDeclaration locality Normal Check scope -> TypeDeclaration scope
 simplify Solved.TypeDeclaration {name, definition} =
   TypeDeclaration
     { name,

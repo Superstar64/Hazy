@@ -7,6 +7,7 @@ import qualified Stage2.Index.Type2 as Type2
 import Stage2.Layout (Layout)
 import Stage2.Locality (Locality)
 import Stage2.Scope (Environment)
+import Stage2.Stage (Check)
 import qualified Stage3.Functor.Annotated as Functor (Annotated (..))
 import qualified Stage3.Functor.Declarations as Functor (Declarations (..))
 import Stage3.Tree.Declaration (Declaration)
@@ -17,7 +18,7 @@ import Stage3.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 type Declarations :: Locality -> Layout -> Environment -> Type
 data Declarations locality layout scope = Declarations
   { terms :: !(Vector (Declaration locality layout scope)),
-    types :: !(Vector (TypeDeclaration locality layout scope)),
+    types :: !(Vector (TypeDeclaration locality layout Check scope)),
     typeExtras :: !(Vector (TypeDeclarationExtra scope)),
     classInstances :: !(Vector (Map (Type2.Index scope) (Instance scope))),
     dataInstances :: !(Vector (Map (Type2.Index scope) (Instance scope)))
@@ -30,7 +31,7 @@ fromFunctor ::
     a
     (Declaration locality layout scope)
     b
-    (TypeDeclaration locality layout scope)
+    (TypeDeclaration locality layout Check scope)
     (TypeDeclarationExtra scope)
     d
     (Instance scope) ->

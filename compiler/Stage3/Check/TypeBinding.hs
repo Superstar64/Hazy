@@ -12,6 +12,7 @@ import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (Category (Shift), Shift (..), shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Check)
 import {-# SOURCE #-} Stage3.Check.InstanceAnnotation (InstanceAnnotation)
 import {-# SOURCE #-} qualified Stage3.Check.InstanceAnnotation as InstanceAnnotation
 import {-# SOURCE #-} Stage3.Check.KindAnnotation (KindAnnotation)
@@ -70,7 +71,7 @@ rigid ::
   Functor.Annotated
     Label.TypeBinding
     (ST s (KindAnnotation scope))
-    (ST s (TypeDeclaration locality Normal scope)) ->
+    (ST s (TypeDeclaration locality Normal Check scope)) ->
   ST s (TypeDeclarationExtra scope) ->
   Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) b) ->
   Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) d) ->
@@ -81,7 +82,7 @@ wobbly ::
   Functor.Annotated
     Label.TypeBinding
     (ST s (KindAnnotation scope))
-    (ST s (TypeDeclaration locality Normal scope)) ->
+    (ST s (TypeDeclaration locality Normal Check scope)) ->
   ST s (Temporary.TypeDeclarationExtra s scope) ->
   Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) b) ->
   Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) d) ->
@@ -116,7 +117,7 @@ bindingImpl
         annotation <- meta
         Rigid <$> case annotation of
           KindAnnotation.Annotation {kind} -> pure kind
-          KindAnnotation.Inferred -> TypeDeclaration.kind_ <$> content
+          KindAnnotation.Inferred -> TypeDeclaration.kind' <$> content
           KindAnnotation.Synonym {kind} -> pure kind
       synonym = do
         annotation <- meta
