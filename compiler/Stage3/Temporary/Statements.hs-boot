@@ -24,4 +24,4 @@ check ::
   Unify.Type s scope ->
   Stage2.Statements Normal Resolve scope ->
   ST s (Statements s scope)
-solve :: Statements s scope -> ST s (Solved.Statements scope)
+solve :: Statements s scope -> ST s (Solved.Statements Solved.Guard scope)

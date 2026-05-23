@@ -24,13 +24,13 @@ import qualified Stage3.Index.Evidence as Index.Evidence
 import qualified Stage3.Tree.ConstructorInfo as Stage3 (ConstructorInfo (ConstructorInfo))
 import qualified Stage3.Tree.ConstructorInfo as Stage3.ConstructorInfo
 import qualified Stage3.Tree.Definition as Stage3 (Definition)
-import qualified Stage3.Tree.Do as Stage3 (Do)
-import qualified Stage3.Tree.Do as Stage3.Do
 import qualified Stage3.Tree.Expression as Stage3 (Expression (..))
 import qualified Stage3.Tree.ExpressionField as Stage3 (Field (Field))
 import qualified Stage3.Tree.ExpressionField as Stage3.Field
 import qualified Stage3.Tree.RightHandSide as Stage3 (RightHandSide)
 import Stage3.Tree.SelectorInfo (Select (..), SelectorInfo (..))
+import qualified Stage3.Tree.Statements as Stage3 (Do, Equal (..), Evidence (..), IsDo (..), Statements)
+import qualified Stage3.Tree.Statements as Stage3.Statements
 import qualified Stage4.Index.Term as Term
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
@@ -371,18 +371,18 @@ instance Simplify Stage3.RightHandSide where
           RightHandSide.desugar $ RightHandSide.simplify rightHandSide
       }
 
-instance Simplify Stage3.Do where
-  simplify = \case
-    Stage3.Do.Done {done} -> simplify done
-    Stage3.Do.Let {declarations, letBody} ->
+instance (Stage3.Statements.IsDo syntax) => Simplify (Stage3.Statements syntax) where
+  simplify | Stage3.Refl <- Stage3.isDo :: Stage3.Equal Stage3.Do syntax = \case
+    Stage3.Statements.Done {done} -> simplify done
+    Stage3.Statements.Let {declarations, body} ->
       Let
         { declarations = Declarations.simplify declarations,
-          letBody = simplify letBody
+          letBody = simplify body
         }
-    Stage3.Do.Run {evidence, effect, after} ->
-      run evidence (simplify effect) (simplify after)
-    Stage3.Do.Bind {patternx, evidence, effect, thenx, fail} ->
-      bind fail evidence (simplify effect) $
+    Stage3.Statements.Run {evidence = Solved (Stage3.Monad evidence), check, after} ->
+      run evidence (simplify check) (simplify after)
+    Stage3.Statements.Bind {patternx, evidence = Solved (Stage3.Monad evidence), check, thenx, fail} ->
+      bind fail evidence (simplify check) $
         Definition.desugar $
           if fail
             then Definition.Alternative {definition, alternative}

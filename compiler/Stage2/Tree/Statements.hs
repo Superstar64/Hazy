@@ -1,6 +1,7 @@
 module Stage2.Tree.Statements where
 
 import Data.Foldable (toList)
+import Data.Kind (Type)
 import Stage1.Position (Position)
 import qualified Stage1.Tree.Expression as Stage1 (Expression)
 import qualified Stage1.Tree.Statement as Stage1 (Statement (..))
@@ -12,7 +13,7 @@ import Stage2.Layout (Normal)
 import qualified Stage2.Locality as Locality
 import Stage2.Resolve.Context (Context (..))
 import Stage2.Scope (Environment ((:+)))
-import qualified Stage2.Scope as Scope (Declaration, Pattern)
+import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift (..), shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Resolve)
@@ -22,6 +23,25 @@ import {-# SOURCE #-} Stage2.Tree.Expression (Expression)
 import {-# SOURCE #-} qualified Stage2.Tree.Expression as Expression (resolve)
 import Stage2.Tree.Pattern (Pattern)
 import qualified Stage2.Tree.Pattern as Pattern (augment, resolve)
+import qualified Stage4.Tree.Evidence as Simple (Evidence)
+
+data Syntax
+  = Guard
+  | Do
+
+type Guard = 'Guard
+
+type Do = 'Do
+
+type Equal :: Syntax -> Syntax -> Type
+data Equal syntax1 syntax2 where
+  Refl :: Equal syntax syntax
+
+class IsDo syntax where
+  isDo :: Equal Do syntax
+
+instance IsDo 'Do where
+  isDo = Refl
 
 data Statements layout stage scope
   = Done
@@ -118,6 +138,26 @@ instance Connect Statements where
           declarations = Declarations.connect declarations,
           body = connect body
         }
+
+data Evidence syntax scope where
+  Bool :: Evidence Guard scope
+  Monad :: !(Simple.Evidence scope) -> Evidence Do scope
+
+instance Show (Evidence syntax scope) where
+  showsPrec d = \case
+    Bool -> showString "Bool"
+    Monad evidence -> showParen (d > 10) $ showString "Monad " . showsPrec 11 evidence
+
+instance Scope.Show (Evidence syntax) where
+  showsPrec = showsPrec
+
+instance Shift (Evidence syntax) where
+  shift = shiftDefault
+
+instance Shift.Functor (Evidence syntax) where
+  map category = \case
+    Bool -> Bool
+    Monad evidence -> Monad (Shift.map category evidence)
 
 resolve :: Context scope -> Stage1.Statements Position -> Statements Normal Resolve scope
 resolve context Stage1.Statements {body, done} = statements context (toList body) done

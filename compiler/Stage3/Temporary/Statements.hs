@@ -7,6 +7,8 @@ import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope (Declaration, Pattern)
 import Stage2.Shift (shift)
 import Stage2.Stage (Resolve)
+import Stage2.Tree.Combinators.Inferred (Inferred (..))
+import qualified Stage2.Tree.Pattern as Stage2.Pattern
 import qualified Stage2.Tree.Statements as Stage2
 import Stage3.Check.Context (Context)
 import Stage3.Temporary.Declarations (Declarations)
@@ -59,20 +61,36 @@ check context typex = \case
     letBody <- check context (shift typex) body
     pure (Let declarations letBody)
 
-solve :: Statements s scope -> ST s (Solved.Statements scope)
+solve :: Statements s scope -> ST s (Solved.Statements Solved.Guard scope)
 solve (Done expression) = do
   expression <- Expression.solve expression
   pure $ Solved.Done expression
 solve (Run expression statements) = do
-  expression <- Expression.solve expression
-  statements <- solve statements
-  pure $ Solved.Run expression statements
+  check <- Expression.solve expression
+  after <- solve statements
+  pure $
+    Solved.Run
+      { evidence = Solved Stage2.Bool,
+        check,
+        after
+      }
 solve (Bind patternx expression statements) = do
   patternx <- Pattern.solve patternx
-  expression <- Expression.solve expression
-  statements <- solve statements
-  pure $ Solved.Bind patternx expression statements
+  check <- Expression.solve expression
+  thenx <- solve statements
+  pure $
+    Solved.Bind
+      { patternx,
+        evidence = Solved Stage2.Bool,
+        check,
+        thenx,
+        fail = not $ Stage2.Pattern.neverFails patternx
+      }
 solve (Let declarations statements) = do
   declarations <- Declarations.solve declarations
-  statements <- solve statements
-  pure $ Solved.Let declarations statements
+  body <- solve statements
+  pure $
+    Solved.Let
+      { declarations,
+        body
+      }

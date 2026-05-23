@@ -14,7 +14,7 @@ import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Tree.ConstructorInfo as Stage3 (ConstructorInfo (..))
 import qualified Stage3.Tree.ConstructorInfo as Stage3.ConstructorInfo
-import qualified Stage3.Tree.Statements as Stage3 (Statements (..))
+import qualified Stage3.Tree.Statements as Stage3 (Guard, Statements (..))
 import qualified Stage4.Index.Term as Term
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
@@ -292,7 +292,7 @@ true =
       }
   )
 
-simplify :: Stage3.Statements scope -> Statements scope
+simplify :: Stage3.Statements Stage3.Guard scope -> Statements scope
 simplify = \case
   Stage3.Done {done} -> Done {done = Expression.simplify done}
   Stage3.Run {check, after} ->

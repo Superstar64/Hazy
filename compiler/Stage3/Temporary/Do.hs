@@ -9,6 +9,7 @@ import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (shift)
 import Stage2.Stage (Resolve)
+import Stage2.Tree.Combinators.Inferred (Inferred (..))
 import qualified Stage2.Tree.Pattern as Stage2.Pattern
 import qualified Stage2.Tree.Statements as Stage2
 import Stage3.Check.Context (Context)
@@ -18,7 +19,7 @@ import {-# SOURCE #-} Stage3.Temporary.Expression (Expression)
 import {-# SOURCE #-} qualified Stage3.Temporary.Expression as Expression
 import Stage3.Temporary.Pattern (Pattern)
 import qualified Stage3.Temporary.Pattern as Pattern
-import qualified Stage3.Tree.Do as Solved
+import qualified Stage3.Tree.Statements as Solved
 import qualified Stage3.Unify as Unify
 
 data Do s scope
@@ -96,7 +97,7 @@ check context typex = \case
     body <- check context (shift typex) body
     pure (Let declarations body)
 
-solve :: Do s scope -> ST s (Solved.Do scope)
+solve :: Do s scope -> ST s (Solved.Statements Solved.Do scope)
 solve = \case
   Done {done} -> do
     done <- Expression.solve done
@@ -105,14 +106,21 @@ solve = \case
     evidence <- Unify.solveEvidence startPosition evidence
     effect <- Expression.solve effect
     after <- solve after
-    pure Solved.Run {evidence, effect, after}
+    pure Solved.Run {evidence = Solved $ Stage2.Monad evidence, check = effect, after}
   Bind {startPosition, patternx, evidence, effect, thenx, fail} -> do
     patternx <- Pattern.solve patternx
     evidence <- Unify.solveEvidence startPosition evidence
     effect <- Expression.solve effect
     thenx <- solve thenx
-    pure Solved.Bind {patternx, evidence, effect, thenx, fail}
+    pure
+      Solved.Bind
+        { patternx,
+          evidence = Solved $ Stage2.Monad evidence,
+          check = effect,
+          thenx,
+          fail
+        }
   Let {declarations, letBody} -> do
     declarations <- Declarations.solve declarations
-    letBody <- solve letBody
-    pure Solved.Let {declarations, letBody}
+    body <- solve letBody
+    pure Solved.Let {declarations, body}

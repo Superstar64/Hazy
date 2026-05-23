@@ -381,7 +381,6 @@ executable hazy
     Stage3.Tree.Definition2
     Stage3.Tree.Definition3
     Stage3.Tree.Definition4
-    Stage3.Tree.Do
     Stage3.Tree.EntryInfo
     Stage3.Tree.Expression
     Stage3.Tree.ExpressionField

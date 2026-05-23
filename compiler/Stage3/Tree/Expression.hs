@@ -16,11 +16,11 @@ import Stage2.Tree.Pattern (Pattern)
 import Stage3.Tree.Alternative (Alternative)
 import Stage3.Tree.ConstructorInfo (ConstructorInfo)
 import Stage3.Tree.Declarations (Declarations)
-import Stage3.Tree.Do (Do)
 import Stage3.Tree.ExpressionField (Field)
 import Stage3.Tree.Lambda (Lambda)
 import Stage3.Tree.RightHandSide (RightHandSide)
 import Stage3.Tree.Scheme (Scheme)
+import Stage3.Tree.Statements (Do, Statements)
 import qualified Stage4.Tree.Evidence as Simple (Evidence)
 import qualified Stage4.Tree.Instanciation as Simple (Instanciation (..))
 import qualified Stage4.Tree.SchemeOver as Simple (SchemeOver (..))
@@ -75,7 +75,7 @@ data Expression scope
   | Character {character :: !Char}
   | String {string :: !Text}
   | Do
-      { statements :: !(Do scope)
+      { statements :: !(Statements Do scope)
       }
   | Annotation
       { expression :: !(Simple.SchemeOver Expression scope),
