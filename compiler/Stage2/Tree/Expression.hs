@@ -42,12 +42,13 @@ import Stage2.Scope as Null (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift (shift), shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage2.Stage (Resolve)
+import Stage2.Stage (Check, Equal (..), Resolve, Unsupported)
 import {-# SOURCE #-} qualified Stage2.Temporary.ExpressionInfix as Infix (fix, fixWith, resolve)
 import Stage2.Tree.Alternative (Alternative (..))
 import qualified Stage2.Tree.Alternative as Alternative (resolve)
 import Stage2.Tree.CallHead (CallHead)
 import qualified Stage2.Tree.CallHead as CallHead
+import Stage2.Tree.Combinators.Inferred (Inferred (..))
 import {-# SOURCE #-} Stage2.Tree.Declarations (Declarations)
 import {-# SOURCE #-} qualified Stage2.Tree.Declarations as Declarations
 import Stage2.Tree.ExpressionField (Field)
@@ -63,7 +64,11 @@ import qualified Stage2.Tree.Scheme as Scheme (augment, resolve)
 import Stage2.Tree.Select (Select (..))
 import qualified Stage2.Tree.Select as Select (resolve)
 import Stage2.Tree.Statements (Statements)
-import qualified Stage2.Tree.Statements as Statements (resolve)
+import qualified Stage2.Tree.Statements as Statements (Do, Guard, resolve)
+import Stage3.Tree.ConstructorInfo (ConstructorInfo)
+import qualified Stage4.Tree.Evidence as Simple (Evidence)
+import qualified Stage4.Tree.Instanciation as Simple (Instanciation (..))
+import qualified Stage4.Tree.SchemeOver as Simple (SchemeOver)
 import Prelude hiding (Bool (False, True), Either (Left, Right))
 
 data Expression layout stage scope
@@ -72,11 +77,13 @@ data Expression layout stage scope
       }
   | Integer
       { startPosition :: !Position,
-        integer :: !Integer
+        integer :: !Integer,
+        evidence :: !(Inferred Simple.Evidence stage scope)
       }
   | Float
       { startPosition :: !Position,
-        float :: !Rational
+        float :: !Rational,
+        evidence :: !(Inferred Simple.Evidence stage scope)
       }
   | Character
       { startPosition :: !Position,
@@ -96,17 +103,20 @@ data Expression layout stage scope
       }
   | Comprehension
       { startPosition :: !Position,
-        statements :: !(Statements layout stage scope)
+        statements :: !(Statements Statements.Guard layout stage scope),
+        unsupported :: !(Unsupported stage)
       }
   | Record
       { constructorPosition :: !Position,
         constructor :: !(Constructor.Index scope),
+        constructorInfo :: !(Inferred ConstructorInfo stage scope),
         fields :: !(Strict.Vector (Field layout stage scope))
       }
   | Update
       { base :: !(Expression layout stage scope),
         updatePosition :: !Position,
-        updates :: !(Strict.Vector1 (Select layout stage scope))
+        updates :: !(Strict.Vector1 (Select layout stage scope)),
+        unsupported :: !(Unsupported stage)
       }
   | Call
       { function :: !(Expression layout stage scope),
@@ -131,7 +141,7 @@ data Expression layout stage scope
       }
   | Do
       { startPosition :: !Position,
-        statements :: !(Statements layout stage scope)
+        dox :: !(Statements Statements.Do layout stage scope)
       }
   | Lambda
       { startPosition :: !Position,
@@ -148,15 +158,20 @@ data Expression layout stage scope
         right :: !(Expression layout stage scope)
       }
   | Annotation
-      { expression :: !(Expression layout stage (Scope.Local ':+ scope)),
+      { expression :: !(Explicit layout stage scope),
         operatorPosition :: !Position,
-        annotation :: !(Scheme Position stage scope)
+        annotation :: !(Scheme Position stage scope),
+        instanciation :: !(Inferred Simple.Instanciation stage scope)
       }
   | RunST
       { startPosition :: !Position,
-        imperative :: !(Expression layout stage scope)
+        imperative :: !(Expression layout stage scope),
+        unsupported :: !(Unsupported stage)
       }
   deriving (Show)
+
+instance Scope.Show (Expression layout stage) where
+  showsPrec = showsPrec
 
 instance Shift (Expression layout stage) where
   shift = shiftDefault
@@ -167,8 +182,18 @@ instance Shift.Functor (Expression layout stage) where
       CallHead
         { callHead = Shift.map category callHead
         }
-    Integer {startPosition, integer} -> Integer {startPosition, integer}
-    Float {startPosition, float} -> Float {startPosition, float}
+    Integer {startPosition, integer, evidence} ->
+      Integer
+        { startPosition,
+          integer,
+          evidence = Shift.map category evidence
+        }
+    Float {startPosition, float, evidence} ->
+      Float
+        { startPosition,
+          float,
+          evidence = Shift.map category evidence
+        }
     Character {startPosition, character} -> Character {startPosition, character}
     String {startPosition, string} -> String {startPosition, string}
     Tuple {startPosition, elements} ->
@@ -181,22 +206,25 @@ instance Shift.Functor (Expression layout stage) where
         { startPosition,
           items = fmap (Shift.map category) items
         }
-    Comprehension {startPosition, statements} ->
+    Comprehension {startPosition, statements, unsupported} ->
       Comprehension
         { startPosition,
-          statements = Shift.map category statements
+          statements = Shift.map category statements,
+          unsupported
         }
-    Record {constructorPosition, constructor, fields} ->
+    Record {constructorPosition, constructor, constructorInfo, fields} ->
       Record
         { constructorPosition,
           constructor = Shift.map category constructor,
+          constructorInfo = Shift.map category constructorInfo,
           fields = fmap (Shift.map category) fields
         }
-    Update {base, updatePosition, updates} ->
+    Update {base, updatePosition, updates, unsupported} ->
       Update
         { base = Shift.map category base,
           updatePosition,
-          updates = fmap (Shift.map category) updates
+          updates = fmap (Shift.map category) updates,
+          unsupported
         }
     Call {function, argument} ->
       Call
@@ -224,10 +252,10 @@ instance Shift.Functor (Expression layout stage) where
           scrutinee = Shift.map category scrutinee,
           cases = fmap (Shift.map category) cases
         }
-    Do {startPosition, statements} ->
+    Do {startPosition, dox} ->
       Do
         { startPosition,
-          statements = Shift.map category statements
+          dox = Shift.map category dox
         }
     Lambda {startPosition, parameter, body} ->
       Lambda
@@ -246,16 +274,18 @@ instance Shift.Functor (Expression layout stage) where
           left = Shift.map category left,
           right = Shift.map category right
         }
-    Annotation {expression, operatorPosition, annotation} ->
+    Annotation {expression, operatorPosition, annotation, instanciation} ->
       Annotation
-        { expression = Shift.map (Shift.Over category) expression,
+        { expression = Shift.map category expression,
           operatorPosition,
-          annotation = Shift.map category annotation
+          annotation = Shift.map category annotation,
+          instanciation = Shift.map category instanciation
         }
-    RunST {startPosition, imperative} ->
+    RunST {startPosition, imperative, unsupported} ->
       RunST
         { startPosition,
-          imperative = Shift.map category imperative
+          imperative = Shift.map category imperative,
+          unsupported
         }
 
 instance FreeTermVariables (Expression layout) where
@@ -289,7 +319,7 @@ instance FreeTermVariables (Expression layout) where
         [ freeTermVariables target scrutinee,
           foldMap (freeTermVariables target) cases
         ]
-    Do {statements} -> freeTermVariables target statements
+    Do {dox} -> freeTermVariables target dox
     Lambda {body} ->
       freeTermVariables (FreeVariables.Over target) body
     LambdaCase {cases} -> foldMap (freeTermVariables target) cases
@@ -299,7 +329,7 @@ instance FreeTermVariables (Expression layout) where
           freeTermVariables target right
         ]
     Annotation {expression} ->
-      freeTermVariables (FreeVariables.Over target) expression
+      freeTermVariables target expression
     RunST {imperative} -> freeTermVariables target imperative
 
 instance Connect Expression where
@@ -311,12 +341,14 @@ instance Connect Expression where
     Integer {startPosition, integer} ->
       Integer
         { startPosition,
-          integer
+          integer,
+          evidence = Inferred
         }
     Float {startPosition, float} ->
       Float
         { startPosition,
-          float
+          float,
+          evidence = Inferred
         }
     Character {startPosition, character} ->
       Character
@@ -338,22 +370,25 @@ instance Connect Expression where
         { startPosition,
           items = connect <$> items
         }
-    Comprehension {startPosition, statements} ->
+    Comprehension {startPosition, statements, unsupported} ->
       Comprehension
         { startPosition,
-          statements = connect statements
+          statements = connect statements,
+          unsupported
         }
     Record {constructorPosition, constructor, fields} ->
       Record
         { constructorPosition,
           constructor,
+          constructorInfo = Inferred,
           fields = connect <$> fields
         }
-    Update {base, updatePosition, updates} ->
+    Update {base, updatePosition, updates, unsupported} ->
       Update
         { base = connect base,
           updatePosition,
-          updates = connect <$> updates
+          updates = connect <$> updates,
+          unsupported
         }
     Call {function, argument} ->
       Call
@@ -381,10 +416,10 @@ instance Connect Expression where
           scrutinee = connect scrutinee,
           cases = connect <$> cases
         }
-    Do {startPosition, statements} ->
+    Do {startPosition, dox} ->
       Do
         { startPosition,
-          statements = connect statements
+          dox = connect dox
         }
     Lambda {startPosition, parameter, body} ->
       Lambda
@@ -407,13 +442,38 @@ instance Connect Expression where
       Annotation
         { expression = connect expression,
           operatorPosition,
-          annotation
+          annotation,
+          instanciation = Inferred
         }
-    RunST {startPosition, imperative} ->
+    RunST {startPosition, imperative, unsupported} ->
       RunST
         { startPosition,
-          imperative = connect imperative
+          imperative = connect imperative,
+          unsupported
         }
+
+data Explicit layout stage scope where
+  Explicit :: !(Expression layout Resolve (Scope.Local ':+ scope)) -> Explicit layout Resolve scope
+  Known :: !(Simple.SchemeOver (Expression layout Check) scope) -> Explicit layout Check scope
+
+instance Show (Explicit layout stage scope) where
+  showsPrec d = \case
+    Explicit expression -> showParen (d > 10) $ showString "Explicit " . showsPrec 11 expression
+    Known expression -> showParen (d > 10) $ showString "Known " . showsPrec 11 expression
+
+instance Shift (Explicit layout stage) where
+  shift = shiftDefault
+
+instance Shift.Functor (Explicit layout stage) where
+  map category = \case
+    Explicit expression -> Explicit (Shift.map (Shift.Over category) expression)
+    Known expression -> Known (Shift.map category expression)
+
+instance FreeTermVariables (Explicit layout) where
+  freeTermVariables target (Explicit expression) = freeTermVariables (FreeVariables.Over target) expression
+
+instance Connect Explicit where
+  connect (Explicit expression) = Explicit (connect expression)
 
 callHead_ :: CallHead Resolve scope -> Expression Normal Resolve scope
 callHead_ callHead = CallHead {callHead}
@@ -427,7 +487,8 @@ resolveTerm2 position index Nil = CallHead {callHead = CallHead.resolveVariable 
 resolveTerm2 startPosition Term2.RunST (Nil :> imperative) =
   RunST
     { startPosition,
-      imperative
+      imperative,
+      unsupported = Refl
     }
 resolveTerm2 position index (arguments :> argument) =
   Call
@@ -472,8 +533,18 @@ resolveWith context expression arguments@(_ : _)
           argument
         }
 resolveWith context expression [] = case expression of
-  Stage1.Integer {startPosition, integer} -> Integer {startPosition, integer}
-  Stage1.Float {startPosition, float} -> Float {startPosition, float}
+  Stage1.Integer {startPosition, integer} ->
+    Integer
+      { startPosition,
+        integer,
+        evidence = Inferred
+      }
+  Stage1.Float {startPosition, float} ->
+    Float
+      { startPosition,
+        float,
+        evidence = Inferred
+      }
   Stage1.Character {startPosition, character} -> Character {startPosition, character}
   Stage1.String {startPosition, string} -> String {startPosition, string}
   Stage1.Tupling {startPosition, count} ->
@@ -509,7 +580,8 @@ resolveWith context expression [] = case expression of
   Stage1.Comprehension {startPosition, statements} ->
     Comprehension
       { startPosition,
-        statements = Statements.resolve context statements
+        statements = Statements.resolve context statements,
+        unsupported = Refl
       }
   Stage1.Record {startPosition, constructor, fields} ->
     case context != constructor of
@@ -519,6 +591,7 @@ resolveWith context expression [] = case expression of
           Record
             { constructorPosition = startPosition,
               constructor = Constructor.Index typex constructorIndex,
+              constructorInfo = Inferred,
               fields = fmap (Field.resolve context binding) fields
             }
   Stage1.Update {base, updatePosition, updates} -> case first of
@@ -526,7 +599,8 @@ resolveWith context expression [] = case expression of
       Update
         { base = resolve context base,
           updatePosition,
-          updates = fmap (Select.resolve index context) updates
+          updates = fmap (Select.resolve index context) updates,
+          unsupported = Refl
         }
     where
       first = case head (toList updates) of
@@ -557,7 +631,7 @@ resolveWith context expression [] = case expression of
   Stage1.Do {startPosition, statements} ->
     Do
       { startPosition,
-        statements = Statements.resolve context statements
+        dox = Statements.resolve context statements
       }
   Stage1.Lambda {startPosition, parameters, body}
     | parameters <- toList parameters,
@@ -630,9 +704,10 @@ resolveWith context expression [] = case expression of
     let scheme' = Scheme.resolve context annotation
         context' = Scheme.augment scheme' context
      in Annotation
-          { expression = resolve context' expression,
+          { expression = Explicit $ resolve context' expression,
             operatorPosition,
-            annotation = scheme'
+            annotation = scheme',
+            instanciation = Inferred
           }
   where
     section wanted Fixity {associativity, precedence} section

@@ -3,10 +3,11 @@ module Stage3.Check.TermBinding where
 import Control.Monad.ST (ST)
 import Stage2.Layout (Normal)
 import Stage2.Shift (Shift (..))
+import Stage2.Stage (Check)
+import {-# SOURCE #-} Stage2.Tree.Declaration (Declaration)
+import {-# SOURCE #-} qualified Stage2.Tree.Declaration as Declaration
 import Stage3.Check.TypeAnnotation (Annotation (..), GlobalTypeAnnotation (..), LocalTypeAnnotation (..))
 import qualified Stage3.Functor.Annotated as Functor (Annotated (..))
-import {-# SOURCE #-} Stage3.Tree.Declaration (Declaration)
-import {-# SOURCE #-} qualified Stage3.Tree.Declaration as Declaration
 import {-# SOURCE #-} qualified Stage3.Unify as Unify
 import {-# SOURCE #-} qualified Stage4.Tree.Scheme as Simple (Scheme)
 
@@ -29,13 +30,13 @@ rigid ::
   Functor.Annotated
     name
     (ST s (GlobalTypeAnnotation scope))
-    (ST s (Declaration locality Normal scope)) ->
+    (ST s (Declaration locality Normal Check scope)) ->
   TermBinding s scope
 rigid Functor.Annotated {meta, content} = TermBinding $ do
   annotation <- meta
   Rigid <$> case annotation of
     GlobalAnnotation Annotation {annotation'} -> pure annotation'
-    GlobalInferred -> Declaration.typex_ <$> content
+    GlobalInferred -> Declaration.typex' <$> content
 
 wobbly ::
   Functor.Annotated

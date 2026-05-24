@@ -1,10 +1,13 @@
 module Stage4.Tree.Instance where
 
 import qualified Data.Vector.Strict as Strict (Vector)
+import Stage2.Layout (Normal)
 import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (Shift (shift), shiftDefault)
 import qualified Stage2.Shift as Shift
-import qualified Stage3.Tree.Instance as Stage3 (Instance (..))
+import Stage2.Stage (Check)
+import Stage2.Tree.Combinators.Inferred (Inferred (Solved))
+import qualified Stage2.Tree.Instance as Stage3 (Evidence (..), Instance (..))
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
 import Stage4.Tree.Evidence (Evidence)
@@ -35,8 +38,8 @@ instance Substitute.Functor Instance where
         members = Substitute.map category <$> members
       }
 
-simplify :: Stage3.Instance scope -> Instance scope
-simplify Stage3.Instance {evidence, prerequisites, members} =
+simplify :: Stage3.Instance Normal Check scope -> Instance scope
+simplify Stage3.Instance {evidence = Solved (Stage3.Evidence evidence), prerequisites, members} =
   Instance
     { evidence,
       prerequisitesCount = length prerequisites,

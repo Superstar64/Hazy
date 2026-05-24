@@ -17,12 +17,13 @@ import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift (..), shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Resolve)
+import Stage2.Tree.Combinators.Inferred (Inferred (..))
 import {-# SOURCE #-} Stage2.Tree.Declarations (Declarations)
 import {-# SOURCE #-} qualified Stage2.Tree.Declarations as Declarations
 import {-# SOURCE #-} Stage2.Tree.Expression (Expression)
 import {-# SOURCE #-} qualified Stage2.Tree.Expression as Expression (resolve)
 import Stage2.Tree.Pattern (Pattern)
-import qualified Stage2.Tree.Pattern as Pattern (augment, resolve)
+import qualified Stage2.Tree.Pattern as Pattern (augment, neverFails, resolve)
 import qualified Stage4.Tree.Evidence as Simple (Evidence)
 
 data Syntax
@@ -43,49 +44,55 @@ class IsDo syntax where
 instance IsDo 'Do where
   isDo = Refl
 
-data Statements layout stage scope
+data Statements syntax layout stage scope
   = Done
       { done :: !(Expression layout stage scope)
       }
   | Run
       { startPosition :: !Position,
+        evidence :: !(Inferred (Evidence syntax) stage scope),
         effect :: !(Expression layout stage scope),
-        after :: !(Statements layout stage scope)
+        after :: !(Statements syntax layout stage scope)
       }
   | Bind
       { startPosition :: !Position,
-        patternx :: !(Pattern Resolve scope),
+        evidence :: !(Inferred (Evidence syntax) stage scope),
+        patternx :: !(Pattern stage scope),
         effect :: !(Expression layout stage scope),
-        thenx :: !(Statements layout stage (Scope.Pattern ':+ scope))
+        thenx :: !(Statements syntax layout stage (Scope.Pattern ':+ scope)),
+        fail :: !Bool
       }
   | Let
       { startPosition :: !Position,
         declarations :: !(Declarations Locality.Local layout stage (Scope.Declaration ':+ scope)),
-        body :: !(Statements layout stage (Scope.Declaration ':+ scope))
+        body :: !(Statements syntax layout stage (Scope.Declaration ':+ scope))
       }
   deriving (Show)
 
-instance Shift (Statements layout stage) where
+instance Shift (Statements syntax layout stage) where
   shift = shiftDefault
 
-instance Shift.Functor (Statements layout stage) where
+instance Shift.Functor (Statements syntax layout stage) where
   map category = \case
     Done {done} ->
       Done
         { done = Shift.map category done
         }
-    Run {startPosition, effect, after} ->
+    Run {startPosition, evidence, effect, after} ->
       Run
         { startPosition,
+          evidence = Shift.map category evidence,
           effect = Shift.map category effect,
           after = Shift.map category after
         }
-    Bind {startPosition, patternx, effect, thenx} ->
+    Bind {startPosition, evidence, patternx, effect, thenx, fail} ->
       Bind
         { startPosition,
+          evidence = Shift.map category evidence,
           patternx = Shift.map category patternx,
           effect = Shift.map category effect,
-          thenx = Shift.map (Shift.Over category) thenx
+          thenx = Shift.map (Shift.Over category) thenx,
+          fail
         }
     Let {startPosition, declarations, body} ->
       Let
@@ -94,7 +101,7 @@ instance Shift.Functor (Statements layout stage) where
           body = Shift.map (Shift.Over category) body
         }
 
-instance FreeTermVariables (Statements layout) where
+instance FreeTermVariables (Statements syntax layout) where
   freeTermVariables target = \case
     Done {done} -> freeTermVariables target done
     Run {effect, after} ->
@@ -113,7 +120,7 @@ instance FreeTermVariables (Statements layout) where
           freeTermVariables (FreeVariables.Over target) body
         ]
 
-instance Connect Statements where
+instance Connect (Statements syntax) where
   connect = \case
     Done {done} ->
       Done
@@ -122,15 +129,18 @@ instance Connect Statements where
     Run {startPosition, effect, after} ->
       Run
         { startPosition,
+          evidence = Inferred,
           effect = connect effect,
           after = connect after
         }
-    Bind {startPosition, patternx, effect, thenx} ->
+    Bind {startPosition, patternx, effect, thenx, fail} ->
       Bind
         { startPosition,
+          evidence = Inferred,
           patternx,
           effect = connect effect,
-          thenx = connect thenx
+          thenx = connect thenx,
+          fail
         }
     Let {startPosition, declarations, body} ->
       Let
@@ -159,14 +169,14 @@ instance Shift.Functor (Evidence syntax) where
     Bool -> Bool
     Monad evidence -> Monad (Shift.map category evidence)
 
-resolve :: Context scope -> Stage1.Statements Position -> Statements Normal Resolve scope
+resolve :: Context scope -> Stage1.Statements Position -> Statements syntax Normal Resolve scope
 resolve context Stage1.Statements {body, done} = statements context (toList body) done
   where
     statements ::
       Context scope ->
       [Stage1.Statement Position] ->
       Stage1.Expression Position ->
-      Statements Normal Resolve scope
+      Statements syntax Normal Resolve scope
     statements context [] done =
       Done
         { done = Expression.resolve context done
@@ -174,15 +184,18 @@ resolve context Stage1.Statements {body, done} = statements context (toList body
     statements context (Stage1.Run {startPosition, expression} : remaining) done =
       Run
         { startPosition,
+          evidence = Inferred,
           effect = Expression.resolve context expression,
           after = statements context remaining done
         }
     statements context (Stage1.Bind {startPosition, patternx, expression} : remaining) done =
       Bind
         { startPosition,
+          evidence = Inferred,
           patternx = pattern',
           effect = Expression.resolve context expression,
-          thenx = statements (Pattern.augment pattern' context) remaining done
+          thenx = statements (Pattern.augment pattern' context) remaining done,
+          fail = not $ Pattern.neverFails pattern'
         }
       where
         pattern' = Pattern.resolve context patternx

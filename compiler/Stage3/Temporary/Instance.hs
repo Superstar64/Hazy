@@ -17,7 +17,9 @@ import Stage2.Shift (shift)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Check, Resolve)
 import qualified Stage2.Tree.Combinators.Implicit as Stage2 (Implicit (..))
+import Stage2.Tree.Combinators.Inferred (Inferred (..))
 import qualified Stage2.Tree.Constraint as Solved (Constraint)
+import qualified Stage2.Tree.Instance as Solved (Evidence (..), Instance (..))
 import qualified Stage2.Tree.Instance as Stage2 (Instance (..))
 import qualified Stage2.Tree.MethodConcrete as Stage2 (MethodConcrete (..))
 import qualified Stage2.Tree.TypePattern as Solved (TypePattern)
@@ -34,7 +36,6 @@ import qualified Stage3.Simple.Type as Simple.Type (lift)
 import qualified Stage3.Temporary.Definition as Definition
 import Stage3.Temporary.MethodConcrete (MethodConcrete (..))
 import qualified Stage3.Temporary.MethodConcrete as MethodConcrete
-import qualified Stage3.Tree.Instance as Solved (Instance (..))
 import qualified Stage3.Tree.Scheme as Scheme
 import qualified Stage3.Unify as Unify
 import Stage4.Substitute (Category (Substitute))
@@ -76,16 +77,17 @@ head = \case
   Class {head2} -> head2
 
 data Instance s scope = Instance
-  { parameters :: !(Strict.Vector (Solved.TypePattern Position Check scope)),
+  { startPosition, classPosition :: !Position,
+    parameters :: !(Strict.Vector (Solved.TypePattern Position Check scope)),
     prerequisites :: !(Strict.Vector (Solved.Constraint Position Check scope)),
     evidence :: !(Strict.Vector (Simple.Evidence (Local ':+ scope))),
     members :: !(Strict.Vector (MethodConcrete s scope))
   }
 
 instance Unify.Zonk Instance where
-  zonk zonker Instance {parameters, prerequisites, evidence, members} = do
+  zonk zonker Instance {startPosition, classPosition, parameters, prerequisites, evidence, members} = do
     members <- traverse (Unify.zonk zonker) members
-    pure Instance {parameters, prerequisites, evidence, members}
+    pure Instance {startPosition, classPosition, parameters, prerequisites, evidence, members}
 
 check ::
   Context s scope ->
@@ -102,6 +104,7 @@ check
     }
   Stage2.Instance
     { startPosition,
+      classPosition,
       members
     }
     | index <- index key,
@@ -181,9 +184,17 @@ check
                         }
               pure Default {self, base, defaultx}
         members <- izipWithM check methods (shift <$> members)
-        pure Instance {parameters, prerequisites, evidence, members}
+        pure Instance {startPosition, classPosition, parameters, prerequisites, evidence, members}
 
-solve :: Instance s scope -> ST s (Solved.Instance scope)
-solve Instance {parameters, prerequisites, evidence, members} = do
+solve :: Instance s scope -> ST s (Solved.Instance Normal Check scope)
+solve Instance {startPosition, classPosition, parameters, prerequisites, evidence, members} = do
   members <- traverse MethodConcrete.solve members
-  pure Solved.Instance {parameters, prerequisites, evidence, members}
+  pure
+    Solved.Instance
+      { startPosition,
+        classPosition,
+        parameters,
+        prerequisites,
+        evidence = Solved $ Solved.Evidence evidence,
+        members
+      }

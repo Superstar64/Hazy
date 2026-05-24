@@ -8,9 +8,10 @@ import Stage2.Locality (Local)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (shift)
-import Stage2.Stage (Resolve)
+import Stage2.Stage (Check, Resolve)
 import Stage2.Tree.Combinators.Inferred (Inferred (..))
 import qualified Stage2.Tree.Pattern as Stage2.Pattern
+import qualified Stage2.Tree.Statements as Solved
 import qualified Stage2.Tree.Statements as Stage2
 import Stage3.Check.Context (Context)
 import Stage3.Temporary.Declarations (Declarations)
@@ -19,7 +20,6 @@ import {-# SOURCE #-} Stage3.Temporary.Expression (Expression)
 import {-# SOURCE #-} qualified Stage3.Temporary.Expression as Expression
 import Stage3.Temporary.Pattern (Pattern)
 import qualified Stage3.Temporary.Pattern as Pattern
-import qualified Stage3.Tree.Statements as Solved
 import qualified Stage3.Unify as Unify
 
 data Do s scope
@@ -39,8 +39,9 @@ data Do s scope
         fail :: !Bool
       }
   | Let
-      { declarations :: !(Declarations Local s (Scope.Declaration ':+ scope)),
-        letBody :: !(Do s (Scope.Declaration ':+ scope))
+      { startPosition :: !Position,
+        declarations :: !(Declarations Local s (Scope.Declaration ':+ scope)),
+        body :: !(Do s (Scope.Declaration ':+ scope))
       }
 
 instance Unify.Zonk Do where
@@ -59,12 +60,16 @@ instance Unify.Zonk Do where
       effect <- Unify.zonk zonker effect
       thenx <- Unify.zonk zonker thenx
       pure Bind {startPosition, patternx, evidence, effect, thenx, fail}
-    Let {declarations, letBody} -> do
+    Let {startPosition, declarations, body} -> do
       declarations <- Unify.zonk zonker declarations
-      letBody <- Unify.zonk zonker letBody
-      pure Let {declarations, letBody}
+      body <- Unify.zonk zonker body
+      pure Let {startPosition, declarations, body}
 
-check :: Context s scope -> Unify.Type s scope -> Stage2.Statements Normal Resolve scope -> ST s (Do s scope)
+check ::
+  Context s scope ->
+  Unify.Type s scope ->
+  Stage2.Statements Stage2.Do Normal Resolve scope ->
+  ST s (Do s scope)
 check context typex = \case
   Stage2.Done {done} -> do
     done <- Expression.check context typex done
@@ -92,12 +97,12 @@ check context typex = \case
     effect <- Expression.check context (Unify.call monad input) effect
     thenx <- check (Pattern.augment patternx context) (shift $ Unify.call monad output) thenx
     pure Bind {startPosition, patternx, evidence, effect, thenx, fail = not neverFail}
-  Stage2.Let {declarations, body} -> do
+  Stage2.Let {startPosition, declarations, body} -> do
     (context, declarations) <- Declarations.check context declarations
     body <- check context (shift typex) body
-    pure (Let declarations body)
+    pure Let {startPosition, declarations, body}
 
-solve :: Do s scope -> ST s (Solved.Statements Solved.Do scope)
+solve :: Do s scope -> ST s (Solved.Statements Solved.Do Normal Check scope)
 solve = \case
   Done {done} -> do
     done <- Expression.solve done
@@ -106,7 +111,13 @@ solve = \case
     evidence <- Unify.solveEvidence startPosition evidence
     effect <- Expression.solve effect
     after <- solve after
-    pure Solved.Run {evidence = Solved $ Stage2.Monad evidence, check = effect, after}
+    pure
+      Solved.Run
+        { startPosition,
+          evidence = Solved $ Stage2.Monad evidence,
+          effect,
+          after
+        }
   Bind {startPosition, patternx, evidence, effect, thenx, fail} -> do
     patternx <- Pattern.solve patternx
     evidence <- Unify.solveEvidence startPosition evidence
@@ -114,13 +125,14 @@ solve = \case
     thenx <- solve thenx
     pure
       Solved.Bind
-        { patternx,
+        { startPosition,
+          patternx,
           evidence = Solved $ Stage2.Monad evidence,
-          check = effect,
+          effect,
           thenx,
           fail
         }
-  Let {declarations, letBody} -> do
+  Let {startPosition, declarations, body} -> do
     declarations <- Declarations.solve declarations
-    body <- solve letBody
-    pure Solved.Let {declarations, body}
+    body <- solve body
+    pure Solved.Let {startPosition, declarations, body}

@@ -1,14 +1,16 @@
 module Stage3.Temporary.Statements where
 
 import Control.Monad.ST (ST)
+import Stage1.Position (Position)
 import Stage2.Layout (Normal)
 import Stage2.Locality (Local)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope (Declaration, Pattern)
 import Stage2.Shift (shift)
-import Stage2.Stage (Resolve)
+import Stage2.Stage (Check, Resolve)
 import Stage2.Tree.Combinators.Inferred (Inferred (..))
 import qualified Stage2.Tree.Pattern as Stage2.Pattern
+import qualified Stage2.Tree.Statements as Solved
 import qualified Stage2.Tree.Statements as Stage2
 import Stage3.Check.Context (Context)
 import Stage3.Temporary.Declarations (Declarations)
@@ -17,80 +19,99 @@ import {-# SOURCE #-} Stage3.Temporary.Expression (Expression)
 import {-# SOURCE #-} qualified Stage3.Temporary.Expression as Expression
 import Stage3.Temporary.Pattern (Pattern)
 import qualified Stage3.Temporary.Pattern as Pattern
-import qualified Stage3.Tree.Statements as Solved
 import qualified Stage3.Unify as Unify
 
 data Statements s scope
   = Done !(Expression s scope)
-  | Run !(Expression s scope) !(Statements s scope)
-  | Bind !(Pattern s scope) !(Expression s scope) !(Statements s (Scope.Pattern ':+ scope))
-  | Let !(Declarations Local s (Scope.Declaration ':+ scope)) !(Statements s (Scope.Declaration ':+ scope))
+  | Run
+      { startPosition :: !Position,
+        effect :: !(Expression s scope),
+        after :: !(Statements s scope)
+      }
+  | Bind
+      { startPosition :: !Position,
+        patternx :: !(Pattern s scope),
+        effect :: !(Expression s scope),
+        thenx :: !(Statements s (Scope.Pattern ':+ scope))
+      }
+  | Let
+      { startPosition :: !Position,
+        declarations :: !(Declarations Local s (Scope.Declaration ':+ scope)),
+        body :: !(Statements s (Scope.Declaration ':+ scope))
+      }
 
 instance Unify.Zonk Statements where
   zonk zonker = \case
     Done expression -> Done <$> Unify.zonk zonker expression
-    Run expression statements -> do
+    Run startPosition expression statements -> do
       expression <- Unify.zonk zonker expression
       statements <- Unify.zonk zonker statements
-      pure $ Run expression statements
-    Bind patternx expression statements -> do
+      pure $ Run startPosition expression statements
+    Bind startPosition patternx expression statements -> do
       patternx <- Unify.zonk zonker patternx
       expression <- Unify.zonk zonker expression
       statements <- Unify.zonk zonker statements
-      pure $ Bind patternx expression statements
-    Let declarations statements -> do
+      pure $ Bind startPosition patternx expression statements
+    Let startPosition declarations statements -> do
       declarations <- Unify.zonk zonker declarations
       statements <- Unify.zonk zonker statements
-      pure $ Let declarations statements
+      pure $ Let startPosition declarations statements
 
-check :: Context s scope -> Unify.Type s scope -> Stage2.Statements Normal Resolve scope -> ST s (Statements s scope)
+check ::
+  Context s scope ->
+  Unify.Type s scope ->
+  Stage2.Statements Stage2.Guard Normal Resolve scope ->
+  ST s (Statements s scope)
 check context typex = \case
   Stage2.Done {done} -> Done <$> Expression.check context typex done
-  Stage2.Run {effect, after} -> do
-    expression <- Expression.check context Unify.bool effect
-    statements <- check context typex after
-    pure $ Run expression statements
-  Stage2.Bind {patternx, effect, thenx} -> do
+  Stage2.Run {startPosition, effect, after} -> do
+    effect <- Expression.check context Unify.bool effect
+    after <- check context typex after
+    pure Run {startPosition, effect, after}
+  Stage2.Bind {startPosition, patternx, effect, thenx} -> do
     binder <- Unify.fresh Unify.typex
     patternx <- Pattern.check context binder patternx
     effect <- Expression.check context binder effect
-    afeter <- check (Pattern.augment patternx context) (shift typex) thenx
-    pure $ Bind patternx effect afeter
-  Stage2.Let {declarations, body} -> do
+    thenx <- check (Pattern.augment patternx context) (shift typex) thenx
+    pure Bind {startPosition, patternx, effect, thenx}
+  Stage2.Let {startPosition, declarations, body} -> do
     (context, declarations) <- Declarations.check context declarations
-    letBody <- check context (shift typex) body
-    pure (Let declarations letBody)
+    body <- check context (shift typex) body
+    pure Let {startPosition, declarations, body}
 
-solve :: Statements s scope -> ST s (Solved.Statements Solved.Guard scope)
+solve :: Statements s scope -> ST s (Solved.Statements Solved.Guard Normal Check scope)
 solve (Done expression) = do
   expression <- Expression.solve expression
   pure $ Solved.Done expression
-solve (Run expression statements) = do
-  check <- Expression.solve expression
+solve (Run startPosition expression statements) = do
+  effect <- Expression.solve expression
   after <- solve statements
   pure $
     Solved.Run
-      { evidence = Solved Stage2.Bool,
-        check,
+      { startPosition,
+        evidence = Solved Stage2.Bool,
+        effect,
         after
       }
-solve (Bind patternx expression statements) = do
+solve (Bind startPosition patternx expression statements) = do
   patternx <- Pattern.solve patternx
-  check <- Expression.solve expression
+  effect <- Expression.solve expression
   thenx <- solve statements
   pure $
     Solved.Bind
-      { patternx,
+      { startPosition,
+        patternx,
         evidence = Solved Stage2.Bool,
-        check,
+        effect,
         thenx,
         fail = not $ Stage2.Pattern.neverFails patternx
       }
-solve (Let declarations statements) = do
+solve (Let startPosition declarations statements) = do
   declarations <- Declarations.solve declarations
   body <- solve statements
   pure $
     Solved.Let
-      { declarations,
+      { startPosition,
+        declarations,
         body
       }

@@ -127,6 +127,7 @@ merge entries@(entry :| _) =
             pure $ Method method
         | Just (position, More.Choice {index, bound, patternx}) <- choice ->
             let cast declaration = Real $ Real.locality declaration
+                instanciation = Inferred
                 real = case annotation of
                   Nothing ->
                     Real.Declaration
@@ -136,7 +137,9 @@ merge entries@(entry :| _) =
                           Real.Inferred
                             Real.::: Real.Name properName fixity
                             Real.::@ Real.Resolve
-                              (Real.Piece Real.Choice {position, index, bound, patternx}),
+                              ( Real.Piece
+                                  Real.Choice {position, index, instanciation, bound, patternx}
+                              ),
                         typex = Inferred
                       }
                   Just annotation ->
@@ -147,7 +150,9 @@ merge entries@(entry :| _) =
                           Real.Annotated annotation
                             Real.::: Real.Name properName fixity
                             Real.::@ Real.Resolve
-                              (Real.Piece Real.Choice {position, index, bound, patternx}),
+                              ( Real.Piece
+                                  Real.Choice {position, index, instanciation, bound, patternx}
+                              ),
                         typex = Inferred
                       }
              in cast <$> Verbose.resolving (Variable.printLiteral' properName) real

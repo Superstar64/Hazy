@@ -2,12 +2,12 @@ module Stage3.Temporary.ExpressionField where
 
 import Control.Monad.ST (ST)
 import Stage2.Layout (Normal)
-import Stage2.Stage (Resolve)
+import Stage2.Stage (Check, Resolve)
+import qualified Stage2.Tree.ExpressionField as Solved
 import qualified Stage2.Tree.ExpressionField as Stage2
 import Stage3.Check.Context (Context)
 import {-# SOURCE #-} Stage3.Temporary.Expression (Expression)
 import {-# SOURCE #-} qualified Stage3.Temporary.Expression as Expression
-import qualified Stage3.Tree.ExpressionField as Solved
 import qualified Stage3.Unify as Unify
 
 data Field s scope
@@ -34,7 +34,7 @@ check context lookup Stage2.Field {index, expression} = do
         expression
       }
 
-solve :: Field s scope -> ST s (Solved.Field scope)
+solve :: Field s scope -> ST s (Solved.Field Normal Check scope)
 solve Field {index, expression} = do
   expression <- Expression.solve expression
   pure $ Solved.Field {index, expression}

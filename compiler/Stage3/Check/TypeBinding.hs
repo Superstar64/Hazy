@@ -13,6 +13,7 @@ import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (Category (Shift), Shift (..), shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Check)
+import {-# SOURCE #-} Stage2.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 import {-# SOURCE #-} Stage3.Check.InstanceAnnotation (InstanceAnnotation)
 import {-# SOURCE #-} qualified Stage3.Check.InstanceAnnotation as InstanceAnnotation
 import {-# SOURCE #-} Stage3.Check.KindAnnotation (KindAnnotation)
@@ -21,7 +22,6 @@ import qualified Stage3.Functor.Annotated as Functor (Annotated (..), NoLabel)
 import {-# SOURCE #-} qualified Stage3.Temporary.TypeDeclarationExtra as Temporary
 import {-# SOURCE #-} Stage3.Tree.TypeDeclaration (TypeDeclaration)
 import {-# SOURCE #-} qualified Stage3.Tree.TypeDeclaration as TypeDeclaration
-import {-# SOURCE #-} Stage3.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 import {-# SOURCE #-} qualified Stage3.Unify as Unify
 import Stage4.Tree.Constraint (Constraint)
 import qualified Stage4.Tree.Type as Simple (Type)
@@ -72,7 +72,7 @@ rigid ::
     Label.TypeBinding
     (ST s (KindAnnotation scope))
     (ST s (TypeDeclaration locality Normal Check scope)) ->
-  ST s (TypeDeclarationExtra scope) ->
+  ST s (TypeDeclarationExtra Normal Check scope) ->
   Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) b) ->
   Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) d) ->
   TypeBinding s scope

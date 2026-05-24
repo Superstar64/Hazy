@@ -7,6 +7,7 @@ import Stage2.Layout (Normal)
 import Stage2.Scope (Environment)
 import Stage2.Shift (Shift)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Check)
 import qualified Stage3.Tree.Declarations as Stage3
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
@@ -27,5 +28,5 @@ instance Shift2.Functor Declarations
 
 instance Substitute.Functor Declarations
 
-simplify :: Stage3.Declarations locality Normal scope -> Declarations scope
+simplify :: Stage3.Declarations locality Normal Check scope -> Declarations scope
 single :: Declaration scope -> Declarations scope

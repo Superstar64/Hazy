@@ -12,12 +12,16 @@ import Stage2.Layout (Normal)
 import qualified Stage2.Locality as Locality
 import Stage2.Scope (Global)
 import Stage2.Stage (Check, Resolve)
+import Stage2.Tree.Declaration (Declaration (..))
+import qualified Stage2.Tree.Declaration as Declaration
 import qualified Stage2.Tree.Declaration as Stage2 (Declaration)
 import qualified Stage2.Tree.Declaration as Stage2.Declaration
 import qualified Stage2.Tree.Declarations as Stage2.Declarations
+import Stage2.Tree.Instance (Instance)
 import qualified Stage2.Tree.Instance as Stage2.Instance
 import qualified Stage2.Tree.Module as Stage2 (Module (..))
 import qualified Stage2.Tree.TypeDeclaration as Stage2.TypeDeclaration
+import Stage2.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 import qualified Stage2.Tree.TypeDeclarationExtra as Stage2.TypeDeclarationExtra
 import Stage3.Check.Context (globalBindings)
 import Stage3.Check.InstanceAnnotation (InstanceAnnotation)
@@ -36,19 +40,15 @@ import qualified Stage3.Functor.ModuleSet as Functor (ModuleSet (..))
 import qualified Stage3.Temporary.Declaration as Declaration.Unsolved
 import qualified Stage3.Temporary.Instance as Instance (Key (..), check, solve)
 import qualified Stage3.Temporary.TypeDeclarationExtra as TypeDeclarationExtra
-import Stage3.Tree.Declaration (Declaration (..))
-import qualified Stage3.Tree.Declaration as Declaration
 import Stage3.Tree.Declarations (Declarations)
 import qualified Stage3.Tree.Declarations as Declarations
-import Stage3.Tree.Instance (Instance)
 import Stage3.Tree.TypeDeclaration (TypeDeclaration)
 import qualified Stage3.Tree.TypeDeclaration as TypeDeclaration
-import Stage3.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 import Prelude hiding (Functor)
 
 data Module = Module
   { name :: !FullQualifiers,
-    declarations :: Declarations Locality.Global Normal Global
+    declarations :: Declarations Locality.Global Normal Check Global
   }
   deriving (Show)
 
@@ -57,23 +57,23 @@ type Formula s z =
     Functor.ModuleSet
     s
     (GlobalTypeAnnotation Global)
-    (Declaration Locality.Global Normal Global)
+    (Declaration Locality.Global Normal Check Global)
     (KindAnnotation Global)
     (TypeDeclaration Locality.Global Normal Check Global)
-    (TypeDeclarationExtra Global)
+    (TypeDeclarationExtra Normal Check Global)
     (InstanceAnnotation Global)
-    (Instance Global)
+    (Instance Normal Check Global)
     z
 
 fromFunctor ::
   Functor.Module
     a
-    (Declaration Locality.Global Normal Global)
+    (Declaration Locality.Global Normal Check Global)
     b
     (TypeDeclaration Locality.Global Normal Check Global)
-    (TypeDeclarationExtra Global)
+    (TypeDeclarationExtra Normal Check Global)
     c
-    (Instance Global) ->
+    (Instance Normal Check Global) ->
   Module
 fromFunctor (Functor.Module {name, declarations}) =
   Module
@@ -84,12 +84,12 @@ fromFunctor (Functor.Module {name, declarations}) =
 fromFunctors ::
   Functor.ModuleSet
     a
-    (Declaration Locality.Global Normal Global)
+    (Declaration Locality.Global Normal Check Global)
     b
     (TypeDeclaration Locality.Global Normal Check Global)
-    (TypeDeclarationExtra Global)
+    (TypeDeclarationExtra Normal Check Global)
     c
-    (Instance Global) ->
+    (Instance Normal Check Global) ->
   Vector Module
 fromFunctors (Functor.ModuleSet modules) = fmap fromFunctor modules
 
@@ -124,7 +124,7 @@ check modules =
         declarations <- Stage2.declarations modulex,
         terms <- Stage2.Declarations.terms declarations,
         term <- terms Vector.! term =
-          Declaration.lazy (Stage2.Declaration.name term) declaration
+          Declaration.lazy term declaration
 
     typex modulex typex declaration
       | modulex <- modules Vector.! modulex,
@@ -148,7 +148,7 @@ checkTermDeclaration ::
   Int ->
   Int ->
   Stage2.Declaration locality Normal Resolve Global ->
-  Formula s (Declaration locality Normal Global)
+  Formula s (Declaration locality Normal Check Global)
 checkTermDeclaration global local declaration = Formula7 {cycle, run}
   where
     cycle :: a
@@ -195,7 +195,7 @@ checkTypeDeclarationExtra ::
   Int ->
   Int ->
   Stage2.TypeDeclarationExtra.TypeDeclarationExtra Normal Resolve Global ->
-  Formula s (TypeDeclarationExtra Global)
+  Formula s (TypeDeclarationExtra Normal Check Global)
 checkTypeDeclarationExtra global local declaration = Formula7 {cycle, run}
   where
     cycle :: a
@@ -224,7 +224,7 @@ checkInstanceDeclaration ::
   Int ->
   Instance.Key.Key Global ->
   Stage2.Instance.Instance Normal Resolve Global ->
-  Formula s (Instance Global)
+  Formula s (Instance Normal Check Global)
 checkInstanceDeclaration global key declaration = Formula7 {cycle, run}
   where
     cycle :: a

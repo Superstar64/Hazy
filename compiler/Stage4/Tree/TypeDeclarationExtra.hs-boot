@@ -1,8 +1,10 @@
 module Stage4.Tree.TypeDeclarationExtra where
 
+import Stage2.Layout (Normal)
 import Stage2.Shift (Shift)
 import qualified Stage2.Shift as Shift
-import {-# SOURCE #-} qualified Stage3.Tree.TypeDeclarationExtra as Stage3
+import Stage2.Stage (Check)
+import {-# SOURCE #-} qualified Stage2.Tree.TypeDeclarationExtra as Stage3
 import {-# SOURCE #-} Stage4.Tree.ClassExtra (ClassExtra)
 
 data TypeDeclarationExtra scope
@@ -15,5 +17,5 @@ instance Shift TypeDeclarationExtra
 
 instance Shift.Functor TypeDeclarationExtra
 
-simplify :: Stage3.TypeDeclarationExtra scope -> TypeDeclarationExtra scope
+simplify :: Stage3.TypeDeclarationExtra Normal Check scope -> TypeDeclarationExtra scope
 assumeClass :: TypeDeclarationExtra scope -> ClassExtra scope

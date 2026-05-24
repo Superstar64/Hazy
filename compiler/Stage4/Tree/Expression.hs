@@ -13,24 +13,26 @@ import qualified Stage2.Index.Constructor as Constructor
 import qualified Stage2.Index.Method as Method
 import qualified Stage2.Index.Selector as Selector (Index (..))
 import qualified Stage2.Index.Type2 as Type2
+import Stage2.Layout (Normal)
 import Stage2.Scope (Environment ((:+)))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage2.Stage (Check, Equal (..), IsCheck (..))
+import Stage2.Stage (Check)
 import qualified Stage2.Tree.CallHead as Stage3 (CallHead (..))
 import Stage2.Tree.Combinators.Inferred (Inferred (..))
+import qualified Stage2.Tree.Definition as Stage3 (Definition)
+import Stage2.Tree.Expression (Explicit (Known))
+import qualified Stage2.Tree.Expression as Stage3 (Expression (..))
+import qualified Stage2.Tree.ExpressionField as Stage3 (Field (Field))
+import qualified Stage2.Tree.ExpressionField as Stage3.Field
+import qualified Stage2.Tree.RightHandSide as Stage3 (RightHandSide)
+import qualified Stage2.Tree.Statements as Stage3 (Do, Equal (..), Evidence (..), IsDo (..), Statements)
+import qualified Stage2.Tree.Statements as Stage3.Statements
 import qualified Stage3.Index.Evidence as Index.Evidence
 import qualified Stage3.Tree.ConstructorInfo as Stage3 (ConstructorInfo (ConstructorInfo))
 import qualified Stage3.Tree.ConstructorInfo as Stage3.ConstructorInfo
-import qualified Stage3.Tree.Definition as Stage3 (Definition)
-import qualified Stage3.Tree.Expression as Stage3 (Expression (..))
-import qualified Stage3.Tree.ExpressionField as Stage3 (Field (Field))
-import qualified Stage3.Tree.ExpressionField as Stage3.Field
-import qualified Stage3.Tree.RightHandSide as Stage3 (RightHandSide)
 import Stage3.Tree.SelectorInfo (Select (..), SelectorInfo (..))
-import qualified Stage3.Tree.Statements as Stage3 (Do, Equal (..), Evidence (..), IsDo (..), Statements)
-import qualified Stage3.Tree.Statements as Stage3.Statements
 import qualified Stage4.Index.Term as Term
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
@@ -330,36 +332,36 @@ guard left done =
       }
 
 class Simplify source where
-  simplify :: source scope -> Expression scope
+  simplify :: source Normal Check scope -> Expression scope
 
 instance Simplify Stage3.Expression where
   simplify expression = simplifyWith expression []
 
-instance (IsCheck stage) => Simplify (Stage3.CallHead stage) where
-  simplify | Refl <- isCheck :: Equal Check stage = \case
-    Stage3.Variable {variable, instanciation = Solved instanciation} ->
-      Variable
-        { variable = Term.from variable,
-          instanciation
+simplifyCallHead :: Stage3.CallHead Check scope -> Expression scope
+simplifyCallHead = \case
+  Stage3.Variable {variable, instanciation = Solved instanciation} ->
+    Variable
+      { variable = Term.from variable,
+        instanciation
+      }
+  Stage3.Selector {selector, selectorInfo = Solved selectorInfo} ->
+    Lambda
+      { body = simplifySelector (shift selector) (shift selectorInfo) lambdaVariable
+      }
+  Stage3.Method
+    { method,
+      evidence = Solved evidence,
+      instanciation = Solved instanciation,
+      methodInfo = Solved methodInfo
+    } ->
+      Method
+        { method,
+          evidence,
+          instanciation,
+          methodInfo
         }
-    Stage3.Selector {selector, selectorInfo = Solved selectorInfo} ->
-      Lambda
-        { body = simplifySelector (shift selector) (shift selectorInfo) lambdaVariable
-        }
-    Stage3.Method
-      { method,
-        evidence = Solved evidence,
-        instanciation = Solved instanciation,
-        methodInfo = Solved methodInfo
-      } ->
-        Method
-          { method,
-            evidence,
-            instanciation,
-            methodInfo
-          }
-    Stage3.Constructor {constructor, constructorInfo = Solved constructorInfo} ->
-      simplifyConstructor constructor constructorInfo 0 Reverse.Nil
+  Stage3.Constructor {constructor, constructorInfo = Solved constructorInfo} ->
+    simplifyConstructor constructor constructorInfo 0 Reverse.Nil
 
 instance Simplify Stage3.Definition where
   simplify = Definition.desugar . Definition.simplify
@@ -379,10 +381,10 @@ instance (Stage3.Statements.IsDo syntax) => Simplify (Stage3.Statements syntax) 
         { declarations = Declarations.simplify declarations,
           letBody = simplify body
         }
-    Stage3.Statements.Run {evidence = Solved (Stage3.Monad evidence), check, after} ->
-      run evidence (simplify check) (simplify after)
-    Stage3.Statements.Bind {patternx, evidence = Solved (Stage3.Monad evidence), check, thenx, fail} ->
-      bind fail evidence (simplify check) $
+    Stage3.Statements.Run {evidence = Solved (Stage3.Monad evidence), effect, after} ->
+      run evidence (simplify effect) (simplify after)
+    Stage3.Statements.Bind {patternx, evidence = Solved (Stage3.Monad evidence), effect, thenx, fail} ->
+      bind fail evidence (simplify effect) $
         Definition.desugar $
           if fail
             then Definition.Alternative {definition, alternative}
@@ -486,7 +488,7 @@ simplifySelector (Selector.Index typeIndex _) Disjoint {select} argument =
     statements = zipWith generate [0 ..] $ toList select
 
 simplifyWith ::
-  Stage3.Expression scope ->
+  Stage3.Expression Normal Check scope ->
   [Expression scope] ->
   Expression scope
 simplifyWith Stage3.Call {function, argument} arguments =
@@ -500,8 +502,8 @@ simplifyWith
 simplifyWith expression arguments@(_ : _) =
   foldl Call (simplify expression) arguments
 simplifyWith expression [] = case expression of
-  Stage3.CallHead {callHead} -> simplify callHead
-  Stage3.Record {constructor, constructorInfo, fields} ->
+  Stage3.CallHead {callHead} -> simplifyCallHead callHead
+  Stage3.Record {constructor, constructorInfo = Solved constructorInfo, fields} ->
     simplifyConstructorExact constructor constructorInfo arguments
     where
       entryCount = Stage3.ConstructorInfo.entryCount constructorInfo
@@ -516,8 +518,8 @@ simplifyWith expression [] = case expression of
              ] of
           [] -> Join {statements = Statements.Bottom}
           fields -> simplify $ last fields
-  Stage3.Integer {integer, evidence} -> integer_ integer evidence
-  Stage3.Float {float, evidence} -> float_ float evidence
+  Stage3.Integer {integer, evidence = Solved evidence} -> integer_ integer evidence
+  Stage3.Float {float, evidence = Solved evidence} -> float_ float evidence
   Stage3.Tuple {elements} ->
     Constructor
       { constructor = Constructor.tuple (length elements),
@@ -600,8 +602,8 @@ simplifyWith expression [] = case expression of
     Character {character}
   Stage3.String {string} ->
     foldr (cons . Character) nil (unpack string)
-  Stage3.Do {statements} -> simplify statements
-  Stage3.Annotation {expression, annotation, instanciation} ->
+  Stage3.Do {dox} -> simplify dox
+  Stage3.Annotation {expression = Known expression, annotation, instanciation = Solved instanciation} ->
     Let
       { declarations = Declarations.single $ shift $ Declaration.annotation expression annotation,
         letBody =
@@ -616,7 +618,7 @@ simplifyWith expression [] = case expression of
           Call
             { function =
                 Call
-                  { function = shift $ simplify left,
+                  { function = shift $ simplifyCallHead left,
                     argument = lambdaVariable
                   },
               argument = shift $ simplify right

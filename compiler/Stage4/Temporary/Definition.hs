@@ -1,10 +1,12 @@
 module Stage4.Temporary.Definition where
 
+import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import qualified Stage3.Tree.Definition as Stage3 (Definition (..))
+import Stage2.Stage (Check)
+import qualified Stage2.Tree.Definition as Stage3 (Definition (..))
 import qualified Stage4.Shift as Shift2
 import Stage4.Temporary.Function (Function)
 import qualified Stage4.Temporary.Function as Function
@@ -48,7 +50,7 @@ instance Semigroup (Definition scope) where
       }
   Definition {definition} <> alternative = Alternative {definition, alternative}
 
-simplify :: Stage3.Definition scope -> Definition scope
+simplify :: Stage3.Definition Normal Check scope -> Definition scope
 simplify = \case
   Stage3.Definition {definition} ->
     Definition

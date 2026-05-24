@@ -19,8 +19,9 @@ import {-# SOURCE #-} qualified Stage2.Tree.Declarations as Declarations
 
 data RightHandSide layout stage scope
   = RightHandSide
-      !(Body layout stage (Declaration ':+ scope))
-      !(Declarations Locality.Local layout stage (Declaration ':+ scope))
+  { body :: !(Body layout stage (Declaration ':+ scope)),
+    declarations :: !(Declarations Locality.Local layout stage (Declaration ':+ scope))
+  }
   deriving (Show)
 
 instance Shift (RightHandSide layout stage) where

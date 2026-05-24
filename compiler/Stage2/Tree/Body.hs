@@ -13,11 +13,11 @@ import Stage2.Stage (Resolve)
 import {-# SOURCE #-} Stage2.Tree.Expression (Expression)
 import {-# SOURCE #-} qualified Stage2.Tree.Expression as Expression (resolve)
 import Stage2.Tree.Statements (Statements)
-import qualified Stage2.Tree.Statements as Statements (resolve)
+import qualified Stage2.Tree.Statements as Statements (Guard, resolve)
 
 data Body layout stage scope
-  = Body !(Expression layout stage scope)
-  | Guards !(Strict.Vector1 (Statements layout stage scope))
+  = Body {body :: !(Expression layout stage scope)}
+  | Guards {guards :: !(Strict.Vector1 (Statements Statements.Guard layout stage scope))}
   deriving (Show)
 
 instance Shift (Body layout stage) where

@@ -1,13 +1,15 @@
 module Stage4.Temporary.Function where
 
+import Stage2.Layout (Normal)
 import Stage2.Scope (Environment ((:+)))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import qualified Stage3.Tree.Alternative as Stage3 (Alternative (..))
-import qualified Stage3.Tree.Function as Stage3 (Function (..))
-import qualified Stage3.Tree.Lambda as Stage3 (Lambda)
-import qualified Stage3.Tree.Lambda as Stage3.Lambda
+import Stage2.Stage (Check)
+import qualified Stage2.Tree.Alternative as Stage3 (Alternative (..))
+import qualified Stage2.Tree.Function as Stage3 (Function (..))
+import qualified Stage2.Tree.Lambda as Stage3 (Lambda)
+import qualified Stage2.Tree.Lambda as Stage3.Lambda
 import qualified Stage4.Index.Term as Term
 import qualified Stage4.Shift as Shift2
 import Stage4.Temporary.Pattern (Pattern)
@@ -56,15 +58,15 @@ instance Shift2.Functor Function where
         }
 
 class Simplify source where
-  simplify :: source scope -> Function scope
+  simplify :: source Normal Check scope -> Function scope
 
 instance Simplify Stage3.Function where
   simplify = \case
-    Stage3.Plain {plain} -> Plain {plain = RightHandSide.simplify plain}
-    Stage3.Bound {patternx, body} ->
+    Stage3.Plain {rightHandSide} -> Plain {plain = RightHandSide.simplify rightHandSide}
+    Stage3.Bound {patternx, function} ->
       Bound
         { patternx = Pattern.simplify patternx,
-          body = simplify body
+          body = simplify function
         }
 
 instance Simplify Stage3.Lambda where

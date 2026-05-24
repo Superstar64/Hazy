@@ -5,13 +5,15 @@ import Stage2.Layout (Normal)
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Check)
+import Stage2.Tree.Combinators.Implicit (Implicit (..))
+import Stage2.Tree.Combinators.Inferred (Inferred (..))
 import Stage2.Tree.Declaration (Key (..))
-import qualified Stage3.Tree.Declaration as Stage3 (Declaration (..))
-import qualified Stage3.Tree.Definition2 as Stage3 (Choice (..), Definition2 (Definition, Piece))
-import qualified Stage3.Tree.Definition2 as Stage3.Definition2
-import qualified Stage3.Tree.Definition3 as Stage3 (Definition3 (..))
-import qualified Stage3.Tree.Definition4 as Stage3 (Definition4 (..))
-import qualified Stage3.Tree.Expression as Stage3 (Expression)
+import qualified Stage2.Tree.Declaration as Stage3 (Declaration (..))
+import qualified Stage2.Tree.Definition2 as Stage3 (Choice (..), Definition2 (Definition, Piece))
+import qualified Stage2.Tree.Definition2 as Stage3.Definition2
+import qualified Stage2.Tree.Definition3 as Stage3 (Definition3 (..))
+import qualified Stage2.Tree.Definition4 as Stage3 (Definition4 (..))
+import qualified Stage2.Tree.Expression as Stage3 (Expression)
 import qualified Stage3.Tree.Scheme as Stage3 (Scheme)
 import qualified Stage4.Index.Term as Term
 import qualified Stage4.Shift as Shift2
@@ -51,7 +53,7 @@ instance Substitute.Functor Declaration where
 
 simplify ::
   forall locality scope.
-  Stage3.Declaration locality Normal scope ->
+  Stage3.Declaration locality Normal Check scope ->
   Declaration scope
 simplify = \case
   Stage3.Declaration
@@ -63,15 +65,15 @@ simplify = \case
         { name,
           definition =
             case definition of
-              _ Stage3.::: _ Stage3.::@ definition ->
+              _ Stage3.::: _ Stage3.::@ Check definition ->
                 SchemeOver.map go definition,
-          typex
+          typex = case typex of Solved typex -> typex
         }
   where
-    go :: SchemeOver.Map (Stage3.Definition2 source mark) Expression
+    go :: SchemeOver.Map (Stage3.Definition2 source mark Normal Check) Expression
     go = SchemeOver.Map $ \case
       Stage3.Definition definition -> Expression.simplify definition
-      Stage3.Piece Stage3.Choice {index, instanciation, patternx, bound} ->
+      Stage3.Piece Stage3.Choice {index, instanciation = Solved instanciation, patternx, bound} ->
         Expression.Join
           { statements =
               Statements.bind
@@ -89,7 +91,10 @@ simplify = \case
           }
       Stage3.Definition2.Shared shared -> Expression.simplify shared
 
-annotation :: SchemeOver Stage3.Expression scope -> Stage3.Scheme position Check scope -> Declaration scope
+annotation ::
+  SchemeOver (Stage3.Expression Normal Check) scope ->
+  Stage3.Scheme position Check scope ->
+  Declaration scope
 annotation SchemeOver {parameters, constraints, result} scheme =
   Declaration
     { name = Unnamed 0,

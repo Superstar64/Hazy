@@ -5,7 +5,6 @@ import Data.List.NonEmpty (NonEmpty ((:|)))
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe (mapMaybe)
-import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import qualified Data.Vector.Strict as Strict (Vector)
 import Error (duplicateMethodEntries, missingMethodEntry)
 import Stage1.Position (Position)
@@ -15,14 +14,14 @@ import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Stage (Resolve)
 import qualified Stage2.Temporary.Partial.Method as Partial
 import qualified Stage2.Tree.Definition as Definition (merge)
-import qualified Stage2.Tree.Definition as Real (Definition)
 import qualified Stage2.Tree.Method as Real (Method (..))
+import qualified Stage2.Tree.MethodAbstract as Real (MethodAbstract (..))
 
 data Method scope = Method
   { position :: !Position,
     name :: !Variable,
     method :: Real.Method Resolve scope,
-    extra :: Strict.Maybe (Real.Definition Normal Resolve scope)
+    extra :: Real.MethodAbstract Normal Resolve scope
   }
 
 shrink = method
@@ -53,8 +52,8 @@ merge entries@(entry :| _) =
       [(_, annotation)] -> annotation
       annotations -> duplicateMethodEntries (map fst annotations)
     definition = case functions of
-      (function : functions) -> Strict.Just (Definition.merge $ function :| functions)
-      [] -> Strict.Nothing
+      (function : functions) -> Real.DefaultResolve (Definition.merge $ function :| functions)
+      [] -> Real.Abstract
 
     annotations = mapMaybe annotation (toList entries)
       where

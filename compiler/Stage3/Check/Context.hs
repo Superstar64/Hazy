@@ -14,6 +14,8 @@ import Stage2.Scope (Environment (..), Global, Local)
 import qualified Stage2.Scope as Scope (Declaration)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Check)
+import {-# SOURCE #-} Stage2.Tree.Declaration (Declaration)
+import {-# SOURCE #-} Stage2.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 import {-# SOURCE #-} Stage3.Check.InstanceAnnotation (InstanceAnnotation)
 import {-# SOURCE #-} Stage3.Check.KindAnnotation (KindAnnotation (..))
 import Stage3.Check.LocalBinding (LocalBinding)
@@ -27,9 +29,7 @@ import qualified Stage3.Functor.Declarations as Functor (Declarations (..))
 import qualified Stage3.Functor.Module as Functor (Module (..))
 import qualified Stage3.Functor.ModuleSet as Functor (ModuleSet (..))
 import {-# SOURCE #-} qualified Stage3.Temporary.TypeDeclarationExtra as Temporary
-import {-# SOURCE #-} Stage3.Tree.Declaration (Declaration)
 import {-# SOURCE #-} Stage3.Tree.TypeDeclaration (TypeDeclaration)
-import {-# SOURCE #-} Stage3.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 import Stage4.Tree.Type (Type)
 
 type Context :: Data.Kind.Type -> Environment -> Data.Kind.Type
@@ -52,10 +52,10 @@ instance Shift.Unshift (Context s) where
 globalBindings ::
   Functor.ModuleSet
     (ST s (GlobalTypeAnnotation Global))
-    (ST s (Declaration locality Normal Global))
+    (ST s (Declaration locality Normal Check Global))
     (ST s (KindAnnotation Global))
     (ST s (TypeDeclaration locality Normal Check Global))
-    (ST s (TypeDeclarationExtra Global))
+    (ST s (TypeDeclarationExtra Normal Check Global))
     (ST s (InstanceAnnotation Global))
     x ->
   Context s Global

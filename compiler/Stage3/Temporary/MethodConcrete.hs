@@ -2,10 +2,14 @@ module Stage3.Temporary.MethodConcrete where
 
 import Control.Monad.ST (ST)
 import Stage1.Position (Position)
+import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..), Local)
+import Stage2.Stage (Check)
+import Stage2.Tree.Combinators.Implicit (Implicit (..))
+import Stage2.Tree.Combinators.Inferred (Inferred (..))
+import qualified Stage2.Tree.MethodConcrete as Solved
 import Stage3.Temporary.Definition (Definition)
 import qualified Stage3.Temporary.Definition as Definition
-import qualified Stage3.Tree.MethodConcrete as Solved
 import qualified Stage3.Unify as Unify
 import qualified Stage4.Tree.Evidence as Simple (Evidence)
 import {-# SOURCE #-} qualified Stage4.Tree.Expression as Simple (Expression)
@@ -32,11 +36,16 @@ instance Unify.Zonk MethodConcrete where
       defaultx <- Unify.zonk zonker defaultx
       pure Default {base, self, defaultx}
 
-solve :: MethodConcrete s scope -> ST s (Solved.MethodConcrete scope)
+solve :: MethodConcrete s scope -> ST s (Solved.MethodConcrete Normal Check scope)
 solve = \case
   Definition {position, definition} -> do
     definition <- Unify.solveSchemeOver (Unify.Solve $ const Definition.solve) position definition
-    pure Solved.Definition {definition}
+    pure Solved.Definition {definition = Check definition}
   Default {base, self, defaultx = Unify.Delay defaultx} -> do
     defaultx <- defaultx
-    pure Solved.Default {base, self, defaultx}
+    pure
+      Solved.Default
+        { base = Solved base,
+          self = Solved self,
+          defaultx = Solved defaultx
+        }

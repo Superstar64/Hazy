@@ -8,13 +8,15 @@ import qualified Data.Vector.Strict as Strict.Vector
 import qualified Stage2.Index.Constructor as Constructor
 import qualified Stage2.Index.Constructor as Constructor2
 import qualified Stage2.Index.Type2 as Type2
+import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Check)
+import qualified Stage2.Tree.Statements as Stage3 (Guard, Statements (..))
 import qualified Stage3.Tree.ConstructorInfo as Stage3 (ConstructorInfo (..))
 import qualified Stage3.Tree.ConstructorInfo as Stage3.ConstructorInfo
-import qualified Stage3.Tree.Statements as Stage3 (Guard, Statements (..))
 import qualified Stage4.Index.Term as Term
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
@@ -292,18 +294,18 @@ true =
       }
   )
 
-simplify :: Stage3.Statements Stage3.Guard scope -> Statements scope
+simplify :: Stage3.Statements Stage3.Guard Normal Check scope -> Statements scope
 simplify = \case
   Stage3.Done {done} -> Done {done = Expression.simplify done}
-  Stage3.Run {check, after} ->
+  Stage3.Run {effect, after} ->
     bind
       true
-      (Expression.simplify check)
+      (Expression.simplify effect)
       (shift $ simplify after)
-  Stage3.Bind {patternx, check, thenx} ->
+  Stage3.Bind {patternx, effect, thenx} ->
     bind
       (Pattern.simplify patternx)
-      (Expression.simplify check)
+      (Expression.simplify effect)
       (simplify thenx)
   Stage3.Let {declarations, body} ->
     Let

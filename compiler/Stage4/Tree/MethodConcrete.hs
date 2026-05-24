@@ -1,10 +1,14 @@
 module Stage4.Tree.MethodConcrete where
 
 import qualified Data.Vector as Vector
+import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import qualified Stage3.Tree.MethodConcrete as Stage3
+import Stage2.Stage (Check)
+import Stage2.Tree.Combinators.Implicit (Implicit (..))
+import Stage2.Tree.Combinators.Inferred (Inferred (Solved))
+import qualified Stage2.Tree.MethodConcrete as Stage3
 import qualified Stage4.Shift as Shift2
 import Stage4.Substitute (Category (Substitute))
 import qualified Stage4.Substitute as Substitute
@@ -33,13 +37,13 @@ instance Substitute.Functor MethodConcrete where
       { definition = Substitute.map (Substitute.Over category) definition
       }
 
-simplify :: Stage3.MethodConcrete scope -> MethodConcrete scope
+simplify :: Stage3.MethodConcrete Normal Check scope -> MethodConcrete scope
 simplify = \case
-  Stage3.Definition {definition} ->
+  Stage3.Definition {definition = Check definition} ->
     Definition
       { definition = SchemeOver.map (SchemeOver.Map Expression.simplify) definition
       }
-  Stage3.Default {base, self, defaultx} ->
+  Stage3.Default {base = Solved base, self = Solved self, defaultx = Solved defaultx} ->
     Definition
       { definition =
           let typeReplacements = Vector.singleton base

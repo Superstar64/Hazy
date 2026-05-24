@@ -7,6 +7,7 @@ import qualified Stage2.Index.Type2 as Type2
 import Stage2.Layout (Normal)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
+import Stage2.Stage (Check)
 import qualified Stage3.Tree.Declarations as Stage3
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
@@ -49,7 +50,7 @@ instance Substitute.Functor Declarations where
           Substitute.mapInstances category . fmap (Substitute.map category) <$> dataInstances
       }
 
-simplify :: Stage3.Declarations locality Normal scope -> Declarations scope
+simplify :: Stage3.Declarations locality Normal Check scope -> Declarations scope
 simplify
   Stage3.Declarations
     { terms,

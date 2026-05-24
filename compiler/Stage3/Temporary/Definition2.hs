@@ -8,8 +8,10 @@ import qualified Stage2.Index.Term as Term (Index)
 import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (shift)
-import Stage2.Stage (Resolve)
+import Stage2.Stage (Check, Resolve)
+import qualified Stage2.Tree.Combinators.Inferred as Inferred
 import Stage2.Tree.Definition2 (Annotated, Inferred, Share, Single)
+import qualified Stage2.Tree.Definition2 as Solved (Choice (..), Definition2 (..))
 import qualified Stage2.Tree.Definition2 as Stage2
 import Stage3.Check.Context (Context (..))
 import Stage3.Check.TermBinding (TermBinding (TermBinding), Type (..))
@@ -20,7 +22,6 @@ import Stage3.Temporary.Pattern (Pattern)
 import qualified Stage3.Temporary.Pattern as Pattern
 import Stage3.Temporary.RightHandSide (RightHandSide)
 import qualified Stage3.Temporary.RightHandSide as RightHandSide
-import qualified Stage3.Tree.Definition2 as Solved (Choice (..), Definition2 (..))
 import qualified Stage3.Unify as Unify
 
 data Definition2 source mark s scope where
@@ -99,7 +100,10 @@ check context@Context {termEnvironment} _ typex declaration = case declaration o
     Unify.unify context position typex typex'
     pure $ Piece Choice {index = shift index, instanciation, patternx, bound} typex
 
-solve :: Position -> Definition2 source mark s scope -> ST s (Solved.Definition2 source mark scope)
+solve ::
+  Position ->
+  Definition2 source mark s scope ->
+  ST s (Solved.Definition2 source mark Normal Check scope)
 solve position = \case
   Definition definition _ -> do
     definition <- Definition.solve definition
@@ -107,7 +111,15 @@ solve position = \case
   Piece Choice {index, instanciation, patternx, bound} _ -> do
     instanciation <- Unify.solveInstanciation position instanciation
     patternx <- Pattern.solve patternx
-    pure $ Solved.Piece Solved.Choice {index, instanciation, patternx, bound}
+    pure $
+      Solved.Piece
+        Solved.Choice
+          { position,
+            index,
+            instanciation = Inferred.Solved instanciation,
+            patternx,
+            bound
+          }
   Shared shared _ -> do
     shared <- RightHandSide.solve shared
     pure $ Solved.Shared shared

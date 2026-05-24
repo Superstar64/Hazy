@@ -3,9 +3,12 @@ module Stage3.Temporary.Declaration where
 import Control.Monad.ST (ST)
 import Stage1.Position (Position)
 import Stage2.Layout (Normal)
-import Stage2.Stage (Resolve)
+import Stage2.Stage (Check, Resolve)
+import Stage2.Tree.Combinators.Inferred (Inferred (Solved))
 import Stage2.Tree.Declaration (Key)
+import qualified Stage2.Tree.Declaration as Solved (Declaration (..))
 import qualified Stage2.Tree.Declaration as Stage2 (Declaration (..))
+import Stage2.Tree.Definition4 (Annotation (..))
 import qualified Stage2.Tree.Definition4 as Stage2 (Annotation (..), Definition4 (..))
 import Stage3.Check.Context (Context (..))
 import Stage3.Check.TypeAnnotation (Annotation (..), GlobalTypeAnnotation (..), LocalTypeAnnotation (..))
@@ -14,8 +17,6 @@ import Stage3.Temporary.Definition3 (Definition3 (..))
 import qualified Stage3.Temporary.Definition3 as Definition3
 import Stage3.Temporary.Definition4 (Definition4 (..))
 import qualified Stage3.Temporary.Definition4 as Definition4
-import qualified Stage3.Tree.Declaration as Solved (Declaration (..))
-import Stage3.Tree.Definition4 (Annotation (..))
 import qualified Stage3.Unify as Unify
 
 data Declaration s scope
@@ -87,8 +88,8 @@ checkGlobal context annotation Stage2.Declaration {position, name, definition} =
       pure $ Inferred ::: definition
     go _ _ = error "bad annotation"
 
-solve :: Declaration s scope -> ST s (Solved.Declaration locality Normal scope)
+solve :: Declaration s scope -> ST s (Solved.Declaration locality Normal Check scope)
 solve Declaration {position, name, definition, typex} = do
   definition <- Definition4.solve position definition
   typex <- Unify.solveScheme position typex
-  pure Solved.Declaration {name, definition, typex}
+  pure Solved.Declaration {position, name, definition, typex = Solved typex}

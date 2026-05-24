@@ -4,12 +4,14 @@ module Stage4.Tree.Expression where
 
 import Data.Kind (Type)
 import qualified Stage2.Index.Constructor as Constructor
+import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift)
 import qualified Stage2.Shift as Shift
-import qualified Stage3.Tree.Definition as Stage3
-import {-# SOURCE #-} qualified Stage3.Tree.Expression as Stage3
+import Stage2.Stage (Check)
+import qualified Stage2.Tree.Definition as Stage3
+import {-# SOURCE #-} qualified Stage2.Tree.Expression as Stage3
 import qualified Stage4.Index.Term as Term
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
@@ -49,7 +51,7 @@ float_ :: Rational -> Evidence scope -> Expression scope
 call :: Expression scope -> Expression scope -> Expression scope
 
 class Simplify source where
-  simplify :: source scope -> Expression scope
+  simplify :: source Normal Check scope -> Expression scope
 
 instance Simplify Stage3.Expression
 

@@ -13,9 +13,11 @@ import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Resolve, Stage)
+import qualified Stage2.Tree.Combinators.Inferred as Inferred
 import Stage2.Tree.Definition (Definition)
 import Stage2.Tree.Pattern (Pattern)
 import Stage2.Tree.RightHandSide (RightHandSide)
+import qualified Stage4.Tree.Instanciation as Simple
 
 data Mark
   = Annotated
@@ -83,6 +85,7 @@ instance Connect (Definition2 source mark) where
 data Choice stage scope = Choice
   { position :: !Position,
     index :: !(Term.Index scope),
+    instanciation :: !(Inferred.Inferred Simple.Instanciation stage scope),
     bound :: !Term.Bound,
     patternx :: Pattern stage scope
   }
@@ -92,10 +95,11 @@ instance Shift (Choice stage) where
   shift = shiftDefault
 
 instance Shift.Functor (Choice stage) where
-  map category Choice {position, index, bound, patternx} =
+  map category Choice {position, index, instanciation, bound, patternx} =
     Choice
       { position,
         index = Shift.map category index,
+        instanciation = Shift.map category instanciation,
         bound,
         patternx = Shift.map category patternx
       }

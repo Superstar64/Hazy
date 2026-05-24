@@ -5,14 +5,14 @@ import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope (Pattern)
 import Stage2.Shift (shift)
-import Stage2.Stage (Resolve)
+import Stage2.Stage (Check, Resolve)
+import qualified Stage2.Tree.Alternative as Solved
 import qualified Stage2.Tree.Alternative as Stage2
 import Stage3.Check.Context (Context)
 import Stage3.Temporary.Pattern (Pattern)
 import qualified Stage3.Temporary.Pattern as Pattern
 import Stage3.Temporary.RightHandSide (RightHandSide)
 import qualified Stage3.Temporary.RightHandSide as RightHandSide
-import qualified Stage3.Tree.Alternative as Solved
 import qualified Stage3.Unify as Unify
 
 data Alternative s scope
@@ -39,7 +39,7 @@ check context typex binder Stage2.Alternative {parameter, rightHandSide} = do
   rightHandSide <- RightHandSide.check (Pattern.augment parameter context) (shift typex) rightHandSide
   pure Alternative {parameter, rightHandSide}
 
-solve :: Alternative s scope -> ST s (Solved.Alternative scope)
+solve :: Alternative s scope -> ST s (Solved.Alternative Normal Check scope)
 solve Alternative {parameter, rightHandSide} = do
   parameter <- Pattern.solve parameter
   rightHandSide <- RightHandSide.solve rightHandSide

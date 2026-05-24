@@ -1,11 +1,12 @@
 module Stage4.Tree.ClassExtra where
 
-import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import qualified Data.Vector.Strict as Strict (Vector)
+import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import qualified Stage3.Tree.Definition as Stage3
+import Stage2.Stage (Check)
+import qualified Stage2.Tree.MethodAbstract as Stage3
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
 import Stage4.Tree.Expression (Expression)
@@ -32,9 +33,12 @@ instance Substitute.Functor ClassExtra where
       { defaults = Substitute.map (Substitute.Over (Substitute.Over category)) <$> defaults
       }
 
-simplify :: Strict.Vector (Strict.Maybe (Stage3.Definition (Local ':+ (Local ':+ scope)))) -> ClassExtra scope
+simplify ::
+  Strict.Vector (Stage3.MethodAbstract Normal Check (Local ':+ scope)) ->
+  ClassExtra scope
 simplify defaults = ClassExtra {defaults = go <$> defaults}
   where
+    go :: Stage3.MethodAbstract Normal Check scope -> Expression (Local ':+ scope)
     go = \case
-      Strict.Just statements -> Expression.simplify statements
-      Strict.Nothing -> Expression.Join {statements = Statements.Bottom}
+      Stage3.DefaultCheck statements -> Expression.simplify statements
+      Stage3.Abstract -> Expression.Join {statements = Statements.Bottom}

@@ -6,9 +6,11 @@ import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (shift)
 import Stage2.Stage (Check, Resolve)
+import Stage2.Tree.Combinators.Implicit (Implicit (..))
 import qualified Stage2.Tree.Combinators.Implicit as Stage2 (Implicit (..))
 import Stage2.Tree.Definition2 (Annotated, Inferred)
 import Stage2.Tree.Definition3 (Info)
+import qualified Stage2.Tree.Definition3 as Solved (Definition3 (..))
 import qualified Stage2.Tree.Definition3 as Stage2 (Definition3 (..))
 import qualified Stage2.Tree.TypePattern as TypePattern
 import Stage3.Check.Context (Context)
@@ -17,7 +19,6 @@ import qualified Stage3.Simple.Constraint as Simple.Constraint (lift)
 import Stage3.Simple.Type (lift)
 import Stage3.Temporary.Definition2 (Definition2)
 import qualified Stage3.Temporary.Definition2 as Definition2
-import qualified Stage3.Tree.Definition3 as Solved (Definition3 (..))
 import qualified Stage3.Tree.Scheme as Solved (Scheme (..))
 import qualified Stage3.Tree.Scheme as Solved.Scheme
 import qualified Stage3.Unify as Unify
@@ -84,7 +85,7 @@ checkAnnotation
           (Simple.Constraint.lift . Simple.Constraint.simplify <$> constraints)
           definition
 
-solve :: Position -> Definition3 mark s scope -> ST s (Solved.Definition3 mark scope)
+solve :: Position -> Definition3 mark s scope -> ST s (Solved.Definition3 mark Normal Check scope)
 solve position (info ::@ definition) = do
   definition <- Unify.solveSchemeOver (Unify.Solve Definition2.solve) position definition
-  pure $ info Solved.::@ definition
+  pure $ info Solved.::@ Check definition

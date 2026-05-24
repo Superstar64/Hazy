@@ -23,6 +23,9 @@ import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (shift)
 import Stage2.Stage (Check, Resolve)
+import Stage2.Tree.Combinators.Inferred (Inferred (Solved))
+import Stage2.Tree.Expression (Explicit (..))
+import qualified Stage2.Tree.Expression as Solved
 import qualified Stage2.Tree.Expression as Stage2 (Expression (..))
 import qualified Stage3.Check.ConstructorInstance as ConstructorInstance
 import Stage3.Check.Context (Context (..))
@@ -51,7 +54,6 @@ import Stage3.Temporary.Pattern (Pattern)
 import qualified Stage3.Temporary.Pattern as Pattern
 import Stage3.Temporary.RightHandSide (RightHandSide)
 import qualified Stage3.Temporary.RightHandSide as RightHandSide
-import qualified Stage3.Tree.Expression as Solved
 import Stage3.Tree.Scheme (Scheme)
 import qualified Stage3.Unify as Unify
 import {-# SOURCE #-} qualified Stage4.Tree.Builtin as Builtin
@@ -73,15 +75,24 @@ data Expression s scope
         evidence :: !(Unify.Evidence s scope)
       }
   | Character
-      { character :: !Char
+      { startPosition :: !Position,
+        character :: !Char
       }
-  | String {string :: !Text}
+  | String
+      { startPosition :: !Position,
+        string :: !Text
+      }
   | Tuple
-      { elements :: !(Strict.Vector2 (Expression s scope))
+      { startPosition :: !Position,
+        elements :: !(Strict.Vector2 (Expression s scope))
       }
-  | List {items :: !(Strict.Vector (Expression s scope))}
+  | List
+      { startPosition :: !Position,
+        items :: !(Strict.Vector (Expression s scope))
+      }
   | Record
-      { constructor :: !(Constructor.Index scope),
+      { constructorPosition :: !Position,
+        constructor :: !(Constructor.Index scope),
         constructorInfo :: !(ConstructorInfo s scope),
         fields :: !(Strict.Vector (Field s scope))
       }
@@ -99,21 +110,25 @@ data Expression s scope
         elsex :: !(Expression s scope)
       }
   | Case
-      { scrutinee :: !(Expression s scope),
+      { startPosition :: !Position,
+        scrutinee :: !(Expression s scope),
         cases :: !(Strict.Vector (Alternative s scope))
       }
   | Lambda
-      { parameter :: !(Pattern s scope),
+      { startPosition :: !Position,
+        parameter :: !(Pattern s scope),
         body :: !(Lambda s (Scope.Pattern ':+ scope))
       }
   | LambdaCase
-      { cases :: !(Strict.Vector (Alternative s scope))
+      { startPosition :: !Position,
+        cases :: !(Strict.Vector (Alternative s scope))
       }
   | MultiwayIf
       { branches :: !(Strict.Vector1 (RightHandSide s scope))
       }
   | Do
-      { statements :: !(Do s scope)
+      { startPosition :: !Position,
+        statements :: !(Do s scope)
       }
   | Annotation
       { expression :: !(Unify.SchemeOver Expression s scope),
@@ -122,7 +137,8 @@ data Expression s scope
         instanciation :: !(Unify.Instanciation s scope)
       }
   | RightSection
-      { left :: !(CallHead s scope),
+      { operatorPosition :: !Position,
+        left :: !(CallHead s scope),
         right :: !(Expression s scope)
       }
 
@@ -137,18 +153,28 @@ instance Unify.Zonk Expression where
     Float {startPosition, float, evidence} -> do
       evidence <- Unify.zonk zonker evidence
       pure Float {startPosition, float, evidence}
-    Character {character} -> pure Character {character}
-    String {string} -> pure String {string}
-    Tuple {elements} -> do
+    Character {startPosition, character} ->
+      pure
+        Character
+          { startPosition,
+            character
+          }
+    String {startPosition, string} ->
+      pure
+        String
+          { startPosition,
+            string
+          }
+    Tuple {startPosition, elements} -> do
       elements <- traverse (Unify.zonk zonker) elements
-      pure Tuple {elements}
-    List {items} -> do
+      pure Tuple {startPosition, elements}
+    List {startPosition, items} -> do
       items <- traverse (Unify.zonk zonker) items
-      pure List {items}
-    Record {constructor, constructorInfo, fields} -> do
+      pure List {startPosition, items}
+    Record {constructorPosition, constructor, constructorInfo, fields} -> do
       constructorInfo <- Unify.zonk zonker constructorInfo
       fields <- traverse (Unify.zonk zonker) fields
-      pure Record {constructor, constructorInfo, fields}
+      pure Record {constructorPosition, constructor, constructorInfo, fields}
     Call {function, argument} -> do
       function <- Unify.zonk zonker function
       argument <- Unify.zonk zonker argument
@@ -162,31 +188,31 @@ instance Unify.Zonk Expression where
       thenx <- Unify.zonk zonker thenx
       elsex <- Unify.zonk zonker elsex
       pure If {conditionx, thenx, elsex}
-    Case {scrutinee, cases} -> do
+    Case {startPosition, scrutinee, cases} -> do
       scrutinee <- Unify.zonk zonker scrutinee
       cases <- traverse (Unify.zonk zonker) cases
-      pure Case {scrutinee, cases}
-    Lambda {parameter, body} -> do
+      pure Case {startPosition, scrutinee, cases}
+    Lambda {startPosition, parameter, body} -> do
       parameter <- Unify.zonk zonker parameter
       body <- Unify.zonk zonker body
-      pure Lambda {parameter, body}
-    LambdaCase {cases} -> do
+      pure Lambda {startPosition, parameter, body}
+    LambdaCase {startPosition, cases} -> do
       cases <- traverse (Unify.zonk zonker) cases
-      pure LambdaCase {cases}
+      pure LambdaCase {startPosition, cases}
     MultiwayIf {branches} -> do
       branches <- traverse (Unify.zonk zonker) branches
       pure MultiwayIf {branches}
-    Do {statements} -> do
+    Do {startPosition, statements} -> do
       statements <- Unify.zonk zonker statements
-      pure Do {statements}
+      pure Do {startPosition, statements}
     Annotation {expression, operatorPosition, annotation, instanciation} -> do
       expression <- Unify.zonk zonker expression
       instanciation <- Unify.zonk zonker instanciation
       pure Annotation {expression, operatorPosition, annotation, instanciation}
-    RightSection {left, right} -> do
+    RightSection {operatorPosition, left, right} -> do
       left <- Unify.zonk zonker left
       right <- Unify.zonk zonker right
-      pure RightSection {left, right}
+      pure RightSection {operatorPosition, left, right}
 
 check :: Context s scope -> Unify.Type s scope -> Stage2.Expression Normal Resolve scope -> ST s (Expression s scope)
 check context typex Stage2.CallHead {callHead} = do
@@ -215,12 +241,12 @@ check
           lookup index = entries Strict.Vector.! index
       Unify.unify context constructorPosition typex base
       fields <- traverse (Field.check context lookup) fields
-      pure $ Record {constructor, fields, constructorInfo}
+      pure $ Record {constructorPosition, constructor, fields, constructorInfo}
 check context typex Stage2.List {startPosition, items} = do
   inner <- Unify.fresh Unify.typex
   Unify.unify context startPosition typex (Unify.listWith inner)
   items <- traverse (check context inner) items
-  pure (List items)
+  pure List {startPosition, items}
 check context resultType Stage2.Call {function, argument} = do
   argumentType <- Unify.fresh Unify.typex
   function1 <- check context (Unify.function argumentType resultType) function
@@ -246,10 +272,10 @@ check context typex Stage2.Float {startPosition, float} = do
   pure $ Float {startPosition, float, evidence}
 check context typex Stage2.String {startPosition, string} = do
   Unify.unify context startPosition typex (Unify.listWith Unify.char)
-  pure $ String string
+  pure $ String {startPosition, string}
 check context typex Stage2.Character {startPosition, character} = do
   Unify.unify context startPosition typex Unify.char
-  pure $ Character {character}
+  pure $ Character {startPosition, character}
 check context typex Stage2.Tuple {startPosition, elements} = do
   items <- for elements $ \element -> do
     typex <- Unify.fresh Unify.typex
@@ -258,32 +284,32 @@ check context typex Stage2.Tuple {startPosition, elements} = do
   let (types, elements) = Strict.Vector2.unzip items
   let target = foldl Unify.call (Unify.tuple $ length elements) types
   Unify.unify context startPosition typex target
-  pure $ Tuple {elements}
+  pure $ Tuple {startPosition, elements}
 check _ _ Stage2.Comprehension {startPosition} =
   unsupportedFeatureListComprehension startPosition
 check _ _ Stage2.Update {updatePosition} =
   unsupportedFeatureRecordUpdate updatePosition
-check context typex Stage2.Case {scrutinee, cases} = do
+check context typex Stage2.Case {startPosition, scrutinee, cases} = do
   binder <- Unify.fresh Unify.typex
   scrutinee <- check context binder scrutinee
   cases <- traverse (Alternative.check context typex binder) cases
-  pure Case {scrutinee, cases}
-check context typex Stage2.Do {statements} = do
-  statements <- Do.check context typex statements
-  pure Do {statements}
+  pure Case {startPosition, scrutinee, cases}
+check context typex Stage2.Do {startPosition, dox} = do
+  statements <- Do.check context typex dox
+  pure Do {startPosition, statements}
 check context typex Stage2.Lambda {startPosition, parameter, body} = do
   parameterType <- Unify.fresh Unify.typex
   parameter <- Pattern.check context parameterType parameter
   resultType <- Unify.fresh Unify.typex
   body <- Lambda.check (Pattern.augment parameter context) (shift resultType) body
   Unify.unify context startPosition typex (Unify.function parameterType resultType)
-  pure Lambda {parameter, body}
+  pure Lambda {startPosition, parameter, body}
 check context typex Stage2.LambdaCase {startPosition, cases} = do
   parameterType <- Unify.fresh Unify.typex
   resultType <- Unify.fresh Unify.typex
   cases <- traverse (Alternative.check context resultType parameterType) cases
   Unify.unify context startPosition typex (Unify.function parameterType resultType)
-  pure LambdaCase {cases}
+  pure LambdaCase {startPosition, cases}
 check context typex Stage2.RightSection {left, operatorPosition, right} = do
   argumentType1 <- Unify.fresh Unify.typex
   argumentType2 <- Unify.fresh Unify.typex
@@ -292,8 +318,8 @@ check context typex Stage2.RightSection {left, operatorPosition, right} = do
   left <- CallHead.check context target left
   right <- check context argumentType2 right
   Unify.unify context operatorPosition typex (argumentType1 `Unify.function` result)
-  pure RightSection {left, right}
-check context typex Stage2.Annotation {expression, operatorPosition, annotation} = do
+  pure RightSection {operatorPosition, left, right}
+check context typex Stage2.Annotation {expression = Explicit expression, operatorPosition, annotation} = do
   Annotation.Annotation {annotation, annotation'} <- Annotation.checkAnnotation context annotation
   expression <- Definition3.checkAnnotation context operatorPosition annotation $
     \context typex -> check context typex expression
@@ -303,64 +329,76 @@ check context typex Stage2.Annotation {expression, operatorPosition, annotation}
 check _ _ Stage2.RunST {startPosition} =
   unsupportedFeatureRunST startPosition
 
-solve :: Expression s scope -> ST s (Solved.Expression scope)
+solve :: Expression s scope -> ST s (Solved.Expression Normal Check scope)
 solve = \case
   CallHead {callHead} -> do
     callHead <- CallHead.solve callHead
     pure Solved.CallHead {callHead}
-  Record {constructor, constructorInfo, fields} -> do
+  Record {constructorPosition, constructor, constructorInfo, fields} -> do
     fields <- traverse Field.solve fields
     constructorInfo <- ConstructorInfo.solve constructorInfo
-    pure Solved.Record {constructor, constructorInfo, fields}
-  List items -> do
+    pure
+      Solved.Record
+        { constructorPosition,
+          constructor,
+          constructorInfo = Solved constructorInfo,
+          fields
+        }
+  List {startPosition, items} -> do
     items <- traverse solve items
-    pure $ Solved.List items
+    pure $ Solved.List {startPosition, items}
   Call function argument -> do
     function <- solve function
     argument <- solve argument
-    pure $ Solved.Call function argument
+    pure $ Solved.Call {function, argument}
   Let declarations body -> do
     declarations <- Declarations.solve declarations
     body <- solve body
-    pure $ Solved.Let declarations body
+    pure $ Solved.Let {declarations, letBody = body}
   If condition true false -> do
     condition <- solve condition
     true <- solve true
     false <- solve false
-    pure $ Solved.If condition true false
-  Case {scrutinee, cases} -> do
+    pure $ Solved.If {condition, thenx = true, elsex = false}
+  Case {startPosition, scrutinee, cases} -> do
     scrutinee <- solve scrutinee
     cases <- traverse Alternative.solve cases
-    pure Solved.Case {scrutinee, cases}
-  Lambda {parameter, body} -> do
+    pure Solved.Case {startPosition, scrutinee, cases}
+  Lambda {startPosition, parameter, body} -> do
     parameter <- Pattern.solve parameter
     body <- Lambda.solve body
-    pure $ Solved.Lambda {parameter, body}
-  LambdaCase {cases} -> do
+    pure $ Solved.Lambda {startPosition, parameter, body}
+  LambdaCase {startPosition, cases} -> do
     cases <- traverse Alternative.solve cases
-    pure Solved.LambdaCase {cases}
+    pure Solved.LambdaCase {startPosition, cases}
   MultiwayIf branches -> do
     branches <- traverse RightHandSide.solve branches
-    pure $ Solved.MultiwayIf branches
+    pure $ Solved.MultiwayIf {branches}
   Integer {startPosition, integer, evidence} -> do
     evidence <- Unify.solveEvidence startPosition evidence
-    pure Solved.Integer {integer, evidence}
+    pure Solved.Integer {startPosition, integer, evidence = Solved evidence}
   Float {startPosition, float, evidence} -> do
     evidence <- Unify.solveEvidence startPosition evidence
-    pure Solved.Float {float, evidence}
-  String {string} -> pure $ Solved.String {string}
-  Character {character} -> pure $ Solved.Character {character}
-  Tuple {elements} -> do
+    pure Solved.Float {startPosition, float, evidence = Solved evidence}
+  String {startPosition, string} -> pure $ Solved.String {startPosition, string}
+  Character {startPosition, character} -> pure $ Solved.Character {startPosition, character}
+  Tuple {startPosition, elements} -> do
     elements <- traverse solve elements
-    pure $ Solved.Tuple {elements}
-  Do {statements} -> do
-    statements <- Do.solve statements
-    pure Solved.Do {statements}
+    pure $ Solved.Tuple {startPosition, elements}
+  Do {startPosition, statements} -> do
+    dox <- Do.solve statements
+    pure Solved.Do {startPosition, dox}
   Annotation {expression, operatorPosition, annotation, instanciation} -> do
     expression <- Unify.solveSchemeOver (Unify.Solve $ const solve) operatorPosition expression
     instanciation <- Unify.solveInstanciation operatorPosition instanciation
-    pure Solved.Annotation {expression, annotation, instanciation}
-  RightSection {left, right} -> do
+    pure
+      Solved.Annotation
+        { operatorPosition,
+          expression = Known expression,
+          annotation,
+          instanciation = Solved instanciation
+        }
+  RightSection {operatorPosition, left, right} -> do
     left <- CallHead.solve left
     right <- solve right
-    pure Solved.RightSection {left, right}
+    pure Solved.RightSection {operatorPosition, left, right}

@@ -1,13 +1,15 @@
 module Stage4.Temporary.RightHandSide where
 
+import Stage2.Layout (Normal)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import qualified Stage3.Tree.Body as Stage3 (Body (Body))
-import qualified Stage3.Tree.Body as Stage3.Body
-import qualified Stage3.Tree.Expression as Stage3 (Expression)
-import qualified Stage3.Tree.RightHandSide as Stage3 (RightHandSide (..))
+import Stage2.Stage (Check)
+import qualified Stage2.Tree.Body as Stage3 (Body (Body))
+import qualified Stage2.Tree.Body as Stage3.Body
+import qualified Stage2.Tree.Expression as Stage3 (Expression)
+import qualified Stage2.Tree.RightHandSide as Stage3 (RightHandSide (..))
 import qualified Stage4.Index.Term as Term
 import qualified Stage4.Shift as Shift2
 import {-# SOURCE #-} Stage4.Tree.Declarations (Declarations)
@@ -50,7 +52,7 @@ instance Shift2.Functor RightHandSide where
     Done {done} -> Done {done = Shift2.map category done}
 
 class Simplify source where
-  simplify :: source scope -> RightHandSide scope
+  simplify :: source Normal Check scope -> RightHandSide scope
 
 instance Simplify Stage3.RightHandSide where
   simplify Stage3.RightHandSide {body, declarations}

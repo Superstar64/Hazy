@@ -9,8 +9,11 @@ import qualified Stage2.Shift as Shift
 import Stage2.Tree.Function (Function)
 
 data Definition layout stage scope
-  = Definition !(Function layout stage scope)
-  | Alternative !(Function layout stage scope) !(Definition layout stage scope)
+  = Definition {definition :: !(Function layout stage scope)}
+  | Alternative
+      { definition :: !(Function layout stage scope),
+        alternative :: !(Definition layout stage scope)
+      }
   deriving (Show)
 
 instance Scope.Show (Definition layout stage) where

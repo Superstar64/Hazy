@@ -19,7 +19,7 @@ import qualified Stage2.Tree.RightHandSide as RightHandSide (resolve)
 
 data Alternative layout stage scope
   = Alternative
-  { parameter :: !(Pattern Resolve scope),
+  { parameter :: !(Pattern stage scope),
     rightHandSide :: !(RightHandSide layout stage (Scope.Pattern ':+ scope))
   }
   deriving (Show)
