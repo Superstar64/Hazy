@@ -34,6 +34,12 @@ data Category scope scope' where
   GroupType ::
     (Type0.Index scope -> Strict.Maybe Int) ->
     Category scope (Scope.Group ':+ scope)
+  UngroupTerm ::
+    (Int -> Term0.Index scope) ->
+    Category (Scope.Group ':+ scope) scope
+  UngroupType ::
+    (Int -> Type0.Index scope) ->
+    Category (Scope.Group ':+ scope) scope
 
 infixr 9 :.
 

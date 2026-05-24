@@ -41,6 +41,8 @@ instance FreeTermVariables (RightHandSide layout) where
 instance Connect RightHandSide where
   connect (RightHandSide body declarations) =
     RightHandSide (connect body) (Declarations.connect declarations)
+  seperate (RightHandSide body declarations) =
+    RightHandSide (seperate body) (Declarations.seperate declarations)
 
 resolve :: Context scope -> Stage1.RightHandSide Position -> RightHandSide Normal Resolve scope
 resolve context Stage1.RightHandSide {body, declarations}

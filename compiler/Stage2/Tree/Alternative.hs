@@ -43,6 +43,11 @@ instance Connect Alternative where
       { parameter,
         rightHandSide = connect rightHandSide
       }
+  seperate Alternative {parameter, rightHandSide} =
+    Alternative
+      { parameter,
+        rightHandSide = seperate rightHandSide
+      }
 
 resolve :: Context scope -> Stage1.Alternative Position -> Alternative Normal Resolve scope
 resolve context (Stage1.Alternative {parameter, rightHandSide}) =

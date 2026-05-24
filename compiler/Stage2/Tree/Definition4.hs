@@ -8,6 +8,7 @@ import qualified Data.Vector.Strict as Strict.Vector
 import qualified Graph.StronglyConnected as StronglyConnected
 import Stage1.Position (Position)
 import Stage2.Connect (connect)
+import qualified Stage2.Connect as Connect
 import Stage2.FreeVariables (FreeTermVariables (freeTermVariables))
 import qualified Stage2.FreeVariables as FreeVariables
 import qualified Stage2.Index.Link.Term as Term
@@ -18,7 +19,7 @@ import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage2.Stage (Resolve, Stage)
+import Stage2.Stage (Check, Resolve, Stage)
 import Stage2.Tree.Definition2 (Inferred)
 import qualified Stage2.Tree.Definition2 as Mark
 import Stage2.Tree.Definition3 (Definition3)
@@ -121,3 +122,18 @@ group link index group (Inferred ::: _) = case group of
           }
       lookup index = Strict.Maybe.fromLazy $ Set.lookupIndex (link index) set
   StronglyConnected.Link {link, id} -> Link link id
+
+ungroup ::
+  (Term.Link locality -> Term0.Index scope) ->
+  (Term.Link locality -> Strict.Vector (Element locality Check scope)) ->
+  Definition4 locality Group Check scope ->
+  Definition4 locality Normal Check scope
+ungroup _ _ (Annotated annotation ::: definition) = Annotated annotation ::: Connect.seperate definition
+ungroup index lookup definition = case definition of
+  Link index id -> Inferred ::: go id (lookup index)
+  (Group set) -> Inferred ::: go 0 set
+  where
+    go id set = Connect.seperate $ Shift.map (Shift.UngroupTerm original) element
+      where
+        original id | Element {link} <- set Strict.Vector.! id = index link
+        Element {element} = set Strict.Vector.! id

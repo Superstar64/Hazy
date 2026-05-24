@@ -81,6 +81,10 @@ instance Connect (Definition2 source mark) where
     Definition definition -> Definition (connect definition)
     Piece choice -> Piece choice
     Shared definition -> Shared (connect definition)
+  seperate = \case
+    Definition definition -> Definition (seperate definition)
+    Piece choice -> Piece choice
+    Shared definition -> Shared (seperate definition)
 
 data Choice stage scope = Choice
   { position :: !Position,

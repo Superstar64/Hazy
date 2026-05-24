@@ -34,6 +34,7 @@ instance FreeTermVariables (Select layout) where
 
 instance Connect Select where
   connect (Select pick record) = Select pick (connect record)
+  seperate (Select pick record) = Select pick (seperate record)
 
 resolve :: Type2.Index scope -> Context scope -> Stage1.Field Position -> Select Normal Resolve scope
 resolve typex context = \case

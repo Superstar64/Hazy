@@ -59,6 +59,10 @@ instance Shift.Functor Index where
     | Strict.Just index <- typex (Type0.Global global local) = Group index
   map Shift.GroupTerm {} index = Shift index
   map Shift.GroupType {} index = Shift index
+  map (Shift.UngroupType typex) (Group index) = Type0.normal $ typex index
+  map Shift.UngroupType {} (Shift index) = index
+  map Shift.UngroupTerm {} (Shift index) = index
+  map Shift.UngroupTerm {} Group {} = error "ungroup term in type"
 
 unlocal :: Index (Local ':+ scope) -> Index scope
 unlocal (Shift index) = index

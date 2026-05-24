@@ -2,6 +2,7 @@
 
 module Stage2.Tree.Declaration where
 
+import qualified Data.Vector.Strict as Strict
 import qualified Graph.StronglyConnected as StronglyConnected
 import Stage1.Position (Position)
 import Stage1.Variable (QualifiedVariable ((:-)), Qualifiers, Variable)
@@ -94,3 +95,16 @@ group link index' group = \case
         definition = Definition4.group link index' group definition,
         typex = Inferred
       }
+
+ungroup ::
+  (Term.Link locality -> Term0.Index scope) ->
+  (Term.Link locality -> Strict.Vector (Definition4.Element locality Check scope)) ->
+  Declaration locality Group Check scope ->
+  Declaration locality Normal Check scope
+ungroup index lookup Declaration {position, name, definition, typex} =
+  Declaration
+    { position,
+      name,
+      definition = Definition4.ungroup index lookup definition,
+      typex
+    }

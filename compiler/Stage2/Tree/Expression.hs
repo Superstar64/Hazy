@@ -68,6 +68,7 @@ import qualified Stage2.Tree.Statements as Statements (Do, Guard, resolve)
 import Stage3.Tree.ConstructorInfo (ConstructorInfo)
 import qualified Stage4.Tree.Evidence as Simple (Evidence)
 import qualified Stage4.Tree.Instanciation as Simple (Instanciation (..))
+import qualified Stage4.Tree.SchemeOver as SchemeOver
 import qualified Stage4.Tree.SchemeOver as Simple (SchemeOver)
 import Prelude hiding (Bool (False, True), Either (Left, Right))
 
@@ -451,6 +452,87 @@ instance Connect Expression where
           imperative = connect imperative,
           unsupported
         }
+  seperate = \case
+    CallHead {callHead} ->
+      CallHead
+        { callHead
+        }
+    Integer {startPosition, integer, evidence} -> Integer {startPosition, integer, evidence}
+    Float {startPosition, float, evidence} -> Float {startPosition, float, evidence}
+    Character {startPosition, character} -> Character {startPosition, character}
+    String {startPosition, string} -> String {startPosition, string}
+    Tuple {startPosition, elements} ->
+      Tuple
+        { startPosition,
+          elements = seperate <$> elements
+        }
+    List {startPosition, items} ->
+      List
+        { startPosition,
+          items = seperate <$> items
+        }
+    Record {constructorPosition, constructor, constructorInfo, fields} ->
+      Record
+        { constructorPosition,
+          constructor,
+          constructorInfo,
+          fields = seperate <$> fields
+        }
+    Call {function, argument} ->
+      Call
+        { function = seperate function,
+          argument = seperate argument
+        }
+    Let {declarations, letBody} ->
+      Let
+        { declarations = Declarations.seperate declarations,
+          letBody = seperate letBody
+        }
+    If {condition, thenx, elsex} ->
+      If
+        { condition = seperate condition,
+          thenx = seperate thenx,
+          elsex = seperate elsex
+        }
+    MultiwayIf {branches} ->
+      MultiwayIf
+        { branches = seperate <$> branches
+        }
+    Case {startPosition, scrutinee, cases} ->
+      Case
+        { startPosition,
+          scrutinee = seperate scrutinee,
+          cases = seperate <$> cases
+        }
+    Do {startPosition, dox} ->
+      Do
+        { startPosition,
+          dox = seperate dox
+        }
+    Lambda {startPosition, parameter, body} ->
+      Lambda
+        { startPosition,
+          parameter,
+          body = seperate body
+        }
+    LambdaCase {startPosition, cases} ->
+      LambdaCase
+        { startPosition,
+          cases = seperate <$> cases
+        }
+    RightSection {operatorPosition, left, right} ->
+      RightSection
+        { operatorPosition,
+          left,
+          right = seperate right
+        }
+    Annotation {expression, operatorPosition, annotation, instanciation} ->
+      Annotation
+        { expression = seperate expression,
+          operatorPosition,
+          annotation,
+          instanciation
+        }
 
 data Explicit layout stage scope where
   Explicit :: !(Expression layout Resolve (Scope.Local ':+ scope)) -> Explicit layout Resolve scope
@@ -474,6 +556,7 @@ instance FreeTermVariables (Explicit layout) where
 
 instance Connect Explicit where
   connect (Explicit expression) = Explicit (connect expression)
+  seperate (Known expression) = Known (SchemeOver.map (SchemeOver.Map seperate) expression)
 
 callHead_ :: CallHead Resolve scope -> Expression Normal Resolve scope
 callHead_ callHead = CallHead {callHead}

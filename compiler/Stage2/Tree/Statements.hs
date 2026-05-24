@@ -148,6 +148,33 @@ instance Connect (Statements syntax) where
           declarations = Declarations.connect declarations,
           body = connect body
         }
+  seperate = \case
+    Done {done} ->
+      Done
+        { done = seperate done
+        }
+    Run {startPosition, evidence, effect, after} ->
+      Run
+        { startPosition,
+          evidence,
+          effect = seperate effect,
+          after = seperate after
+        }
+    Bind {startPosition, evidence, patternx, effect, thenx, fail} ->
+      Bind
+        { startPosition,
+          evidence,
+          patternx,
+          effect = seperate effect,
+          thenx = seperate thenx,
+          fail
+        }
+    Let {startPosition, declarations, body} ->
+      Let
+        { startPosition,
+          declarations = Declarations.seperate declarations,
+          body = seperate body
+        }
 
 data Evidence syntax scope where
   Bool :: Evidence Guard scope

@@ -51,3 +51,12 @@ instance Connect TypeDeclarationExtra where
         }
     Synonym {position} -> Synonym {position}
     GADT {position} -> GADT {position}
+  seperate = \case
+    ADT {position} -> ADT {position}
+    Class {position, methods} ->
+      Class
+        { position,
+          methods = seperate <$> methods
+        }
+    Synonym {position} -> Synonym {position}
+    GADT {position} -> GADT {position}

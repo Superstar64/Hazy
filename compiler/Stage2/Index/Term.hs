@@ -54,6 +54,10 @@ instance Shift.Functor Index where
     | Strict.Just index <- term (Term0.Global global local) = Group index
   map Shift.GroupTerm {} index = Shift index
   map Shift.GroupType {} index = Shift index
+  map (Shift.UngroupTerm term) (Group index) = Term0.normal $ term index
+  map Shift.UngroupTerm {} (Shift index) = index
+  map Shift.UngroupType {} (Shift index) = index
+  map Shift.UngroupType {} Group {} = error "ungroup type in term"
 
 data Bound
   = At

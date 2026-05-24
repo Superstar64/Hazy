@@ -60,6 +60,8 @@ instance Shift.Functor Index where
   map (Shift.Unshift abort) _ = absurd abort
   map Shift.GroupTerm {} index = Shift index
   map Shift.GroupType {} index = Shift index
+  map (Shift.UngroupTerm {}) (Shift index) = index
+  map (Shift.UngroupType {}) (Shift index) = index
 
 instance Functor Index where
   map (Lift category) index = Shift.map category index

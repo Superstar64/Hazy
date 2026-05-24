@@ -7,6 +7,7 @@ module Stage2.Tree.TypeDeclaration
     labelBinding,
     locality,
     group,
+    ungroup,
   )
 where
 
@@ -109,3 +110,17 @@ group link index group = \case
         definition = TypeDefinition2.group link index group definition,
         kind = Inferred
       }
+
+ungroup ::
+  (Type.Link locality -> Type0.Index scope) ->
+  (Type.Link locality -> Strict.Vector (TypeDefinition2.Element locality Check scope)) ->
+  TypeDeclaration locality Group Check scope ->
+  TypeDeclaration locality Normal Check scope
+ungroup index lookup TypeDeclaration {position, name, constructorNames, definition, kind} =
+  TypeDeclaration
+    { position,
+      name,
+      constructorNames,
+      definition = TypeDefinition2.ungroup index lookup definition,
+      kind
+    }

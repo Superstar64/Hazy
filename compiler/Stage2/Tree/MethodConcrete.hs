@@ -9,6 +9,7 @@ import Stage2.Tree.Combinators.Inferred (Inferred (..))
 import Stage2.Tree.Definition (Definition)
 import qualified Stage4.Tree.Evidence as Simple (Evidence)
 import {-# SOURCE #-} qualified Stage4.Tree.Expression as Simple (Expression)
+import qualified Stage4.Tree.SchemeOver as SchemeOver
 import qualified Stage4.Tree.SchemeOver as Simple (SchemeOver)
 import qualified Stage4.Tree.Type as Simple (Type)
 
@@ -50,4 +51,15 @@ instance Connect MethodConcrete where
         { base = Inferred,
           self = Inferred,
           defaultx = Inferred
+        }
+  seperate = \case
+    Definition {definition = Check definition} ->
+      Definition
+        { definition = Check (SchemeOver.map (SchemeOver.Map seperate) definition)
+        }
+    Default {base, self, defaultx} ->
+      Default
+        { base,
+          self,
+          defaultx
         }

@@ -40,6 +40,8 @@ instance Shift.Functor Index where
   map (Shift.Unshift abort) Assumed {} = absurd abort
   map Shift.GroupTerm {} index = Shift index
   map Shift.GroupType {} index = Shift index
+  map Shift.UngroupTerm {} (Shift index) = index
+  map Shift.UngroupType {} (Shift index) = index
 
 instance Shift.PartialUnshift Index where
   partialUnshift abort (Assumed _) = vacuous abort

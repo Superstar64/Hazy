@@ -49,3 +49,6 @@ instance Connect MethodAbstract where
   connect = \case
     Abstract -> Abstract
     DefaultResolve definition -> DefaultResolve (connect definition)
+  seperate = \case
+    Abstract -> Abstract
+    DefaultCheck definition -> DefaultCheck (seperate definition)

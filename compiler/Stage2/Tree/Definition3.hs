@@ -8,6 +8,7 @@ import Stage2.Shift (Shift (..), shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Tree.Combinators.Implicit (Implicit (..))
 import Stage2.Tree.Definition2 (Definition2 (..), Share, Single)
+import qualified Stage4.Tree.SchemeOver as SchemeOver
 
 data Definition3 mark layout stage scope where
   (::@) ::
@@ -33,6 +34,8 @@ instance FreeTermVariables (Definition3 mark layout) where
 
 instance Connect (Definition3 mark) where
   connect (info ::@ Resolve definition) = info ::@ Resolve (connect definition)
+  seperate (info ::@ Check definition) =
+    info ::@ Check (SchemeOver.map (SchemeOver.Map seperate) definition)
 
 data Info source where
   Name :: !Variable -> !Fixity -> Info Single

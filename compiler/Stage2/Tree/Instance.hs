@@ -68,6 +68,23 @@ instance Connect Instance where
         members = connect <$> members,
         evidence = Inferred
       }
+  seperate
+    Instance
+      { startPosition,
+        prerequisites,
+        classPosition,
+        parameters,
+        members,
+        evidence
+      } =
+      Instance
+        { startPosition,
+          prerequisites,
+          classPosition,
+          parameters,
+          members = seperate <$> members,
+          evidence
+        }
 
 newtype Evidence scope = Evidence (Strict.Vector (Simple.Evidence (Local ':+ scope)))
   deriving (Show)

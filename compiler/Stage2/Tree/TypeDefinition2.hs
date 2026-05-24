@@ -17,7 +17,7 @@ import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage2.Stage (Resolve, Stage)
+import Stage2.Stage (Check, Resolve, Stage)
 import Stage2.Tree.Type (Type)
 import Stage2.Tree.TypeDefinition (TypeDefinition)
 
@@ -125,3 +125,18 @@ group link index group (Inferred ::: _) = case group of
           }
       lookup index = Strict.Maybe.fromLazy $ Set.lookupIndex (link index) set
   StronglyConnected.Link {link, id} -> Link link id
+
+ungroup ::
+  (Type.Link locality -> Type0.Index scope) ->
+  (Type.Link locality -> Strict.Vector (Element locality Check scope)) ->
+  TypeDefinition2 locality Group Check scope ->
+  TypeDefinition2 locality Normal Check scope
+ungroup _ _ (Annotated annotation ::: definition) = Annotated annotation ::: definition
+ungroup index lookup definition = case definition of
+  Link index id -> Inferred ::: go id (lookup index)
+  (Group set) -> Inferred ::: go 0 set
+  where
+    go id set = Shift.map (Shift.UngroupType original) element
+      where
+        original id | Element {link} <- set Strict.Vector.! id = index link
+        Element {element} = set Strict.Vector.! id

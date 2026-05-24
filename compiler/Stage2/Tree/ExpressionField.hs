@@ -45,6 +45,11 @@ instance Connect Field where
       { index,
         expression = connect expression
       }
+  seperate Field {index, expression} =
+    Field
+      { index,
+        expression = seperate expression
+      }
 
 resolve ::
   Context scope ->

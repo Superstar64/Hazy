@@ -60,6 +60,17 @@ instance Connect Function where
           patternx,
           function = connect function
         }
+  seperate = \case
+    Plain {rightHandSide} ->
+      Plain
+        { rightHandSide = seperate rightHandSide
+        }
+    Bound {functionPosition, patternx, function} ->
+      Bound
+        { functionPosition,
+          patternx,
+          function = seperate function
+        }
 
 -- todo complain when lambda variables shadow other lambda variables
 resolve ::

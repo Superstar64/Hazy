@@ -8,6 +8,7 @@ import Data.Map (Map)
 import Data.Maybe (fromJust, mapMaybe)
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
+import qualified Data.Vector.Strict as Strict
 import Graph.StronglyConnected (Index (..), tarjan)
 import qualified Graph.StronglyConnected as StronglyConnected
 import Stage1.Extensions (Extensions (Extensions, stableImports))
@@ -34,7 +35,7 @@ import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage2.Stage (Resolve)
+import Stage2.Stage (Check, Resolve)
 import {-# SOURCE #-} qualified Stage2.Temporary.Complete.Declarations as Complete
 import Stage2.Tree.Declaration (Declaration (..))
 import qualified Stage2.Tree.Declaration as Declaration
@@ -136,6 +137,33 @@ group
         classInstances = fmap Connect.connect <$> classInstances
       }
 
+ungroup ::
+  (Term.Link locality -> Term0.Index scope) ->
+  (Type.Link locality -> Type0.Index scope) ->
+  (Term.Link locality -> Strict.Vector (Definition4.Element locality Check scope)) ->
+  (Type.Link locality -> Strict.Vector (TypeDefinition2.Element locality Check scope)) ->
+  Declarations locality Group Check scope ->
+  Declarations locality Normal Check scope
+ungroup
+  indexTerm
+  indexType
+  lookupTerm
+  lookupType
+  Declarations
+    { terms,
+      types,
+      typeExtras,
+      dataInstances,
+      classInstances
+    } =
+    Declarations
+      { terms = Declaration.ungroup indexTerm lookupTerm <$> terms,
+        types = TypeDeclaration.ungroup indexType lookupType <$> types,
+        typeExtras = Connect.seperate <$> typeExtras,
+        dataInstances = fmap Connect.seperate <$> dataInstances,
+        classInstances = fmap Connect.seperate <$> classInstances
+      }
+
 connect ::
   forall scope.
   Declarations Local Normal Resolve (Scope.Declaration ':+ scope) ->
@@ -162,17 +190,47 @@ connect declarations@Declarations {terms, types} =
 
     indexTerm' = fromJust . indexTerm
     indexType' = fromJust . indexType
-    indexTerm :: Term.Link Local -> Maybe (Definition3 Inferred Normal Resolve (Scope.Declaration ':+ scope))
+    indexTerm ::
+      Term.Link Local ->
+      Maybe (Definition3 Inferred Normal Resolve (Scope.Declaration ':+ scope))
     indexTerm = \case
       Term.Declaration index
         | Declaration {definition} <- terms Vector.! index -> case definition of
             Definition4.Inferred Definition4.::: definition ->
               Just definition
             Definition4.Annotated {} Definition4.::: _ -> Nothing
-    indexType :: Type.Link Local -> Maybe (TypeDefinition Resolve (Scope.Declaration ':+ scope))
+    indexType ::
+      Type.Link Local ->
+      Maybe (TypeDefinition Resolve (Scope.Declaration ':+ scope))
     indexType = \case
       Type.Declaration index
         | TypeDeclaration {definition} <- types Vector.! index -> case definition of
             TypeDefinition2.Inferred TypeDefinition2.::: definition ->
               Just definition
             TypeDefinition2.Annotated {} TypeDefinition2.::: _ -> Nothing
+
+seperate ::
+  forall scope.
+  Declarations Local Group Check (Scope.Declaration ':+ scope) ->
+  Declarations Local Normal Check (Scope.Declaration ':+ scope)
+seperate declarations@Declarations {terms, types} =
+  ungroup Term.unlocal Type.unlocal lookupTerm lookupType declarations
+  where
+    lookupTerm ::
+      Term.Link Local ->
+      Strict.Vector (Definition4.Element Local Check (Scope.Declaration ':+ scope))
+    lookupTerm = \case
+      Term.Declaration index
+        | Declaration {definition} <- terms Vector.! index,
+          Definition4.Group set <- definition ->
+            set
+      _ -> error "bad term lookup"
+    lookupType ::
+      Type.Link Local ->
+      Strict.Vector (TypeDefinition2.Element Local Check (Scope.Declaration ':+ scope))
+    lookupType = \case
+      Type.Declaration index
+        | TypeDeclaration {definition} <- types Vector.! index,
+          TypeDefinition2.Group set <- definition ->
+            set
+      _ -> error "bad type lookup"

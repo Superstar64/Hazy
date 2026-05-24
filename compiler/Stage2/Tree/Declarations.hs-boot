@@ -12,7 +12,7 @@ import Stage2.Resolve.Context (Context)
 import Stage2.Scope (Declaration, Environment (..))
 import Stage2.Shift (Shift)
 import qualified Stage2.Shift as Shift
-import Stage2.Stage (Resolve, Stage)
+import Stage2.Stage (Check, Resolve, Stage)
 
 type Declarations :: Locality -> Layout -> Stage -> Environment -> Type
 
@@ -38,3 +38,7 @@ connect ::
   forall scope.
   Declarations Local Normal Resolve (Declaration ':+ scope) ->
   Declarations Local Group Resolve (Declaration ':+ scope)
+seperate ::
+  forall scope.
+  Declarations Local Group Check (Declaration ':+ scope) ->
+  Declarations Local Normal Check (Declaration ':+ scope)

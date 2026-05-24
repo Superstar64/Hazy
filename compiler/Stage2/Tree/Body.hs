@@ -37,6 +37,9 @@ instance Connect Body where
   connect = \case
     Body expression -> Body (connect expression)
     Guards statements -> Guards (fmap connect statements)
+  seperate = \case
+    Body expression -> Body (seperate expression)
+    Guards statements -> Guards (fmap seperate statements)
 
 resolve :: Context scope -> Stage1.Body Position -> Body Normal Resolve scope
 resolve context = \case

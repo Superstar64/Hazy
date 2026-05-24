@@ -43,6 +43,9 @@ instance Connect Definition where
   connect = \case
     Definition function -> Definition (connect function)
     Alternative function definition -> Alternative (connect function) (connect definition)
+  seperate = \case
+    Definition function -> Definition (seperate function)
+    Alternative function definition -> Alternative (seperate function) (seperate definition)
 
 merge :: NonEmpty (Function layout stage scope) -> Definition layout stage scope
 merge (definition :| []) = Definition definition

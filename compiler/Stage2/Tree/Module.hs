@@ -11,6 +11,7 @@ where
 import Data.Maybe (fromJust)
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
+import qualified Data.Vector.Strict as Strict
 import Error (Position)
 import Graph.StronglyConnected (Index (..), tarjan)
 import qualified Stage1.Tree.Module as Stage1 (Module)
@@ -31,12 +32,12 @@ import Stage2.Layout (Group, Normal)
 import qualified Stage2.Locality as Locality
 import Stage2.Scope (Global)
 import qualified Stage2.Scope as Scope
-import Stage2.Stage (Resolve)
+import Stage2.Stage (Check, Resolve)
 import {-# SOURCE #-} qualified Stage2.Temporary.Complete.Module as Complete
 import Stage2.Tree.Declaration (Declaration (Declaration))
 import qualified Stage2.Tree.Declaration as Declaration
 import Stage2.Tree.Declarations (Declarations (..))
-import qualified Stage2.Tree.Declarations as Declarations (group)
+import qualified Stage2.Tree.Declarations as Declarations
 import Stage2.Tree.Definition2 (Inferred)
 import Stage2.Tree.Definition3 (Definition3)
 import qualified Stage2.Tree.Definition4 as Definition4
@@ -131,3 +132,38 @@ connect modules = Vector.imap go modules
               TypeDefinition2.Inferred TypeDefinition2.::: definition ->
                 Just definition
               TypeDefinition2.Annotated {} TypeDefinition2.::: _ -> Nothing
+
+seperate :: Vector (Module Group Check) -> Vector (Module Normal Check)
+seperate modules = go <$> modules
+  where
+    go Module {name, declarations} =
+      Module
+        { name,
+          declarations =
+            Declarations.ungroup
+              Term.unglobal
+              Type.unglobal
+              lookupTerm
+              lookupType
+              declarations
+        }
+    lookupTerm ::
+      Term.Link Locality.Global ->
+      Strict.Vector (Definition4.Element Locality.Global Check Global)
+    lookupTerm = \case
+      Term.Global global local
+        | Module {declarations = Declarations {terms}} <- modules Vector.! global,
+          Declaration {definition} <- terms Vector.! local,
+          Definition4.Group set <- definition ->
+            set
+      _ -> error "bad term lookup"
+    lookupType ::
+      Type.Link Locality.Global ->
+      Strict.Vector (TypeDefinition2.Element Locality.Global Check Global)
+    lookupType = \case
+      Type.Global global local
+        | Module {declarations = Declarations {types}} <- modules Vector.! global,
+          TypeDeclaration {definition} <- types Vector.! local,
+          TypeDefinition2.Group set <- definition ->
+            set
+      _ -> error "bad type lookup"

@@ -32,3 +32,9 @@ global (Type0.Global global local) = Global global local
 
 local :: Type0.Index (Scope.Declaration 'Scope.:+ scope) -> Link Local
 local (Type0.Declaration index) = Declaration index
+
+unglobal :: Link Global -> Type0.Index Scope.Global
+unglobal (Global global local) = Type0.Global global local
+
+unlocal :: Link Local -> Type0.Index (Scope.Declaration 'Scope.:+ scope)
+unlocal (Declaration index) = Type0.Declaration index
