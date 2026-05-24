@@ -6,7 +6,6 @@ import qualified Data.Vector as Vector
 import Error (cyclicalTypeChecking)
 import Graph.Topological (Formula7 (..), Loeb7 (..), loeb7)
 import qualified Graph.Topological7
-import Stage1.Variable (FullQualifiers)
 import qualified Stage2.Index.Type as Type
 import Stage2.Layout (Normal)
 import qualified Stage2.Locality as Locality
@@ -19,7 +18,7 @@ import qualified Stage2.Tree.Declaration as Stage2.Declaration
 import qualified Stage2.Tree.Declarations as Stage2.Declarations
 import Stage2.Tree.Instance (Instance)
 import qualified Stage2.Tree.Instance as Stage2.Instance
-import qualified Stage2.Tree.Module as Stage2 (Module (..))
+import Stage2.Tree.Module (Module (..))
 import qualified Stage2.Tree.TypeDeclaration as Stage2.TypeDeclaration
 import Stage2.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 import qualified Stage2.Tree.TypeDeclarationExtra as Stage2.TypeDeclarationExtra
@@ -40,17 +39,10 @@ import qualified Stage3.Functor.ModuleSet as Functor (ModuleSet (..))
 import qualified Stage3.Temporary.Declaration as Declaration.Unsolved
 import qualified Stage3.Temporary.Instance as Instance (Key (..), check, solve)
 import qualified Stage3.Temporary.TypeDeclarationExtra as TypeDeclarationExtra
-import Stage3.Tree.Declarations (Declarations)
 import qualified Stage3.Tree.Declarations as Declarations
 import Stage3.Tree.TypeDeclaration (TypeDeclaration)
 import qualified Stage3.Tree.TypeDeclaration as TypeDeclaration
 import Prelude hiding (Functor)
-
-data Module = Module
-  { name :: !FullQualifiers,
-    declarations :: Declarations Locality.Global Normal Check Global
-  }
-  deriving (Show)
 
 type Formula s z =
   Formula7
@@ -74,7 +66,7 @@ fromFunctor ::
     (TypeDeclarationExtra Normal Check Global)
     c
     (Instance Normal Check Global) ->
-  Module
+  Module Normal Check
 fromFunctor (Functor.Module {name, declarations}) =
   Module
     { name,
@@ -90,10 +82,10 @@ fromFunctors ::
     (TypeDeclarationExtra Normal Check Global)
     c
     (Instance Normal Check Global) ->
-  Vector Module
+  Vector (Module Normal Check)
 fromFunctors (Functor.ModuleSet modules) = fmap fromFunctor modules
 
-check :: Vector (Stage2.Module Normal) -> Vector Module
+check :: Vector (Module Normal Resolve) -> Vector (Module Normal Check)
 check modules =
   fromFunctors
     $ mapWithKey
@@ -121,14 +113,14 @@ check modules =
 
     term modulex term declaration
       | modulex <- modules Vector.! modulex,
-        declarations <- Stage2.declarations modulex,
+        declarations <- declarations modulex,
         terms <- Stage2.Declarations.terms declarations,
         term <- terms Vector.! term =
           Declaration.lazy term declaration
 
     typex modulex typex declaration
       | modulex <- modules Vector.! modulex,
-        declarations <- Stage2.declarations modulex,
+        declarations <- declarations modulex,
         types <- Stage2.Declarations.types declarations,
         typex <- types Vector.! typex =
           TypeDeclaration.lazy typex declaration

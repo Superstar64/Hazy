@@ -34,10 +34,10 @@ import qualified Stage1.Tree.Module as Module (parse)
 import qualified Stage1.Tree.Module as Stage1 (Module, assumeName, name)
 import qualified Stage1.Variable as Variable
 import qualified Stage2.Layout as Layout
+import qualified Stage2.Stage as Stage
 import qualified Stage2.Tree.Module as Module (connect, resolve)
 import qualified Stage2.Tree.Module as Stage2 (Module, name)
 import qualified Stage3.Tree.Module as Module (check)
-import qualified Stage3.Tree.Module as Stage3 (Module, name)
 import qualified Stage4.Tree.Module as Module (simplify)
 import qualified Stage4.Tree.Module as Stage4 (Module, name)
 import qualified Stage5.Generate.Mangle as Mangle
@@ -121,18 +121,30 @@ stage1 verbose = case verbose of
       Stage1.assumeName path
         <$> Parser.parse extensions Module.parse name contents
 
-stage2 :: Debug -> Vector (Stage1.Module Position) -> IO (Vector (Stage2.Module Layout.Normal))
+stage2 ::
+  Debug ->
+  Vector (Stage1.Module Position) ->
+  IO (Vector (Stage2.Module Layout.Normal Stage.Resolve))
 stage2 verbose = case verbose of
   Debug -> runVerbose . Module.resolve
   Normal -> pure . runIdentity . Module.resolve
 
-stage2x :: Debug -> Vector (Stage2.Module Layout.Normal) -> IO (Vector (Stage2.Module Layout.Group))
+stage2x ::
+  Debug ->
+  Vector (Stage2.Module Layout.Normal Stage.Resolve) ->
+  IO (Vector (Stage2.Module Layout.Group Stage.Resolve))
 stage2x _ = pure . Module.connect
 
-stage3 :: Debug -> Vector (Stage2.Module Layout.Normal) -> IO (Vector Stage3.Module)
+stage3 ::
+  Debug ->
+  Vector (Stage2.Module Layout.Normal Stage.Resolve) ->
+  IO (Vector (Stage2.Module Layout.Normal Stage.Check))
 stage3 _ = pure . Module.check
 
-stage4 :: Debug -> Vector Stage3.Module -> IO (Vector Stage4.Module)
+stage4 ::
+  Debug ->
+  Vector (Stage2.Module Layout.Normal Stage.Check) ->
+  IO (Vector Stage4.Module)
 stage4 _ = pure . Vector.map Module.simplify
 
 stage5 :: Debug -> Vector Stage4.Module -> IO (Vector Stage5.Module)
@@ -354,7 +366,7 @@ main'' args = case getOpt order options args of
             all <- stage1 debug all
             all <- stage2 debug all
             all <- stage3 debug all
-            forceModules "Checking" show verbose Stage3.name (Vector.drop split all)
+            forceModules "Checking" show verbose Stage2.name (Vector.drop split all)
           Simplify -> do
             all <- stage1 debug all
             all <- stage2 debug all

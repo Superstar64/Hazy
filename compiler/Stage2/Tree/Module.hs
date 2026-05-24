@@ -33,7 +33,7 @@ import Stage2.Scope (Global)
 import qualified Stage2.Scope as Scope
 import Stage2.Stage (Resolve)
 import {-# SOURCE #-} qualified Stage2.Temporary.Complete.Module as Complete
-import Stage2.Tree.Declaration (Declaration (..))
+import Stage2.Tree.Declaration (Declaration (Declaration))
 import qualified Stage2.Tree.Declaration as Declaration
 import Stage2.Tree.Declarations (Declarations (..))
 import qualified Stage2.Tree.Declarations as Declarations (group)
@@ -46,13 +46,13 @@ import Stage2.Tree.TypeDefinition (TypeDefinition)
 import qualified Stage2.Tree.TypeDefinition2 as TypeDefinition2
 import Verbose (Debug)
 
-data Module layout = Module
+data Module layout stage = Module
   { name :: !FullQualifiers,
-    declarations :: Declarations Locality.Global layout Resolve Global
+    declarations :: Declarations Locality.Global layout stage Global
   }
   deriving (Show)
 
-labelContext :: Vector (Module Normal) -> Label.Context Global
+labelContext :: Vector (Module Normal Resolve) -> Label.Context Global
 labelContext modules =
   Label.Context
     { terms = Table.Term.Global $ labelTerms modules,
@@ -65,10 +65,10 @@ labelContext modules =
     labelTypes = fmap $ \Module {name, declarations = Declarations {types}} ->
       TypeDeclaration.labelBinding (toQualifiers name) <$> types
 
-resolve :: (Debug verbose) => Vector (Stage1.Module Position) -> verbose (Vector (Module Normal))
+resolve :: (Debug verbose) => Vector (Stage1.Module Position) -> verbose (Vector (Module Normal Resolve))
 resolve modules = fmap Complete.shrink <$> Complete.resolve modules
 
-connect :: Vector (Module Normal) -> Vector (Module Group)
+connect :: Vector (Module Normal Resolve) -> Vector (Module Group Resolve)
 connect modules = Vector.imap go modules
   where
     go index Module {name, declarations} =

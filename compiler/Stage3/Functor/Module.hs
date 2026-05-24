@@ -49,7 +49,7 @@ mapWithKey f1 f2 f3 f4 f5 f6 f7 Module {name, declarations} =
     }
 
 fromStage2 ::
-  Stage2.Module Normal ->
+  Stage2.Module Normal Resolve ->
   Module
     (Stage2.Declaration Locality.Global Normal Resolve Global)
     (Stage2.Declaration Locality.Global Normal Resolve Global)

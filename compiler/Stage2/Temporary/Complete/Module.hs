@@ -29,6 +29,7 @@ import Stage2.Resolve.Import (StableImports (StableImports), pickImports, pickPr
 import qualified Stage2.Resolve.Import as Import
 import Stage2.Resolve.Stability (Stability (..))
 import Stage2.Scope (Global)
+import Stage2.Stage (Resolve)
 import Stage2.Temporary.Complete.Declarations (Declarations)
 import qualified Stage2.Temporary.Complete.Declarations as Declarations
 import qualified Stage2.Tree.Module as Real
@@ -107,7 +108,7 @@ resolve modules = mfix $ \main ->
             Stage1.Module {modulePosition = right} <- modules Vector.! right =
               duplicateModuleEntries [left, right]
 
-shrink :: Module -> Real.Module Normal
+shrink :: Module -> Real.Module Normal Resolve
 shrink Module {name, declarations} =
   Real.Module
     { name,

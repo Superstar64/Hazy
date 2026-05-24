@@ -1,7 +1,9 @@
 module Stage4.Tree.Module where
 
 import Stage1.Variable (FullQualifiers)
+import Stage2.Layout (Normal)
 import Stage2.Scope (Global)
+import Stage2.Stage (Check)
 import qualified Stage3.Tree.Module as Stage3
 import Stage4.Tree.Declarations (Declarations)
 import qualified Stage4.Tree.Declarations as Declarations (simplify)
@@ -12,7 +14,7 @@ data Module = Module
   }
   deriving (Show)
 
-simplify :: Stage3.Module -> Module
+simplify :: Stage3.Module Normal Check -> Module
 simplify Stage3.Module {name, declarations} =
   Module
     { name,
