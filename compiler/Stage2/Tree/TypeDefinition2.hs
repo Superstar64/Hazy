@@ -28,7 +28,9 @@ data TypeDefinition2 locality layout stage scope where
     !(TypeDefinition stage scope) ->
     TypeDefinition2 locality layout stage scope
   Link :: !(Type.Link locality) -> !Int -> TypeDefinition2 locality Group stage scope
-  Group :: !(Strict.Vector (Element locality stage scope)) -> TypeDefinition2 locality Group stage scope
+  Group ::
+    !(Strict.Vector (Element locality stage (Scope.Group ':+ scope))) ->
+    TypeDefinition2 locality Group stage scope
 
 infix 5 :::
 
@@ -52,14 +54,14 @@ instance Shift.Functor (TypeDefinition2 locality layout stage) where
   map category = \case
     annotation ::: definition -> Shift.map category annotation ::: Shift.map category definition
     Link link id -> Link link id
-    Group set -> Group $ Shift.map category <$> set
+    Group set -> Group $ Shift.map (Shift.Over category) <$> set
 
 instance FreeTypeVariables (TypeDefinition2 locality layout) where
   freeTypeVariables target = \case
     annotation ::: definition ->
       freeTypeVariables target annotation ++ freeTypeVariables target definition
     Link {} -> []
-    Group set -> foldMap (freeTypeVariables target) set
+    Group set -> foldMap (freeTypeVariables (FreeVariables.Over target)) set
 
 data Annotation layout stage scope where
   Annotated :: !(Type Position stage scope) -> Annotation layout stage scope
@@ -84,7 +86,7 @@ instance FreeTypeVariables (Annotation mark) where
     Inferred -> []
 
 data Element locality stage scope = Element
-  { element :: !(TypeDefinition stage (Scope.Group ':+ scope)),
+  { element :: !(TypeDefinition stage scope),
     link :: !(Type.Link locality)
   }
   deriving (Show)
@@ -95,13 +97,13 @@ instance Shift (Element locality stage) where
 instance Shift.Functor (Element locality stage) where
   map category Element {element, link} =
     Element
-      { element = Shift.map (Shift.Over category) element,
+      { element = Shift.map category element,
         link
       }
 
 instance FreeTypeVariables (Element locality) where
   freeTypeVariables target Element {element} =
-    freeTypeVariables (FreeVariables.Over target) element
+    freeTypeVariables target element
 
 locality :: TypeDefinition2 locality Normal stage scope -> TypeDefinition2 locality' Normal stage scope
 locality = \case
@@ -128,7 +130,7 @@ group link index group (Inferred ::: _) = case group of
 
 ungroup ::
   (Type.Link locality -> Type0.Index scope) ->
-  (Type.Link locality -> Strict.Vector (Element locality Check scope)) ->
+  (Type.Link locality -> Strict.Vector (Element locality Check (Scope.Group ':+ scope))) ->
   TypeDefinition2 locality Group Check scope ->
   TypeDefinition2 locality Normal Check scope
 ungroup _ _ (Annotated annotation ::: definition) = Annotated annotation ::: definition

@@ -30,7 +30,7 @@ import qualified Stage2.Label.Context as Label (Context (Context))
 import qualified Stage2.Label.Context as Label.Context
 import Stage2.Layout (Group, Normal)
 import qualified Stage2.Locality as Locality
-import Stage2.Scope (Global)
+import Stage2.Scope (Environment (..), Global)
 import qualified Stage2.Scope as Scope
 import Stage2.Stage (Check, Resolve)
 import {-# SOURCE #-} qualified Stage2.Temporary.Complete.Module as Complete
@@ -149,7 +149,7 @@ seperate modules = go <$> modules
         }
     lookupTerm ::
       Term.Link Locality.Global ->
-      Strict.Vector (Definition4.Element Locality.Global Check Global)
+      Strict.Vector (Definition4.Element Locality.Global Check (Scope.Group ':+ Global))
     lookupTerm = \case
       Term.Global global local
         | Module {declarations = Declarations {terms}} <- modules Vector.! global,
@@ -159,7 +159,7 @@ seperate modules = go <$> modules
       _ -> error "bad term lookup"
     lookupType ::
       Type.Link Locality.Global ->
-      Strict.Vector (TypeDefinition2.Element Locality.Global Check Global)
+      Strict.Vector (TypeDefinition2.Element Locality.Global Check (Scope.Group ':+ Global))
     lookupType = \case
       Type.Global global local
         | Module {declarations = Declarations {types}} <- modules Vector.! global,
