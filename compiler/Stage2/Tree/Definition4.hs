@@ -32,7 +32,9 @@ data Definition4 locality layout stage scope where
     !(Definition3 mark layout stage scope) ->
     Definition4 locality layout stage scope
   Link :: !(Term.Link locality) -> !Int -> Definition4 locality Group stage scope
-  Group :: !(Strict.Vector (Element locality stage (Scope.Group ':+ scope))) -> Definition4 locality Group stage scope
+  Group ::
+    !(Strict.Vector (Element locality stage (Scope.GroupTerm ':+ scope))) ->
+    Definition4 locality Group stage scope
 
 infixr 5 :::
 
@@ -125,7 +127,7 @@ group link index group (Inferred ::: _) = case group of
 
 ungroup ::
   (Term.Link locality -> Term0.Index scope) ->
-  (Term.Link locality -> Strict.Vector (Element locality Check (Scope.Group ':+ scope))) ->
+  (Term.Link locality -> Strict.Vector (Element locality Check (Scope.GroupTerm ':+ scope))) ->
   Definition4 locality Group Check scope ->
   Definition4 locality Normal Check scope
 ungroup _ _ (Annotated annotation ::: definition) = Annotated annotation ::: Connect.seperate definition

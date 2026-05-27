@@ -3,7 +3,7 @@ module Stage2.Index.Type where
 import qualified Data.Strict.Maybe as Strict
 import Data.Void (absurd, vacuous)
 import {-# SOURCE #-} qualified Stage2.Index.Type0 as Type0
-import Stage2.Scope (Declaration, Environment (..), Global, Group, Local)
+import Stage2.Scope (Declaration, Environment (..), Global, GroupType, Local)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 
@@ -11,7 +11,7 @@ data Index scopes where
   Declaration :: !Int -> Index (Declaration ':+ scopes)
   Shift :: !(Index scopes) -> Index (scope ':+ scopes)
   Global :: !Int -> !Int -> Index Global
-  Group :: !Int -> Index (Group ':+ scopes)
+  Group :: !Int -> Index (GroupType ':+ scopes)
 
 instance Eq (Index scope) where
   Declaration local1 == Declaration local2 = local1 == local2
@@ -62,7 +62,6 @@ instance Shift.Functor Index where
   map (Shift.UngroupType typex) (Group index) = Type0.normal $ typex index
   map Shift.UngroupType {} (Shift index) = index
   map Shift.UngroupTerm {} (Shift index) = index
-  map Shift.UngroupTerm {} Group {} = error "ungroup term in type"
 
 unlocal :: Index (Local ':+ scope) -> Index scope
 unlocal (Shift index) = index

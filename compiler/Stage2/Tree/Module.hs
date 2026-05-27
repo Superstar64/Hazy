@@ -149,7 +149,7 @@ seperate modules = go <$> modules
         }
     lookupTerm ::
       Term.Link Locality.Global ->
-      Strict.Vector (Definition4.Element Locality.Global Check (Scope.Group ':+ Global))
+      Strict.Vector (Definition4.Element Locality.Global Check (Scope.GroupTerm ':+ Global))
     lookupTerm = \case
       Term.Global global local
         | Module {declarations = Declarations {terms}} <- modules Vector.! global,
@@ -159,7 +159,7 @@ seperate modules = go <$> modules
       _ -> error "bad term lookup"
     lookupType ::
       Type.Link Locality.Global ->
-      Strict.Vector (TypeDefinition2.Element Locality.Global Check (Scope.Group ':+ Global))
+      Strict.Vector (TypeDefinition2.Element Locality.Global Check (Scope.GroupType ':+ Global))
     lookupType = \case
       Type.Global global local
         | Module {declarations = Declarations {types}} <- modules Vector.! global,

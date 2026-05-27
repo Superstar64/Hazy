@@ -3,7 +3,7 @@ module Stage2.Index.Term where
 import qualified Data.Strict.Maybe as Strict
 import Data.Void (absurd)
 import {-# SOURCE #-} qualified Stage2.Index.Term0 as Term0
-import Stage2.Scope (Declaration, Environment (..), Global, Group, Pattern)
+import Stage2.Scope (Declaration, Environment (..), Global, GroupTerm, Pattern)
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Prelude hiding (Functor, map)
@@ -13,7 +13,7 @@ data Index scopes where
   Pattern :: !Bound -> Index (Pattern ':+ scopes)
   Shift :: !(Index scopes) -> Index (scope ':+ scopes)
   Global :: !Int -> !Int -> Index Global
-  Group :: !Int -> Index (Group ':+ scope)
+  Group :: !Int -> Index (GroupTerm ':+ scope)
 
 instance Eq (Index scope) where
   Declaration local1 == Declaration local2 = local1 == local2
@@ -57,7 +57,6 @@ instance Shift.Functor Index where
   map (Shift.UngroupTerm term) (Group index) = Term0.normal $ term index
   map Shift.UngroupTerm {} (Shift index) = index
   map Shift.UngroupType {} (Shift index) = index
-  map Shift.UngroupType {} Group {} = error "ungroup type in term"
 
 data Bound
   = At

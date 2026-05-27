@@ -100,7 +100,7 @@ group link index' group = \case
 
 ungroup ::
   (Term.Link locality -> Term0.Index scope) ->
-  (Term.Link locality -> Strict.Vector (Definition4.Element locality Check (Scope.Group ':+ scope))) ->
+  (Term.Link locality -> Strict.Vector (Definition4.Element locality Check (Scope.GroupTerm ':+ scope))) ->
   Declaration locality Group Check scope ->
   Declaration locality Normal Check scope
 ungroup index lookup Declaration {position, name, definition, typex} =

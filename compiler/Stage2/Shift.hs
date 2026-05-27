@@ -30,16 +30,16 @@ data Category scope scope' where
   Unshift :: Void -> Category (scope ':+ scopes) scopes
   GroupTerm ::
     (Term0.Index scope -> Strict.Maybe Int) ->
-    Category scope (Scope.Group ':+ scope)
+    Category scope (Scope.GroupTerm ':+ scope)
   GroupType ::
     (Type0.Index scope -> Strict.Maybe Int) ->
-    Category scope (Scope.Group ':+ scope)
+    Category scope (Scope.GroupType ':+ scope)
   UngroupTerm ::
     (Int -> Term0.Index scope) ->
-    Category (Scope.Group ':+ scope) scope
+    Category (Scope.GroupTerm ':+ scope) scope
   UngroupType ::
     (Int -> Type0.Index scope) ->
-    Category (Scope.Group ':+ scope) scope
+    Category (Scope.GroupType ':+ scope) scope
 
 infixr 9 :.
 

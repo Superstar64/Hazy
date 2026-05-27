@@ -140,8 +140,8 @@ group
 ungroup ::
   (Term.Link locality -> Term0.Index scope) ->
   (Type.Link locality -> Type0.Index scope) ->
-  (Term.Link locality -> Strict.Vector (Definition4.Element locality Check (Scope.Group ':+ scope))) ->
-  (Type.Link locality -> Strict.Vector (TypeDefinition2.Element locality Check (Scope.Group ':+ scope))) ->
+  (Term.Link locality -> Strict.Vector (Definition4.Element locality Check (Scope.GroupTerm ':+ scope))) ->
+  (Type.Link locality -> Strict.Vector (TypeDefinition2.Element locality Check (Scope.GroupType ':+ scope))) ->
   Declarations locality Group Check scope ->
   Declarations locality Normal Check scope
 ungroup
@@ -218,7 +218,7 @@ seperate declarations@Declarations {terms, types} =
   where
     lookupTerm ::
       Term.Link Local ->
-      Strict.Vector (Definition4.Element Local Check (Scope.Group ':+ Scope.Declaration ':+ scope))
+      Strict.Vector (Definition4.Element Local Check (Scope.GroupTerm ':+ Scope.Declaration ':+ scope))
     lookupTerm = \case
       Term.Declaration index
         | Declaration {definition} <- terms Vector.! index,
@@ -227,7 +227,7 @@ seperate declarations@Declarations {terms, types} =
       _ -> error "bad term lookup"
     lookupType ::
       Type.Link Local ->
-      Strict.Vector (TypeDefinition2.Element Local Check (Scope.Group ':+ Scope.Declaration ':+ scope))
+      Strict.Vector (TypeDefinition2.Element Local Check (Scope.GroupType ':+ Scope.Declaration ':+ scope))
     lookupType = \case
       Type.Declaration index
         | TypeDeclaration {definition} <- types Vector.! index,

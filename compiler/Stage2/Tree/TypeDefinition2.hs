@@ -29,7 +29,7 @@ data TypeDefinition2 locality layout stage scope where
     TypeDefinition2 locality layout stage scope
   Link :: !(Type.Link locality) -> !Int -> TypeDefinition2 locality Group stage scope
   Group ::
-    !(Strict.Vector (Element locality stage (Scope.Group ':+ scope))) ->
+    !(Strict.Vector (Element locality stage (Scope.GroupType ':+ scope))) ->
     TypeDefinition2 locality Group stage scope
 
 infix 5 :::
@@ -130,7 +130,7 @@ group link index group (Inferred ::: _) = case group of
 
 ungroup ::
   (Type.Link locality -> Type0.Index scope) ->
-  (Type.Link locality -> Strict.Vector (Element locality Check (Scope.Group ':+ scope))) ->
+  (Type.Link locality -> Strict.Vector (Element locality Check (Scope.GroupType ':+ scope))) ->
   TypeDefinition2 locality Group Check scope ->
   TypeDefinition2 locality Normal Check scope
 ungroup _ _ (Annotated annotation ::: definition) = Annotated annotation ::: definition

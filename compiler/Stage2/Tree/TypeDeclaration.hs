@@ -114,7 +114,7 @@ group link index group = \case
 
 ungroup ::
   (Type.Link locality -> Type0.Index scope) ->
-  (Type.Link locality -> Strict.Vector (TypeDefinition2.Element locality Check (Scope.Group ':+ scope))) ->
+  (Type.Link locality -> Strict.Vector (TypeDefinition2.Element locality Check (Scope.GroupType ':+ scope))) ->
   TypeDeclaration locality Group Check scope ->
   TypeDeclaration locality Normal Check scope
 ungroup index lookup TypeDeclaration {position, name, constructorNames, definition, kind} =
