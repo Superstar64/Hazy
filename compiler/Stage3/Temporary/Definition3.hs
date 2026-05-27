@@ -50,12 +50,12 @@ check context annotation position (info Stage2.::@ Stage2.Resolve definition) =
   (info ::@) <$> case annotation of
     Global -> Unify.generalizeOver context $ Unify.Generalize $ \context -> do
       typex <- Unify.fresh Unify.typex
-      Definition2.check context Definition2.Auto typex definition
+      Definition2.checkAuto context typex (shift definition)
     Local typex -> Unify.generalizeOver context $ Unify.Generalize $ \context -> do
-      Definition2.check context Definition2.Auto (shift typex) definition
+      Definition2.checkAuto context (shift typex) (shift definition)
     Marked annotation ->
       checkAnnotation context position annotation $ \context typex -> do
-        Definition2.check context Definition2.Manual typex definition
+        Definition2.checkManual context typex definition
 
 checkAnnotation ::
   Context s scope ->
