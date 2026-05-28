@@ -14,7 +14,7 @@ import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
 import Stage2.Index.Term (Index)
 import qualified Stage2.Index.Term as Index
-import Stage2.Scope (Declaration, Environment (..), Global, Local, Pattern)
+import Stage2.Scope (Declaration, Environment (..), Global, GroupTerm, GroupType, Local, Pattern)
 import Stage2.Shift (Shift (..))
 import qualified Stage2.Shift as Shift
 import Prelude hiding (map)
@@ -25,11 +25,15 @@ data Table value scope where
   Pattern :: Bound value (Pattern ':+ scope) -> Table value scope -> Table value (Pattern ':+ scope)
   Local :: Table value scope -> Table value (Local ':+ scope)
   Global :: Vector (Vector (value Global)) -> Table value Global
+  GroupTerm :: Vector (value (GroupTerm ':+ scope)) -> Table value scope -> Table value (GroupTerm ':+ scope)
+  GroupType :: Table value scope -> Table value (GroupType ':+ scope)
 
 instance Shift.Unshift (Table value) where
   unshift (Declaration _ table) = table
   unshift (Pattern _ table) = table
   unshift (Local table) = table
+  unshift (GroupTerm _ table) = table
+  unshift (GroupType table) = table
 
 type Bound :: (Environment -> Type) -> Environment -> Type
 data Bound value scope = Bound
@@ -48,6 +52,9 @@ Declaration _ table ! Index.Shift index = shift $ table ! index
 Pattern _ table ! Index.Shift index = shift $ table ! index
 Local table ! Index.Shift index = shift $ table ! index
 Global table ! Index.Global global local = table Vector.! global Vector.! local
+GroupTerm values _ ! Index.Group index = values Vector.! index
+GroupTerm _ table ! Index.Shift index = shift $ table ! index
+GroupType table ! Index.Shift index = shift $ table ! index
 
 type Map :: (Environment -> Data.Kind.Type) -> (Environment -> Data.Kind.Type) -> Data.Kind.Type
 newtype Map value value' = Map (forall scope. value scope -> value' scope)
@@ -58,6 +65,8 @@ map (Map f) = \case
   Pattern bound table -> Pattern (mapBound (Map f) bound) (map (Map f) table)
   Local table -> Local (map (Map f) table)
   Global values -> Global (Vector.map (Vector.map f) values)
+  GroupTerm values table -> GroupTerm (f <$> values) (map (Map f) table)
+  GroupType table -> GroupType (map (Map f) table)
 
 mapBound :: Map value value' -> Bound value scope -> Bound value' scope
 mapBound (Map f) Bound {at, select} = Bound {at = f at, select = Strict.Vector.map (mapBound (Map f)) select}
