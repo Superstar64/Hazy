@@ -153,5 +153,5 @@ ungroup index lookup definition = case definition of
   where
     go id (Set set) = Shift.map (Shift.UngroupType original) element
       where
-        original id | Element {link} <- set Strict.Vector.! id = index link
+        original id | Element {link} <- set Strict.Vector.! id = Type0.normal $ index link
         Element {element} = set Strict.Vector.! id

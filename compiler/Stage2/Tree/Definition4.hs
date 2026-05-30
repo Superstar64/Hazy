@@ -17,22 +17,26 @@ import Stage2.Layout (Group, Layout, Normal)
 import Stage2.Locality (Locality)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
-import Stage2.Shift (Shift, shiftDefault)
+import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Check, Resolve, Stage)
+import Stage2.Tree.Combinators.Implicit (Implicit)
+import qualified Stage2.Tree.Combinators.Implicit as Implicit
 import Stage2.Tree.Definition2 (Inferred)
 import qualified Stage2.Tree.Definition2 as Mark
 import Stage2.Tree.Definition3 (Definition3)
 import Stage2.Tree.Scheme (Scheme)
+import Stage4.Tree.SchemeOver (SchemeOver (..))
+import qualified Stage4.Tree.SchemeOver as SchemeOver
 
 type Definition4 :: Locality -> Layout -> Stage -> Environment -> Type
 data Definition4 locality layout stage scope where
   (:::) ::
     !(Annotation mark layout stage scope) ->
-    !(Definition3 mark layout stage scope) ->
+    !(Implicit (Definition3 mark layout stage) stage scope) ->
     Definition4 locality layout stage scope
   Link :: !(Term.Link locality) -> !Int -> Definition4 locality Group stage scope
-  Group :: !(Set locality stage scope) -> Definition4 locality Group stage scope
+  Group :: !(Implicit (Set locality stage) stage scope) -> Definition4 locality Group stage scope
 
 infixr 5 :::
 
@@ -59,9 +63,9 @@ instance Shift.Functor (Definition4 locality layout stage) where
 
 instance FreeTermVariables (Definition4 locality layout) where
   freeTermVariables target = \case
-    _ ::: definition -> freeTermVariables target definition
+    _ ::: Implicit.Resolve definition -> freeTermVariables target definition
     Link {} -> []
-    Group set -> freeTermVariables target set
+    Group (Implicit.Resolve set) -> freeTermVariables target set
 
 data Annotation mark layout stage scope where
   Annotated :: !(Scheme Position stage scope) -> Annotation Mark.Annotated layout stage scope
@@ -83,6 +87,9 @@ instance Show (Annotation mark scope layout stage) where
 newtype Set locality stage scope
   = Set (Strict.Vector (Element locality stage scope))
   deriving (Show)
+
+instance Scope.Show (Set locality stage) where
+  showsPrec = showsPrec
 
 instance Shift (Set locality stage) where
   shift = shiftDefault
@@ -123,10 +130,11 @@ group ::
   StronglyConnected.Component (Term.Link locality) ->
   Definition4 locality Normal Resolve scope ->
   Definition4 locality Group Resolve scope
-group _ _ _ (Annotated annotation ::: definition) = Annotated annotation ::: connect definition
+group _ _ _ (Annotated annotation ::: Implicit.Resolve definition) =
+  Annotated annotation ::: Implicit.Resolve (connect definition)
 group link index group (Inferred ::: _) = case group of
   StronglyConnected.Group {set} ->
-    Group $ Set $ Strict.Vector.fromList $ map go $ Set.toList set
+    Group $ Implicit.Resolve $ Set $ Strict.Vector.fromList $ map go $ Set.toList set
     where
       go link =
         Element
@@ -138,15 +146,24 @@ group link index group (Inferred ::: _) = case group of
 
 ungroup ::
   (Term.Link locality -> Term0.Index scope) ->
-  (Term.Link locality -> Set locality Check scope) ->
+  (Term.Link locality -> Implicit (Set locality Check) Check scope) ->
   Definition4 locality Group Check scope ->
   Definition4 locality Normal Check scope
-ungroup _ _ (Annotated annotation ::: definition) = Annotated annotation ::: Connect.seperate definition
+ungroup _ _ (Annotated annotation ::: Implicit.Check definition) =
+  Annotated annotation ::: Implicit.Check (SchemeOver.map (SchemeOver.Map Connect.seperate) definition)
 ungroup index lookup definition = case definition of
   Link index id -> Inferred ::: go id (lookup index)
   (Group set) -> Inferred ::: go 0 set
   where
-    go id (Set set) = Connect.seperate $ Shift.map (Shift.UngroupTerm original) element
+    go id (Implicit.Check SchemeOver {parameters, constraints, result = Set set}) =
+      Implicit.Check $
+        SchemeOver
+          { parameters,
+            constraints,
+            result = Connect.seperate $ Shift.map (Shift.UngroupTerm original) element
+          }
       where
-        original id | Element {link} <- set Strict.Vector.! id = index link
+        original id
+          | Element {link} <- set Strict.Vector.! id =
+              shift $ Term0.normal $ index link
         Element {element} = set Strict.Vector.! id

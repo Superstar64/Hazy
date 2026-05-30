@@ -100,8 +100,10 @@ merge entries@(entry :| _) =
                             name,
                             definition =
                               Real.Inferred
-                                Real.::: Real.Name properName fixity
-                                Real.::@ Real.Resolve (Real.Definition auto),
+                                Real.::: Real.Resolve
+                                  ( Real.Name properName fixity
+                                      `Real.Label` Real.Definition auto
+                                  ),
                             typex = Inferred
                           }
                   Just annotation -> cast <$> Verbose.resolving (Variable.printLiteral' properName) real
@@ -113,10 +115,12 @@ merge entries@(entry :| _) =
                             name,
                             definition =
                               Real.Annotated annotation
-                                Real.::: Real.Name properName fixity
-                                Real.::@ if Scheme.implicit annotation
-                                  then Real.Resolve (Real.Definition auto)
-                                  else Real.Resolve (Real.Scoped manual),
+                                Real.::: Real.Resolve
+                                  ( Real.Name properName fixity
+                                      `Real.Label` if Scheme.implicit annotation
+                                        then Real.Definition auto
+                                        else Real.Scoped manual
+                                  ),
                             typex = Inferred
                           }
         | Just (_, selector) <- selection,
@@ -135,10 +139,10 @@ merge entries@(entry :| _) =
                         name,
                         definition =
                           Real.Inferred
-                            Real.::: Real.Name properName fixity
-                            Real.::@ Real.Resolve
-                              ( Real.Piece
-                                  Real.Choice {position, index, instanciation, bound, patternx}
+                            Real.::: Real.Resolve
+                              ( Real.Name properName fixity
+                                  `Real.Label` Real.Piece
+                                    Real.Choice {position, index, instanciation, bound, patternx}
                               ),
                         typex = Inferred
                       }
@@ -148,10 +152,10 @@ merge entries@(entry :| _) =
                         name,
                         definition =
                           Real.Annotated annotation
-                            Real.::: Real.Name properName fixity
-                            Real.::@ Real.Resolve
-                              ( Real.Piece
-                                  Real.Choice {position, index, instanciation, bound, patternx}
+                            Real.::: Real.Resolve
+                              ( Real.Name properName fixity
+                                  `Real.Label` Real.Piece
+                                    Real.Choice {position, index, instanciation, bound, patternx}
                               ),
                         typex = Inferred
                       }

@@ -44,9 +44,6 @@ instance Unify.Zonk (Definition2 source mark) where
       typex <- Unify.zonk zonker typex
       pure $ Shared shared typex
 
-instance Unify.Generalizable (Definition2 source mark) where
-  collect collector body = Unify.collect collector (typex body)
-
 typex :: Definition2 source mark s scope -> Unify.Type s scope
 typex = \case
   Definition _ typex -> typex

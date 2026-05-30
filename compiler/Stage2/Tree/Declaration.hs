@@ -13,6 +13,7 @@ import Stage2.Layout (Group, Normal)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Check, Resolve)
+import Stage2.Tree.Combinators.Implicit (Implicit)
 import Stage2.Tree.Combinators.Inferred (Inferred (..))
 import qualified Stage2.Tree.Definition2 as Definition2
 import Stage2.Tree.Definition3 (Definition3)
@@ -97,7 +98,7 @@ group link index' group = \case
 
 ungroup ::
   (Term.Link locality -> Term0.Index scope) ->
-  (Term.Link locality -> Definition4.Set locality Check scope) ->
+  (Term.Link locality -> Implicit (Definition4.Set locality Check) Check scope) ->
   Declaration locality Group Check scope ->
   Declaration locality Normal Check scope
 ungroup index lookup Declaration {position, name, definition, typex} =

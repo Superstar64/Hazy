@@ -33,6 +33,8 @@ import Stage2.Scope (Global)
 import qualified Stage2.Scope as Scope
 import Stage2.Stage (Check, Resolve)
 import {-# SOURCE #-} qualified Stage2.Temporary.Complete.Module as Complete
+import Stage2.Tree.Combinators.Implicit (Implicit)
+import qualified Stage2.Tree.Combinators.Implicit as Implicit
 import Stage2.Tree.Declaration (Declaration (Declaration))
 import qualified Stage2.Tree.Declaration as Declaration
 import Stage2.Tree.Declarations (Declarations (..))
@@ -119,7 +121,7 @@ connect modules = Vector.imap go modules
         | Module {declarations = Declarations {terms}} <- modules Vector.! global,
           Declaration {definition} <- terms Vector.! local ->
             case definition of
-              Definition4.Inferred Definition4.::: definition ->
+              Definition4.Inferred Definition4.::: Implicit.Resolve definition ->
                 Just definition
               Definition4.Annotated {} Definition4.::: _ -> Nothing
     indexType :: Type.Link Locality.Global -> Maybe (TypeDefinition Resolve Scope.Global)
@@ -146,7 +148,7 @@ seperate modules = go <$> modules
               lookupType
               declarations
         }
-    lookupTerm :: Term.Link Locality.Global -> Definition4.Set Locality.Global Check Global
+    lookupTerm :: Term.Link Locality.Global -> Implicit (Definition4.Set Locality.Global Check) Check Global
     lookupTerm = \case
       Term.Global global local
         | Module {declarations = Declarations {terms}} <- modules Vector.! global,

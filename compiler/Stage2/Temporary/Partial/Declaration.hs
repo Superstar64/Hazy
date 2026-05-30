@@ -139,9 +139,11 @@ resolve'
                   name = Unnamed temporary,
                   definition =
                     Real.Inferred
-                      Real.::: Real.Unnamed temporary
-                      Real.::@ Real.Resolve
-                        (Real.Shared $ RightHandSide.resolve context rightHandSide),
+                      Real.::: Real.Resolve
+                        ( Real.Unnamed temporary
+                            `Real.Label` Real.Shared
+                              (RightHandSide.resolve context rightHandSide)
+                        ),
                   typex = Inferred
                 }
           }

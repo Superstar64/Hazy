@@ -52,7 +52,6 @@ instance Substitute.Functor Declaration where
       }
 
 simplify ::
-  forall locality scope.
   Stage3.Declaration locality Normal Check scope ->
   Declaration scope
 simplify = \case
@@ -65,13 +64,16 @@ simplify = \case
         { name,
           definition =
             case definition of
-              _ Stage3.::: _ Stage3.::@ Check definition ->
-                SchemeOver.map go definition,
+              _ Stage3.::: Check definition ->
+                SchemeOver.map (SchemeOver.Map definition3) definition,
           typex = case typex of Solved typex -> typex
         }
   where
-    go :: SchemeOver.Map (Stage3.Definition2 source mark Normal Check) Expression
-    go = SchemeOver.Map $ \case
+    definition3 :: Stage3.Definition3 mark Normal Check scope -> Expression scope
+    definition3 (Stage3.Label _ definition) = definition2 definition
+
+    definition2 :: Stage3.Definition2 source mark Normal Check scope -> Expression scope
+    definition2 = \case
       Stage3.Definition definition -> Expression.simplify definition
       Stage3.Piece Stage3.Choice {index, instanciation = Solved instanciation, patternx, bound} ->
         Expression.Join

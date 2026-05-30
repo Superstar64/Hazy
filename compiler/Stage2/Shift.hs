@@ -12,7 +12,9 @@ where
 import qualified Data.Map as Map
 import qualified Data.Strict.Maybe as Strict
 import Data.Void (Void)
+import {-# SOURCE #-} qualified Stage2.Index.Term as Term
 import {-# SOURCE #-} qualified Stage2.Index.Term0 as Term0
+import {-# SOURCE #-} qualified Stage2.Index.Type as Type
 import {-# SOURCE #-} qualified Stage2.Index.Type0 as Type0
 import {-# SOURCE #-} Stage2.Index.Type2 as Type2 (Index)
 import Stage2.Scope (Environment ((:+)))
@@ -35,10 +37,10 @@ data Category scope scope' where
     (Type0.Index scope -> Strict.Maybe Int) ->
     Category scope (Scope.GroupType ':+ scope)
   UngroupTerm ::
-    (Int -> Term0.Index scope) ->
+    (Int -> Term.Index scope) ->
     Category (Scope.GroupTerm ':+ scope) scope
   UngroupType ::
-    (Int -> Type0.Index scope) ->
+    (Int -> Type.Index scope) ->
     Category (Scope.GroupType ':+ scope) scope
 
 infixr 9 :.

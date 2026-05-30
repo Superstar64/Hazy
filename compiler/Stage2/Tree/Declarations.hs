@@ -36,6 +36,8 @@ import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Check, Resolve)
 import {-# SOURCE #-} qualified Stage2.Temporary.Complete.Declarations as Complete
+import Stage2.Tree.Combinators.Implicit (Implicit)
+import qualified Stage2.Tree.Combinators.Implicit as Implicit
 import Stage2.Tree.Declaration (Declaration (..))
 import qualified Stage2.Tree.Declaration as Declaration
 import Stage2.Tree.Definition2 (Inferred)
@@ -139,7 +141,7 @@ group
 ungroup ::
   (Term.Link locality -> Term0.Index scope) ->
   (Type.Link locality -> Type0.Index scope) ->
-  (Term.Link locality -> Definition4.Set locality Check scope) ->
+  (Term.Link locality -> Implicit (Definition4.Set locality Check) Check scope) ->
   (Type.Link locality -> TypeDefinition2.Set locality Check scope) ->
   Declarations locality Group Check scope ->
   Declarations locality Normal Check scope
@@ -195,7 +197,7 @@ connect declarations@Declarations {terms, types} =
     indexTerm = \case
       Term.Declaration index
         | Declaration {definition} <- terms Vector.! index -> case definition of
-            Definition4.Inferred Definition4.::: definition ->
+            Definition4.Inferred Definition4.::: Implicit.Resolve definition ->
               Just definition
             Definition4.Annotated {} Definition4.::: _ -> Nothing
     indexType ::
@@ -215,7 +217,7 @@ seperate ::
 seperate declarations@Declarations {terms, types} =
   ungroup Term.unlocal Type.unlocal lookupTerm lookupType declarations
   where
-    lookupTerm :: Term.Link Local -> Definition4.Set Local Check (Scope.Declaration ':+ scope)
+    lookupTerm :: Term.Link Local -> Implicit (Definition4.Set Local Check) Check (Scope.Declaration ':+ scope)
     lookupTerm = \case
       Term.Declaration index
         | Declaration {definition} <- terms Vector.! index,
