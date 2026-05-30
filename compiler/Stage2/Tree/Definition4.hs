@@ -32,9 +32,7 @@ data Definition4 locality layout stage scope where
     !(Definition3 mark layout stage scope) ->
     Definition4 locality layout stage scope
   Link :: !(Term.Link locality) -> !Int -> Definition4 locality Group stage scope
-  Group ::
-    !(Strict.Vector (Element locality stage (Scope.GroupTerm ':+ scope))) ->
-    Definition4 locality Group stage scope
+  Group :: !(Set locality stage scope) -> Definition4 locality Group stage scope
 
 infixr 5 :::
 
@@ -57,13 +55,13 @@ instance Shift.Functor (Definition4 locality layout stage) where
   map category = \case
     annotation ::: definition -> Shift.map category annotation ::: Shift.map category definition
     Link link id -> Link link id
-    Group set -> Group (Shift.map (Shift.Over category) <$> set)
+    Group set -> Group (Shift.map category set)
 
 instance FreeTermVariables (Definition4 locality layout) where
   freeTermVariables target = \case
     _ ::: definition -> freeTermVariables target definition
     Link {} -> []
-    Group set -> foldMap (freeTermVariables (FreeVariables.Over target)) set
+    Group set -> freeTermVariables target set
 
 data Annotation mark layout stage scope where
   Annotated :: !(Scheme Position stage scope) -> Annotation Mark.Annotated layout stage scope
@@ -82,8 +80,21 @@ instance Show (Annotation mark scope layout stage) where
     Annotated scheme -> showParen (d > 10) $ showString "Annotated " . showsPrec 11 scheme
     Inferred -> showString "Inferred"
 
+newtype Set locality stage scope
+  = Set (Strict.Vector (Element locality stage scope))
+  deriving (Show)
+
+instance Shift (Set locality stage) where
+  shift = shiftDefault
+
+instance Shift.Functor (Set locality stage) where
+  map category (Set set) = Set (Shift.map category <$> set)
+
+instance FreeTermVariables (Set locality) where
+  freeTermVariables target (Set set) = foldMap (freeTermVariables target) set
+
 data Element locality stage scope = Element
-  { element :: !(Definition3 Inferred Group stage scope),
+  { element :: !(Definition3 Inferred Group stage (Scope.GroupTerm ':+ scope)),
     link :: !(Term.Link locality)
   }
   deriving (Show)
@@ -94,13 +105,13 @@ instance Shift (Element locality stage) where
 instance Shift.Functor (Element locality stage) where
   map category Element {element, link} =
     Element
-      { element = Shift.map category element,
+      { element = Shift.map (Shift.Over category) element,
         link
       }
 
 instance FreeTermVariables (Element locality) where
   freeTermVariables target Element {element} =
-    freeTermVariables target element
+    freeTermVariables (FreeVariables.Over target) element
 
 locality :: Definition4 locality Normal stage scope -> Definition4 locality' Normal stage scope
 locality = \case
@@ -115,7 +126,7 @@ group ::
 group _ _ _ (Annotated annotation ::: definition) = Annotated annotation ::: connect definition
 group link index group (Inferred ::: _) = case group of
   StronglyConnected.Group {set} ->
-    Group $ Strict.Vector.fromList $ map go $ Set.toList set
+    Group $ Set $ Strict.Vector.fromList $ map go $ Set.toList set
     where
       go link =
         Element
@@ -127,7 +138,7 @@ group link index group (Inferred ::: _) = case group of
 
 ungroup ::
   (Term.Link locality -> Term0.Index scope) ->
-  (Term.Link locality -> Strict.Vector (Element locality Check (Scope.GroupTerm ':+ scope))) ->
+  (Term.Link locality -> Set locality Check scope) ->
   Definition4 locality Group Check scope ->
   Definition4 locality Normal Check scope
 ungroup _ _ (Annotated annotation ::: definition) = Annotated annotation ::: Connect.seperate definition
@@ -135,7 +146,7 @@ ungroup index lookup definition = case definition of
   Link index id -> Inferred ::: go id (lookup index)
   (Group set) -> Inferred ::: go 0 set
   where
-    go id set = Connect.seperate $ Shift.map (Shift.UngroupTerm original) element
+    go id (Set set) = Connect.seperate $ Shift.map (Shift.UngroupTerm original) element
       where
         original id | Element {link} <- set Strict.Vector.! id = index link
         Element {element} = set Strict.Vector.! id

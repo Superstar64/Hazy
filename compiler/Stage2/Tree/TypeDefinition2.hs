@@ -29,7 +29,7 @@ data TypeDefinition2 locality layout stage scope where
     TypeDefinition2 locality layout stage scope
   Link :: !(Type.Link locality) -> !Int -> TypeDefinition2 locality Group stage scope
   Group ::
-    !(Strict.Vector (Element locality stage (Scope.GroupType ':+ scope))) ->
+    !(Set locality stage scope) ->
     TypeDefinition2 locality Group stage scope
 
 infix 5 :::
@@ -54,14 +54,14 @@ instance Shift.Functor (TypeDefinition2 locality layout stage) where
   map category = \case
     annotation ::: definition -> Shift.map category annotation ::: Shift.map category definition
     Link link id -> Link link id
-    Group set -> Group $ Shift.map (Shift.Over category) <$> set
+    Group set -> Group $ Shift.map category set
 
 instance FreeTypeVariables (TypeDefinition2 locality layout) where
   freeTypeVariables target = \case
     annotation ::: definition ->
       freeTypeVariables target annotation ++ freeTypeVariables target definition
     Link {} -> []
-    Group set -> foldMap (freeTypeVariables (FreeVariables.Over target)) set
+    Group set -> freeTypeVariables target set
 
 data Annotation layout stage scope where
   Annotated :: !(Type Position stage scope) -> Annotation layout stage scope
@@ -85,8 +85,21 @@ instance FreeTypeVariables (Annotation mark) where
     Annotated typex -> freeTypeVariables target typex
     Inferred -> []
 
+newtype Set locality stage scope
+  = Set (Strict.Vector (Element locality stage scope))
+  deriving (Show)
+
+instance Shift (Set locality stage) where
+  shift = shiftDefault
+
+instance Shift.Functor (Set locality stage) where
+  map category (Set set) = Set (Shift.map category <$> set)
+
+instance FreeTypeVariables (Set locality) where
+  freeTypeVariables target (Set set) = foldMap (freeTypeVariables target) set
+
 data Element locality stage scope = Element
-  { element :: !(TypeDefinition stage scope),
+  { element :: !(TypeDefinition stage (Scope.GroupType ':+ scope)),
     link :: !(Type.Link locality)
   }
   deriving (Show)
@@ -97,13 +110,13 @@ instance Shift (Element locality stage) where
 instance Shift.Functor (Element locality stage) where
   map category Element {element, link} =
     Element
-      { element = Shift.map category element,
+      { element = Shift.map (Shift.Over category) element,
         link
       }
 
 instance FreeTypeVariables (Element locality) where
   freeTypeVariables target Element {element} =
-    freeTypeVariables target element
+    freeTypeVariables (FreeVariables.Over target) element
 
 locality :: TypeDefinition2 locality Normal stage scope -> TypeDefinition2 locality' Normal stage scope
 locality = \case
@@ -118,7 +131,7 @@ group ::
 group _ _ _ (Annotated typex ::: definition) = Annotated typex ::: definition
 group link index group (Inferred ::: _) = case group of
   StronglyConnected.Group {set} ->
-    Group $ Strict.Vector.fromList $ map go $ Set.toList set
+    Group $ Set $ Strict.Vector.fromList $ map go $ Set.toList set
     where
       go link =
         Element
@@ -130,7 +143,7 @@ group link index group (Inferred ::: _) = case group of
 
 ungroup ::
   (Type.Link locality -> Type0.Index scope) ->
-  (Type.Link locality -> Strict.Vector (Element locality Check (Scope.GroupType ':+ scope))) ->
+  (Type.Link locality -> Set locality Check scope) ->
   TypeDefinition2 locality Group Check scope ->
   TypeDefinition2 locality Normal Check scope
 ungroup _ _ (Annotated annotation ::: definition) = Annotated annotation ::: definition
@@ -138,7 +151,7 @@ ungroup index lookup definition = case definition of
   Link index id -> Inferred ::: go id (lookup index)
   (Group set) -> Inferred ::: go 0 set
   where
-    go id set = Shift.map (Shift.UngroupType original) element
+    go id (Set set) = Shift.map (Shift.UngroupType original) element
       where
         original id | Element {link} <- set Strict.Vector.! id = index link
         Element {element} = set Strict.Vector.! id

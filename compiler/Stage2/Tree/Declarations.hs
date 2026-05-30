@@ -8,7 +8,6 @@ import Data.Map (Map)
 import Data.Maybe (fromJust, mapMaybe)
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
-import qualified Data.Vector.Strict as Strict
 import Graph.StronglyConnected (Index (..), tarjan)
 import qualified Graph.StronglyConnected as StronglyConnected
 import Stage1.Extensions (Extensions (Extensions, stableImports))
@@ -140,8 +139,8 @@ group
 ungroup ::
   (Term.Link locality -> Term0.Index scope) ->
   (Type.Link locality -> Type0.Index scope) ->
-  (Term.Link locality -> Strict.Vector (Definition4.Element locality Check (Scope.GroupTerm ':+ scope))) ->
-  (Type.Link locality -> Strict.Vector (TypeDefinition2.Element locality Check (Scope.GroupType ':+ scope))) ->
+  (Term.Link locality -> Definition4.Set locality Check scope) ->
+  (Type.Link locality -> TypeDefinition2.Set locality Check scope) ->
   Declarations locality Group Check scope ->
   Declarations locality Normal Check scope
 ungroup
@@ -216,18 +215,14 @@ seperate ::
 seperate declarations@Declarations {terms, types} =
   ungroup Term.unlocal Type.unlocal lookupTerm lookupType declarations
   where
-    lookupTerm ::
-      Term.Link Local ->
-      Strict.Vector (Definition4.Element Local Check (Scope.GroupTerm ':+ Scope.Declaration ':+ scope))
+    lookupTerm :: Term.Link Local -> Definition4.Set Local Check (Scope.Declaration ':+ scope)
     lookupTerm = \case
       Term.Declaration index
         | Declaration {definition} <- terms Vector.! index,
           Definition4.Group set <- definition ->
             set
       _ -> error "bad term lookup"
-    lookupType ::
-      Type.Link Local ->
-      Strict.Vector (TypeDefinition2.Element Local Check (Scope.GroupType ':+ Scope.Declaration ':+ scope))
+    lookupType :: Type.Link Local -> TypeDefinition2.Set Local Check (Scope.Declaration ':+ scope)
     lookupType = \case
       Type.Declaration index
         | TypeDeclaration {definition} <- types Vector.! index,

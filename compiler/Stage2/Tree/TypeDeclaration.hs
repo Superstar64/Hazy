@@ -29,7 +29,6 @@ import qualified Stage2.Label.Binding.Type as Label
 import Stage2.Layout (Group, Layout, Normal)
 import Stage2.Locality (Locality)
 import Stage2.Scope (Environment (..))
-import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Check, Resolve, Stage)
@@ -114,7 +113,7 @@ group link index group = \case
 
 ungroup ::
   (Type.Link locality -> Type0.Index scope) ->
-  (Type.Link locality -> Strict.Vector (TypeDefinition2.Element locality Check (Scope.GroupType ':+ scope))) ->
+  (Type.Link locality -> TypeDefinition2.Set locality Check scope) ->
   TypeDeclaration locality Group Check scope ->
   TypeDeclaration locality Normal Check scope
 ungroup index lookup TypeDeclaration {position, name, constructorNames, definition, kind} =

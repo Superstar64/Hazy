@@ -11,7 +11,6 @@ where
 import Data.Maybe (fromJust)
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
-import qualified Data.Vector.Strict as Strict
 import Error (Position)
 import Graph.StronglyConnected (Index (..), tarjan)
 import qualified Stage1.Tree.Module as Stage1 (Module)
@@ -30,7 +29,7 @@ import qualified Stage2.Label.Context as Label (Context (Context))
 import qualified Stage2.Label.Context as Label.Context
 import Stage2.Layout (Group, Normal)
 import qualified Stage2.Locality as Locality
-import Stage2.Scope (Environment (..), Global)
+import Stage2.Scope (Global)
 import qualified Stage2.Scope as Scope
 import Stage2.Stage (Check, Resolve)
 import {-# SOURCE #-} qualified Stage2.Temporary.Complete.Module as Complete
@@ -147,9 +146,7 @@ seperate modules = go <$> modules
               lookupType
               declarations
         }
-    lookupTerm ::
-      Term.Link Locality.Global ->
-      Strict.Vector (Definition4.Element Locality.Global Check (Scope.GroupTerm ':+ Global))
+    lookupTerm :: Term.Link Locality.Global -> Definition4.Set Locality.Global Check Global
     lookupTerm = \case
       Term.Global global local
         | Module {declarations = Declarations {terms}} <- modules Vector.! global,
@@ -157,9 +154,7 @@ seperate modules = go <$> modules
           Definition4.Group set <- definition ->
             set
       _ -> error "bad term lookup"
-    lookupType ::
-      Type.Link Locality.Global ->
-      Strict.Vector (TypeDefinition2.Element Locality.Global Check (Scope.GroupType ':+ Global))
+    lookupType :: Type.Link Locality.Global -> TypeDefinition2.Set Locality.Global Check Global
     lookupType = \case
       Type.Global global local
         | Module {declarations = Declarations {types}} <- modules Vector.! global,

@@ -2,7 +2,6 @@
 
 module Stage2.Tree.Declaration where
 
-import qualified Data.Vector.Strict as Strict
 import qualified Graph.StronglyConnected as StronglyConnected
 import Stage1.Position (Position)
 import Stage1.Variable (QualifiedVariable ((:-)), Qualifiers, Variable)
@@ -11,8 +10,6 @@ import qualified Stage2.Index.Link.Term as Term
 import qualified Stage2.Index.Term0 as Term0
 import qualified Stage2.Label.Binding.Term as Label
 import Stage2.Layout (Group, Normal)
-import Stage2.Scope (Environment (..))
-import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Check, Resolve)
@@ -100,7 +97,7 @@ group link index' group = \case
 
 ungroup ::
   (Term.Link locality -> Term0.Index scope) ->
-  (Term.Link locality -> Strict.Vector (Definition4.Element locality Check (Scope.GroupTerm ':+ scope))) ->
+  (Term.Link locality -> Definition4.Set locality Check scope) ->
   Declaration locality Group Check scope ->
   Declaration locality Normal Check scope
 ungroup index lookup Declaration {position, name, definition, typex} =
