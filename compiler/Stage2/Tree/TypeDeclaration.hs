@@ -1,15 +1,6 @@
 {-# LANGUAGE_HAZY UnorderedRecords #-}
 
-module Stage2.Tree.TypeDeclaration
-  ( TypeDeclaration (..),
-    kind',
-    lazy,
-    labelBinding,
-    locality,
-    group,
-    ungroup,
-  )
-where
+module Stage2.Tree.TypeDeclaration where
 
 import qualified Data.Kind
 import qualified Data.Vector.Strict as Strict
@@ -22,7 +13,7 @@ import Stage1.Variable
     QualifiedConstructorIdentifier ((:=.)),
     Qualifiers,
   )
-import Stage2.FreeVariables (FreeTypeVariables (..))
+import Stage2.FreeVariables (FreeTypeVariables (..), Target (..))
 import qualified Stage2.Index.Link.Type as Type
 import qualified Stage2.Index.Type0 as Type0
 import qualified Stage2.Label.Binding.Type as Label
@@ -33,7 +24,7 @@ import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Check, Resolve, Stage)
 import Stage2.Tree.Combinators.Inferred (Inferred (..))
-import Stage2.Tree.TypeDefinition (TypeDefinition)
+import Stage2.Tree.TypeDefinition (TypeDefinition (Synonym))
 import Stage2.Tree.TypeDefinition2 (TypeDefinition2)
 import qualified Stage2.Tree.TypeDefinition2 as TypeDefinition2
 import qualified Stage4.Tree.Type as Simple (Type)
@@ -96,18 +87,19 @@ locality = \case
       }
 
 group ::
+  Qualifiers ->
   (Type0.Index scope -> Type.Link locality) ->
-  (Type.Link locality -> TypeDefinition Resolve scope) ->
+  (Type.Link locality -> Groupable scope) ->
   StronglyConnected.Component (Type.Link locality) ->
   TypeDeclaration locality Normal Resolve scope ->
   TypeDeclaration locality Group Resolve scope
-group link index group = \case
+group qualifiers link index group = \case
   TypeDeclaration {position, name, constructorNames, definition} ->
     TypeDeclaration
       { position,
         name,
         constructorNames,
-        definition = TypeDefinition2.group link index group definition,
+        definition = TypeDefinition2.group qualifiers link index group definition,
         kind = Inferred
       }
 
@@ -124,3 +116,44 @@ ungroup index lookup TypeDeclaration {position, name, constructorNames, definiti
       definition = TypeDefinition2.ungroup index lookup definition,
       kind
     }
+
+ungroupM ::
+  (Monad m) =>
+  (Type.Link locality -> Type0.Index scope) ->
+  (Type.Link locality -> m (TypeDefinition2.Set locality Check scope)) ->
+  TypeDeclaration locality Group Check scope ->
+  m (TypeDeclaration locality Normal Check scope)
+ungroupM index lookup TypeDeclaration {position, name, constructorNames, definition, kind} = do
+  definition <- TypeDefinition2.ungroupM index lookup definition
+  pure
+    TypeDeclaration
+      { position,
+        name,
+        constructorNames,
+        definition,
+        kind
+      }
+
+data Groupable scope = Groupable
+  { element :: !(TypeDefinition Resolve scope),
+    position' :: !Position,
+    name' :: !ConstructorIdentifier,
+    constructorNames' :: !(Strict.Vector Constructor)
+  }
+
+groupable :: TypeDeclaration locality Normal Resolve scope -> Maybe (Groupable scope)
+groupable TypeDeclaration {position, name, constructorNames, definition} = case definition of
+  TypeDefinition2.Inferred TypeDefinition2.::: definition ->
+    Just
+      Groupable
+        { element = definition,
+          position' = position,
+          name' = name,
+          constructorNames' = constructorNames
+        }
+  TypeDefinition2.Annotated {} TypeDefinition2.::: _ -> Nothing
+
+groupFree :: Groupable scope -> [Type0.Index scope]
+groupFree Groupable {element} = case element of
+  Synonym {} -> []
+  _ -> freeTypeVariables Target element

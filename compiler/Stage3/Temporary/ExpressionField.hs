@@ -1,7 +1,7 @@
 module Stage3.Temporary.ExpressionField where
 
 import Control.Monad.ST (ST)
-import Stage2.Layout (Normal)
+import Stage2.Layout (Group)
 import Stage2.Stage (Check, Resolve)
 import qualified Stage2.Tree.ExpressionField as Solved
 import qualified Stage2.Tree.ExpressionField as Stage2
@@ -24,7 +24,7 @@ instance Unify.Zonk Field where
 check ::
   Context s scope ->
   (Int -> Unify.Type s scope) ->
-  Stage2.Field Normal Resolve scope ->
+  Stage2.Field Group Resolve scope ->
   ST s (Field s scope)
 check context lookup Stage2.Field {index, expression} = do
   expression <- Expression.check context (lookup index) expression
@@ -34,7 +34,7 @@ check context lookup Stage2.Field {index, expression} = do
         expression
       }
 
-solve :: Field s scope -> ST s (Solved.Field Normal Check scope)
+solve :: Field s scope -> ST s (Solved.Field Group Check scope)
 solve Field {index, expression} = do
   expression <- Expression.solve expression
   pure $ Solved.Field {index, expression}

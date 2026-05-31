@@ -2,7 +2,7 @@ module Stage3.Temporary.Statements where
 
 import Control.Monad.ST (ST)
 import Stage1.Position (Position)
-import Stage2.Layout (Normal)
+import Stage2.Layout (Group)
 import Stage2.Locality (Local)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope (Declaration, Pattern)
@@ -60,7 +60,7 @@ instance Unify.Zonk Statements where
 check ::
   Context s scope ->
   Unify.Type s scope ->
-  Stage2.Statements Stage2.Guard Normal Resolve scope ->
+  Stage2.Statements Stage2.Guard Group Resolve scope ->
   ST s (Statements s scope)
 check context typex = \case
   Stage2.Done {done} -> Done <$> Expression.check context typex done
@@ -79,7 +79,7 @@ check context typex = \case
     body <- check context (shift typex) body
     pure Let {startPosition, declarations, body}
 
-solve :: Statements s scope -> ST s (Solved.Statements Solved.Guard Normal Check scope)
+solve :: Statements s scope -> ST s (Solved.Statements Solved.Guard Group Check scope)
 solve (Done expression) = do
   expression <- Expression.solve expression
   pure $ Solved.Done expression

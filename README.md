@@ -386,21 +386,6 @@ Named field pun syntax is supported.
 ## Bugs
 These are deviations that will are planned to get fixed at some point.
 
-### No binding groups
-Hazy does not generalize bindings groups. Unannotated declarations that form a
-cycle are errors.
-
-For example, this would be rejected:
-```haskell
-f a b = g a b
-g a b = f a b
-```
-However, this would be okay:
-```haskell
-f a b = a b
-g a b = f a b
-```
-
 ### Constraints must have unique typeclass variable pairs
 Constraints must not have overlapping typeclass / rigid variable pairs.
 For example, something like this is not allowed:
@@ -445,10 +430,6 @@ f' a = a + 1 -- #2
 Here, `#1` is polymorphic over an unconstrainted type variable so it gets
 properly generalized to `f :: a -> a`. However, `#2` is rejected because it
 would have the type `f' :: Num a => a -> a`.
-
-### MonoLocalBinds Only
-All local bindings are monomorphic. This is nearly equivalent to GHC's
-`MonoLocalBinds` extension.
 
 ### No Negation Operator
 Hazy does not implement a negation operator. However negative integer literals

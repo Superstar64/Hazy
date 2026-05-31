@@ -54,6 +54,8 @@ mapInstances ::
   Map.Map (Type2.Index scope') a
 mapInstances GroupType {} =
   error "group type shifts are not monotonic"
+mapInstances UngroupType {} =
+  error "group type shifts are not monotonic"
 mapInstances category = Map.mapKeysMonotonic (map category)
 
 shiftDefault :: (Functor f) => f scopes -> f (scope ':+ scopes)

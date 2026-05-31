@@ -2,7 +2,7 @@ module Stage3.Temporary.Body where
 
 import Control.Monad.ST (ST)
 import qualified Data.Strict.Vector1 as Strict
-import Stage2.Layout (Normal)
+import Stage2.Layout (Group)
 import Stage2.Stage (Check, Resolve)
 import qualified Stage2.Tree.Body as Solved
 import qualified Stage2.Tree.Body as Stage2 (Body (..))
@@ -24,12 +24,12 @@ instance Unify.Zonk Body where
       statements <- traverse (Unify.zonk zonker) statements
       pure $ Guards statements
 
-check :: Context s scope -> Unify.Type s scope -> Stage2.Body Normal Resolve scope -> ST s (Body s scope)
+check :: Context s scope -> Unify.Type s scope -> Stage2.Body Group Resolve scope -> ST s (Body s scope)
 check context typex = \case
   Stage2.Body expression1 -> Body <$> Expression.check context typex expression1
   Stage2.Guards statements -> Guards <$> traverse (Statements.check context typex) statements
 
-solve :: Body s scope -> ST s (Solved.Body Normal Check scope)
+solve :: Body s scope -> ST s (Solved.Body Group Check scope)
 solve (Body expression) = do
   expression <- Expression.solve expression
   pure (Solved.Body expression)

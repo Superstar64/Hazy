@@ -6,14 +6,21 @@ import Data.Map (Map)
 import qualified Data.Map as Map
 import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import qualified Data.Vector.Strict as Strict (Vector)
+import Error (improperBindingGroup)
+import Stage1.Position (Position)
+import qualified Stage2.Connect as Connect
+import qualified Stage2.Index.Link.Type as Type
+import qualified Stage2.Index.Type0 as Type0
 import qualified Stage2.Index.Type2 as Type2
 import qualified Stage2.Label.Binding.Type as Label
-import Stage2.Layout (Normal)
-import Stage2.Scope (Environment (..), Local)
+import Stage2.Layout (Group)
+import Stage2.Scope (Environment (..), GroupType, Local)
 import Stage2.Shift (Category (Shift), Shift (..), shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Check)
+import Stage2.Tree.TypeDeclaration (ungroupM)
 import {-# SOURCE #-} Stage2.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
+import qualified Stage2.Tree.TypeDefinition2 as TypeDefinition2
 import {-# SOURCE #-} Stage3.Check.InstanceAnnotation (InstanceAnnotation)
 import {-# SOURCE #-} qualified Stage3.Check.InstanceAnnotation as InstanceAnnotation
 import {-# SOURCE #-} Stage3.Check.KindAnnotation (KindAnnotation)
@@ -68,21 +75,25 @@ instance Shift (TypeBinding s) where
       category = Shift
 
 rigid ::
+  (Type.Link locality -> Type0.Index scope) ->
+  (Type.Link locality -> ST s (TypeDefinition2.Set locality Check scope)) ->
   Functor.Annotated
     Label.TypeBinding
     (ST s (KindAnnotation scope))
-    (ST s (TypeDeclaration locality Normal Check scope)) ->
-  ST s (TypeDeclarationExtra Normal Check scope) ->
+    (ST s (TypeDeclaration locality Group Check scope)) ->
+  ST s (TypeDeclarationExtra Group Check scope) ->
   Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) b) ->
   Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) d) ->
   TypeBinding s scope
-rigid = bindingImpl (Unify.Delay . pure . SimpleExtra.simplify)
+rigid = bindingImpl (Unify.Delay . pure . SimpleExtra.simplify . Connect.seperate)
 
 wobbly ::
+  (Type.Link locality -> Type0.Index scope) ->
+  (Type.Link locality -> ST s (TypeDefinition2.Set locality Check scope)) ->
   Functor.Annotated
     Label.TypeBinding
     (ST s (KindAnnotation scope))
-    (ST s (TypeDeclaration locality Normal Check scope)) ->
+    (ST s (TypeDeclaration locality Group Check scope)) ->
   ST s (Temporary.TypeDeclarationExtra s scope) ->
   Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) b) ->
   Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) d) ->
@@ -91,10 +102,39 @@ wobbly = bindingImpl (Unify.Delay . go)
   where
     go extra = do
       extra <- Temporary.solve extra
-      pure $ SimpleExtra.simplify extra
+      pure $ SimpleExtra.simplify $ Connect.seperate extra
 
+group :: Position -> Label.TypeBinding scope -> Unify.Type s scopes -> TypeBinding s (GroupType ':+ scopes)
+group position Label.TypeBinding {name, constructorNames} binding =
+  TypeBinding
+    { label = Label.TypeBinding {name, constructorNames},
+      kind = pure $ Wobbly $ shift binding,
+      content = abort,
+      extra = abort,
+      synonym = pure Strict.Nothing,
+      dataInstances = abort,
+      classInstances = abort
+    }
+  where
+    abort :: a
+    abort = improperBindingGroup position
+
+bindingImpl ::
+  (a -> Unify.Delay Simple.TypeDeclarationExtra s scope) ->
+  (Type.Link locality -> Type0.Index scope) ->
+  (Type.Link locality -> ST s (TypeDefinition2.Set locality Check scope)) ->
+  Functor.Annotated
+    Label.TypeBinding
+    (ST s (KindAnnotation scope))
+    (ST s (TypeDeclaration locality Group Check scope)) ->
+  ST s a ->
+  Map (Type2.Index scope) (Functor.Annotated label1 (ST s (InstanceAnnotation scope)) b1) ->
+  Map (Type2.Index scope) (Functor.Annotated label2 (ST s (InstanceAnnotation scope)) b2) ->
+  TypeBinding s scope
 bindingImpl
   simpleExtra
+  index
+  lookup
   Functor.Annotated
     { label,
       meta,
@@ -107,7 +147,10 @@ bindingImpl
       { label,
         kind,
         synonym,
-        content = Simple.simplify <$> content,
+        content = do
+          definition <- content
+          definition <- ungroupM index lookup definition
+          pure $ Simple.simplify definition,
         extra = simpleExtra <$> extra,
         dataInstances = Map.map (fmap (Instance . InstanceAnnotation.prerequisites'_) . Functor.meta) dataInstances,
         classInstances = Map.map (fmap (Instance . InstanceAnnotation.prerequisites'_) . Functor.meta) classInstances

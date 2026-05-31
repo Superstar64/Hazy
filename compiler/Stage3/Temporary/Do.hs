@@ -3,7 +3,7 @@ module Stage3.Temporary.Do where
 import Control.Monad.ST (ST)
 import Stage1.Position (Position)
 import qualified Stage2.Index.Type2 as Type2
-import Stage2.Layout (Normal)
+import Stage2.Layout (Group)
 import Stage2.Locality (Local)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
@@ -68,7 +68,7 @@ instance Unify.Zonk Do where
 check ::
   Context s scope ->
   Unify.Type s scope ->
-  Stage2.Statements Stage2.Do Normal Resolve scope ->
+  Stage2.Statements Stage2.Do Group Resolve scope ->
   ST s (Do s scope)
 check context typex = \case
   Stage2.Done {done} -> do
@@ -102,7 +102,7 @@ check context typex = \case
     body <- check context (shift typex) body
     pure Let {startPosition, declarations, body}
 
-solve :: Do s scope -> ST s (Solved.Statements Solved.Do Normal Check scope)
+solve :: Do s scope -> ST s (Solved.Statements Solved.Do Group Check scope)
 solve = \case
   Done {done} -> do
     done <- Expression.solve done

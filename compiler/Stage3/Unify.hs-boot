@@ -25,6 +25,7 @@ import qualified Stage2.Index.Type as Type
 import qualified Stage2.Index.Type2 as Type2
 import Stage2.Scope (Environment ((:+)))
 import qualified Stage2.Scope as Scope
+import Stage2.Shift (Shift)
 import {-# SOURCE #-} Stage3.Check.Context (Context)
 import qualified Stage3.Index.Evidence as Evidence
 import {-# SOURCE #-} Stage3.Unify.Class
@@ -38,6 +39,9 @@ newtype Scheme s scope = Scheme
   { runScheme :: SchemeOver Type s scope
   }
 
+instance Shift (Scheme s)
+
+monoScheme :: Type s scope -> Scheme s scope
 variable :: Local.Index scope -> Type s scope
 constructor :: Type2.Index scope -> Type s scope
 call :: Type s scope -> Type s scope -> Type s scope

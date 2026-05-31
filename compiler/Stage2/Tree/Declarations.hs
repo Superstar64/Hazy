@@ -14,8 +14,9 @@ import Stage1.Extensions (Extensions (Extensions, stableImports))
 import Stage1.Position (Position)
 import qualified Stage1.Tree.Declaration as Stage1 (toImport)
 import qualified Stage1.Tree.Declarations as Stage1 (Declarations (..))
+import Stage1.Variable (Qualifiers (Local))
 import qualified Stage2.Connect as Connect
-import Stage2.FreeVariables (FreeTermVariables (..), FreeTypeVariables (..), Target (..))
+import Stage2.FreeVariables (FreeTermVariables (..))
 import {-# SOURCE #-} qualified Stage2.Group.Functor.Term.Declarations as Functor.Term
 import {-# SOURCE #-} qualified Stage2.Group.Functor.Type.Declarations as Functor.Type
 import qualified Stage2.Index.Link.Term as Term
@@ -37,17 +38,13 @@ import qualified Stage2.Shift as Shift
 import Stage2.Stage (Check, Resolve)
 import {-# SOURCE #-} qualified Stage2.Temporary.Complete.Declarations as Complete
 import Stage2.Tree.Combinators.Implicit (Implicit)
-import qualified Stage2.Tree.Combinators.Implicit as Implicit
 import Stage2.Tree.Declaration (Declaration (..))
 import qualified Stage2.Tree.Declaration as Declaration
-import Stage2.Tree.Definition2 (Inferred)
-import Stage2.Tree.Definition3 (Definition3 (..))
 import qualified Stage2.Tree.Definition4 as Definition4
 import Stage2.Tree.Instance (Instance)
 import Stage2.Tree.TypeDeclaration (TypeDeclaration (..))
 import qualified Stage2.Tree.TypeDeclaration as TypeDeclaration
 import Stage2.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
-import Stage2.Tree.TypeDefinition (TypeDefinition)
 import qualified Stage2.Tree.TypeDefinition2 as TypeDefinition2
 
 data Declarations locality layout stage scope = Declarations
@@ -108,15 +105,17 @@ resolve initial@Context {canonical, extensions} Stage1.Declarations {declaration
     complete = runIdentity $ Complete.resolve context extensions Index.Term.Declaration (toList declarations)
 
 group ::
+  Qualifiers ->
   (Term0.Index scope -> Term.Link locality) ->
   (Type0.Index scope -> Type.Link locality) ->
-  (Term.Link locality -> Definition3 Inferred Normal Resolve scope) ->
-  (Type.Link locality -> TypeDefinition Resolve scope) ->
+  (Term.Link locality -> Declaration.Groupable scope) ->
+  (Type.Link locality -> TypeDeclaration.Groupable scope) ->
   Functor.Term.Declarations (StronglyConnected.Component (Term.Link locality)) ->
   Functor.Type.Declarations (StronglyConnected.Component (Type.Link locality)) ->
   Declarations locality Normal Resolve scope ->
   Declarations locality Group Resolve scope
 group
+  qualifiers
   linkTerm
   linkType
   indexTerm
@@ -132,7 +131,7 @@ group
     } =
     Declarations
       { terms = Vector.zipWith (Declaration.group linkTerm indexTerm) functorTerms terms,
-        types = Vector.zipWith (TypeDeclaration.group linkType indexType) functorTypes types,
+        types = Vector.zipWith (TypeDeclaration.group qualifiers linkType indexType) functorTypes types,
         typeExtras = Connect.connect <$> typeExtras,
         dataInstances = fmap Connect.connect <$> dataInstances,
         classInstances = fmap Connect.connect <$> classInstances
@@ -170,7 +169,7 @@ connect ::
   Declarations Local Normal Resolve (Scope.Declaration ':+ scope) ->
   Declarations Local Group Resolve (Scope.Declaration ':+ scope)
 connect declarations@Declarations {terms, types} =
-  group Term.local Type.local indexTerm' indexType' termGroups typeGroups declarations
+  group Local Term.local Type.local indexTerm' indexType' termGroups typeGroups declarations
   where
     termIndexes = Functor.Term.indexes Term.Declaration declarations
     typeIndexes = Functor.Type.indexes Type.Declaration declarations
@@ -186,29 +185,13 @@ connect declarations@Declarations {terms, types} =
         (map Type.local . freeType . indexType)
         typeIndexes
 
-    freeTerm = foldMap (freeTermVariables Target)
-    freeType = foldMap (freeTypeVariables Target)
+    freeTerm = foldMap Declaration.groupFree
+    freeType = foldMap TypeDeclaration.groupFree
 
     indexTerm' = fromJust . indexTerm
     indexType' = fromJust . indexType
-    indexTerm ::
-      Term.Link Local ->
-      Maybe (Definition3 Inferred Normal Resolve (Scope.Declaration ':+ scope))
-    indexTerm = \case
-      Term.Declaration index
-        | Declaration {definition} <- terms Vector.! index -> case definition of
-            Definition4.Inferred Definition4.::: Implicit.Resolve definition ->
-              Just definition
-            Definition4.Annotated {} Definition4.::: _ -> Nothing
-    indexType ::
-      Type.Link Local ->
-      Maybe (TypeDefinition Resolve (Scope.Declaration ':+ scope))
-    indexType = \case
-      Type.Declaration index
-        | TypeDeclaration {definition} <- types Vector.! index -> case definition of
-            TypeDefinition2.Inferred TypeDefinition2.::: definition ->
-              Just definition
-            TypeDefinition2.Annotated {} TypeDefinition2.::: _ -> Nothing
+    indexTerm (Term.Declaration index) = Declaration.groupable (terms Vector.! index)
+    indexType (Type.Declaration index) = TypeDeclaration.groupable (types Vector.! index)
 
 seperate ::
   forall scope.

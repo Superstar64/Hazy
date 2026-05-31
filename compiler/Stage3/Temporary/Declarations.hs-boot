@@ -4,8 +4,9 @@ module Stage3.Temporary.Declarations where
 
 import Control.Monad.ST (ST)
 import Data.Kind (Type)
-import Stage2.Layout (Normal)
+import Stage2.Layout (Group)
 import Stage2.Locality (Locality)
+import qualified Stage2.Locality as Locality
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Stage (Check, Resolve)
@@ -23,10 +24,10 @@ instance Unify.Zonk (Declarations locality)
 
 check ::
   Context s scope ->
-  Stage2.Declarations locality Normal Resolve (Scope.Declaration ':+ scope) ->
+  Stage2.Declarations Locality.Local Group Resolve (Scope.Declaration ':+ scope) ->
   ST
     s
     ( Context s (Scope.Declaration ':+ scope),
-      Declarations locality s (Scope.Declaration ':+ scope)
+      Declarations Locality.Local s (Scope.Declaration ':+ scope)
     )
-solve :: Declarations locality s scope -> ST s (Solved.Declarations locality Normal Check scope)
+solve :: Declarations locality s scope -> ST s (Solved.Declarations locality Group Check scope)

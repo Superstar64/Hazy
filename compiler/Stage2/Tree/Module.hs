@@ -5,6 +5,7 @@ module Stage2.Tree.Module
     labelContext,
     resolve,
     connect,
+    seperate,
   )
 where
 
@@ -15,7 +16,6 @@ import Error (Position)
 import Graph.StronglyConnected (Index (..), tarjan)
 import qualified Stage1.Tree.Module as Stage1 (Module)
 import Stage1.Variable (FullQualifiers, toQualifiers)
-import Stage2.FreeVariables (FreeTypeVariables (..), Target (..), freeTermVariables)
 import qualified Stage2.Group.Functor.Term.Declarations as Functor.Term (indexes)
 import qualified Stage2.Group.Functor.Term.ModuleSet as Functor.Term (ModuleSet (..), (!))
 import qualified Stage2.Group.Functor.Type.Declarations as Functor.Type (indexes)
@@ -34,17 +34,13 @@ import qualified Stage2.Scope as Scope
 import Stage2.Stage (Check, Resolve)
 import {-# SOURCE #-} qualified Stage2.Temporary.Complete.Module as Complete
 import Stage2.Tree.Combinators.Implicit (Implicit)
-import qualified Stage2.Tree.Combinators.Implicit as Implicit
 import Stage2.Tree.Declaration (Declaration (Declaration))
 import qualified Stage2.Tree.Declaration as Declaration
 import Stage2.Tree.Declarations (Declarations (..))
 import qualified Stage2.Tree.Declarations as Declarations
-import Stage2.Tree.Definition2 (Inferred)
-import Stage2.Tree.Definition3 (Definition3)
 import qualified Stage2.Tree.Definition4 as Definition4
 import Stage2.Tree.TypeDeclaration (TypeDeclaration (..))
 import qualified Stage2.Tree.TypeDeclaration as TypeDeclaration
-import Stage2.Tree.TypeDefinition (TypeDefinition)
 import qualified Stage2.Tree.TypeDefinition2 as TypeDefinition2
 import Verbose (Debug)
 
@@ -78,6 +74,7 @@ connect modules = Vector.imap go modules
         { name,
           declarations =
             Declarations.group
+              (toQualifiers name)
               Term.global
               Type.global
               indexTerm'
@@ -100,8 +97,8 @@ connect modules = Vector.imap go modules
         (map Type.global . freeType . indexType)
         typeIndexes
 
-    freeTerm = foldMap (freeTermVariables Target)
-    freeType = foldMap (freeTypeVariables Target)
+    freeTerm = foldMap Declaration.groupFree
+    freeType = foldMap TypeDeclaration.groupFree
 
     termIndexes = Functor.Term.ModuleSet $ Vector.generate (length modules) termIndex
     termIndex index =
@@ -115,24 +112,15 @@ connect modules = Vector.imap go modules
         (declarations $ modules Vector.! index)
     indexTerm' = fromJust . indexTerm
     indexType' = fromJust . indexType
-    indexTerm :: Term.Link Locality.Global -> Maybe (Definition3 Inferred Normal Resolve Scope.Global)
-    indexTerm = \case
-      Term.Global global local
-        | Module {declarations = Declarations {terms}} <- modules Vector.! global,
-          Declaration {definition} <- terms Vector.! local ->
-            case definition of
-              Definition4.Inferred Definition4.::: Implicit.Resolve definition ->
-                Just definition
-              Definition4.Annotated {} Definition4.::: _ -> Nothing
-    indexType :: Type.Link Locality.Global -> Maybe (TypeDefinition Resolve Scope.Global)
-    indexType = \case
-      Type.Global global local
-        | Module {declarations = Declarations {types}} <- modules Vector.! global,
-          TypeDeclaration {definition} <- types Vector.! local ->
-            case definition of
-              TypeDefinition2.Inferred TypeDefinition2.::: definition ->
-                Just definition
-              TypeDefinition2.Annotated {} TypeDefinition2.::: _ -> Nothing
+    indexTerm :: Term.Link Locality.Global -> Maybe (Declaration.Groupable Scope.Global)
+    indexTerm
+      (Term.Global global local)
+        | Module {declarations = Declarations {terms}} <- modules Vector.! global =
+            Declaration.groupable (terms Vector.! local)
+    indexType :: Type.Link Locality.Global -> Maybe (TypeDeclaration.Groupable Scope.Global)
+    indexType (Type.Global global local)
+      | Module {declarations = Declarations {types}} <- modules Vector.! global =
+          TypeDeclaration.groupable (types Vector.! local)
 
 seperate :: Vector (Module Group Check) -> Vector (Module Normal Check)
 seperate modules = go <$> modules

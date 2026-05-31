@@ -6,7 +6,7 @@ import qualified Data.Vector.Strict as Strict.Vector
 import Stage1.Position (Position)
 import qualified Stage2.Index.Type as Type
 import qualified Stage2.Index.Type2 as Type2
-import Stage2.Layout (Normal)
+import Stage2.Layout (Group, Normal)
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Stage (Check, Resolve)
 import Stage2.Tree.Combinators.Inferred (Inferred (..))
@@ -53,7 +53,7 @@ check ::
   Context s scope ->
   Type.Index scope ->
   TypeDeclaration locality Normal Check scope ->
-  Stage2.TypeDeclarationExtra Normal Resolve scope ->
+  Stage2.TypeDeclarationExtra Group Resolve scope ->
   ST s (TypeDeclarationExtra s scope)
 check context classx declaration
   | definition <- TypeDeclaration.definition declaration = \case
@@ -79,7 +79,7 @@ check context classx declaration
           pure Class {position, methods}
         _ -> error "bad proper"
 
-solve :: TypeDeclarationExtra s scope -> ST s (Solved.TypeDeclarationExtra Normal Check scope)
+solve :: TypeDeclarationExtra s scope -> ST s (Solved.TypeDeclarationExtra Group Check scope)
 solve = \case
   ADT {position} -> pure Solved.ADT {position}
   Class {position, methods} -> do

@@ -77,7 +77,7 @@ check context@Context {termEnvironment} typex Stage2.Variable {variablePosition,
   let TermBinding binding = termEnvironment Term.! variable
   binding >>= \case
     Wobbly scheme -> do
-      (typex', instanciation) <- Unify.instanciate context variablePosition (Unify.monoScheme scheme)
+      (typex', instanciation) <- Unify.instanciate context variablePosition scheme
       Unify.unify context variablePosition typex typex'
       pure Variable {variablePosition, variable, instanciation}
     Rigid scheme -> do

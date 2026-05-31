@@ -2,7 +2,7 @@ module Stage3.Temporary.MethodConcrete where
 
 import Control.Monad.ST (ST)
 import Stage1.Position (Position)
-import Stage2.Layout (Normal)
+import Stage2.Layout (Group)
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Stage (Check)
 import Stage2.Tree.Combinators.Implicit (Implicit (..))
@@ -36,7 +36,7 @@ instance Unify.Zonk MethodConcrete where
       defaultx <- Unify.zonk zonker defaultx
       pure Default {base, self, defaultx}
 
-solve :: MethodConcrete s scope -> ST s (Solved.MethodConcrete Normal Check scope)
+solve :: MethodConcrete s scope -> ST s (Solved.MethodConcrete Group Check scope)
 solve = \case
   Definition {position, definition} -> do
     definition <- Unify.solveSchemeOver (Unify.Solve $ const Definition.solve) position definition

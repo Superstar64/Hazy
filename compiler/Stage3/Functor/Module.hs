@@ -4,7 +4,7 @@ import Data.Heptafoldable (Heptafoldable (..))
 import Data.Heptafunctor (Heptafunctor (heptamap))
 import Data.Heptatraversable (Heptatraversable (..), heptafoldMapDefault, heptamapDefault)
 import Stage1.Variable (FullQualifiers ((:..)), Qualifiers ((:.)))
-import Stage2.Layout (Normal)
+import Stage2.Layout (Group)
 import qualified Stage2.Locality as Locality
 import Stage2.Scope (Global)
 import Stage2.Stage (Resolve)
@@ -49,15 +49,15 @@ mapWithKey f1 f2 f3 f4 f5 f6 f7 Module {name, declarations} =
     }
 
 fromStage2 ::
-  Stage2.Module Normal Resolve ->
+  Stage2.Module Group Resolve ->
   Module
-    (Stage2.Declaration Locality.Global Normal Resolve Global)
-    (Stage2.Declaration Locality.Global Normal Resolve Global)
-    (Stage2.TypeDeclaration Locality.Global Normal Resolve Global)
-    (Stage2.TypeDeclaration Locality.Global Normal Resolve Global)
-    (Stage2.TypeDeclarationExtra Normal Resolve Global)
-    (Stage2.Instance Normal Resolve Global)
-    (Stage2.Instance Normal Resolve Global)
+    (Stage2.Declaration Locality.Global Group Resolve Global)
+    (Stage2.Declaration Locality.Global Group Resolve Global)
+    (Stage2.TypeDeclaration Locality.Global Group Resolve Global)
+    (Stage2.TypeDeclaration Locality.Global Group Resolve Global)
+    (Stage2.TypeDeclarationExtra Group Resolve Global)
+    (Stage2.Instance Group Resolve Global)
+    (Stage2.Instance Group Resolve Global)
 fromStage2 Stage2.Module {name = name@(path :.. base), declarations}
   | let root = path :. base =
       Module

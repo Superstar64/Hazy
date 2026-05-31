@@ -1,5 +1,6 @@
 module Stage2.Tree.TypeDefinition2 where
 
+import Data.Functor.Identity (Identity (..))
 import qualified Data.Kind
 import qualified Data.Set as Set
 import qualified Data.Strict.Maybe as Strict.Maybe
@@ -7,10 +8,12 @@ import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
 import qualified Graph.StronglyConnected as StronglyConnected
 import Stage1.Position (Position)
+import Stage1.Variable (QualifiedConstructor (..), QualifiedConstructorIdentifier (..), Qualifiers)
 import Stage2.FreeVariables (FreeTypeVariables (..))
 import qualified Stage2.FreeVariables as FreeVariables
 import qualified Stage2.Index.Link.Type as Type
 import qualified Stage2.Index.Type0 as Type0
+import qualified Stage2.Label.Binding.Type as Label
 import Stage2.Layout (Group, Layout, Normal)
 import Stage2.Locality (Locality)
 import Stage2.Scope (Environment (..))
@@ -18,8 +21,11 @@ import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Check, Resolve, Stage)
+import qualified Stage2.Tree.Combinators.Inferred as Combinators
 import Stage2.Tree.Type (Type)
+import {-# SOURCE #-} Stage2.Tree.TypeDeclaration (Groupable (..))
 import Stage2.Tree.TypeDefinition (TypeDefinition)
+import qualified Stage4.Tree.Type as Simple
 
 type TypeDefinition2 :: Locality -> Layout -> Stage -> Environment -> Data.Kind.Type
 data TypeDefinition2 locality layout stage scope where
@@ -100,6 +106,10 @@ instance FreeTypeVariables (Set locality) where
 
 data Element locality stage scope = Element
   { element :: !(TypeDefinition stage (Scope.GroupType ':+ scope)),
+    typex :: !(Combinators.Inferred Simple.Type stage scope),
+    position :: !Position,
+    name :: !QualifiedConstructorIdentifier,
+    constructorNames :: !(Strict.Vector QualifiedConstructor),
     link :: !(Type.Link locality)
   }
   deriving (Show)
@@ -108,9 +118,13 @@ instance Shift (Element locality stage) where
   shift = shiftDefault
 
 instance Shift.Functor (Element locality stage) where
-  map category Element {element, link} =
+  map category Element {element, typex, position, name, constructorNames, link} =
     Element
       { element = Shift.map (Shift.Over category) element,
+        typex = Shift.map category typex,
+        position,
+        name,
+        constructorNames,
         link
       }
 
@@ -122,22 +136,35 @@ locality :: TypeDefinition2 locality Normal stage scope -> TypeDefinition2 local
 locality = \case
   annotation ::: definition -> annotation ::: definition
 
+label :: Element locality stage scope1 -> Label.TypeBinding scope2
+label Element {name, constructorNames} =
+  Label.TypeBinding
+    { name,
+      constructorNames
+    }
+
 group ::
+  Qualifiers ->
   (Type0.Index scope -> Type.Link locality) ->
-  (Type.Link locality -> TypeDefinition Resolve scope) ->
+  (Type.Link locality -> Groupable scope) ->
   StronglyConnected.Component (Type.Link locality) ->
   TypeDefinition2 locality Normal Resolve scope ->
   TypeDefinition2 locality Group Resolve scope
-group _ _ _ (Annotated typex ::: definition) = Annotated typex ::: definition
-group link index group (Inferred ::: _) = case group of
+group _ _ _ _ (Annotated typex ::: definition) = Annotated typex ::: definition
+group qualifiers link index group (Inferred ::: _) = case group of
   StronglyConnected.Group {set} ->
     Group $ Set $ Strict.Vector.fromList $ map go $ Set.toList set
     where
-      go link =
-        Element
-          { element = Shift.map (Shift.GroupType lookup) $ index link,
-            link
-          }
+      go link = case index link of
+        Groupable {element, position', name', constructorNames'} ->
+          Element
+            { element = Shift.map (Shift.GroupType lookup) element,
+              typex = Combinators.Inferred,
+              position = position',
+              name = qualifiers :=. name',
+              constructorNames = (qualifiers :=) <$> constructorNames',
+              link
+            }
       lookup index = Strict.Maybe.fromLazy $ Set.lookupIndex (link index) set
   StronglyConnected.Link {link, id} -> Link link id
 
@@ -146,10 +173,20 @@ ungroup ::
   (Type.Link locality -> Set locality Check scope) ->
   TypeDefinition2 locality Group Check scope ->
   TypeDefinition2 locality Normal Check scope
-ungroup _ _ (Annotated annotation ::: definition) = Annotated annotation ::: definition
-ungroup index lookup definition = case definition of
-  Link index id -> Inferred ::: go id (lookup index)
-  (Group set) -> Inferred ::: go 0 set
+ungroup index lookup definition = runIdentity $ ungroupM index (Identity . lookup) definition
+
+ungroupM ::
+  (Monad m) =>
+  (Type.Link locality -> Type0.Index scope) ->
+  (Type.Link locality -> m (Set locality Check scope)) ->
+  TypeDefinition2 locality Group Check scope ->
+  m (TypeDefinition2 locality Normal Check scope)
+ungroupM _ _ (Annotated annotation ::: definition) = pure $ Annotated annotation ::: definition
+ungroupM index lookup definition = case definition of
+  Link index id -> do
+    set <- lookup index
+    pure $ Inferred ::: go id set
+  (Group set) -> pure $ Inferred ::: go 0 set
   where
     go id (Set set) = Shift.map (Shift.UngroupType original) element
       where

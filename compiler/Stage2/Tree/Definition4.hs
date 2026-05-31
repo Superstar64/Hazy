@@ -22,12 +22,15 @@ import qualified Stage2.Shift as Shift
 import Stage2.Stage (Check, Resolve, Stage)
 import Stage2.Tree.Combinators.Implicit (Implicit)
 import qualified Stage2.Tree.Combinators.Implicit as Implicit
+import qualified Stage2.Tree.Combinators.Inferred as Combinators
+import {-# SOURCE #-} Stage2.Tree.Declaration (Groupable (..))
 import Stage2.Tree.Definition2 (Inferred)
 import qualified Stage2.Tree.Definition2 as Mark
 import Stage2.Tree.Definition3 (Definition3)
 import Stage2.Tree.Scheme (Scheme)
 import Stage4.Tree.SchemeOver (SchemeOver (..))
 import qualified Stage4.Tree.SchemeOver as SchemeOver
+import qualified Stage4.Tree.Type as Simple
 
 type Definition4 :: Locality -> Layout -> Stage -> Environment -> Type
 data Definition4 locality layout stage scope where
@@ -102,6 +105,7 @@ instance FreeTermVariables (Set locality) where
 
 data Element locality stage scope = Element
   { element :: !(Definition3 Inferred Group stage (Scope.GroupTerm ':+ scope)),
+    typex :: !(Combinators.Inferred Simple.Type stage scope),
     link :: !(Term.Link locality)
   }
   deriving (Show)
@@ -110,9 +114,10 @@ instance Shift (Element locality stage) where
   shift = shiftDefault
 
 instance Shift.Functor (Element locality stage) where
-  map category Element {element, link} =
+  map category Element {element, typex, link} =
     Element
       { element = Shift.map (Shift.Over category) element,
+        typex = Shift.map category typex,
         link
       }
 
@@ -126,7 +131,7 @@ locality = \case
 
 group ::
   (Term0.Index scope -> Term.Link locality) ->
-  (Term.Link locality -> Definition3 Inferred Normal Resolve scope) ->
+  (Term.Link locality -> Groupable scope) ->
   StronglyConnected.Component (Term.Link locality) ->
   Definition4 locality Normal Resolve scope ->
   Definition4 locality Group Resolve scope
@@ -136,11 +141,13 @@ group link index group (Inferred ::: _) = case group of
   StronglyConnected.Group {set} ->
     Group $ Implicit.Resolve $ Set $ Strict.Vector.fromList $ map go $ Set.toList set
     where
-      go link =
-        Element
-          { element = Shift.map (Shift.GroupTerm lookup) $ connect $ index link,
-            link
-          }
+      go link = case index link of
+        Groupable {element} ->
+          Element
+            { element = Shift.map (Shift.GroupTerm lookup) $ connect element,
+              typex = Combinators.Inferred,
+              link
+            }
       lookup index = Strict.Maybe.fromLazy $ Set.lookupIndex (link index) set
   StronglyConnected.Link {link, id} -> Link link id
 

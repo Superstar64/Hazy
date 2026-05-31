@@ -11,7 +11,7 @@ import qualified Stage2.Index.Local as Local
 import qualified Stage2.Index.Table.Type as Table.Type
 import qualified Stage2.Index.Type as Type
 import qualified Stage2.Index.Type2 as Type2
-import Stage2.Layout (Normal)
+import Stage2.Layout (Group)
 import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (shift)
 import qualified Stage2.Shift as Shift
@@ -93,7 +93,7 @@ check ::
   Context s scope ->
   Key scope ->
   InstanceAnnotation scope ->
-  Stage2.Instance Normal Resolve scope ->
+  Stage2.Instance Group Resolve scope ->
   ST s (Instance s scope)
 check
   context@Context {typeEnvironment}
@@ -186,7 +186,7 @@ check
         members <- izipWithM check methods (shift <$> members)
         pure Instance {startPosition, classPosition, parameters, prerequisites, evidence, members}
 
-solve :: Instance s scope -> ST s (Solved.Instance Normal Check scope)
+solve :: Instance s scope -> ST s (Solved.Instance Group Check scope)
 solve Instance {startPosition, classPosition, parameters, prerequisites, evidence, members} = do
   members <- traverse MethodConcrete.solve members
   pure

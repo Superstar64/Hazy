@@ -87,6 +87,7 @@ module Error
     invalidNewtype,
     maskError,
     orphanInstance,
+    improperBindingGroup,
     unsupportedFeatureRunST,
     unsupportedFeatureRecordUpdate,
     unsupportedFeatureListComprehension,
@@ -288,6 +289,7 @@ data Type
   | InvalidNewtype
   | Mismask
   | OrphanInstance
+  | ImproperBindingGroup
   | UnsupportedFeature
   deriving (Show, Eq, Enum, Bounded)
 
@@ -551,6 +553,9 @@ maskError position typex = errorAt Mismask position $ mconcat builders
 
 orphanInstance :: Position -> a
 orphanInstance position = errorAt OrphanInstance position $ fromString "Orphan instance"
+
+improperBindingGroup :: Position -> a
+improperBindingGroup position = errorAt ImproperBindingGroup position $ fromString "improper binding group"
 
 listComprehension = fromString "list comprehension"
 

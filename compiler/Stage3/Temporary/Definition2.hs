@@ -5,7 +5,7 @@ import Stage1.Position (Position)
 import qualified Stage2.Index.Table.Term as Term ((!))
 import Stage2.Index.Term (Bound)
 import qualified Stage2.Index.Term as Term (Index)
-import Stage2.Layout (Normal)
+import Stage2.Layout (Group)
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (shift)
 import Stage2.Stage (Check, Resolve)
@@ -25,30 +25,21 @@ import qualified Stage3.Temporary.RightHandSide as RightHandSide
 import qualified Stage3.Unify as Unify
 
 data Definition2 source mark s scope where
-  Definition :: !(Definition s scope) -> !(Unify.Type s scope) -> Definition2 Single mark s scope
-  Piece :: !(Choice s scope) -> !(Unify.Type s scope) -> Definition2 Single mark s scope
-  Shared :: !(RightHandSide s scope) -> !(Unify.Type s scope) -> Definition2 Share Inferred s scope
+  Definition :: !(Definition s scope) -> Definition2 Single mark s scope
+  Piece :: !(Choice s scope) -> Definition2 Single mark s scope
+  Shared :: !(RightHandSide s scope) -> Definition2 Share Inferred s scope
 
 instance Unify.Zonk (Definition2 source mark) where
   zonk zonker = \case
-    Definition definition typex -> do
+    Definition definition -> do
       definition <- Unify.zonk zonker definition
-      typex <- Unify.zonk zonker typex
-      pure $ Definition definition typex
-    Piece choice typex -> do
+      pure $ Definition definition
+    Piece choice -> do
       choice <- Unify.zonk zonker choice
-      typex <- Unify.zonk zonker typex
-      pure $ Piece choice typex
-    Shared shared typex -> do
+      pure $ Piece choice
+    Shared shared -> do
       shared <- Unify.zonk zonker shared
-      typex <- Unify.zonk zonker typex
-      pure $ Shared shared typex
-
-typex :: Definition2 source mark s scope -> Unify.Type s scope
-typex = \case
-  Definition _ typex -> typex
-  Piece _ typex -> typex
-  Shared _ typex -> typex
+      pure $ Shared shared
 
 data Choice s scope = Choice
   { index :: !(Term.Index scope),
@@ -66,58 +57,58 @@ instance Unify.Zonk Choice where
 checkManual ::
   Context s (Local ':+ scopes) ->
   Unify.Type s (Local ':+ scopes) ->
-  Stage2.Definition2 source Annotated Normal Resolve scopes ->
+  Stage2.Definition2 source Annotated Group Resolve scopes ->
   ST s (Definition2 source Annotated s (Local ':+ scopes))
 checkManual context typex (Stage2.Definition definition) = do
   definition <- Definition.check context typex (shift definition)
-  pure $ Definition definition typex
+  pure $ Definition definition
 checkManual context typex (Stage2.Scoped definition) = do
   definition <- Definition.check context typex definition
-  pure $ Definition definition typex
+  pure $ Definition definition
 checkManual context@Context {termEnvironment} typex declaration = case declaration of
   Stage2.Piece Stage2.Choice {position, index, patternx, bound} -> do
     let TermBinding binding = termEnvironment Term.! shift index
     (full, instanciation) <-
       binding >>= \case
-        Wobbly typex -> Unify.instanciate context position (Unify.monoScheme typex)
+        Wobbly typex -> Unify.instanciate context position typex
         Rigid scheme -> instanciate context position scheme
     patternx <- Pattern.check context full (shift patternx)
     let typex' = patternx Pattern.! bound
     Unify.unify context position typex typex'
-    pure $ Piece Choice {index = shift index, instanciation, patternx, bound} typex
+    pure $ Piece Choice {index = shift index, instanciation, patternx, bound}
 
 checkAuto ::
   Context s scopes ->
   Unify.Type s scopes ->
-  Stage2.Definition2 source Inferred Normal Resolve scopes ->
+  Stage2.Definition2 source Inferred Group Resolve scopes ->
   ST s (Definition2 source Inferred s scopes)
 checkAuto context typex (Stage2.Definition definition) = do
   definition <- Definition.check context typex definition
-  pure $ Definition definition typex
+  pure $ Definition definition
 checkAuto context typex (Stage2.Shared definition) = do
   definition <- RightHandSide.check context typex definition
-  pure $ Shared definition typex
+  pure $ Shared definition
 checkAuto context@Context {termEnvironment} typex declaration = case declaration of
   Stage2.Piece Stage2.Choice {position, index, patternx, bound} -> do
     let TermBinding binding = termEnvironment Term.! index
     (full, instanciation) <-
       binding >>= \case
-        Wobbly typex -> Unify.instanciate context position (Unify.monoScheme typex)
+        Wobbly typex -> Unify.instanciate context position typex
         Rigid scheme -> instanciate context position scheme
     patternx <- Pattern.check context full patternx
     let typex' = patternx Pattern.! bound
     Unify.unify context position typex typex'
-    pure $ Piece Choice {index, instanciation, patternx, bound} typex
+    pure $ Piece Choice {index, instanciation, patternx, bound}
 
 solve ::
   Position ->
   Definition2 source mark s scope ->
-  ST s (Solved.Definition2 source mark Normal Check scope)
+  ST s (Solved.Definition2 source mark Group Check scope)
 solve position = \case
-  Definition definition _ -> do
+  Definition definition -> do
     definition <- Definition.solve definition
     pure $ Solved.Definition definition
-  Piece Choice {index, instanciation, patternx, bound} _ -> do
+  Piece Choice {index, instanciation, patternx, bound} -> do
     instanciation <- Unify.solveInstanciation position instanciation
     patternx <- Pattern.solve patternx
     pure $
@@ -129,6 +120,6 @@ solve position = \case
             patternx,
             bound
           }
-  Shared shared _ -> do
+  Shared shared -> do
     shared <- RightHandSide.solve shared
     pure $ Solved.Shared shared

@@ -5,7 +5,7 @@ module Stage2.Tree.Declaration where
 import qualified Graph.StronglyConnected as StronglyConnected
 import Stage1.Position (Position)
 import Stage1.Variable (QualifiedVariable ((:-)), Qualifiers, Variable)
-import Stage2.FreeVariables (FreeTermVariables (..))
+import Stage2.FreeVariables (FreeTermVariables (..), Target (Target))
 import qualified Stage2.Index.Link.Term as Term
 import qualified Stage2.Index.Term0 as Term0
 import qualified Stage2.Label.Binding.Term as Label
@@ -14,6 +14,7 @@ import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Check, Resolve)
 import Stage2.Tree.Combinators.Implicit (Implicit)
+import qualified Stage2.Tree.Combinators.Implicit as Implicit
 import Stage2.Tree.Combinators.Inferred (Inferred (..))
 import qualified Stage2.Tree.Definition2 as Definition2
 import Stage2.Tree.Definition3 (Definition3)
@@ -83,7 +84,7 @@ locality = \case
 
 group ::
   (Term0.Index scope -> Term.Link locality) ->
-  (Term.Link locality -> Definition3 Definition2.Inferred Normal Resolve scope) ->
+  (Term.Link locality -> Groupable scope) ->
   StronglyConnected.Component (Term.Link locality) ->
   Declaration locality Normal Resolve scope ->
   Declaration locality Group Resolve scope
@@ -108,3 +109,17 @@ ungroup index lookup Declaration {position, name, definition, typex} =
       definition = Definition4.ungroup index lookup definition,
       typex
     }
+
+newtype Groupable scope
+  = Groupable
+  { element :: Definition3 Definition2.Inferred Normal Resolve scope
+  }
+
+groupable :: Declaration locality Normal Resolve scope -> Maybe (Groupable scope)
+groupable Declaration {definition} = case definition of
+  Definition4.Inferred Definition4.::: Implicit.Resolve definition ->
+    Just Groupable {element = definition}
+  Definition4.Annotated {} Definition4.::: _ -> Nothing
+
+groupFree :: Groupable scope -> [Term0.Index scope]
+groupFree Groupable {element} = freeTermVariables Target element

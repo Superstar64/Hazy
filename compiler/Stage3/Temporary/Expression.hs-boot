@@ -4,7 +4,7 @@ module Stage3.Temporary.Expression where
 
 import Control.Monad.ST (ST)
 import Data.Kind (Type)
-import Stage2.Layout (Normal)
+import Stage2.Layout (Group)
 import Stage2.Scope (Environment)
 import Stage2.Stage (Check, Resolve)
 import qualified Stage2.Tree.Expression as Solved
@@ -22,6 +22,6 @@ instance Unify.Zonk Expression
 check ::
   Context s scope ->
   Unify.Type s scope ->
-  Stage2.Expression Normal Resolve scope ->
+  Stage2.Expression Group Resolve scope ->
   ST s (Expression s scope)
-solve :: Expression s scope -> ST s (Solved.Expression Normal Check scope)
+solve :: Expression s scope -> ST s (Solved.Expression Group Check scope)

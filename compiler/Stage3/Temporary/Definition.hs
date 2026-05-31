@@ -1,7 +1,7 @@
 module Stage3.Temporary.Definition where
 
 import Control.Monad.ST (ST)
-import Stage2.Layout (Normal)
+import Stage2.Layout (Group)
 import Stage2.Stage (Check, Resolve)
 import qualified Stage2.Tree.Definition as Solved
 import qualified Stage2.Tree.Definition as Stage2 (Definition (..))
@@ -24,13 +24,13 @@ instance Unify.Zonk Definition where
       function <- Unify.zonk zonker function
       pure $ Definition function
 
-check :: Context s scope -> Unify.Type s scope -> Stage2.Definition Normal Resolve scope -> ST s (Definition s scope)
+check :: Context s scope -> Unify.Type s scope -> Stage2.Definition Group Resolve scope -> ST s (Definition s scope)
 check context typex = \case
   Stage2.Alternative function1 definitions ->
     Alternative <$> Function.check context typex function1 <*> check context typex definitions
   Stage2.Definition function1 -> Definition <$> Function.check context typex function1
 
-solve :: Definition s scope -> ST s (Solved.Definition Normal Check scope)
+solve :: Definition s scope -> ST s (Solved.Definition Group Check scope)
 solve (Alternative function definition) = do
   function <- Function.solve function
   definition <- solve definition

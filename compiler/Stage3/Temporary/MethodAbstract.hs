@@ -2,7 +2,7 @@ module Stage3.Temporary.MethodAbstract where
 
 import Control.Monad.ST (ST)
 import Stage1.Position (Position)
-import Stage2.Layout (Normal)
+import Stage2.Layout (Group)
 import Stage2.Scope (Environment (..), Local)
 import Stage2.Shift (shift)
 import Stage2.Stage (Check, Resolve)
@@ -33,7 +33,7 @@ check ::
   Context s scope ->
   Position ->
   Method Check scope ->
-  Stage2.MethodAbstract Normal Resolve scope ->
+  Stage2.MethodAbstract Group Resolve scope ->
   ST s (MethodAbstract s scope)
 check _ _ _ Stage2.Abstract = pure Abstract
 check context position Method {annotation} (Stage2.DefaultResolve definition)
@@ -42,7 +42,7 @@ check context position Method {annotation} (Stage2.DefaultResolve definition)
       definition <- Definition.check context (Simple.Type.lift result) (shift definition)
       pure $ DefaultCheck definition
 
-solve :: MethodAbstract s scope -> ST s (Solved.MethodAbstract Normal Check scope)
+solve :: MethodAbstract s scope -> ST s (Solved.MethodAbstract Group Check scope)
 solve = \case
   Abstract -> pure Solved.Abstract
   DefaultCheck definition -> do

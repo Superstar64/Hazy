@@ -3,7 +3,7 @@ module Stage3.Check.InstanceAnnotation where
 import Control.Monad.ST (ST)
 import qualified Data.Vector.Strict as Strict (Vector)
 import Stage1.Position (Position)
-import Stage2.Layout (Normal)
+import Stage2.Layout (Group)
 import Stage2.Stage (Check, Resolve)
 import qualified Stage2.Tree.Constraint as Solved (Constraint)
 import qualified Stage2.Tree.Instance as Stage2 (Instance (..))
@@ -29,7 +29,7 @@ prerequisites'_ = prerequisites'
 
 check ::
   Context s scope ->
-  Stage2.Instance Normal Resolve scope ->
+  Stage2.Instance Group Resolve scope ->
   ST s (InstanceAnnotation scope)
 check context Stage2.Instance {parameters, prerequisites} = do
   let fresh Stage2.TypePattern {name, position} = do

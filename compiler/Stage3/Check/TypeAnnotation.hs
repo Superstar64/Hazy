@@ -4,7 +4,7 @@ module Stage3.Check.TypeAnnotation where
 
 import Control.Monad.ST (ST)
 import Stage1.Position (Position)
-import Stage2.Layout (Normal)
+import Stage2.Layout (Group)
 import Stage2.Stage (Check, Resolve)
 import qualified Stage2.Tree.Declaration as Stage2 (Declaration (..))
 import qualified Stage2.Tree.Definition4 as Stage2 (Annotation (..), Definition4 (..))
@@ -12,7 +12,6 @@ import qualified Stage2.Tree.Scheme as Stage2 (Scheme (..))
 import {-# SOURCE #-} Stage3.Check.Context (Context)
 import {-# SOURCE #-} qualified Stage3.Temporary.Scheme as Scheme (check, solve)
 import {-# SOURCE #-} Stage3.Tree.Scheme (Scheme)
-import {-# SOURCE #-} qualified Stage3.Unify as Unify
 import {-# SOURCE #-} qualified Stage4.Tree.Scheme as Simple
 
 data Annotation scope = Annotation
@@ -20,13 +19,9 @@ data Annotation scope = Annotation
     annotation' :: !(Simple.Scheme scope)
   }
 
-data GlobalTypeAnnotation scope
-  = GlobalAnnotation !(Annotation scope)
-  | GlobalInferred
-
-data LocalTypeAnnotation s scope
-  = LocalAnnotation !(Annotation scope)
-  | LocalInferred !(Unify.Type s scope)
+data TypeAnnotation scope
+  = Annotated !(Annotation scope)
+  | Inferred
 
 checkAnnotation :: Context s scope -> Stage2.Scheme Position Resolve scope -> ST s (Annotation scope)
 checkAnnotation context annotation = do
@@ -35,14 +30,7 @@ checkAnnotation context annotation = do
   let annotation' = Simple.simplify annotation
   pure $ Annotation {annotation, annotation'}
 
-checkGlobal :: Context s scope -> Stage2.Declaration locality Normal Resolve scope -> ST s (GlobalTypeAnnotation scope)
-checkGlobal context Stage2.Declaration {definition} = case definition of
-  Stage2.Annotated annotation Stage2.::: _ -> GlobalAnnotation <$> checkAnnotation context annotation
-  Stage2.Inferred {} Stage2.::: _ -> pure GlobalInferred
-
-checkLocal :: Context s scope -> Stage2.Declaration locality Normal Resolve scope -> ST s (LocalTypeAnnotation s scope)
-checkLocal context Stage2.Declaration {definition} = case definition of
-  Stage2.Annotated annotation Stage2.::: _ -> LocalAnnotation <$> checkAnnotation context annotation
-  Stage2.Inferred {} Stage2.::: _ -> do
-    typex <- Unify.fresh Unify.typex
-    pure $ LocalInferred typex
+check :: Context s scope -> Stage2.Declaration locality Group Resolve scope -> ST s (TypeAnnotation scope)
+check context Stage2.Declaration {definition} = case definition of
+  Stage2.Annotated annotation Stage2.::: _ -> Annotated <$> checkAnnotation context annotation
+  _ -> pure Inferred

@@ -373,6 +373,7 @@ executable hazy
     Stage3.Temporary.Type
     Stage3.Temporary.TypeDeclarationExtra
     Stage3.Temporary.TypeDefinition
+    Stage3.Temporary.TypeDefinition2
     Stage3.Temporary.TypePattern
     Stage3.Tree.ConstructorInfo
     Stage3.Tree.Declarations

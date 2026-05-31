@@ -1,7 +1,7 @@
 module Stage3.Temporary.Alternative where
 
 import Control.Monad.ST (ST)
-import Stage2.Layout (Normal)
+import Stage2.Layout (Group)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope (Pattern)
 import Stage2.Shift (shift)
@@ -32,14 +32,14 @@ check ::
   Context s scope ->
   Unify.Type s scope ->
   Unify.Type s scope ->
-  Stage2.Alternative Normal Resolve scope ->
+  Stage2.Alternative Group Resolve scope ->
   ST s (Alternative s scope)
 check context typex binder Stage2.Alternative {parameter, rightHandSide} = do
   parameter <- Pattern.check context binder parameter
   rightHandSide <- RightHandSide.check (Pattern.augment parameter context) (shift typex) rightHandSide
   pure Alternative {parameter, rightHandSide}
 
-solve :: Alternative s scope -> ST s (Solved.Alternative Normal Check scope)
+solve :: Alternative s scope -> ST s (Solved.Alternative Group Check scope)
 solve Alternative {parameter, rightHandSide} = do
   parameter <- Pattern.solve parameter
   rightHandSide <- RightHandSide.solve rightHandSide

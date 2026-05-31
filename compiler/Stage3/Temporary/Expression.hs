@@ -17,7 +17,7 @@ import Stage1.Position (Position)
 import qualified Stage2.Index.Constructor as Constructor
 import qualified Stage2.Index.Table.Type as Type
 import qualified Stage2.Index.Type2 as Type2
-import Stage2.Layout (Normal)
+import Stage2.Layout (Group)
 import Stage2.Locality (Local)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
@@ -214,7 +214,7 @@ instance Unify.Zonk Expression where
       right <- Unify.zonk zonker right
       pure RightSection {operatorPosition, left, right}
 
-check :: Context s scope -> Unify.Type s scope -> Stage2.Expression Normal Resolve scope -> ST s (Expression s scope)
+check :: Context s scope -> Unify.Type s scope -> Stage2.Expression Group Resolve scope -> ST s (Expression s scope)
 check context typex Stage2.CallHead {callHead} = do
   callHead <- CallHead.check context typex callHead
   pure CallHead {callHead}
@@ -329,7 +329,7 @@ check context typex Stage2.Annotation {expression = Explicit expression, operato
 check _ _ Stage2.RunST {startPosition} =
   unsupportedFeatureRunST startPosition
 
-solve :: Expression s scope -> ST s (Solved.Expression Normal Check scope)
+solve :: Expression s scope -> ST s (Solved.Expression Group Check scope)
 solve = \case
   CallHead {callHead} -> do
     callHead <- CallHead.solve callHead

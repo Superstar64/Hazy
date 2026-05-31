@@ -207,7 +207,7 @@ augment patternx Context {termEnvironment, localEnvironment, typeEnvironment} =
 augmentPattern :: Pattern s scopes -> Term.Bound (TermBinding s) (scope ':+ scopes)
 augmentPattern patternx = Term.Bound {at, select}
   where
-    at = TermBinding $ pure $ Wobbly (shift (typex patternx))
+    at = TermBinding $ pure $ Wobbly (shift (Unify.monoScheme $ typex patternx))
     select = case patternx of
       Wildcard {} -> Strict.Vector.empty
       List {items} -> Strict.Vector.map augmentPattern $ Strict.Vector1.toVector items
