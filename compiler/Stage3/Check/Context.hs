@@ -89,7 +89,7 @@ globalBindings (Functor.ModuleSet modules) =
           Functor.Annotated {content} <- types Vector.! local -> do
             Stage2.TypeDeclaration {definition} <- content
             case definition of
-              Stage2.Group set -> pure set
+              _ Stage2.:::: set -> pure set
               _ -> error "bad definition lookup"
 
 localBindings ::
@@ -120,7 +120,7 @@ localBindings
           | Functor.Annotated {content} <- types Vector.! local -> do
               Stage2.TypeDeclaration {definition} <- content
               case definition of
-                Stage2.Group set -> pure set
+                _ Stage2.:::: set -> pure set
                 _ -> error "bad definition lookup"
 
 groupTermBindings ::

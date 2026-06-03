@@ -12,7 +12,7 @@ import Stage2.Stage (Check, Resolve)
 import Stage2.Tree.Combinators.Inferred (Inferred (Solved))
 import Stage2.Tree.TypeDeclaration (TypeDeclaration (..), kind', lazy)
 import Stage2.Tree.TypeDefinition (Alias (..), Inject (..), TypeDefinition (..), assumeInject)
-import Stage2.Tree.TypeDefinition2 (Annotation (..), Element (..), Set (..), TypeDefinition2 (..))
+import Stage2.Tree.TypeDefinition2 (Annotation (..), Element (..), Set (..), TypeDefinition2 (..), Types (..))
 import qualified Stage2.Tree.TypeDefinition2 as TypeDefinition2
 import Stage3.Check.Context (Context (..), groupTypeBindings)
 import qualified Stage3.Check.KindAnnotation as KindAnnotation
@@ -67,7 +67,7 @@ check context linked annotation TypeDeclaration {position, name, constructorName
                 kind = Solved kind
               }
       | otherwise -> error "bad annotation"
-    Group (Set set) -> do
+    _ :::: Set set -> do
       fresh <- Vector.replicateM (length set) (Unify.fresh Unify.kind)
       let context' =
             groupTypeBindings
@@ -83,13 +83,14 @@ check context linked annotation TypeDeclaration {position, name, constructorName
               element <- TypeDefinition.check context' (shift typex) element
               pure $ Temporary.Element {element, typex, position, name, constructorNames, link}
       set <- traverse (Temporary.solveElement context') set
-      kind <- Unify.solve position (Vector.head fresh)
+      kinds <- traverse (Unify.solve position) fresh
+      let kind = Vector.head kinds
       pure
         TypeDeclaration
           { position,
             name,
             constructorNames,
-            definition = Group $ Set set,
+            definition = Solved (Types $ Strict.Vector.fromLazy kinds) :::: Set set,
             kind = Solved kind
           }
     Link link id -> do

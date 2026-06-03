@@ -15,6 +15,7 @@ import Stage2.Tree.Combinators.Inferred (Inferred (Solved))
 import Stage2.Tree.Declaration (Key)
 import qualified Stage2.Tree.Declaration as Solved (Declaration (..))
 import qualified Stage2.Tree.Declaration as Stage2 (Declaration (..))
+import qualified Stage2.Tree.Definition4 as Solved (Set (..))
 import qualified Stage2.Tree.Definition4 as Stage2
   ( Annotation (..),
     Definition4 (..),
@@ -30,7 +31,7 @@ import qualified Stage3.Simple.Constraint as Simple.Constraint (lift)
 import qualified Stage3.Simple.Scheme as Simple.Scheme
 import Stage3.Simple.Type (lift)
 import qualified Stage3.Temporary.Definition3 as Definition3
-import Stage3.Temporary.Definition4 (Definition4 (..), Element (Element), Set (..))
+import Stage3.Temporary.Definition4 (Definition4 (..), Element (Element), Types (..), solveElement)
 import qualified Stage3.Temporary.Definition4 as Definition4
 import qualified Stage3.Tree.Scheme as Solved.Scheme
 import qualified Stage3.Unify as Unify
@@ -46,19 +47,6 @@ data Declaration locality s scope
   }
 
 typex' = typex
-
-instance Unify.Zonk (Declaration locality) where
-  zonk zonker = \case
-    Declaration {position, name, definition, typex} -> do
-      definition <- Unify.zonk zonker definition
-      typex <- Unify.zonk zonker typex
-      pure
-        Declaration
-          { position,
-            name,
-            definition,
-            typex
-          }
 
 check ::
   Context s scope ->
@@ -79,22 +67,26 @@ check context linked annotation Stage2.Declaration {position, name, definition} 
               typex = Simple.Scheme.lift annotation'
             }
     | otherwise -> error "bad type annotation"
-  Stage2.Group (Implicit.Resolve (Stage2.Set set)) -> do
-    set <- Unify.generalizeOver context $ Unify.Generalize $ \context -> do
+  _ Stage2.:::: Implicit.Resolve (Stage2.Set set) -> do
+    types Unify.::: set <- Unify.generalizeBody position context $ Unify.Generalize $ \context -> do
       fresh <- Vector.replicateM (length set) $ Unify.fresh Unify.typex
       set <- flip Strict.Vector.imapM set $ \index Stage2.Element {element, link} -> do
         let element' = Shift.map (Shift.Over Shift) element
             typex = fresh Vector.! index
         element <- Definition3.checkAuto (groupTermBindings fresh context) (shift typex) element'
-        pure Element {element, typex, link}
-      pure $ Set set
-    let initial = Unify.MapScheme $ \(Set set) -> Definition4.typex (Strict.Vector.head set)
+        pure Element {element, link}
+      let types = Types (Strict.Vector.fromLazy fresh)
+          solved = Unify.Delay $ do
+            set <- traverse (solveElement position) set
+            pure $ Solved.Set set
+      pure $ types Unify.::: solved
+    let initial = Unify.MapScheme $ \(Types types) -> Strict.Vector.head types
     pure
       Declaration
         { position,
           name,
-          definition = Group set,
-          typex = Unify.Scheme $ Unify.mapScheme initial set
+          definition = types Definition4.:::: set,
+          typex = Unify.Scheme $ Unify.mapScheme initial types
         }
   Stage2.Link link id -> do
     typex <- linked link id

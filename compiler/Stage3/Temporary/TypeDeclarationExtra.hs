@@ -22,8 +22,6 @@ import Stage3.Temporary.MethodAbstract (MethodAbstract)
 import qualified Stage3.Temporary.MethodAbstract as MethodAbstract
 import Stage3.Tree.TypeDeclaration (TypeDeclaration (..))
 import qualified Stage3.Tree.TypeDeclaration as TypeDeclaration
-import Stage3.Unify (Zonk (..))
-import qualified Stage3.Unify as Unify
 import qualified Stage4.Tree.Constraint as Simple (Constraint (..))
 import qualified Stage4.Tree.Constraint as Simple.Constraint
 
@@ -35,19 +33,6 @@ data TypeDeclarationExtra s scope
       }
   | Synonym {position :: !Position}
   | GADT {position :: !Position}
-
-instance Zonk TypeDeclarationExtra where
-  zonk zonker = \case
-    ADT {position} -> pure ADT {position}
-    Class {position, methods} -> do
-      methods <- traverse (Unify.zonk zonker) methods
-      pure
-        Class
-          { position,
-            methods
-          }
-    Synonym {position} -> pure Synonym {position}
-    GADT {position} -> pure GADT {position}
 
 check ::
   Context s scope ->

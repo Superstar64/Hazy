@@ -43,7 +43,8 @@ module Stage3.Unify
     Zonker,
     Generalizable (..),
     Generalize (..),
-    generalizeOver,
+    Body ((:::)),
+    generalizeBody,
     generalize,
     solve,
     solveEvidence,
@@ -61,7 +62,6 @@ module Stage3.Unify
 where
 
 import Control.Monad.ST (ST)
-import qualified Data.Kind
 import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
 import Stage1.Position (Position)
@@ -88,7 +88,17 @@ import Stage3.Unify.Evidence (Evidence)
 import qualified Stage3.Unify.Evidence as Evidence (Evidence (..), solve)
 import Stage3.Unify.Instanciation (Instanciation (..))
 import qualified Stage3.Unify.Instanciation as Instanciation
-import Stage3.Unify.SchemeOver (Generalize (..), SchemeOver (..), Solve (..), generalizeOver, instanciateOver)
+import Stage3.Unify.SchemeOver
+  ( Body ((:::)),
+    Generalize (..),
+    MapScheme (..),
+    SchemeOver (..),
+    Solve (..),
+    generalizeBody,
+    generalizeOver,
+    instanciateOver,
+    mapScheme,
+  )
 import qualified Stage3.Unify.SchemeOver as SchemeOver
 import Stage3.Unify.Type
   ( Type (..),
@@ -116,20 +126,6 @@ instance Zonk Scheme where
   zonk zonker (Scheme scheme) = do
     scheme <- zonk zonker scheme
     pure (Scheme scheme)
-
-type MapScheme ::
-  (Data.Kind.Type -> Environment -> Data.Kind.Type) ->
-  (Data.Kind.Type -> Environment -> Data.Kind.Type) ->
-  Data.Kind.Type
-newtype MapScheme typex typex' = MapScheme (forall s scope. typex s scope -> typex' s scope)
-
-mapScheme :: MapScheme typex typex' -> SchemeOver typex s scope -> SchemeOver typex' s scope
-mapScheme (MapScheme map) SchemeOver {parameters, constraints, result} =
-  SchemeOver
-    { parameters,
-      constraints,
-      result = map result
-    }
 
 variable :: Local.Index scope -> Type s scope
 variable = Variable

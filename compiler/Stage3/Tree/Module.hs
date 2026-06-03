@@ -15,8 +15,7 @@ import Stage2.Layout (Group)
 import qualified Stage2.Locality as Locality
 import Stage2.Scope (Global)
 import Stage2.Stage (Check, Resolve)
-import qualified Stage2.Tree.Combinators.Implicit as Implicit
-import Stage2.Tree.Combinators.Inferred (Inferred (Solved))
+import Stage2.Tree.Combinators.Inferred (Inferred (..))
 import Stage2.Tree.Declaration (Declaration (..))
 import qualified Stage2.Tree.Declaration as Declaration
 import qualified Stage2.Tree.Declaration as Stage2 (Declaration)
@@ -170,12 +169,10 @@ checkTermDeclaration global local declaration = Formula7 {cycle, run}
                 Functor.Annotated {content} = terms Vector.! local
             Declaration {definition} <- content
             pure $ case definition of
-              Definition4.Group (Implicit.Check set) -> Simple.Scheme.lift $ Scheme $ Scheme.map go set
+              Solved types Definition4.:::: _ -> Simple.Scheme.lift $ Scheme $ Scheme.map go types
                 where
                   go = Scheme.Map $ \case
-                    Definition4.Set set
-                      | Definition4.Element {typex = Solved typex} <- set Strict.Vector.! id ->
-                          typex
+                    Definition4.Types types -> types Strict.Vector.! id
               _ -> error "bad link lookup"
       annotation <- meta
       let context = globalBindings moduleSet
@@ -214,10 +211,7 @@ checkTypeDeclaration global local declaration = Formula7 {cycle, run}
                 Functor.Annotated {content} = types Vector.! local
             TypeDeclaration {definition} <- content
             pure $ case definition of
-              TypeDefinition2.Group (TypeDefinition2.Set set)
-                | TypeDefinition2.Element {typex} <- set Strict.Vector.! id,
-                  Solved typex <- typex ->
-                    typex
+              (Solved (TypeDefinition2.Types types)) TypeDefinition2.:::: _ -> types Strict.Vector.! id
               _ -> error "bad link lookup"
       annotation <- meta
       let context = globalBindings moduleSet
@@ -249,7 +243,7 @@ checkTypeDeclarationExtra global local declaration = Formula7 {cycle, run}
                 Functor.Annotated {content} = types Vector.! local
             TypeDeclaration {definition} <- content
             case definition of
-              TypeDefinition2.Group set -> pure set
+              _ TypeDefinition2.:::: set -> pure set
               _ -> error "bad link"
       proper <- Stage2.TypeDeclaration.ungroupM Link.Type.unglobal link proper
       extra <- TypeDeclarationExtra.check context (Type.Global global local) proper declaration

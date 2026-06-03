@@ -29,30 +29,12 @@ data Definition2 source mark s scope where
   Piece :: !(Choice s scope) -> Definition2 Single mark s scope
   Shared :: !(RightHandSide s scope) -> Definition2 Share Inferred s scope
 
-instance Unify.Zonk (Definition2 source mark) where
-  zonk zonker = \case
-    Definition definition -> do
-      definition <- Unify.zonk zonker definition
-      pure $ Definition definition
-    Piece choice -> do
-      choice <- Unify.zonk zonker choice
-      pure $ Piece choice
-    Shared shared -> do
-      shared <- Unify.zonk zonker shared
-      pure $ Shared shared
-
 data Choice s scope = Choice
   { index :: !(Term.Index scope),
     instanciation :: !(Unify.Instanciation s scope),
     patternx :: !(Pattern s scope),
     bound :: !Bound
   }
-
-instance Unify.Zonk Choice where
-  zonk zonker Choice {index, instanciation, patternx, bound} = do
-    instanciation <- Unify.zonk zonker instanciation
-    patternx <- Unify.zonk zonker patternx
-    pure Choice {index, instanciation, patternx, bound}
 
 checkManual ::
   Context s (Local ':+ scopes) ->

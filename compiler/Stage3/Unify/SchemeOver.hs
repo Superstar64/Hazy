@@ -24,6 +24,7 @@ import qualified Stage3.Check.Mask as Mask
 import Stage3.Unify.Class
   ( Collected (..),
     Collector (..),
+    Delay (..),
     Functor (..),
     Generalizable (..),
     Instantiatable (..),
@@ -84,6 +85,34 @@ instanciateOver context position SchemeOver {parameters, constraints, result} = 
     arguments <- pure $ toList $ fmap (substitute $ Substitute fresh) arguments
     constrainWith context position classx head arguments
   pure $ (substitute (Substitute fresh) result, Instanciation evidence)
+
+data Body typex term s scope = (:::)
+  { typex :: !(typex s scope),
+    term :: !(Delay term s scope)
+  }
+
+infix 5 :::
+
+instance (Zonk typex) => Zonk (Body typex term) where
+  zonk zonker (typex ::: term) = do
+    typex <- zonk zonker typex
+    term <- zonk zonker term
+    pure $ typex ::: term
+
+instance (Generalizable typex) => Generalizable (Body typex term) where
+  collect collector (typex ::: _) = collect collector typex
+
+generalizeBody ::
+  (Generalizable typex) =>
+  Position ->
+  Context s scope ->
+  Generalize (Body typex term) s scope ->
+  ST s (Body (SchemeOver typex) (Simple.SchemeOver term) s scope)
+generalizeBody position context generalizable = do
+  body <- generalizeOver context generalizable
+  typex <- pure $ mapScheme (MapScheme typex) body
+  term <- pure $ mapScheme (MapScheme term) body
+  pure $ typex ::: Delay (solve (Solve $ \_ (Delay run) -> run) position term)
 
 newtype Generalize typex s scopes = Generalize
   { runGeneralize ::
@@ -176,3 +205,17 @@ solve (Solve go) position SchemeOver {parameters, constraints, result} = do
         constraints,
         result
       }
+
+type MapScheme ::
+  (Kind.Type -> Environment -> Kind.Type) ->
+  (Kind.Type -> Environment -> Kind.Type) ->
+  Kind.Type
+newtype MapScheme typex typex' = MapScheme (forall s scope. typex s scope -> typex' s scope)
+
+mapScheme :: MapScheme typex typex' -> SchemeOver typex s scope -> SchemeOver typex' s scope
+mapScheme (MapScheme map) SchemeOver {parameters, constraints, result} =
+  SchemeOver
+    { parameters,
+      constraints,
+      result = map result
+    }

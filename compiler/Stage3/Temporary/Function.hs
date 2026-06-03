@@ -24,16 +24,6 @@ data Function s scope
         function :: !(Function s (Scope.Pattern ':+ scope))
       }
 
-instance Unify.Zonk Function where
-  zonk zonker = \case
-    Plain {rightHandSide} -> do
-      rightHandSide <- Unify.zonk zonker rightHandSide
-      pure $ Plain {rightHandSide}
-    Bound {functionPosition, patternx, function} -> do
-      patternx <- Unify.zonk zonker patternx
-      function <- Unify.zonk zonker function
-      pure $ Bound {functionPosition, patternx, function}
-
 check :: Context s scope -> Unify.Type s scope -> Stage2.Function Group Resolve scope -> ST s (Function s scope)
 check context typex = \case
   Stage2.Plain {rightHandSide} -> Plain <$> RightHandSide.check context typex rightHandSide

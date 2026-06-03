@@ -21,7 +21,9 @@ import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Check, Resolve, Stage)
+import Stage2.Tree.Combinators.Inferred (Inferred)
 import qualified Stage2.Tree.Combinators.Inferred as Combinators
+import qualified Stage2.Tree.Combinators.Inferred as Inferred
 import Stage2.Tree.Type (Type)
 import {-# SOURCE #-} Stage2.Tree.TypeDeclaration (Groupable (..))
 import Stage2.Tree.TypeDefinition (Constructive, Substitutive, TypeDefinition)
@@ -34,11 +36,12 @@ data TypeDefinition2 locality layout stage scope where
     !(TypeDefinition equality stage scope) ->
     TypeDefinition2 locality layout stage scope
   Link :: !(Type.Link locality) -> !Int -> TypeDefinition2 locality Group stage scope
-  Group ::
+  (::::) ::
+    !(Inferred Types stage scope) ->
     !(Set locality stage scope) ->
     TypeDefinition2 locality Group stage scope
 
-infix 5 :::
+infix 5 :::, ::::
 
 instance Show (TypeDefinition2 locality layout stage scope) where
   showsPrec d = \case
@@ -51,7 +54,9 @@ instance Show (TypeDefinition2 locality layout stage scope) where
           . showsPrec 11 link
           . showString " "
           . showsPrec 11 id
-    Group set -> showParen (d > 10) $ showString "Group " . showsPrec 11 set
+    types :::: set ->
+      showParen (d > 5) $
+        showsPrec 6 types . showString " :::: " . showsPrec 6 set
 
 instance Shift (TypeDefinition2 locality layout stage) where
   shift = shiftDefault
@@ -60,14 +65,14 @@ instance Shift.Functor (TypeDefinition2 locality layout stage) where
   map category = \case
     annotation ::: definition -> Shift.map category annotation ::: Shift.map category definition
     Link link id -> Link link id
-    Group set -> Group $ Shift.map category set
+    types :::: set -> Shift.map category types :::: Shift.map category set
 
 instance FreeTypeVariables (TypeDefinition2 locality layout) where
   freeTypeVariables target = \case
     annotation ::: definition ->
       freeTypeVariables target annotation ++ freeTypeVariables target definition
     Link {} -> []
-    Group set -> freeTypeVariables target set
+    _ :::: set -> freeTypeVariables target set
 
 data Annotation equality layout stage scope where
   Annotated :: !(Type Position stage scope) -> Annotation equality layout stage scope
@@ -94,6 +99,18 @@ instance FreeTypeVariables (Annotation equality mark) where
     Annotated typex -> freeTypeVariables target typex
     InferredCyclic -> []
     InferredAcyclic -> []
+
+newtype Types scope = Types (Strict.Vector (Simple.Type scope))
+  deriving (Show)
+
+instance Scope.Show Types where
+  showsPrec = showsPrec
+
+instance Shift Types where
+  shift = shiftDefault
+
+instance Shift.Functor Types where
+  map category (Types types) = Types (Shift.map category <$> types)
 
 newtype Set locality stage scope
   = Set (Strict.Vector (Element locality stage scope))
@@ -158,7 +175,7 @@ group _ _ _ _ (Annotated typex ::: definition) = Annotated typex ::: definition
 group _ _ _ _ (InferredAcyclic ::: definition) = InferredAcyclic ::: definition
 group qualifiers link index group (InferredCyclic ::: _) = case group of
   StronglyConnected.Group {set} ->
-    Group $ Set $ Strict.Vector.fromList $ map go $ Set.toList set
+    Inferred.Inferred :::: Set (Strict.Vector.fromList $ map go $ Set.toList set)
     where
       go link = case index link of
         Groupable {element, position', name', constructorNames'} ->
@@ -192,7 +209,7 @@ ungroupM index lookup definition = case definition of
   Link index id -> do
     set <- lookup index
     pure $ InferredCyclic ::: go id set
-  (Group set) -> pure $ InferredCyclic ::: go 0 set
+  _ :::: set -> pure $ InferredCyclic ::: go 0 set
   where
     go id (Set set) = Shift.map (Shift.UngroupType original) element
       where

@@ -44,27 +44,6 @@ data Do s scope
         body :: !(Do s (Scope.Declaration ':+ scope))
       }
 
-instance Unify.Zonk Do where
-  zonk zonker = \case
-    Done {done} -> do
-      done <- Unify.zonk zonker done
-      pure Done {done}
-    Run {startPosition, evidence, effect, after} -> do
-      evidence <- Unify.zonk zonker evidence
-      effect <- Unify.zonk zonker effect
-      after <- Unify.zonk zonker after
-      pure Run {startPosition, evidence, effect, after}
-    Bind {startPosition, patternx, evidence, effect, thenx, fail} -> do
-      patternx <- Unify.zonk zonker patternx
-      evidence <- Unify.zonk zonker evidence
-      effect <- Unify.zonk zonker effect
-      thenx <- Unify.zonk zonker thenx
-      pure Bind {startPosition, patternx, evidence, effect, thenx, fail}
-    Let {startPosition, declarations, body} -> do
-      declarations <- Unify.zonk zonker declarations
-      body <- Unify.zonk zonker body
-      pure Let {startPosition, declarations, body}
-
 check ::
   Context s scope ->
   Unify.Type s scope ->

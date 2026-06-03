@@ -21,12 +21,6 @@ data RightHandSide s scope
       !(Body s (Scope.Declaration ':+ scope))
       !(Declarations Local s (Scope.Declaration ':+ scope))
 
-instance Unify.Zonk RightHandSide where
-  zonk zonker (RightHandSide body declarations) = do
-    body <- Unify.zonk zonker body
-    declarations <- Unify.zonk zonker declarations
-    pure $ RightHandSide body declarations
-
 check ::
   Context s scope ->
   Unify.Type s scope ->

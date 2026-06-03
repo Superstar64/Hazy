@@ -64,29 +64,6 @@ data Declarations locality s scope = Declarations
     dataInstances :: !(Vector (Map (Type2.Index scope) (Instance s scope)))
   }
 
-instance Unify.Zonk (Declarations locality) where
-  zonk
-    zonker
-    Declarations
-      { terms,
-        types,
-        typeExtras,
-        classInstances,
-        dataInstances
-      } = do
-      terms <- traverse (Unify.zonk zonker) terms
-      typeExtras <- traverse (Unify.zonk zonker) typeExtras
-      classInstances <- traverse (traverse (Unify.zonk zonker)) classInstances
-      dataInstances <- traverse (traverse (Unify.zonk zonker)) dataInstances
-      pure
-        Declarations
-          { terms,
-            types,
-            typeExtras,
-            classInstances,
-            dataInstances
-          }
-
 type Formula s scope z =
   Formula7
     (Functor.Declarations (Scope.Declaration ':+ scope))
@@ -181,11 +158,10 @@ checkTermDeclaration context index declaration = Formula7 {cycle, run}
             let Functor.Annotated {content} = terms Vector.! local
             Declaration {definition} <- content
             pure $ case definition of
-              Definition4.Group set -> Unify.Scheme $ Unify.mapScheme go set
+              types Definition4.:::: _ -> Unify.Scheme $ Unify.mapScheme go types
                 where
                   go = Unify.MapScheme $ \case
-                    Definition4.Set set
-                      | Definition4.Element {typex} <- set Strict.Vector.! id -> typex
+                    Definition4.Types types -> types Strict.Vector.! id
               _ -> error "bad link lookup"
       annotation <- meta
       Declaration.check context link annotation declaration
@@ -221,10 +197,7 @@ checkTypeDeclaration context index declaration = Formula7 {cycle, run}
             let Functor.Annotated {content} = types Vector.! local
             TypeDeclaration {definition} <- content
             pure $ case definition of
-              TypeDefinition2.Group (TypeDefinition2.Set set)
-                | TypeDefinition2.Element {typex} <- set Strict.Vector.! id,
-                  Solved typex <- typex ->
-                    typex
+              Solved (TypeDefinition2.Types types) TypeDefinition2.:::: _ -> types Strict.Vector.! id
               _ -> error "bad link lookup"
       annotation <- meta
       TypeDeclaration.check context link annotation declaration
@@ -250,7 +223,7 @@ checkTypeDeclarationExtra context index declaration = Formula7 {cycle, run}
             let Functor.Annotated {content} = types Vector.! local
             TypeDeclaration {definition} <- content
             case definition of
-              TypeDefinition2.Group set -> pure set
+              _ TypeDefinition2.:::: set -> pure set
               _ -> error "bad link"
       proper <- Stage2.TypeDeclaration.ungroupM Link.Type.unlocal link proper
       TypeDeclarationExtra.check context (Type.Declaration index) proper declaration

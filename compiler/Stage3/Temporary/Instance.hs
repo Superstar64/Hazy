@@ -84,11 +84,6 @@ data Instance s scope = Instance
     members :: !(Strict.Vector (MethodConcrete s scope))
   }
 
-instance Unify.Zonk Instance where
-  zonk zonker Instance {startPosition, classPosition, parameters, prerequisites, evidence, members} = do
-    members <- traverse (Unify.zonk zonker) members
-    pure Instance {startPosition, classPosition, parameters, prerequisites, evidence, members}
-
 check ::
   Context s scope ->
   Key scope ->

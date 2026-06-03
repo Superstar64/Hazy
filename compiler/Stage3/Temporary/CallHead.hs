@@ -56,22 +56,6 @@ data CallHead s scope
         methodInfo :: !(MethodInfo scope)
       }
 
-instance Unify.Zonk CallHead where
-  zonk zonker = \case
-    Variable {variablePosition, variable, instanciation} -> do
-      instanciation <- Unify.zonk zonker instanciation
-      pure Variable {variablePosition, variable, instanciation}
-    Constructor {constructorPosition, constructor, constructorInfo} -> do
-      constructorInfo <- Unify.zonk zonker constructorInfo
-      pure Constructor {constructorPosition, constructor, constructorInfo}
-    Selector {selectorPosition, selector, selectorInfo} -> do
-      selectorInfo <- Unify.zonk zonker selectorInfo
-      pure Selector {selectorPosition, selector, selectorInfo}
-    Method {methodPosition, method, evidence, instanciation, methodInfo} -> do
-      evidence <- Unify.zonk zonker evidence
-      instanciation <- Unify.zonk zonker instanciation
-      pure Method {methodPosition, method, evidence, instanciation, methodInfo}
-
 check :: Context s scope -> Unify.Type s scope -> Stage2.CallHead Resolve scope -> ST s (CallHead s scope)
 check context@Context {termEnvironment} typex Stage2.Variable {variablePosition, variable} = do
   let TermBinding binding = termEnvironment Term.! variable

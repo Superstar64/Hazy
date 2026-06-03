@@ -18,25 +18,11 @@ data SelectorInfo s scope
       { select :: !(Strict.Vector (Select s scope))
       }
 
-instance Unify.Zonk SelectorInfo where
-  zonk zonker = \case
-    Uniform {position, strict} -> do
-      strict <- Unify.zonk zonker strict
-      pure Uniform {position, strict}
-    Disjoint {select} -> do
-      select <- traverse (Unify.zonk zonker) select
-      pure Disjoint {select}
-
 data Select s scope
   = Select
   { selectIndex :: !(Strict.Maybe Int),
     constructorInfo :: !(ConstructorInfo s scope)
   }
-
-instance Unify.Zonk Select where
-  zonk zonker Select {selectIndex, constructorInfo} = do
-    constructorInfo <- Unify.zonk zonker constructorInfo
-    pure Select {selectIndex, constructorInfo}
 
 solve :: SelectorInfo s scope -> ST s (Solved.SelectorInfo scope)
 solve = \case

@@ -10,11 +10,6 @@ data EntryInfo s scope = EntryInfo
     strict :: !(Unify.Type s scope)
   }
 
-instance Unify.Zonk EntryInfo where
-  zonk zonker EntryInfo {position, strict} = do
-    strict <- Unify.zonk zonker strict
-    pure EntryInfo {position, strict}
-
 solve :: EntryInfo s scope -> ST s (Solved.EntryInfo scope)
 solve EntryInfo {position, strict} = do
   strict <- Unify.solve position strict

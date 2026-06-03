@@ -22,9 +22,9 @@ import qualified Stage2.Shift as Shift
 import Stage2.Stage (Check, Resolve, Stage)
 import Stage2.Tree.Combinators.Implicit (Implicit)
 import qualified Stage2.Tree.Combinators.Implicit as Implicit
-import qualified Stage2.Tree.Combinators.Inferred as Combinators
+import Stage2.Tree.Combinators.Inferred (Inferred)
+import qualified Stage2.Tree.Combinators.Inferred as Inferred
 import {-# SOURCE #-} Stage2.Tree.Declaration (Groupable (..))
-import Stage2.Tree.Definition2 (Inferred)
 import qualified Stage2.Tree.Definition2 as Mark
 import Stage2.Tree.Definition3 (Definition3)
 import Stage2.Tree.Scheme (Scheme)
@@ -39,9 +39,12 @@ data Definition4 locality layout stage scope where
     !(Implicit (Definition3 mark layout stage) stage scope) ->
     Definition4 locality layout stage scope
   Link :: !(Term.Link locality) -> !Int -> Definition4 locality Group stage scope
-  Group :: !(Implicit (Set locality stage) stage scope) -> Definition4 locality Group stage scope
+  (::::) ::
+    !(Inferred (SchemeOver Types) stage scope) ->
+    !(Implicit (Set locality stage) stage scope) ->
+    Definition4 locality Group stage scope
 
-infixr 5 :::
+infix 5 :::, ::::
 
 instance Show (Definition4 locality layout stage scope) where
   showsPrec d (annotation ::: definition) =
@@ -53,7 +56,9 @@ instance Show (Definition4 locality layout stage scope) where
         . showsPrec 11 link
         . showString " "
         . showsPrec 11 id
-  showsPrec d (Group set) = showParen (d > 10) $ showString "Group " . showsPrec 11 set
+  showsPrec d (types :::: set) =
+    showParen (d > 5) $
+      showsPrec 6 types . showString " :::: " . showsPrec 6 set
 
 instance Shift (Definition4 locality layout stage) where
   shift = shiftDefault
@@ -62,13 +67,13 @@ instance Shift.Functor (Definition4 locality layout stage) where
   map category = \case
     annotation ::: definition -> Shift.map category annotation ::: Shift.map category definition
     Link link id -> Link link id
-    Group set -> Group (Shift.map category set)
+    types :::: set -> Shift.map category types :::: Shift.map category set
 
 instance FreeTermVariables (Definition4 locality layout) where
   freeTermVariables target = \case
     _ ::: Implicit.Resolve definition -> freeTermVariables target definition
     Link {} -> []
-    Group (Implicit.Resolve set) -> freeTermVariables target set
+    _ :::: Implicit.Resolve set -> freeTermVariables target set
 
 data Annotation mark layout stage scope where
   Annotated :: !(Scheme Position stage scope) -> Annotation Mark.Annotated layout stage scope
@@ -87,6 +92,18 @@ instance Show (Annotation mark scope layout stage) where
     Annotated scheme -> showParen (d > 10) $ showString "Annotated " . showsPrec 11 scheme
     Inferred -> showString "Inferred"
 
+newtype Types scope = Types (Strict.Vector (Simple.Type scope))
+  deriving (Show)
+
+instance Scope.Show Types where
+  showsPrec = showsPrec
+
+instance Shift Types where
+  shift = shiftDefault
+
+instance Shift.Functor Types where
+  map category (Types types) = Types (Shift.map category <$> types)
+
 newtype Set locality stage scope
   = Set (Strict.Vector (Element locality stage scope))
   deriving (Show)
@@ -104,8 +121,7 @@ instance FreeTermVariables (Set locality) where
   freeTermVariables target (Set set) = foldMap (freeTermVariables target) set
 
 data Element locality stage scope = Element
-  { element :: !(Definition3 Inferred Group stage (Scope.GroupTerm ':+ scope)),
-    typex :: !(Combinators.Inferred Simple.Type stage scope),
+  { element :: !(Definition3 Mark.Inferred Group stage (Scope.GroupTerm ':+ scope)),
     link :: !(Term.Link locality)
   }
   deriving (Show)
@@ -114,10 +130,9 @@ instance Shift (Element locality stage) where
   shift = shiftDefault
 
 instance Shift.Functor (Element locality stage) where
-  map category Element {element, typex, link} =
+  map category Element {element, link} =
     Element
       { element = Shift.map (Shift.Over category) element,
-        typex = Shift.map category typex,
         link
       }
 
@@ -139,13 +154,12 @@ group _ _ _ (Annotated annotation ::: Implicit.Resolve definition) =
   Annotated annotation ::: Implicit.Resolve (connect definition)
 group link index group (Inferred ::: _) = case group of
   StronglyConnected.Group {set} ->
-    Group $ Implicit.Resolve $ Set $ Strict.Vector.fromList $ map go $ Set.toList set
+    Inferred.Inferred :::: Implicit.Resolve (Set $ Strict.Vector.fromList $ map go $ Set.toList set)
     where
       go link = case index link of
         Groupable {element} ->
           Element
             { element = Shift.map (Shift.GroupTerm lookup) $ connect element,
-              typex = Combinators.Inferred,
               link
             }
       lookup index = Strict.Maybe.fromLazy $ Set.lookupIndex (link index) set
@@ -160,7 +174,7 @@ ungroup _ _ (Annotated annotation ::: Implicit.Check definition) =
   Annotated annotation ::: Implicit.Check (SchemeOver.map (SchemeOver.Map Connect.seperate) definition)
 ungroup index lookup definition = case definition of
   Link index id -> Inferred ::: go id (lookup index)
-  (Group set) -> Inferred ::: go 0 set
+  (_ :::: set) -> Inferred ::: go 0 set
   where
     go id (Implicit.Check SchemeOver {parameters, constraints, result = Set set}) =
       Implicit.Check $

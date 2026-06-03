@@ -17,11 +17,6 @@ import qualified Stage3.Unify as Unify
 data Definition3 mark s scope where
   Label :: !(Info source) -> !(Definition2 source mark s scope) -> Definition3 mark s scope
 
-instance Unify.Zonk (Definition3 mark) where
-  zonk zonker (Label info definition) = do
-    definition <- Unify.zonk zonker definition
-    pure $ Label info definition
-
 checkManual ::
   Context s (Local ':+ scopes) ->
   Unify.Type s (Local ':+ scopes) ->

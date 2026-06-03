@@ -18,11 +18,6 @@ data Field s scope = Field
     patternx :: !(Pattern s scope)
   }
 
-instance Unify.Zonk Field where
-  zonk zonker Field {index, patternx} = do
-    patternx <- Unify.zonk zonker patternx
-    pure Field {index, patternx}
-
 (!) :: Field s scope -> Bound -> Unify.Type s scope
 Field {patternx} ! bound = patternx Pattern.! bound
 

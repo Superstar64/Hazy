@@ -15,19 +15,12 @@ import Stage3.Simple.SchemeOver (augment')
 import qualified Stage3.Simple.Type as Simple.Type
 import Stage3.Temporary.Definition (Definition)
 import qualified Stage3.Temporary.Definition as Definition
-import qualified Stage3.Unify as Unify
 import qualified Stage4.Tree.Scheme as Simple (Scheme (..), simplify)
 import qualified Stage4.Tree.SchemeOver as Simple (SchemeOver (..))
 
 data MethodAbstract s scope
   = Abstract
   | DefaultCheck !(Definition s (Local ':+ scope))
-
-instance Unify.Zonk MethodAbstract where
-  zonk zonker = \case
-    Abstract -> pure Abstract
-    DefaultCheck definition ->
-      DefaultCheck <$> Unify.zonk zonker definition
 
 check ::
   Context s scope ->

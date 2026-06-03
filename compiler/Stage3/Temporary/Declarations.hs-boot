@@ -13,14 +13,11 @@ import Stage2.Stage (Check, Resolve)
 import qualified Stage2.Tree.Declarations as Stage2 (Declarations)
 import Stage3.Check.Context (Context)
 import qualified Stage3.Tree.Declarations as Solved
-import qualified Stage3.Unify as Unify
 
 type role Declarations nominal nominal nominal
 
 type Declarations :: Locality -> Type -> Environment -> Type
 data Declarations locality s scope
-
-instance Unify.Zonk (Declarations locality)
 
 check ::
   Context s scope ->

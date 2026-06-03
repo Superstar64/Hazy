@@ -204,13 +204,13 @@ seperate declarations@Declarations {terms, types} =
     lookupTerm = \case
       Term.Declaration index
         | Declaration {definition} <- terms Vector.! index,
-          Definition4.Group set <- definition ->
+          _ Definition4.:::: set <- definition ->
             set
       _ -> error "bad term lookup"
     lookupType :: Type.Link Local -> TypeDefinition2.Set Local Check (Scope.Declaration ':+ scope)
     lookupType = \case
       Type.Declaration index
         | TypeDeclaration {definition} <- types Vector.! index,
-          TypeDefinition2.Group set <- definition ->
+          _ TypeDefinition2.:::: set <- definition ->
             set
       _ -> error "bad type lookup"

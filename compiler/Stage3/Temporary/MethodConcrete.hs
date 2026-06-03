@@ -27,15 +27,6 @@ data MethodConcrete s scope
         defaultx :: !(Unify.Delay (Simple.SchemeOver Simple.Expression) s (Local ':+ scope))
       }
 
-instance Unify.Zonk MethodConcrete where
-  zonk zonker = \case
-    Definition {position, definition} -> do
-      definition <- Unify.zonk zonker definition
-      pure Definition {position, definition}
-    Default {base, self, defaultx} -> do
-      defaultx <- Unify.zonk zonker defaultx
-      pure Default {base, self, defaultx}
-
 solve :: MethodConcrete s scope -> ST s (Solved.MethodConcrete Group Check scope)
 solve = \case
   Definition {position, definition} -> do

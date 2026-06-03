@@ -40,23 +40,6 @@ data Statements s scope
         body :: !(Statements s (Scope.Declaration ':+ scope))
       }
 
-instance Unify.Zonk Statements where
-  zonk zonker = \case
-    Done expression -> Done <$> Unify.zonk zonker expression
-    Run startPosition expression statements -> do
-      expression <- Unify.zonk zonker expression
-      statements <- Unify.zonk zonker statements
-      pure $ Run startPosition expression statements
-    Bind startPosition patternx expression statements -> do
-      patternx <- Unify.zonk zonker patternx
-      expression <- Unify.zonk zonker expression
-      statements <- Unify.zonk zonker statements
-      pure $ Bind startPosition patternx expression statements
-    Let startPosition declarations statements -> do
-      declarations <- Unify.zonk zonker declarations
-      statements <- Unify.zonk zonker statements
-      pure $ Let startPosition declarations statements
-
 check ::
   Context s scope ->
   Unify.Type s scope ->
