@@ -2,7 +2,7 @@ module Stage3.Unify.Evidence where
 
 import Control.Monad.ST (ST)
 import Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
-import Error (ambiguousType)
+import Error (unsupportedFeatureConstraintedTypeDefaulting)
 import Stage1.Position (Position)
 import Stage2.Scope (Environment (..))
 import Stage2.Shift (shift)
@@ -100,4 +100,4 @@ solve position = \case
   Logical reference ->
     readSTRef reference >>= \case
       Solved evidence -> solve position evidence
-      Unsolved -> ambiguousType position
+      Unsolved -> unsupportedFeatureConstraintedTypeDefaulting position

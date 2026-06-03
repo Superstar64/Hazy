@@ -10,7 +10,7 @@ import Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 import Data.Traversable (for)
 import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
-import Error (ambiguousType, unsupportedFeatureConstraintedTypeDefaulting)
+import Error (unsupportedFeatureConstraintedTypeDefaulting)
 import Stage1.Position (Position)
 import qualified Stage2.Index.Constructor as Constructor
 import qualified Stage2.Index.Local as Local (Index (..))
@@ -609,10 +609,10 @@ defaultFrom position constraints kind = case kind of
   Logical reference ->
     readSTRef reference >>= \case
       Solved kind -> defaultFrom position constraints kind
-      Unsolved {} -> ambiguousType position
+      Unsolved {} -> unsupportedFeatureConstraintedTypeDefaulting position
   Type universe -> defaultUniverse position constraints universe
   Levity -> pure $ Simple.Constructor Type2.Lazy
-  _ -> ambiguousType position
+  _ -> unsupportedFeatureConstraintedTypeDefaulting position
 defaultUniverse position constraints universe = case universe of
   Logical reference ->
     readSTRef reference >>= \case

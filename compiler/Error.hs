@@ -64,7 +64,6 @@ module Error
     unificationError,
     nonUniqueConstraints,
     constraintError,
-    ambiguousType,
     escapingType,
     illegalInstanceClass,
     illegalInstanceData,
@@ -265,7 +264,6 @@ data Type
   | UnificationError
   | NonUniqueConstraints
   | ConstraintError
-  | AmbiguousType
   | EscapingType
   | IllegalInstanceClass
   | IllegalInstanceData
@@ -447,10 +445,6 @@ constraintError position satify =
         satify,
         fromString "`"
       ]
-
-ambiguousType :: Position -> a
-ambiguousType position =
-  errorAt AmbiguousType position $ fromString "ambiguous type"
 
 escapingType :: Position -> Builder -> a
 escapingType position typex =
