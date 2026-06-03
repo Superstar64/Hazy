@@ -50,11 +50,11 @@ data Element locality s scope = Element
 solve :: Position -> Definition4 locality s scope -> ST s (Solved.Definition4 locality Group Check scope)
 solve position = \case
   (annotation ::: definition) -> do
-    definition <- Unify.solveSchemeOver (Unify.Solve Definition3.solve) position definition
+    definition <- Unify.solveSchemeOver (Unify.SolveScheme Definition3.solve) position definition
     pure $ annotation Solved.::: Implicit.Check definition
   Link link id -> pure (Solved.Link link id)
   types :::: Unify.Delay set -> do
-    types <- Unify.solveSchemeOver (Unify.Solve solveTypes) position types
+    types <- Unify.solveSchemeOver (Unify.SolveScheme solveTypes) position types
     set <- set
     pure $ Inferred.Solved types Solved.:::: Implicit.Check set
 

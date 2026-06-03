@@ -317,7 +317,7 @@ solve = \case
     dox <- Do.solve statements
     pure Solved.Do {startPosition, dox}
   Annotation {expression, operatorPosition, annotation, instanciation} -> do
-    expression <- Unify.solveSchemeOver (Unify.Solve $ const solve) operatorPosition expression
+    expression <- Unify.solveSchemeOver (Unify.SolveScheme $ const solve) operatorPosition expression
     instanciation <- Unify.solveInstanciation operatorPosition instanciation
     pure
       Solved.Annotation

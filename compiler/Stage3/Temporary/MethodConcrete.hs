@@ -30,7 +30,7 @@ data MethodConcrete s scope
 solve :: MethodConcrete s scope -> ST s (Solved.MethodConcrete Group Check scope)
 solve = \case
   Definition {position, definition} -> do
-    definition <- Unify.solveSchemeOver (Unify.Solve $ const Definition.solve) position definition
+    definition <- Unify.solveSchemeOver (Unify.SolveScheme $ const Definition.solve) position definition
     pure Solved.Definition {definition = Check definition}
   Default {base, self, defaultx = Unify.Delay defaultx} -> do
     defaultx <- defaultx

@@ -49,7 +49,7 @@ module Stage3.Unify
     solve,
     solveEvidence,
     solveInstanciation,
-    Solve (..),
+    SolveScheme (..),
     solveSchemeOver,
     solveScheme,
     instanciate,
@@ -93,7 +93,7 @@ import Stage3.Unify.SchemeOver
     Generalize (..),
     MapScheme (..),
     SchemeOver (..),
-    Solve (..),
+    SolveScheme (..),
     generalizeBody,
     generalizeOver,
     instanciateOver,
@@ -259,10 +259,10 @@ solveInstanciation = Instanciation.solve
 solveConstraint :: Position -> Constraint s scope -> ST s (Simple.Constraint scope)
 solveConstraint = Constraint.solve
 
-solveScheme position (Scheme scheme) = Simple.Scheme <$> solveSchemeOver (Solve solve) position scheme
+solveScheme position (Scheme scheme) = Simple.Scheme <$> solveSchemeOver (SolveScheme solve) position scheme
 
 solveSchemeOver ::
-  Solve source target ->
+  SolveScheme source target ->
   Position ->
   SchemeOver source s scope ->
   ST s (Simple.SchemeOver target scope)

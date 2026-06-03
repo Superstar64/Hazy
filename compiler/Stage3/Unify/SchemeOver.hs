@@ -112,7 +112,7 @@ generalizeBody position context generalizable = do
   body <- generalizeOver context generalizable
   typex <- pure $ mapScheme (MapScheme typex) body
   term <- pure $ mapScheme (MapScheme term) body
-  pure $ typex ::: Delay (solve (Solve $ \_ (Delay run) -> run) position term)
+  pure $ typex ::: Delay (solve (SolveScheme $ \_ (Delay run) -> run) position term)
 
 newtype Generalize typex s scopes = Generalize
   { runGeneralize ::
@@ -185,17 +185,16 @@ generalizeOver context (Generalize run) = do
     writeVariable variable reference =
       writeSTRef reference $ Solved $ Variable $ Local.Local variable
 
-type Solve :: (Kind.Type -> Environment -> Kind.Type) -> (Environment -> Kind.Type) -> Kind.Type
-newtype Solve source target = Solve
-  { runSolve :: forall s scope. Position -> source s scope -> ST s (target scope)
-  }
+type SolveScheme :: (Kind.Type -> Environment -> Kind.Type) -> (Environment -> Kind.Type) -> Kind.Type
+newtype SolveScheme source target
+  = SolveScheme (forall s scope. Position -> source s scope -> ST s (target scope))
 
 solve ::
-  Solve source target ->
+  SolveScheme source target ->
   Position ->
   SchemeOver source s scope ->
   ST s (Simple.SchemeOver target scope)
-solve (Solve go) position SchemeOver {parameters, constraints, result} = do
+solve (SolveScheme go) position SchemeOver {parameters, constraints, result} = do
   parameters <- traverse (Type.solve position) parameters
   constraints <- traverse (Constraint.solve position) constraints
   result <- go position result
