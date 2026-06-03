@@ -24,14 +24,14 @@ import Stage2.Stage (Check, Resolve, Stage)
 import qualified Stage2.Tree.Combinators.Inferred as Combinators
 import Stage2.Tree.Type (Type)
 import {-# SOURCE #-} Stage2.Tree.TypeDeclaration (Groupable (..))
-import Stage2.Tree.TypeDefinition (TypeDefinition)
+import Stage2.Tree.TypeDefinition (Constructive, Substitutive, TypeDefinition)
 import qualified Stage4.Tree.Type as Simple
 
 type TypeDefinition2 :: Locality -> Layout -> Stage -> Environment -> Data.Kind.Type
 data TypeDefinition2 locality layout stage scope where
   (:::) ::
-    !(Annotation layout stage scope) ->
-    !(TypeDefinition stage scope) ->
+    !(Annotation equality layout stage scope) ->
+    !(TypeDefinition equality stage scope) ->
     TypeDefinition2 locality layout stage scope
   Link :: !(Type.Link locality) -> !Int -> TypeDefinition2 locality Group stage scope
   Group ::
@@ -69,27 +69,31 @@ instance FreeTypeVariables (TypeDefinition2 locality layout) where
     Link {} -> []
     Group set -> freeTypeVariables target set
 
-data Annotation layout stage scope where
-  Annotated :: !(Type Position stage scope) -> Annotation layout stage scope
-  Inferred :: Annotation Normal stage scope
+data Annotation equality layout stage scope where
+  Annotated :: !(Type Position stage scope) -> Annotation equality layout stage scope
+  InferredCyclic :: Annotation Constructive Normal stage scope
+  InferredAcyclic :: Annotation Substitutive layout stage scope
 
-instance Show (Annotation mark stage scope) where
+instance Show (Annotation equality mark stage scope) where
   showsPrec d = \case
     Annotated typex -> showParen (d > 10) $ showString "Annotated " . showsPrec 11 typex
-    Inferred -> showString "Inferred"
+    InferredCyclic -> showString "InferredCyclic"
+    InferredAcyclic -> showString "InferredAcyclic"
 
-instance Shift (Annotation mark stage) where
+instance Shift (Annotation equality mark stage) where
   shift = shiftDefault
 
-instance Shift.Functor (Annotation mark stage) where
+instance Shift.Functor (Annotation equality mark stage) where
   map category = \case
     Annotated typex -> Annotated (Shift.map category typex)
-    Inferred -> Inferred
+    InferredCyclic -> InferredCyclic
+    InferredAcyclic -> InferredAcyclic
 
-instance FreeTypeVariables (Annotation mark) where
+instance FreeTypeVariables (Annotation equality mark) where
   freeTypeVariables target = \case
     Annotated typex -> freeTypeVariables target typex
-    Inferred -> []
+    InferredCyclic -> []
+    InferredAcyclic -> []
 
 newtype Set locality stage scope
   = Set (Strict.Vector (Element locality stage scope))
@@ -105,7 +109,7 @@ instance FreeTypeVariables (Set locality) where
   freeTypeVariables target (Set set) = foldMap (freeTypeVariables target) set
 
 data Element locality stage scope = Element
-  { element :: !(TypeDefinition stage (Scope.GroupType ':+ scope)),
+  { element :: !(TypeDefinition Constructive stage (Scope.GroupType ':+ scope)),
     typex :: !(Combinators.Inferred Simple.Type stage scope),
     position :: !Position,
     name :: !QualifiedConstructorIdentifier,
@@ -151,7 +155,8 @@ group ::
   TypeDefinition2 locality Normal Resolve scope ->
   TypeDefinition2 locality Group Resolve scope
 group _ _ _ _ (Annotated typex ::: definition) = Annotated typex ::: definition
-group qualifiers link index group (Inferred ::: _) = case group of
+group _ _ _ _ (InferredAcyclic ::: definition) = InferredAcyclic ::: definition
+group qualifiers link index group (InferredCyclic ::: _) = case group of
   StronglyConnected.Group {set} ->
     Group $ Set $ Strict.Vector.fromList $ map go $ Set.toList set
     where
@@ -182,11 +187,12 @@ ungroupM ::
   TypeDefinition2 locality Group Check scope ->
   m (TypeDefinition2 locality Normal Check scope)
 ungroupM _ _ (Annotated annotation ::: definition) = pure $ Annotated annotation ::: definition
+ungroupM _ _ (InferredAcyclic ::: definition) = pure $ InferredAcyclic ::: definition
 ungroupM index lookup definition = case definition of
   Link index id -> do
     set <- lookup index
-    pure $ Inferred ::: go id set
-  (Group set) -> pure $ Inferred ::: go 0 set
+    pure $ InferredCyclic ::: go id set
+  (Group set) -> pure $ InferredCyclic ::: go 0 set
   where
     go id (Set set) = Shift.map (Shift.UngroupType original) element
       where

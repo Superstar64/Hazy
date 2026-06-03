@@ -10,6 +10,7 @@ import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Stage (Check, Resolve)
 import Stage2.Tree.Selector (Selector)
+import Stage2.Tree.TypeDefinition (Constructive, Inject (..))
 import qualified Stage2.Tree.TypeDefinition as Solved
 import qualified Stage2.Tree.TypeDefinition as Stage2 (TypeDefinition (..))
 import qualified Stage2.Tree.TypePattern as Stage2 (TypePattern (..))
@@ -40,7 +41,11 @@ data TypeDefinition s scope
         methods :: !(Strict.Vector (Method s (Scope.Local ':+ scope)))
       }
 
-check :: Context s scope -> Unify.Type s scope -> Stage2.TypeDefinition Resolve scope -> ST s (TypeDefinition s scope)
+check ::
+  Context s scope ->
+  Unify.Type s scope ->
+  Stage2.TypeDefinition Constructive Resolve scope ->
+  ST s (TypeDefinition s scope)
 check context kind = \case
   Stage2.ADT
     { position,
@@ -83,7 +88,6 @@ check context kind = \case
             methods
           }
   Stage2.GADT {position} -> unsupportedFeatureGADTs position
-  Stage2.Synonym {} -> error "can't type check synonym"
   where
     fresh Stage2.TypePattern {name, position} = do
       level <- Unify.fresh Unify.universe
@@ -95,16 +99,16 @@ check context kind = \case
             position
           }
 
-solve :: Context s scope -> TypeDefinition s scope -> ST s (Solved.TypeDefinition Check scope)
+solve :: Context s scope -> TypeDefinition s scope -> ST s (Solved.TypeDefinition Constructive Check scope)
 solve context = \case
   ADT {brand, position, parameters, constructors, selectors} -> do
     parameters <- traverse TypePattern.solve parameters
     context <- pure $ Scheme.augmentSolve parameters context
     constructors <- traverse (Constructor.solve context) constructors
-    pure Solved.ADT {position, brand, parameters, constructors, selectors}
+    pure Solved.ADT {position, brand, parameters, constructors, selectors, inject = Inject}
   Class {parameter, position, constraints, methods} -> do
     parameter <- TypePattern.solve parameter
     context <- pure $ Scheme.augmentSolve (Strict.Vector.singleton parameter) context
     constraints <- traverse (Constraint.solve context) constraints
     methods <- traverse (Method.solve context) methods
-    pure Solved.Class {position, parameter, constraints, methods}
+    pure Solved.Class {position, parameter, constraints, methods, inject = Inject}

@@ -216,7 +216,6 @@ checkTypeDeclaration context index declaration = Formula7 {cycle, run}
     run declarations@Functor.Declarations {types} = do
       context <- pure $ localBindings declarations context
       let Functor.Annotated {meta} = types Vector.! index
-          self = Link.Type.Declaration index
           link :: Link.Type.Link Locality.Local -> Int -> ST s (Simple.Type (Scope.Declaration ':+ scope))
           link (Link.Type.Declaration local) id = do
             let Functor.Annotated {content} = types Vector.! local
@@ -228,7 +227,7 @@ checkTypeDeclaration context index declaration = Formula7 {cycle, run}
                     typex
               _ -> error "bad link lookup"
       annotation <- meta
-      TypeDeclaration.check context link Local self annotation declaration
+      TypeDeclaration.check context link annotation declaration
 
 checkTypeDeclarationExtra ::
   forall s scope.

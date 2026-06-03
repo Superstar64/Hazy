@@ -8,7 +8,6 @@ import qualified Data.Vector.Strict as Strict.Vector
 import Error (cyclicalTypeChecking)
 import Graph.Topological (Formula7 (..), Loeb7 (..), loeb7)
 import qualified Graph.Topological7
-import Stage1.Variable (toQualifiers)
 import qualified Stage2.Index.Link.Term as Link.Term
 import qualified Stage2.Index.Link.Type as Link.Type
 import qualified Stage2.Index.Type as Type
@@ -205,8 +204,7 @@ checkTypeDeclaration global local declaration = Formula7 {cycle, run}
     cycle :: a
     cycle = cyclicalTypeChecking $ Stage2.TypeDeclaration.position declaration
     run moduleSet@(Functor.ModuleSet modules) = do
-      let self = Link.Type.Global global local
-          Functor.Module {name, declarations} = modules Vector.! global
+      let Functor.Module {declarations} = modules Vector.! global
           Functor.Declarations {types} = declarations
           Functor.Annotated {meta} = types Vector.! local
           link :: Link.Type.Link 'Locality.Global -> Int -> ST s (Simple.Type Global)
@@ -224,7 +222,7 @@ checkTypeDeclaration global local declaration = Formula7 {cycle, run}
       annotation <- meta
       let context = globalBindings moduleSet
       -- todo, augment context with self to allow basic recursive inference
-      TypeDeclaration.check context link (toQualifiers name) self annotation declaration
+      TypeDeclaration.check context link annotation declaration
 
 checkTypeDeclarationExtra ::
   forall s.

@@ -6,7 +6,15 @@ import Data.Kind (Type)
 import Stage2.Scope (Environment)
 import Stage2.Stage (Stage)
 
-type role TypeDefinition nominal nominal
+type role TypeDefinition nominal nominal nominal
 
-type TypeDefinition :: Stage -> Environment -> Type
-data TypeDefinition stage scope
+data Equality
+  = Constructive
+  | Substitutive
+
+type Constructive = 'Constructive
+
+type Substitutive = 'Substitutive
+
+type TypeDefinition :: Equality -> Stage -> Environment -> Type
+data TypeDefinition equality stage scope

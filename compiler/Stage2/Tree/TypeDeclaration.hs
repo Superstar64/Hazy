@@ -24,7 +24,7 @@ import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Check, Resolve, Stage)
 import Stage2.Tree.Combinators.Inferred (Inferred (..))
-import Stage2.Tree.TypeDefinition (TypeDefinition (Synonym))
+import Stage2.Tree.TypeDefinition (Constructive, TypeDefinition)
 import Stage2.Tree.TypeDefinition2 (TypeDefinition2)
 import qualified Stage2.Tree.TypeDefinition2 as TypeDefinition2
 import qualified Stage4.Tree.Type as Simple (Type)
@@ -135,7 +135,7 @@ ungroupM index lookup TypeDeclaration {position, name, constructorNames, definit
       }
 
 data Groupable scope = Groupable
-  { element :: !(TypeDefinition Resolve scope),
+  { element :: !(TypeDefinition Constructive Resolve scope),
     position' :: !Position,
     name' :: !ConstructorIdentifier,
     constructorNames' :: !(Strict.Vector Constructor)
@@ -143,7 +143,7 @@ data Groupable scope = Groupable
 
 groupable :: TypeDeclaration locality Normal Resolve scope -> Maybe (Groupable scope)
 groupable TypeDeclaration {position, name, constructorNames, definition} = case definition of
-  TypeDefinition2.Inferred TypeDefinition2.::: definition ->
+  TypeDefinition2.InferredCyclic TypeDefinition2.::: definition ->
     Just
       Groupable
         { element = definition,
@@ -152,8 +152,7 @@ groupable TypeDeclaration {position, name, constructorNames, definition} = case 
           constructorNames' = constructorNames
         }
   TypeDefinition2.Annotated {} TypeDefinition2.::: _ -> Nothing
+  TypeDefinition2.InferredAcyclic TypeDefinition2.::: _ -> Nothing
 
 groupFree :: Groupable scope -> [Type0.Index scope]
-groupFree Groupable {element} = case element of
-  Synonym {} -> []
-  _ -> freeTypeVariables Target element
+groupFree Groupable {element} = freeTypeVariables Target element

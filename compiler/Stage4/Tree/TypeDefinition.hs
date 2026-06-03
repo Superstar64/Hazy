@@ -53,7 +53,7 @@ instance Substitute.Functor TypeDefinition where
     Synonym definition ->
       Synonym (Substitute.map (Substitute.Over category) definition)
 
-simplify :: Solved.TypeDefinition Check scope -> TypeDefinition scope
+simplify :: Solved.TypeDefinition equality Check scope -> TypeDefinition scope
 simplify = \case
   Solved.ADT {parameters, constructors, selectors, brand} ->
     Data

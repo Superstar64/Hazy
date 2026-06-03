@@ -10,7 +10,7 @@ import Stage2.Layout (Layout)
 import Stage2.Locality (Locality)
 import Stage2.Scope (Environment)
 import Stage2.Stage (Check, Resolve, Stage)
-import {-# SOURCE #-} Stage2.Tree.TypeDefinition (TypeDefinition)
+import {-# SOURCE #-} Stage2.Tree.TypeDefinition (Constructive, TypeDefinition)
 import qualified Stage4.Tree.Type as Simple
 
 type role TypeDeclaration nominal nominal nominal nominal
@@ -21,7 +21,7 @@ data TypeDeclaration locality layout stage scope
 kind' :: TypeDeclaration locality layout Check scope -> Simple.Type scope
 
 data Groupable scope = Groupable
-  { element :: !(TypeDefinition Resolve scope),
+  { element :: !(TypeDefinition Constructive Resolve scope),
     position' :: !Position,
     name' :: !ConstructorIdentifier,
     constructorNames' :: !(Strict.Vector Constructor)

@@ -45,6 +45,7 @@ import qualified Stage2.Tree.Field as Real.Field
 import qualified Stage2.Tree.StrictnessAnnotation as StrictnessAnnotation
 import qualified Stage2.Tree.TypeDeclaration as Real (TypeDeclaration (..), locality)
 import qualified Stage2.Tree.TypeDeclarationExtra as Real.Extra
+import Stage2.Tree.TypeDefinition (Alias (..), Inject (Inject))
 import qualified Stage2.Tree.TypeDefinition as Real (TypeDefinition (..))
 import qualified Stage2.Tree.TypeDefinition2 as Real (Annotation (..), TypeDefinition2 (..))
 import Verbose (Debug (resolving))
@@ -130,8 +131,15 @@ merge entries@(entry :| _) =
                         name,
                         constructorNames,
                         definition =
-                          Real.Inferred
-                            Real.::: Real.ADT {position, brand, parameters, constructors, selectors},
+                          Real.InferredCyclic
+                            Real.::: Real.ADT
+                              { position,
+                                brand,
+                                parameters,
+                                constructors,
+                                selectors,
+                                inject = Inject
+                              },
                         kind = Inferred
                       }
                   Strict.Just annotation ->
@@ -141,7 +149,14 @@ merge entries@(entry :| _) =
                         constructorNames,
                         definition =
                           Real.Annotated annotation
-                            Real.::: Real.ADT {position, brand, parameters, constructors, selectors},
+                            Real.::: Real.ADT
+                              { position,
+                                brand,
+                                parameters,
+                                constructors,
+                                selectors,
+                                inject = Inject
+                              },
                         kind = Inferred
                       }
         | Just (_, More.GADT {brand, parameters, gadtConstructors}) <- gadt,
@@ -155,13 +170,14 @@ merge entries@(entry :| _) =
                       name,
                       constructorNames,
                       definition =
-                        Real.Inferred
+                        Real.InferredCyclic
                           Real.::: Real.GADT
                             { position,
                               parameters,
                               brand,
                               gadtConstructors,
-                              unsupported = Refl
+                              unsupported = Refl,
+                              inject = Inject
                             },
                       kind = Inferred
                     }
@@ -177,7 +193,8 @@ merge entries@(entry :| _) =
                               parameters,
                               brand,
                               gadtConstructors,
-                              unsupported = Refl
+                              unsupported = Refl,
+                              inject = Inject
                             },
                       kind = Inferred
                     }
@@ -190,8 +207,14 @@ merge entries@(entry :| _) =
                     name,
                     constructorNames = Strict.Vector.empty,
                     definition =
-                      Real.Inferred
-                        Real.::: Real.Class {position, parameter, constraints, methods},
+                      Real.InferredCyclic
+                        Real.::: Real.Class
+                          { position,
+                            parameter,
+                            constraints,
+                            methods,
+                            inject = Inject
+                          },
                     kind = Inferred
                   }
               Strict.Just annotation ->
@@ -201,7 +224,13 @@ merge entries@(entry :| _) =
                     constructorNames = Strict.Vector.empty,
                     definition =
                       Real.Annotated annotation
-                        Real.::: Real.Class {position, parameter, constraints, methods},
+                        Real.::: Real.Class
+                          { position,
+                            parameter,
+                            constraints,
+                            methods,
+                            inject = Inject
+                          },
                     kind = Inferred
                   }
         | Just
@@ -218,7 +247,12 @@ merge entries@(entry :| _) =
                   name,
                   constructorNames = Strict.Vector.empty,
                   definition =
-                    Real.Inferred Real.::: Real.Synonym {parameters, synonym},
+                    Real.InferredAcyclic
+                      Real.::: Real.Synonym
+                        { parameters,
+                          synonym,
+                          alias = Alias
+                        },
                   kind = Inferred
                 }
             Strict.Just annotation ->
@@ -227,7 +261,12 @@ merge entries@(entry :| _) =
                   name,
                   constructorNames = Strict.Vector.empty,
                   definition =
-                    Real.Annotated annotation Real.::: Real.Synonym {parameters, synonym},
+                    Real.Annotated annotation
+                      Real.::: Real.Synonym
+                        { parameters,
+                          synonym,
+                          alias = Alias
+                        },
                   kind = Inferred
                 }
       entries -> duplicateTypeEntries entries
