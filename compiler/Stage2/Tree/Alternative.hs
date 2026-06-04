@@ -1,21 +1,14 @@
 module Stage2.Tree.Alternative where
 
-import Stage1.Position (Position)
-import qualified Stage1.Tree.Alternative as Stage1 (Alternative (..))
 import Stage2.Connect (Connect (..))
 import Stage2.FreeVariables (FreeTermVariables (freeTermVariables))
 import qualified Stage2.FreeVariables as FreeTermVariables
-import Stage2.Layout (Normal)
-import Stage2.Resolve.Context (Context (..))
 import Stage2.Scope (Environment ((:+)))
 import qualified Stage2.Scope as Scope (Pattern)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage2.Stage (Resolve)
 import Stage2.Tree.Pattern (Pattern)
-import qualified Stage2.Tree.Pattern as Pattern (augment, resolve)
 import Stage2.Tree.RightHandSide (RightHandSide)
-import qualified Stage2.Tree.RightHandSide as RightHandSide (resolve)
 
 data Alternative layout stage scope
   = Alternative
@@ -48,9 +41,3 @@ instance Connect Alternative where
       { parameter,
         rightHandSide = seperate rightHandSide
       }
-
-resolve :: Context scope -> Stage1.Alternative Position -> Alternative Normal Resolve scope
-resolve context (Stage1.Alternative {parameter, rightHandSide}) =
-  Alternative pattern' (RightHandSide.resolve (Pattern.augment pattern' context) rightHandSide)
-  where
-    pattern' = Pattern.resolve context parameter

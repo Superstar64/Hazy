@@ -20,12 +20,13 @@ import Stage2.Resolve.Context
     (!=*~),
     (!=.*),
   )
+import qualified Stage2.Resolve.Go.Instance as Real (resolve)
 import Stage2.Stage (Resolve)
 import Stage2.Temporary.Complete.Method (Method (Method))
 import qualified Stage2.Temporary.Complete.Method as Method
 import Stage2.Temporary.Complete.TypeDeclaration (TypeDeclaration (TypeDeclaration))
 import qualified Stage2.Temporary.Complete.TypeDeclaration as TypeDeclaration
-import qualified Stage2.Tree.Instance as Real
+import qualified Stage2.Tree.Instance as Real (Instance)
 
 data ClassInstance scope = ClassInstance
   { classPosition :: !Position,

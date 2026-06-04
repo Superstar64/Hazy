@@ -3,23 +3,15 @@
 module Stage2.Tree.Lambda where
 
 import Stage1.Position (Position)
-import qualified Stage1.Tree.Expression as Stage1 (Expression (..))
-import qualified Stage1.Tree.Pattern as Stage1 (Pattern (..))
-import qualified Stage1.Tree.Pattern as Stage1.Pattern
 import Stage2.Connect (Connect (..))
 import Stage2.FreeVariables (FreeTermVariables (..))
 import qualified Stage2.FreeVariables as FreeTermVariables
-import Stage2.Layout (Normal)
-import Stage2.Resolve.Context (Context (..))
 import Stage2.Scope (Environment ((:+)))
 import qualified Stage2.Scope as Scope (Pattern)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage2.Stage (Resolve)
 import {-# SOURCE #-} Stage2.Tree.Expression (Expression)
-import {-# SOURCE #-} qualified Stage2.Tree.Expression as Expression (resolve)
 import Stage2.Tree.Pattern (Pattern)
-import qualified Stage2.Tree.Pattern as Pattern (augment, resolve)
 
 data Lambda layout stage scope
   = Plain
@@ -73,15 +65,3 @@ instance Connect Lambda where
           parameter,
           body = seperate body
         }
-
--- todo complain when lambda variables shadow other lambda variables
-resolve :: Context scope -> [Stage1.Pattern Position] -> Stage1.Expression Position -> Lambda Normal Resolve scope
-resolve context patterns expression = case patterns of
-  [] -> Plain {plain = Expression.resolve context expression}
-  (patternx : patterns)
-    | parameter <- Pattern.resolve context patternx ->
-        Bound
-          { boundPosition = Stage1.Pattern.startPosition patternx,
-            parameter,
-            body = resolve (Pattern.augment parameter context) patterns expression
-          }

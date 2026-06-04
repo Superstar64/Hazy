@@ -34,8 +34,9 @@ import qualified Stage1.Tree.Module as Module (parse)
 import qualified Stage1.Tree.Module as Stage1 (Module, assumeName, name)
 import qualified Stage1.Variable as Variable
 import qualified Stage2.Layout as Layout
+import qualified Stage2.Resolve.Go.Module as Module (resolve)
 import qualified Stage2.Stage as Stage
-import qualified Stage2.Tree.Module as Module (connect, resolve, seperate)
+import qualified Stage2.Tree.Module as Module (connect, seperate)
 import qualified Stage2.Tree.Module as Stage2 (Module, name)
 import qualified Stage3.Tree.Module as Module (check)
 import qualified Stage4.Tree.Module as Module (simplify)

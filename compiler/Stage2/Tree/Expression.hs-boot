@@ -3,12 +3,9 @@
 module Stage2.Tree.Expression where
 
 import Data.Kind (Type)
-import Stage1.Position (Position)
-import qualified Stage1.Tree.Expression as Stage1 (Expression)
 import Stage2.Connect (Connect)
 import Stage2.FreeVariables (FreeTermVariables)
 import Stage2.Layout (Layout, Normal)
-import Stage2.Resolve.Context (Context)
 import Stage2.Scope (Environment)
 import Stage2.Shift (Shift)
 import qualified Stage2.Shift as Shift
@@ -32,4 +29,3 @@ instance FreeTermVariables (Expression layout)
 instance Connect Expression
 
 callHead_ :: CallHead Resolve scope -> Expression Normal Resolve scope
-resolve :: Context scope -> Stage1.Expression Position -> Expression Normal Resolve scope

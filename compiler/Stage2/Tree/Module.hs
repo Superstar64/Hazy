@@ -3,7 +3,6 @@
 module Stage2.Tree.Module
   ( Module (..),
     labelContext,
-    resolve,
     connect,
     seperate,
   )
@@ -12,9 +11,7 @@ where
 import Data.Maybe (fromJust)
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
-import Error (Position)
 import Graph.StronglyConnected (Index (..), tarjan)
-import qualified Stage1.Tree.Module as Stage1 (Module)
 import Stage1.Variable (FullQualifiers, toQualifiers)
 import qualified Stage2.Group.Functor.Term.Declarations as Functor.Term (indexes)
 import qualified Stage2.Group.Functor.Term.ModuleSet as Functor.Term (ModuleSet (..), (!))
@@ -32,7 +29,6 @@ import qualified Stage2.Locality as Locality
 import Stage2.Scope (Global)
 import qualified Stage2.Scope as Scope
 import Stage2.Stage (Check, Resolve)
-import {-# SOURCE #-} qualified Stage2.Temporary.Complete.Module as Complete
 import Stage2.Tree.Combinators.Implicit (Implicit)
 import Stage2.Tree.Declaration (Declaration (Declaration))
 import qualified Stage2.Tree.Declaration as Declaration
@@ -42,7 +38,6 @@ import qualified Stage2.Tree.Definition4 as Definition4
 import Stage2.Tree.TypeDeclaration (TypeDeclaration (..))
 import qualified Stage2.Tree.TypeDeclaration as TypeDeclaration
 import qualified Stage2.Tree.TypeDefinition2 as TypeDefinition2
-import Verbose (Debug)
 
 data Module layout stage = Module
   { name :: !FullQualifiers,
@@ -62,9 +57,6 @@ labelContext modules =
       Declaration.labelBinding (toQualifiers name) <$> terms
     labelTypes = fmap $ \Module {name, declarations = Declarations {types}} ->
       TypeDeclaration.labelBinding (toQualifiers name) <$> types
-
-resolve :: (Debug verbose) => Vector (Stage1.Module Position) -> verbose (Vector (Module Normal Resolve))
-resolve modules = fmap Complete.shrink <$> Complete.resolve modules
 
 connect :: Vector (Module Normal Resolve) -> Vector (Module Group Resolve)
 connect modules = Vector.imap go modules

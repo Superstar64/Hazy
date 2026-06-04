@@ -8,10 +8,8 @@ import qualified Data.Strict.Vector2 as Strict (Vector2)
 import Data.Text (pack)
 import qualified Data.Vector.Strict as Strict.Vector
 import Stage1.Lexer (constructorIdentifier)
-import Stage1.Position (Position)
 import Stage1.Tree.Marked (Marked (..))
 import qualified Stage1.Tree.Type as Stage1 (Type (..))
-import qualified Stage1.Tree.TypeInfix as Stage1.TypeInfix
 import Stage1.Variable
   ( Constructor (ConstructorIdentifier),
     QualifiedConstructor ((:=)),
@@ -23,17 +21,13 @@ import qualified Stage2.FreeVariables as FreeVariables
 import qualified Stage2.Index.Constructor as Constructor
 import qualified Stage2.Index.Local as Local
 import qualified Stage2.Index.Type2 as Type2
-import qualified Stage2.Index.Type3 as Type3
 import qualified Stage2.Label.Binding.Type as Label (TypeBinding (..))
 import qualified Stage2.Label.Context as Label (Context, (!-.*), (!=.), (!=.*))
-import Stage2.Resolve.Context ((!$), (!=*~))
-import qualified Stage2.Resolve.Context as Resolved (Context, (!=.*))
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift (..), shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Check, Equal (..), IsResolve (..), Resolve, Unsupported)
-import {-# SOURCE #-} qualified Stage2.Temporary.TypeInfix as Infix (fix, resolve)
 import {-# SOURCE #-} qualified Stage4.Tree.Type as Simple
 import Prelude hiding (Bool (False, True))
 import qualified Prelude
@@ -287,144 +281,6 @@ anonymize = \case
   Large {unsupported} -> Large {startPosition = (), unsupported}
   Universe {unsupported} -> Universe {startPosition = (), unsupported}
   Levity {} -> Levity {startPosition = ()}
-
-resolve :: Resolved.Context scope -> Stage1.Type Position -> Type Position Resolve scope
-resolve context = \case
-  Stage1.Variable {startPosition, variable} ->
-    Variable
-      { startPosition,
-        variable = context !$ variable
-      }
-  Stage1.Constructor {startPosition = constructorPosition@startPosition, constructor} ->
-    case context Resolved.!=.* constructor of
-      Type3.Index constructor ->
-        Constructor
-          { startPosition,
-            constructorPosition,
-            constructor,
-            synonym = NoSynonym
-          }
-      Type3.Type -> SmallType {startPosition}
-      Type3.Constraint -> Constraint {startPosition}
-      Type3.Small -> Small {startPosition, unsupported = Refl}
-      Type3.Large -> Large {startPosition, unsupported = Refl}
-      Type3.Universe -> Universe {startPosition, unsupported = Refl}
-      Type3.Levity -> Levity {startPosition}
-  Stage1.Unit {startPosition = constructorPosition@startPosition} ->
-    Constructor
-      { startPosition,
-        constructorPosition,
-        constructor = Type2.Tuple 0,
-        synonym = NoSynonym
-      }
-  Stage1.Arrow {startPosition = constructorPosition@startPosition} ->
-    Constructor
-      { startPosition,
-        constructorPosition,
-        constructor = Type2.Arrow,
-        synonym = NoSynonym
-      }
-  Stage1.Listing {startPosition = constructorPosition@startPosition} ->
-    Constructor
-      { startPosition,
-        constructorPosition,
-        constructor = Type2.List,
-        synonym = NoSynonym
-      }
-  Stage1.Tupling {startPosition = constructorPosition@startPosition, count} ->
-    Constructor
-      { startPosition,
-        constructorPosition,
-        constructor = Type2.Tuple count,
-        synonym = NoSynonym
-      }
-  Stage1.List {startPosition, element} ->
-    List
-      { startPosition,
-        element = resolve context element
-      }
-  Stage1.Tuple {startPosition, elements} ->
-    Tuple
-      { startPosition,
-        elements = fmap (resolve context) elements
-      }
-  Stage1.Call {startPosition, function, argument} ->
-    Call
-      { startPosition,
-        function = resolve context function,
-        argument = resolve context argument
-      }
-  Stage1.Function {startPosition, parameter, operatorPosition, result} ->
-    Function
-      { startPosition,
-        parameter = resolve context parameter,
-        operatorPosition,
-        result = resolve context result
-      }
-  Stage1.StrictFunction {startPosition, parameter, operatorPosition, result} ->
-    StrictFunction
-      { startPosition,
-        parameter = resolve context parameter,
-        operatorPosition,
-        result = resolve context result,
-        unsupported = Refl
-      }
-  Stage1.Lifted {startPosition = constructorPosition@startPosition, lifted} ->
-    Constructor
-      { startPosition,
-        constructorPosition,
-        constructor = Type2.Lifted (context !=*~ lifted),
-        synonym = NoSynonym
-      }
-  Stage1.LiftedCons {startPosition = constructorPosition@startPosition} ->
-    Constructor
-      { startPosition,
-        constructorPosition,
-        constructor = Type2.Lifted Constructor.cons,
-        synonym = NoSynonym
-      }
-  Stage1.LiftedList {startPosition = constructorPosition@startPosition, items}
-    | null items ->
-        Constructor
-          { startPosition,
-            constructorPosition,
-            constructor = Type2.Lifted Constructor.nil,
-            synonym = NoSynonym
-          }
-    | otherwise ->
-        LiftedList
-          { startPosition,
-            items = resolve context <$> Strict.Vector1.fromVector items
-          }
-  Stage1.Infix {startPosition, left, operator, right} ->
-    Infix.fix operators
-    where
-      operators =
-        Infix.resolve context $
-          Stage1.TypeInfix.Infix
-            { startPosition,
-              left,
-              operator,
-              right
-            }
-  Stage1.InfixCons {startPosition, head, operatorPosition, tail} ->
-    Infix.fix operators
-    where
-      operators =
-        Infix.resolve context $
-          Stage1.TypeInfix.InfixCons
-            { startPosition,
-              head,
-              operatorPosition,
-              tail
-            }
-  Stage1.Type {startPosition, universe} ->
-    Type
-      { startPosition,
-        universe = resolve context universe,
-        unsupported = Refl
-      }
-  Stage1.Star {startPosition} -> SmallType {startPosition}
 
 label :: Label.Context scope -> Type unit Resolve scope -> Stage1.Type ()
 label context = \case

@@ -2,10 +2,7 @@
 
 module Stage2.Tree.Entry where
 
-import Stage1.Position (Position)
-import qualified Stage1.Tree.Entry as Stage1 (Entry (..))
 import Stage2.FreeVariables (FreeTypeVariables (..))
-import Stage2.Resolve.Context (Context)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Check, IsResolve, Resolve)
@@ -81,27 +78,3 @@ anonymize Entry {entry, strict} =
     anonymizeRestrict = \case
       Canonical scheme -> Canonical (Scheme.anonymize scheme)
       Restricted typex -> Restricted (Type.anonymize typex)
-
-resolve :: Context scope -> Stage1.Entry -> Entry Position Resolve scope
-resolve context = \case
-  Stage1.Lazy {startPosition, entry} ->
-    Entry
-      { startPosition,
-        entry = Canonical $ Scheme.resolve context entry,
-        strict = Lazy
-      }
-  Stage1.Strict {startPosition, entry} ->
-    Entry
-      { startPosition,
-        entry = Canonical $ Scheme.resolve context entry,
-        strict = Strict
-      }
-  Stage1.Polymorphic {startPosition, levity, entry} ->
-    Entry
-      { startPosition,
-        entry = Canonical $ Scheme.resolve context entry,
-        strict =
-          Polymorphic
-            { levity = Type.resolve context levity
-            }
-      }

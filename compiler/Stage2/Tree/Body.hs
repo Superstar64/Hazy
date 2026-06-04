@@ -1,19 +1,13 @@
 module Stage2.Tree.Body where
 
 import qualified Data.Strict.Vector1 as Strict
-import Stage1.Position (Position)
-import qualified Stage1.Tree.Body as Stage1 (Body (..))
 import Stage2.Connect (Connect (..))
 import Stage2.FreeVariables (FreeTermVariables (..))
-import Stage2.Layout (Normal)
-import Stage2.Resolve.Context (Context)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage2.Stage (Resolve)
 import {-# SOURCE #-} Stage2.Tree.Expression (Expression)
-import {-# SOURCE #-} qualified Stage2.Tree.Expression as Expression (resolve)
 import Stage2.Tree.Statements (Statements)
-import qualified Stage2.Tree.Statements as Statements (Guard, resolve)
+import qualified Stage2.Tree.Statements as Statements (Guard)
 
 data Body layout stage scope
   = Body {body :: !(Expression layout stage scope)}
@@ -40,8 +34,3 @@ instance Connect Body where
   seperate = \case
     Body expression -> Body (seperate expression)
     Guards statements -> Guards (fmap seperate statements)
-
-resolve :: Context scope -> Stage1.Body Position -> Body Normal Resolve scope
-resolve context = \case
-  Stage1.Body {expression} -> Body (Expression.resolve context expression)
-  Stage1.Guards {statements} -> Guards (fmap (Statements.resolve context) statements)

@@ -19,6 +19,9 @@ import qualified Stage1.Tree.Declaration as Stage1 (Declaration (..))
 import Stage1.Tree.Marked (Marked (..))
 import Stage1.Variable (ConstructorIdentifier)
 import Stage2.Resolve.Context (Context (..), augmentLocalTypes)
+import qualified Stage2.Resolve.Go.Constraint as Constraint
+import qualified Stage2.Resolve.Go.Type as Type (resolve)
+import qualified Stage2.Resolve.Go.TypePattern as TypePattern
 import Stage2.Stage (Resolve)
 import Stage2.Temporary.Complete.Constructor (Constructor (Constructor))
 import qualified Stage2.Temporary.Complete.Constructor as Constructor
@@ -37,14 +40,11 @@ import qualified Stage2.Temporary.Partial.More.GADT as More (GADT (GADT))
 import qualified Stage2.Temporary.Partial.More.GADT as More.GADT
 import qualified Stage2.Temporary.Partial.More.Synonym as More (Synonym (Synonym))
 import qualified Stage2.Temporary.Partial.More.Synonym as More.Synonym
-import qualified Stage2.Tree.Constraint as Constraint
 import qualified Stage2.Tree.Entry as Entry
 import qualified Stage2.Tree.Field as Field
 import qualified Stage2.Tree.Selector as Selector
 import qualified Stage2.Tree.StrictnessAnnotation as StrictnessAnnotation
 import Stage2.Tree.Type (Type)
-import qualified Stage2.Tree.Type as Type (resolve)
-import qualified Stage2.Tree.TypePattern as TypePattern
 
 data TypeDeclaration scope
   = ADT

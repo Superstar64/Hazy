@@ -1,22 +1,15 @@
 module Stage2.Tree.Constraint where
 
 import qualified Data.Vector.Strict as Strict (Vector)
-import Error (constraintNonLocal, illegalConstraint)
-import Stage1.Position (Position)
-import qualified Stage1.Tree.Constraint as Stage1 (Constraint (..))
 import Stage2.FreeVariables (FreeTypeVariables (..))
 import qualified Stage2.FreeVariables as FreeTermVariables
 import qualified Stage2.FreeVariables as FreeVariables
-import Stage2.Index.Local (Index (Local))
 import qualified Stage2.Index.Type2 as Type2
-import qualified Stage2.Index.Type3 as Type3
-import Stage2.Resolve.Context (Context (..), (!$), (!=.*))
 import Stage2.Scope (Environment ((:+)), Local)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage2.Stage (Resolve)
 import Stage2.Tree.Type (Type)
-import qualified Stage2.Tree.Type as Type (anonymize, resolve)
+import qualified Stage2.Tree.Type as Type (anonymize)
 import Prelude hiding (head)
 
 data Constraint position stage scope = Constraint
@@ -54,17 +47,3 @@ anonymize Constraint {classx, head, arguments} =
       head,
       arguments = Type.anonymize <$> arguments
     }
-
-resolve :: Context (Local ':+ scope) -> Stage1.Constraint Position -> Constraint Position Resolve scope
-resolve context Stage1.Constraint {startPosition, classVariable, typeVariable, arguments}
-  | Local head <- context !$ typeVariable =
-      case context !=.* classVariable of
-        Type3.Index classx ->
-          Constraint
-            { startPosition,
-              classx = Type2.unlocal classx,
-              head,
-              arguments = Type.resolve context <$> arguments
-            }
-        _ -> illegalConstraint startPosition
-  | otherwise = constraintNonLocal startPosition

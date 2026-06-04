@@ -2,18 +2,12 @@
 
 module Stage2.Tree.Declarations where
 
-import Data.Foldable (toList)
-import Data.Functor.Identity (Identity (runIdentity))
 import Data.Map (Map)
-import Data.Maybe (fromJust, mapMaybe)
+import Data.Maybe (fromJust)
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Graph.StronglyConnected (Index (..), tarjan)
 import qualified Graph.StronglyConnected as StronglyConnected
-import Stage1.Extensions (Extensions (Extensions, stableImports))
-import Stage1.Position (Position)
-import qualified Stage1.Tree.Declaration as Stage1 (toImport)
-import qualified Stage1.Tree.Declarations as Stage1 (Declarations (..))
 import Stage1.Variable (Qualifiers (Local))
 import qualified Stage2.Connect as Connect
 import Stage2.FreeVariables (FreeTermVariables (..))
@@ -21,22 +15,16 @@ import {-# SOURCE #-} qualified Stage2.Group.Functor.Term.Declarations as Functo
 import {-# SOURCE #-} qualified Stage2.Group.Functor.Type.Declarations as Functor.Type
 import qualified Stage2.Index.Link.Term as Term
 import qualified Stage2.Index.Link.Type as Type
-import qualified Stage2.Index.Term as Index.Term
 import qualified Stage2.Index.Term0 as Term0 (Index (..))
 import qualified Stage2.Index.Type0 as Type0
 import qualified Stage2.Index.Type2 as Type2
 import Stage2.Layout (Group, Normal)
 import Stage2.Locality (Local)
-import qualified Stage2.Resolve.Bindings as Bindings
-import Stage2.Resolve.Context (Context (..))
-import qualified Stage2.Resolve.Context as Context
-import Stage2.Resolve.Import (StableImports (StableImports), pickImports)
 import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Check, Resolve)
-import {-# SOURCE #-} qualified Stage2.Temporary.Complete.Declarations as Complete
 import Stage2.Tree.Combinators.Implicit (Implicit)
 import Stage2.Tree.Declaration (Declaration (..))
 import qualified Stage2.Tree.Declaration as Declaration
@@ -83,26 +71,6 @@ instance FreeTermVariables (Declarations locality layout) where
       [ foldMap (freeTermVariables target) terms,
         foldMap (freeTermVariables target) typeExtras
       ]
-
-resolve ::
-  Context scope ->
-  Stage1.Declarations Position ->
-  ( Context (Scope.Declaration ':+ scope),
-    Declarations locality Normal Resolve (Scope.Declaration ':+ scope)
-  )
-resolve initial@Context {canonical, extensions} Stage1.Declarations {declarations} =
-  (context, Complete.shrink complete)
-  where
-    context
-      | context <- initial,
-        Extensions {stableImports} <- extensions,
-        imports <- pickImports (StableImports stableImports) (mapMaybe Stage1.toImport (toList declarations)) canonical,
-        context <- imports Context.</> context,
-        context@Context {locals} <- shift context,
-        bindings <- Complete.bindings Term0.Declaration Type0.Declaration complete,
-        context <- context {locals = bindings Bindings.</> locals} =
-          context
-    complete = runIdentity $ Complete.resolve context extensions Index.Term.Declaration (toList declarations)
 
 group ::
   Qualifiers ->

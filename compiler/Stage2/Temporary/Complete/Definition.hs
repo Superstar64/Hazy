@@ -18,11 +18,11 @@ import Stage1.Variable
 import Stage2.Layout (Normal)
 import qualified Stage2.Resolve.Binding.Term as Term
 import Stage2.Resolve.Context (Context, (!-))
+import qualified Stage2.Resolve.Go.Function as Function (resolve)
+import qualified Stage2.Resolve.Go.Pattern as Pattern (augment)
 import Stage2.Stage (Resolve)
 import qualified Stage2.Temporary.PatternInfix as Pattern.Infix (fixWith, resolve)
 import Stage2.Tree.Function (Function (..))
-import qualified Stage2.Tree.Function as Function (resolve)
-import qualified Stage2.Tree.Pattern as Pattern (augment)
 import Prelude hiding (Either (Left, Right))
 
 data Definition scope = Definition !Position !Variable (Function Normal Resolve scope)

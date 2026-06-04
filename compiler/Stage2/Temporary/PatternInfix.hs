@@ -9,12 +9,13 @@ import qualified Stage1.Tree.PatternInfix as Stage1 (Infix (..))
 import qualified Stage2.Index.Constructor as Constructor (cons)
 import qualified Stage2.Resolve.Binding.Constructor as Constructor (Binding (..))
 import Stage2.Resolve.Context (Context (..), (!=~))
+import qualified Stage2.Resolve.Go.Pattern as Pattern (resolve)
 import Stage2.Stage (Resolve)
 import Stage2.Temporary.Infix (Infix (..))
 import qualified Stage2.Temporary.Infix as Infix
 import Stage2.Tree.Combinators.Inferred (Inferred (..))
 import Stage2.Tree.Pattern (Pattern ())
-import qualified Stage2.Tree.Pattern as Pattern
+import qualified Stage2.Tree.Pattern as Pattern (Pattern (..))
 import Prelude hiding (Either (Left, Right))
 
 data Index scope

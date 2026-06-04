@@ -3,12 +3,9 @@
 module Stage2.Tree.Declarations where
 
 import Data.Kind (Type)
-import Stage1.Position (Position)
-import qualified Stage1.Tree.Declarations as Stage1 (Declarations)
 import Stage2.FreeVariables (FreeTermVariables)
 import Stage2.Layout (Group, Layout, Normal)
 import Stage2.Locality (Local, Locality)
-import Stage2.Resolve.Context (Context)
 import Stage2.Scope (Declaration, Environment (..))
 import Stage2.Shift (Shift)
 import qualified Stage2.Shift as Shift
@@ -28,12 +25,6 @@ instance Shift.Functor (Declarations locality layout stage)
 
 instance FreeTermVariables (Declarations locality layout)
 
-resolve ::
-  Context scope ->
-  Stage1.Declarations Position ->
-  ( Context (Declaration ':+ scope),
-    Declarations locality Normal Resolve (Declaration ':+ scope)
-  )
 connect ::
   forall scope.
   Declarations Local Normal Resolve (Declaration ':+ scope) ->

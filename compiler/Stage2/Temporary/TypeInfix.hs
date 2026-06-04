@@ -12,6 +12,7 @@ import Stage2.Resolve.Context
   ( Context (..),
     (!=~),
   )
+import qualified Stage2.Resolve.Go.Type as Type (resolve)
 import Stage2.Stage (Resolve)
 import Stage2.Temporary.Infix (Infix (..))
 import qualified Stage2.Temporary.Infix as Infix
@@ -27,7 +28,6 @@ import qualified Stage2.Tree.Type as Type
         startPosition,
         synonym
       ),
-    resolve,
   )
 import Prelude hiding (Either (Left, Right))
 

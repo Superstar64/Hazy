@@ -25,6 +25,9 @@ import Stage1.Variable (ConstructorIdentifier, Name (..), Variable)
 import qualified Stage2.Index.Term as Term
 import Stage2.Layout (Normal)
 import Stage2.Resolve.Context (Context)
+import qualified Stage2.Resolve.Go.Pattern as Pattern
+import qualified Stage2.Resolve.Go.RightHandSide as RightHandSide
+import qualified Stage2.Resolve.Go.Scheme as Scheme
 import Stage2.Stage (Resolve)
 import {-# SOURCE #-} qualified Stage2.Temporary.Complete.Declaration as Complete
   ( Declaration (Declaration, annotation),
@@ -51,10 +54,7 @@ import qualified Stage2.Tree.Declaration as Real (Declaration (..))
 import qualified Stage2.Tree.Definition2 as Real (Definition2 (Shared))
 import qualified Stage2.Tree.Definition3 as Real (Definition3 (..), Info (..))
 import qualified Stage2.Tree.Definition4 as Real (Annotation (..), Definition4 (..))
-import qualified Stage2.Tree.Pattern as Pattern
-import qualified Stage2.Tree.RightHandSide as RightHandSide
 import Stage2.Tree.Scheme (Scheme)
-import qualified Stage2.Tree.Scheme as Scheme
 
 data Declaration scope
   = Fixity

@@ -15,8 +15,9 @@ import qualified Stage2.Index.Type3 as Type3
 import Stage2.Layout (Normal)
 import qualified Stage2.Resolve.Binding.Type as Type
 import Stage2.Resolve.Context (Context, (!=.))
+import qualified Stage2.Resolve.Go.Instance as Real (resolve)
 import qualified Stage2.Stage as Stage2
-import qualified Stage2.Tree.Instance as Real
+import qualified Stage2.Tree.Instance as Real (Instance)
 
 data DataInstance scope = DataInstance
   { classPosition :: !Position,

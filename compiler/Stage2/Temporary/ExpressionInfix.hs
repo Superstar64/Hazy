@@ -18,15 +18,11 @@ import Stage2.Resolve.Context
     (!-),
     (!=~),
   )
+import qualified Stage2.Resolve.Go.Expression as Expression
 import Stage2.Stage (Resolve)
 import Stage2.Temporary.Infix (Infix (..))
 import qualified Stage2.Temporary.Infix as Infix
 import Stage2.Tree.Expression (Expression)
-import qualified Stage2.Tree.Expression as Expression
-  ( resolve,
-    resolveConstructor2,
-    resolveTerm2,
-  )
 import Prelude hiding (Either (Left, Right))
 
 data Index scope

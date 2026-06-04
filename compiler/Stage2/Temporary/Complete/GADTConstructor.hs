@@ -6,9 +6,9 @@ import qualified Stage1.Tree.GADTConstructor as Stage1
 import Stage1.Tree.Marked (Marked ((:@)))
 import Stage1.Variable (Constructor)
 import Stage2.Resolve.Context (Context)
+import qualified Stage2.Resolve.Go.Scheme as Scheme
 import Stage2.Stage (Resolve)
 import qualified Stage2.Tree.GADTConstructor as Real
-import qualified Stage2.Tree.Scheme as Scheme
 
 data GADTConstructor scope = GADTConstructor
   { position :: !Position,

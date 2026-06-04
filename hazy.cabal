@@ -235,6 +235,26 @@ executable hazy
     Stage2.Resolve.Functor.Canonical
     Stage2.Resolve.Functor.Core
     Stage2.Resolve.Functor.Same
+    Stage2.Resolve.Go.Alternative
+    Stage2.Resolve.Go.Body
+    Stage2.Resolve.Go.CallHead
+    Stage2.Resolve.Go.Constraint
+    Stage2.Resolve.Go.Declarations
+    Stage2.Resolve.Go.Entry
+    Stage2.Resolve.Go.Expression
+    Stage2.Resolve.Go.ExpressionField
+    Stage2.Resolve.Go.Function
+    Stage2.Resolve.Go.Instance
+    Stage2.Resolve.Go.Lambda
+    Stage2.Resolve.Go.Module
+    Stage2.Resolve.Go.Pattern
+    Stage2.Resolve.Go.PatternField
+    Stage2.Resolve.Go.RightHandSide
+    Stage2.Resolve.Go.Scheme
+    Stage2.Resolve.Go.Select
+    Stage2.Resolve.Go.Statements
+    Stage2.Resolve.Go.Type
+    Stage2.Resolve.Go.TypePattern
     Stage2.Resolve.Import
     Stage2.Resolve.Stability
     Stage2.Scope

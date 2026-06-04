@@ -1,29 +1,20 @@
 module Stage2.Tree.Statements where
 
-import Data.Foldable (toList)
 import Data.Kind (Type)
 import Stage1.Position (Position)
-import qualified Stage1.Tree.Expression as Stage1 (Expression)
-import qualified Stage1.Tree.Statement as Stage1 (Statement (..))
-import qualified Stage1.Tree.Statements as Stage1 (Statements (..))
 import Stage2.Connect (Connect (..))
 import Stage2.FreeVariables (FreeTermVariables (..))
 import qualified Stage2.FreeVariables as FreeVariables
-import Stage2.Layout (Normal)
 import qualified Stage2.Locality as Locality
-import Stage2.Resolve.Context (Context (..))
 import Stage2.Scope (Environment ((:+)))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift (..), shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage2.Stage (Resolve)
 import Stage2.Tree.Combinators.Inferred (Inferred (..))
 import {-# SOURCE #-} Stage2.Tree.Declarations (Declarations)
 import {-# SOURCE #-} qualified Stage2.Tree.Declarations as Declarations
 import {-# SOURCE #-} Stage2.Tree.Expression (Expression)
-import {-# SOURCE #-} qualified Stage2.Tree.Expression as Expression (resolve)
 import Stage2.Tree.Pattern (Pattern)
-import qualified Stage2.Tree.Pattern as Pattern (augment, neverFails, resolve)
 import qualified Stage4.Tree.Evidence as Simple (Evidence)
 
 data Syntax
@@ -195,41 +186,3 @@ instance Shift.Functor (Evidence syntax) where
   map category = \case
     Bool -> Bool
     Monad evidence -> Monad (Shift.map category evidence)
-
-resolve :: Context scope -> Stage1.Statements Position -> Statements syntax Normal Resolve scope
-resolve context Stage1.Statements {body, done} = statements context (toList body) done
-  where
-    statements ::
-      Context scope ->
-      [Stage1.Statement Position] ->
-      Stage1.Expression Position ->
-      Statements syntax Normal Resolve scope
-    statements context [] done =
-      Done
-        { done = Expression.resolve context done
-        }
-    statements context (Stage1.Run {startPosition, expression} : remaining) done =
-      Run
-        { startPosition,
-          evidence = Inferred,
-          effect = Expression.resolve context expression,
-          after = statements context remaining done
-        }
-    statements context (Stage1.Bind {startPosition, patternx, expression} : remaining) done =
-      Bind
-        { startPosition,
-          evidence = Inferred,
-          patternx = pattern',
-          effect = Expression.resolve context expression,
-          thenx = statements (Pattern.augment pattern' context) remaining done,
-          fail = not $ Pattern.neverFails pattern'
-        }
-      where
-        pattern' = Pattern.resolve context patternx
-    statements context (Stage1.Let {startPosition, declarations} : remaining) done
-      | (context, declarations) <- Declarations.resolve context declarations =
-          Let
-            { startPosition,
-              declarations,
-              body = statements context remaining done
-            }

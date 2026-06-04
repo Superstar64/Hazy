@@ -13,11 +13,11 @@ import Stage1.Tree.Marked (Marked ((:@)))
 import Stage1.Variable (Variable)
 import qualified Stage1.Variable as Variable (Constructor)
 import Stage2.Resolve.Context (Context)
+import qualified Stage2.Resolve.Go.Entry as Entry
 import Stage2.Stage (Resolve)
 import Stage2.Temporary.Complete.Field (Field)
 import qualified Stage2.Temporary.Complete.Field as Field
 import qualified Stage2.Tree.Constructor as Real
-import qualified Stage2.Tree.Entry as Entry
 
 data Constructor scope
   = Constructor

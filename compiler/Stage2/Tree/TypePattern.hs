@@ -1,12 +1,11 @@
 module Stage2.Tree.TypePattern where
 
-import qualified Stage1.Tree.TypePattern as Stage1
 import Stage1.Variable (VariableIdentifier)
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import Stage2.Stage (Check, Resolve)
+import Stage2.Stage (Check)
 import Stage2.Tree.Combinators.Inferred (Inferred (..), get)
-import {-# SOURCE #-} Stage4.Tree.Type as Simple (Type)
+import Stage4.Tree.Type as Simple (Type)
 
 data TypePattern position stage scope = TypePattern
   { position :: !position,
@@ -37,14 +36,6 @@ anonymize TypePattern {name, typex} =
     { position = (),
       name,
       typex
-    }
-
-resolve :: Stage1.TypePattern position -> TypePattern position Resolve scope
-resolve Stage1.TypePattern {position, name} =
-  TypePattern
-    { position,
-      name,
-      typex = Inferred
     }
 
 typex' :: TypePattern position Check scope -> Simple.Type scope
