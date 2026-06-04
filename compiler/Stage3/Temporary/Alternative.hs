@@ -32,7 +32,7 @@ check context typex binder Stage2.Alternative {parameter, rightHandSide} = do
   rightHandSide <- RightHandSide.check (Pattern.augment parameter context) (shift typex) rightHandSide
   pure Alternative {parameter, rightHandSide}
 
-solve :: Alternative s scope -> ST s (Solved.Alternative Group Check scope)
+solve :: Alternative s scope -> Unify.Solve s (Solved.Alternative Group Check scope)
 solve Alternative {parameter, rightHandSide} = do
   parameter <- Pattern.solve parameter
   rightHandSide <- RightHandSide.solve rightHandSide

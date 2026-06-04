@@ -45,7 +45,9 @@ module Stage3.Unify
     Generalize (..),
     Body ((:::)),
     generalizeBody,
-    generalize,
+    Solve,
+    liftST,
+    runSolve,
     solve,
     solveEvidence,
     solveInstanciation,
@@ -57,7 +59,6 @@ module Stage3.Unify
     Category,
     MapScheme (..),
     mapScheme,
-    Delay (..),
   )
 where
 
@@ -76,9 +77,9 @@ import Stage3.Check.Context (Context (..))
 import qualified Stage3.Index.Evidence as Evidence (Index (..))
 import Stage3.Unify.Class
   ( Category,
-    Delay (..),
     Functor (..),
     Generalizable (collect),
+    Solve (..),
     Zonk (..),
     Zonker (..),
   )
@@ -95,7 +96,6 @@ import Stage3.Unify.SchemeOver
     SchemeOver (..),
     SolveScheme (..),
     generalizeBody,
-    generalizeOver,
     instanciateOver,
     mapScheme,
   )
@@ -247,23 +247,30 @@ instanciate :: Context s scope -> Position -> Scheme s scope -> ST s (Type s sco
 instanciate context position Scheme {runScheme} =
   instanciateOver context position runScheme
 
-generalize :: Context s scopes -> Generalize Type s scopes -> ST s (Scheme s scopes)
-generalize context = fmap Scheme . generalizeOver context
+-- todo, figure out how to make sure nodes that are being solved early have a
+-- rigid context
+runSolve :: Solve s a -> ST s a
+runSolve (Solve a) = a
 
-solveEvidence :: Position -> Evidence s scope -> ST s (Simple.Evidence scope)
+-- todo, figure out how to make sure no unification occurs during solving
+liftST :: ST s a -> Solve s a
+liftST = Solve
+
+solveEvidence :: Position -> Evidence s scope -> Solve s (Simple.Evidence scope)
 solveEvidence = Evidence.solve
 
-solveInstanciation :: Position -> Instanciation s scope -> ST s (Simple.Instanciation scope)
+solveInstanciation :: Position -> Instanciation s scope -> Solve s (Simple.Instanciation scope)
 solveInstanciation = Instanciation.solve
 
-solveConstraint :: Position -> Constraint s scope -> ST s (Simple.Constraint scope)
+solveConstraint :: Position -> Constraint s scope -> Solve s (Simple.Constraint scope)
 solveConstraint = Constraint.solve
 
+solveScheme :: Position -> Scheme s scope -> Solve s (Simple.Scheme scope)
 solveScheme position (Scheme scheme) = Simple.Scheme <$> solveSchemeOver (SolveScheme solve) position scheme
 
 solveSchemeOver ::
   SolveScheme source target ->
   Position ->
   SchemeOver source s scope ->
-  ST s (Simple.SchemeOver target scope)
+  Solve s (Simple.SchemeOver target scope)
 solveSchemeOver = SchemeOver.solve

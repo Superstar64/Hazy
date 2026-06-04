@@ -138,7 +138,7 @@ check context@Context {localEnvironment, typeEnvironment} kind = \case
     Unify.unify context startPosition kind Unify.kind
     pure Levity {startPosition}
 
-solve :: Context s scope -> Type s scope -> ST s (Solved.Type Position Check scope)
+solve :: Context s scope -> Type s scope -> Unify.Solve s (Solved.Type Position Check scope)
 solve context = \case
   Variable {startPosition, variable} -> do
     pure
@@ -147,7 +147,7 @@ solve context = \case
           variable
         }
   Constructor {startPosition, constructorPosition, constructor} -> do
-    synonym <- Context.lookupSynonym context constructor
+    synonym <- Unify.liftST $ Context.lookupSynonym context constructor
     pure
       Solved.Constructor
         { startPosition,

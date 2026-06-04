@@ -9,6 +9,7 @@ import qualified Stage2.Tree.Field as Stage2
 import Stage3.Check.Context (Context)
 import Stage3.Temporary.Entry (Entry)
 import qualified Stage3.Temporary.Entry as Entry
+import qualified Stage3.Unify as Unify
 
 data Field s scope = Field
   { position :: !Position,
@@ -21,7 +22,7 @@ check context Stage2.Field {position, name, entry} = do
   entry <- Entry.check context entry
   pure Field {position, name, entry}
 
-solve :: Context s scope -> Field s scope -> ST s (Solved.Field Check scope)
+solve :: Context s scope -> Field s scope -> Unify.Solve s (Solved.Field Check scope)
 solve context Field {position, name, entry} = do
   entry <- Entry.solve context entry
   pure Solved.Field {position, name, entry}

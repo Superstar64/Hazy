@@ -9,10 +9,10 @@ module Stage3.Unify
     SchemeOver,
     Type,
     fresh,
-    solve,
     mark,
     unify,
-    Delay (..),
+    Solve,
+    solve,
   )
 where
 
@@ -82,3 +82,5 @@ constraintx ::
   Strict.Vector (Type s (Scope.Local ':+ scope)) ->
   Constraint s scope
 instanciate :: Context s scope -> Position -> Scheme s scope -> ST s (Type s scope, Instanciation s scope)
+liftST :: ST s a -> Solve s a
+runSolve :: Solve s a -> ST s a

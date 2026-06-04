@@ -48,7 +48,7 @@ check context (Stage2.Scheme {startPosition, implicit, parameters, constraints, 
   result <- Type.check (augment parameters context) Unify.typex result
   pure $ Scheme {startPosition, implicit, parameters, constraints, result}
 
-solve :: Context s scope -> Scheme s scope -> ST s (Solved.Scheme Position Check scope)
+solve :: Context s scope -> Scheme s scope -> Unify.Solve s (Solved.Scheme Position Check scope)
 solve context Scheme {startPosition, implicit, parameters = wobbly, constraints, result} = do
   parameters <- traverse TypePattern.solve wobbly
   constraints <- traverse (Constraint.solve (augment wobbly context)) constraints

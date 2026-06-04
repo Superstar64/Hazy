@@ -12,6 +12,7 @@ import Stage3.Temporary.Entry (Entry)
 import qualified Stage3.Temporary.Entry as Entry
 import Stage3.Temporary.Field (Field)
 import qualified Stage3.Temporary.Field as Field
+import qualified Stage3.Unify as Unify
 
 data Constructor s scope
   = Constructor
@@ -34,7 +35,7 @@ check context constructor = case constructor of
     fields <- traverse (Field.check context) fields
     pure Record {position, name, fields}
 
-solve :: Context s scope -> Constructor s scope -> ST s (Solved.Constructor Check scope)
+solve :: Context s scope -> Constructor s scope -> Unify.Solve s (Solved.Constructor Check scope)
 solve context Constructor {position, name, entries} = do
   entries <- traverse (Entry.solve context) entries
   pure Solved.Constructor {position, name, entries}

@@ -51,7 +51,7 @@ data TypeBinding s scope = TypeBinding
   { label :: !(forall scope. Label.TypeBinding scope),
     kind :: ST s (Kind s scope),
     content :: ST s (Simple.TypeDeclaration scope),
-    extra :: ST s (Unify.Delay Simple.TypeDeclarationExtra s scope),
+    extra :: ST s (Unify.Solve s (Simple.TypeDeclarationExtra scope)),
     synonym :: ST s (Strict.Maybe (Simple.Type (Local ':+ scope))),
     dataInstances :: Map (Type2.Index scope) (ST s (Instance scope)),
     classInstances :: Map (Type2.Index scope) (ST s (Instance scope))
@@ -67,7 +67,7 @@ instance Shift (TypeBinding s) where
         kind = fmap shift kind,
         synonym = fmap (fmap (Shift.map (Shift.Over category))) synonym,
         content = fmap (Shift.map category) content,
-        extra = fmap (Shift.map category) extra,
+        extra = fmap (Shift.map category) <$> extra,
         dataInstances = Map.map (fmap $ Shift.map category) $ Shift.mapInstances category dataInstances,
         classInstances = Map.map (fmap $ Shift.map category) $ Shift.mapInstances category classInstances
       }
@@ -85,7 +85,7 @@ rigid ::
   Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) b) ->
   Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) d) ->
   TypeBinding s scope
-rigid = bindingImpl (Unify.Delay . pure . SimpleExtra.simplify . Connect.seperate)
+rigid = bindingImpl (pure . SimpleExtra.simplify . Connect.seperate)
 
 wobbly ::
   (Type.Link locality -> Type0.Index scope) ->
@@ -98,7 +98,7 @@ wobbly ::
   Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) b) ->
   Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) d) ->
   TypeBinding s scope
-wobbly = bindingImpl (Unify.Delay . go)
+wobbly = bindingImpl go
   where
     go extra = do
       extra <- Temporary.solve extra
@@ -120,7 +120,7 @@ group position Label.TypeBinding {name, constructorNames} binding =
     abort = improperBindingGroup position
 
 bindingImpl ::
-  (a -> Unify.Delay Simple.TypeDeclarationExtra s scope) ->
+  (a -> Unify.Solve s (Simple.TypeDeclarationExtra scope)) ->
   (Type.Link locality -> Type0.Index scope) ->
   (Type.Link locality -> ST s (TypeDefinition2.Set locality Check scope)) ->
   Functor.Annotated

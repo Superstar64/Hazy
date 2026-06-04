@@ -234,7 +234,7 @@ check context@Context {typeEnvironment} typex = \case
     equal <- Unify.constrain context startPosition Type2.Eq typex
     pure Float {typex, names, irrefutable, startPosition, float, evidence, equal}
 
-solve :: Pattern s scope -> ST s (Solved.Pattern Check scope)
+solve :: Pattern s scope -> Unify.Solve s (Solved.Pattern Check scope)
 solve = \case
   Wildcard {names} -> pure Solved.Wildcard {names}
   Constructor

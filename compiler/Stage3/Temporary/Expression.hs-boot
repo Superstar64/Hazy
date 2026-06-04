@@ -22,4 +22,4 @@ check ::
   Unify.Type s scope ->
   Stage2.Expression Group Resolve scope ->
   ST s (Expression s scope)
-solve :: Expression s scope -> ST s (Solved.Expression Group Check scope)
+solve :: Expression s scope -> Unify.Solve s (Solved.Expression Group Check scope)

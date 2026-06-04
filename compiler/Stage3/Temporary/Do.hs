@@ -81,7 +81,7 @@ check context typex = \case
     body <- check context (shift typex) body
     pure Let {startPosition, declarations, body}
 
-solve :: Do s scope -> ST s (Solved.Statements Solved.Do Group Check scope)
+solve :: Do s scope -> Unify.Solve s (Solved.Statements Solved.Do Group Check scope)
 solve = \case
   Done {done} -> do
     done <- Expression.solve done

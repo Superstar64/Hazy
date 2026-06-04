@@ -39,7 +39,7 @@ check context typex = \case
     Unify.unify context boundPosition typex (Unify.function parameterType resultType)
     pure Bound {boundPosition, parameter, body}
 
-solve :: Lambda s scope -> ST s (Solved.Lambda Group Check scope)
+solve :: Lambda s scope -> Unify.Solve s (Solved.Lambda Group Check scope)
 solve = \case
   Plain {plain} -> do
     plain <- Expression.solve plain

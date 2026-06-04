@@ -257,7 +257,7 @@ check context typex Stage2.Annotation {expression = Explicit expression, operato
 check _ _ Stage2.RunST {startPosition} =
   unsupportedFeatureRunST startPosition
 
-solve :: Expression s scope -> ST s (Solved.Expression Group Check scope)
+solve :: Expression s scope -> Unify.Solve s (Solved.Expression Group Check scope)
 solve = \case
   CallHead {callHead} -> do
     callHead <- CallHead.solve callHead

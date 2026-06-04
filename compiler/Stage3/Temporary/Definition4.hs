@@ -1,6 +1,5 @@
 module Stage3.Temporary.Definition4 where
 
-import Control.Monad.ST (ST)
 import qualified Data.Vector.Strict as Strict
 import Stage1.Position (Position)
 import qualified Stage2.Index.Link.Term as Term
@@ -25,7 +24,7 @@ data Definition4 locality s scope where
   Link :: !(Term.Link locality) -> !Int -> Definition4 locality s scope
   (::::) ::
     !(Unify.SchemeOver Types s scope) ->
-    !(Unify.Delay (Simple.SchemeOver (Solved.Set locality Check)) s scope) ->
+    !(Unify.Solve s (Simple.SchemeOver (Solved.Set locality Check) scope)) ->
     Definition4 locality s scope
 
 infix 5 :::, ::::
@@ -47,28 +46,28 @@ data Element locality s scope = Element
     link :: !(Term.Link locality)
   }
 
-solve :: Position -> Definition4 locality s scope -> ST s (Solved.Definition4 locality Group Check scope)
+solve :: Position -> Definition4 locality s scope -> Unify.Solve s (Solved.Definition4 locality Group Check scope)
 solve position = \case
   (annotation ::: definition) -> do
     definition <- Unify.solveSchemeOver (Unify.SolveScheme Definition3.solve) position definition
     pure $ annotation Solved.::: Implicit.Check definition
   Link link id -> pure (Solved.Link link id)
-  types :::: Unify.Delay set -> do
+  types :::: set -> do
     types <- Unify.solveSchemeOver (Unify.SolveScheme solveTypes) position types
     set <- set
     pure $ Inferred.Solved types Solved.:::: Implicit.Check set
 
-solveTypes :: Position -> Types s1 scope1 -> ST s1 (Solved.Types scope1)
+solveTypes :: Position -> Types s1 scope1 -> Unify.Solve s1 (Solved.Types scope1)
 solveTypes position (Types types) = do
   types <- traverse (Unify.solve position) types
   pure $ Solved.Types types
 
-solveGroup :: Position -> Set locality s scope -> ST s (Solved.Set locality Check scope)
+solveGroup :: Position -> Set locality s scope -> Unify.Solve s (Solved.Set locality Check scope)
 solveGroup position (Set elements) = do
   elements <- traverse (solveElement position) elements
   pure $ Solved.Set elements
 
-solveElement :: Position -> Element locality s scope -> ST s (Solved.Element locality Check scope)
+solveElement :: Position -> Element locality s scope -> Unify.Solve s (Solved.Element locality Check scope)
 solveElement position Element {element, link} = do
   element <- Definition3.solve position element
   pure Solved.Element {element, link}

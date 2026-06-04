@@ -9,6 +9,7 @@ import qualified Stage2.Tree.Method as Stage2 (Method (..))
 import Stage3.Check.Context (Context)
 import Stage3.Temporary.Scheme (Scheme)
 import qualified Stage3.Temporary.Scheme as Scheme
+import qualified Stage3.Unify as Unify
 
 data Method s scope = Method
   { position :: !Position,
@@ -21,7 +22,7 @@ check context Stage2.Method {position, name, annotation} = do
   annotation <- Scheme.check context annotation
   pure Method {position, name, annotation}
 
-solve :: Context s scope -> Method s scope -> ST s (Solved.Method Check scope)
+solve :: Context s scope -> Method s scope -> Unify.Solve s (Solved.Method Check scope)
 solve context Method {position, name, annotation} = do
   annotation <- Scheme.solve context annotation
   pure $ Solved.Method {position, name, annotation}

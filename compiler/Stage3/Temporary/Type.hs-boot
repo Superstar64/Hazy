@@ -18,4 +18,4 @@ type Type :: Kind.Type -> Environment -> Kind.Type
 data Type s scope
 
 check :: Context s scope -> Unify.Type s scope -> Stage2.Type Position Resolve scope -> ST s (Type s scope)
-solve :: Context s scope -> Type s scope -> ST s (Solved.Type Position Check scope)
+solve :: Context s scope -> Type s scope -> Unify.Solve s (Solved.Type Position Check scope)

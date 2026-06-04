@@ -177,7 +177,7 @@ checkTermDeclaration global local declaration = Formula7 {cycle, run}
       annotation <- meta
       let context = globalBindings moduleSet
       unsolved <- Declaration.Unsolved.check context link annotation declaration
-      Declaration.Unsolved.solve unsolved
+      Unify.runSolve $ Declaration.Unsolved.solve unsolved
 
 checkTypeAnnotation ::
   p1 ->
@@ -247,7 +247,7 @@ checkTypeDeclarationExtra global local declaration = Formula7 {cycle, run}
               _ -> error "bad link"
       proper <- Stage2.TypeDeclaration.ungroupM Link.Type.unglobal link proper
       extra <- TypeDeclarationExtra.check context (Type.Global global local) proper declaration
-      TypeDeclarationExtra.solve extra
+      Unify.runSolve $ TypeDeclarationExtra.solve extra
 
 checkInstanceAnnotation ::
   p1 ->
@@ -278,10 +278,10 @@ checkInstanceDeclaration global key declaration = Formula7 {cycle, run}
               key = Instance.Data {index1 = classKey, head1 = Type.Global global index}
           annotation <- meta
           instancex <- Instance.check (globalBindings moduleSet) key annotation declaration
-          Instance.solve instancex
+          Unify.runSolve $ Instance.solve instancex
         Instance.Key.Class {index, dataKey} -> do
           let Functor.Annotated {meta} = classInstances Vector.! index Map.! dataKey
               key = Instance.Class {index2 = Type.Global global index, head2 = dataKey}
           annotation <- meta
           instancex <- Instance.check (globalBindings moduleSet) key annotation declaration
-          Instance.solve instancex
+          Unify.runSolve $ Instance.solve instancex

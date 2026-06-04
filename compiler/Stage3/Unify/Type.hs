@@ -39,6 +39,7 @@ import Stage3.Unify.Class
     Functor (..),
     Generalizable (..),
     Instantiatable (..),
+    Solve (..),
     Substitute (..),
     Zonk (..),
     Zonker (..),
@@ -626,8 +627,8 @@ defaultUniverse position constraints universe = case universe of
     | otherwise -> error "unexpected kind constraints"
   _ -> error "unexpected universe kind"
 
-solve :: Position -> Type s scope -> ST s (Simple.Type scope)
-solve position = solve
+solve :: Position -> Type s scope -> Solve s (Simple.Type scope)
+solve position = Solve . solve
   where
     solve :: Type s scope -> ST s (Simple.Type scope)
     solve = \case

@@ -76,7 +76,7 @@ check context linked annotation Stage2.Declaration {position, name, definition} 
         element <- Definition3.checkAuto (groupTermBindings fresh context) (shift typex) element'
         pure Element {element, link}
       let types = Types (Strict.Vector.fromLazy fresh)
-          solved = Unify.Delay $ do
+          solved = do
             set <- traverse (solveElement position) set
             pure $ Solved.Set set
       pure $ types Unify.::: solved
@@ -126,7 +126,7 @@ checkAnnotation
           (Simple.Constraint.lift . Simple.Constraint.simplify <$> constraints)
           definition
 
-solve :: Declaration locality s scope -> ST s (Solved.Declaration locality Group Check scope)
+solve :: Declaration locality s scope -> Unify.Solve s (Solved.Declaration locality Group Check scope)
 solve Declaration {position, name, definition, typex} = do
   definition <- Definition4.solve position definition
   typex <- Unify.solveScheme position typex

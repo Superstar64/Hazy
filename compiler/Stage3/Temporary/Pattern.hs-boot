@@ -22,4 +22,4 @@ data Pattern s scope
 (!) :: Pattern s scope -> Bound -> Unify.Type s scope
 augmentPattern :: Pattern s scopes -> Term.Bound (TermBinding s) (scope ':+ scopes)
 check :: Context s scope -> Unify.Type s scope -> Stage2.Pattern Resolve scope -> ST s (Pattern s scope)
-solve :: Pattern s scope -> ST s (Solved.Pattern Check scope)
+solve :: Pattern s scope -> Unify.Solve s (Solved.Pattern Check scope)

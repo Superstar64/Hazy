@@ -1,6 +1,5 @@
 module Stage3.Unify.Constraint where
 
-import Control.Monad.ST (ST)
 import qualified Data.Vector.Strict as Strict
 import Stage1.Position (Position)
 import qualified Stage2.Index.Type2 as Type2
@@ -8,7 +7,7 @@ import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift (..))
 import qualified Stage2.Shift as Shift
-import Stage3.Unify.Class (Functor (..), Zonk (..))
+import Stage3.Unify.Class (Functor (..), Solve, Zonk (..))
 import qualified Stage3.Unify.Class as Class
 import {-# SOURCE #-} Stage3.Unify.Type (Type)
 import {-# SOURCE #-} qualified Stage3.Unify.Type as Type
@@ -37,7 +36,7 @@ instance Functor (Constraint s) where
         arguments = Class.map (Class.Over category) <$> arguments
       }
 
-solve :: Position -> Constraint s scope -> ST s (Simple.Constraint scope)
+solve :: Position -> Constraint s scope -> Solve s (Simple.Constraint scope)
 solve position Constraint {classx, head, arguments} = do
   arguments <- traverse (Type.solve position) arguments
   pure $

@@ -1,10 +1,10 @@
 module Stage3.Temporary.ConstructorInfo where
 
-import Control.Monad.ST (ST)
 import qualified Data.Vector.Strict as Strict
 import Stage3.Temporary.EntryInfo (EntryInfo)
 import qualified Stage3.Temporary.EntryInfo as EntryInfo
 import qualified Stage3.Tree.ConstructorInfo as Solved
+import {-# SOURCE #-} qualified Stage3.Unify as Unify
 
 data ConstructorInfo s scope
   = ConstructorInfo
@@ -12,7 +12,7 @@ data ConstructorInfo s scope
       }
   | Newtype
 
-solve :: ConstructorInfo s scope -> ST s (Solved.ConstructorInfo scope)
+solve :: ConstructorInfo s scope -> Unify.Solve s (Solved.ConstructorInfo scope)
 solve = \case
   ConstructorInfo {entries} -> do
     entries <- traverse EntryInfo.solve entries

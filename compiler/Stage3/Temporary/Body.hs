@@ -22,7 +22,7 @@ check context typex = \case
   Stage2.Body expression1 -> Body <$> Expression.check context typex expression1
   Stage2.Guards statements -> Guards <$> traverse (Statements.check context typex) statements
 
-solve :: Body s scope -> ST s (Solved.Body Group Check scope)
+solve :: Body s scope -> Unify.Solve s (Solved.Body Group Check scope)
 solve (Body expression) = do
   expression <- Expression.solve expression
   pure (Solved.Body expression)

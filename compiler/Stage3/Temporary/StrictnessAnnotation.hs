@@ -25,7 +25,8 @@ check context = \case
     levity <- Type.check context Unify.levity levity
     pure Polymorphic {levity}
 
-solve :: Context s scope -> StrictnessAnnotation s scope -> ST s (Solved.StrictnessAnnotation Position Check scope)
+solve :: Context s scope -> StrictnessAnnotation s scope ->
+   Unify.Solve s (Solved.StrictnessAnnotation Position Check scope)
 solve context = \case
   Lazy -> pure Solved.Lazy
   Strict -> pure Solved.Strict

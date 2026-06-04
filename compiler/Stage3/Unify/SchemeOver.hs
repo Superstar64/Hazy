@@ -24,10 +24,10 @@ import qualified Stage3.Check.Mask as Mask
 import Stage3.Unify.Class
   ( Collected (..),
     Collector (..),
-    Delay (..),
     Functor (..),
     Generalizable (..),
     Instantiatable (..),
+    Solve,
     Substitute (..),
     Zonk (..),
     Zonker (..),
@@ -86,34 +86,6 @@ instanciateOver context position SchemeOver {parameters, constraints, result} = 
     constrainWith context position classx head arguments
   pure $ (substitute (Substitute fresh) result, Instanciation evidence)
 
-data Body typex term s scope = (:::)
-  { typex :: !(typex s scope),
-    term :: !(Delay term s scope)
-  }
-
-infix 5 :::
-
-instance (Zonk typex) => Zonk (Body typex term) where
-  zonk zonker (typex ::: term) = do
-    typex <- zonk zonker typex
-    term <- zonk zonker term
-    pure $ typex ::: term
-
-instance (Generalizable typex) => Generalizable (Body typex term) where
-  collect collector (typex ::: _) = collect collector typex
-
-generalizeBody ::
-  (Generalizable typex) =>
-  Position ->
-  Context s scope ->
-  Generalize (Body typex term) s scope ->
-  ST s (Body (SchemeOver typex) (Simple.SchemeOver term) s scope)
-generalizeBody position context generalizable = do
-  body <- generalizeOver context generalizable
-  typex <- pure $ mapScheme (MapScheme typex) body
-  term <- pure $ mapScheme (MapScheme term) body
-  pure $ typex ::: Delay (solve (SolveScheme $ \_ (Delay run) -> run) position term)
-
 newtype Generalize typex s scopes = Generalize
   { runGeneralize ::
       forall scope.
@@ -121,32 +93,55 @@ newtype Generalize typex s scopes = Generalize
       ST s (typex s (scope ':+ scopes))
   }
 
-generalizeOver ::
-  forall typex s scopes.
+type Body ::
+  (Kind.Type -> Environment -> Kind.Type) ->
+  (Environment -> Kind.Type) ->
+  Kind.Type ->
+  Environment ->
+  Kind.Type
+data Body typex term s scope = (:::)
+  { typex :: !(typex s scope),
+    term :: !(Solve s (term scope))
+  }
+
+infix 5 :::
+
+generalizeBody ::
   (Generalizable typex) =>
-  Context s scopes ->
-  Generalize typex s scopes ->
-  ST s (SchemeOver typex s scopes)
-generalizeOver context (Generalize run) = do
-  wobbly <- run $ case context of
+  Position ->
+  Context s scope ->
+  Generalize (Body typex term) s scope ->
+  ST s (Body (SchemeOver typex) (Simple.SchemeOver term) s scope)
+generalizeBody position context (Generalize run) = do
+  typex ::: term <- run $ case context of
     Context {termEnvironment, localEnvironment, typeEnvironment} ->
       Context
         { termEnvironment = Table.Term.Local termEnvironment,
           localEnvironment = Table.Local.Local Vector.empty localEnvironment,
           typeEnvironment = Table.Type.Local typeEnvironment
         }
-  candidates <- collect (Collector Mask.Runtime) wobbly
+  candidates <- collect (Collector Mask.Runtime) typex
   traverse_ shiftUnwanted candidates
   boxes <- nub . catMaybes <$> traverse selectBox candidates
   parameters <- Strict.Vector.fromList <$> traverse parameter boxes
   zipWithM_ writeVariable [0 ..] boxes
-  result <- zonk Zonker wobbly
-  pure
+  result <- zonk Zonker typex
+  pure $
     SchemeOver
       { parameters,
         constraints = Strict.Vector.empty,
         result
       }
+      ::: do
+        parameters <- traverse (Type.solve position) parameters
+        constraints <- traverse (Constraint.solve position) Strict.Vector.empty
+        result <- term
+        pure
+          Simple.SchemeOver
+            { parameters,
+              constraints,
+              result
+            }
   where
     shiftUnwanted :: Collected s (scope ':+ scopes) -> ST s ()
     shiftUnwanted = \case
@@ -187,13 +182,13 @@ generalizeOver context (Generalize run) = do
 
 type SolveScheme :: (Kind.Type -> Environment -> Kind.Type) -> (Environment -> Kind.Type) -> Kind.Type
 newtype SolveScheme source target
-  = SolveScheme (forall s scope. Position -> source s scope -> ST s (target scope))
+  = SolveScheme (forall s scope. Position -> source s scope -> Solve s (target scope))
 
 solve ::
   SolveScheme source target ->
   Position ->
   SchemeOver source s scope ->
-  ST s (Simple.SchemeOver target scope)
+  Solve s (Simple.SchemeOver target scope)
 solve (SolveScheme go) position SchemeOver {parameters, constraints, result} = do
   parameters <- traverse (Type.solve position) parameters
   constraints <- traverse (Constraint.solve position) constraints

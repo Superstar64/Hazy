@@ -31,7 +31,7 @@ check context typex (Stage2.RightHandSide body declarations) = do
   body <- Body.check context (shift typex) body
   pure $ RightHandSide body declarations
 
-solve :: RightHandSide s scope -> ST s (Solved.RightHandSide Group Check scope)
+solve :: RightHandSide s scope -> Unify.Solve s (Solved.RightHandSide Group Check scope)
 solve (RightHandSide body declarations) = do
   body <- Body.solve body
   declarations <- Declarations.solve declarations

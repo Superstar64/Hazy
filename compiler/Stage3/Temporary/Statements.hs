@@ -62,7 +62,7 @@ check context typex = \case
     body <- check context (shift typex) body
     pure Let {startPosition, declarations, body}
 
-solve :: Statements s scope -> ST s (Solved.Statements Solved.Guard Group Check scope)
+solve :: Statements s scope -> Unify.Solve s (Solved.Statements Solved.Guard Group Check scope)
 solve (Done expression) = do
   expression <- Expression.solve expression
   pure $ Solved.Done expression

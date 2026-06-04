@@ -85,7 +85,7 @@ checkAuto context@Context {termEnvironment} typex declaration = case declaration
 solve ::
   Position ->
   Definition2 source mark s scope ->
-  ST s (Solved.Definition2 source mark Group Check scope)
+  Unify.Solve s (Solved.Definition2 source mark Group Check scope)
 solve position = \case
   Definition definition -> do
     definition <- Definition.solve definition

@@ -29,7 +29,7 @@ check context lookup Stage2.Field {index, expression} = do
         expression
       }
 
-solve :: Field s scope -> ST s (Solved.Field Group Check scope)
+solve :: Field s scope -> Unify.Solve s (Solved.Field Group Check scope)
 solve Field {index, expression} = do
   expression <- Expression.solve expression
   pure $ Solved.Field {index, expression}

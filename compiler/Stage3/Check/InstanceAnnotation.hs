@@ -43,9 +43,9 @@ check context Stage2.Instance {parameters, prerequisites} = do
             }
   parameters <- traverse fresh parameters
   context <- pure $ Unsolved.Scheme.augment parameters context
-  prerequisites <- traverse (Unsolved.Constraint.check context) $ prerequisites
-  parameters <- traverse Unsolved.TypePattern.solve parameters
-  prerequisites <- traverse (Unsolved.Constraint.solve context) prerequisites
+  prerequisites <- traverse (Unsolved.Constraint.check context) prerequisites
+  parameters <- Unify.runSolve $ traverse Unsolved.TypePattern.solve parameters
+  prerequisites <- Unify.runSolve $ traverse (Unsolved.Constraint.solve context) prerequisites
   let prerequisites' = fmap Simple.Constraint.simplify prerequisites
   pure
     InstanceAnnotation

@@ -63,19 +63,19 @@ check
         Stage2.Annotated annotation -> do
           universe <- Unify.fresh Unify.universe
           annotation <- Type.check context (Unify.typeWith universe) annotation
-          annotation <- Type.solve context annotation
+          annotation <- Unify.runSolve $ Type.solve context annotation
           Unify.unify context position kind (Simple.lift $ Simple.simplify annotation)
           pure $ Strict.Just annotation
       context <- pure $ Unsolved.Scheme.augment parameters context
       synonym <- Unsolved.Type.check context (shift target) synonym
-      kind <- Unify.solve position kind
-      parameters <- traverse Unsolved.TypePattern.solve parameters
-      synonym <- Unsolved.Type.solve context synonym
+      kind <- Unify.runSolve $ Unify.solve position kind
+      parameters <- Unify.runSolve $ traverse Unsolved.TypePattern.solve parameters
+      synonym <- Unify.runSolve $ Unsolved.Type.solve context synonym
       pure Synonym {annotation', kind, parameters, synonym}
 check context Stage2.TypeDeclaration {definition} = case definition of
   Stage2.Annotated annotation Stage2.::: _ -> do
     universe <- Unify.fresh Unify.universe
     annotation <- Type.check context (Unify.typeWith universe) annotation
-    annotation <- Type.solve context annotation
+    annotation <- Unify.runSolve $ Type.solve context annotation
     pure $ Annotation {annotation, kind = Simple.simplify annotation}
   _ -> pure Inferred

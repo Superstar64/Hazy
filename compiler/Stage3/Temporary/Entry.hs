@@ -32,7 +32,7 @@ check context Stage2.Entry {startPosition, entry = Stage2.Canonical Stage2.Schem
         strict
       }
 
-solve :: Context s scope -> Entry s scope -> ST s (Solved.Entry Position Check scope)
+solve :: Context s scope -> Entry s scope -> Unify.Solve s (Solved.Entry Position Check scope)
 solve context Entry {startPosition, entry, strict} = do
   entry <- Type.solve context entry
   strict <- StrictnessAnnotation.solve context strict

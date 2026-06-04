@@ -8,7 +8,7 @@ import Stage2.Scope (Environment (..))
 import Stage2.Shift (shift)
 import qualified Stage2.Shift as Shift
 import qualified Stage3.Index.Evidence as Evidence
-import Stage3.Unify.Class (Zonk (..), Zonker (..))
+import Stage3.Unify.Class (Solve (..), Zonk (..), Zonker (..))
 import Stage3.Unify.Instanciation (Instanciation)
 import qualified Stage3.Unify.Instanciation as Instanciation
 import qualified Stage4.Tree.Evidence as Simple (Evidence (..))
@@ -88,7 +88,7 @@ unshift = \case
     evidence <- unshift evidence
     pure $ Super evidence index
 
-solve :: Position -> Evidence s scope -> ST s (Simple.Evidence scope)
+solve :: Position -> Evidence s scope -> Solve s (Simple.Evidence scope)
 solve position = \case
   Variable variable instanciation -> do
     instanciation <- Instanciation.solve position instanciation
@@ -98,6 +98,6 @@ solve position = \case
     pure $ Simple.Super {base, index}
   Shift evidence -> shift <$> solve position evidence
   Logical reference ->
-    readSTRef reference >>= \case
+    Solve (readSTRef reference) >>= \case
       Solved evidence -> solve position evidence
       Unsolved -> unsupportedFeatureConstraintedTypeDefaulting position

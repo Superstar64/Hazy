@@ -36,7 +36,7 @@ check context typex = \case
     function1 <- check context (shift result) function
     pure Bound {functionPosition, patternx = pattern1, function = function1}
 
-solve :: Function s scope -> ST s (Solved.Function Group Check scope)
+solve :: Function s scope -> Unify.Solve s (Solved.Function Group Check scope)
 solve Plain {rightHandSide} = do
   rightHandSide <- RightHandSide.solve rightHandSide
   pure $ Solved.Plain {rightHandSide}

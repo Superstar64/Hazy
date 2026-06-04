@@ -86,7 +86,7 @@ check
 
     pure $ Constraint {startPosition, classx, head, arguments}
 
-solve :: Context s (Local ':+ scope) -> Constraint s scope -> ST s (Solved.Constraint Position Check scope)
+solve :: Context s (Local ':+ scope) -> Constraint s scope -> Unify.Solve s (Solved.Constraint Position Check scope)
 solve context Constraint {startPosition, classx, head, arguments} = do
   arguments <- traverse (Type.solve context) arguments
   pure

@@ -1,6 +1,5 @@
 module Stage3.Temporary.TypeDefinition2 where
 
-import Control.Monad.ST (ST)
 import qualified Data.Vector.Strict as Strict
 import Stage1.Position (Position)
 import Stage1.Variable (QualifiedConstructor, QualifiedConstructorIdentifier)
@@ -26,7 +25,7 @@ data Element locality s scope = Element
 solveElement ::
   Context s (GroupType ':+ scope) ->
   Element locality s scope ->
-  ST s (Solved.Element locality Check scope)
+  Unify.Solve s (Solved.Element locality Check scope)
 solveElement context Element {element, typex, position, name, constructorNames, link} = do
   element <- TypeDefinition.solve context element
   typex <- Unify.solve position typex

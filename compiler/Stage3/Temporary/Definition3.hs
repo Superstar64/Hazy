@@ -33,7 +33,7 @@ checkAuto ::
 checkAuto context typex (Stage2.Label info definition) =
   Label info <$> Definition2.checkAuto context typex definition
 
-solve :: Position -> Definition3 mark s scope -> ST s (Solved.Definition3 mark Group Check scope)
+solve :: Position -> Definition3 mark s scope -> Unify.Solve s (Solved.Definition3 mark Group Check scope)
 solve position (Label info definition) = do
   definition <- Definition2.solve position definition
   pure $ Solved.Label info definition

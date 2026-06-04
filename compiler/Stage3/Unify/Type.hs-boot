@@ -9,7 +9,7 @@ import Stage2.Scope (Environment)
 import Stage2.Shift (Shift)
 import {-# SOURCE #-} Stage3.Check.Context (Context)
 import qualified Stage3.Check.Mask as Mask
-import {-# SOURCE #-} Stage3.Unify.Class (Functor, Zonk)
+import {-# SOURCE #-} Stage3.Unify.Class (Functor, Solve, Zonk)
 import qualified Stage4.Tree.Type as Simple
 import Prelude hiding (Functor)
 
@@ -30,7 +30,6 @@ type Box :: Kind.Type -> Environment -> Kind.Type
 data Box s scope
 
 fresh :: Type s scope -> ST s (Type s scope)
--- todo, have mechinism to ensure solve is the last ST action
 mark :: Context s scope -> Position -> Mask.Erasure -> Type s scope -> ST s ()
-solve :: Position -> Type s scope -> ST s (Simple.Type scope)
+solve :: Position -> Type s scope -> Solve s (Simple.Type scope)
 unify :: Context s scope -> Position -> Type s scope -> Type s scope -> ST s ()

@@ -1,6 +1,5 @@
 module Stage3.Temporary.SelectorInfo where
 
-import Control.Monad.ST (ST)
 import qualified Data.Strict.Maybe as Strict (Maybe)
 import qualified Data.Vector.Strict as Strict (Vector)
 import Stage1.Position (Position)
@@ -24,7 +23,7 @@ data Select s scope
     constructorInfo :: !(ConstructorInfo s scope)
   }
 
-solve :: SelectorInfo s scope -> ST s (Solved.SelectorInfo scope)
+solve :: SelectorInfo s scope -> Unify.Solve s (Solved.SelectorInfo scope)
 solve = \case
   Uniform {position, strict} -> do
     strict <- Unify.solve position strict
@@ -33,7 +32,7 @@ solve = \case
     select <- traverse solveSelect select
     pure Solved.Disjoint {select}
 
-solveSelect :: Select s scope -> ST s (Solved.Select scope)
+solveSelect :: Select s scope -> Unify.Solve s (Solved.Select scope)
 solveSelect Select {selectIndex, constructorInfo} = do
   constructorInfo <- ConstructorInfo.solve constructorInfo
   pure Solved.Select {selectIndex, constructorInfo}

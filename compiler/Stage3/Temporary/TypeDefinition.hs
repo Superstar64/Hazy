@@ -99,7 +99,7 @@ check context kind = \case
             position
           }
 
-solve :: Context s scope -> TypeDefinition s scope -> ST s (Solved.TypeDefinition Constructive Check scope)
+solve :: Context s scope -> TypeDefinition s scope -> Unify.Solve s (Solved.TypeDefinition Constructive Check scope)
 solve context = \case
   ADT {brand, position, parameters, constructors, selectors} -> do
     parameters <- traverse TypePattern.solve parameters

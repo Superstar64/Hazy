@@ -20,7 +20,7 @@ check context typex = \case
     Alternative <$> Function.check context typex function1 <*> check context typex definitions
   Stage2.Definition function1 -> Definition <$> Function.check context typex function1
 
-solve :: Definition s scope -> ST s (Solved.Definition Group Check scope)
+solve :: Definition s scope -> Unify.Solve s (Solved.Definition Group Check scope)
 solve (Alternative function definition) = do
   function <- Function.solve function
   definition <- solve definition

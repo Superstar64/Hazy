@@ -13,6 +13,7 @@ import {-# SOURCE #-} Stage3.Check.Context (Context)
 import {-# SOURCE #-} qualified Stage3.Temporary.Scheme as Scheme (check, solve)
 import {-# SOURCE #-} Stage3.Tree.Scheme (Scheme)
 import {-# SOURCE #-} qualified Stage4.Tree.Scheme as Simple
+import {-# SOURCE #-} qualified Stage3.Unify as Unify
 
 data Annotation scope = Annotation
   { annotation :: !(Scheme Position Check scope),
@@ -26,7 +27,7 @@ data TypeAnnotation scope
 checkAnnotation :: Context s scope -> Stage2.Scheme Position Resolve scope -> ST s (Annotation scope)
 checkAnnotation context annotation = do
   annotation <- Scheme.check context annotation
-  annotation <- Scheme.solve context annotation
+  annotation <- Unify.runSolve $ Scheme.solve context annotation
   let annotation' = Simple.simplify annotation
   pure $ Annotation {annotation, annotation'}
 

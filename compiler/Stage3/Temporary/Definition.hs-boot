@@ -22,4 +22,4 @@ check ::
   Unify.Type s scope ->
   Stage2.Definition Group Resolve scope ->
   ST s (Definition s scope)
-solve :: Definition s scope -> ST s (Solved.Definition Group Check scope)
+solve :: Definition s scope -> Unify.Solve s (Solved.Definition Group Check scope)

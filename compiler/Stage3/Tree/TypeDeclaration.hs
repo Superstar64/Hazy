@@ -57,7 +57,7 @@ check context linked annotation TypeDeclaration {position, name, constructorName
       | KindAnnotation.Annotation {annotation, kind} <- annotation,
         Inject <- assumeInject definition -> do
           definition <- Temporary.TypeDefinition.check context (Simple.Type.lift kind) definition
-          definition <- Temporary.TypeDefinition.solve context definition
+          definition <- Unify.runSolve $ Temporary.TypeDefinition.solve context definition
           pure
             TypeDeclaration
               { position,
@@ -82,8 +82,8 @@ check context linked annotation TypeDeclaration {position, name, constructorName
               let typex = fresh Vector.! index
               element <- TypeDefinition.check context' (shift typex) element
               pure $ Temporary.Element {element, typex, position, name, constructorNames, link}
-      set <- traverse (Temporary.solveElement context') set
-      kinds <- traverse (Unify.solve position) fresh
+      set <- Unify.runSolve $ traverse (Temporary.solveElement context') set
+      kinds <- Unify.runSolve $ traverse (Unify.solve position) fresh
       let kind = Vector.head kinds
       pure
         TypeDeclaration

@@ -107,11 +107,11 @@ check
         classx <- do
           let get index = assumeClass <$> TypeBinding.content (typeEnvironment Table.Type.! index)
           Builtin.index pure get index
-        Unify.Delay extra <- do
+        extra <- do
           let get index = do
-                Unify.Delay extra <- TypeBinding.extra (typeEnvironment Table.Type.! index)
-                pure $ Unify.Delay (Extra.assumeClass <$> extra)
-          Builtin.index (pure . Unify.Delay . pure) get index
+                extra <- TypeBinding.extra (typeEnvironment Table.Type.! index)
+                pure (Extra.assumeClass <$> extra)
+          Builtin.index (pure . pure) get index
         let Simple.Class.Class {constraints, methods} = classx
             base = foldl Simple.Type.Call (shift $ Simple.Type.Constructor head) variables
               where
@@ -152,7 +152,7 @@ check
           \Simple.Constraint {classx, arguments} -> do
             let parameter = foldl Simple.Type.Call base arguments
             evidence <- Unify.constrain context startPosition (shift classx) (Simple.Type.lift parameter)
-            Unify.solveEvidence startPosition evidence
+            Unify.runSolve $ Unify.solveEvidence startPosition evidence
         let check _ scheme Stage2.Definition {definition = Stage2.Resolve member} = do
               let Simple.Scheme Simple.SchemeOver {parameters, constraints, result} = scheme
               result <- pure $ Simple.Type.lift result
@@ -169,7 +169,7 @@ check
                   }
             check index scheme Stage2.Default {} = do
               let Simple.Scheme Simple.SchemeOver {parameters, constraints} = scheme
-                  defaultx = Unify.Delay $ do
+                  defaultx = do
                     ClassExtra {defaults} <- extra
                     pure $
                       Simple.SchemeOver
@@ -181,7 +181,7 @@ check
         members <- izipWithM check methods (shift <$> members)
         pure Instance {startPosition, classPosition, parameters, prerequisites, evidence, members}
 
-solve :: Instance s scope -> ST s (Solved.Instance Group Check scope)
+solve :: Instance s scope -> Unify.Solve s (Solved.Instance Group Check scope)
 solve Instance {startPosition, classPosition, parameters, prerequisites, evidence, members} = do
   members <- traverse MethodConcrete.solve members
   pure

@@ -1,6 +1,5 @@
 module Stage3.Temporary.TypePattern where
 
-import Control.Monad.ST (ST)
 import Stage1.Lexer (VariableIdentifier)
 import Stage1.Position (Position)
 import Stage2.Stage (Check)
@@ -14,7 +13,7 @@ data TypePattern s scope = TypePattern
     name :: !VariableIdentifier
   }
 
-solve :: TypePattern s scope -> ST s (Solved.TypePattern Position Check scope)
+solve :: TypePattern s scope -> Unify.Solve s (Solved.TypePattern Position Check scope)
 solve TypePattern {position, name, typex} = do
   typex <- Unify.solve position typex
   pure

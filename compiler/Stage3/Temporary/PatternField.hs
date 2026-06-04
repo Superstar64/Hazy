@@ -33,7 +33,7 @@ check context lookup Stage2.Field {index, patternx} = do
         patternx
       }
 
-solve :: Field s scope -> ST s (Solved.Field Check scope)
+solve :: Field s scope -> Unify.Solve s (Solved.Field Check scope)
 solve Field {index, patternx} = do
   patternx <- Pattern.solve patternx
   pure $ Solved.Field index patternx

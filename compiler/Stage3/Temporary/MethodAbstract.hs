@@ -15,6 +15,7 @@ import Stage3.Simple.SchemeOver (augment')
 import qualified Stage3.Simple.Type as Simple.Type
 import Stage3.Temporary.Definition (Definition)
 import qualified Stage3.Temporary.Definition as Definition
+import qualified Stage3.Unify as Unify
 import qualified Stage4.Tree.Scheme as Simple (Scheme (..), simplify)
 import qualified Stage4.Tree.SchemeOver as Simple (SchemeOver (..))
 
@@ -35,7 +36,7 @@ check context position Method {annotation} (Stage2.DefaultResolve definition)
       definition <- Definition.check context (Simple.Type.lift result) (shift definition)
       pure $ DefaultCheck definition
 
-solve :: MethodAbstract s scope -> ST s (Solved.MethodAbstract Group Check scope)
+solve :: MethodAbstract s scope -> Unify.Solve s (Solved.MethodAbstract Group Check scope)
 solve = \case
   Abstract -> pure Solved.Abstract
   DefaultCheck definition -> do

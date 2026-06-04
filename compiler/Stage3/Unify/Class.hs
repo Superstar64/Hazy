@@ -1,5 +1,6 @@
 module Stage3.Unify.Class where
 
+import qualified Control.Monad as Monad
 import Control.Monad.ST (ST)
 import qualified Data.Kind
 import Data.STRef (STRef)
@@ -11,6 +12,7 @@ import qualified Stage2.Shift as Shift
 import Stage3.Check.Mask (Mask)
 import {-# SOURCE #-} Stage3.Unify.Type (Box, Type)
 import Prelude hiding (Functor, map)
+import qualified Prelude
 
 data Substitute s scope scope' where
   Substitute :: !(Strict.Vector (Type s scope)) -> Substitute s (Scope.Local ':+ scope) scope
@@ -34,22 +36,6 @@ data Zonker s s' where
 type Zonk :: (Data.Kind.Type -> Environment -> Data.Kind.Type) -> Data.Kind.Constraint
 class Zonk typex where
   zonk :: Zonker s s' -> typex s scope -> ST s (typex s' scope)
-
--- |
--- This is used for delaying a unification answer and storing it in a zonkable
--- AST. The wrapped action should _only_ use `solve` set of  functions and
--- _should not_ do any unification.
-type Delay :: (Environment -> Data.Kind.Type) -> Data.Kind.Type -> Environment -> Data.Kind.Type
-newtype Delay f s scope = Delay {solveDelay :: ST s (f scope)}
-
-instance Zonk (Delay f) where
-  zonk Zonker (Delay f) = pure $ Delay f
-
-instance (Shift f) => Shift (Delay f s) where
-  shift (Delay f) = Delay (Shift.shift <$> f)
-
-instance (Shift.Functor f) => Shift.Functor (Delay f s) where
-  map category (Delay f) = Delay (Shift.map category <$> f)
 
 -- todo, this is O(n^2) due to STRefs not having an order
 -- especially not a heterogeneous order
@@ -84,3 +70,15 @@ class (Shift typex) => Functor typex where
 
 shiftDefault :: (Functor typex) => typex scopes -> typex (scope ':+ scopes)
 shiftDefault = map Shift
+
+newtype Solve s a = Solve (ST s a)
+
+instance Prelude.Functor (Solve s) where
+  fmap = Monad.liftM
+
+instance Prelude.Applicative (Solve s) where
+  pure a = Solve (pure a)
+  (<*>) = Monad.ap
+
+instance Prelude.Monad (Solve s) where
+  Solve m >>= f = Solve (m >>= (\(Solve a) -> a) . f)

@@ -22,4 +22,4 @@ check ::
   Unify.Type s scope ->
   Stage2.Statements Stage2.Guard Group Resolve scope ->
   ST s (Statements s scope)
-solve :: Statements s scope -> ST s (Solved.Statements Solved.Guard Group Check scope)
+solve :: Statements s scope -> Unify.Solve s (Solved.Statements Solved.Guard Group Check scope)

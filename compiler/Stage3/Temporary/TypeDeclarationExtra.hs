@@ -22,6 +22,7 @@ import Stage3.Temporary.MethodAbstract (MethodAbstract)
 import qualified Stage3.Temporary.MethodAbstract as MethodAbstract
 import Stage3.Tree.TypeDeclaration (TypeDeclaration (..))
 import qualified Stage3.Tree.TypeDeclaration as TypeDeclaration
+import qualified Stage3.Unify as Unify
 import qualified Stage4.Tree.Constraint as Simple (Constraint (..))
 import qualified Stage4.Tree.Constraint as Simple.Constraint
 
@@ -64,7 +65,7 @@ check context classx declaration
           pure Class {position, methods}
         _ -> error "bad proper"
 
-solve :: TypeDeclarationExtra s scope -> ST s (Solved.TypeDeclarationExtra Group Check scope)
+solve :: TypeDeclarationExtra s scope -> Unify.Solve s (Solved.TypeDeclarationExtra Group Check scope)
 solve = \case
   ADT {position} -> pure Solved.ADT {position}
   Class {position, methods} -> do
