@@ -2,6 +2,8 @@ module Main (main) where
 
 import Control.Exception (catch)
 import Control.Monad (zipWithM_)
+import qualified Core.Tree.Module as Core (Module, name)
+import qualified Core.Tree.Module as Module (simplify)
 import Data.Char (toUpper)
 import Data.Foldable (for_, toList, traverse_)
 import Data.Functor.Identity (Identity (..))
@@ -15,35 +17,33 @@ import qualified Data.Text.Lazy.IO as Text.Lazy.IO
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import qualified Error (allow, fail, types)
+import qualified Generate.Go.Module as Module (generate)
+import qualified Generate.Go.Module as Stage5
+import qualified Generate.Mangle as Mangle
 import qualified Javascript.Printer.Lexer as Javascript (print, run)
 import qualified Javascript.Tree.Module as Module (print)
 import Package as X (Module (Module), Package (Package))
 import qualified Package
-import Stage1.Extensions (Extensions, hazy)
-import Stage1.Lexer
+import qualified Semantic.Check.Go.Module as Module (check)
+import qualified Semantic.Layout as Layout
+import qualified Semantic.Resolve.Go.Module as Module (resolve)
+import qualified Semantic.Stage as Stage
+import qualified Semantic.Tree.Module as Module (connect, seperate)
+import qualified Semantic.Tree.Module as Semantic (Module, name)
+import Syntax.Extensions (Extensions, hazy)
+import Syntax.Lexer
   ( FullQualifiers (..),
     Qualifiers (..),
     constructorIdentifier,
     extend,
   )
-import qualified Stage1.Lexer as Lexer
-import qualified Stage1.Parser as Parser (parse)
-import Stage1.ParserCombinator (internal, parse, startStream)
-import Stage1.Position (Position)
-import qualified Stage1.Tree.Module as Module (parse)
-import qualified Stage1.Tree.Module as Stage1 (Module, assumeName, name)
-import qualified Stage1.Variable as Variable
-import qualified Stage2.Layout as Layout
-import qualified Stage2.Resolve.Go.Module as Module (resolve)
-import qualified Stage2.Stage as Stage
-import qualified Stage2.Tree.Module as Module (connect, seperate)
-import qualified Stage2.Tree.Module as Stage2 (Module, name)
-import qualified Stage2.Check.Go.Module as Module (check)
-import qualified Stage4.Tree.Module as Module (simplify)
-import qualified Stage4.Tree.Module as Stage4 (Module, name)
-import qualified Stage5.Generate.Mangle as Mangle
-import qualified Stage5.Tree.Module as Module (generate)
-import qualified Stage5.Tree.Module as Stage5
+import qualified Syntax.Lexer as Lexer
+import qualified Syntax.Parser as Parser (parse)
+import Syntax.ParserCombinator (internal, parse, startStream)
+import Syntax.Position (Position)
+import qualified Syntax.Tree.Module as Module (parse)
+import qualified Syntax.Tree.Module as Syntax (Module, assumeName, name)
+import qualified Syntax.Variable as Variable
 import System.Console.GetOpt (ArgDescr (..), ArgOrder (..), OptDescr (..), getOpt, usageInfo)
 import System.Directory (createDirectoryIfMissing, listDirectory)
 import System.Environment (getArgs, getExecutablePath)
@@ -112,43 +112,43 @@ loadPackage Package {extensions, modules} = map loadModule modules
           contents = header
         }
 
-stage1 :: Debug -> Vector Loaded -> IO (Vector (Stage1.Module Position))
+stage1 :: Debug -> Vector Loaded -> IO (Vector (Syntax.Module Position))
 stage1 verbose = case verbose of
   Debug -> runVerbose . traverse parse
   Normal -> pure . runIdentity . traverse parse
   where
     parse Root {extensions, name, contents} = Parser.parse extensions Module.parse name contents
     parse Inner {extensions, path, name, contents} =
-      Stage1.assumeName path
+      Syntax.assumeName path
         <$> Parser.parse extensions Module.parse name contents
 
 stage2 ::
   Debug ->
-  Vector (Stage1.Module Position) ->
-  IO (Vector (Stage2.Module Layout.Normal Stage.Resolve))
+  Vector (Syntax.Module Position) ->
+  IO (Vector (Semantic.Module Layout.Normal Stage.Resolve))
 stage2 verbose = case verbose of
   Debug -> runVerbose . Module.resolve
   Normal -> pure . runIdentity . Module.resolve
 
 stage2x ::
   Debug ->
-  Vector (Stage2.Module Layout.Normal Stage.Resolve) ->
-  IO (Vector (Stage2.Module Layout.Group Stage.Resolve))
+  Vector (Semantic.Module Layout.Normal Stage.Resolve) ->
+  IO (Vector (Semantic.Module Layout.Group Stage.Resolve))
 stage2x _ = pure . Module.connect
 
 stage3 ::
   Debug ->
-  Vector (Stage2.Module Layout.Normal Stage.Resolve) ->
-  IO (Vector (Stage2.Module Layout.Normal Stage.Check))
+  Vector (Semantic.Module Layout.Normal Stage.Resolve) ->
+  IO (Vector (Semantic.Module Layout.Normal Stage.Check))
 stage3 _ = pure . Module.seperate . Module.check . Module.connect
 
 stage4 ::
   Debug ->
-  Vector (Stage2.Module Layout.Normal Stage.Check) ->
-  IO (Vector Stage4.Module)
+  Vector (Semantic.Module Layout.Normal Stage.Check) ->
+  IO (Vector Core.Module)
 stage4 _ = pure . Vector.map Module.simplify
 
-stage5 :: Debug -> Vector Stage4.Module -> IO (Vector Stage5.Module)
+stage5 :: Debug -> Vector Core.Module -> IO (Vector Stage5.Module)
 stage5 _ = pure . Module.generate
 
 message :: String -> Int -> Int -> FullQualifiers -> IO ()
@@ -353,27 +353,27 @@ main'' args = case getOpt order options args of
           Help -> help
           Parse -> do
             all <- stage1 debug all
-            forceModules "Parsing" show verbose Stage1.name (Vector.drop split all)
+            forceModules "Parsing" show verbose Syntax.name (Vector.drop split all)
           Resolve -> do
             all <- stage1 debug all
             all <- stage2 debug all
-            forceModules "Resolving" show verbose Stage2.name (Vector.drop split all)
+            forceModules "Resolving" show verbose Semantic.name (Vector.drop split all)
           Group -> do
             all <- stage1 debug all
             all <- stage2 debug all
             all <- stage2x debug all
-            forceModules "Grouping" show verbose Stage2.name (Vector.drop split all)
+            forceModules "Grouping" show verbose Semantic.name (Vector.drop split all)
           Check -> do
             all <- stage1 debug all
             all <- stage2 debug all
             all <- stage3 debug all
-            forceModules "Checking" show verbose Stage2.name (Vector.drop split all)
+            forceModules "Checking" show verbose Semantic.name (Vector.drop split all)
           Simplify -> do
             all <- stage1 debug all
             all <- stage2 debug all
             all <- stage3 debug all
             all <- stage4 debug all
-            forceModules "Simplifying" show verbose Stage4.name (Vector.drop split all)
+            forceModules "Simplifying" show verbose Core.name (Vector.drop split all)
           Generate target -> do
             all <- stage1 debug all
             all <- stage2 debug all

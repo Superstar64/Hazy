@@ -1,0 +1,81 @@
+module Semantic.Index.Type2 where
+
+import Data.Functor.Identity (Identity (..))
+import {-# SOURCE #-} qualified Semantic.Index.Constructor as Constructor
+import qualified Semantic.Index.Type as Type1
+import Semantic.Scope (Environment ((:+)), Local)
+import Semantic.Shift (Shift, shift, shiftDefault)
+import qualified Semantic.Shift as Shift
+import Prelude hiding (map, traverse)
+
+data Index scope
+  = Index !(Type1.Index scope)
+  | Lifted !(Constructor.Index scope)
+  | Bool
+  | Char
+  | ST
+  | Arrow
+  | List
+  | Tuple !Int
+  | Integer
+  | Int
+  | Ordering
+  | Ratio
+  | Num
+  | Enum
+  | Eq
+  | Ord
+  | Real
+  | Integral
+  | Fractional
+  | Functor
+  | Applicative
+  | Monad
+  | MonadFail
+  | Lazy
+  | Strict
+  deriving (Show, Eq, Ord)
+
+instance Shift Index where
+  shift = shiftDefault
+
+instance Shift.Functor Index where
+  map category = map (Shift.map category)
+
+instance Shift.PartialUnshift Index where
+  partialUnshift abort = traverse (Shift.partialUnshift abort)
+
+map :: (Type1.Index scope -> Type1.Index scope') -> Index scope -> Index scope'
+map run = runIdentity . traverse (Identity . run)
+
+traverse :: (Applicative m) => (Type1.Index scope -> m (Type1.Index scope')) -> Index scope -> m (Index scope')
+traverse run = \case
+  Index index -> Index <$> run index
+  Lifted index -> Lifted <$> Constructor.traverse run index
+  typex -> pure $ case typex of
+    Bool -> Bool
+    Char -> Char
+    ST -> ST
+    Arrow -> Arrow
+    List -> List
+    Tuple count -> Tuple count
+    Integer -> Integer
+    Int -> Int
+    Ordering -> Ordering
+    Ratio -> Ratio
+    Num -> Num
+    Enum -> Enum
+    Eq -> Eq
+    Ord -> Ord
+    Integral -> Integral
+    Fractional -> Fractional
+    Real -> Real
+    Functor -> Functor
+    Applicative -> Applicative
+    Monad -> Monad
+    MonadFail -> MonadFail
+    Lazy -> Lazy
+    Strict -> Strict
+
+unlocal :: Index (Local ':+ scope) -> Index scope
+unlocal = map Type1.unlocal

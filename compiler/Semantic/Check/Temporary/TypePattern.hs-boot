@@ -1,0 +1,11 @@
+{-# LANGUAGE RoleAnnotations #-}
+
+module Semantic.Check.Temporary.TypePattern where
+
+import Data.Kind (Type)
+import Semantic.Scope (Environment)
+
+type role TypePattern nominal nominal
+
+type TypePattern :: Type -> Environment -> Type
+data TypePattern s scope

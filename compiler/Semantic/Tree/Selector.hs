@@ -1,0 +1,22 @@
+module Semantic.Tree.Selector where
+
+import qualified Data.Strict.Maybe as Strict (Maybe)
+import qualified Data.Vector.Strict as Strict (Vector)
+import Syntax.Position (Position)
+import Syntax.Variable (Variable)
+
+data Selector
+  = Selector
+  { name :: !Variable,
+    position :: !Position,
+    first, index :: !Int,
+    uniform :: !Uniform
+  }
+  deriving (Show)
+
+data Uniform
+  = Uniform
+  | Disjoint
+      { indexes :: !(Strict.Vector (Strict.Maybe Int))
+      }
+  deriving (Show)

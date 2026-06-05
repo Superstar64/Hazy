@@ -1,0 +1,51 @@
+module Semantic.Resolve.Temporary.Infix where
+
+import Control.Arrow (first)
+import Error (illegalFixity)
+import Syntax.Position (Position)
+import Syntax.Tree.Associativity (Associativity (..))
+import Syntax.Tree.Fixity (Fixity (..))
+import Prelude hiding (Either (Left, Right))
+
+data Infix x e
+  = Infix e x (Infix x e)
+  | Single e
+
+data Infix' x e
+  = Oped x (Infix x e)
+  | Empty
+
+fixWith ::
+  forall e x.
+  (x -> Position) ->
+  (x -> Fixity) ->
+  (e -> x -> e -> e) ->
+  Maybe Associativity ->
+  Int ->
+  Infix x e ->
+  e
+fixWith position fixity make = \target precedence operators -> case fixWith target precedence operators of
+  (e, Empty) -> e
+  (_, Oped x _) -> illegalFixity (position x)
+  where
+    fixWith :: Maybe Associativity -> Int -> Infix x e -> (e, Infix' x e)
+    fixWith _ 10 operators = case operators of
+      Infix e x operators -> (e, Oped x operators)
+      Single e -> (e, Empty)
+    fixWith target precedence operators = case fixWith Nothing (precedence + 1) operators of
+      (e, Oped index operators)
+        | Fixity {associativity, precedence = precedence'} <- fixity index,
+          case target of Nothing -> True; Just associativity' -> associativity == associativity',
+          precedence == precedence' -> case associativity of
+            Right -> first (make e index) (fixWith (Just Right) precedence operators)
+            None -> first (make e index) (fixWith Nothing (precedence + 1) operators)
+            Left -> left e index operators
+              where
+                left e index operators = case fixWith Nothing (precedence + 1) operators of
+                  (e2, Oped index2 operators)
+                    | Fixity {associativity = Left, precedence = precedence'} <-
+                        fixity index2,
+                      precedence == precedence' ->
+                        left (make e index e2) index2 operators
+                  (e2, oped) -> (make e index e2, oped)
+      es -> es

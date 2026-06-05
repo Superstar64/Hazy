@@ -104,7 +104,7 @@ import qualified Data.Map as Map
 import qualified Data.Text.Lazy as Lazy (Text)
 import Data.Text.Lazy.Builder (Builder, fromString, fromText, toLazyText)
 import qualified Data.Text.Lazy.IO as Text.Lazy.IO
-import Stage1.ParserCombinator
+import Syntax.ParserCombinator
   ( Position,
     column,
     file,

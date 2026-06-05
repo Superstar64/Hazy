@@ -1,0 +1,101 @@
+module Semantic.Resolve.Binding.Constructor where
+
+import Data.Map (Map)
+import qualified Data.Strict.Maybe as Strict (Maybe)
+import qualified Data.Vector.Strict as Strict (Vector)
+import Error (duplicateConstructorEntries)
+import qualified Semantic.Index.Constructor as Constructor
+import qualified Semantic.Resolve.Detail.Binding.Constructor as Detail
+import qualified Semantic.Resolve.Functor.Binding.Constructor as Functor
+import Semantic.Shift (Shift (..), shiftDefault)
+import qualified Semantic.Shift as Shift
+import Syntax.Position (Position)
+import Syntax.Tree.Fixity (Fixity)
+import Syntax.Variable (Variable)
+
+data Binding scope = Binding
+  { position :: !Position,
+    index :: !(Constructor.Index scope),
+    fixity :: !Fixity,
+    fields :: !(Map Variable Int),
+    -- redirect a selector index into an entry index
+    selections :: !(Strict.Vector (Strict.Maybe Int)),
+    unordered :: !Bool,
+    fielded :: !Bool,
+    single :: !Bool
+  }
+  deriving (Show)
+
+instance Semigroup (Binding scope) where
+  binding@Binding {index = index1, position = position1}
+    <> Binding {index = index2, position = position2}
+      | index1 == index2 = binding
+      | otherwise = duplicateConstructorEntries [position1, position2]
+
+instance Shift Binding where
+  shift = shiftDefault
+
+instance Shift.Functor Binding where
+  map category Binding {position, index, fixity, fields, selections, unordered, fielded, single} =
+    Binding
+      { position,
+        index = Shift.map category index,
+        fixity,
+        fields,
+        selections,
+        unordered,
+        fielded,
+        single
+      }
+
+fromFunctor :: Functor.Binding (Detail.Binding scope) -> Binding scope
+fromFunctor
+  Functor.Binding
+    { position,
+      value =
+        Detail.Binding
+          { index,
+            fixity,
+            fields,
+            selections,
+            unordered,
+            fielded,
+            single
+          }
+    } =
+    Binding
+      { position,
+        index,
+        fixity,
+        fields,
+        selections,
+        unordered,
+        fielded,
+        single
+      }
+
+toFunctor :: Binding scope -> Functor.Binding (Detail.Binding scope)
+toFunctor
+  Binding
+    { position,
+      index,
+      fixity,
+      fields,
+      selections,
+      unordered,
+      fielded,
+      single
+    } =
+    Functor.Binding
+      { position,
+        value =
+          Detail.Binding
+            { index,
+              fixity,
+              fields,
+              selections,
+              unordered,
+              fielded,
+              single
+            }
+      }

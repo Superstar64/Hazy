@@ -6,9 +6,9 @@ import Data.Text (Text, pack, unpack)
 import qualified Data.Text.IO as Text
 import Data.Text.Lazy.Builder (fromString)
 import Data.Traversable (for)
-import Stage1.Lexer (FullQualifiers (..), Toggle, legalChar)
-import qualified Stage1.Lexer as Lexer
-import Stage1.ParserCombinator
+import Syntax.Lexer (FullQualifiers (..), Toggle, legalChar)
+import qualified Syntax.Lexer as Lexer
+import Syntax.ParserCombinator
   ( Parser,
     Stream,
     char,
