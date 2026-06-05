@@ -8,7 +8,7 @@ import Stage2.Scope (Environment)
 import Stage2.Shift (Shift)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Check)
-import {-# SOURCE #-} qualified Stage3.Tree.TypeDeclaration as Solved
+import {-# SOURCE #-} qualified Stage2.Check.Go.TypeDeclaration as Solved
 import {-# SOURCE #-} Stage4.Tree.Class (Class)
 import {-# SOURCE #-} Stage4.Tree.Data (Data)
 

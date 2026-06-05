@@ -6,7 +6,7 @@ import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Check)
-import {-# SOURCE #-} qualified Stage3.Tree.Scheme as Solved
+import {-# SOURCE #-} qualified Stage2.Tree.Scheme as Solved
 import qualified Stage4.Shift as Shift2
 import Stage4.Tree.SchemeOver (SchemeOver)
 import Stage4.Tree.Type (Type)

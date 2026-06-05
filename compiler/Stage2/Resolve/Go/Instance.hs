@@ -21,7 +21,7 @@ import qualified Stage2.Resolve.Go.Constraint as Constraint
 import qualified Stage2.Resolve.Go.Scheme as Scheme
 import qualified Stage2.Resolve.Go.TypePattern as TypePattern
 import Stage2.Stage (Resolve)
-import qualified Stage2.Temporary.Complete.Definition as Complete (Definition (..), resolve)
+import qualified Stage2.Resolve.Temporary.Complete.Definition as Complete (Definition (..), resolve)
 import Stage2.Tree.Combinators.Implicit (Implicit (..))
 import Stage2.Tree.Combinators.Inferred (Inferred (..))
 import qualified Stage2.Tree.Definition as Definition (merge)

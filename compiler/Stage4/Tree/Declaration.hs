@@ -14,7 +14,7 @@ import qualified Stage2.Tree.Definition2 as Stage3.Definition2
 import qualified Stage2.Tree.Definition3 as Stage3 (Definition3 (..))
 import qualified Stage2.Tree.Definition4 as Stage3 (Definition4 (..))
 import qualified Stage2.Tree.Expression as Stage3 (Expression)
-import qualified Stage3.Tree.Scheme as Stage3 (Scheme)
+import qualified Stage2.Check.Go.Scheme as Stage3 (Scheme)
 import qualified Stage4.Index.Term as Term
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute

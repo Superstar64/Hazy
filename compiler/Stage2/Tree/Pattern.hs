@@ -15,7 +15,7 @@ import qualified Stage2.Shift as Shift
 import Stage2.Tree.Combinators.Inferred (Inferred (..))
 import Stage2.Tree.PatternField (Field (..))
 import qualified Stage2.Tree.PatternField as Field (neverFails)
-import Stage3.Tree.ConstructorInfo (ConstructorInfo)
+import Stage2.Check.Simple.ConstructorInfo (ConstructorInfo)
 import qualified Stage4.Tree.Evidence as Simple
 import Prelude hiding (Bool (False, True), Either (Left, Right), head, tail)
 import qualified Prelude

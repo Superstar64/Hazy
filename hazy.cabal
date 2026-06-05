@@ -175,6 +175,77 @@ executable hazy
     Stage1.Tree.TypeInfix
     Stage1.Tree.TypePattern
     Stage1.Variable
+    Stage2.Check.ClassInstance
+    Stage2.Check.ConstructorInstance
+    Stage2.Check.Context
+    Stage2.Check.DataInstance
+    Stage2.Check.EntryInstance
+    Stage2.Check.Functor.Annotated
+    Stage2.Check.Functor.Declarations
+    Stage2.Check.Functor.Instance.Key
+    Stage2.Check.Functor.Module
+    Stage2.Check.Functor.ModuleSet
+    Stage2.Check.Go.Declarations
+    Stage2.Check.Go.Module
+    Stage2.Check.Go.Scheme
+    Stage2.Check.Go.TypeDeclaration
+    Stage2.Check.InstanceAnnotation
+    Stage2.Check.KindAnnotation
+    Stage2.Check.LocalBinding
+    Stage2.Check.Mask
+    Stage2.Check.Simple.Class
+    Stage2.Check.Simple.Constraint
+    Stage2.Check.Simple.Constructor
+    Stage2.Check.Simple.ConstructorInfo
+    Stage2.Check.Simple.Data
+    Stage2.Check.Simple.EntryInfo
+    Stage2.Check.Simple.Evidence
+    Stage2.Check.Simple.Instanciation
+    Stage2.Check.Simple.MethodInfo
+    Stage2.Check.Simple.Scheme
+    Stage2.Check.Simple.SchemeOver
+    Stage2.Check.Simple.SelectorInfo
+    Stage2.Check.Simple.Type
+    Stage2.Check.Temporary.Alternative
+    Stage2.Check.Temporary.Body
+    Stage2.Check.Temporary.CallHead
+    Stage2.Check.Temporary.Constraint
+    Stage2.Check.Temporary.Constructor
+    Stage2.Check.Temporary.ConstructorInfo
+    Stage2.Check.Temporary.Declaration
+    Stage2.Check.Temporary.Declarations
+    Stage2.Check.Temporary.Definition
+    Stage2.Check.Temporary.Definition2
+    Stage2.Check.Temporary.Definition3
+    Stage2.Check.Temporary.Definition4
+    Stage2.Check.Temporary.Do
+    Stage2.Check.Temporary.Entry
+    Stage2.Check.Temporary.EntryInfo
+    Stage2.Check.Temporary.Expression
+    Stage2.Check.Temporary.ExpressionField
+    Stage2.Check.Temporary.Field
+    Stage2.Check.Temporary.Function
+    Stage2.Check.Temporary.Instance
+    Stage2.Check.Temporary.Lambda
+    Stage2.Check.Temporary.Method
+    Stage2.Check.Temporary.MethodAbstract
+    Stage2.Check.Temporary.MethodConcrete
+    Stage2.Check.Temporary.Pattern
+    Stage2.Check.Temporary.PatternField
+    Stage2.Check.Temporary.RightHandSide
+    Stage2.Check.Temporary.Scheme
+    Stage2.Check.Temporary.Select
+    Stage2.Check.Temporary.SelectorInfo
+    Stage2.Check.Temporary.Statements
+    Stage2.Check.Temporary.StrictnessAnnotation
+    Stage2.Check.Temporary.Type
+    Stage2.Check.Temporary.TypeDeclarationExtra
+    Stage2.Check.Temporary.TypeDefinition
+    Stage2.Check.Temporary.TypeDefinition2
+    Stage2.Check.Temporary.TypePattern
+    Stage2.Check.TermBinding
+    Stage2.Check.TypeAnnotation
+    Stage2.Check.TypeBinding
     Stage2.Connect
     Stage2.FreeVariables
     Stage2.Group.Functor.Term.Declarations
@@ -182,11 +253,14 @@ executable hazy
     Stage2.Group.Functor.Type.Declarations
     Stage2.Group.Functor.Type.ModuleSet
     Stage2.Index.Constructor
+    Stage2.Index.Evidence
+    Stage2.Index.Evidence0
     Stage2.Index.Link.Term
     Stage2.Index.Link.Type
     Stage2.Index.Local
     Stage2.Index.Method
     Stage2.Index.Selector
+    Stage2.Index.Table.Evidence0
     Stage2.Index.Table.Local
     Stage2.Index.Table.Term
     Stage2.Index.Table.Type
@@ -257,39 +331,39 @@ executable hazy
     Stage2.Resolve.Go.TypePattern
     Stage2.Resolve.Import
     Stage2.Resolve.Stability
+    Stage2.Resolve.Temporary.Complete.ClassInstance
+    Stage2.Resolve.Temporary.Complete.Constructor
+    Stage2.Resolve.Temporary.Complete.ConstructorDeclaration
+    Stage2.Resolve.Temporary.Complete.DataInstance
+    Stage2.Resolve.Temporary.Complete.Declaration
+    Stage2.Resolve.Temporary.Complete.Declarations
+    Stage2.Resolve.Temporary.Complete.Definition
+    Stage2.Resolve.Temporary.Complete.Field
+    Stage2.Resolve.Temporary.Complete.GADTConstructor
+    Stage2.Resolve.Temporary.Complete.Method
+    Stage2.Resolve.Temporary.Complete.Module
+    Stage2.Resolve.Temporary.Complete.Selector
+    Stage2.Resolve.Temporary.Complete.TypeDeclaration
+    Stage2.Resolve.Temporary.ExpressionInfix
+    Stage2.Resolve.Temporary.Infix
+    Stage2.Resolve.Temporary.Partial.ConstructorDeclaration
+    Stage2.Resolve.Temporary.Partial.Declaration
+    Stage2.Resolve.Temporary.Partial.Method
+    Stage2.Resolve.Temporary.Partial.More.ADT
+    Stage2.Resolve.Temporary.Partial.More.Choice
+    Stage2.Resolve.Temporary.Partial.More.Class
+    Stage2.Resolve.Temporary.Partial.More.Constructor
+    Stage2.Resolve.Temporary.Partial.More.Function
+    Stage2.Resolve.Temporary.Partial.More.GADT
+    Stage2.Resolve.Temporary.Partial.More.Method
+    Stage2.Resolve.Temporary.Partial.More.Selector
+    Stage2.Resolve.Temporary.Partial.More.Synonym
+    Stage2.Resolve.Temporary.Partial.TypeDeclaration
+    Stage2.Resolve.Temporary.PatternInfix
+    Stage2.Resolve.Temporary.TypeInfix
     Stage2.Scope
     Stage2.Shift
     Stage2.Stage
-    Stage2.Temporary.Complete.ClassInstance
-    Stage2.Temporary.Complete.Constructor
-    Stage2.Temporary.Complete.ConstructorDeclaration
-    Stage2.Temporary.Complete.DataInstance
-    Stage2.Temporary.Complete.Declaration
-    Stage2.Temporary.Complete.Declarations
-    Stage2.Temporary.Complete.Definition
-    Stage2.Temporary.Complete.Field
-    Stage2.Temporary.Complete.GADTConstructor
-    Stage2.Temporary.Complete.Method
-    Stage2.Temporary.Complete.Module
-    Stage2.Temporary.Complete.Selector
-    Stage2.Temporary.Complete.TypeDeclaration
-    Stage2.Temporary.ExpressionInfix
-    Stage2.Temporary.Infix
-    Stage2.Temporary.Partial.ConstructorDeclaration
-    Stage2.Temporary.Partial.Declaration
-    Stage2.Temporary.Partial.Method
-    Stage2.Temporary.Partial.More.ADT
-    Stage2.Temporary.Partial.More.Choice
-    Stage2.Temporary.Partial.More.Class
-    Stage2.Temporary.Partial.More.Constructor
-    Stage2.Temporary.Partial.More.Function
-    Stage2.Temporary.Partial.More.GADT
-    Stage2.Temporary.Partial.More.Method
-    Stage2.Temporary.Partial.More.Selector
-    Stage2.Temporary.Partial.More.Synonym
-    Stage2.Temporary.Partial.TypeDeclaration
-    Stage2.Temporary.PatternInfix
-    Stage2.Temporary.TypeInfix
     Stage2.Tree.Alternative
     Stage2.Tree.Body
     Stage2.Tree.CallHead
@@ -329,89 +403,15 @@ executable hazy
     Stage2.Tree.TypeDefinition
     Stage2.Tree.TypeDefinition2
     Stage2.Tree.TypePattern
-    Stage3.Check.ClassInstance
-    Stage3.Check.ConstructorInstance
-    Stage3.Check.Context
-    Stage3.Check.DataInstance
-    Stage3.Check.EntryInstance
-    Stage3.Check.InstanceAnnotation
-    Stage3.Check.KindAnnotation
-    Stage3.Check.LocalBinding
-    Stage3.Check.Mask
-    Stage3.Check.TermBinding
-    Stage3.Check.TypeAnnotation
-    Stage3.Check.TypeBinding
-    Stage3.Functor.Annotated
-    Stage3.Functor.Declarations
-    Stage3.Functor.Instance.Key
-    Stage3.Functor.Module
-    Stage3.Functor.ModuleSet
-    Stage3.Index.Evidence
-    Stage3.Index.Evidence0
-    Stage3.Index.Table.Evidence0
-    Stage3.Simple.Class
-    Stage3.Simple.Constraint
-    Stage3.Simple.Constructor
-    Stage3.Simple.Data
-    Stage3.Simple.Evidence
-    Stage3.Simple.Instanciation
-    Stage3.Simple.Scheme
-    Stage3.Simple.SchemeOver
-    Stage3.Simple.Type
-    Stage3.Temporary.Alternative
-    Stage3.Temporary.Body
-    Stage3.Temporary.CallHead
-    Stage3.Temporary.Constraint
-    Stage3.Temporary.Constructor
-    Stage3.Temporary.ConstructorInfo
-    Stage3.Temporary.Declaration
-    Stage3.Temporary.Declarations
-    Stage3.Temporary.Definition
-    Stage3.Temporary.Definition2
-    Stage3.Temporary.Definition3
-    Stage3.Temporary.Definition4
-    Stage3.Temporary.Do
-    Stage3.Temporary.Entry
-    Stage3.Temporary.EntryInfo
-    Stage3.Temporary.Expression
-    Stage3.Temporary.ExpressionField
-    Stage3.Temporary.Field
-    Stage3.Temporary.Function
-    Stage3.Temporary.Instance
-    Stage3.Temporary.Lambda
-    Stage3.Temporary.Method
-    Stage3.Temporary.MethodAbstract
-    Stage3.Temporary.MethodConcrete
-    Stage3.Temporary.Pattern
-    Stage3.Temporary.PatternField
-    Stage3.Temporary.RightHandSide
-    Stage3.Temporary.Scheme
-    Stage3.Temporary.Select
-    Stage3.Temporary.SelectorInfo
-    Stage3.Temporary.Statements
-    Stage3.Temporary.StrictnessAnnotation
-    Stage3.Temporary.Type
-    Stage3.Temporary.TypeDeclarationExtra
-    Stage3.Temporary.TypeDefinition
-    Stage3.Temporary.TypeDefinition2
-    Stage3.Temporary.TypePattern
-    Stage3.Tree.ConstructorInfo
-    Stage3.Tree.Declarations
-    Stage3.Tree.EntryInfo
-    Stage3.Tree.MethodInfo
-    Stage3.Tree.Module
-    Stage3.Tree.Scheme
-    Stage3.Tree.SelectorInfo
-    Stage3.Tree.TypeDeclaration
-    Stage3.Unify
-    Stage3.Unify.Builtin
-    Stage3.Unify.Class
-    Stage3.Unify.Constraint
-    Stage3.Unify.Error
-    Stage3.Unify.Evidence
-    Stage3.Unify.Instanciation
-    Stage3.Unify.SchemeOver
-    Stage3.Unify.Type
+    Stage2.Unify
+    Stage2.Unify.Builtin
+    Stage2.Unify.Class
+    Stage2.Unify.Constraint
+    Stage2.Unify.Error
+    Stage2.Unify.Evidence
+    Stage2.Unify.Instanciation
+    Stage2.Unify.SchemeOver
+    Stage2.Unify.Type
     Stage4.Index.Table.Term
     Stage4.Index.Term
     Stage4.Shift

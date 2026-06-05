@@ -10,7 +10,7 @@ import Stage2.Stage (Check)
 import Stage2.Tree.Combinators.Inferred (Inferred (..))
 import qualified Stage2.Tree.Pattern as Stage3
 import qualified Stage2.Tree.PatternField as Stage3.Field
-import Stage3.Tree.ConstructorInfo (ConstructorInfo)
+import Stage2.Check.Simple.ConstructorInfo (ConstructorInfo)
 import qualified Stage4.Shift as Shift2
 import Stage4.Tree.Evidence (Evidence)
 

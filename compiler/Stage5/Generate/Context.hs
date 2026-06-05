@@ -8,12 +8,12 @@ import Data.Text (Text)
 import Data.Vector (Vector)
 import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
+import qualified Stage2.Index.Evidence0 as Evidence0 (Index)
+import qualified Stage2.Index.Table.Evidence0 as Evidence0 (Table (..), (!))
 import qualified Stage2.Index.Table.Type as Type (Table (..), (!))
 import qualified Stage2.Index.Type as Type (Index)
 import Stage2.Scope (Environment ((:+)))
 import qualified Stage2.Scope as Scope
-import qualified Stage3.Index.Evidence0 as Evidence0 (Index)
-import qualified Stage3.Index.Table.Evidence0 as Evidence0 (Table (..), (!))
 import qualified Stage4.Index.Table.Term as Term (Table (..), (!))
 import qualified Stage4.Index.Term as Term (Index)
 import Stage4.Tree.ConstructorInfo (ConstructorInfo (..))

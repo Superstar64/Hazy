@@ -4,7 +4,7 @@ import Stage1.Variable (FullQualifiers)
 import Stage2.Layout (Normal)
 import Stage2.Scope (Global)
 import Stage2.Stage (Check)
-import qualified Stage3.Tree.Module as Stage3
+import qualified Stage2.Check.Go.Module as Stage3
 import Stage4.Tree.Declarations (Declarations)
 import qualified Stage4.Tree.Declarations as Declarations (simplify)
 

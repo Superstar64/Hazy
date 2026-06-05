@@ -1,13 +1,13 @@
 module Stage4.Tree.Evidence (Evidence (..)) where
 
 import qualified Data.Vector as Vector
+import qualified Stage2.Index.Evidence as Evidence
+import qualified Stage2.Index.Evidence0 as Evidence0
 import qualified Stage2.Index.Type as Type
 import qualified Stage2.Index.Type2 as Type2
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
-import qualified Stage3.Index.Evidence as Evidence
-import qualified Stage3.Index.Evidence0 as Evidence0
 import qualified Stage4.Shift as Shift2
 import Stage4.Substitute (Category (Substitute))
 import qualified Stage4.Substitute as Substitute

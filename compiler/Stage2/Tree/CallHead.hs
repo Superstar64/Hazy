@@ -10,9 +10,9 @@ import qualified Stage2.Index.Term as Term
 import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Tree.Combinators.Inferred (Inferred)
-import Stage3.Tree.ConstructorInfo (ConstructorInfo)
-import Stage3.Tree.MethodInfo (MethodInfo)
-import Stage3.Tree.SelectorInfo (SelectorInfo)
+import Stage2.Check.Simple.ConstructorInfo (ConstructorInfo)
+import Stage2.Check.Simple.MethodInfo (MethodInfo)
+import Stage2.Check.Simple.SelectorInfo (SelectorInfo)
 import qualified Stage4.Tree.Evidence as Simple (Evidence)
 import qualified Stage4.Tree.Instanciation as Simple (Instanciation)
 

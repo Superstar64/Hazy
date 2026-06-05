@@ -9,7 +9,11 @@ import qualified Data.Strict.Vector2 as Strict.Vector2
 import Data.Text (unpack)
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
+import qualified Stage2.Check.Simple.ConstructorInfo as Stage3 (ConstructorInfo (ConstructorInfo))
+import qualified Stage2.Check.Simple.ConstructorInfo as Stage3.ConstructorInfo
+import Stage2.Check.Simple.SelectorInfo (Select (..), SelectorInfo (..))
 import qualified Stage2.Index.Constructor as Constructor
+import qualified Stage2.Index.Evidence as Index.Evidence
 import qualified Stage2.Index.Method as Method
 import qualified Stage2.Index.Selector as Selector (Index (..))
 import qualified Stage2.Index.Type2 as Type2
@@ -29,10 +33,6 @@ import qualified Stage2.Tree.ExpressionField as Stage3.Field
 import qualified Stage2.Tree.RightHandSide as Stage3 (RightHandSide)
 import qualified Stage2.Tree.Statements as Stage3 (Do, Equal (..), Evidence (..), IsDo (..), Statements)
 import qualified Stage2.Tree.Statements as Stage3.Statements
-import qualified Stage3.Index.Evidence as Index.Evidence
-import qualified Stage3.Tree.ConstructorInfo as Stage3 (ConstructorInfo (ConstructorInfo))
-import qualified Stage3.Tree.ConstructorInfo as Stage3.ConstructorInfo
-import Stage3.Tree.SelectorInfo (Select (..), SelectorInfo (..))
 import qualified Stage4.Index.Term as Term
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute

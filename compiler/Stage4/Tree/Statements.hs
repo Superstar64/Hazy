@@ -15,8 +15,8 @@ import Stage2.Shift (Shift, shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Check)
 import qualified Stage2.Tree.Statements as Stage3 (Guard, Statements (..))
-import qualified Stage3.Tree.ConstructorInfo as Stage3 (ConstructorInfo (..))
-import qualified Stage3.Tree.ConstructorInfo as Stage3.ConstructorInfo
+import qualified Stage2.Check.Simple.ConstructorInfo as Stage3 (ConstructorInfo (..))
+import qualified Stage2.Check.Simple.ConstructorInfo as Stage3.ConstructorInfo
 import qualified Stage4.Index.Term as Term
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute

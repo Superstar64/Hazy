@@ -2,6 +2,8 @@ module Stage4.Shift (Category (..), Functor (..), mapDefault, mapInstances) wher
 
 import qualified Data.Map as Map
 import qualified Stage2.Index.Constructor as Constructor
+import qualified Stage2.Index.Evidence as Evidence
+import qualified Stage2.Index.Evidence0 as Evidence0
 import qualified Stage2.Index.Local as Local
 import qualified Stage2.Index.Method as Method
 import qualified Stage2.Index.Selector as Selector
@@ -9,8 +11,6 @@ import qualified Stage2.Index.Type as Type
 import qualified Stage2.Index.Type2 as Type2
 import Stage2.Scope (Environment (..), Pattern, SimpleDeclaration, SimplePattern)
 import qualified Stage2.Shift as Stage2
-import qualified Stage3.Index.Evidence as Evidence
-import qualified Stage3.Index.Evidence0 as Evidence0
 import Prelude hiding (Functor, map)
 
 data Category scope scope' where

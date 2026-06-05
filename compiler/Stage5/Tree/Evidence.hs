@@ -5,7 +5,7 @@ import Data.Foldable (toList)
 import qualified Data.Map as Map
 import qualified Javascript.Tree.Expression as Javascript (Expression (..))
 import qualified Javascript.Tree.Statement as Javascript (Statement (..))
-import qualified Stage3.Index.Evidence as Evidence (Builtin (..), Index (..))
+import qualified Stage2.Index.Evidence as Evidence (Builtin (..), Index (..))
 import Stage4.Tree.Evidence (Evidence (..))
 import Stage4.Tree.Instanciation (Instanciation (Instanciation))
 import qualified Stage5.Generate.Binding.Evidence as Evidence (Binding (..))

@@ -21,7 +21,7 @@ import Stage2.Scope (Environment (..))
 import qualified Stage2.Scope as Scope
 import Stage2.Shift (shift)
 import Stage2.Stage (Resolve)
-import {-# SOURCE #-} qualified Stage2.Temporary.Complete.Declarations as Complete
+import {-# SOURCE #-} qualified Stage2.Resolve.Temporary.Complete.Declarations as Complete
 import Stage2.Tree.Declarations (Declarations (..))
 
 resolve ::

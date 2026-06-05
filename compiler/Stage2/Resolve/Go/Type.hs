@@ -24,7 +24,7 @@ import qualified Stage2.Label.Context as Label (Context, (!-.*), (!=.), (!=.*))
 import Stage2.Resolve.Context ((!$), (!=*~))
 import qualified Stage2.Resolve.Context as Resolved (Context, (!=.*))
 import Stage2.Stage (Equal (..), Resolve)
-import {-# SOURCE #-} qualified Stage2.Temporary.TypeInfix as Infix (fix, resolve)
+import {-# SOURCE #-} qualified Stage2.Resolve.Temporary.TypeInfix as Infix (fix, resolve)
 import Stage2.Tree.Type (Synonym (..), Type (..))
 import Prelude hiding (Bool (False, True))
 

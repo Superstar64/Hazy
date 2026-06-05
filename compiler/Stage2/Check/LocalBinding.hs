@@ -1,0 +1,59 @@
+module Stage2.Check.LocalBinding where
+
+import qualified Data.Kind (Type)
+import Data.Map (Map)
+import qualified Data.Map as Map
+import qualified Data.Vector.Strict as Strict
+import Error (nonUniqueConstraints)
+import Stage1.Position (Position)
+import qualified Stage2.Index.Type2 as Type2
+import qualified Stage2.Label.Binding.Local as Label
+import Stage2.Scope (Environment)
+import Stage2.Shift (Shift (shift))
+import Stage2.Check.Mask (Mask)
+import {-# SOURCE #-} qualified Stage2.Unify as Unify (Type)
+import qualified Stage4.Tree.Evidence as Simple (Evidence)
+import Stage4.Tree.Type as Simple (Type)
+
+type LocalBinding :: Data.Kind.Type -> Environment -> Data.Kind.Type
+data LocalBinding s scope
+  = Rigid
+      { label :: !(forall scope. Label.LocalBinding scope),
+        rigid :: !(Simple.Type scope),
+        constraints :: !(Map (Type2.Index scope) (Constraint scope)),
+        mask :: !Mask
+      }
+  | Wobbly
+      { label :: !(forall scope. Label.LocalBinding scope),
+        wobbly :: !(Unify.Type s scope)
+      }
+
+instance Shift (LocalBinding s) where
+  shift = \case
+    Rigid {label, rigid, constraints, mask} ->
+      Rigid
+        { label,
+          rigid = shift rigid,
+          constraints = Map.map shift $ Map.mapKeysMonotonic shift constraints,
+          mask
+        }
+    Wobbly {label, wobbly} -> Wobbly {label, wobbly = shift wobbly}
+
+data Constraint scope = Constraint
+  { arguments :: !(Strict.Vector (Simple.Type scope)),
+    evidence :: !(Simple.Evidence scope)
+  }
+  deriving (Show)
+
+combine :: Position -> Constraint scope -> Constraint scope -> Constraint scope
+combine position left@Constraint {arguments} Constraint {arguments = argument'}
+  -- evidence is left biased
+  | arguments == argument' = left
+  | otherwise = nonUniqueConstraints position
+
+instance Shift Constraint where
+  shift Constraint {arguments, evidence} =
+    Constraint
+      { arguments = fmap shift arguments,
+        evidence = shift evidence
+      }

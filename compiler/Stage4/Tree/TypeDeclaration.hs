@@ -6,7 +6,7 @@ import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Check)
 import Stage2.Tree.TypeDefinition2 (TypeDefinition2 (..))
-import qualified Stage3.Tree.TypeDeclaration as Solved (TypeDeclaration (..))
+import qualified Stage2.Check.Go.TypeDeclaration as Solved (TypeDeclaration (..))
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
 import Stage4.Tree.Class (Class)

@@ -7,7 +7,7 @@ import Error (Position)
 import qualified Stage1.Tree.Module as Stage1 (Module)
 import Stage2.Layout (Normal)
 import Stage2.Stage (Resolve)
-import qualified Stage2.Temporary.Complete.Module as Complete
+import qualified Stage2.Resolve.Temporary.Complete.Module as Complete
 import Stage2.Tree.Module (Module (..))
 import Verbose (Debug)
 

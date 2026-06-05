@@ -38,7 +38,7 @@ import qualified Stage2.Resolve.Go.Module as Module (resolve)
 import qualified Stage2.Stage as Stage
 import qualified Stage2.Tree.Module as Module (connect, seperate)
 import qualified Stage2.Tree.Module as Stage2 (Module, name)
-import qualified Stage3.Tree.Module as Module (check)
+import qualified Stage2.Check.Go.Module as Module (check)
 import qualified Stage4.Tree.Module as Module (simplify)
 import qualified Stage4.Tree.Module as Stage4 (Module, name)
 import qualified Stage5.Generate.Mangle as Mangle

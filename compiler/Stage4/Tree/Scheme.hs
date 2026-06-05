@@ -5,7 +5,7 @@ import Stage2.Shift (Shift, shiftDefault)
 import qualified Stage2.Shift as Shift
 import Stage2.Stage (Check)
 import qualified Stage2.Tree.TypePattern as Solved.TypePattern
-import qualified Stage3.Tree.Scheme as Solved
+import qualified Stage2.Check.Go.Scheme as Solved
 import qualified Stage4.Shift as Shift2
 import qualified Stage4.Substitute as Substitute
 import qualified Stage4.Tree.Constraint as Constraint

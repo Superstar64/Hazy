@@ -1,11 +1,11 @@
 module Stage4.Tree.Builtin.Real where
 
 import qualified Data.Vector.Strict as Strict.Vector
+import qualified Stage2.Index.Evidence as Evidence
+import qualified Stage2.Index.Evidence0 as Evidence0
 import qualified Stage2.Index.Local as Local
 import qualified Stage2.Index.Method as Method
 import qualified Stage2.Index.Type2 as Type2
-import qualified Stage3.Index.Evidence as Evidence
-import qualified Stage3.Index.Evidence0 as Evidence0
 import Stage4.Tree.Class (Class (..))
 import Stage4.Tree.ClassExtra (ClassExtra (..))
 import Stage4.Tree.Constraint (Constraint (..))

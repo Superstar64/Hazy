@@ -31,7 +31,7 @@ import Stage2.Tree.Scheme (Scheme)
 import Stage2.Tree.Select (Select (..))
 import Stage2.Tree.Statements (Statements)
 import qualified Stage2.Tree.Statements as Statements (Do, Guard)
-import Stage3.Tree.ConstructorInfo (ConstructorInfo)
+import Stage2.Check.Simple.ConstructorInfo (ConstructorInfo)
 import qualified Stage4.Tree.Evidence as Simple (Evidence)
 import qualified Stage4.Tree.Instanciation as Simple (Instanciation (..))
 import qualified Stage4.Tree.SchemeOver as SchemeOver
