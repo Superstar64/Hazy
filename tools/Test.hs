@@ -92,7 +92,13 @@ main = do
   copyFile "runtime/package" ".test/dist/packages/runtime/package"
 
   let header = ["Hazy", "Hazy/Builtin"]
-      source = ["Hazy/Helper", "Hazy/Prelude"]
+      source =
+        [ "Hazy/Helper",
+          "Hazy/Prelude",
+          "Hazy/PreludeList",
+          "Hazy/PreludeText",
+          "Hazy/PreludeIO"
+        ]
   for_ header $ \file ->
     copyFile
       ("runtime/header/" ++ file ++ ".hs")

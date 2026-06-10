@@ -3,3 +3,6 @@ Hazy.hs
 Hazy/Builtin.hs
 Hazy/Helper.hs
 Hazy/Prelude.hs
+Hazy/PreludeList.hs
+Hazy/PreludeText.hs
+Hazy/PreludeIO.hs

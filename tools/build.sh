@@ -36,7 +36,7 @@ mkdir $DIST/packages/runtime/artifact/Hazy
 cp runtime/package $DIST/packages/runtime/package
 
 HEADER="Hazy Hazy/Builtin"
-SOURCE="Hazy/Helper Hazy/Prelude"
+SOURCE="Hazy/Helper Hazy/Prelude Hazy/PreludeList Hazy/PreludeText Hazy/PreludeIO"
 
 for FILE in $HEADER; do
     cp runtime/header/$FILE.hs $DIST/packages/runtime/header/$FILE.hs
