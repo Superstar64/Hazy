@@ -73,7 +73,7 @@ lessThenEqual =
     Term.Binding
       { position = Position.internal,
         index = Term2.Method Method.lessThenEqual,
-        fixity = Fixity {associativity = Left, precedence = 4},
+        fixity = Fixity {associativity = None, precedence = 4},
         selector = Normal
       }
   )
@@ -93,7 +93,7 @@ greaterThenEqual =
     Term.Binding
       { position = Position.internal,
         index = Term2.Method Method.greaterThenEqual,
-        fixity = Fixity {associativity = Left, precedence = 4},
+        fixity = Fixity {associativity = None, precedence = 4},
         selector = Normal
       }
   )

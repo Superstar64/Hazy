@@ -624,6 +624,17 @@ simplifyWith expression [] = case expression of
               argument = shift $ simplify right
             }
       }
+  Semantic.Negate {evidence = Solved evidence, negative} ->
+    Call
+      { function =
+          Method
+            { method = Method.negate,
+              evidence,
+              instanciation = Instanciation Strict.Vector.empty,
+              methodInfo = Class.info Builtin.num
+            },
+        argument = simplify negative
+      }
   where
     cons head tail =
       Constructor

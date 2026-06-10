@@ -118,7 +118,7 @@ class (RealFrac a, Floating a) => RealFloat a where
     | (x <= 0 && y < 0)
         || (x < 0 && isNegativeZero y)
         || (isNegativeZero x && isNegativeZero y) =
-        negate (atan2 (-y) x)
+        -(atan2 (-y) x)
     | y == 0 && (x < 0 || isNegativeZero x) =
         pi
     | x == 0 && y == 0 = y
@@ -156,7 +156,7 @@ x ^ n | n > 0 = f x (n - 1) x
 _ ^ _ = error "Prelude.^: negative exponent"
 
 (^^) :: (Fractional a, Integral b) => a -> b -> a
-x ^^ n = if n >= 0 then x ^ n else recip (x ^ (negate n))
+x ^^ n = if n >= 0 then x ^ n else recip (x ^ (-n))
 
 fromIntegral :: (Integral a, Num b) => a -> b
 fromIntegral = fromInteger . toInteger

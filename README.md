@@ -431,25 +431,6 @@ Here, `#1` is polymorphic over an unconstrainted type variable so it gets
 properly generalized to `f :: a -> a`. However, `#2` is rejected because it
 would have the type `f' :: Num a => a -> a`.
 
-### No Negation Operator
-Hazy does not implement a negation operator. However negative integer literals
-are supported. The are parsed when there is no space between the integer and the
-minus sign.
-
-This example is rejected:
-```haskell
-negate x = -x
-```
-This example get treated as sections;
-```haskell
-section x = (- x)
-section' = (- 10)
-```
-This example is a normal integer literal:
-```haskell
-literal = (-10)
-```
-
 ### Postfix Operators
 Left sections are treated as function application and are not eta expanded.
 This follows GHC's `PostfixOperators` extension.

@@ -165,6 +165,24 @@ resolve context = \case
         evidence = Inferred,
         equal = Inferred
       }
+  Syntax.NegativeInteger {startPosition, integer} ->
+    Integer
+      { names = Map.empty,
+        irrefutable = Prelude.False,
+        startPosition,
+        integer = -integer,
+        evidence = Inferred,
+        equal = Inferred
+      }
+  Syntax.NegativeFloat {startPosition, float} ->
+    Float
+      { names = Map.empty,
+        irrefutable = Prelude.False,
+        startPosition,
+        float = -float,
+        evidence = Inferred,
+        equal = Inferred
+      }
   Syntax.Character {startPosition, character} ->
     Character
       { names = Map.empty,

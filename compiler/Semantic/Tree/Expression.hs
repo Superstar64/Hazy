@@ -135,6 +135,11 @@ data Expression layout stage scope
         imperative :: !(Expression layout stage scope),
         unsupported :: !(Unsupported stage)
       }
+  | Negate
+      { startPosition :: !Position,
+        evidence :: !(Inferred Simple.Evidence stage scope),
+        negative :: !(Expression layout stage scope)
+      }
   deriving (Show)
 
 instance Scope.Show (Expression layout stage) where
@@ -254,6 +259,12 @@ instance Shift.Functor (Expression layout stage) where
           imperative = Shift.map category imperative,
           unsupported
         }
+    Negate {startPosition, evidence, negative} ->
+      Negate
+        { startPosition,
+          evidence = Shift.map category evidence,
+          negative = Shift.map category negative
+        }
 
 instance FreeTermVariables (Expression layout) where
   freeTermVariables target = \case
@@ -298,6 +309,7 @@ instance FreeTermVariables (Expression layout) where
     Annotation {expression} ->
       freeTermVariables target expression
     RunST {imperative} -> freeTermVariables target imperative
+    Negate {negative} -> freeTermVariables target negative
 
 instance Connect Expression where
   connect = \case
@@ -418,6 +430,12 @@ instance Connect Expression where
           imperative = connect imperative,
           unsupported
         }
+    Negate {startPosition, negative} ->
+      Negate
+        { startPosition,
+          evidence = Inferred,
+          negative = connect negative
+        }
   seperate = \case
     CallHead {callHead} ->
       CallHead
@@ -498,6 +516,12 @@ instance Connect Expression where
           operatorPosition,
           annotation,
           instanciation
+        }
+    Negate {startPosition, evidence, negative} ->
+      Negate
+        { startPosition,
+          evidence,
+          negative = seperate negative
         }
 
 data Explicit layout stage scope where

@@ -108,7 +108,7 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
   Pattern.Constructor {constructor, patterns, constructorInfo} -> go (length patterns - 1)
     where
       -- todo this is `O(n^2)`
-      go -1
+      go (-1)
         | patternx <- Pattern.Match {match, irrefutable} =
             expand patternx check thenx
       go index = case patterns Strict.Vector.! index of
@@ -124,7 +124,7 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
   Pattern.Record {constructor, fields, constructorInfo = constructorInfo} ->
     go (length fields - 1)
     where
-      go -1
+      go (-1)
         | entryCount <- Semantic.ConstructorInfo.entryCount constructorInfo,
           patterns <- Strict.Vector.replicate entryCount Pattern.Wildcard,
           match <- Pattern.Constructor {constructor, patterns, constructorInfo},
@@ -231,7 +231,7 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
       Statements (Scope.SimplePattern ':+ scope) ->
       Int ->
       Statements scope
-    replace _ _ _ thenx -1 = Shift2.map (Shift2.Lift $ Shift.Unshift fail) thenx
+    replace _ _ _ thenx (-1) = Shift2.map (Shift2.Lift $ Shift.Unshift fail) thenx
       where
         fail = error "bad irrefutable replace"
     replace constructor constructorInfo check thenx n =

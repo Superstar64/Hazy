@@ -3,6 +3,7 @@
 module Semantic.Resolve.Temporary.TypeInfix where
 
 import qualified Data.Kind as Kind (Type)
+import Data.Void (Void)
 import Semantic.Resolve.Context (Context)
 import Semantic.Resolve.Temporary.Infix (Infix)
 import Semantic.Scope (Environment)
@@ -20,9 +21,7 @@ data Index scope
 fixWith ::
   Maybe Associativity ->
   Int ->
-  Infix
-    (Index scope)
-    (Type Position Resolve scope) ->
+  Infix Void (Index scope) (Type Position Resolve scope) ->
   Type Position Resolve scope
-fix :: Infix (Index scope) (Type Position Resolve scope) -> Type Position Resolve scope
-resolve :: Context scope -> Syntax.Infix Position -> Infix (Index scope) (Type Position Resolve scope)
+fix :: Infix Void (Index scope) (Type Position Resolve scope) -> Type Position Resolve scope
+resolve :: Context scope -> Syntax.Infix Position -> Infix Void (Index scope) (Type Position Resolve scope)

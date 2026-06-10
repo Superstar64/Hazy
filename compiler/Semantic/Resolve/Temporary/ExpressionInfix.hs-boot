@@ -18,10 +18,12 @@ type role Index nominal
 type Index :: Environment -> Type
 data Index scope
 
-resolve :: Context scope -> Syntax.Infix Position -> Infix (Index scope) (Expression Normal Resolve scope)
-fix :: Infix (Index scope) (Expression Normal Resolve scope) -> Expression Normal Resolve scope
+data Negate
+
+resolve :: Context scope -> Syntax.Infix Position -> Infix Negate (Index scope) (Expression Normal Resolve scope)
+fix :: Infix Negate (Index scope) (Expression Normal Resolve scope) -> Expression Normal Resolve scope
 fixWith ::
   Maybe Associativity ->
   Int ->
-  Infix (Index scope) (Expression Normal Resolve scope) ->
+  Infix Negate (Index scope) (Expression Normal Resolve scope) ->
   Expression Normal Resolve scope

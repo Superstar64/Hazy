@@ -503,7 +503,6 @@ executable hazy
     MonoLocalBinds
     MultiWayIf
     NamedFieldPuns
-    NegativeLiterals
     PolymorphicComponents
     PostfixOperators
     ScopedTypeVariables

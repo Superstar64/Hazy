@@ -238,6 +238,14 @@ resolveWith context expression [] = case expression of
             operatorPosition,
             tail
           }
+  Syntax.Negate {startPosition, negative} ->
+    Infix.fix $
+      Infix.resolve
+        context
+        Syntax.Infix.Negate
+          { startPosition,
+            negative
+          }
   Syntax.LeftSection {leftSection, operator = operatorPosition :@ operator} -> case operator of
     QualifiedVariable operator -> resolveTerm2 position index (Nil :> left)
       where

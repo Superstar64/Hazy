@@ -1,5 +1,6 @@
 module Semantic.Resolve.Temporary.TypeInfix where
 
+import Data.Void (Void, absurd)
 import qualified Semantic.Index.Constructor as Constructor (cons)
 import qualified Semantic.Index.Type2 as Type2
 import qualified Semantic.Resolve.Binding.Constructor as Constructor (Binding (..))
@@ -35,21 +36,21 @@ data Index scope
   = Constructor !Position !(Constructor.Binding scope)
   | Cons !Position
 
+instance Infix.Token (Index scope) where
+  position = \case
+    Constructor position _ -> position
+    Cons position -> position
+  fixity = \case
+    Constructor _ Constructor.Binding {fixity} -> fixity
+    Cons _ -> Fixity {associativity = Right, precedence = 5}
+
 fixWith ::
   Maybe Associativity ->
   Int ->
-  Infix (Index scope) (Type Position Resolve scope) ->
+  Infix Void (Index scope) (Type Position Resolve scope) ->
   Type Position Resolve scope
-fixWith = Infix.fixWith position fixity operator
+fixWith = Infix.fixWith absurd operator
   where
-    position = \case
-      Constructor position _ -> position
-      Cons position -> position
-    fixity :: Index scope -> Fixity
-    fixity = \case
-      Constructor _ Constructor.Binding {fixity} -> fixity
-      Cons _ -> Fixity {associativity = Right, precedence = 5}
-
     operator ::
       Type Position Resolve scope ->
       Index scope ->
@@ -82,10 +83,10 @@ fixWith = Infix.fixWith position fixity operator
               argument
             }
 
-fix :: Infix (Index scope) (Type Position Resolve scope) -> Type Position Resolve scope
+fix :: Infix Void (Index scope) (Type Position Resolve scope) -> Type Position Resolve scope
 fix = fixWith Nothing 0
 
-resolve :: Context scope -> Syntax.Infix Position -> Infix (Index scope) (Type Position Resolve scope)
+resolve :: Context scope -> Syntax.Infix Position -> Infix Void (Index scope) (Type Position Resolve scope)
 resolve context = \case
   Syntax.Type type1 -> Single (Type.resolve context type1)
   Syntax.Infix {left, operator = operator@(operatorPosition :@ _), right} ->

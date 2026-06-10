@@ -79,6 +79,18 @@ data Pattern position
         float :: !Rational
       }
   | -- |
+    -- > -1
+    NegativeInteger
+      { startPosition :: !position,
+        integer :: !Integer
+      }
+  | -- |
+    -- > -1.0
+    NegativeFloat
+      { startPosition :: !position,
+        float :: !Rational
+      }
+  | -- |
     -- > 'a'
     Character
       { startPosition :: !position,
@@ -150,6 +162,8 @@ instance TermBindingVariables Pattern where
     Record {fields} -> foldMap termBindingVariables fields
     Integer {} -> []
     Float {} -> []
+    NegativeInteger {} -> []
+    NegativeFloat {} -> []
     Character {} -> []
     String {} -> []
     Wildcard {} -> []
@@ -168,8 +182,21 @@ parse = PatternInfix.toPattern <$> PatternInfix.parse
 parse1 :: Parser (Pattern Position)
 parse1 =
   asum
-    [ try (constructor <$> position <*> Variable.parseLiteral <*> (Strict.Vector.fromList <$> Applicative.some parse2)),
+    [ try $
+        constructor
+          <$> position
+          <*> Variable.parseLiteral
+          <*> (Strict.Vector.fromList <$> Applicative.some parse2),
       cons <$ try (betweenParens $ token ":") <*> position <*> parse2 <*> parse2,
+      -- This is not a part of PattenInfix because the Haskell report demands
+      -- that pattern negation have max precedence.
+      position
+        <**> ( token "-"
+                 *> asum
+                   [ integer <$> Parser.integer,
+                     float <$> decimal
+                   ]
+             ),
       parse2
     ]
   where
@@ -185,6 +212,10 @@ parse1 =
           head,
           tail
         }
+
+    integer integer startPosition = Integer {startPosition, integer}
+
+    float float startPosition = Float {startPosition, float}
 
 -- apat
 parse2 :: Parser (Pattern Position)

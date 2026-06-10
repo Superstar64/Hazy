@@ -141,6 +141,11 @@ data Expression s scope
         left :: !(CallHead s scope),
         right :: !(Expression s scope)
       }
+  | Negate
+      { startPosition :: !Position,
+        evidence :: !(Unify.Evidence s scope),
+        negative :: !(Expression s scope)
+      }
 
 check :: Context s scope -> Unify.Type s scope -> Semantic.Expression Group Resolve scope -> ST s (Expression s scope)
 check context typex Semantic.CallHead {callHead} = do
@@ -256,6 +261,10 @@ check context typex Semantic.Annotation {expression = Explicit expression, opera
   pure Annotation {expression, operatorPosition, annotation, instanciation}
 check _ _ Semantic.RunST {startPosition} =
   unsupportedFeatureRunST startPosition
+check context typex Semantic.Negate {startPosition, negative} = do
+  evidence <- Unify.constrain context startPosition Type2.Num typex
+  negative <- check context typex negative
+  pure Negate {startPosition, evidence, negative}
 
 solve :: Expression s scope -> Unify.Solve s (Solved.Expression Group Check scope)
 solve = \case
@@ -330,3 +339,12 @@ solve = \case
     left <- CallHead.solve left
     right <- solve right
     pure Solved.RightSection {operatorPosition, left, right}
+  Negate {startPosition, evidence, negative} -> do
+    evidence <- Unify.solveEvidence startPosition evidence
+    negative <- solve negative
+    pure
+      Solved.Negate
+        { startPosition,
+          evidence = Solved evidence,
+          negative
+        }

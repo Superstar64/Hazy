@@ -30,6 +30,12 @@ data Infix position
         operatorPosition :: !position,
         tail :: !(Infix position)
       }
+  | -- |
+    -- > - e
+    Negate
+      { startPosition :: !position,
+        negative :: !(Infix position)
+      }
   deriving (Show)
 
 toExpression :: Infix position -> Expression position
@@ -47,6 +53,7 @@ toExpression = \case
         operatorPosition,
         tail
       }
+  Negate {startPosition, negative} -> Expression.Negate {startPosition, negative}
 
 parse :: Parser (Infix Position)
 parse =
@@ -55,6 +62,9 @@ parse =
       [ make <$> position <*> operator <*> parse,
         pure Expression
       ]
+    <|> negate
+    <$> position
+    <*> (token "-" *> parse)
   where
     operator = Left <$> Variable.parseOperator <|> Right <$> token ":"
     make position (Left operator) right left =
@@ -69,6 +79,7 @@ parse =
           operatorPosition,
           tail
         }
+    negate startPosition negative = Negate {startPosition, negative}
 
 parseLeftSection :: Parser (Expression Position)
 parseLeftSection = parseLeftSection <$> some ((,) <$> Expression.parse2 <*> operator)

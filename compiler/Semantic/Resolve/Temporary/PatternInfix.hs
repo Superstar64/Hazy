@@ -2,6 +2,7 @@ module Semantic.Resolve.Temporary.PatternInfix where
 
 import qualified Data.Map as Map
 import qualified Data.Vector.Strict as Strict.Vector
+import Data.Void (Void, absurd)
 import qualified Semantic.Index.Constructor as Constructor (cons)
 import qualified Semantic.Resolve.Binding.Constructor as Constructor (Binding (..))
 import Semantic.Resolve.Context (Context (..), (!=~))
@@ -22,7 +23,15 @@ data Index scope
   = Constructor !Position !(Constructor.Binding scope)
   | Cons !Position
 
-resolve :: Context scope -> Syntax.Infix Position -> Infix (Index scope) (Pattern Resolve scope)
+instance Infix.Token (Index scope) where
+  position = \case
+    Constructor position _ -> position
+    Cons position -> position
+  fixity = \case
+    Constructor _ Constructor.Binding {fixity} -> fixity
+    Cons _ -> Fixity {associativity = Right, precedence = 5}
+
+resolve :: Context scope -> Syntax.Infix Position -> Infix Void (Index scope) (Pattern Resolve scope)
 resolve context = \case
   Syntax.Pattern {patternx} -> Single (Pattern.resolve context patternx)
   Syntax.Infix {left, operator, operatorPosition, right} ->
@@ -33,15 +42,9 @@ resolve context = \case
   Syntax.InfixCons {left, operatorPosition, right} ->
     Infix (Pattern.resolve context left) (Cons operatorPosition) (resolve context right)
 
-fixWith :: Maybe Associativity -> Int -> Infix (Index scope) (Pattern Resolve scope) -> Pattern Resolve scope
-fixWith = Infix.fixWith position fixity operators
+fixWith :: Maybe Associativity -> Int -> Infix Void (Index scope) (Pattern Resolve scope) -> Pattern Resolve scope
+fixWith = Infix.fixWith absurd operators
   where
-    position = \case
-      Constructor position _ -> position
-      Cons position -> position
-    fixity = \case
-      Constructor _ Constructor.Binding {fixity} -> fixity
-      Cons _ -> Fixity {associativity = Right, precedence = 5}
     operators pattern1 index pattern2 = case index of
       Constructor position Constructor.Binding {index, single} ->
         Pattern.Constructor
@@ -64,5 +67,5 @@ fixWith = Infix.fixWith position fixity operators
             constructorInfo = Inferred
           }
 
-fix :: Infix (Index scope) (Pattern Resolve scope) -> Pattern Resolve scope
+fix :: Infix Void (Index scope) (Pattern Resolve scope) -> Pattern Resolve scope
 fix = fixWith Nothing 0

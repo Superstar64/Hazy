@@ -663,11 +663,8 @@ identifier = ($ []) <$> identifier
         property = optional (try (char '.' *> identifier))
 
 number :: Parser Stream Lexeme
-number = sign <**> (try nondecimal <|> read <$> number <**> postfix)
+number = try nondecimal <|> read <$> number <**> postfix
   where
-    sign :: Parser Stream Integer
-    sign = -1 <$ char '-' <|> pure 1
-
     number :: Parser Stream String
     number = Applicative.some digit
     nondecimal = parse <$> char '0' <*> asum nonbinary
@@ -676,7 +673,7 @@ number = sign <**> (try nondecimal <|> read <$> number <**> postfix)
           [ (:) <$> asum (map char "oO") <*> Applicative.some octDigit,
             (:) <$> asum (map char "xX") <*> Applicative.some hexDigit
           ]
-        parse _ digits sign = Integer $ sign * read ('0' : digits)
+        parse _ digits = Integer $ read ('0' : digits)
     exponent = try $ parse <$> char 'e' <*> sign <*> (read <$> number)
       where
         parse _ sign number = case sign of
@@ -687,14 +684,12 @@ number = sign <**> (try nondecimal <|> read <$> number <**> postfix)
       where
         rational = parse <$> char '.' <*> number <*> (exponent <|> pure 1)
           where
-            parse _ decimal power base sign =
-              Float $ sign % 1 * (base % 1 + read decimal % 10 ^ length decimal) * power
+            parse _ decimal power base =
+              Float $ (base % 1 + read decimal % 10 ^ length decimal) * power
         raised = parse <$> exponent
           where
-            parse power base sign = Float $ (sign % 1) * (base % 1) * power
-        plain = pure parse
-          where
-            parse num sign = Integer (sign * num)
+            parse power base = Float $ (base % 1) * power
+        plain = pure Integer
 
 escape :: (Char -> a) -> Parser Stream a -> Parser Stream a
 escape lift gap = char '\\' *> asum [gap, literals, decimal, octal, hexadecimal]

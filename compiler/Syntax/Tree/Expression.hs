@@ -4,6 +4,7 @@
 -- Parser syntax tree for expressions
 module Syntax.Tree.Expression where
 
+import Data.Foldable (toList)
 import qualified Data.Strict.Vector1 as Strict (Vector1, fromNonEmpty)
 import qualified Data.Strict.Vector2 as Strict (Vector2, fromList'')
 import Data.Text (Text)
@@ -20,7 +21,7 @@ import Syntax.Parser
     many,
     optional,
     position,
-    sepByComma,
+    sepBy1Comma,
     sepEndBy1Semicolon,
     some,
     text,
@@ -224,6 +225,12 @@ data Expression position
         tail :: !(Infix position)
       }
   | -- |
+    -- > - e
+    Negate
+      { startPosition :: !position,
+        negative :: !(Infix position)
+      }
+  | -- |
     -- > (e +)
     LeftSection
       { leftSection :: !(Infix position),
@@ -368,10 +375,12 @@ parse4 =
         }
     parseParen =
       asum
-        [ parseRightSection,
+        [ -- this has to be first to not parse negation as a section
+          tuple <$> position <*> (toList <$> sepBy1Comma parse),
+          parseRightSection,
           parseRightSectionCons,
           tupling <$> position <*> (length <$> some (token ",")),
-          tuple <$> position <*> sepByComma parse
+          tuple <$> position <*> pure []
         ]
       where
         parseRightSection = rightSection <$> Marked.parseOperator <*> ExpressionInfix.parse
