@@ -1,5 +1,3 @@
-{-# LANGUAGE_HAZY NoStableImports, NoImplicitPrelude #-}
-
 -- |
 -- This module contains Hazy's Prelude variant. This is a superset of Haskell's
 -- proper Prelude. The definitions here are largely taken from the Haskell2010

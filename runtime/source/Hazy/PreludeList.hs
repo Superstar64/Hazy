@@ -1,5 +1,3 @@
-{-# LANGUAGE_HAZY NoStableImports, NoImplicitPrelude #-}
-
 module Hazy.PreludeList where
 
 import Hazy.Prelude

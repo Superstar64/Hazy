@@ -82,27 +82,19 @@ if [ -n "$HASKELL_FILES" ]; then
         exit 1
     fi
 
-    echo "=== Building Compiler ==="
+fi
 
-    if ! cabal build hazy; then
-        echo "Complication failed"
-        exit 1
-    fi
+if [ -n "$HASKELL_FILES$JAVASCRIPT_FILES" ]; then
+
+    echo "=== Building Compiler ==="
+    rm -rf .pre-commit
+    tools/build.sh .pre-commit
 
     echo "=== Checking Self Resolution ==="
-
-    if ! cabal run hazy --verbose=0 -- --bare --resolve utility compiler -I runtime/header -I runtime/source \
-        -I library/base/source; then
-        echo "Self resolution failed"
-        exit 1
-    fi
+    .pre-commit/bin/hazy --resolve compiler utility
 
     echo "=== Running tests ==="
-
-    if ! cabal test hazy-test --verbose=0 --test-show-details=direct; then
-        echo "Error: tests failed"
-        exit 1
-    fi
+    tools/test.sh .pre-commit/bin/hazy
 
     git add $HASKELL_FILES
 fi

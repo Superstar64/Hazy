@@ -1,5 +1,3 @@
-{-# LANGUAGE_HAZY NoStableImports, NoImplicitPrelude #-}
-
 -- |
 -- This module contains helpers that the runtime call into. This is mainly
 -- for type class defaults and instances that are necessarily part of the

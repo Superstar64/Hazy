@@ -2,7 +2,7 @@
 
 # tools/build.sh [folder]
 
-set -e
+set -euo pipefail
 
 # Set the default directory to .dist 
 if [ "$#" -lt 1 ]; then
@@ -50,7 +50,7 @@ for FILE in $HEADER; do
     cp runtime/javascript/$FILE.mjs $DIST/packages/runtime/artifact/$FILE.mjs
 done
 
-$DIST/bin/hazy --bare -c -I runtime/header runtime/source -o $DIST/packages/runtime/artifact
+$DIST/bin/hazy --bare -c -I runtime/header runtime/source -o $DIST/packages/runtime/artifact $(cat runtime/flags)
 
 # Compile base
 $DIST/bin/hazy --pack --bare-runtime library/base/source -o $DIST/packages/base $(cat library/base/flags)
