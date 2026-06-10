@@ -12,9 +12,10 @@ else
 fi
 
 # Setup the distribution
-mkdir $DIST
-mkdir $DIST/bin
-mkdir $DIST/packages
+PACKAGE=$DIST/lib/hazy/packages
+
+mkdir -p $DIST/bin
+mkdir -p $PACKAGE
 
 # Compile the compiler
 cabal build hazy
@@ -26,31 +27,31 @@ HAZY=$(cabal list-bin hazy)
 cp $HAZY $DIST/bin/$(basename $HAZY)
 
 # Copy and Compile the runtime
-mkdir $DIST/packages/runtime
-mkdir $DIST/packages/runtime/header
-mkdir $DIST/packages/runtime/header/Hazy
+mkdir $PACKAGE/hazy-internal
+mkdir $PACKAGE/hazy-internal/header
+mkdir $PACKAGE/hazy-internal/header/Hazy
 
-mkdir $DIST/packages/runtime/artifact
-mkdir $DIST/packages/runtime/artifact/Hazy
+mkdir $PACKAGE/hazy-internal/artifacts
+mkdir $PACKAGE/hazy-internal/artifacts/Hazy
 
-cp runtime/package $DIST/packages/runtime/package
+cp runtime/package $PACKAGE/hazy-internal/package
 
 HEADER="Hazy Hazy/Builtin"
 SOURCE="Hazy/Helper Hazy/Prelude Hazy/PreludeList Hazy/PreludeText Hazy/PreludeIO"
 
 for FILE in $HEADER; do
-    cp runtime/header/$FILE.hs $DIST/packages/runtime/header/$FILE.hs
+    cp runtime/header/$FILE.hs $PACKAGE/hazy-internal/header/$FILE.hs
 done
 
 for FILE in $SOURCE; do
-    cp runtime/source/$FILE.hs $DIST/packages/runtime/header/$FILE.hs
+    cp runtime/source/$FILE.hs $PACKAGE/hazy-internal/header/$FILE.hs
 done
 
 for FILE in $HEADER; do
-    cp runtime/javascript/$FILE.mjs $DIST/packages/runtime/artifact/$FILE.mjs
+    cp runtime/javascript/$FILE.mjs $PACKAGE/hazy-internal/artifacts/$FILE.mjs
 done
 
-$DIST/bin/hazy --bare -c -I runtime/header runtime/source -o $DIST/packages/runtime/artifact $(cat runtime/flags)
+$DIST/bin/hazy --bare -c -I runtime/header runtime/source -o $PACKAGE/hazy-internal/artifacts $(cat runtime/flags)
 
 # Compile base
-$DIST/bin/hazy --pack --bare-runtime library/base/source -o $DIST/packages/base $(cat library/base/flags)
+$DIST/bin/hazy --pack --bare-runtime library/base/source -o $PACKAGE/base $(cat library/base/flags)

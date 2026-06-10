@@ -47,8 +47,8 @@ node .hello/index.mjs
 
 # Packages
 
-Hazy has a bare minimum package system at the moment. A package is a folder with
-three subfiles:
+Hazy has a bare minimum package system at the moment. A package is a directory
+with three subfiles:
 * `$PACKAGE/package`: This contains the package metadata. As of now, it only
    includes the default extensions and the list of Haskell files in the package.
 * `$PACKAGE/header`: This contains the compiler generated header files that are
@@ -58,21 +58,31 @@ three subfiles:
    to copy when generating a final executable.
 
 To generate a package, just compile a set of modules and pass `--pack`.
+
 For example:
 ```sh
 hazy Module.hs modules/ -o mypackage --pack
 ```
+This will generate a package into a directory with the specified name.
 
-To load a package, pass `--package $PATH`. For example:
-```
-hazy --package mypackage -o program
+To load a package, pass `--package $NAME` or `--package $PATH`. `--package` will
+try to load a package from the system package directory if the argument doesn't
+start with `./` or `/` (and `.\\`, full drives paths on Windows).
+
+For example:
+```sh
+hazy --package pkg ... # system package
+hazy --package ./mypackage ... # specific package
 ```
 This causes of all of the packages modules to be added to the module list and,
-when generating a full executable, causes the package's Javascript to be copied
-to the final program.
+when generating a full executable, and causes the package's Javascript to be
+copied to the final program.
 
-By default hazy will load `runtime` and `base` from it's `packages` folder.
-Other packages aren't special cased and any path can be loaded with `--package`.
+As of now, compiled packages have to be manually moved to into system packages
+folder (`$DIST/lib/hazy/packages`) to be easily loadable by `--package`.
+
+By default hazy will load `hazy-internal` and `base` from it's system packages
+directory. This can be disabled with `--bare` and `--bare-runtime` respectively.
 
 # Extensions
 Hazy implements original extensions alongside some GHC extensions.

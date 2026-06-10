@@ -48,7 +48,7 @@ import System.Console.GetOpt (ArgDescr (..), ArgOrder (..), OptDescr (..), getOp
 import System.Directory (createDirectoryIfMissing, listDirectory)
 import System.Environment (getArgs, getExecutablePath)
 import System.Exit (exitFailure)
-import System.FilePath (dropExtension, dropFileName, takeDirectory, takeExtension, (</>))
+import System.FilePath (dropExtension, dropFileName, hasDrive, pathSeparators, takeDirectory, takeExtension, (</>))
 import System.IO (IOMode (..), hSetEncoding, openFile, utf8)
 import System.IO.Unsafe (unsafeInterleaveIO)
 import Verbose (runVerbose)
@@ -260,7 +260,7 @@ options =
     Option [] ["check"] (NoArg check) "Typecheck source",
     Option ['o'] ["generate"] (ReqArg generate "PATH") "Generate Javascript from source",
     Option ['I'] [] (ReqArg include "PATH") "Add directory to search path",
-    Option [] ["package"] (ReqArg package "PATH") "Load package",
+    Option [] ["package"] (ReqArg package "NAME or PATH ('./...' or '/...')") "Load a package.",
     Option ['c'] [] (NoArg partial) "Don't include package artifacts",
     Option [] ["pack"] (NoArg pack) "Emit package",
     Option ['X'] [] (ReqArg extension "EXTENSION") "Enable extension",
@@ -324,23 +324,19 @@ main'' args = case getOpt order options args of
     let extensions = foldl extend hazy toggles
           where
             toggles = parse Lexer.toggle . startStream internal <$> language
-    builtin <- case bare of
-      Bare -> pure []
-      Standard -> do
-        exe <- getExecutablePath
-        let root = takeDirectory (takeDirectory exe)
-        pure
-          [ root </> "packages" </> "runtime",
-            root </> "packages" </> "base"
-          ]
-      Runtime -> do
-        exe <- getExecutablePath
-        let root = takeDirectory (takeDirectory exe)
-        pure
-          [ root </> "packages" </> "runtime"
-          ]
+    let builtin = case bare of
+          Bare -> []
+          Runtime -> ["hazy-internal"]
+          Standard -> ["hazy-internal", "base"]
 
-    packages <- traverse Package.load (builtin ++ toList packages)
+    exe <- getExecutablePath
+    let root = takeDirectory (takeDirectory exe)
+        package = root </> "lib" </> "hazy" </> "packages"
+        pathize name = case name of
+          '.' : c : _ | c `elem` pathSeparators -> name
+          _ | hasDrive name -> name
+          _ -> package </> name
+    packages <- traverse (Package.load . pathize) (builtin ++ toList packages)
     let system = Vector.fromList $ concatMap loadPackage packages
     include <- Vector.fromList . concat <$> traverse (loadModules extensions) (toList include)
     modules <- Vector.fromList . concat <$> traverse (loadModules extensions) (toList modules)
@@ -389,10 +385,10 @@ main'' args = case getOpt order options args of
                   Loud -> putStrLn "Copying Artifacts"
                   Quiet -> pure ()
                 for_ packages $ \Package {modules} ->
-                  for_ modules $ \Package.Module {target = subtarget, artifact} -> do
+                  for_ modules $ \Package.Module {target = subtarget, artifacts} -> do
                     let file = target </> subtarget
                     createDirectoryIfMissing True (dropFileName file)
-                    Text.IO.writeFile file artifact
+                    Text.IO.writeFile file artifacts
                 let index =
                       mconcat
                         [ pack "import{main as a}from\"./Main.mjs\";(a.",
@@ -405,7 +401,7 @@ main'' args = case getOpt order options args of
                         ]
                 Text.IO.writeFile (target </> "index.mjs") index
                 pure target
-              Pack -> pure $ target </> "artifact"
+              Pack -> pure $ target </> "artifacts"
             for_ (zip [1 ..] $ toList code) $ \(index, Stage5.Module {name, statements}) -> do
               case verbose of
                 Loud -> message "Compiling" index total name

@@ -29,7 +29,7 @@ data Module = Module
     path :: !FullQualifiers,
     target :: FilePath,
     header :: Text,
-    artifact :: Text
+    artifacts :: Text
   }
   deriving (Show)
 
@@ -99,12 +99,12 @@ load root = do
   let Meta {toggles, paths} = parse meta $ startStream (pack package) raw
   modules <- for paths $ \path -> do
     let haskellName = root </> "header" </> haskell path
-        javascriptName = root </> "artifact" </> javascript path
+        javascriptName = root </> "artifacts" </> javascript path
     header <- unsafeInterleaveIO $ do
       handle <- openFile haskellName ReadMode
       hSetEncoding handle utf8
       Text.hGetContents handle
-    artifact <- unsafeInterleaveIO $ do
+    artifacts <- unsafeInterleaveIO $ do
       handle <- openFile javascriptName ReadMode
       hSetEncoding handle utf8
       Text.hGetContents handle
@@ -114,7 +114,7 @@ load root = do
           path = qualifiers path,
           target = javascript path,
           header,
-          artifact
+          artifacts
         }
   pure
     Package
