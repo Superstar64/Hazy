@@ -8,5 +8,5 @@ data Statements position
 
 instance (Show position) => Show (Statements position)
 
-parseComprehension :: Parser (Expression Position -> Statements Position)
+parseComprehension :: Parser (Position -> Expression Position -> Statements Position)
 parseDo :: Parser (Statements Position)

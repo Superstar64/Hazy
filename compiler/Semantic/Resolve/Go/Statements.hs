@@ -16,7 +16,7 @@ import qualified Syntax.Tree.Statement as Syntax (Statement (..))
 import qualified Syntax.Tree.Statements as Syntax (Statements (..))
 
 resolve :: Context scope -> Syntax.Statements Position -> Statements syntax Normal Resolve scope
-resolve context Syntax.Statements {body, done} = statements context (toList body) done
+resolve context Syntax.Statements {body, donePosition, done} = statements context (toList body) done
   where
     statements ::
       Context scope ->
@@ -25,7 +25,8 @@ resolve context Syntax.Statements {body, done} = statements context (toList body
       Statements syntax Normal Resolve scope
     statements context [] done =
       Done
-        { done = Expression.resolve context done
+        { startPosition = donePosition,
+          done = Expression.resolve context done
         }
     statements context (Syntax.Run {startPosition, expression} : remaining) done =
       Run

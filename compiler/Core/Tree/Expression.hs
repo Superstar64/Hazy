@@ -9,6 +9,7 @@ import Core.Temporary.Function (Function (Bound))
 import qualified Core.Temporary.Function as Function
 import qualified Core.Temporary.Pattern as Pattern
 import qualified Core.Temporary.RightHandSide as RightHandSide
+import {-# SOURCE #-} qualified Core.Tree.Builtin.Applicative as Builtin (applicative)
 import {-# SOURCE #-} qualified Core.Tree.Builtin.Eq as Builtin (eq)
 import {-# SOURCE #-} qualified Core.Tree.Builtin.Fractional as Builtin (fractional)
 import {-# SOURCE #-} qualified Core.Tree.Builtin.Monad as Builtin (monad)
@@ -30,6 +31,7 @@ import Core.Tree.Statements (Statements)
 import qualified Core.Tree.Statements as Statements
 import qualified Core.Tree.Type as Type
 import Data.Foldable (toList)
+import qualified Data.Kind
 import Data.List.Reverse (List (..))
 import qualified Data.List.Reverse as Reverse
 import Data.Ratio (denominator, numerator)
@@ -60,7 +62,7 @@ import qualified Semantic.Tree.Expression as Semantic (Expression (..))
 import qualified Semantic.Tree.ExpressionField as Semantic (Field (Field))
 import qualified Semantic.Tree.ExpressionField as Semantic.Field
 import qualified Semantic.Tree.RightHandSide as Semantic (RightHandSide)
-import qualified Semantic.Tree.Statements as Semantic (Do, Equal (..), Evidence (..), IsDo (..), Statements)
+import qualified Semantic.Tree.Statements as Semantic (Evidence, Statements, Syntax)
 import qualified Semantic.Tree.Statements as Semantic.Statements
 import Prelude hiding (fail)
 
@@ -218,6 +220,14 @@ join_ statements = Join {statements}
 newtype_ :: Constructor.Index scope -> Expression scope -> Direction -> Expression scope
 newtype_ constructor argument direction = Newtype {constructor, argument, direction}
 
+nil :: Expression scope
+nil =
+  Constructor
+    { constructor = Constructor.nil,
+      arguments = Strict.Vector.empty,
+      constructorInfo = ConstructorInfo {entries = Strict.Vector.empty}
+    }
+
 eqChar :: Expression scope -> Expression scope -> Expression scope
 eqChar =
   eq
@@ -236,6 +246,16 @@ eq evidence left right =
     }
     `call` left
     `call` right
+
+purex :: Evidence scope -> Expression scope -> Expression scope
+purex evidence value =
+  Method
+    { method = Method.pure,
+      evidence,
+      instanciation = Instanciation Strict.Vector.empty,
+      methodInfo = Class.info Builtin.applicative
+    }
+    `call` value
 
 run :: Evidence scope -> Expression scope -> Expression scope -> Expression scope
 run evidence ignore thenx =
@@ -270,11 +290,7 @@ failx evidence =
       instanciation = Instanciation Strict.Vector.empty,
       methodInfo = Class.info Builtin.monadFail
     }
-    `call` Constructor
-      { constructor = Constructor.nil,
-        arguments = Strict.Vector.empty,
-        constructorInfo = ConstructorInfo {entries = Strict.Vector.empty}
-      }
+    `call` nil
 
 integer_ :: Integer -> Evidence scope -> Expression scope
 integer_ integer evidence =
@@ -331,6 +347,27 @@ guard left done =
         right = Statements.Done {done}
       }
 
+ifx :: Expression scope -> Expression scope -> Expression scope -> Expression scope
+ifx condition thenx =
+  guard
+    ( Statements.bind
+        ( Pattern.Match
+            { match =
+                Pattern.Constructor
+                  { constructor = Constructor.true,
+                    patterns = Strict.Vector.empty,
+                    constructorInfo = Semantic.ConstructorInfo {entries = Strict.Vector.empty}
+                  },
+              irrefutable = False
+            }
+        )
+        condition
+        ( Statements.Done
+            { done = shift thenx
+            }
+        )
+    )
+
 class Simplify source where
   simplify :: source Normal Check scope -> Expression scope
 
@@ -373,23 +410,58 @@ instance Simplify Semantic.RightHandSide where
           RightHandSide.desugar $ RightHandSide.simplify rightHandSide
       }
 
-instance (Semantic.Statements.IsDo syntax) => Simplify (Semantic.Statements syntax) where
-  simplify | Semantic.Refl <- Semantic.isDo :: Semantic.Equal Semantic.Do syntax = \case
-    Semantic.Statements.Done {done} -> simplify done
+type Proxy :: Semantic.Syntax -> Data.Kind.Type
+data Proxy syntax = Proxy
+
+class Monadic syntax where
+  action :: Semantic.Evidence syntax scope -> Expression scope -> Expression scope -> Expression scope
+  monad :: Bool -> Semantic.Evidence syntax scope -> Evidence scope
+  lift :: Proxy syntax -> Expression scope -> Expression scope
+
+instance Monadic 'Semantic.Statements.Do where
+  action (Semantic.Statements.Monad evidence) = run evidence
+  monad _ (Semantic.Statements.Monad evidence) = evidence
+  lift _ = id
+
+instance Monadic 'Semantic.Statements.Comprehension where
+  action Semantic.Statements.List check thenx = ifx check thenx nil
+  monad fail Semantic.Statements.List =
+    if fail
+      then
+        Evidence.Variable
+          { variable = Index.Evidence.Builtin Index.Evidence.MonadFailList,
+            instanciation = Instanciation.empty
+          }
+      else
+        Evidence.Variable
+          { variable = Index.Evidence.Builtin Index.Evidence.MonadList,
+            instanciation = Instanciation.empty
+          }
+  lift _ =
+    purex
+      Evidence.Variable
+        { variable = Index.Evidence.Builtin Index.Evidence.ApplicativeList,
+          instanciation = Instanciation.empty
+        }
+
+instance (Monadic syntax) => Simplify (Semantic.Statements syntax) where
+  simplify = \case
+    Semantic.Statements.Done {done} -> lift (Proxy :: Proxy syntax) (simplify done)
     Semantic.Statements.Let {declarations, body} ->
       Let
         { declarations = Declarations.simplify declarations,
           letBody = simplify body
         }
-    Semantic.Statements.Run {evidence = Solved (Semantic.Monad evidence), effect, after} ->
-      run evidence (simplify effect) (simplify after)
-    Semantic.Statements.Bind {patternx, evidence = Solved (Semantic.Monad evidence), effect, thenx, fail} ->
-      bind fail evidence (simplify effect) $
+    Semantic.Statements.Run {evidence = Solved evidence, effect, after} ->
+      action evidence (simplify effect) (simplify after)
+    Semantic.Statements.Bind {patternx, evidence = Solved evidence, effect, thenx, fail} ->
+      bind fail monadic (simplify effect) $
         Definition.desugar $
           if fail
             then Definition.Alternative {definition, alternative}
             else Definition.Definition {definition}
       where
+        monadic = monad fail evidence
         definition =
           Bound
             { patternx = Pattern.simplify patternx,
@@ -404,7 +476,7 @@ instance (Semantic.Statements.IsDo syntax) => Simplify (Semantic.Statements synt
                       Function.Plain
                         { plain =
                             RightHandSide.Done
-                              { done = failx (shift evidence)
+                              { done = failx (shift monadic)
                               }
                         }
                   }
@@ -536,6 +608,7 @@ simplifyWith expression [] = case expression of
       }
   Semantic.List {items} ->
     foldr (cons . simplify) nil items
+  Semantic.Comprehension {statements} -> simplify statements
   Semantic.Let {declarations, letBody} ->
     Let
       { declarations = Declarations.simplify declarations,

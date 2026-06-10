@@ -409,7 +409,7 @@ parse6 =
     comprehension statements base startPosition =
       Comprehension
         { startPosition,
-          statements = statements base
+          statements = statements startPosition base
         }
     list item startPosition =
       List

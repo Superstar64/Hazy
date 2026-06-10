@@ -34,7 +34,7 @@ import Semantic.Tree.RightHandSide (RightHandSide)
 import Semantic.Tree.Scheme (Scheme)
 import Semantic.Tree.Select (Select (..))
 import Semantic.Tree.Statements (Statements)
-import qualified Semantic.Tree.Statements as Statements (Do, Guard)
+import qualified Semantic.Tree.Statements as Statements (Comprehension, Do)
 import Syntax.Position (Position)
 import Prelude hiding (Bool (False, True), Either (Left, Right))
 
@@ -70,8 +70,7 @@ data Expression layout stage scope
       }
   | Comprehension
       { startPosition :: !Position,
-        statements :: !(Statements Statements.Guard layout stage scope),
-        unsupported :: !(Unsupported stage)
+        statements :: !(Statements Statements.Comprehension layout stage scope)
       }
   | Record
       { constructorPosition :: !Position,
@@ -178,11 +177,10 @@ instance Shift.Functor (Expression layout stage) where
         { startPosition,
           items = fmap (Shift.map category) items
         }
-    Comprehension {startPosition, statements, unsupported} ->
+    Comprehension {startPosition, statements} ->
       Comprehension
         { startPosition,
-          statements = Shift.map category statements,
-          unsupported
+          statements = Shift.map category statements
         }
     Record {constructorPosition, constructor, constructorInfo, fields} ->
       Record
@@ -349,11 +347,10 @@ instance Connect Expression where
         { startPosition,
           items = connect <$> items
         }
-    Comprehension {startPosition, statements, unsupported} ->
+    Comprehension {startPosition, statements} ->
       Comprehension
         { startPosition,
-          statements = connect statements,
-          unsupported
+          statements = connect statements
         }
     Record {constructorPosition, constructor, fields} ->
       Record
@@ -454,6 +451,11 @@ instance Connect Expression where
       List
         { startPosition,
           items = seperate <$> items
+        }
+    Comprehension {startPosition, statements} ->
+      Comprehension
+        { startPosition,
+          statements = seperate statements
         }
     Record {constructorPosition, constructor, constructorInfo, fields} ->
       Record

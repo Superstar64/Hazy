@@ -11,8 +11,7 @@ import Data.Traversable (for)
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
 import Error
-  ( unsupportedFeatureListComprehension,
-    unsupportedFeatureRecordUpdate,
+  ( unsupportedFeatureRecordUpdate,
     unsupportedFeatureRunST,
   )
 import qualified Semantic.Check.ConstructorInstance as ConstructorInstance
@@ -26,6 +25,8 @@ import Semantic.Check.Temporary.Alternative (Alternative)
 import qualified Semantic.Check.Temporary.Alternative as Alternative
 import Semantic.Check.Temporary.CallHead (CallHead)
 import qualified Semantic.Check.Temporary.CallHead as CallHead
+import Semantic.Check.Temporary.Comprehension (Comprehension)
+import qualified Semantic.Check.Temporary.Comprehension as Comprehension
 import Semantic.Check.Temporary.ConstructorInfo (ConstructorInfo)
 import qualified Semantic.Check.Temporary.ConstructorInfo as ConstructorInfo
 import qualified Semantic.Check.Temporary.Declaration as Declaration
@@ -90,6 +91,10 @@ data Expression s scope
       { startPosition :: !Position,
         items :: !(Strict.Vector (Expression s scope))
       }
+  | Comprehension
+      { startPosition :: !Position,
+        statements :: !(Comprehension s scope)
+      }
   | Record
       { constructorPosition :: !Position,
         constructor :: !(Constructor.Index scope),
@@ -128,7 +133,7 @@ data Expression s scope
       }
   | Do
       { startPosition :: !Position,
-        statements :: !(Do s scope)
+        dox :: !(Do s scope)
       }
   | Annotation
       { expression :: !(Unify.SchemeOver Expression s scope),
@@ -218,8 +223,9 @@ check context typex Semantic.Tuple {startPosition, elements} = do
   let target = foldl Unify.call (Unify.tuple $ length elements) types
   Unify.unify context startPosition typex target
   pure $ Tuple {startPosition, elements}
-check _ _ Semantic.Comprehension {startPosition} =
-  unsupportedFeatureListComprehension startPosition
+check context typex Semantic.Comprehension {startPosition, statements} = do
+  statements <- Comprehension.check context typex statements
+  pure Comprehension {startPosition, statements}
 check _ _ Semantic.Update {updatePosition} =
   unsupportedFeatureRecordUpdate updatePosition
 check context typex Semantic.Case {startPosition, scrutinee, cases} = do
@@ -228,8 +234,8 @@ check context typex Semantic.Case {startPosition, scrutinee, cases} = do
   cases <- traverse (Alternative.check context typex binder) cases
   pure Case {startPosition, scrutinee, cases}
 check context typex Semantic.Do {startPosition, dox} = do
-  statements <- Do.check context typex dox
-  pure Do {startPosition, statements}
+  dox <- Do.check context typex dox
+  pure Do {startPosition, dox}
 check context typex Semantic.Lambda {startPosition, parameter, body} = do
   parameterType <- Unify.fresh Unify.typex
   parameter <- Pattern.check context parameterType parameter
@@ -284,6 +290,9 @@ solve = \case
   List {startPosition, items} -> do
     items <- traverse solve items
     pure $ Solved.List {startPosition, items}
+  Comprehension {startPosition, statements} -> do
+    statements <- Comprehension.solve statements
+    pure Solved.Comprehension {startPosition, statements}
   Call function argument -> do
     function <- solve function
     argument <- solve argument
@@ -322,8 +331,8 @@ solve = \case
   Tuple {startPosition, elements} -> do
     elements <- traverse solve elements
     pure $ Solved.Tuple {startPosition, elements}
-  Do {startPosition, statements} -> do
-    dox <- Do.solve statements
+  Do {startPosition, dox} -> do
+    dox <- Do.solve dox
     pure Solved.Do {startPosition, dox}
   Annotation {expression, operatorPosition, annotation, instanciation} -> do
     expression <- Unify.solveSchemeOver (Unify.SolveScheme $ const solve) operatorPosition expression

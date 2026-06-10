@@ -5,7 +5,7 @@
 module Syntax.Tree.Body where
 
 import qualified Data.Strict.Vector1 as Strict
-import Syntax.Parser (Parser, asum, betweenBraces, some, token)
+import Syntax.Parser (Parser, asum, betweenBraces, position, some, token)
 import Syntax.Position (Position)
 import {-# SOURCE #-} Syntax.Tree.Expression (Expression)
 import {-# SOURCE #-} qualified Syntax.Tree.Expression as Expression
@@ -52,6 +52,6 @@ parse equal =
     guards statements = Guards {statements}
     parseGuards =
       asum
-        [ token "|" *> Statements.parseComprehension <*> (equal *> Expression.parse),
+        [ token "|" *> Statements.parseComprehension <*> position <*> (equal *> Expression.parse),
           token "of" *> betweenBraces Statements.parseDo
         ]

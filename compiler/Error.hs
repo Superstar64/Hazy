@@ -89,7 +89,6 @@ module Error
     improperBindingGroup,
     unsupportedFeatureRunST,
     unsupportedFeatureRecordUpdate,
-    unsupportedFeatureListComprehension,
     unsupportedFeatureConstraintedTypeDefaulting,
     unsupportedFeatureStrictFunctions,
     unsupportedFeaturePolymorphicComponents,
@@ -551,8 +550,6 @@ orphanInstance position = errorAt OrphanInstance position $ fromString "Orphan i
 improperBindingGroup :: Position -> a
 improperBindingGroup position = errorAt ImproperBindingGroup position $ fromString "improper binding group"
 
-listComprehension = fromString "list comprehension"
-
 strictFunctions = fromString "strict functions"
 
 gadts = fromString "GADTs"
@@ -575,10 +572,6 @@ unsupportedFeatureRunST = unsupportedFeature runST
 unsupportedFeatureRecordUpdate :: Position -> a
 unsupportedFeatureRecordUpdate =
   unsupportedFeature recordUpdate
-
-unsupportedFeatureListComprehension :: Position -> a
-unsupportedFeatureListComprehension =
-  unsupportedFeature listComprehension
 
 unsupportedFeatureConstraintedTypeDefaulting :: Position -> a
 unsupportedFeatureConstraintedTypeDefaulting =

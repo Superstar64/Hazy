@@ -228,6 +228,7 @@ executable hazy
     Semantic.Check.Temporary.Alternative
     Semantic.Check.Temporary.Body
     Semantic.Check.Temporary.CallHead
+    Semantic.Check.Temporary.Comprehension
     Semantic.Check.Temporary.Constraint
     Semantic.Check.Temporary.Constructor
     Semantic.Check.Temporary.ConstructorInfo

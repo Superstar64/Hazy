@@ -17,23 +17,30 @@ import qualified Syntax.Tree.Statement as Statement
 
 data Statements position = Statements
   { body :: !(Strict.Vector (Statement position)),
+    donePosition :: !position,
     done :: !(Expression position)
   }
   deriving (Show)
 
-parseComprehension :: Parser (Expression Position -> Statements Position)
-parseComprehension = statements . Strict.Vector.fromList <$> sepByComma Statement.parse
+parseComprehension :: Parser (Position -> Expression Position -> Statements Position)
+parseComprehension = statements <$> sepByComma Statement.parse
   where
-    statements body done = Statements {body, done}
+    statements body donePosition done =
+      Statements
+        { body = Strict.Vector.fromList body,
+          donePosition,
+          done
+        }
 
-data Statements' position = Statements' [Statement position] (Expression position)
+data Statements' position = Statements' [Statement position] !position (Expression position)
 
 parseDo :: Parser (Statements Position)
 parseDo = run <$> parseDo'
 
-run (Statements' body done) =
+run (Statements' body donePosition done) =
   Statements
     { body = Strict.Vector.fromList body,
+      donePosition,
       done
     }
 
@@ -46,14 +53,14 @@ parseDo' =
         <*> parseDo',
       statement' <$> position <*> try (Expression.parse <* token ";") <*> optional parseDo',
       statement <$> try ((letx <$> position <*> (token "let" *> Declarations.parse)) <* token ";") <*> parseDo',
-      Statements' [] <$> Expression.parse
+      Statements' [] <$> position <*> Expression.parse
     ]
   where
     bind startPosition patternx expression = Bind {startPosition, patternx, expression}
     letx startPosition declarations = Let {startPosition, declarations}
-    statement statement1 (Statements' statements expression) =
-      Statements' (statement1 : statements) expression
+    statement statement1 (Statements' statements donePosition expression) =
+      Statements' (statement1 : statements) donePosition expression
     statement' startPosition expression = \case
-      Nothing -> Statements' [] expression
-      Just (Statements' statements expression') ->
-        Statements' (Run {startPosition, expression} : statements) expression'
+      Nothing -> Statements' [] startPosition expression
+      Just (Statements' statements donePosition expression') ->
+        Statements' (Run {startPosition, expression} : statements) donePosition expression'

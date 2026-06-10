@@ -148,8 +148,7 @@ resolveWith context expression [] = case expression of
   Syntax.Comprehension {startPosition, statements} ->
     Comprehension
       { startPosition,
-        statements = Statements.resolve context statements,
-        unsupported = Refl
+        statements = Statements.resolve context statements
       }
   Syntax.Record {startPosition, constructor, fields} ->
     case context != constructor of

@@ -22,7 +22,10 @@ import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
 
 data Statements s scope
-  = Done !(Expression s scope)
+  = Done
+      { startPosition :: !Position,
+        done :: !(Expression s scope)
+      }
   | Run
       { startPosition :: !Position,
         effect :: !(Expression s scope),
@@ -46,7 +49,9 @@ check ::
   Semantic.Statements Semantic.Guard Group Resolve scope ->
   ST s (Statements s scope)
 check context typex = \case
-  Semantic.Done {done} -> Done <$> Expression.check context typex done
+  Semantic.Done {startPosition, done} -> do
+    done <- Expression.check context typex done
+    pure Done {startPosition, done}
   Semantic.Run {startPosition, effect, after} -> do
     effect <- Expression.check context Unify.bool effect
     after <- check context typex after
@@ -63,9 +68,9 @@ check context typex = \case
     pure Let {startPosition, declarations, body}
 
 solve :: Statements s scope -> Unify.Solve s (Solved.Statements Solved.Guard Group Check scope)
-solve (Done expression) = do
-  expression <- Expression.solve expression
-  pure $ Solved.Done expression
+solve Done {startPosition, done} = do
+  done <- Expression.solve done
+  pure $ Solved.Done {startPosition, done}
 solve (Run startPosition expression statements) = do
   effect <- Expression.solve expression
   after <- solve statements

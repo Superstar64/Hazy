@@ -1,7 +1,6 @@
 module Semantic.Tree.Statements where
 
 import qualified Core.Tree.Evidence as Simple (Evidence)
-import Data.Kind (Type)
 import Semantic.Connect (Connect (..))
 import Semantic.FreeVariables (FreeTermVariables (..))
 import qualified Semantic.FreeVariables as FreeVariables
@@ -20,24 +19,18 @@ import Syntax.Position (Position)
 data Syntax
   = Guard
   | Do
+  | Comprehension
 
 type Guard = 'Guard
 
 type Do = 'Do
 
-type Equal :: Syntax -> Syntax -> Type
-data Equal syntax1 syntax2 where
-  Refl :: Equal syntax syntax
-
-class IsDo syntax where
-  isDo :: Equal Do syntax
-
-instance IsDo 'Do where
-  isDo = Refl
+type Comprehension = 'Comprehension
 
 data Statements syntax layout stage scope
   = Done
-      { done :: !(Expression layout stage scope)
+      { startPosition :: !Position,
+        done :: !(Expression layout stage scope)
       }
   | Run
       { startPosition :: !Position,
@@ -65,9 +58,10 @@ instance Shift (Statements syntax layout stage) where
 
 instance Shift.Functor (Statements syntax layout stage) where
   map category = \case
-    Done {done} ->
+    Done {startPosition, done} ->
       Done
-        { done = Shift.map category done
+        { startPosition,
+          done = Shift.map category done
         }
     Run {startPosition, evidence, effect, after} ->
       Run
@@ -113,9 +107,10 @@ instance FreeTermVariables (Statements syntax layout) where
 
 instance Connect (Statements syntax) where
   connect = \case
-    Done {done} ->
+    Done {startPosition, done} ->
       Done
-        { done = connect done
+        { startPosition,
+          done = connect done
         }
     Run {startPosition, effect, after} ->
       Run
@@ -140,9 +135,10 @@ instance Connect (Statements syntax) where
           body = connect body
         }
   seperate = \case
-    Done {done} ->
+    Done {startPosition, done} ->
       Done
-        { done = seperate done
+        { startPosition,
+          done = seperate done
         }
     Run {startPosition, evidence, effect, after} ->
       Run
@@ -170,11 +166,13 @@ instance Connect (Statements syntax) where
 data Evidence syntax scope where
   Bool :: Evidence Guard scope
   Monad :: !(Simple.Evidence scope) -> Evidence Do scope
+  List :: Evidence Comprehension scope
 
 instance Show (Evidence syntax scope) where
   showsPrec d = \case
     Bool -> showString "Bool"
     Monad evidence -> showParen (d > 10) $ showString "Monad " . showsPrec 11 evidence
+    List -> showString "List"
 
 instance Scope.Show (Evidence syntax) where
   showsPrec = showsPrec
@@ -186,3 +184,4 @@ instance Shift.Functor (Evidence syntax) where
   map category = \case
     Bool -> Bool
     Monad evidence -> Monad (Shift.map category evidence)
+    List -> List
