@@ -38,7 +38,8 @@ cp runtime/package $PACKAGE/hazy-internal/package
 
 HEADER="Hazy Hazy/Builtin"
 SOURCE="Hazy/Helper Hazy/Prelude Hazy/PreludeList Hazy/PreludeText Hazy/PreludeIO\
- Hazy/PreludeChar Hazy/PreludeRatio Hazy/PreludeNumeric"
+ Hazy/PreludeChar Hazy/PreludeRatio Hazy/PreludeNumeric Hazy/PreludeMonad\
+ Hazy/PreludeString Hazy/PreludeMonoid Hazy/PreludeNonEmpty"
 
 for FILE in $HEADER; do
     cp runtime/header/$FILE.hs $PACKAGE/hazy-internal/header/$FILE.hs

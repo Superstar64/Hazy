@@ -10,6 +10,10 @@ module Hazy.Prelude
     module Hazy.PreludeChar,
     module Hazy.PreludeRatio,
     module Hazy.PreludeNumeric,
+    module Hazy.PreludeMonad,
+    module Hazy.PreludeString,
+    module Hazy.PreludeMonoid,
+    module Hazy.PreludeNonEmpty,
     module Hazy.Builtin,
     errorText,
     pack,
@@ -25,15 +29,17 @@ import Hazy.Helper (Strict (..), enumCompare, enumEqual, ratio, reduce)
 import Hazy.PreludeChar
 import Hazy.PreludeIO
 import Hazy.PreludeList
+import Hazy.PreludeMonad
+import Hazy.PreludeMonoid
+import Hazy.PreludeNonEmpty
 import Hazy.PreludeNumeric
 import Hazy.PreludeRatio
+import Hazy.PreludeString
 import Hazy.PreludeText
 
 infixr 9 .
 
 infixr 8 ^, ^^, **
-
-infixl 4 <$>
 
 infixr 3 &&
 
@@ -84,6 +90,11 @@ class (Real a, Fractional a) => RealFrac a where
   floor x = if r < 0 then n - 1 else n
     where
       (n, r) = properFraction x
+
+instance (Integral a) => RealFrac (Ratio a) where
+  properFraction (x :% y) = (fromIntegral q, r :% y)
+    where
+      (q, r) = quotRem x y
 
 class (RealFrac a, Floating a) => RealFloat a where
   floatRadix :: a -> Integer
@@ -166,9 +177,6 @@ fromIntegral = fromInteger . toInteger
 
 realToFrac :: (Real a, Fractional b) => a -> b
 realToFrac = fromRational . toRational
-
-(<$>) :: (Functor f) => (a -> b) -> f a -> f b
-(<$>) = fmap
 
 -- todo replace with Traversable
 
@@ -432,21 +440,3 @@ placeholder = error "Prelude.placeholder"
 
 trace :: String -> a -> a
 trace = traceText . pack
-
-data Text
-
-liftM :: (Monad m) => (a -> b) -> m a -> m b
-liftM f a = do
-  a' <- a
-  return (f a')
-
-ap :: (Monad m) => m (a -> b) -> m a -> m b
-ap f a = do
-  f' <- f
-  a' <- a
-  return (f' a')
-
-instance (Integral a) => RealFrac (Ratio a) where
-  properFraction (x :% y) = (fromIntegral q, r :% y)
-    where
-      (q, r) = quotRem x y

@@ -46,29 +46,11 @@ init [x] = []
 init (x : xs) = x : init xs
 init [] = error "Prelude.init: empty list"
 
-null :: [a] -> Bool
-null [] = True
-null (_ : _) = False
-
-length :: [a] -> Int
-length [] = 0
-length (_ : l) = 1 + length l
-
 (!!) :: [a] -> Int -> a
 xs !! n | n < 0 = error "Prelude.!!: negative index"
 [] !! _ = error "Prelude.!!: index too large"
 (x : _) !! 0 = x
 (_ : xs) !! n = xs !! (n - 1)
-
--- todo replace with Foldable
-
-foldl :: (a -> b -> a) -> a -> [b] -> a
-foldl f z [] = z
-foldl f z (x : xs) = foldl f (f z x) xs
-
-foldl1 :: (a -> a -> a) -> [a] -> a
-foldl1 f (x : xs) = foldl f x xs
-foldl1 _ [] = error "Prelude.foldl1: empty list"
 
 scanl :: (a -> b -> a) -> a -> [b] -> [a]
 scanl f q xs =
@@ -82,14 +64,97 @@ scanl1 :: (a -> a -> a) -> [a] -> [a]
 scanl1 f (x : xs) = scanl f x xs
 scanl1 _ [] = []
 
-foldr :: (a -> b -> b) -> b -> [a] -> b
-foldr f z [] = z
-foldr f z (x : xs) = f x (foldr f z xs)
+class Foldable t where
+  fold :: (Monoid m) => t m -> m
+  fold = placeholder
 
-foldr1 :: (a -> a -> a) -> [a] -> a
-foldr1 f [x] = x
-foldr1 f (x : xs) = f x (foldr1 f xs)
-foldr1 _ [] = error "Prelude.foldr1: empty list"
+  foldMap :: (Monoid m) => (a -> m) -> t a -> m
+  foldMap = placeholder
+
+  foldMap' :: (Monoid m) => (a -> m) -> t a -> m
+  foldMap' = placeholder
+
+  foldr :: (a -> b -> b) -> b -> t a -> b
+  foldr = placeholder
+
+  foldl :: (b -> a -> b) -> b -> t a -> b
+  foldl f z = foldl f z . toList
+    where
+      foldl :: (a -> b -> a) -> a -> [b] -> a
+      foldl f z [] = z
+      foldl f z (x : xs) = foldl f (f z x) xs
+  foldl' :: (b -> a -> b) -> b -> t a -> b
+  foldl' = placeholder
+
+  foldr1 :: (a -> a -> a) -> t a -> a
+  foldr1 f = foldr1 f . toList
+    where
+      foldr1 :: (a -> a -> a) -> [a] -> a
+      foldr1 f [x] = x
+      foldr1 f (x : xs) = f x (foldr1 f xs)
+      foldr1 _ [] = error "Prelude.foldr1: empty list"
+
+  foldl1 :: (a -> a -> a) -> t a -> a
+  foldl1 f = foldl1 f . toList
+    where
+      foldl1 :: (a -> a -> a) -> [a] -> a
+      foldl1 f (x : xs) = foldl f x xs
+      foldl1 _ [] = error "Prelude.foldl1: empty list"
+
+  toList :: t a -> [a]
+  toList = foldr (:) []
+
+  null :: t a -> Bool
+  null = null . toList
+    where
+      null :: [a] -> Bool
+      null [] = True
+      null (_ : _) = False
+
+  length :: t a -> Int
+  length = length . toList
+    where
+      length :: [a] -> Int
+      length [] = 0
+      length (_ : l) = 1 + length l
+
+  elem :: (Eq a) => a -> t a -> Bool
+  elem x = elem x . toList
+    where
+      elem :: (Eq a) => a -> [a] -> Bool
+      elem x = any (== x)
+
+  maximum :: (Ord a) => t a -> a
+  maximum = maximum . toList
+    where
+      maximum :: (Ord a) => [a] -> a
+      maximum [] = error "Prelude.maximum: empty list"
+      maximum xs = foldl1 max xs
+
+  minimum :: (Ord a) => t a -> a
+  minimum = minimum . toList
+    where
+      minimum :: (Ord a) => [a] -> a
+      minimum [] = error "Prelude.minimum: empty list"
+      minimum xs = foldl1 min xs
+
+  sum :: (Num a) => t a -> a
+  sum = sum . toList
+    where
+      sum :: (Num a) => [a] -> a
+      sum = foldl (+) 0
+
+  product :: (Num a) => t a -> a
+  product = product . toList
+    where
+      product :: (Num a) => [a] -> a
+      product = foldl (*) 1
+
+instance Foldable [] where
+  foldr f z [] = z
+  foldr f z (x : xs) = f x (foldr f z xs)
+
+  toList = id
 
 scanr :: (a -> b -> b) -> b -> [a] -> [b]
 scanr f q0 [] = [q0]
@@ -176,33 +241,22 @@ unwords ws = foldr1 (\w s -> w ++ ' ' : s) ws
 reverse :: [a] -> [a]
 reverse = foldl (flip (:)) []
 
-and, or :: [Bool] -> Bool
+and, or :: (Foldable t) => t Bool -> Bool
 and = foldr (&&) True
 or = foldr (||) False
 
-any, all :: (a -> Bool) -> [a] -> Bool
-any p = or . map p
-all p = and . map p
+any, all :: (Foldable t) => (a -> Bool) -> t a -> Bool
+any p = or . map p . toList
+all p = and . map p . toList
 
-elem, notElem :: (Eq a) => a -> [a] -> Bool
-elem x = any (== x)
-notElem x = all (/= x)
+notElem :: (Foldable t, Eq a) => a -> t a -> Bool
+notElem x xs = not (elem x xs)
 
 lookup :: (Eq a) => a -> [(a, b)] -> Maybe b
 lookup key [] = Nothing
 lookup key ((x, y) : xys)
   | key == x = Just y
   | otherwise = lookup key xys
-
-sum, product :: (Num a) => [a] -> a
-sum = foldl (+) 0
-product = foldl (*) 1
-
-maximum, minimum :: (Ord a) => [a] -> a
-maximum [] = error "Prelude.maximum: empty list"
-maximum xs = foldl1 max xs
-minimum [] = error "Prelude.minimum: empty list"
-minimum xs = foldl1 min xs
 
 zip :: [a] -> [b] -> [(a, b)]
 zip = zipWith (,)
