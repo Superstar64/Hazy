@@ -166,9 +166,6 @@ words s = case dropWhile isSpace s of
     where
       (w, s'') = break isSpace s'
 
-isSpace :: Char -> Bool
-isSpace = placeholder
-
 unlines :: [String] -> String
 unlines = concatMap (++ "\n")
 

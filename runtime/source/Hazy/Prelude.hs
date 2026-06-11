@@ -7,6 +7,9 @@ module Hazy.Prelude
     module Hazy.PreludeList,
     module Hazy.PreludeText,
     module Hazy.PreludeIO,
+    module Hazy.PreludeChar,
+    module Hazy.PreludeRatio,
+    module Hazy.PreludeNumeric,
     module Hazy.Builtin,
     errorText,
     pack,
@@ -19,8 +22,11 @@ where
 import Hazy
 import Hazy.Builtin
 import Hazy.Helper (Strict (..), enumCompare, enumEqual, ratio, reduce)
+import Hazy.PreludeChar
 import Hazy.PreludeIO
 import Hazy.PreludeList
+import Hazy.PreludeNumeric
+import Hazy.PreludeRatio
 import Hazy.PreludeText
 
 infixr 9 .
@@ -296,9 +302,104 @@ instance Bounded Int where
   minBound = primIntMinBound
   maxBound = primIntMaxBound
 
--- todo `Double` and `Float`
+data Float
 
--- todo `Bounded` for tuples
+instance Eq Float
+
+instance Ord Float
+
+instance Num Float
+
+instance Real Float
+
+instance Fractional Float
+
+instance Floating Float
+
+instance RealFrac Float
+
+instance RealFloat Float
+
+data Double
+
+instance Eq Double
+
+instance Ord Double
+
+instance Num Double
+
+instance Real Double
+
+instance Fractional Double
+
+instance Floating Double
+
+instance RealFrac Double
+
+instance RealFloat Double
+
+instance Enum Float where
+  succ x = x + 1
+  pred x = x - 1
+  toEnum = fromIntegral
+  fromEnum = fromInteger . truncate
+  enumFrom = numericEnumFrom
+  enumFromThen = numericEnumFromThen
+  enumFromTo = numericEnumFromTo
+  enumFromThenTo = numericEnumFromThenTo
+
+instance Enum Double where
+  succ x = x + 1
+  pred x = x - 1
+  toEnum = fromIntegral
+  fromEnum = fromInteger . truncate
+  enumFrom = numericEnumFrom
+  enumFromThen = numericEnumFromThen
+  enumFromTo = numericEnumFromTo
+  enumFromThenTo = numericEnumFromThenTo
+
+numericEnumFrom :: (Fractional a) => a -> [a]
+numericEnumFromThen :: (Fractional a) => a -> a -> [a]
+numericEnumFromTo :: (Fractional a, Ord a) => a -> a -> [a]
+numericEnumFromThenTo :: (Fractional a, Ord a) => a -> a -> a -> [a]
+numericEnumFrom = iterate (+ 1)
+
+numericEnumFromThen n m = iterate (+ (m - n)) n
+
+numericEnumFromTo n m = takeWhile (<= m + 1 / 2) (numericEnumFrom n)
+
+numericEnumFromThenTo n n' m = takeWhile p (numericEnumFromThen n n')
+  where
+    p
+      | n' >= n = (<= m + (n' - n) / 2)
+      | otherwise = (>= m + (n' - n) / 2)
+
+instance (Bounded a, Bounded b) => Bounded (a, b) where
+  minBound = (minBound, minBound)
+  maxBound = (maxBound, maxBound)
+
+instance (Bounded a, Bounded b, Bounded c) => Bounded (a, b, c) where
+  minBound = (minBound, minBound, minBound)
+  maxBound = (maxBound, maxBound, maxBound)
+
+instance (Bounded a, Bounded b, Bounded c, Bounded d) => Bounded (a, b, c, d) where
+  minBound = (minBound, minBound, minBound, minBound)
+  maxBound = (maxBound, maxBound, maxBound, maxBound)
+
+instance (Bounded a, Bounded b, Bounded c, Bounded d, Bounded e) => Bounded (a, b, c, d, e) where
+  minBound = (minBound, minBound, minBound, minBound, minBound)
+  maxBound = (maxBound, maxBound, maxBound, maxBound, maxBound)
+
+instance (Bounded a, Bounded b, Bounded c, Bounded d, Bounded e, Bounded f) => Bounded (a, b, c, d, e, f) where
+  minBound = (minBound, minBound, minBound, minBound, minBound, minBound)
+  maxBound = (maxBound, maxBound, maxBound, maxBound, maxBound, maxBound)
+
+instance
+  (Bounded a, Bounded b, Bounded c, Bounded d, Bounded e, Bounded f, Bounded g) =>
+  Bounded (a, b, c, d, e, f, g)
+  where
+  minBound = (minBound, minBound, minBound, minBound, minBound, minBound, minBound)
+  maxBound = (maxBound, maxBound, maxBound, maxBound, maxBound, maxBound, maxBound)
 
 fst :: (a, b) -> a
 fst (x, y) = x
@@ -345,63 +446,7 @@ ap f a = do
   a' <- a
   return (f' a')
 
-type Rational = Ratio Integer
-
 instance (Integral a) => RealFrac (Ratio a) where
   properFraction (x :% y) = (fromIntegral q, r :% y)
     where
       (q, r) = quotRem x y
-
-(%) :: (Integral a) => a -> a -> Ratio a
-numerator, denominator :: (Integral a) => Ratio a -> a
-x % y = ratio (reduce (x * signum y) (abs y))
-
-numerator (x :% _) = x
-
-denominator (_ :% y) = y
-
-data GeneralCategory
-  = UppercaseLetter
-  | LowercaseLetter
-  | TitlecaseLetter
-  | ModifierLetter
-  | OtherLetter
-  | NonSpacingMark
-  | SpacingCombiningMark
-  | EnclosingMark
-  | DecimalNumber
-  | LetterNumber
-  | OtherNumber
-  | ConnectorPunctuation
-  | DashPunctuation
-  | OpenPunctuation
-  | ClosePunctuation
-  | InitialQuote
-  | FinalQuote
-  | OtherPunctuation
-  | MathSymbol
-  | CurrencySymbol
-  | ModifierSymbol
-  | OtherSymbol
-  | Space
-  | LineSeparator
-  | ParagraphSeparator
-  | Control
-  | Format
-  | Surrogate
-  | PrivateUse
-  | NotAssigned
-
-instance Enum GeneralCategory where
-  toEnum x | x >= 0 && x < 30 = primFromConstructorTag x
-  fromEnum = primToConstructorTag
-
-instance Eq GeneralCategory where
-  (==) = enumEqual
-
-instance Ord GeneralCategory where
-  compare = enumCompare
-
-instance Bounded GeneralCategory where
-  minBound = UppercaseLetter
-  maxBound = NotAssigned

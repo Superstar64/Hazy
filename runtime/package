@@ -6,3 +6,6 @@ Hazy/Prelude.hs
 Hazy/PreludeList.hs
 Hazy/PreludeText.hs
 Hazy/PreludeIO.hs
+Hazy/PreludeChar.hs
+Hazy/PreludeRatio.hs
+Hazy/PreludeNumeric.hs

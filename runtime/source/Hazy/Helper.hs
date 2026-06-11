@@ -23,22 +23,6 @@ reduce x y = Ratio $ (x `quot` d) :% (y `quot` d)
   where
     d = gcd x y
 
-numericEnumFrom :: (Fractional a) => a -> [a]
-numericEnumFromThen :: (Fractional a) => a -> a -> [a]
-numericEnumFromTo :: (Fractional a, Ord a) => a -> a -> [a]
-numericEnumFromThenTo :: (Fractional a, Ord a) => a -> a -> a -> [a]
-numericEnumFrom = iterate (+ 1)
-
-numericEnumFromThen n m = iterate (+ (m - n)) n
-
-numericEnumFromTo n m = takeWhile (<= m + 1 / 2) (numericEnumFrom n)
-
-numericEnumFromThenTo n n' m = takeWhile p (numericEnumFromThen n n')
-  where
-    p
-      | n' >= n = (<= m + (n' - n) / 2)
-      | otherwise = (>= m + (n' - n) / 2)
-
 defaultEqual, defaultNotEqual :: (Eq a) => a -> a -> Bool
 defaultEqual x y = not (x /= y)
 defaultNotEqual x y = not (x == y)

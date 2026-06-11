@@ -37,7 +37,8 @@ mkdir $PACKAGE/hazy-internal/artifacts/Hazy
 cp runtime/package $PACKAGE/hazy-internal/package
 
 HEADER="Hazy Hazy/Builtin"
-SOURCE="Hazy/Helper Hazy/Prelude Hazy/PreludeList Hazy/PreludeText Hazy/PreludeIO"
+SOURCE="Hazy/Helper Hazy/Prelude Hazy/PreludeList Hazy/PreludeText Hazy/PreludeIO\
+ Hazy/PreludeChar Hazy/PreludeRatio Hazy/PreludeNumeric"
 
 for FILE in $HEADER; do
     cp runtime/header/$FILE.hs $PACKAGE/hazy-internal/header/$FILE.hs
