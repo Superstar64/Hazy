@@ -19,8 +19,10 @@ module Text.ParserCombinators.ReadPrec
   )
 where
 
-import Hazy.Prelude (ReadPrec, placeholder)
+import Hazy.Prelude (placeholder)
 import Text.ParserCombinators.ReadP (ReadP)
+
+data ReadPrec a
 
 type Prec = Int
 
