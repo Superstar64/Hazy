@@ -178,21 +178,34 @@ fromIntegral = fromInteger . toInteger
 realToFrac :: (Real a, Fractional b) => a -> b
 realToFrac = fromRational . toRational
 
--- todo replace with Traversable
+class (Functor t, Foldable t) => Traversable t where
+  traverse :: (Applicative f) => (a -> f b) -> t a -> f (t b)
+  traverse f = sequenceA . fmap f
+  sequenceA :: (Applicative f) => t (f a) -> f (t a)
+  sequenceA = traverse id
+  mapM :: (Monad m) => (a -> m b) -> t a -> m (t b)
+  mapM = traverse
+  sequence :: (Monad m) => t (m a) -> m (t a)
+  sequence = sequenceA
 
-sequence :: (Monad m) => [m a] -> m [a]
-sequence = foldr mcons (return [])
-  where
-    mcons p q = p >>= \x -> q >>= \y -> return (x : y)
+instance Traversable [] where
+  traverse f = \case
+    [] -> pure []
+    (x : xs) -> (:) <$> f x <*> traverse f xs
 
-sequence_ :: (Monad m) => [m a] -> m ()
+  mapM f as = sequence (map f as)
+  sequence = foldr mcons (return [])
+    where
+      mcons p q = p >>= \x -> q >>= \y -> return (x : y)
+
+instance Traversable NonEmpty where
+  traverse f (x :| xs) = (:|) <$> f x <*> traverse f xs
+
+sequence_ :: (Foldable t, Monad m) => t (m a) -> m ()
 sequence_ = foldr (>>) (return ())
 
-mapM :: (Monad m) => (a -> m b) -> [a] -> m [b]
-mapM f as = sequence (map f as)
-
-mapM_ :: (Monad m) => (a -> m b) -> [a] -> m ()
-mapM_ f as = sequence_ (map f as)
+mapM_ :: (Foldable t, Monad m) => (a -> m b) -> t a -> m ()
+mapM_ f = sequence_ . map f . toList
 
 (=<<) :: (Monad m) => (a -> m b) -> m a -> m b
 f =<< x = x >>= f
@@ -271,6 +284,17 @@ instance Monad Maybe where
 instance MonadFail Maybe where
   fail s = Nothing
 
+instance Foldable Maybe where
+  foldr f z = foldr f z . toList
+  toList = \case
+    Nothing -> []
+    Just x -> [x]
+
+instance Traversable Maybe where
+  traverse f = \case
+    Nothing -> pure Nothing
+    Just a -> Just <$> f a
+
 data Either a b = Left a | Right b
 
 instance (Eq a, Eq b) => Eq (Either a b) where
@@ -283,6 +307,27 @@ instance (Ord a, Ord b) => Ord (Either a b) where
   Left _ `compare` Right _ = LT
   Right _ `compare` Left _ = GT
   Right a `compare` Right b = a `compare` b
+
+instance Functor (Either a) where
+  fmap = liftM
+
+instance Applicative (Either a) where
+  (<*>) = ap
+
+instance Monad (Either a) where
+  Left a >>= _ = Left a
+  Right a >>= f = f a
+
+instance Foldable (Either a) where
+  foldr f z = foldr f z . toList
+  toList = \case
+    Left {} -> []
+    Right x -> [x]
+
+instance Traversable (Either a) where
+  traverse f = \case
+    Left a -> pure (Left a)
+    Right a -> Right <$> f a
 
 either :: (a -> c) -> (b -> c) -> Either a b -> c
 either f g (Left x) = f x
