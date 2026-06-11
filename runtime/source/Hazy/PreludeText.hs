@@ -246,16 +246,16 @@ instance (Show a, Show b) => Show (a, b) where
       . showChar ')'
 
 instance (Read a, Read b) => Read (a, b) where
-  readsPrec p =
+  readsPrec _ =
     readParen
       False
-      ( \r ->
-          [ ((x, y), w)
-          | ("(", s) <- lex r,
-            (x, t) <- reads s,
-            (",", u) <- lex t,
-            (y, v) <- reads u,
-            (")", w) <- lex v
+      ( \s1 ->
+          [ ((a, b), s6)
+          | ("(", s2) <- lex s1,
+            (a, s3) <- reads s2,
+            (",", s4) <- lex s3,
+            (b, s5) <- reads s4,
+            (")", s6) <- lex s5
           ]
       )
 
@@ -273,15 +273,15 @@ instance (Read a, Read b, Read c) => Read (a, b, c) where
   readsPrec _ =
     readParen
       False
-      ( \r ->
-          [ ((x, y, z), w)
-          | ("(", s) <- lex r,
-            (x, t) <- reads s,
-            (",", u) <- lex t,
-            (y, v) <- reads u,
-            (",", m) <- lex v,
-            (z, w) <- reads m,
-            (")", w') <- lex w
+      ( \s1 ->
+          [ ((a, b, c), s8)
+          | ("(", s2) <- lex s1,
+            (a, s3) <- reads s2,
+            (",", s4) <- lex s3,
+            (b, s5) <- reads s4,
+            (",", s6) <- lex s5,
+            (c, s7) <- reads s6,
+            (")", s8) <- lex s7
           ]
       )
 
@@ -301,17 +301,17 @@ instance (Read a, Read b, Read c, Read d) => Read (a, b, c, d) where
   readsPrec _ =
     readParen
       False
-      ( \r ->
-          [ ((x, y, z, k), w')
-          | ("(", s) <- lex r,
-            (x, t) <- reads s,
-            (",", u) <- lex t,
-            (y, v) <- reads u,
-            (",", m) <- lex v,
-            (z, n) <- reads m,
-            (",", p) <- lex n,
-            (k, w) <- reads p,
-            (")", w') <- lex w
+      ( \s1 ->
+          [ ((a, b, c, d), s10)
+          | ("(", s2) <- lex s1,
+            (a, s3) <- reads s2,
+            (",", s4) <- lex s3,
+            (b, s5) <- reads s4,
+            (",", s6) <- lex s5,
+            (c, s7) <- reads s6,
+            (",", s8) <- lex s7,
+            (d, s9) <- reads s8,
+            (")", s10) <- lex s9
           ]
       )
 
@@ -333,19 +333,19 @@ instance (Read a, Read b, Read c, Read d, Read e) => Read (a, b, c, d, e) where
   readsPrec _ =
     readParen
       False
-      ( \r ->
-          [ ((x, y, z, k, m), w')
-          | ("(", s) <- lex r,
-            (x, t) <- reads s,
-            (",", u) <- lex t,
-            (y, v) <- reads u,
-            (",", n) <- lex v,
-            (z, p) <- reads n,
-            (",", q) <- lex p,
-            (k, g) <- reads q,
-            (",", h) <- lex g,
-            (m, w) <- reads h,
-            (")", w') <- lex w
+      ( \s1 ->
+          [ ((a, b, c, d, e), s12)
+          | ("(", s2) <- lex s1,
+            (a, s3) <- reads s2,
+            (",", s4) <- lex s3,
+            (b, s5) <- reads s4,
+            (",", s6) <- lex s5,
+            (c, s7) <- reads s6,
+            (",", s8) <- lex s7,
+            (d, s9) <- reads s8,
+            (",", s10) <- lex s9,
+            (e, s11) <- reads s10,
+            (")", s12) <- lex s11
           ]
       )
 
@@ -369,21 +369,21 @@ instance (Read a, Read b, Read c, Read d, Read e, Read f) => Read (a, b, c, d, e
   readsPrec _ =
     readParen
       False
-      ( \r ->
-          [ ((x, y, z, k, m, n), w')
-          | ("(", s) <- lex r,
-            (x, t) <- reads s,
-            (",", u) <- lex t,
-            (y, v) <- reads u,
-            (",", p) <- lex v,
-            (z, q) <- reads p,
-            (",", g) <- lex q,
-            (k, h) <- reads g,
-            (",", i) <- lex h,
-            (m, j) <- reads i,
-            (",", l) <- lex j,
-            (n, w) <- reads l,
-            (")", w') <- lex w
+      ( \s1 ->
+          [ ((a, b, c, d, e, f), s14)
+          | ("(", s2) <- lex s1,
+            (a, s3) <- reads s2,
+            (",", s4) <- lex s3,
+            (b, s5) <- reads s4,
+            (",", s6) <- lex s5,
+            (c, s7) <- reads s6,
+            (",", s8) <- lex s7,
+            (d, s9) <- reads s8,
+            (",", s10) <- lex s9,
+            (e, s11) <- reads s10,
+            (",", s12) <- lex s11,
+            (f, s13) <- reads s12,
+            (")", s14) <- lex s13
           ]
       )
 
@@ -409,22 +409,22 @@ instance (Read a, Read b, Read c, Read d, Read e, Read f, Read g) => Read (a, b,
   readsPrec _ =
     readParen
       False
-      ( \r ->
-          [ ((x, y, z, k, m, n, p), w')
-          | ("(", s) <- lex r,
-            (x, t) <- reads s,
-            (",", u) <- lex t,
-            (y, v) <- reads u,
-            (",", q) <- lex v,
-            (z, h) <- reads q,
-            (",", i) <- lex h,
-            (k, j) <- reads i,
-            (",", l) <- lex j,
-            (m, a') <- reads l,
-            (",", b') <- lex a',
-            (n, c') <- reads b',
-            (",", d') <- lex c',
-            (p, w) <- reads d',
-            (")", w') <- lex w
+      ( \s1 ->
+          [ ((a, b, c, d, e, f, g), s16)
+          | ("(", s2) <- lex s1,
+            (a, s3) <- reads s2,
+            (",", s4) <- lex s3,
+            (b, s5) <- reads s4,
+            (",", s6) <- lex s5,
+            (c, s7) <- reads s6,
+            (",", s8) <- lex s7,
+            (d, s9) <- reads s8,
+            (",", s10) <- lex s9,
+            (e, s11) <- reads s10,
+            (",", s12) <- lex s11,
+            (f, s13) <- reads s12,
+            (",", s14) <- lex s13,
+            (g, s15) <- reads s14,
+            (")", s16) <- lex s15
           ]
       )
