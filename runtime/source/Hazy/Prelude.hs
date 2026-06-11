@@ -302,6 +302,9 @@ instance Applicative IO where
 instance Monad IO where
   IO m >>= f = IO (m >>= (runIO . f))
 
+instance MonadFail IO where
+  fail s = ioError (userError s)
+
 instance Bounded Ordering where
   minBound = LT
   maxBound = GT

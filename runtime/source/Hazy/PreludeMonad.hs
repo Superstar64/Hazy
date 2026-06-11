@@ -17,3 +17,8 @@ ap f a = do
   f' <- f
   a' <- a
   return (f' a')
+
+join :: (Monad m) => m (m a) -> m a
+join m = do
+  m <- m
+  m

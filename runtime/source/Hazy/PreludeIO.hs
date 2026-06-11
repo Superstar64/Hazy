@@ -6,9 +6,11 @@ type FilePath = String
 
 data IOError
 
-instance Show IOError
+instance Show IOError where
+  showsPrec = placeholder
 
-instance Eq IOError
+instance Eq IOError where
+  (==) = placeholder
 
 ioError :: IOError -> IO a
 ioError = placeholder

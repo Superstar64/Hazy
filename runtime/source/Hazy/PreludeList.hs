@@ -156,6 +156,10 @@ instance Foldable [] where
 
   toList = id
 
+instance Foldable NonEmpty where
+  foldr f z (x :| xs) = f x (foldr f z xs)
+  toList (x :| xs) = x : xs
+
 scanr :: (a -> b -> b) -> b -> [a] -> [b]
 scanr f q0 [] = [q0]
 scanr f q0 (x : xs) = f x q : qs

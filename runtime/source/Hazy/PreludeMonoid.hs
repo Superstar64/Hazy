@@ -2,6 +2,8 @@ module Hazy.PreludeMonoid where
 
 import Hazy.Prelude
 
+infixr 6 <>
+
 class Semigroup a where
   (<>) :: a -> a -> a
   a <> b = sconcat (a :| [b])
@@ -10,7 +12,7 @@ class Semigroup a where
   sconcat = foldr1 (<>)
 
   stimes :: (Integral b) => b -> a -> a
-  stimes = stimesInteger
+  stimes = stimesInteger . toInteger
 
   stimesInteger :: Integer -> a -> a
   stimesInteger n _
@@ -18,7 +20,13 @@ class Semigroup a where
   stimesInteger n a = go n a
     where
       go 1 a = a
-      go n a = go (n - 1) a
+      go n a = a <> go (n - 1) a
+
+instance Semigroup [a] where
+  (<>) = (++)
+
+instance Semigroup (NonEmpty a) where
+  (x :| xs) <> (y :| ys) = x :| xs ++ y : ys
 
 class (Semigroup a) => Monoid a where
   mempty :: a
@@ -29,3 +37,6 @@ class (Semigroup a) => Monoid a where
 
   mconcat :: [a] -> a
   mconcat = foldr (<>) mempty
+
+instance Monoid [a] where
+  mempty = []

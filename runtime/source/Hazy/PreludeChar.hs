@@ -50,6 +50,12 @@ instance Bounded GeneralCategory where
   minBound = UppercaseLetter
   maxBound = NotAssigned
 
+instance Read GeneralCategory where
+  readsPrec = placeholder
+
+instance Show GeneralCategory where
+  showsPrec = placeholder
+
 isSpace :: Char -> Bool
 isSpace = placeholder
 

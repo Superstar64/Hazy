@@ -33,6 +33,18 @@ class Read a where
                (xs, v) <- readl' u
              ]
 
+instance Read Bool where
+  readsPrec = placeholder
+
+instance (Read a) => Read (Maybe a) where
+  readsPrec = placeholder
+
+instance (Read a, Read b) => Read (Either a b) where
+  readsPrec = placeholder
+
+instance Read Ordering where
+  readsPrec = placeholder
+
 class Show a where
   showsPrec :: Int -> a -> ShowS
   show :: a -> String
