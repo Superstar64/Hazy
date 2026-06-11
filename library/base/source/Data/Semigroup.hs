@@ -23,17 +23,7 @@ module Data.Semigroup
   )
 where
 
-import Data.Bool (Bool)
-import Data.List.NonEmpty (NonEmpty)
-import Data.Monoid (Monoid)
-import Hazy.Prelude (placeholder)
-import Prelude (Integral, error)
-
-class Semigroup a where
-  infixr 6 <>
-  (<>) :: a -> a -> a
-  sconcat :: NonEmpty a -> a
-  stimes :: (Integral b) => b -> a -> a
+import Hazy.Prelude (Semigroup (..), placeholder)
 
 stimesMonoid :: (Integral b, Monoid a) => b -> a -> a
 stimesMonoid = placeholder

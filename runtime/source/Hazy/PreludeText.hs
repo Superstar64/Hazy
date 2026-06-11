@@ -6,6 +6,8 @@ type ReadS a = String -> [(a, String)]
 
 type ShowS = String -> String
 
+data ReadPrec a
+
 class Read a where
   readsPrec :: Int -> ReadS a
   readList :: ReadS [a]
@@ -32,6 +34,10 @@ class Read a where
                (x, u) <- reads t,
                (xs, v) <- readl' u
              ]
+  readPrec :: ReadPrec a
+  readPrec = placeholder
+  readListPrec :: ReadPrec [a]
+  readListPrec = placeholder
 
 instance Read Bool where
   readsPrec = placeholder

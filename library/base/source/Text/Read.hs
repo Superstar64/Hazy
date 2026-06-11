@@ -25,7 +25,6 @@ import Data.String (String)
 import Hazy.Prelude (placeholder)
 import Text.ParserCombinators.ReadPrec (ReadPrec)
 import Text.Read.Lex (Lexeme (..))
-import Prelude (error)
 
 class Read a where
   readsPrec :: Int -> ReadS a

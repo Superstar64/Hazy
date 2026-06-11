@@ -414,6 +414,8 @@ instance Enum Double where
   enumFromTo = numericEnumFromTo
   enumFromThenTo = numericEnumFromThenTo
 
+data Word
+
 numericEnumFrom :: (Fractional a) => a -> [a]
 numericEnumFromThen :: (Fractional a) => a -> a -> [a]
 numericEnumFromTo :: (Fractional a, Ord a) => a -> a -> [a]
@@ -479,6 +481,9 @@ asTypeOf = const
 
 error :: String -> a
 error = errorText . pack
+
+errorWithoutStackTrace :: [Char] -> a
+errorWithoutStackTrace = placeholder
 
 undefined :: a
 undefined = error "Prelude.undefined"

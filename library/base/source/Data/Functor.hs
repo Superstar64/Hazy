@@ -7,8 +7,7 @@ module Data.Functor
   )
 where
 
-import Hazy.Prelude (Functor (..), placeholder, (<$>))
-import Prelude (error)
+import Hazy.Prelude (placeholder)
 
 infixl 4 $>
 

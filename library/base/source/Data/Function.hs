@@ -10,8 +10,7 @@ module Data.Function
   )
 where
 
-import Hazy.Prelude (const, flip, id, placeholder, ($), (.))
-import Prelude (error)
+import Hazy.Prelude (placeholder)
 
 infixl 1 &
 

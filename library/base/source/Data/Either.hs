@@ -11,9 +11,7 @@ module Data.Either
   )
 where
 
-import Data.Bool (Bool)
-import Hazy.Prelude (Either (..), either, placeholder)
-import Prelude ()
+import Hazy.Prelude (placeholder)
 
 lefts :: [Either a b] -> [a]
 lefts = placeholder

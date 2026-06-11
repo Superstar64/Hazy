@@ -16,10 +16,7 @@ module Control.Applicative
 where
 
 import Data.Foldable (asum)
-import Data.Functor (Functor, (<$), (<$>))
-import Data.Maybe (Maybe)
-import Hazy.Prelude (Applicative (..), placeholder)
-import Prelude (error)
+import Hazy.Prelude (placeholder)
 
 class (Applicative f) => Alternative f where
   empty :: f a

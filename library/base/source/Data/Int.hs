@@ -7,9 +7,6 @@ module Data.Int
   )
 where
 
-import Hazy.Prelude (Int, placeholder)
-import Prelude ()
-
 data Int8
 
 data Int16

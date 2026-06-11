@@ -65,11 +65,7 @@ module Data.List.NonEmpty
 where
 
 import Control.Applicative (Alternative (..))
-import Hazy.Prelude (placeholder)
-
-infixr 5 :|
-
-data NonEmpty a = a :| [a]
+import Hazy.Prelude (NonEmpty (..), placeholder)
 
 map :: (a -> b) -> NonEmpty a -> NonEmpty b
 map = placeholder

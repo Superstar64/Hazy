@@ -22,11 +22,11 @@ filter p (x : xs)
   | p x = x : filter p xs
   | otherwise = filter p xs
 
-concat :: [[a]] -> [a]
+concat :: (Foldable t) => t [a] -> [a]
 concat xss = foldr (++) [] xss
 
-concatMap :: (a -> [b]) -> [a] -> [b]
-concatMap f = concat . map f
+concatMap :: (Foldable t) => (a -> [b]) -> t a -> [b]
+concatMap f = concat . map f . toList
 
 head :: [a] -> a
 head (x : _) = x

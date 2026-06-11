@@ -14,7 +14,6 @@ module Data.Monoid
   )
 where
 
-import Data.Maybe (Maybe)
 import Data.Semigroup
   ( All (getAll),
     Any (getAny),
@@ -24,13 +23,7 @@ import Data.Semigroup
     Semigroup ((<>)),
     Sum (getSum),
   )
-import Hazy.Prelude (placeholder)
-import Prelude ()
-
-class (Semigroup a) => Monoid a where
-  mempty :: a
-  mappend :: a -> a -> a
-  mconcat :: [a] -> a
+import Hazy.Prelude (Monoid (..), placeholder)
 
 newtype First a = First
   { getFirst :: Maybe a

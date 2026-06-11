@@ -120,83 +120,9 @@ module Data.List
   )
 where
 
-import Data.Bool (Bool)
-import Data.Eq
-  ( Eq,
-  )
-import Data.Foldable
-  ( all,
-    and,
-    any,
-    concat,
-    concatMap,
-    elem,
-    find,
-    foldl,
-    foldl',
-    foldl1,
-    foldl1',
-    foldr,
-    foldr1,
-    length,
-    maximum,
-    maximumBy,
-    minimum,
-    minimumBy,
-    notElem,
-    null,
-    or,
-    product,
-    sum,
-  )
-import Data.Int (Int)
-import Data.Maybe (Maybe)
-import Data.Ord
-  ( Ord,
-    Ordering,
-  )
-import Data.String
-  ( String,
-    lines,
-    unlines,
-    unwords,
-    words,
-  )
-import Data.Traversable
-  ( mapAccumL,
-    mapAccumR,
-  )
-import Hazy.Prelude
-  ( break,
-    cycle,
-    drop,
-    dropWhile,
-    filter,
-    head,
-    init,
-    iterate,
-    last,
-    lookup,
-    map,
-    placeholder,
-    repeat,
-    replicate,
-    reverse,
-    span,
-    splitAt,
-    tail,
-    take,
-    takeWhile,
-    unzip,
-    unzip3,
-    zip,
-    zip3,
-    zipWith,
-    zipWith3,
-    (!!),
-    (++),
-  )
-import Prelude (Integral, Num, error)
+import Data.Foldable (find, maximumBy, minimumBy)
+import Data.Traversable (mapAccumL, mapAccumR)
+import Hazy.Prelude (placeholder)
 
 uncons :: [a] -> Maybe (a, [a])
 uncons = placeholder

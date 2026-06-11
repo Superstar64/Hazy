@@ -95,19 +95,10 @@ module System.IO
   )
 where
 
-import Data.Bool (Bool)
-import Data.Char (Char)
-import Data.Int (Int)
-import Data.Maybe (Maybe)
-import Data.String (String)
 import Data.Text (pack)
 import qualified Data.Text.IO as Text
 import Foreign.Ptr (Ptr)
-import Hazy.Prelude (IO, placeholder, putStrLn)
-import Text.Show (Show)
-import Prelude (Integer, Read, error)
-
-type FilePath = String
+import Hazy.Prelude (placeholder)
 
 fixIO :: (a -> IO a) -> IO a
 fixIO = placeholder
@@ -138,17 +129,8 @@ data IOMode
 hClose :: Handle -> IO ()
 hClose = placeholder
 
-readFile :: FilePath -> IO String
-readFile = placeholder
-
 readFile' :: FilePath -> IO String
 readFile' = placeholder
-
-writeFile :: FilePath -> String -> IO ()
-writeFile = placeholder
-
-appendFile :: FilePath -> String -> IO ()
-appendFile = placeholder
 
 hFileSize :: Handle -> IO Integer
 hFileSize = placeholder
@@ -254,33 +236,6 @@ hPutStrLn = placeholder
 
 hPrint :: (Show a) => Handle -> a -> IO ()
 hPrint = placeholder
-
-interact :: (String -> String) -> IO ()
-interact = placeholder
-
-putChar :: Char -> IO ()
-putChar = placeholder
-
-putStr :: String -> IO ()
-putStr = placeholder
-
-print :: (Show a) => a -> IO ()
-print = placeholder
-
-getChar :: IO Char
-getChar = placeholder
-
-getLine :: IO String
-getLine = placeholder
-
-getContents :: IO String
-getContents = placeholder
-
-readIO :: (Read a) => String -> IO a
-readIO = placeholder
-
-readLn :: (Read a) => IO a
-readLn = placeholder
 
 getContents' :: IO String
 getContents' = placeholder

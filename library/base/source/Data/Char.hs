@@ -35,18 +35,22 @@ module Data.Char
   )
 where
 
-import Data.Bool (Bool)
-import Data.Int (Int)
-import Data.String (String)
-import Hazy.Prelude (Char, GeneralCategory (..), generalCategory, placeholder)
-import Text.Show (ShowS)
-import Prelude (ReadS)
+import Hazy.Prelude
+  ( Char,
+    GeneralCategory (..),
+    generalCategory,
+    isAlpha,
+    isAlphaNum,
+    isDigit,
+    isSpace,
+    lexLitChar,
+    placeholder,
+    readLitChar,
+    showLitChar,
+  )
 
 isControl :: Char -> Bool
 isControl = placeholder
-
-isSpace :: Char -> Bool
-isSpace = placeholder
 
 isLower :: Char -> Bool
 isLower = placeholder
@@ -54,17 +58,8 @@ isLower = placeholder
 isUpper :: Char -> Bool
 isUpper = placeholder
 
-isAlpha :: Char -> Bool
-isAlpha = placeholder
-
-isAlphaNum :: Char -> Bool
-isAlphaNum = placeholder
-
 isPrint :: Char -> Bool
 isPrint = placeholder
-
-isDigit :: Char -> Bool
-isDigit = placeholder
 
 isOctDigit :: Char -> Bool
 isOctDigit = placeholder
@@ -122,12 +117,3 @@ ord = placeholder
 
 chr :: Int -> Char
 chr = placeholder
-
-showLitChar :: Char -> ShowS
-showLitChar = placeholder
-
-lexLitChar :: ReadS String
-lexLitChar = placeholder
-
-readLitChar :: ReadS Char
-readLitChar = placeholder

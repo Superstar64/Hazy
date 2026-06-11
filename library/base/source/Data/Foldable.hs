@@ -23,35 +23,9 @@ module Data.Foldable
   )
 where
 
-import Control.Applicative (Alternative, Applicative)
-import Control.Monad (Monad, MonadPlus)
-import Data.Bool (Bool)
-import Data.Eq (Eq)
-import Data.Int (Int)
-import Data.Maybe (Maybe)
-import Data.Monoid (Monoid)
-import Data.Ord (Ord, Ordering)
-import Hazy.Prelude (placeholder)
-import Prelude (Num, error)
-
-class Foldable t where
-  fold :: (Monoid m) => t m -> m
-  foldMap :: (Monoid m) => (a -> m) -> t a -> m
-  foldMap' :: (Monoid m) => (a -> m) -> t a -> m
-  foldr :: (a -> b -> b) -> b -> t a -> b
-  foldr' :: (a -> b -> b) -> b -> t a -> b
-  foldl :: (b -> a -> b) -> b -> t a -> b
-  foldl' :: (b -> a -> b) -> b -> t a -> b
-  foldr1 :: (a -> a -> a) -> t a -> a
-  foldl1 :: (a -> a -> a) -> t a -> a
-  toList :: t a -> [a]
-  null :: t a -> Bool
-  length :: t a -> Int
-  elem :: (Eq a) => a -> t a -> Bool
-  maximum :: (Ord a) => t a -> a
-  minimum :: (Ord a) => t a -> a
-  sum :: (Num a) => t a -> a
-  product :: (Num a) => t a -> a
+import Control.Applicative (Alternative)
+import Control.Monad (MonadPlus)
+import Hazy.Prelude (Foldable (..), placeholder)
 
 foldrM :: (Foldable t, Monad m) => (a -> b -> m b) -> b -> t a -> m b
 foldrM = placeholder
@@ -71,9 +45,6 @@ sequenceA_ = placeholder
 asum :: (Foldable t, Alternative f) => t (f a) -> f a
 asum = placeholder
 
-mapM_ :: (Foldable t, Monad m) => (a -> m b) -> t a -> m ()
-mapM_ = placeholder
-
 forM_ :: (Foldable t, Monad m) => t a -> (a -> m b) -> m ()
 forM_ = placeholder
 
@@ -82,24 +53,6 @@ sequence_ = placeholder
 
 msum :: (Foldable t, MonadPlus m) => t (m a) -> m a
 msum = placeholder
-
-concat :: (Foldable t) => t [a] -> [a]
-concat = placeholder
-
-concatMap :: (Foldable t) => (a -> [b]) -> t a -> [b]
-concatMap = placeholder
-
-and :: (Foldable t) => t Bool -> Bool
-and = placeholder
-
-or :: (Foldable t) => t Bool -> Bool
-or = placeholder
-
-any :: (Foldable t) => (a -> Bool) -> t a -> Bool
-any = placeholder
-
-all :: (Foldable t) => (a -> Bool) -> t a -> Bool
-all = placeholder
 
 maximumBy :: (Foldable t) => (a -> a -> Ordering) -> t a -> a
 maximumBy = placeholder

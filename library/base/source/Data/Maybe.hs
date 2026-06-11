@@ -12,9 +12,7 @@ module Data.Maybe
   )
 where
 
-import Data.Bool (Bool)
-import Hazy.Prelude (Maybe (..), maybe, placeholder)
-import Prelude ()
+import Hazy.Prelude (placeholder)
 
 isJust :: Maybe a -> Bool
 isJust = placeholder

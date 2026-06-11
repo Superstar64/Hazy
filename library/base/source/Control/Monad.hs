@@ -38,30 +38,16 @@ module Control.Monad
   )
 where
 
-import Control.Applicative (Alternative, Applicative)
-import Data.Bool (Bool)
-import Data.Foldable (Foldable, msum)
-import Data.Functor
-  ( Functor (..),
-  )
-import Data.Int (Int)
-import Data.String (String)
-import Data.Traversable (Traversable, mapM, sequence)
-import Hazy.Prelude (Monad (..), MonadFail (..), ap, liftM, placeholder, (=<<))
-import Prelude ()
+import Control.Applicative (Alternative)
+import Data.Foldable (msum)
+import Hazy.Prelude (ap, join, liftM, placeholder)
 
 class (Alternative m, Monad m) => MonadPlus m where
   mzero :: m a
   mplus :: m a -> m a -> m a
 
-mapM_ :: (Foldable t, Monad m) => (a -> m b) -> t a -> m ()
-mapM_ = placeholder
-
 forM :: (Traversable t, Monad m) => t a -> (a -> m b) -> m (t b)
 forM = placeholder
-
-sequence_ :: (Foldable t, Monad m) => t (m a) -> m ()
-sequence_ = placeholder
 
 forM_ :: (Foldable t, Monad m) => t a -> (a -> m b) -> m ()
 forM_ = placeholder
@@ -81,9 +67,6 @@ forever = placeholder
 
 void :: (Functor f) => f a -> f ()
 void = placeholder
-
-join :: (Monad m) => m (m a) -> m a
-join = placeholder
 
 mfilter :: (MonadPlus m) => (a -> Bool) -> m a -> m a
 mfilter = placeholder
