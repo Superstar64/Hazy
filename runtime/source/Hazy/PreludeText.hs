@@ -1,5 +1,6 @@
 module Hazy.PreludeText where
 
+import Hazy.Helper
 import Hazy.Prelude
 
 type ReadS a = String -> [(a, String)]
@@ -440,3 +441,22 @@ instance (Read a, Read b, Read c, Read d, Read e, Read f, Read g) => Read (a, b,
             (")", s16) <- lex s15
           ]
       )
+
+instance (Read a, Integral a) => Read (Ratio a) where
+  readsPrec p =
+    readParen
+      (p > ratPrec)
+      ( \r ->
+          [ (x % y, u)
+          | (x, s) <- readsPrec (ratPrec + 1) r,
+            ("%", t) <- lex s,
+            (y, u) <- readsPrec (ratPrec + 1) t
+          ]
+      )
+
+instance (Show a, Integral a) => Show (Ratio a) where
+  showsPrec p (x :% y) =
+    showParen (p > ratPrec) $
+      showsPrec (ratPrec + 1) x
+        . showString " % "
+        . showsPrec (ratPrec + 1) y

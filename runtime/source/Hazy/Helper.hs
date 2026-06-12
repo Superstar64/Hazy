@@ -17,6 +17,8 @@ enumEqual l r = fromEnum l == fromEnum r
 enumCompare :: (Enum a) => a -> a -> Ordering
 enumCompare l r = compare (fromEnum l) (fromEnum r)
 
+ratPrec = 7 :: Int
+
 reduce :: (Integral a) => a -> a -> HelperRatio a
 reduce _ 0 = error "Data.Ratio.% : zero denominator"
 reduce x y = Ratio $ (x `quot` d) :% (y `quot` d)
@@ -214,6 +216,7 @@ instance Integral HelperInt where
   Int x `quot` Int y = Int (primIntQuot x y)
   Int x `rem` Int y = Int (primIntRem x y)
   quotRem x y = (x `quot` y, x `rem` y)
+  toInteger (Int x) = primIntToInteger x
 
 newtype HelperInteger = Integer Integer
 
@@ -256,6 +259,7 @@ instance Integral HelperInteger where
   Integer x `quot` Integer y = Integer (primIntegerQuot x y)
   Integer x `rem` Integer y = Integer (primIntegerRem x y)
   quotRem x y = (x `quot` y, x `rem` y)
+  toInteger (Integer x) = x
 
 newtype HelperOrdering = Ordering Ordering
 

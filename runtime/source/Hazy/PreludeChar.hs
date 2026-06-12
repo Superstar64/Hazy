@@ -57,22 +57,56 @@ instance Show GeneralCategory where
   showsPrec = placeholder
 
 isSpace :: Char -> Bool
-isSpace = placeholder
+isSpace = \case
+  '\t' -> True
+  '\n' -> True
+  '\r' -> True
+  '\f' -> True
+  '\v' -> True
+  char | Space <- generalCategory char -> True
+  _ -> False
 
 isAlpha :: Char -> Bool
-isAlpha = placeholder
+isAlpha char = case generalCategory char of
+  UppercaseLetter -> True
+  LowercaseLetter -> True
+  TitlecaseLetter -> True
+  ModifierLetter -> True
+  OtherLetter -> True
+  _ -> False
 
 isDigit :: Char -> Bool
-isDigit = placeholder
+isDigit char = char >= '0' && char <= '9'
 
 isAlphaNum :: Char -> Bool
-isAlphaNum = placeholder
+isAlphaNum char = case generalCategory char of
+  UppercaseLetter -> True
+  LowercaseLetter -> True
+  TitlecaseLetter -> True
+  ModifierLetter -> True
+  OtherLetter -> True
+  DecimalNumber -> True
+  LetterNumber -> True
+  OtherNumber -> True
+  _ -> False
 
 showLitChar :: Char -> ShowS
-showLitChar = placeholder
+showLitChar char =
+  if isAlphaNum char || char == ' '
+    then \string -> char : string
+    else \string -> '\\' : showInt (fromEnum char) string
 
 readLitChar :: ReadS Char
-readLitChar = placeholder
+readLitChar = \case
+  '\\' : string -> do
+    (code, string) <- readDec string
+    [(toEnum code, string)]
+  c : string -> [(c, string)]
 
 lexLitChar :: ReadS String
-lexLitChar = placeholder
+lexLitChar = \case
+  '\\' : string -> do
+    (digits, string) <- lexDigits string
+    [('\\' : digits, string)]
+  char : string -> [(char : [], string)]
+  _ -> []
