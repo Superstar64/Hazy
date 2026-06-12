@@ -7,9 +7,4 @@ instance Eq MyBool where
   MyTrue == MyTrue = True
   _ == _ = False
 
-main =
-  putStrLn
-    ( case MyFalse /= MyTrue of
-        True -> "y"
-        False -> "n"
-    )
+main = print (MyFalse /= MyTrue)

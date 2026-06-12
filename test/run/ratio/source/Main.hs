@@ -2,14 +2,16 @@ module Main where
 
 import Data.Ratio (denominator, numerator)
 
-literal = case 0.5 :: Rational of
-  number
-    | numerator number == 1 && denominator number == 2 -> "y"
-    | otherwise -> "n"
+literal =
+  let number :: Rational
+      number = 0.5
+   in numerator number == 1 && denominator number == 2
 
-add = case 0.1 + 0.5 :: Rational of
-  number
-    | numerator number == 3 && denominator number == 5 -> "y"
-    | otherwise -> "n"
+add =
+  let number :: Rational
+      number = 0.1 + 0.5
+   in numerator number == 3 && denominator number == 5
 
-main = putStrLn (literal ++ add)
+main = do
+  print [literal, add]
+  print (0.5 :: Rational)

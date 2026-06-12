@@ -11,5 +11,5 @@ mathSymbol = case generalCategory '+' of
   _ -> "n"
 
 main = do
-  putStrLn lowercaseLetter
-  putStrLn mathSymbol
+  print $ generalCategory 'a'
+  print $ generalCategory '+'

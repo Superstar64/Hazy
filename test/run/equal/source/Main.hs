@@ -11,16 +11,13 @@ instance Eq Custom where
 instance Ord Custom where
   Custom `compare` Custom = EQ
 
-same = case (number, True, Custom, "abc", EQ) == (1, True, Custom, "abc", EQ) of
-  True -> "y"
-  False -> "n"
+same = (number, True, Custom, "abc", EQ) == (1, True, Custom, "abc", EQ)
 
-less = case (number, True, Custom, "abc", EQ) < (1, True, Custom, "abc", GT) of
-  True -> "y"
-  False -> "n"
+less = (number, True, Custom, "abc", EQ) < (1, True, Custom, "abc", GT)
 
-greater = case (number, True, Custom, "abd", EQ) > (1, True, Custom, "abc", EQ) of
-  True -> "y"
-  False -> "n"
+greater = (number, True, Custom, "abd", EQ) > (1, True, Custom, "abc", EQ)
 
-main = putStrLn (same ++ less ++ greater)
+main = do
+  print same
+  print less
+  print greater
