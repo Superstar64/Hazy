@@ -105,6 +105,7 @@ executable hazy
     Generate.Mangle
     Generate.Mangle.Builtin
     Generate.Precontext
+    Generate.Target
     Generate.Variable
     Graph.StronglyConnected
     Graph.Topological

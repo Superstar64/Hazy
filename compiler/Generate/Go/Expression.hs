@@ -21,6 +21,7 @@ import qualified Generate.Go.Hook as Hook
 import qualified Generate.Go.Statements as Statements
 import qualified Generate.Info as Info
 import qualified Generate.Mangle as Mangle
+import Generate.Target (Target (..), finish)
 import qualified Javascript.Tree.Expression as Javascript (Expression (..))
 import qualified Javascript.Tree.Field as Javascript (Field (..))
 import qualified Javascript.Tree.Statement as Javascript (Statement (..))
@@ -106,12 +107,12 @@ generate ::
 generate context expression = do
   name <- fresh context
   let letx = Javascript.Let name
-  body <- generateInto context Javascript.Variable {name} expression
+  body <- generateInto context (Assign Javascript.Variable {name}) expression
   pure (letx : body, Javascript.Variable {name})
 
 generateInto ::
   Context s scope ->
-  Javascript.Expression ->
+  Target return ->
   Expression scope ->
   ST s [Javascript.Statement 'True]
 generateInto context target = \case
@@ -120,7 +121,7 @@ generateInto context target = \case
     name <- symbol context name
     let expression = Javascript.Variable {name}
     arguments <- traverse (Evidence.generate context) (toList instanciation)
-    pure [done (evaluate strict expression arguments)]
+    pure [finish target (evaluate strict expression arguments)]
   Constructor
     { constructor = Constructor.Index {constructorIndex},
       arguments,
@@ -139,10 +140,10 @@ generateInto context target = \case
           elements = map Javascript.Literal (tag : arguments)
           fields = zip Mangle.fields elements
           object = Javascript.Object {fields}
-      pure $ concat extra ++ [done object]
+      pure $ concat extra ++ [finish target object]
   Character {character} -> do
     let string = Javascript.Number {number = ord character}
-    pure [done string]
+    pure [finish target string]
   Method
     { method = Method.Index {methodIndex},
       evidence,
@@ -159,7 +160,7 @@ generateInto context target = \case
           statement = Javascript.Const name value
           expression = Javascript.Variable {name}
       arguments <- traverse (Evidence.generate context) (toList instanciation)
-      pure [statement, done (evaluate False expression arguments)]
+      pure [statement, finish target (evaluate False expression arguments)]
   Selector
     { selector = Selector.Index {selectorIndex},
       argument,
@@ -171,7 +172,7 @@ generateInto context target = \case
               { object,
                 field = Mangle.fields !! (selectorIndex + 1)
               }
-      pure $ statements ++ [done (evaluate (Info.strict strict) select [])]
+      pure $ statements ++ [finish target (evaluate (Info.strict strict) select [])]
   Let {declarations, letBody} -> do
     (context, declarations) <- Declarations.generate context declarations
     result <- generateInto context target letBody
@@ -179,13 +180,13 @@ generateInto context target = \case
   Lambda {body} -> do
     name <- fresh context
     context <- pure $ singleBinding name context
-    (statements, result) <- generate context body
-    let returnx = Javascript.Return result
+    statements <- generateInto context Return body
     pure
-      [ done
+      [ finish
+          target
           Javascript.Arrow
             { parameters = [name],
-              body = statements ++ [returnx]
+              body = statements
             }
       ]
   Call {function, argument} -> do
@@ -196,26 +197,18 @@ generateInto context target = \case
             { function,
               arguments = [argument]
             }
-    pure $ statements ++ [done call]
+    pure $ statements ++ [finish target call]
   Join {statements} -> Statements.generate context target statements
-  -- todo use big ints
   Integer {integer} ->
     pure
-      [ done
+      [ finish
+          target
           Javascript.BigInt
             { bigInt = integer
             }
       ]
   Hook {hook} -> Hook.generateInto context target hook
   Newtype {argument} -> generateInto context target argument
-  where
-    done value =
-      Javascript.Expression
-        ( Javascript.Assign
-            { target,
-              value
-            }
-        )
 
 -- |
 -- Is the thunk a part of a binding group or not?
@@ -230,7 +223,7 @@ thunk context Done Variable {variable, instanciation = Instanciation instanciati
       name <- symbol context name
       pure Javascript.Variable {name}
 thunk context _ value = do
-  body <- generateInto context done value
+  body <- generateInto context (Assign done) value
   pure (delay body)
 
 declaration :: Context s scope -> SchemeOver Expression scope -> ST s Javascript.Expression

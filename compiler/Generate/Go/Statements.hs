@@ -11,37 +11,50 @@ import qualified Generate.Context as Context
 import {-# SOURCE #-} qualified Generate.Go.Declarations as Declarations
 import {-# SOURCE #-} qualified Generate.Go.Expression as Expression
 import qualified Generate.Mangle as Mangle
+import Generate.Target (Target (..))
 import qualified Javascript.Tree.Expression as Javascript (Expression (..))
 import qualified Javascript.Tree.Statement as Javascript (Statement (..))
 import qualified Semantic.Index.Constructor as Constructor
 
+data Label return where
+  Label :: !Text -> Label 'False
+  NoLabel :: Label 'True
+
 generate ::
   Context s scope ->
-  Javascript.Expression ->
+  Target return ->
   Statements scope ->
   ST s [Javascript.Statement 'True]
-generate context@Context {builtin = Mangle.Builtin {abort}} target statements = do
-  label <- Context.fresh context
-  statements <- attempt context target label statements
-  let bottom =
-        Javascript.Expression
-          Javascript.Call
-            { function = Javascript.Variable {name = abort},
-              arguments = []
-            }
-  pure [Javascript.Label label (statements ++ [bottom])]
+generate context@Context {builtin = Mangle.Builtin {abort}} target statements = case target of
+  Assign target -> do
+    label <- Context.fresh context
+    statements <- attempt context (Assign target) (Label label) statements
+    pure [Javascript.Label label (statements ++ [bottom])]
+  Return -> do
+    statements <- attempt context Return NoLabel statements
+    pure $ statements ++ [bottom]
+  where
+    bottom =
+      Javascript.Expression
+        Javascript.Call
+          { function = Javascript.Variable {name = abort},
+            arguments = []
+          }
 
 attempt ::
   Context s scope ->
-  Javascript.Expression ->
-  Text ->
+  Target return ->
+  Label return ->
   Statements scope ->
   ST s [Javascript.Statement 'True]
 attempt context target label = \case
-  Done {done} -> do
-    assign <- Expression.generateInto context target done
-    let break = Javascript.Break label
-    pure $ assign ++ [break]
+  Done {done} -> case label of
+    Label label -> do
+      assign <- Expression.generateInto context target done
+      let break = Javascript.Break label
+      pure $ assign ++ [break]
+    NoLabel -> do
+      Expression.generateInto context target done
   Bind
     { constructor = Constructor.Index {constructorIndex},
       constructorInfo = constructorInfo@ConstructorInfo {entries},

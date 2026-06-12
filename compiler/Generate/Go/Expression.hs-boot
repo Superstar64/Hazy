@@ -4,6 +4,7 @@ import Control.Monad.ST (ST)
 import Core.Tree.Expression (Expression)
 import Core.Tree.SchemeOver (SchemeOver)
 import Generate.Context (Context)
+import Generate.Target (Target)
 import qualified Javascript.Tree.Expression as Javascript (Expression)
 import qualified Javascript.Tree.Statement as Javascript (Statement)
 
@@ -13,7 +14,7 @@ generate ::
   ST s ([Javascript.Statement 'True], Javascript.Expression)
 generateInto ::
   Context s scope ->
-  Javascript.Expression ->
+  Target return ->
   Expression scope ->
   ST s [Javascript.Statement 'True]
 
