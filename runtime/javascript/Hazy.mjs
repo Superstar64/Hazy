@@ -151,6 +151,31 @@ export const pack = {
   },
 };
 
+function stream(points) {
+  const head = points.next();
+  if (head.done) {
+    return { a: 0 };
+  } else {
+    return {
+      a: 1,
+      b: { a: 0, b: head.value.codePointAt(0) },
+      c: {
+        a: 1,
+        b() {
+          this.b = stream(points);
+          this.a = 0;
+          return this.b;
+        },
+      },
+    };
+  }
+}
+
+export const unpack = {
+  a: 0,
+  b: (thunk) => stream(force(thunk)[Symbol.iterator]()),
+};
+
 export const putStrLnText = {
   a: 0,
   b: (thunk) => () => {
@@ -308,6 +333,7 @@ export const primSTBind = {
     return force(f)(x)();
   },
 };
+
 export const eqTuple =
   (unpack) =>
   (...evidences) => {

@@ -17,6 +17,9 @@ errorText = missing
 pack :: [Char] -> Text
 pack = missing
 
+unpack :: Text -> [Char]
+unpack = missing
+
 putStrLnText :: Text -> IO ()
 putStrLnText = missing
 

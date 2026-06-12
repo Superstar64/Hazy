@@ -5,19 +5,19 @@ import Hazy.Prelude
 data Text
 
 instance Eq Text where
-  (==) = placeholder
+  a == b = unpack a == unpack b
 
 instance Ord Text where
-  compare = placeholder
+  compare a b = compare (unpack a) (unpack b)
 
 instance Semigroup Text where
-  (<>) = placeholder
+  a <> b = pack $ unpack a ++ unpack b
 
 instance Monoid Text where
-  mempty = placeholder
+  mempty = pack ""
 
 instance Read Text where
   readsPrec = placeholder
 
 instance Show Text where
-  showsPrec = placeholder
+  showsPrec d = showsPrec d . unpack

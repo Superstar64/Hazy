@@ -17,6 +17,7 @@ module Hazy.Prelude
     module Hazy.Builtin,
     errorText,
     pack,
+    unpack,
     putStrLnText,
     traceText,
     generalCategory,
