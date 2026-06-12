@@ -5,9 +5,7 @@ import Core.Tree.Hook (Hook (..))
 import Generate.Context (Context (..))
 import qualified Generate.Go.Evidence as Evidence
 import Generate.Mangle (Builtin (..))
-import Generate.Target (Target, finish)
 import qualified Javascript.Tree.Expression as Javascript (Expression (..))
-import qualified Javascript.Tree.Statement as Javascript (Statement (..))
 import Semantic.Index.Method
   ( Applicative (..),
     Enum (..),
@@ -22,8 +20,8 @@ import Semantic.Index.Method
     Real (..),
   )
 
-generateInto :: Context s scope -> Target return -> Hook scope -> ST s [Javascript.Statement 'True]
-generateInto context target hook = do
+generate :: Context s scope -> Hook scope -> ST s Javascript.Expression
+generate context hook = do
   let Context {builtin} = context
       Builtin
         { defaultPlus,
@@ -80,7 +78,7 @@ generateInto context target hook = do
             { function = Javascript.Variable {name},
               arguments = [evidence]
             }
-  expression <- case hook of
+  case hook of
     DefaultNum {evidence, num} -> defaultx evidence $ case num of
       Plus -> defaultPlus
       Minus -> defaultMinus
@@ -138,5 +136,3 @@ generateInto context target hook = do
       Return -> defaultReturn
     DefaultMonadFail {evidence, monadFail} -> defaultx evidence $ case monadFail of
       Fail -> defaultFail
-
-  pure [finish target expression]

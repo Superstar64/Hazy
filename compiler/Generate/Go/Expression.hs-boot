@@ -8,7 +8,7 @@ import Generate.Target (Target)
 import qualified Javascript.Tree.Expression as Javascript (Expression)
 import qualified Javascript.Tree.Statement as Javascript (Statement)
 
-generate ::
+generatePure ::
   Context s scope ->
   Expression scope ->
   ST s ([Javascript.Statement 'True], Javascript.Expression)

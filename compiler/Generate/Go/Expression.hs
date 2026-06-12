@@ -130,7 +130,7 @@ generateConstructor context Constructor.Index {constructorIndex} arguments Const
   let process EntryInfo {strict} argument =
         if Info.strict strict
           then do
-            (extra, value) <- generate context argument
+            (extra, value) <- generatePure context argument
             pure (extra, value)
           else do
             value <- thunk context Done argument
@@ -190,43 +190,18 @@ thunk context binder expression = case expression of
     body <- generateInto context (Assign done) expression
     pure (delay body)
 
-generate ::
-  Context s scope ->
-  Expression scope ->
-  ST s ([Javascript.Statement 'True], Javascript.Expression)
-generate context expression = case expression of
-  Constructor {constructor, arguments, constructorInfo} -> do
-    generateConstructor context constructor arguments constructorInfo
-  Character {character} -> pure ([], generateCharacter character)
-  Integer {integer} -> pure ([], generateInteger integer)
-  Lambda {body} -> do
-    value <- generateLambda context body
-    pure ([], value)
-  Newtype {argument} -> generate context argument
-  _ -> do
-    name <- fresh context
-    let letx = Javascript.Let name
-    body <- generateInto context (Assign Javascript.Variable {name}) expression
-    pure (letx : body, Javascript.Variable {name})
-
-generateInto ::
-  Context s scope ->
-  Target return ->
-  Expression scope ->
-  ST s [Javascript.Statement 'True]
-generateInto context target = \case
+generatePure,
+  generateImpure ::
+    Context s scope ->
+    Expression scope ->
+    ST s ([Javascript.Statement 'True], Javascript.Expression)
+generateImpure context expression = case expression of
   Variable {variable, instanciation = Instanciation instanciation} -> do
     let Term.Binding {name, strict} = context !- variable
     name <- symbol context name
     let expression = Javascript.Variable {name}
     arguments <- traverse (Evidence.generate context) (toList instanciation)
-    pure [finish target (evaluate strict expression arguments)]
-  Constructor {constructor, arguments, constructorInfo} -> do
-    (extra, object) <- generateConstructor context constructor arguments constructorInfo
-    pure $ extra ++ [finish target object]
-  Character {character} -> do
-    let number = Javascript.Number {number = ord character}
-    pure [finish target number]
+    pure ([], evaluate strict expression arguments)
   Method
     { method = Method.Index {methodIndex},
       evidence,
@@ -243,55 +218,66 @@ generateInto context target = \case
           statement = Javascript.Const name value
           expression = Javascript.Variable {name}
       arguments <- traverse (Evidence.generate context) (toList instanciation)
-      pure [statement, finish target (evaluate False expression arguments)]
+      pure ([statement], evaluate False expression arguments)
   Selector
     { selector = Selector.Index {selectorIndex},
       argument,
       selectorInfo = EntryInfo {strict}
     } -> do
-      (statements, object) <- generate context argument
+      (statements, object) <- generateImpure context argument
       let select =
             Javascript.Member
               { object,
                 field = Mangle.fields !! (selectorIndex + 1)
               }
-      pure $ statements ++ [finish target (evaluate (Info.strict strict) select [])]
-  Let {declarations, letBody} -> do
-    (context, declarations) <- Declarations.generate context declarations
-    result <- generateInto context target letBody
-    pure $ declarations ++ result
-  Lambda {body} -> do
-    name <- fresh context
-    context <- pure $ singleBinding name context
-    statements <- generateInto context Return body
-    pure
-      [ finish
-          target
-          Javascript.Arrow
-            { parameters = [name],
-              body = statements
-            }
-      ]
+      pure (statements, evaluate (Info.strict strict) select [])
   Call {function, argument} -> do
-    (statements, function) <- generate context function
+    (statements, function) <- generateImpure context function
     argument <- thunk context Done argument
     let call =
           Javascript.Call
             { function,
               arguments = [argument]
             }
-    pure $ statements ++ [finish target call]
+    pure (statements, call)
+  Let {declarations, letBody} -> do
+    (context, declarations) <- Declarations.generate context declarations
+    (extra, result) <- generateImpure context letBody
+    pure (declarations ++ extra, result)
+  Hook {hook} -> do
+    value <- Hook.generate context hook
+    pure ([], value)
+  _ -> generatePure context expression
+generatePure context expression = case expression of
+  Constructor {constructor, arguments, constructorInfo} -> do
+    generateConstructor context constructor arguments constructorInfo
+  Character {character} -> pure ([], generateCharacter character)
+  Integer {integer} -> pure ([], generateInteger integer)
+  Lambda {body} -> do
+    value <- generateLambda context body
+    pure ([], value)
+  Newtype {argument} -> generatePure context argument
+  _ -> do
+    name <- fresh context
+    let letx = Javascript.Let name
+    body <- generateInto context (Assign Javascript.Variable {name}) expression
+    pure (letx : body, Javascript.Variable {name})
+
+generateInto ::
+  Context s scope ->
+  Target return ->
+  Expression scope ->
+  ST s [Javascript.Statement 'True]
+generateInto context target = \case
+  Let {declarations, letBody} -> do
+    (context, declarations) <- Declarations.generate context declarations
+    result <- generateInto context target letBody
+    pure $ declarations ++ result
   Join {statements} -> Statements.generate context target statements
-  Integer {integer} ->
-    pure
-      [ finish
-          target
-          Javascript.BigInt
-            { bigInt = integer
-            }
-      ]
-  Hook {hook} -> Hook.generateInto context target hook
   Newtype {argument} -> generateInto context target argument
+  expression -> do
+    (extra, value) <- generateImpure context expression
+    pure $ extra ++ [finish target value]
 
 declaration :: Context s scope -> SchemeOver Expression scope -> ST s Javascript.Expression
 declaration context scheme@SchemeOver {result = expression} = do
@@ -301,9 +287,9 @@ declaration context scheme@SchemeOver {result = expression} = do
   if
     | 0 <- constraintCount -> thunk context Group expression
     | otherwise -> do
-        (statements, result) <- generate context expression
-        pure $
+        statements <- generateInto context Return expression
+        pure
           Javascript.Arrow
             { parameters = toList fresh,
-              body = statements ++ [Javascript.Return result]
+              body = statements
             }

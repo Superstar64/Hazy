@@ -61,7 +61,7 @@ attempt context target label = \case
       check,
       thenx
     } -> do
-      (prelude, check) <- Expression.generate context check
+      (prelude, check) <- Expression.generatePure context check
       names <- Strict.Vector.replicateM (length entries) (Context.fresh context)
       context <- pure $ Context.patternBindings names constructorInfo context
       thenx <- attempt context target label thenx
