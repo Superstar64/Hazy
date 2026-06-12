@@ -17,7 +17,9 @@ instance Monoid Text where
   mempty = pack ""
 
 instance Read Text where
-  readsPrec = placeholder
+  readsPrec d string = do
+    (literal, string) <- readsPrec d string
+    [(pack literal, string)]
 
 instance Show Text where
   showsPrec d = showsPrec d . unpack

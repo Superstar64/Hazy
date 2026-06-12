@@ -35,16 +35,44 @@ class Read a where
              ]
 
 instance Read Bool where
-  readsPrec = placeholder
+  readsPrec _ string = do
+    (token, string) <- lex string
+    case token of
+      "False" -> [(False, string)]
+      "True" -> [(True, string)]
+      _ -> []
 
 instance (Read a) => Read (Maybe a) where
-  readsPrec = placeholder
+  readsPrec d string = readParen False nothing string ++ readParen (d > 10) just string
+    where
+      nothing string = do
+        ("Nothing", string) <- lex string
+        [(Nothing, string)]
+      just string = do
+        ("Just", string) <- lex string
+        (value, string) <- readsPrec 11 string
+        [(Just value, string)]
 
 instance (Read a, Read b) => Read (Either a b) where
-  readsPrec = placeholder
+  readsPrec d = readParen (d > 10) $ \string -> do
+    (either, string) <- lex string
+    case either of
+      "Left" -> do
+        (value, string) <- readsPrec 11 string
+        [(Left value, string)]
+      "Right" -> do
+        (value, string) <- readsPrec 11 string
+        [(Right value, string)]
+      _ -> []
 
 instance Read Ordering where
-  readsPrec = placeholder
+  readsPrec _ string = do
+    (token, string) <- lex string
+    case token of
+      "LT" -> [(LT, string)]
+      "EQ" -> [(EQ, string)]
+      "GT" -> [(GT, string)]
+      _ -> []
 
 class Show a where
   showsPrec :: Int -> a -> ShowS
@@ -65,16 +93,25 @@ class Show a where
           . showl xs
 
 instance Show Bool where
-  showsPrec = placeholder
+  showsPrec _ = \case
+    False -> showString "False"
+    True -> showString "True"
 
 instance (Show a) => Show (Maybe a) where
-  showsPrec = placeholder
+  showsPrec d = \case
+    Nothing -> showString "Nothing"
+    Just x -> showParen (d > 10) $ showString "Just " . showsPrec 11 x
 
 instance (Show a, Show b) => Show (Either a b) where
-  showsPrec = placeholder
+  showsPrec d = \case
+    Left a -> showParen (d > 10) $ showString "Left " . showsPrec 11 a
+    Right b -> showParen (d > 10) $ showString "Right " . showsPrec 11 b
 
 instance Show Ordering where
-  showsPrec = placeholder
+  showsPrec _ = \case
+    LT -> showString "LT"
+    EQ -> showString "EQ"
+    GT -> showString "GT"
 
 reads :: (Read a) => ReadS a
 reads = readsPrec 0

@@ -51,10 +51,73 @@ instance Bounded GeneralCategory where
   maxBound = NotAssigned
 
 instance Read GeneralCategory where
-  readsPrec = placeholder
+  readsPrec _ = readParen False $ \string -> do
+    (token, string) <- lex string
+    case token of
+      "UppercaseLetter" -> [(UppercaseLetter, string)]
+      "LowercaseLetter" -> [(LowercaseLetter, string)]
+      "TitlecaseLetter" -> [(TitlecaseLetter, string)]
+      "ModifierLetter" -> [(ModifierLetter, string)]
+      "OtherLetter" -> [(OtherLetter, string)]
+      "NonSpacingMark" -> [(NonSpacingMark, string)]
+      "SpacingCombiningMark" -> [(SpacingCombiningMark, string)]
+      "EnclosingMark" -> [(EnclosingMark, string)]
+      "DecimalNumber" -> [(DecimalNumber, string)]
+      "LetterNumber" -> [(LetterNumber, string)]
+      "OtherNumber" -> [(OtherNumber, string)]
+      "ConnectorPunctuation" -> [(ConnectorPunctuation, string)]
+      "DashPunctuation" -> [(DashPunctuation, string)]
+      "OpenPunctuation" -> [(OpenPunctuation, string)]
+      "ClosePunctuation" -> [(ClosePunctuation, string)]
+      "InitialQuote" -> [(InitialQuote, string)]
+      "FinalQuote" -> [(FinalQuote, string)]
+      "OtherPunctuation" -> [(OtherPunctuation, string)]
+      "MathSymbol" -> [(MathSymbol, string)]
+      "CurrencySymbol" -> [(CurrencySymbol, string)]
+      "ModifierSymbol" -> [(ModifierSymbol, string)]
+      "OtherSymbol" -> [(OtherSymbol, string)]
+      "Space" -> [(Space, string)]
+      "LineSeparator" -> [(LineSeparator, string)]
+      "ParagraphSeparator" -> [(ParagraphSeparator, string)]
+      "Control" -> [(Control, string)]
+      "Format" -> [(Format, string)]
+      "Surrogate" -> [(Surrogate, string)]
+      "PrivateUse" -> [(PrivateUse, string)]
+      "NotAssigned" -> [(NotAssigned, string)]
+      _ -> []
 
 instance Show GeneralCategory where
-  showsPrec = placeholder
+  showsPrec _ = \case
+    UppercaseLetter -> showString "UppercaseLetter"
+    LowercaseLetter -> showString "LowercaseLetter"
+    TitlecaseLetter -> showString "TitlecaseLetter"
+    ModifierLetter -> showString "ModifierLetter"
+    OtherLetter -> showString "OtherLetter"
+    NonSpacingMark -> showString "NonSpacingMark"
+    SpacingCombiningMark -> showString "SpacingCombiningMark"
+    EnclosingMark -> showString "EnclosingMark"
+    DecimalNumber -> showString "DecimalNumber"
+    LetterNumber -> showString "LetterNumber"
+    OtherNumber -> showString "OtherNumber"
+    ConnectorPunctuation -> showString "ConnectorPunctuation"
+    DashPunctuation -> showString "DashPunctuation"
+    OpenPunctuation -> showString "OpenPunctuation"
+    ClosePunctuation -> showString "ClosePunctuation"
+    InitialQuote -> showString "InitialQuote"
+    FinalQuote -> showString "FinalQuote"
+    OtherPunctuation -> showString "OtherPunctuation"
+    MathSymbol -> showString "MathSymbol"
+    CurrencySymbol -> showString "CurrencySymbol"
+    ModifierSymbol -> showString "ModifierSymbol"
+    OtherSymbol -> showString "OtherSymbol"
+    Space -> showString "Space"
+    LineSeparator -> showString "LineSeparator"
+    ParagraphSeparator -> showString "ParagraphSeparator"
+    Control -> showString "Control"
+    Format -> showString "Format"
+    Surrogate -> showString "Surrogate"
+    PrivateUse -> showString "PrivateUse"
+    NotAssigned -> showString "NotAssigned"
 
 isSpace :: Char -> Bool
 isSpace = \case
