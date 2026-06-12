@@ -15,6 +15,7 @@ fi
 PACKAGE=$DIST/lib/hazy/packages
 
 mkdir -p $DIST/bin
+rm -rf $PACKAGE
 mkdir -p $PACKAGE
 
 # Compile the compiler
