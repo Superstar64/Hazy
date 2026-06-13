@@ -694,7 +694,7 @@ number = try nondecimal <|> read <$> number <**> postfix
           Just False -> 1 / 10 ^ number
           _ -> 10 ^ number
         sign = optional (True <$ char '+' <|> False <$ char '-')
-    postfix = rational <|> raised <|> plain
+    postfix = try rational <|> try raised <|> plain
       where
         rational = parse <$> char '.' <*> number <*> (exponent <|> pure 1)
           where
