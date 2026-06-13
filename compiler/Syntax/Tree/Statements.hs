@@ -48,19 +48,22 @@ parseDo' :: Parser (Statements' Position)
 parseDo' =
   asum
     [ statement
-        <$> try
-          ((bind <$> position <*> try (Pattern.parse <* token "<-") <*> Expression.parse) <* token ";")
+        <$> asum
+          [ bind <$> position <*> try (Pattern.parse <* token "<-") <*> Expression.parse <* token ";",
+            try $ letx <$> position <*> (token "let" *> Declarations.parse) <* token ";"
+          ]
         <*> parseDo',
-      statement' <$> position <*> try (Expression.parse <* token ";") <*> optional parseDo',
-      statement <$> try ((letx <$> position <*> (token "let" *> Declarations.parse)) <* token ";") <*> parseDo',
-      Statements' [] <$> position <*> Expression.parse
+      run <$> position <*> Expression.parse <*> optional (token ";" *> optional parseDo'),
+      token ";" *> parseDo'
     ]
   where
-    bind startPosition patternx expression = Bind {startPosition, patternx, expression}
-    letx startPosition declarations = Let {startPosition, declarations}
     statement statement1 (Statements' statements donePosition expression) =
       Statements' (statement1 : statements) donePosition expression
-    statement' startPosition expression = \case
+
+    bind startPosition patternx expression = Bind {startPosition, patternx, expression}
+    letx startPosition declarations = Let {startPosition, declarations}
+    run startPosition expression = \case
       Nothing -> Statements' [] startPosition expression
-      Just (Statements' statements donePosition expression') ->
+      Just Nothing -> Statements' [] startPosition expression
+      Just (Just (Statements' statements donePosition expression')) ->
         Statements' (Run {startPosition, expression} : statements) donePosition expression'
