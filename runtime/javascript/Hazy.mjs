@@ -137,14 +137,18 @@ export const errorText = {
   },
 };
 
-// todo perform replacement on invalid scalar values
 export const pack = {
   a: 0,
   b: (list) => {
     let buffer = "";
     let current = force(list);
     while (current.a) {
-      buffer += String.fromCodePoint(force(current.b));
+      const code = force(current.b);
+      if (!(code >= 0xd800 && code <= 0xdfff)) {
+        buffer += String.fromCodePoint(code);
+      } else {
+        buffer += "�";
+      }
       current = force(current.c);
     }
     return buffer;
