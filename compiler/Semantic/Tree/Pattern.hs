@@ -6,7 +6,6 @@ import qualified Core.Tree.Evidence as Simple
 import Data.Map (Map)
 import qualified Data.Map as Map
 import qualified Data.Strict.Vector1 as Strict (Vector1)
-import Data.Text (Text)
 import qualified Data.Vector.Strict as Strict (Vector)
 import Semantic.Check.Simple.ConstructorInfo (ConstructorInfo)
 import qualified Semantic.Index.Constructor as Constructor (Index (..))
@@ -16,6 +15,7 @@ import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import Semantic.Tree.PatternField (Field (..))
 import qualified Semantic.Tree.PatternField as Field (neverFails)
 import Syntax.Position (Position)
+import Syntax.StringLiteral (StringLiteral)
 import Syntax.Variable (Variable)
 import Prelude hiding (Bool (False, True), Either (Left, Right), head, tail)
 import qualified Prelude
@@ -68,7 +68,7 @@ data Pattern stage scope
       { startPosition :: !Position,
         names :: !(Map Variable Position),
         irrefutable :: !Prelude.Bool,
-        string :: !Text
+        string :: !StringLiteral
       }
   | List
       { startPosition :: !Position,

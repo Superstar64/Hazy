@@ -14,7 +14,6 @@ import {-# SOURCE #-} qualified Core.Tree.Expression as Expression
 import qualified Core.Tree.Type as Type
 import Data.Foldable (toList)
 import Data.Strict.Vector1 as Strict.Vector1 (fromList', uncons)
-import Data.Text (unpack)
 import Data.Vector.Strict ((//))
 import qualified Data.Vector.Strict as Strict.Vector
 import qualified Semantic.Check.Simple.ConstructorInfo as Semantic (ConstructorInfo (..))
@@ -29,6 +28,7 @@ import Semantic.Shift (Shift, shift, shiftDefault)
 import qualified Semantic.Shift as Shift
 import Semantic.Stage (Check)
 import qualified Semantic.Tree.Statements as Semantic (Guard, Statements (..))
+import qualified Syntax.StringLiteral as StringLiteral
 
 data Statements scope
   = Done {done :: !(Expression scope)}
@@ -175,7 +175,7 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
     | let wrap character
             | match <- Pattern.Character {character} =
                 Pattern.Match {match, irrefutable},
-      characters <- map wrap $ unpack string,
+      characters <- map wrap $ StringLiteral.unpack string,
       match <- case characters of
         (head : tail) -> Pattern.List {items = Strict.Vector1.fromList' head tail}
         [] ->

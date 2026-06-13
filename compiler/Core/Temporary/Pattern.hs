@@ -3,7 +3,6 @@ module Core.Temporary.Pattern where
 import qualified Core.Shift as Shift2
 import Core.Tree.Evidence (Evidence)
 import qualified Data.Strict.Vector1 as Strict (Vector1)
-import Data.Text (Text)
 import qualified Data.Vector.Strict as Strict (Vector)
 import Semantic.Check.Simple.ConstructorInfo (ConstructorInfo)
 import qualified Semantic.Index.Constructor as Constructor
@@ -13,6 +12,7 @@ import Semantic.Stage (Check)
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import qualified Semantic.Tree.Pattern as Semantic
 import qualified Semantic.Tree.PatternField as Semantic.Field
+import Syntax.StringLiteral (StringLiteral)
 
 data Pattern scope
   = Wildcard
@@ -45,7 +45,7 @@ data Bindings scope
       }
   | List {items :: !(Strict.Vector1 (Pattern scope))}
   | Character {character :: !Char}
-  | String {string :: !Text}
+  | String {string :: !StringLiteral}
   deriving (Show)
 
 instance Shift Pattern where

@@ -37,7 +37,6 @@ import qualified Data.List.Reverse as Reverse
 import Data.Ratio (denominator, numerator)
 import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import qualified Data.Strict.Vector2 as Strict.Vector2
-import Data.Text (unpack)
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
 import qualified Semantic.Check.Simple.ConstructorInfo as Semantic (ConstructorInfo (ConstructorInfo))
@@ -64,6 +63,7 @@ import qualified Semantic.Tree.ExpressionField as Semantic.Field
 import qualified Semantic.Tree.RightHandSide as Semantic (RightHandSide)
 import qualified Semantic.Tree.Statements as Semantic (Evidence, Statements, Syntax)
 import qualified Semantic.Tree.Statements as Semantic.Statements
+import qualified Syntax.StringLiteral as StringLiteral
 import Prelude hiding (fail)
 
 data Expression scope
@@ -674,7 +674,7 @@ simplifyWith expression [] = case expression of
   Semantic.Character {character} ->
     Character {character}
   Semantic.String {string} ->
-    foldr (cons . Character) nil (unpack string)
+    foldr (cons . Character) nil (StringLiteral.unpack string)
   Semantic.Do {dox} -> simplify dox
   Semantic.Annotation {expression = Known expression, annotation, instanciation = Solved instanciation} ->
     Let

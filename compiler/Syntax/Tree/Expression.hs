@@ -7,11 +7,11 @@ module Syntax.Tree.Expression where
 import Data.Foldable (toList)
 import qualified Data.Strict.Vector1 as Strict (Vector1, fromNonEmpty)
 import qualified Data.Strict.Vector2 as Strict (Vector2, fromList'')
-import Data.Text (Text)
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
 import Syntax.Parser
   ( Parser,
+    StringLiteral,
     asum,
     betweenBraces,
     betweenBrackets,
@@ -83,7 +83,7 @@ data Expression position
     -- > "a"
     String
       { startPosition :: !position,
-        string :: !Text
+        string :: !StringLiteral
       }
   | -- |
     -- > (,,)

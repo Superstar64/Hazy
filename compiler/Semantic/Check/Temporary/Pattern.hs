@@ -8,7 +8,6 @@ import Data.Map (Map)
 import Data.Strict.Vector1 (toVector)
 import qualified Data.Strict.Vector1 as Strict (Vector1)
 import qualified Data.Strict.Vector1 as Strict.Vector1
-import Data.Text (Text)
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
 import Error
@@ -41,6 +40,7 @@ import qualified Semantic.Tree.Pattern as Semantic
 import qualified Semantic.Tree.Pattern as Solved
 import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
+import Syntax.StringLiteral (StringLiteral)
 import Syntax.Variable (Variable)
 import Prelude hiding (Bool (False, True))
 import qualified Prelude
@@ -100,7 +100,7 @@ data Pattern s scope
         names :: !(Map Variable Position),
         startPosition :: !Position,
         irrefutable :: !Prelude.Bool,
-        string :: !Text
+        string :: !StringLiteral
       }
   | List
       { typex :: !(Unify.Type s scope),

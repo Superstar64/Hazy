@@ -10,7 +10,7 @@ module Syntax.Parser
     decimal,
     Char,
     char,
-    Text,
+    StringLiteral,
     text,
     peek,
     position,
@@ -78,6 +78,7 @@ import Syntax.ParserCombinator
     (<|>),
   )
 import qualified Syntax.ParserCombinator as ParserCombinator (Parser, parse)
+import Syntax.StringLiteral (StringLiteral)
 import Prelude hiding (lex)
 
 type Parser = ParserCombinator.Parser Lexer
@@ -107,7 +108,7 @@ char = satifyBind Strings.character $ \case
   Lex _ (Lexer.Char value) lexer _ -> Parse value lexer
   _ -> Fail
 
-text :: Parser Text
+text :: Parser StringLiteral
 text = satifyBind Strings.string $ \case
   Lex _ (Lexer.String value) lexer _ -> Parse value lexer
   _ -> Fail

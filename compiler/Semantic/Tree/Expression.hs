@@ -8,7 +8,6 @@ import qualified Core.Tree.SchemeOver as SchemeOver
 import qualified Core.Tree.SchemeOver as Simple (SchemeOver)
 import qualified Data.Strict.Vector1 as Strict (Vector1)
 import qualified Data.Strict.Vector2 as Strict (Vector2)
-import Data.Text (Text)
 import qualified Data.Vector.Strict as Strict (Vector)
 import Semantic.Check.Simple.ConstructorInfo (ConstructorInfo)
 import Semantic.Connect (Connect (..))
@@ -36,6 +35,7 @@ import Semantic.Tree.Select (Select (..))
 import Semantic.Tree.Statements (Statements)
 import qualified Semantic.Tree.Statements as Statements (Comprehension, Do)
 import Syntax.Position (Position)
+import Syntax.StringLiteral (StringLiteral)
 import Prelude hiding (Bool (False, True), Either (Left, Right))
 
 data Expression layout stage scope
@@ -58,7 +58,7 @@ data Expression layout stage scope
       }
   | String
       { startPosition :: !Position,
-        string :: !Text
+        string :: !StringLiteral
       }
   | Tuple
       { startPosition :: !Position,

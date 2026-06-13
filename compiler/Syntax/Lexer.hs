@@ -33,7 +33,7 @@ where
 
 import qualified Control.Applicative as Applicative (some)
 import Control.Arrow (first)
-import Data.Char (chr, isAlphaNum, isLower, isPrint, isSpace, isUpper)
+import Data.Char (chr, isAlphaNum, isLower, isPrint, isSpace, isUpper, showLitChar)
 import qualified Data.Char as Char (isSymbol)
 import Data.List (sortOn)
 import Data.Map (Map)
@@ -83,6 +83,8 @@ import Syntax.ParserCombinator
     (<**>),
     (<|>),
   )
+import Syntax.StringLiteral (StringLiteral)
+import qualified Syntax.StringLiteral as StringLiteral
 import Prelude hiding (lex)
 
 infixl 5 :., :.., :-., :=., :-:, :=:
@@ -95,7 +97,7 @@ data Lexeme
   | Integer !Integer
   | Float !Rational
   | Char !Char
-  | String !Text
+  | String !StringLiteral
   | OpenParen
   | CloseParen
   | Comma
@@ -228,12 +230,24 @@ instance Format Lexeme where
     qualifiers :=: name -> format qualifiers <> format name
     Integer value -> fromString (show value)
     Float value -> fromString (show value)
-    Char value -> mconcat [Builder.singleton '\'', Builder.singleton value, Builder.singleton '\'']
-    String value -> mconcat [Builder.singleton '"', fromText value, Builder.singleton '"']
+    Char value ->
+      mconcat
+        [ Builder.singleton '\'',
+          character value,
+          Builder.singleton '\''
+        ]
+    String value ->
+      mconcat
+        [ Builder.singleton '"',
+          foldMap character $ StringLiteral.unpack value,
+          Builder.singleton '"'
+        ]
     Unordered -> fromString "{-# UNORDEREDRECORDS"
     Builtin -> fromString "{-# BUILTIN"
     ClosePragma -> fromString "#-}"
     value -> fromText (formatText value)
+    where
+      character char = fromString $ showLitChar char ""
   formatText = \case
     OpenParen -> pack "("
     CloseParen -> pack ")"
@@ -713,7 +727,7 @@ space = satify Strings.whitespace isSpace
 stringText :: Parser Stream Lexeme
 stringText = char '"' *> string <* char '"'
   where
-    string = String . pack . catMaybes <$> many (escape Just gap <|> Just <$> textual '"')
+    string = String . StringLiteral.pack . catMaybes <$> many (escape Just gap <|> Just <$> textual '"')
     gap = ampersand <|> spaces
     ampersand = Nothing <$ char '&'
     spaces = Nothing <$ some space <* char '\\'

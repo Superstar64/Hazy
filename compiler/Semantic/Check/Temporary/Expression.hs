@@ -6,7 +6,6 @@ import {-# SOURCE #-} Core.Tree.TypeDeclaration (assumeData)
 import qualified Data.Strict.Vector1 as Strict (Vector1)
 import qualified Data.Strict.Vector2 as Strict (Vector2)
 import qualified Data.Strict.Vector2 as Strict.Vector2
-import Data.Text (Text)
 import Data.Traversable (for)
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
@@ -59,6 +58,7 @@ import qualified Semantic.Tree.Expression as Semantic (Expression (..))
 import qualified Semantic.Tree.Expression as Solved
 import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
+import Syntax.StringLiteral (StringLiteral)
 import Prelude hiding (Bool (False, True))
 
 data Expression s scope
@@ -81,7 +81,7 @@ data Expression s scope
       }
   | String
       { startPosition :: !Position,
-        string :: !Text
+        string :: !StringLiteral
       }
   | Tuple
       { startPosition :: !Position,

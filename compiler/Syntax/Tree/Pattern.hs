@@ -6,12 +6,12 @@ module Syntax.Tree.Pattern where
 
 import qualified Control.Applicative as Applicative
 import qualified Data.Strict.Vector2 as Strict (Vector2, fromList'')
-import Data.Text (Text)
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
 import Syntax.FreeVariables (TermBindingVariables (..))
 import Syntax.Parser
   ( Parser,
+    StringLiteral,
     asum,
     betweenBrackets,
     betweenParens,
@@ -100,7 +100,7 @@ data Pattern position
     -- > "a"
     String
       { startPosition :: !position,
-        string :: !Text
+        string :: !StringLiteral
       }
   | -- |
     -- > _

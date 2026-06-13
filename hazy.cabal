@@ -440,6 +440,7 @@ executable hazy
     Syntax.ParserCombinator
     Syntax.Position
     Syntax.Printer
+    Syntax.StringLiteral
     Syntax.Tree.Alias
     Syntax.Tree.Alternative
     Syntax.Tree.Associativity
