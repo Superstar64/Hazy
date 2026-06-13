@@ -696,8 +696,8 @@ escape lift gap = char '\\' *> asum [gap, literals, decimal, octal, hexadecimal]
   where
     literals = asum [lift token <$ string escape | (escape, token) <- escapeRelation]
     decimal = lift . chr . read <$> Applicative.some digit
-    octal = lift . chr . read . ("0o" ++) <$> Applicative.some octDigit
-    hexadecimal = lift . chr . read . ("0x" ++) <$> Applicative.some hexDigit
+    octal = lift . chr . read . ("0o" ++) <$> (char 'o' *> Applicative.some octDigit)
+    hexadecimal = lift . chr . read . ("0x" ++) <$> (char 'x' *> Applicative.some hexDigit)
 
 textual :: Char -> Parser Stream Char
 textual end = satify Strings.stringCharacter (\letter -> isPrint letter && letter /= end)
