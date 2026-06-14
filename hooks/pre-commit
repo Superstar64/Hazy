@@ -91,7 +91,7 @@ if [ -n "$HASKELL_FILES$JAVASCRIPT_FILES" ]; then
     tools/build.sh .pre-commit
 
     echo "=== Checking Self Resolution ==="
-    .pre-commit/bin/hazy --resolve compiler utility
+    .pre-commit/bin/hazy -XStableImports --resolve compiler utility
 
     echo "=== Running tests ==="
     tools/test.sh .pre-commit/bin/hazy

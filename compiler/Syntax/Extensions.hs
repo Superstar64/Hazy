@@ -25,7 +25,7 @@ hazy :: Extensions
 hazy =
   Extensions
     { implicitPrelude = True,
-      stableImports = True,
+      stableImports = False,
       unorderedRecords = False,
       constructorFields = True,
       permissiveUpdates = True
