@@ -42,6 +42,8 @@ import qualified Data.Vector.Strict as Strict.Vector
 import qualified Semantic.Check.Simple.ConstructorInfo as Semantic (ConstructorInfo (ConstructorInfo))
 import qualified Semantic.Check.Simple.ConstructorInfo as Semantic.ConstructorInfo
 import Semantic.Check.Simple.SelectorInfo (Select (..), SelectorInfo (..))
+import Semantic.Check.Simple.UpdateInfo (Update (..))
+import qualified Semantic.Check.Simple.UpdateInfo as Semantic (UpdateInfo (..))
 import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Evidence as Index.Evidence
 import qualified Semantic.Index.Method as Method
@@ -61,6 +63,7 @@ import qualified Semantic.Tree.Expression as Semantic (Expression (..))
 import qualified Semantic.Tree.ExpressionField as Semantic (Field (Field))
 import qualified Semantic.Tree.ExpressionField as Semantic.Field
 import qualified Semantic.Tree.RightHandSide as Semantic (RightHandSide)
+import qualified Semantic.Tree.Select as Semantic (Select (..))
 import qualified Semantic.Tree.Statements as Semantic (Evidence, Statements, Syntax)
 import qualified Semantic.Tree.Statements as Semantic.Statements
 import qualified Syntax.StringLiteral as StringLiteral
@@ -590,6 +593,61 @@ simplifyWith expression [] = case expression of
              ] of
           [] -> Join {statements = Statements.Bottom}
           fields -> simplify $ last fields
+  Semantic.Update
+    { base,
+      updateType,
+      updates,
+      updateInfo = Solved Semantic.UpdateInfo {updateInfo},
+      permissive
+    } ->
+      Call
+        { function =
+            Lambda
+              { body =
+                  Join
+                    { statements = foldr1 (<>) $ Strict.Vector.imap update updateInfo
+                    }
+              },
+          argument = simplify base
+        }
+      where
+        update constructorIndex Update {constructorInfo, selectorIndexes} =
+          Statements.bind
+            Pattern.Match
+              { match =
+                  Pattern.Constructor
+                    { constructor,
+                      patterns = Strict.Vector.replicate length Pattern.Wildcard,
+                      constructorInfo = shift constructorInfo
+                    },
+                irrefutable = False
+              }
+            lambdaVariable
+            Statements.Done
+              { done =
+                  if
+                    | not permissive, any illegal updates -> Join {statements = Statements.Bottom}
+                    | otherwise ->
+                        simplifyConstructorExact
+                          (shift constructor)
+                          (shift $ shift constructorInfo)
+                          (Strict.Vector.imap generate selectorIndexes)
+              }
+          where
+            illegal Semantic.Select {pick} = Strict.Just pick `notElem` selectorIndexes
+            generate index selectorIndex =
+              case [ shift $ shift $ simplify update
+                   | Semantic.Select {pick, update} <- toList updates,
+                     selectorIndex == Strict.Just pick
+                   ] of
+                [] -> monoVariable $ Term.Pattern (Term.Select index Term.At)
+                expressions -> last expressions
+            length = Semantic.ConstructorInfo.entryCount constructorInfo
+            constructor =
+              Constructor.Index
+                { typeIndex = shift updateType,
+                  constructorIndex
+                }
   Semantic.Integer {integer, evidence = Solved evidence} -> integer_ integer evidence
   Semantic.Float {float, evidence = Solved evidence} -> float_ float evidence
   Semantic.Tuple {elements} ->

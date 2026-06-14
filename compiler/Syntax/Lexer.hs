@@ -183,6 +183,7 @@ data Extension
   | UnorderedRecords
   | ConstructorFields
   | LevityPolymorphicFields
+  | PermissiveUpdates
   deriving (Show, Bounded, Enum)
 
 data Toggle
@@ -200,12 +201,14 @@ extend extension = \case
     StableImports -> extension {stableImports = True}
     UnorderedRecords -> extension {unorderedRecords = True}
     ConstructorFields -> extension {constructorFields = True}
+    PermissiveUpdates -> extension {permissiveUpdates = True}
     _ -> extension
   NoExtension position removal -> case removal of
     ImplicitPrelude -> extension {implicitPrelude = False}
     StableImports -> extension {stableImports = False}
     UnorderedRecords -> extension {unorderedRecords = False}
     ConstructorFields -> extension {constructorFields = False}
+    PermissiveUpdates -> extension {permissiveUpdates = False}
     extension -> cannotTurnoff extension
     where
       cannotTurnoff = cannotTurnoffExtension position . formatExtension

@@ -35,6 +35,7 @@ import {-# SOURCE #-} qualified Semantic.Resolve.Temporary.ExpressionInfix as In
 import Semantic.Stage (Equal (..), Resolve)
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import Semantic.Tree.Expression (Explicit (..), Expression (..))
+import Syntax.Extensions (permissiveUpdates)
 import Syntax.Position (Position)
 import Syntax.Tree.Associativity (Associativity (..))
 import qualified Syntax.Tree.Expression as Syntax (Expression (..))
@@ -166,8 +167,10 @@ resolveWith context expression [] = case expression of
       Update
         { base = resolve context base,
           updatePosition,
+          updateType = index,
           updates = fmap (Select.resolve index context) updates,
-          unsupported = Refl
+          updateInfo = Inferred,
+          permissive = permissiveUpdates $ extensions context
         }
     where
       first = case head (toList updates) of

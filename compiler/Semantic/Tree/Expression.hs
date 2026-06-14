@@ -10,10 +10,12 @@ import qualified Data.Strict.Vector1 as Strict (Vector1)
 import qualified Data.Strict.Vector2 as Strict (Vector2)
 import qualified Data.Vector.Strict as Strict (Vector)
 import Semantic.Check.Simple.ConstructorInfo (ConstructorInfo)
+import Semantic.Check.Simple.UpdateInfo (UpdateInfo)
 import Semantic.Connect (Connect (..))
 import Semantic.FreeVariables (FreeTermVariables (..))
 import qualified Semantic.FreeVariables as FreeVariables
 import qualified Semantic.Index.Constructor as Constructor (Index (..))
+import qualified Semantic.Index.Type2 as Type2
 import Semantic.Layout (Normal)
 import qualified Semantic.Locality as Locality
 import Semantic.Scope as Null (Environment (..))
@@ -37,6 +39,7 @@ import qualified Semantic.Tree.Statements as Statements (Comprehension, Do)
 import Syntax.Position (Position)
 import Syntax.StringLiteral (StringLiteral)
 import Prelude hiding (Bool (False, True), Either (Left, Right))
+import qualified Prelude
 
 data Expression layout stage scope
   = CallHead
@@ -81,8 +84,10 @@ data Expression layout stage scope
   | Update
       { base :: !(Expression layout stage scope),
         updatePosition :: !Position,
+        updateType :: !(Type2.Index scope),
         updates :: !(Strict.Vector1 (Select layout stage scope)),
-        unsupported :: !(Unsupported stage)
+        updateInfo :: !(Inferred UpdateInfo stage scope),
+        permissive :: !Prelude.Bool
       }
   | Call
       { function :: !(Expression layout stage scope),
@@ -189,12 +194,14 @@ instance Shift.Functor (Expression layout stage) where
           constructorInfo = Shift.map category constructorInfo,
           fields = fmap (Shift.map category) fields
         }
-    Update {base, updatePosition, updates, unsupported} ->
+    Update {base, updatePosition, updateType, updates, updateInfo, permissive} ->
       Update
         { base = Shift.map category base,
           updatePosition,
+          updateType = Shift.map category updateType,
           updates = fmap (Shift.map category) updates,
-          unsupported
+          updateInfo = Shift.map category updateInfo,
+          permissive
         }
     Call {function, argument} ->
       Call
@@ -359,12 +366,14 @@ instance Connect Expression where
           constructorInfo = Inferred,
           fields = connect <$> fields
         }
-    Update {base, updatePosition, updates, unsupported} ->
+    Update {base, updatePosition, updateType, updates, permissive} ->
       Update
         { base = connect base,
           updatePosition,
+          updateType,
           updates = connect <$> updates,
-          unsupported
+          updateInfo = Inferred,
+          permissive
         }
     Call {function, argument} ->
       Call
@@ -463,6 +472,15 @@ instance Connect Expression where
           constructor,
           constructorInfo,
           fields = seperate <$> fields
+        }
+    Update {base, updatePosition, updateType, updates, updateInfo, permissive} ->
+      Update
+        { base = seperate base,
+          updatePosition,
+          updateType,
+          updates = seperate <$> updates,
+          updateInfo,
+          permissive
         }
     Call {function, argument} ->
       Call

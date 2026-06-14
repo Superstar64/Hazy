@@ -6,6 +6,7 @@ module Data.Strict.Vector1
     toVector,
     singleton,
     uncons,
+    imap,
   )
 where
 
@@ -51,3 +52,6 @@ singleton = Vector1 . Data.Strict.Vector.singleton
 
 uncons :: Vector1 a -> (a, Data.Strict.Vector a)
 uncons (Vector1 vector) = fromJust $ Data.Strict.Vector.uncons vector
+
+imap :: (Int -> a -> b) -> Vector1 a -> Vector1 b
+imap f (Vector1 vector) = Vector1 $ Data.Strict.Vector.imap f vector

@@ -88,7 +88,6 @@ module Error
     orphanInstance,
     improperBindingGroup,
     unsupportedFeatureRunST,
-    unsupportedFeatureRecordUpdate,
     unsupportedFeatureConstraintedTypeDefaulting,
     unsupportedFeatureStrictFunctions,
     unsupportedFeaturePolymorphicComponents,
@@ -558,8 +557,6 @@ polymorphicComponents = fromString "PolymorphicComponents"
 
 constraintedTypeDefaulting = fromString "constrained type defaulting"
 
-recordUpdate = fromString "record update"
-
 runST = fromString "runST"
 
 unsupportedFeature :: Builder -> Position -> a
@@ -568,10 +565,6 @@ unsupportedFeature feature position =
 
 unsupportedFeatureRunST :: Position -> a
 unsupportedFeatureRunST = unsupportedFeature runST
-
-unsupportedFeatureRecordUpdate :: Position -> a
-unsupportedFeatureRecordUpdate =
-  unsupportedFeature recordUpdate
 
 unsupportedFeatureConstraintedTypeDefaulting :: Position -> a
 unsupportedFeatureConstraintedTypeDefaulting =

@@ -7,7 +7,10 @@ import qualified Semantic.Shift as Shift
 import {-# SOURCE #-} Semantic.Tree.Expression (Expression)
 
 data Select layout stage scope
-  = Select !Int !(Expression layout stage scope)
+  = Select
+  { pick :: !Int,
+    update :: !(Expression layout stage scope)
+  }
   deriving (Show)
 
 instance Shift (Select layout stage) where

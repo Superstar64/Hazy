@@ -9,10 +9,7 @@ import qualified Data.Strict.Vector2 as Strict.Vector2
 import Data.Traversable (for)
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
-import Error
-  ( unsupportedFeatureRecordUpdate,
-    unsupportedFeatureRunST,
-  )
+import Error (unsupportedFeatureRunST)
 import qualified Semantic.Check.ConstructorInstance as ConstructorInstance
 import Semantic.Check.Context (Context (..))
 import Semantic.Check.DataInstance (DataInstance (DataInstance))
@@ -41,6 +38,10 @@ import Semantic.Check.Temporary.Pattern (Pattern)
 import qualified Semantic.Check.Temporary.Pattern as Pattern
 import Semantic.Check.Temporary.RightHandSide (RightHandSide)
 import qualified Semantic.Check.Temporary.RightHandSide as RightHandSide
+import Semantic.Check.Temporary.Select (Select)
+import qualified Semantic.Check.Temporary.Select as Select
+import Semantic.Check.Temporary.UpdateInfo (UpdateInfo)
+import qualified Semantic.Check.Temporary.UpdateInfo as UpdateInfo
 import qualified Semantic.Check.TypeAnnotation as Annotation
 import qualified Semantic.Check.TypeBinding as TypeBinding
 import qualified Semantic.Index.Constructor as Constructor
@@ -56,10 +57,12 @@ import Semantic.Tree.Combinators.Inferred (Inferred (Solved))
 import Semantic.Tree.Expression (Explicit (..))
 import qualified Semantic.Tree.Expression as Semantic (Expression (..))
 import qualified Semantic.Tree.Expression as Solved
+import qualified Semantic.Tree.Select as Semantic (Select (..))
 import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
 import Syntax.StringLiteral (StringLiteral)
 import Prelude hiding (Bool (False, True))
+import qualified Prelude
 
 data Expression s scope
   = CallHead
@@ -100,6 +103,14 @@ data Expression s scope
         constructor :: !(Constructor.Index scope),
         constructorInfo :: !(ConstructorInfo s scope),
         fields :: !(Strict.Vector (Field s scope))
+      }
+  | Update
+      { base :: !(Expression s scope),
+        updatePosition :: !Position,
+        updateType :: !(Type2.Index scope),
+        updates :: !(Strict.Vector1 (Select s scope)),
+        updateInfo :: !(UpdateInfo s scope),
+        permissive :: !Prelude.Bool
       }
   | Call
       { function :: !(Expression s scope),
@@ -226,8 +237,35 @@ check context typex Semantic.Tuple {startPosition, elements} = do
 check context typex Semantic.Comprehension {startPosition, statements} = do
   statements <- Comprehension.check context typex statements
   pure Comprehension {startPosition, statements}
-check _ _ Semantic.Update {updatePosition} =
-  unsupportedFeatureRecordUpdate updatePosition
+check
+  context@Context {typeEnvironment}
+  typex
+  Semantic.Update
+    { base,
+      updatePosition,
+      updateType,
+      updates,
+      permissive
+    } = do
+    datax <- do
+      let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
+      Builtin.index pure get updateType
+    instancex <- Simple.Data.instanciate context updatePosition datax
+    let typex' = DataInstance.baseType instancex updateType
+    Unify.unify context updatePosition typex typex'
+    base <- check context typex base
+    updates <- sequence $ flip fmap updates $ \update@Semantic.Select {pick} ->
+      Select.check context (DataInstance.selectorType instancex pick) update
+    let updateInfo = DataInstance.updateInfo instancex
+    pure
+      Update
+        { base,
+          updatePosition,
+          updateType,
+          updates,
+          updateInfo,
+          permissive
+        }
 check context typex Semantic.Case {startPosition, scrutinee, cases} = do
   binder <- Unify.fresh Unify.typex
   scrutinee <- check context binder scrutinee
@@ -286,6 +324,19 @@ solve = \case
           constructor,
           constructorInfo = Solved constructorInfo,
           fields
+        }
+  Update {base, updatePosition, updateType, updates, updateInfo, permissive} -> do
+    base <- solve base
+    updates <- traverse Select.solve updates
+    updateInfo <- UpdateInfo.solve updateInfo
+    pure
+      Solved.Update
+        { base,
+          updatePosition,
+          updateType,
+          updates,
+          updateInfo = Solved updateInfo,
+          permissive
         }
   List {startPosition, items} -> do
     items <- traverse solve items

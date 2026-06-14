@@ -6,7 +6,8 @@ data Extensions = Extensions
   { implicitPrelude :: !Bool,
     stableImports :: !Bool,
     unorderedRecords :: !Bool,
-    constructorFields :: !Bool
+    constructorFields :: !Bool,
+    permissiveUpdates :: !Bool
   }
   deriving (Show)
 
@@ -16,7 +17,8 @@ haskell2010 =
     { implicitPrelude = True,
       stableImports = False,
       unorderedRecords = False,
-      constructorFields = False
+      constructorFields = False,
+      permissiveUpdates = False
     }
 
 hazy :: Extensions
@@ -25,5 +27,6 @@ hazy =
     { implicitPrelude = True,
       stableImports = True,
       unorderedRecords = False,
-      constructorFields = True
+      constructorFields = True,
+      permissiveUpdates = True
     }

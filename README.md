@@ -15,7 +15,6 @@ Haskell features are missing, only a test Javascript backend is implemented.
 # Missing
 
 - Constrained Type Defaulting
-- Record Updates
 - Deriving
 - GADTs
 - Polymorphic Components
@@ -304,6 +303,26 @@ class IntPair s where
 instance IntPair Lazy
 instance IntPair Strict
 ```
+
+### Permissive Updates
+* Pragma: `PermissiveUpdates`
+* Toggleable: True
+
+This changes the behavior of record updates. Normally in Haskell 2010, when
+update matches on a constructor that doesn't have all the selections the result
+is bottom. With permissive updates, any missing selections are ignored.
+
+Consider this example:
+```haskell
+data X = A { x :: Int } | B { y :: Char }
+
+updated =
+  let base = A { x = 1 }
+  in base { y = 'a' }
+```
+
+With permissive updates off, `updated` would be bottom. With permissive updates,
+on, `updated` would be `A { x = 1 }`.
 
 ## GHC Extensions
 ### Scoped Type Variables

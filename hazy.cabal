@@ -226,6 +226,7 @@ executable hazy
     Semantic.Check.Simple.SchemeOver
     Semantic.Check.Simple.SelectorInfo
     Semantic.Check.Simple.Type
+    Semantic.Check.Simple.UpdateInfo
     Semantic.Check.Temporary.Alternative
     Semantic.Check.Temporary.Body
     Semantic.Check.Temporary.CallHead
@@ -264,6 +265,7 @@ executable hazy
     Semantic.Check.Temporary.TypeDefinition
     Semantic.Check.Temporary.TypeDefinition2
     Semantic.Check.Temporary.TypePattern
+    Semantic.Check.Temporary.UpdateInfo
     Semantic.Check.TermBinding
     Semantic.Check.TypeAnnotation
     Semantic.Check.TypeBinding
