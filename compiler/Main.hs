@@ -49,7 +49,7 @@ import System.Directory (createDirectoryIfMissing, listDirectory)
 import System.Environment (getArgs, getExecutablePath)
 import System.Exit (exitFailure)
 import System.FilePath (dropExtension, dropFileName, hasDrive, pathSeparators, takeDirectory, takeExtension, (</>))
-import System.IO (IOMode (..), hSetEncoding, openFile, utf8)
+import System.IO (IOMode (..), hClose, hSetEncoding, openFile, utf8)
 import System.IO.Unsafe (unsafeInterleaveIO)
 import Verbose (runVerbose)
 import Prelude hiding (Show (show))
@@ -388,7 +388,9 @@ main'' args = case getOpt order options args of
                   for_ modules $ \Package.Module {target = subtarget, artifacts} -> do
                     let file = target </> subtarget
                     createDirectoryIfMissing True (dropFileName file)
-                    Text.IO.writeFile file artifacts
+                    handle <- openFile file WriteMode
+                    hSetEncoding handle utf8
+                    Text.IO.hPutStr handle artifacts
                 let index =
                       mconcat
                         [ pack "import{main as a}from\"./Main.mjs\";(a.",
@@ -399,7 +401,9 @@ main'' args = case getOpt order options args of
                           Mangle.value,
                           pack ")()"
                         ]
-                Text.IO.writeFile (target </> "index.mjs") index
+                handle <- openFile (target </> "index.mjs") WriteMode
+                hSetEncoding handle utf8
+                Text.IO.hPutStr handle index
                 pure target
               Pack -> pure $ target </> "artifacts"
             for_ (zip [1 ..] $ toList code) $ \(index, Stage5.Module {name, statements}) -> do
@@ -419,7 +423,10 @@ main'' args = case getOpt order options args of
                 let copy Stage5.Module {name = path} loaded = do
                       let file = target </> "header" </> Mangle.pathSys path ++ ".hs"
                       createDirectoryIfMissing True (dropFileName file)
-                      Text.IO.writeFile file (contents loaded)
+                      handle <- openFile file WriteMode
+                      hSetEncoding handle utf8
+                      Text.IO.hPutStr handle (contents loaded)
+                      hClose handle
                 zipWithM_ copy (toList code) (toList modules)
                 case verbose of
                   Loud -> putStrLn "Writing Package Meta"
@@ -429,7 +436,10 @@ main'' args = case getOpt order options args of
                     files = foldMap format code
                     extensions = intercalate (pack ",") language
                     meta = extensions <> pack ";" <> files
-                Text.IO.writeFile (target </> "package") meta
+                handle <- openFile (target </> "package") WriteMode
+                hSetEncoding handle utf8
+                Text.IO.hPutStr handle meta
+                hClose handle
               _ -> pure ()
         noFail = do
           putStrLn "Code didn't fail"
