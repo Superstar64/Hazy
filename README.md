@@ -324,13 +324,13 @@ updated =
 With permissive updates off, `updated` would be bottom. With permissive updates,
 on, `updated` would be `A { x = 1 }`.
 
-### Hygenic Hiding
-* Pragma: `HygenicHiding`
+### Hygienic Hiding
+* Pragma: `HygienicHiding`
 * Toggeable: `True`
 
 Haskell 2010 specifics that `hiding` declarations that hide a type constructor
 must also hide data constructors. This is counter intuitive to what one would
-expect. With hygenic hiding enabled, hazy instead only hides the type
+expect. With hygienic hiding enabled, hazy instead only hides the type
 constructor.
 
 For example:
@@ -339,7 +339,7 @@ import Prelude hiding ( Just )
 ```
 
 Will hide the `Just` constructor in Haskell 2010, but this wouldn't hide
-anything with hygenic hiding enabled.
+anything with hygienic hiding enabled.
 
 Hiding constructors now has to properly mirror the explicit import list syntax:
 ```haskell

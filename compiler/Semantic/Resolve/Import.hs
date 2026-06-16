@@ -498,7 +498,7 @@ pickImports' ::
   [Syntax.Import Position] ->
   Map FullQualifiers (m (Bindings () a b c)) ->
   Map Qualifiers (m (Dependency Stability Canonical scope))
-pickImports' Extensions {stableImports, hygenicHiding} declarations request =
+pickImports' Extensions {stableImports, hygienicHiding} declarations request =
   Map.fromListWith (liftM2 (<>)) $ do
     Syntax.Import
       { qualification,
@@ -541,7 +541,7 @@ pickImports' Extensions {stableImports, hygenicHiding} declarations request =
             let bindings =
                   Bindings
                     { terms = foldr Map.delete terms termDeletions,
-                      constructors = foldr Map.delete constructors (constructorDeletions ++ unhygenic),
+                      constructors = foldr Map.delete constructors (constructorDeletions ++ unhygienic),
                       types = foldr Map.delete types typeDeletions,
                       stability
                     }
@@ -556,8 +556,8 @@ pickImports' Extensions {stableImports, hygenicHiding} declarations request =
                         Syntax.Fields {picks} -> do
                           _ :@ Variable name <- toList picks
                           pure name
-                unhygenic
-                  | hygenicHiding = []
+                unhygienic
+                  | hygienicHiding = []
                   | otherwise = do
                       Syntax.Import.Data {typeVariable = _ :@ typeVariable} <- toList symbols
                       pure $ ConstructorIdentifier typeVariable

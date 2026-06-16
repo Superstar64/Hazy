@@ -184,7 +184,7 @@ data Extension
   | ConstructorFields
   | LevityPolymorphicFields
   | PermissiveUpdates
-  | HygenicHiding
+  | HygienicHiding
   deriving (Show, Bounded, Enum)
 
 data Toggle
@@ -203,7 +203,7 @@ extend extension = \case
     UnorderedRecords -> extension {unorderedRecords = True}
     ConstructorFields -> extension {constructorFields = True}
     PermissiveUpdates -> extension {permissiveUpdates = True}
-    HygenicHiding -> extension {hygenicHiding = True}
+    HygienicHiding -> extension {hygienicHiding = True}
     _ -> extension
   NoExtension position removal -> case removal of
     ImplicitPrelude -> extension {implicitPrelude = False}
@@ -211,7 +211,7 @@ extend extension = \case
     UnorderedRecords -> extension {unorderedRecords = False}
     ConstructorFields -> extension {constructorFields = False}
     PermissiveUpdates -> extension {permissiveUpdates = False}
-    HygenicHiding -> extension {hygenicHiding = False}
+    HygienicHiding -> extension {hygienicHiding = False}
     extension -> cannotTurnoff extension
     where
       cannotTurnoff = cannotTurnoffExtension position . formatExtension

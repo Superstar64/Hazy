@@ -8,7 +8,7 @@ data Extensions = Extensions
     unorderedRecords :: !Bool,
     constructorFields :: !Bool,
     permissiveUpdates :: !Bool,
-    hygenicHiding :: !Bool
+    hygienicHiding :: !Bool
   }
   deriving (Show)
 
@@ -20,7 +20,7 @@ haskell2010 =
       unorderedRecords = False,
       constructorFields = False,
       permissiveUpdates = False,
-      hygenicHiding = False
+      hygienicHiding = False
     }
 
 hazy :: Extensions
@@ -31,5 +31,5 @@ hazy =
       unorderedRecords = False,
       constructorFields = True,
       permissiveUpdates = True,
-      hygenicHiding = True
+      hygienicHiding = True
     }
