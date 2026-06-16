@@ -144,8 +144,8 @@ executable hazy
     Javascript.Printer.Tree.EqualityExpression
     Javascript.Printer.Tree.ExponentiationExpression
     Javascript.Printer.Tree.ExportDeclaration
-    Javascript.Printer.Tree.ExportSpecifier
     Javascript.Printer.Tree.ExportsList
+    Javascript.Printer.Tree.ExportSpecifier
     Javascript.Printer.Tree.Expression
     Javascript.Printer.Tree.FormalParameterList
     Javascript.Printer.Tree.FormalParameters
@@ -153,8 +153,8 @@ executable hazy
     Javascript.Printer.Tree.IfStatement
     Javascript.Printer.Tree.ImportClause
     Javascript.Printer.Tree.ImportDeclaration
-    Javascript.Printer.Tree.ImportSpecifier
     Javascript.Printer.Tree.ImportsList
+    Javascript.Printer.Tree.ImportSpecifier
     Javascript.Printer.Tree.Initializer
     Javascript.Printer.Tree.LabelledItem
     Javascript.Printer.Tree.LabelledStatement
@@ -456,8 +456,8 @@ executable hazy
     Syntax.Tree.Declaration
     Syntax.Tree.Declarations
     Syntax.Tree.Entry
-    Syntax.Tree.ExportSymbol
     Syntax.Tree.Exports
+    Syntax.Tree.ExportSymbol
     Syntax.Tree.Expression
     Syntax.Tree.ExpressionField
     Syntax.Tree.ExpressionInfix

@@ -2,8 +2,8 @@
 
 set -e
 
-ORMOLU_VERSION='0.8.0.2'
-CABAL_GILD_VERSION='1.6.0.2'
+ORMOLU_VERSION='0.8.1.1'
+CABAL_GILD_VERSION='1.8.4.1'
 PRETTIER_VERSION='3.7.4'
 
 UNSTAGED_FILES=$(git diff --name-only)
@@ -55,7 +55,7 @@ fi
 if [ -n "$CABAL_FILES" ]; then
     echo "=== Formatting Cabal ==="
     for FILE in $CABAL_FILES; do
-        cabal-gild --io="$FILE" || echo "Error: Failed to format $FILE"
+        cabal-gild "$FILE" || echo "Error: Failed to format $FILE"
         git add "$FILE"
     done
 fi
