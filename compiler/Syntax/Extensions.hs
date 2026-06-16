@@ -7,7 +7,8 @@ data Extensions = Extensions
     stableImports :: !Bool,
     unorderedRecords :: !Bool,
     constructorFields :: !Bool,
-    permissiveUpdates :: !Bool
+    permissiveUpdates :: !Bool,
+    hygenicHiding :: !Bool
   }
   deriving (Show)
 
@@ -18,7 +19,8 @@ haskell2010 =
       stableImports = False,
       unorderedRecords = False,
       constructorFields = False,
-      permissiveUpdates = False
+      permissiveUpdates = False,
+      hygenicHiding = False
     }
 
 hazy :: Extensions
@@ -28,5 +30,6 @@ hazy =
       stableImports = False,
       unorderedRecords = False,
       constructorFields = True,
-      permissiveUpdates = True
+      permissiveUpdates = True,
+      hygenicHiding = True
     }

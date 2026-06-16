@@ -12,14 +12,13 @@ import Semantic.Layout (Normal)
 import qualified Semantic.Resolve.Bindings as Bindings
 import Semantic.Resolve.Context (Context (..))
 import qualified Semantic.Resolve.Context as Context
-import Semantic.Resolve.Import (StableImports (StableImports), pickImports)
+import Semantic.Resolve.Import (pickImports)
 import {-# SOURCE #-} qualified Semantic.Resolve.Temporary.Complete.Declarations as Complete
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope
 import Semantic.Shift (shift)
 import Semantic.Stage (Resolve)
 import Semantic.Tree.Declarations (Declarations (..))
-import Syntax.Extensions (Extensions (Extensions, stableImports))
 import Syntax.Position (Position)
 import qualified Syntax.Tree.Declaration as Syntax (toImport)
 import qualified Syntax.Tree.Declarations as Syntax (Declarations (..))
@@ -35,8 +34,7 @@ resolve initial@Context {canonical, extensions} Syntax.Declarations {declaration
   where
     context
       | context <- initial,
-        Extensions {stableImports} <- extensions,
-        imports <- pickImports (StableImports stableImports) (mapMaybe Syntax.toImport (toList declarations)) canonical,
+        imports <- pickImports extensions (mapMaybe Syntax.toImport (toList declarations)) canonical,
         context <- imports Context.</> context,
         context@Context {locals} <- shift context,
         bindings <- Complete.bindings Term0.Declaration Type0.Declaration complete,

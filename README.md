@@ -324,6 +324,28 @@ updated =
 With permissive updates off, `updated` would be bottom. With permissive updates,
 on, `updated` would be `A { x = 1 }`.
 
+### Hygenic Hiding
+* Pragma: `HygenicHiding`
+* Toggeable: `True`
+
+Haskell 2010 specifics that `hiding` declarations that hide a type constructor
+must also hide data constructors. This is counter intuitive to what one would
+expect. With hygenic hiding enabled, hazy instead only hides the type
+constructor.
+
+For example:
+```haskell
+import Prelude hiding ( Just )
+```
+
+Will hide the `Just` constructor in Haskell 2010, but this wouldn't hide
+anything with hygenic hiding enabled.
+
+Hiding constructors now has to properly mirror the explicit import list syntax:
+```haskell
+import Prelude hiding ( Maybe (Just) )
+```
+
 ## GHC Extensions
 ### Scoped Type Variables
 * Pragma: `ScopedTypeVariables`
@@ -462,22 +484,6 @@ would have the type `f' :: Num a => a -> a`.
 ### Postfix Operators
 Left sections are treated as function application and are not eta expanded.
 This follows GHC's `PostfixOperators` extension.
-
-### Hiding imports for type does not hide constructors
-Haskell 2010 specifics that `hiding` declarations must also hide constructors.
-Hazy instead only hides the type constructor as one would expect.
-
-For example:
-```haskell
-import Prelude hiding ( Just )
-```
-
-Will hide the `Just` constructor in Haskell, but this wouldn't hide anything in Hazy.
-Instead, the syntax for hiding constructor mirrors that of import constructors.
-
-```haskell
-import Prelude hiding (Maybe (Just))
-```
 
 ## Intentional
 These are deviations that are unlikely to be fixed in the the near future.

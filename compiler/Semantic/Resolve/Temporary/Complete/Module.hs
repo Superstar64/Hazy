@@ -19,7 +19,7 @@ import Semantic.Resolve.Context (Context (..), (</>))
 import qualified Semantic.Resolve.Context as Context
 import Semantic.Resolve.Core (Core (Core))
 import qualified Semantic.Resolve.Core as Core
-import Semantic.Resolve.Import (StableImports (StableImports), pickImports, pickPrelude)
+import Semantic.Resolve.Import (pickImports, pickPrelude)
 import qualified Semantic.Resolve.Import as Import
 import Semantic.Resolve.Stability (Stability (..))
 import Semantic.Resolve.Temporary.Complete.Declarations (Declarations)
@@ -85,9 +85,9 @@ resolve modules = mfix $ \main ->
                 Declarations.resolve context extensions (Term.Global index) (toList declarations)
             context :: Context Global
             context
-              | imports <- pickImports (StableImports stableImports) (toList imports) canonical =
+              | imports <- pickImports extensions (toList imports) canonical =
                   shadow </> (prelude <> imports) </> (Context.empty extensions) {Context.canonical}
-            Extensions {implicitPrelude, stableImports} = extensions
+            Extensions {implicitPrelude} = extensions
             prelude
               | implicitPrelude = pickPrelude modulePosition (toList imports) canonical
               | otherwise = Core {globals = Map.empty, locals = mempty}

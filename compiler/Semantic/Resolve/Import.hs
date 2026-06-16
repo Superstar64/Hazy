@@ -1,6 +1,5 @@
 module Semantic.Resolve.Import
   ( Module (..),
-    StableImports (..),
     pickPrelude,
     pickImports,
     pickModules,
@@ -61,7 +60,8 @@ import qualified Syntax.Tree.ImportSymbols as Syntax (Symbols (..))
 import Syntax.Tree.Marked (Marked (..))
 import Syntax.Tree.Qualification (Qualification (..))
 import Syntax.Variable
-  ( ConstructorIdentifier,
+  ( Constructor (ConstructorIdentifier),
+    ConstructorIdentifier,
     FullQualifiers ((:..)),
     Name (Constructor, Variable),
     QualifiedConstructorIdentifier ((:=.)),
@@ -486,94 +486,98 @@ pickPrelude' position declarations request = case not $ any isPrelude declaratio
     isPrelude _ = False
 
 pickImports ::
-  StableImports ->
+  Extensions ->
   [Syntax.Import Position] ->
   Regular.Canonical.Canonical scope ->
   Regular.Core.Core scope
-pickImports stableImports declarations = normalizeImport (pickImports' stableImports declarations)
-
-newtype StableImports = StableImports Bool
+pickImports extensions declarations = normalizeImport (pickImports' extensions declarations)
 
 pickImports' ::
   (Monad m) =>
-  StableImports ->
+  Extensions ->
   [Syntax.Import Position] ->
   Map FullQualifiers (m (Bindings () a b c)) ->
   Map Qualifiers (m (Dependency Stability Canonical scope))
-pickImports' (StableImports stableImports) declarations request = Map.fromListWith (liftM2 (<>)) $ do
-  Syntax.Import
-    { qualification,
-      targetPosition = position,
-      target = name,
-      alias,
-      symbols
-    } <-
-    declarations
-  let qualifiedName = case alias of
-        Syntax.NoAlias | root :.. name <- name -> root :. name
-        Syntax.Alias {name} | root :.. name <- name -> root :. name
-      base = case Map.lookup name request of
-        Just bindings -> Bindings.updateStability stability <$> bindings
-        Nothing -> moduleNotFound position
-        where
-          stability
-            | name == prelude = Stable [position]
-            | not stableImports = Stable [position]
-            | otherwise = Unstable position
-      all = do
-        Bindings {terms, constructors, types, stability} <- base
-        pure
-          Bindings
-            { terms = Map.mapWithKey (reselectTerm position) terms,
-              constructors = Map.mapWithKey (reselectConstructor position) constructors,
-              types = Map.mapWithKey (reselectType position) types,
-              stability
-            }
-      bindings = case symbols of
-        Syntax.Symbols {symbols} -> update <$> foldr combine empty items
+pickImports' Extensions {stableImports, hygenicHiding} declarations request =
+  Map.fromListWith (liftM2 (<>)) $ do
+    Syntax.Import
+      { qualification,
+        targetPosition = position,
+        target = name,
+        alias,
+        symbols
+      } <-
+      declarations
+    let qualifiedName = case alias of
+          Syntax.NoAlias | root :.. name <- name -> root :. name
+          Syntax.Alias {name} | root :.. name <- name -> root :. name
+        base = case Map.lookup name request of
+          Just bindings -> Bindings.updateStability stability <$> bindings
+          Nothing -> moduleNotFound position
           where
-            combine = liftM2 (<>)
-            empty = pure $ Dependency $ mempty
-            items = [contramap (Contramap (! position :@ name)) <$> pickSymbol symbol base | symbol <- toList symbols]
-            update = updateStability (Stable [position])
-        Syntax.All -> contramap (Contramap (! position :@ name)) . Dependency <$> all
-        Syntax.Hiding {symbols} -> do
-          base@Bindings {terms, constructors, types, stability} <- all
-          let bindings =
-                Bindings
-                  { terms = foldr Map.delete terms termDeletions,
-                    constructors = foldr Map.delete constructors constructorDeletions,
-                    types = foldr Map.delete types typeDeletions,
-                    stability
-                  }
-              termDeletions = do
-                symbol <- toList symbols
-                case symbol of
-                  Syntax.Import.Definition {variable = _ :@ variable} -> [variable]
-                  Syntax.Import.Data {typeVariable, fields} ->
-                    case fields of
-                      Syntax.AllFields -> case base !=. typeVariable of
-                        Functor.Type.Binding {fields} -> toList fields
-                      Syntax.Fields {picks} -> do
-                        _ :@ Variable name <- toList picks
-                        pure name
-              constructorDeletions = do
-                Syntax.Import.Data {typeVariable, fields} <-
-                  toList symbols
-                case fields of
-                  Syntax.AllFields -> case base !=. typeVariable of
-                    Functor.Type.Binding {constructors} -> toList constructors
-                  Syntax.Fields {picks} -> do
-                    _ :@ Constructor name <- toList picks
-                    pure name
-              typeDeletions = do
-                Syntax.Import.Data {typeVariable = _ :@ typeVariable} <- toList symbols
-                pure typeVariable
-          pure $ contramap (Contramap (! position :@ name)) $ Dependency $ bindings
+            stability
+              | name == prelude = Stable [position]
+              | not stableImports = Stable [position]
+              | otherwise = Unstable position
+        all = do
+          Bindings {terms, constructors, types, stability} <- base
+          pure
+            Bindings
+              { terms = Map.mapWithKey (reselectTerm position) terms,
+                constructors = Map.mapWithKey (reselectConstructor position) constructors,
+                types = Map.mapWithKey (reselectType position) types,
+                stability
+              }
+        bindings = case symbols of
+          Syntax.Symbols {symbols} -> update <$> foldr combine empty items
+            where
+              combine = liftM2 (<>)
+              empty = pure $ Dependency $ mempty
+              items = [contramap (Contramap (! position :@ name)) <$> pickSymbol symbol base | symbol <- toList symbols]
+              update = updateStability (Stable [position])
+          Syntax.All -> contramap (Contramap (! position :@ name)) . Dependency <$> all
+          Syntax.Hiding {symbols} -> do
+            base@Bindings {terms, constructors, types, stability} <- all
+            let bindings =
+                  Bindings
+                    { terms = foldr Map.delete terms termDeletions,
+                      constructors = foldr Map.delete constructors (constructorDeletions ++ unhygenic),
+                      types = foldr Map.delete types typeDeletions,
+                      stability
+                    }
+                termDeletions = do
+                  symbol <- toList symbols
+                  case symbol of
+                    Syntax.Import.Definition {variable = _ :@ variable} -> [variable]
+                    Syntax.Import.Data {typeVariable, fields} ->
+                      case fields of
+                        Syntax.AllFields -> case base !=. typeVariable of
+                          Functor.Type.Binding {fields} -> toList fields
+                        Syntax.Fields {picks} -> do
+                          _ :@ Variable name <- toList picks
+                          pure name
+                unhygenic
+                  | hygenicHiding = []
+                  | otherwise = do
+                      Syntax.Import.Data {typeVariable = _ :@ typeVariable} <- toList symbols
+                      pure $ ConstructorIdentifier typeVariable
+                constructorDeletions = do
+                  Syntax.Import.Data {typeVariable, fields} <-
+                    toList symbols
+                  case fields of
+                    Syntax.AllFields -> case base !=. typeVariable of
+                      Functor.Type.Binding {constructors} -> toList constructors
+                    Syntax.Fields {picks} -> do
+                      _ :@ Constructor name <- toList picks
+                      pure name
+                typeDeletions = do
+                  Syntax.Import.Data {typeVariable = _ :@ typeVariable} <- toList symbols
+                  pure typeVariable
+            pure $ contramap (Contramap (! position :@ name)) $ Dependency $ bindings
 
-  (qualifiedName, bindings) : case qualification of
-    Qualified -> []
-    Unqualified -> [(Local, bindings)]
+    (qualifiedName, bindings) : case qualification of
+      Qualified -> []
+      Unqualified -> [(Local, bindings)]
 
 pickExports ::
   (Monad m) =>
@@ -629,7 +633,7 @@ pickModule ::
 pickModule (root :.. name) Module {modulePosition, extensions, exports, imports, base} =
   (cyclicalImports modulePosition, algebra)
   where
-    Extensions {implicitPrelude, stableImports} = extensions
+    Extensions {implicitPrelude} = extensions
     algebra modules = do
       let regular = base
           update = Bindings.updateStability (Stable [modulePosition])
@@ -639,7 +643,7 @@ pickModule (root :.. name) Module {modulePosition, extensions, exports, imports,
             Map FullQualifiers (m (Bindings () a b c)) ->
             Map Qualifiers (m (Dependency Stability Canonical Scope.Global))
           pick request =
-            let base = pickImports' (StableImports stableImports) imports request
+            let base = pickImports' extensions imports request
                 prelude =
                   if implicitPrelude
                     then pickPrelude' modulePosition imports request
