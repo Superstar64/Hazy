@@ -16,7 +16,7 @@ import Semantic.Tree.TypePattern (TypePattern)
 import Syntax.Position (Position)
 
 data Instance layout stage scope = Instance
-  { startPosition, classPosition :: !Position,
+  { startPosition :: !Position,
     parameters :: !(Strict.Vector (TypePattern Position stage scope)),
     prerequisites :: !(Strict.Vector (Constraint Position stage scope)),
     evidence :: !(Inferred Evidence stage scope),
@@ -28,22 +28,20 @@ instance Shift (Instance layout stage) where
   shift = shiftDefault
 
 instance Shift.Functor (Instance layout stage) where
-  map category Instance {startPosition, prerequisites, classPosition, parameters, members, evidence} =
+  map category Instance {startPosition, prerequisites, parameters, members, evidence} =
     Instance
       { startPosition,
         prerequisites = fmap (Shift.map category) prerequisites,
-        classPosition,
         parameters = Shift.map category <$> parameters,
         members = fmap (Shift.map category) members,
         evidence = Shift.map category evidence
       }
 
 instance Connect Instance where
-  connect Instance {startPosition, prerequisites, classPosition, parameters, members} =
+  connect Instance {startPosition, prerequisites, parameters, members} =
     Instance
       { startPosition,
         prerequisites,
-        classPosition,
         parameters,
         members = connect <$> members,
         evidence = Inferred
@@ -52,7 +50,6 @@ instance Connect Instance where
     Instance
       { startPosition,
         prerequisites,
-        classPosition,
         parameters,
         members,
         evidence
@@ -60,7 +57,6 @@ instance Connect Instance where
       Instance
         { startPosition,
           prerequisites,
-          classPosition,
           parameters,
           members = seperate <$> members,
           evidence

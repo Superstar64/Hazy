@@ -32,7 +32,6 @@ resolve ::
   Context scope ->
   Position ->
   Strict.Vector (Syntax.Constraint Position) ->
-  Position ->
   Strict.Vector (Syntax.TypePattern Position) ->
   Map Variable Int ->
   Syntax.InstanceDeclarations Position ->
@@ -41,7 +40,6 @@ resolve
   context
   startPosition
   prerequisites
-  classPosition
   parameters
   memberMethods
   Syntax.InstanceDeclarations {declarations}
@@ -67,6 +65,5 @@ resolve
                 prerequisites,
                 parameters,
                 members,
-                classPosition,
                 evidence = Inferred
               }

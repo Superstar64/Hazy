@@ -77,7 +77,7 @@ head = \case
   Class {head2} -> head2
 
 data Instance s scope = Instance
-  { startPosition, classPosition :: !Position,
+  { startPosition :: !Position,
     parameters :: !(Strict.Vector (Solved.TypePattern Position Check scope)),
     prerequisites :: !(Strict.Vector (Solved.Constraint Position Check scope)),
     evidence :: !(Strict.Vector (Simple.Evidence (Local ':+ scope))),
@@ -99,7 +99,6 @@ check
     }
   Semantic.Instance
     { startPosition,
-      classPosition,
       members
     }
     | index <- index key,
@@ -179,15 +178,14 @@ check
                         }
               pure Default {self, base, defaultx}
         members <- izipWithM check methods (shift <$> members)
-        pure Instance {startPosition, classPosition, parameters, prerequisites, evidence, members}
+        pure Instance {startPosition, parameters, prerequisites, evidence, members}
 
 solve :: Instance s scope -> Unify.Solve s (Solved.Instance Group Check scope)
-solve Instance {startPosition, classPosition, parameters, prerequisites, evidence, members} = do
+solve Instance {startPosition, parameters, prerequisites, evidence, members} = do
   members <- traverse MethodConcrete.solve members
   pure
     Solved.Instance
       { startPosition,
-        classPosition,
         parameters,
         prerequisites,
         evidence = Solved $ Solved.Evidence evidence,

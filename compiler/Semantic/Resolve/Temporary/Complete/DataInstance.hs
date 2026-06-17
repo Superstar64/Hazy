@@ -65,7 +65,6 @@ resolve context lookup = \case
                         context
                         startPosition
                         prerequisites
-                        classPosition
                         parameters
                         methods
                         instanceDefinition
