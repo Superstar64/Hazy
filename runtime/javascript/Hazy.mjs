@@ -184,7 +184,7 @@ export const putStrLnText = {
   a: 0,
   b: (thunk) => () => {
     console.log(force(thunk));
-    return { a: 0 };
+    return { a: 0, b: { a: 0 } };
   },
 };
 
@@ -327,7 +327,7 @@ export const primIntegerRem = {
 
 export const primSTPure = {
   a: 0,
-  b: (x) => () => force(x),
+  b: (x) => () => x,
 };
 
 export const primSTBind = {
