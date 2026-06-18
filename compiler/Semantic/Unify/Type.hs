@@ -570,12 +570,15 @@ unshift context position typex = unshift typex
                   evidence <- Evidence.unshift evidence
                   pure (key, Delay {arguments, evidence})
             kind <- unshift kind
-            -- todo
-            -- there's no Map.traverseKeysMonotonic
-            constraints <- Map.fromAscList <$> traverse unshiftDelay (Map.toAscList constraints)
-            box <- newSTRef $! Unsolved {kind, constraints, erasure}
+            -- Type variables may link to constraints that mention the variable
+            -- itself. To allow unshifting these cycles, the unshifted box is
+            -- initialized with undefined then later let to it's proper value.
+            box <- newSTRef $ error "unshift cycle"
             let term = Logical box
             writeSTRef reference $! Solved $ Shift term
+            -- there's no Map.traverseKeysMonotonic
+            constraints <- Map.fromAscList <$> traverse unshiftDelay (Map.toAscList constraints)
+            writeSTRef box $! Unsolved {kind, constraints, erasure}
             pure term
           Solved term -> unshift term
       Shift term -> pure term
