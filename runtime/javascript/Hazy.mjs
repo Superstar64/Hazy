@@ -338,85 +338,81 @@ export const primSTBind = {
   },
 };
 
-export const eqTuple =
-  (unpack) =>
-  (...evidences) => {
-    const result = {
-      a: {
-        a: 0,
-        b: (x_) => (y_) => {
-          const x = unpack(force(x_));
-          const y = unpack(force(y_));
-          for (let i = 0; i < evidences.length; i++) {
-            const equal = force(evidences[i].a)(x[i])(y[i]);
-            if (!equal.a) {
-              return { a: 0 };
-            }
-          }
-          return { a: 1 };
-        },
-      },
-      b: undefined,
-    };
-    result.b = {
+export function eqTuple(unpack, ...evidences) {
+  const result = {
+    a: {
       a: 0,
-      b: helper.defaultNotEqual(result),
-    };
-    return result;
+      b: (x_) => (y_) => {
+        const x = unpack(force(x_));
+        const y = unpack(force(y_));
+        for (let i = 0; i < evidences.length; i++) {
+          const equal = force(evidences[i].a)(x[i])(y[i]);
+          if (!equal.a) {
+            return { a: 0 };
+          }
+        }
+        return { a: 1 };
+      },
+    },
+    b: undefined,
   };
+  result.b = {
+    a: 0,
+    b: helper.defaultNotEqual(result),
+  };
+  return result;
+}
 
-export const ordTuple =
-  (unpack) =>
-  (...evidences) => {
-    const result = {
-      a: eqTuple(unpack)(...evidences.map((x) => x.a)),
-      b: {
-        a: 0,
-        b: (x_) => (y_) => {
-          const x = unpack(force(x_));
-          const y = unpack(force(y_));
-          for (let i = 0; i < evidences.length; i++) {
-            const result = force(evidences[i].b)(x[i])(y[i]);
-            if (result.a == 0 || result.a == 2) {
-              return { a: result.a };
-            }
+export function ordTuple(unpack, ...evidences) {
+  const result = {
+    a: eqTuple(unpack, ...evidences.map((x) => x.a)),
+    b: {
+      a: 0,
+      b: (x_) => (y_) => {
+        const x = unpack(force(x_));
+        const y = unpack(force(y_));
+        for (let i = 0; i < evidences.length; i++) {
+          const result = force(evidences[i].b)(x[i])(y[i]);
+          if (result.a == 0 || result.a == 2) {
+            return { a: result.a };
           }
-          return { a: 1 };
-        },
+        }
+        return { a: 1 };
       },
-      c: undefined,
-      d: undefined,
-      e: undefined,
-      f: undefined,
-      g: undefined,
-      h: undefined,
-    };
-    result.c = {
-      a: 0,
-      b: helper.defaultLessThen(result),
-    };
-    result.d = {
-      a: 0,
-      b: helper.defaultLessThenEqual(result),
-    };
-    result.e = {
-      a: 0,
-      b: helper.defaultGreaterThen(result),
-    };
-    result.f = {
-      a: 0,
-      b: helper.defaultGreaterThenEqual(result),
-    };
-    result.g = {
-      a: 0,
-      b: helper.defaultMax(result),
-    };
-    result.h = {
-      a: 0,
-      b: helper.defaultMin(result),
-    };
-    return result;
+    },
+    c: undefined,
+    d: undefined,
+    e: undefined,
+    f: undefined,
+    g: undefined,
+    h: undefined,
   };
+  result.c = {
+    a: 0,
+    b: helper.defaultLessThen(result),
+  };
+  result.d = {
+    a: 0,
+    b: helper.defaultLessThenEqual(result),
+  };
+  result.e = {
+    a: 0,
+    b: helper.defaultGreaterThen(result),
+  };
+  result.f = {
+    a: 0,
+    b: helper.defaultGreaterThenEqual(result),
+  };
+  result.g = {
+    a: 0,
+    b: helper.defaultMax(result),
+  };
+  result.h = {
+    a: 0,
+    b: helper.defaultMin(result),
+  };
+  return result;
+}
 
 export {
   defaultPlus,

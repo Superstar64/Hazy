@@ -17,7 +17,10 @@ less = (number, True, Custom, "abc", EQ) < (1, True, Custom, "abc", GT)
 
 greater = (number, True, Custom, "abd", EQ) > (1, True, Custom, "abc", EQ)
 
+unit = () == ()
+
 main = do
   print same
   print less
   print greater
+  print unit

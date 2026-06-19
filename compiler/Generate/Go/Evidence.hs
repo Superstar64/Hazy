@@ -13,10 +13,27 @@ import {-# SOURCE #-} Generate.Go.Expression (force)
 import qualified Generate.Mangle as Mangle
 import qualified Javascript.Tree.Expression as Javascript (Expression (..))
 import qualified Javascript.Tree.Statement as Javascript (Statement (..))
+import Semantic.Index.Evidence (Builtin (EqTuple, OrdTuple))
 import qualified Semantic.Index.Evidence as Evidence (Builtin (..), Index (..))
 
 generate :: Context s scope -> Evidence scope -> ST s Javascript.Expression
 generate context = \case
+  Variable {variable = Evidence.Builtin (EqTuple number), instanciation = Instanciation arguments} -> do
+    let Mangle.Builtin {eqTuple} = Context.builtin context
+    arguments <- traverse (generate context) (toList arguments)
+    pure
+      Javascript.Call
+        { function = Javascript.Variable {name = eqTuple},
+          arguments = unpackTuple number : arguments
+        }
+  Variable {variable = Evidence.Builtin (OrdTuple number), instanciation = Instanciation arguments} -> do
+    let Mangle.Builtin {ordTuple} = Context.builtin context
+    arguments <- traverse (generate context) (toList arguments)
+    pure
+      Javascript.Call
+        { function = Javascript.Variable {name = ordTuple},
+          arguments = unpackTuple number : arguments
+        }
   Variable {variable, instanciation = Instanciation arguments} -> do
     let strict = case variable of
           Evidence.Index {} -> True
@@ -39,77 +56,46 @@ generate context = \case
       Evidence.Index index
         | Evidence.Binding name <- context Context.!~ index ->
             pure Javascript.Variable {name}
-      Evidence.Builtin evidence ->
-        let unpackTuple number =
-              [ Javascript.Arrow
-                  { parameters = [Mangle.local],
-                    body =
-                      [ Javascript.Return $
-                          Javascript.Array $
-                            do
-                              name <- take number $ tail Mangle.names
-                              pure $
-                                Javascript.Member
-                                  { object = Javascript.Variable {name = Mangle.local},
-                                    field = name
-                                  }
-                      ]
-                  }
-              ]
-         in case evidence of
-              Evidence.EqTuple number ->
-                pure
-                  Javascript.Call
-                    { function = Javascript.Variable {name = eqTuple},
-                      arguments = unpackTuple number
-                    }
-              Evidence.OrdTuple number ->
-                pure
-                  Javascript.Call
-                    { function = Javascript.Variable {name = ordTuple},
-                      arguments = unpackTuple number
-                    }
-              _ -> pure Javascript.Variable {name}
-                where
-                  name = case evidence of
-                    Evidence.NumInt -> numInt
-                    Evidence.NumInteger -> numInteger
-                    Evidence.NumRatio -> numRatio
-                    Evidence.EnumBool -> enumBool
-                    Evidence.EnumChar -> enumChar
-                    Evidence.EnumInt -> enumInt
-                    Evidence.EnumInteger -> enumInteger
-                    Evidence.EnumOrdering -> enumOrdering
-                    Evidence.EnumUnit -> enumUnit
-                    Evidence.EnumRatio -> enumRatio
-                    Evidence.EqBool -> eqBool
-                    Evidence.EqChar -> eqChar
-                    Evidence.EqInt -> eqInt
-                    Evidence.EqInteger -> eqInteger
-                    Evidence.EqList -> eqList
-                    Evidence.EqOrdering -> eqOrdering
-                    Evidence.EqRatio -> eqRatio
-                    Evidence.OrdChar -> ordChar
-                    Evidence.OrdInt -> ordInt
-                    Evidence.OrdInteger -> ordInteger
-                    Evidence.OrdBool -> ordBool
-                    Evidence.OrdList -> ordList
-                    Evidence.OrdOrdering -> ordOrdering
-                    Evidence.OrdRatio -> ordRatio
-                    Evidence.RealInt -> realInt
-                    Evidence.RealInteger -> realInteger
-                    Evidence.RealRatio -> realRatio
-                    Evidence.IntegralInt -> integralInt
-                    Evidence.IntegralInteger -> integralInteger
-                    Evidence.FractionalRatio -> fractionalRatio
-                    Evidence.FunctorList -> functorList
-                    Evidence.ApplicativeList -> applicativeList
-                    Evidence.MonadList -> monadList
-                    Evidence.MonadFailList -> monadFailList
-                    Evidence.FunctorST -> functorST
-                    Evidence.ApplicativeST -> applicativeST
-                    Evidence.MonadST -> monadST
+      Evidence.Builtin evidence -> pure Javascript.Variable {name}
         where
+          name = case evidence of
+            Evidence.NumInt -> numInt
+            Evidence.NumInteger -> numInteger
+            Evidence.NumRatio -> numRatio
+            Evidence.EnumBool -> enumBool
+            Evidence.EnumChar -> enumChar
+            Evidence.EnumInt -> enumInt
+            Evidence.EnumInteger -> enumInteger
+            Evidence.EnumOrdering -> enumOrdering
+            Evidence.EnumUnit -> enumUnit
+            Evidence.EnumRatio -> enumRatio
+            Evidence.EqBool -> eqBool
+            Evidence.EqChar -> eqChar
+            Evidence.EqInt -> eqInt
+            Evidence.EqInteger -> eqInteger
+            Evidence.EqList -> eqList
+            Evidence.EqOrdering -> eqOrdering
+            Evidence.EqRatio -> eqRatio
+            Evidence.OrdChar -> ordChar
+            Evidence.OrdInt -> ordInt
+            Evidence.OrdInteger -> ordInteger
+            Evidence.OrdBool -> ordBool
+            Evidence.OrdList -> ordList
+            Evidence.OrdOrdering -> ordOrdering
+            Evidence.OrdRatio -> ordRatio
+            Evidence.RealInt -> realInt
+            Evidence.RealInteger -> realInteger
+            Evidence.RealRatio -> realRatio
+            Evidence.IntegralInt -> integralInt
+            Evidence.IntegralInteger -> integralInteger
+            Evidence.FractionalRatio -> fractionalRatio
+            Evidence.FunctorList -> functorList
+            Evidence.ApplicativeList -> applicativeList
+            Evidence.MonadList -> monadList
+            Evidence.MonadFailList -> monadFailList
+            Evidence.FunctorST -> functorST
+            Evidence.ApplicativeST -> applicativeST
+            Evidence.MonadST -> monadST
           Mangle.Builtin
             { numInt,
               numInteger,
@@ -123,7 +109,6 @@ generate context = \case
               enumRatio,
               eqBool,
               eqChar,
-              eqTuple,
               eqInteger,
               eqInt,
               eqList,
@@ -133,7 +118,6 @@ generate context = \case
               ordInteger,
               ordBool,
               ordChar,
-              ordTuple,
               ordList,
               ordOrdering,
               ordRatio,
@@ -171,3 +155,20 @@ generate context = \case
         { object = base,
           field = Mangle.fields !! index
         }
+
+unpackTuple :: Int -> Javascript.Expression
+unpackTuple number =
+  Javascript.Arrow
+    { parameters = [Mangle.local],
+      body =
+        [ Javascript.Return $
+            Javascript.Array $
+              do
+                name <- take number $ tail Mangle.names
+                pure $
+                  Javascript.Member
+                    { object = Javascript.Variable {name = Mangle.local},
+                      field = name
+                    }
+        ]
+    }
