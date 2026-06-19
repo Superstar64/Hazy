@@ -226,7 +226,7 @@ parse2 =
           [ at <$> (token "@" *> parse2),
             pure variable
           ],
-      tuple <$> position <*> betweenParens (sepByComma parse),
+      tuple <$> position <*> try (betweenParens (sepByComma parse)),
       list <$> position <*> betweenBrackets (Strict.Vector.fromList <$> sepByComma parse),
       position <**> (Variable.parseLiteral <**> parseConstructor),
       integer <$> position <*> Parser.integer,
