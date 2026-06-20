@@ -32,6 +32,7 @@ instance Substitute.Functor Constraints where
 data ConstraintCount
   = ConstraintCount !Int
   | Null
+  deriving (Show)
 
 constraintCount :: Constraints scope -> ConstraintCount
 constraintCount = \case

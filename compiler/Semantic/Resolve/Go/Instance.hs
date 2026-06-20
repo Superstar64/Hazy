@@ -11,7 +11,7 @@ import Error (notClassMethod, patternInMethod)
 import Order (orderListInt')
 import Semantic.Layout (Normal)
 import Semantic.Resolve.Context (Context)
-import qualified Semantic.Resolve.Go.Constraint as Constraint
+import qualified Semantic.Resolve.Go.Constraints as Constraints
 import qualified Semantic.Resolve.Go.Scheme as Scheme
 import qualified Semantic.Resolve.Go.TypePattern as TypePattern
 import qualified Semantic.Resolve.Temporary.Complete.Definition as Complete (Definition (..), resolve)
@@ -22,7 +22,7 @@ import qualified Semantic.Tree.Definition as Definition (merge)
 import Semantic.Tree.Instance (Instance (..))
 import Semantic.Tree.MethodConcrete (MethodConcrete (..))
 import Syntax.Position (Position)
-import qualified Syntax.Tree.Constraint as Syntax (Constraint)
+import qualified Syntax.Tree.Constraints as Syntax (Constraints)
 import qualified Syntax.Tree.InstanceDeclaration as Syntax (InstanceDeclaration (..))
 import qualified Syntax.Tree.InstanceDeclarations as Syntax (InstanceDeclarations (..))
 import qualified Syntax.Tree.TypePattern as Syntax (TypePattern)
@@ -31,7 +31,7 @@ import Syntax.Variable (Variable)
 resolve ::
   Context scope ->
   Position ->
-  Strict.Vector (Syntax.Constraint Position) ->
+  Syntax.Constraints Position ->
   Strict.Vector (Syntax.TypePattern Position) ->
   Map Variable Int ->
   Syntax.InstanceDeclarations Position ->
@@ -44,7 +44,7 @@ resolve
   memberMethods
   Syntax.InstanceDeclarations {declarations}
     | parameters <- TypePattern.resolve <$> parameters,
-      prerequisites <- fmap (Constraint.resolve (Scheme.augmentWith parameters context)) prerequisites =
+      prerequisites <- Constraints.resolve (Scheme.augmentWith parameters context) prerequisites =
         let members = orderListInt' combine (length memberMethods) members
               where
                 combine (member : members) = Definition $ Resolve $ Definition.merge (member :| members)

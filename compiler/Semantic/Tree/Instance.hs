@@ -10,7 +10,7 @@ import qualified Semantic.Scope as Scope
 import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
-import Semantic.Tree.Constraint (Constraint)
+import Semantic.Tree.Constraints (Constraints)
 import Semantic.Tree.MethodConcrete (MethodConcrete (..))
 import Semantic.Tree.TypePattern (TypePattern)
 import Syntax.Position (Position)
@@ -18,7 +18,7 @@ import Syntax.Position (Position)
 data Instance layout stage scope = Instance
   { startPosition :: !Position,
     parameters :: !(Strict.Vector (TypePattern Position stage scope)),
-    prerequisites :: !(Strict.Vector (Constraint Position stage scope)),
+    prerequisites :: !(Constraints Position stage scope),
     evidence :: !(Inferred Evidence stage scope),
     members :: !(Strict.Vector (MethodConcrete layout stage scope))
   }
@@ -31,7 +31,7 @@ instance Shift.Functor (Instance layout stage) where
   map category Instance {startPosition, prerequisites, parameters, members, evidence} =
     Instance
       { startPosition,
-        prerequisites = fmap (Shift.map category) prerequisites,
+        prerequisites = Shift.map category prerequisites,
         parameters = Shift.map category <$> parameters,
         members = fmap (Shift.map category) members,
         evidence = Shift.map category evidence

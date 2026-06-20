@@ -1,7 +1,7 @@
 module Semantic.Check.TypeBinding where
 
 import Control.Monad.ST (ST)
-import Core.Tree.Constraint (Constraint)
+import Core.Tree.Constraints (Constraints)
 import qualified Core.Tree.Type as Simple (Type)
 import qualified Core.Tree.Type as Simple.Type
 import {-# SOURCE #-} qualified Core.Tree.TypeDeclaration as Simple (TypeDeclaration, simplify)
@@ -11,7 +11,6 @@ import qualified Data.Kind
 import Data.Map (Map)
 import qualified Data.Map as Map
 import qualified Data.Strict.Maybe as Strict (Maybe (..))
-import qualified Data.Vector.Strict as Strict (Vector)
 import Error (improperBindingGroup)
 import qualified Semantic.Check.Functor.Annotated as Functor (Annotated (..), NoLabel)
 import {-# SOURCE #-} Semantic.Check.Go.TypeDeclaration (TypeDeclaration)
@@ -168,10 +167,10 @@ bindingImpl
           KindAnnotation.Synonym {synonym} -> pure $ Strict.Just (Simple.Type.simplify synonym)
           _ -> pure Strict.Nothing
 
-newtype Instance scope = Instance (Strict.Vector (Constraint scope))
+newtype Instance scope = Instance (Constraints scope)
 
 instance Shift Instance where
   shift = shiftDefault
 
 instance Shift.Functor Instance where
-  map category (Instance constraints) = Instance (fmap (Shift.map category) constraints)
+  map category (Instance constraints) = Instance (Shift.map category constraints)

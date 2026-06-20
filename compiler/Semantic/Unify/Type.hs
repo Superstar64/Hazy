@@ -5,6 +5,7 @@ import Control.Monad.ST (ST)
 import {-# SOURCE #-} qualified Core.Tree.Builtin as Builtin (index, kind)
 import qualified Core.Tree.Constraint as Simple (argument)
 import qualified Core.Tree.Constraint as Simple.Constraint
+import qualified Core.Tree.Constraints as Simple (Constraints (..))
 import qualified Core.Tree.Type as Simple (Type (..))
 import {-# SOURCE #-} Core.Tree.TypeDeclaration (assumeData)
 import Data.Foldable (for_, toList, traverse_)
@@ -13,7 +14,6 @@ import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 import Data.Traversable (for)
-import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
 import Error (unsupportedFeatureConstraintedTypeDefaulting)
 import Semantic.Check.Context (Context (..))
@@ -511,26 +511,30 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
       | TypeBinding {classInstances} <- typeEnvironment Type.Table.! classx,
         Just instancex <- Map.lookup index classInstances = do
           TypeBinding.Instance dependencies <- instancex
-          arguments <- for dependencies $ \case
-            constraint@Simple.Constraint.Constraint {classx}
-              | argument <-
-                  Simple.instanciate
-                    (Strict.Vector.fromList arguments)
-                    (Simple.argument constraint) -> do
-                  constrain context position classx argument
-          pure (proof (Evidence.Class classx index) arguments)
+          case dependencies of
+            Simple.Constraints dependencies -> do
+              arguments <- for dependencies $ \constraint@Simple.Constraint.Constraint {classx} ->
+                let argument =
+                      Simple.instanciate
+                        (Strict.Vector.fromList arguments)
+                        (Simple.argument constraint)
+                 in constrain context position classx argument
+              pure $ Evidence.Variable (Evidence.Class classx index) (Instanciation arguments)
+            Simple.None -> pure $ Evidence.Variable (Evidence.Class classx index) Instanciation.Mono
     constrainWith context@Context {typeEnvironment} classx (Constructor (Type2.Index index)) arguments
       | TypeBinding {dataInstances} <- typeEnvironment Type.Table.! index,
         Just instancex <- Map.lookup classx dataInstances = do
           TypeBinding.Instance dependencies <- instancex
-          arguments <- for dependencies $ \case
-            constraint@Simple.Constraint.Constraint {classx}
-              | argument <-
-                  Simple.instanciate
-                    (Strict.Vector.fromList arguments)
-                    (Simple.argument constraint) -> do
-                  constrain context position classx argument
-          pure (proof (Evidence.Data classx index) arguments)
+          case dependencies of
+            Simple.Constraints dependencies -> do
+              arguments <- for dependencies $ \constraint@Simple.Constraint.Constraint {classx} ->
+                let argument =
+                      Simple.instanciate
+                        (Strict.Vector.fromList arguments)
+                        (Simple.argument constraint)
+                 in constrain context position classx argument
+              pure $ Evidence.Variable (Evidence.Data classx index) (Instanciation arguments)
+            Simple.None -> pure $ Evidence.Variable (Evidence.Data classx index) Instanciation.Mono
     constrainWith context classx (Call function argument) arguments =
       constrainWith context classx function (argument : arguments)
     constrainWith context classx (Function argument result) arguments = do
@@ -543,11 +547,6 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
       where
         constrain classx typex = constrainWith context classx typex []
         quit = abort position (Constrain context_ classx_ term_ arguments_)
-
-    proof :: forall scope s. Evidence.Index scope -> Strict.Vector (Evidence s scope) -> Evidence s scope
-    proof variable arguments
-      | null arguments = Evidence.Variable variable Instanciation.Mono
-      | otherwise = Evidence.Variable variable (Instanciation arguments)
 
 reconstrain :: Context s scope -> Position -> Map (Type2.Index scope) (Delay s scope) -> Type s scope -> ST s ()
 reconstrain context position constraints term =

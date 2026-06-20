@@ -33,6 +33,8 @@ import {-# SOURCE #-} Syntax.Tree.ClassDeclarations (ClassDeclarations)
 import {-# SOURCE #-} qualified Syntax.Tree.ClassDeclarations as ClassDeclarations
 import Syntax.Tree.Constraint (Constraint)
 import qualified Syntax.Tree.Constraint as Constraint
+import Syntax.Tree.Constraints (Constraints)
+import qualified Syntax.Tree.Constraints as Constraints
 import Syntax.Tree.Data (Data)
 import qualified Syntax.Tree.Data as Data
 import Syntax.Tree.Fixity (Fixity)
@@ -96,7 +98,7 @@ data Declaration position
     --  > instance C T
     Instance
       { startPosition :: !position,
-        prerequisites :: !(Strict.Vector (Constraint position)),
+        prerequisites :: !(Constraints position),
         classPosition :: !position,
         className :: !QualifiedConstructorIdentifier,
         instanceHead :: !InstanceHead,
@@ -308,47 +310,18 @@ parse =
 
     parseInstance :: Parser (Declaration Position)
     parseInstance =
-      asum
-        [ try (instancex <$> position <*> constraints <* token "=>")
-            <*> position
-            <*> Variable.parse
-            <*> InstanceHead.parse
-            <*> InstanceDeclarations.parse,
-          try ((instanceSingle <$> position <*> Constraint.parse) <* token "=>")
-            <*> position
-            <*> Variable.parse
-            <*> InstanceHead.parse
-            <*> InstanceDeclarations.parse,
-          instanceEmpty
-            <$> position
-            <*> Variable.parse
-            <*> InstanceHead.parse
-            <*> InstanceDeclarations.parse
-        ]
+      instancex
+        <$> position
+        <*> Constraints.parse
+        <*> position
+        <*> Variable.parse
+        <*> InstanceHead.parse
+        <*> InstanceDeclarations.parse
       where
-        constraints = betweenParens (Strict.Vector.fromList <$> sepByComma Constraint.parse)
         instancex startPosition prerequisites classPosition className instanceHead instanceDefinition =
           Instance
             { startPosition,
               prerequisites,
-              classPosition,
-              className,
-              instanceHead,
-              instanceDefinition
-            }
-        instanceSingle startPosition prerequisite classPosition className instanceHead instanceDefinition =
-          Instance
-            { startPosition,
-              prerequisites = Strict.Vector.singleton prerequisite,
-              classPosition,
-              className,
-              instanceHead,
-              instanceDefinition
-            }
-        instanceEmpty classPosition@startPosition className instanceHead instanceDefinition =
-          Instance
-            { startPosition,
-              prerequisites = Strict.Vector.empty,
               classPosition,
               className,
               instanceHead,

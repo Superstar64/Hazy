@@ -2,6 +2,7 @@ module Core.Tree.Instance where
 
 import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
+import Core.Tree.Constraints (ConstraintCount (..))
 import Core.Tree.Evidence (Evidence)
 import Core.Tree.MethodConcrete (MethodConcrete)
 import qualified Core.Tree.MethodConcrete as MethodConcrete
@@ -12,11 +13,12 @@ import Semantic.Shift (Shift (shift), shiftDefault)
 import qualified Semantic.Shift as Shift
 import Semantic.Stage (Check)
 import Semantic.Tree.Combinators.Inferred (Inferred (Solved))
+import qualified Semantic.Tree.Constraints as Semantic (Constraints (..))
 import qualified Semantic.Tree.Instance as Semantic (Evidence (..), Instance (..))
 
 data Instance scope = Instance
   { evidence :: !(Strict.Vector (Evidence (Local ':+ scope))),
-    prerequisitesCount :: !Int,
+    prerequisitesCount :: !ConstraintCount,
     members :: !(Strict.Vector (MethodConcrete scope))
   }
   deriving (Show)
@@ -42,6 +44,8 @@ simplify :: Semantic.Instance Normal Check scope -> Instance scope
 simplify Semantic.Instance {evidence = Solved (Semantic.Evidence evidence), prerequisites, members} =
   Instance
     { evidence,
-      prerequisitesCount = length prerequisites,
+      prerequisitesCount = case prerequisites of
+        Semantic.None -> Null
+        Semantic.Constraints constraints -> ConstraintCount $ length constraints,
       members = MethodConcrete.simplify <$> members
     }

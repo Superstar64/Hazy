@@ -1,6 +1,7 @@
 module Generate.Go.Instance where
 
 import Control.Monad.ST (ST)
+import Core.Tree.Constraints (ConstraintCount (..))
 import Core.Tree.Instance (Instance (..))
 import Core.Tree.MethodConcrete (MethodConcrete (..))
 import Data.Foldable (toList)
@@ -17,7 +18,10 @@ import qualified Javascript.Tree.Statement as Javascript (Statement (..))
 
 generate :: Context s scope -> Instance scope -> ST s Javascript.Expression
 generate context Instance {evidence, prerequisitesCount, members} = do
-  fresh <- Vector.replicateM prerequisitesCount (Context.fresh context)
+  let actualCount = case prerequisitesCount of
+        ConstraintCount count -> count
+        Null -> 0
+  fresh <- Vector.replicateM actualCount (Context.fresh context)
   context <- pure $ Context.evidenceBindings fresh context
   evidence <- traverse (Evidence.generate context) (toList evidence)
   let supers = Javascript.Literal <$> evidence
@@ -28,19 +32,19 @@ generate context Instance {evidence, prerequisitesCount, members} = do
         Javascript.Object
           { fields = zip Mangle.fields (supers ++ fields)
           }
-  if
-    | 0 <- prerequisitesCount ->
-        pure $
-          Expression.delay
-            [ Javascript.Expression $
-                Javascript.Assign
-                  { target = Expression.done,
-                    value = object
-                  }
-            ]
-    | otherwise ->
-        pure
-          Javascript.Arrow
-            { parameters = toList fresh,
-              body = [Javascript.Return object]
-            }
+  case prerequisitesCount of
+    Null ->
+      pure $
+        Expression.delay
+          [ Javascript.Expression $
+              Javascript.Assign
+                { target = Expression.done,
+                  value = object
+                }
+          ]
+    ConstraintCount {} ->
+      pure
+        Javascript.Arrow
+          { parameters = toList fresh,
+            body = [Javascript.Return object]
+          }

@@ -47,8 +47,8 @@ import qualified Semantic.Shift as Shift
 import Semantic.Stage (Check, Resolve)
 import qualified Semantic.Tree.Combinators.Implicit as Semantic (Implicit (..))
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
-import qualified Semantic.Tree.Constraint as Solved (Constraint)
 import qualified Semantic.Tree.Constraints as Solved (Constraints (Constraints))
+import qualified Semantic.Tree.Constraints as Solved.Constraints
 import qualified Semantic.Tree.Instance as Semantic (Instance (..))
 import qualified Semantic.Tree.Instance as Solved (Evidence (..), Instance (..))
 import qualified Semantic.Tree.MethodConcrete as Semantic (MethodConcrete (..))
@@ -80,7 +80,7 @@ head = \case
 data Instance s scope = Instance
   { startPosition :: !Position,
     parameters :: !(Strict.Vector (Solved.TypePattern Position Check scope)),
-    prerequisites :: !(Strict.Vector (Solved.Constraint Position Check scope)),
+    prerequisites :: !(Solved.Constraints Position Check scope),
     evidence :: !(Strict.Vector (Simple.Evidence (Local ':+ scope))),
     members :: !(Strict.Vector (MethodConcrete s scope))
   }
@@ -121,16 +121,16 @@ check
                 variable = case key of
                   Data {index1, head1} -> Evidence.Data index1 head1
                   Class {index2, head2} -> Evidence.Class index2 head2
-                instanciation
-                  | null prerequisites = Simple.Mono
-                  | otherwise = Simple.Instanciation $ Strict.Vector.fromList $ do
-                      i <- [0 .. length prerequisites - 1]
-                      pure
-                        Simple.Evidence.Variable
-                          { variable = Evidence.Index (Evidence0.Assumed i),
-                            instanciation = Simple.Instanciation.Mono
-                          }
-        context <- Scheme.augment startPosition parameters (Solved.Constraints prerequisites) Mask.Runtime context
+                instanciation = case prerequisites of
+                  Solved.Constraints.None -> Simple.Mono
+                  Solved.Constraints prerequisites -> Simple.Instanciation $ Strict.Vector.fromList $ do
+                    i <- [0 .. length prerequisites - 1]
+                    pure
+                      Simple.Evidence.Variable
+                        { variable = Evidence.Index (Evidence0.Assumed i),
+                          instanciation = Simple.Instanciation.Mono
+                        }
+        context <- Scheme.augment startPosition parameters prerequisites Mask.Runtime context
         {-
           instances where the constraints contain the variable in the non head part
           should not kind check, so we should be able to safely ignore them
