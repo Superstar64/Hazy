@@ -202,7 +202,7 @@ monoVariable :: Term.Index scope -> Expression scope
 monoVariable variable =
   Variable
     { variable,
-      instanciation = Instanciation Strict.Vector.empty
+      instanciation = Instanciation.Mono
     }
 
 lambdaVariable :: Expression (Scope.SimpleDeclaration ':+ scopes)
@@ -236,7 +236,7 @@ eqChar =
   eq
     Evidence.Variable
       { variable = Index.Evidence.Builtin Index.Evidence.EqChar,
-        instanciation = Instanciation.empty
+        instanciation = Instanciation.Mono
       }
 
 eq :: Evidence scope -> Expression scope -> Expression scope -> Expression scope
@@ -244,7 +244,7 @@ eq evidence left right =
   Method
     { method = Method.equal,
       evidence,
-      instanciation = Instanciation Strict.Vector.empty,
+      instanciation = Instanciation.Mono,
       methodInfo = Class.info Builtin.eq
     }
     `call` left
@@ -255,7 +255,7 @@ purex evidence value =
   Method
     { method = Method.pure,
       evidence,
-      instanciation = Instanciation Strict.Vector.empty,
+      instanciation = Instanciation.Mono,
       methodInfo = Class.info Builtin.applicative
     }
     `call` value
@@ -265,7 +265,7 @@ run evidence ignore thenx =
   Method
     { method = Method.thenx,
       evidence,
-      instanciation = Instanciation Strict.Vector.empty,
+      instanciation = Instanciation.Mono,
       methodInfo = Class.info Builtin.monad
     }
     `call` ignore
@@ -279,7 +279,7 @@ bind fail evidence input output =
         if fail
           then Evidence.Super {base = evidence, index = 0}
           else evidence,
-      instanciation = Instanciation Strict.Vector.empty,
+      instanciation = Instanciation.Mono,
       methodInfo = Class.info Builtin.monad
     }
     `call` input
@@ -290,7 +290,7 @@ failx evidence =
   Method
     { method = Method.fail,
       evidence,
-      instanciation = Instanciation Strict.Vector.empty,
+      instanciation = Instanciation.Mono,
       methodInfo = Class.info Builtin.monadFail
     }
     `call` nil
@@ -302,7 +302,7 @@ integer_ integer evidence =
         Method
           { method = Method.fromInteger,
             evidence,
-            instanciation = Instanciation Strict.Vector.empty,
+            instanciation = Instanciation.Mono,
             methodInfo = Class.info Builtin.num
           },
       argument = Integer {integer}
@@ -315,7 +315,7 @@ float_ float evidence =
         Method
           { method = Method.fromRational,
             evidence,
-            instanciation = Instanciation Strict.Vector.empty,
+            instanciation = Instanciation.Mono,
             methodInfo = Class.info Builtin.fractional
           },
       argument =
@@ -433,18 +433,18 @@ instance Monadic 'Semantic.Statements.Comprehension where
       then
         Evidence.Variable
           { variable = Index.Evidence.Builtin Index.Evidence.MonadFailList,
-            instanciation = Instanciation.empty
+            instanciation = Instanciation.Mono
           }
       else
         Evidence.Variable
           { variable = Index.Evidence.Builtin Index.Evidence.MonadList,
-            instanciation = Instanciation.empty
+            instanciation = Instanciation.Mono
           }
   lift _ =
     purex
       Evidence.Variable
         { variable = Index.Evidence.Builtin Index.Evidence.ApplicativeList,
-          instanciation = Instanciation.empty
+          instanciation = Instanciation.Mono
         }
 
 instance (Monadic syntax) => Simplify (Semantic.Statements syntax) where
@@ -761,7 +761,7 @@ simplifyWith expression [] = case expression of
           Method
             { method = Method.negate,
               evidence,
-              instanciation = Instanciation Strict.Vector.empty,
+              instanciation = Instanciation.Mono,
               methodInfo = Class.info Builtin.num
             },
         argument = simplify negative

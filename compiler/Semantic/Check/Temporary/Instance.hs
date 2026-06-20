@@ -10,7 +10,7 @@ import qualified Core.Tree.Constraint as Simple (Constraint (Constraint))
 import qualified Core.Tree.Constraint as Simple.Constraint (Constraint (..))
 import qualified Core.Tree.Evidence as Simple (Evidence)
 import qualified Core.Tree.Evidence as Simple.Evidence
-import qualified Core.Tree.Instanciation as Simple (Instanciation (Instanciation))
+import qualified Core.Tree.Instanciation as Simple (Instanciation (..))
 import qualified Core.Tree.Instanciation as Simple.Instanciation
 import qualified Core.Tree.Scheme as Simple (Scheme (..))
 import qualified Core.Tree.SchemeOver as Simple (SchemeOver (..))
@@ -27,7 +27,7 @@ import qualified Semantic.Check.Go.Scheme as Scheme
 import Semantic.Check.InstanceAnnotation (InstanceAnnotation (InstanceAnnotation))
 import qualified Semantic.Check.InstanceAnnotation as InstanceAnnotation
 import qualified Semantic.Check.Mask as Mask
-import qualified Semantic.Check.Simple.Constraint as Simple.Constraint (lift)
+import qualified Semantic.Check.Simple.Constraints as Simple.Constraints
 import qualified Semantic.Check.Simple.Scheme as Simple.Scheme (augment')
 import qualified Semantic.Check.Simple.Type as Simple.Type (lift)
 import qualified Semantic.Check.Temporary.Definition as Definition
@@ -48,6 +48,7 @@ import Semantic.Stage (Check, Resolve)
 import qualified Semantic.Tree.Combinators.Implicit as Semantic (Implicit (..))
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import qualified Semantic.Tree.Constraint as Solved (Constraint)
+import qualified Semantic.Tree.Constraints as Solved (Constraints (Constraints))
 import qualified Semantic.Tree.Instance as Semantic (Instance (..))
 import qualified Semantic.Tree.Instance as Solved (Evidence (..), Instance (..))
 import qualified Semantic.Tree.MethodConcrete as Semantic (MethodConcrete (..))
@@ -120,14 +121,16 @@ check
                 variable = case key of
                   Data {index1, head1} -> Evidence.Data index1 head1
                   Class {index2, head2} -> Evidence.Class index2 head2
-                instanciation = Simple.Instanciation $ Strict.Vector.fromList $ do
-                  i <- [0 .. length prerequisites - 1]
-                  pure
-                    Simple.Evidence.Variable
-                      { variable = Evidence.Index (Evidence0.Assumed i),
-                        instanciation = Simple.Instanciation.empty
-                      }
-        context <- Scheme.augment startPosition parameters prerequisites Mask.Runtime context
+                instanciation
+                  | null prerequisites = Simple.Mono
+                  | otherwise = Simple.Instanciation $ Strict.Vector.fromList $ do
+                      i <- [0 .. length prerequisites - 1]
+                      pure
+                        Simple.Evidence.Variable
+                          { variable = Evidence.Index (Evidence0.Assumed i),
+                            instanciation = Simple.Instanciation.Mono
+                          }
+        context <- Scheme.augment startPosition parameters (Solved.Constraints prerequisites) Mask.Runtime context
         {-
           instances where the constraints contain the variable in the non head part
           should not kind check, so we should be able to safely ignore them
@@ -163,7 +166,7 @@ check
                     definition =
                       Unify.schemeOver
                         (Simple.Type.lift <$> parameters)
-                        (Simple.Constraint.lift <$> constraints)
+                        (Simple.Constraints.lift constraints)
                         definition
                   }
             check index scheme Semantic.Default {} = do

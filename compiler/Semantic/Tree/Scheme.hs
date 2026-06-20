@@ -8,8 +8,8 @@ import qualified Semantic.FreeVariables as FreeVariables
 import Semantic.Scope (Environment ((:+)), Local)
 import Semantic.Shift (Shift, shift, shiftDefault)
 import qualified Semantic.Shift as Shift
-import Semantic.Tree.Constraint (Constraint)
-import qualified Semantic.Tree.Constraint as Constraint
+import Semantic.Tree.Constraints (Constraints)
+import qualified Semantic.Tree.Constraints as Constraints
 import Semantic.Tree.Type (Type)
 import Semantic.Tree.Type as Type (anonymize)
 import Semantic.Tree.TypePattern (TypePattern)
@@ -19,7 +19,7 @@ data Scheme position stage scope = Scheme
   { startPosition :: !position,
     implicit :: !Bool,
     parameters :: !(Strict.Vector (TypePattern position stage scope)),
-    constraints :: !(Strict.Vector (Constraint position stage scope)),
+    constraints :: !(Constraints position stage scope),
     result :: !(Type position stage (Local ':+ scope))
   }
   deriving (Show, Eq)
@@ -33,14 +33,14 @@ instance Shift.Functor (Scheme position stage) where
       { startPosition,
         implicit,
         parameters = Shift.map category <$> parameters,
-        constraints = fmap (Shift.map category) constraints,
+        constraints = Shift.map category constraints,
         result = Shift.map (Shift.Over category) result
       }
 
 instance FreeTypeVariables (Scheme position) where
   freeTypeVariables target Scheme {constraints, result} =
     concat
-      [ foldMap (freeTypeVariables target) constraints,
+      [ freeTypeVariables target constraints,
         freeTypeVariables (FreeVariables.Over target) result
       ]
 
@@ -50,6 +50,6 @@ anonymize Scheme {implicit, parameters, constraints, result} =
     { startPosition = (),
       implicit,
       parameters = TypePattern.anonymize <$> parameters,
-      constraints = Constraint.anonymize <$> constraints,
+      constraints = Constraints.anonymize constraints,
       result = Type.anonymize result
     }

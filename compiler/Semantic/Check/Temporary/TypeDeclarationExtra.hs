@@ -3,6 +3,7 @@ module Semantic.Check.Temporary.TypeDeclarationExtra where
 import Control.Monad.ST (ST)
 import qualified Core.Tree.Constraint as Simple (Constraint (..))
 import qualified Core.Tree.Constraint as Simple.Constraint
+import Core.Tree.Constraints as Simple (Constraints (Constraints))
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Context (Context)
@@ -52,12 +53,13 @@ check context classx declaration
             augment
               position
               (Strict.Vector.singleton parameter)
-              ( Strict.Vector.singleton
-                  Simple.Constraint
-                    { classx = Type2.Index classx,
-                      head = 0,
-                      arguments = Strict.Vector.empty
-                    }
+              ( Constraints $
+                  Strict.Vector.singleton
+                    Simple.Constraint
+                      { classx = Type2.Index classx,
+                        head = 0,
+                        arguments = Strict.Vector.empty
+                      }
               )
               Mask.Inline
               context

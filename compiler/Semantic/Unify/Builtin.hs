@@ -109,5 +109,5 @@ constrain fallthough constrain = table
       pure $ single Evidence.MonadST
     table _ _ _ = fallthough
 
-    single builtin = call builtin []
+    single builtin = Evidence.Variable (Evidence.Builtin builtin) Mono
     call builtin list = Evidence.Variable (Evidence.Builtin builtin) $ Instanciation $ fromList list

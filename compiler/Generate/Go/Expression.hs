@@ -2,11 +2,13 @@ module Generate.Go.Expression where
 
 import Control.Monad (zipWithM)
 import Control.Monad.ST (ST)
+import Core.Tree.Constraints (ConstraintCount (..))
 import Core.Tree.ConstructorInfo (ConstructorInfo (..))
 import Core.Tree.EntryInfo (EntryInfo (EntryInfo))
 import qualified Core.Tree.EntryInfo
 import Core.Tree.Expression (Expression (..))
 import Core.Tree.Instanciation (Instanciation (Instanciation))
+import qualified Core.Tree.Instanciation as Instanciation
 import Core.Tree.MethodInfo (MethodInfo (..))
 import Core.Tree.SchemeOver (SchemeOver (..))
 import qualified Core.Tree.SchemeOver as SchemeOver
@@ -114,11 +116,12 @@ force object =
           }
    in value
 
-evaluate :: Bool -> Javascript.Expression -> [Javascript.Expression] -> Javascript.Expression
-evaluate False thunk [] = force thunk
-evaluate True value [] = value
-evaluate _ function arguments =
-  Javascript.Call {function, arguments}
+implicit :: Context s scope -> Bool -> Javascript.Expression -> Instanciation scope -> ST s Javascript.Expression
+implicit _ False thunk Instanciation.Mono = pure $ force thunk
+implicit _ True value Instanciation.Mono = pure $ value
+implicit context _ function (Instanciation arguments) = do
+  arguments <- traverse (Evidence.generate context) (toList arguments)
+  pure Javascript.Call {function, arguments}
 
 generateConstructor ::
   Context s scope ->
@@ -166,9 +169,8 @@ data Binder
   | Group
 
 thunk :: Context s scope -> Binder -> Expression scope -> ST s Javascript.Expression
-thunk context Done Variable {variable, instanciation = Instanciation instanciation}
-  | null instanciation,
-    Term.Binding {name, strict = False} <- context !- variable = do
+thunk context Done Variable {variable, instanciation = Instanciation.Mono}
+  | Term.Binding {name, strict = False} <- context !- variable = do
       name <- symbol context name
       pure Javascript.Variable {name}
 thunk context binder expression = case expression of
@@ -196,16 +198,16 @@ generatePure,
     Expression scope ->
     ST s ([Javascript.Statement 'True], Javascript.Expression)
 generateImpure context expression = case expression of
-  Variable {variable, instanciation = Instanciation instanciation} -> do
+  Variable {variable, instanciation} -> do
     let Term.Binding {name, strict} = context !- variable
     name <- symbol context name
     let expression = Javascript.Variable {name}
-    arguments <- traverse (Evidence.generate context) (toList instanciation)
-    pure ([], evaluate strict expression arguments)
+    result <- implicit context strict expression instanciation
+    pure ([], result)
   Method
     { method = Method.Index {methodIndex},
       evidence,
-      instanciation = Instanciation instanciation,
+      instanciation,
       methodInfo = MethodInfo {constraintCount}
     } -> do
       evidence <- Evidence.generate context evidence
@@ -217,8 +219,8 @@ generateImpure context expression = case expression of
               }
           statement = Javascript.Const name value
           expression = Javascript.Variable {name}
-      arguments <- traverse (Evidence.generate context) (toList instanciation)
-      pure ([statement], evaluate False expression arguments)
+      result <- implicit context False expression instanciation
+      pure ([statement], result)
   Selector
     { selector = Selector.Index {selectorIndex},
       argument,
@@ -230,7 +232,8 @@ generateImpure context expression = case expression of
               { object,
                 field = Mangle.fields !! (selectorIndex + 1)
               }
-      pure (statements, evaluate (Info.strict strict) select [])
+      result <- implicit context (Info.strict strict) select Instanciation.Mono
+      pure (statements, result)
   Call {function, argument} -> do
     (statements, function) <- generateImpure context function
     argument <- thunk context Done argument
@@ -282,14 +285,17 @@ generateInto context target = \case
 declaration :: Context s scope -> SchemeOver Expression scope -> ST s Javascript.Expression
 declaration context scheme@SchemeOver {result = expression} = do
   let constraintCount = SchemeOver.constraintCount scheme
-  fresh <- Vector.replicateM constraintCount (Context.fresh context)
+      actualCount = case constraintCount of
+        ConstraintCount count -> count
+        Null -> 0
+  fresh <- Vector.replicateM actualCount (Context.fresh context)
   context <- pure $ Context.evidenceBindings fresh context
-  if
-    | 0 <- constraintCount -> thunk context Group expression
-    | otherwise -> do
-        statements <- generateInto context Return expression
-        pure
-          Javascript.Arrow
-            { parameters = toList fresh,
-              body = statements
-            }
+  case constraintCount of
+    Null -> thunk context Group expression
+    ConstraintCount {} -> do
+      statements <- generateInto context Return expression
+      pure
+        Javascript.Arrow
+          { parameters = toList fresh,
+            body = statements
+          }

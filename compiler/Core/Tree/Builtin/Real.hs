@@ -6,7 +6,7 @@ import Core.Tree.Constraint (Constraint (..))
 import Core.Tree.Evidence (Evidence (..))
 import Core.Tree.Expression (Expression (Hook, hook))
 import Core.Tree.Hook (Hook (..))
-import qualified Core.Tree.Instanciation as Instanciation (empty)
+import qualified Core.Tree.Instanciation as Instanciation
 import qualified Core.Tree.Scheme as Scheme
 import qualified Core.Tree.Type as Type
 import qualified Data.Vector.Strict as Strict.Vector
@@ -55,4 +55,4 @@ realExtra =
           Hook {hook = DefaultReal {real, evidence = Variable {variable, instanciation}}}
           where
             variable = Evidence.Index $ Evidence0.Shift $ Evidence0.Assumed 0
-            instanciation = Instanciation.empty
+            instanciation = Instanciation.Mono

@@ -48,4 +48,4 @@ numExtra =
           Hook {hook = DefaultNum {num, evidence = Variable {variable, instanciation}}}
           where
             variable = Evidence.Index $ Evidence0.Shift $ Evidence0.Assumed 0
-            instanciation = Instanciation.empty
+            instanciation = Instanciation.Mono

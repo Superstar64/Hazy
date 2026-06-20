@@ -38,17 +38,25 @@ instance Shift2.Functor Evidence where
   map = Substitute.mapDefault
 
 instance Substitute.Functor Evidence where
-  map (Substitute _ _ replacements) Variable {variable = Evidence.Index (Evidence0.Assumed index), instanciation}
-    | Instanciation.null instanciation = replacements Vector.! index
-  map (Substitute.Over category) Variable {variable = Evidence.Index (Evidence0.Shift index), instanciation}
-    | Instanciation.null instanciation =
-        shift $
-          Substitute.map
-            category
-            Variable
-              { variable = Evidence.Index index,
-                instanciation = Instanciation.empty
-              }
+  map
+    (Substitute _ _ replacements)
+    Variable
+      { variable = Evidence.Index (Evidence0.Assumed index),
+        instanciation = Instanciation.Mono
+      } = replacements Vector.! index
+  map
+    (Substitute.Over category)
+    Variable
+      { variable = Evidence.Index (Evidence0.Shift index),
+        instanciation = Instanciation.Mono
+      } =
+      shift $
+        Substitute.map
+          category
+          Variable
+            { variable = Evidence.Index index,
+              instanciation = Instanciation.Mono
+            }
   map category evidence = case evidence of
     Variable {variable, instanciation} ->
       Variable

@@ -4,11 +4,14 @@ module Semantic.Unify
   ( Type,
     Scheme (..),
     SchemeOver,
+    Constraints,
     Constraint,
     Evidence,
     Instanciation,
     scheme,
     schemeOver,
+    constraints,
+    none,
     constraintx,
     mono,
     monoScheme,
@@ -35,6 +38,7 @@ module Semantic.Unify
     variable',
     super,
     instanciation,
+    monoInstanciation,
     fresh,
     mark,
     unify,
@@ -89,6 +93,8 @@ import Semantic.Unify.Class
   )
 import Semantic.Unify.Constraint (Constraint)
 import qualified Semantic.Unify.Constraint as Constraint
+import Semantic.Unify.Constraints (Constraints (..))
+import qualified Semantic.Unify.Constraints as Constraints
 import Semantic.Unify.Evidence (Evidence)
 import qualified Semantic.Unify.Evidence as Evidence (Evidence (..), solve)
 import Semantic.Unify.Instanciation (Instanciation (..))
@@ -97,7 +103,7 @@ import Semantic.Unify.SchemeOver
   ( Body ((:::)),
     Generalize (..),
     MapScheme (..),
-    SchemeOver (..),
+    SchemeOver (SchemeOver),
     SolveScheme (..),
     generalizeBody,
     instanciateOver,
@@ -191,7 +197,7 @@ function = Function
 
 scheme ::
   Strict.Vector.Vector (Type s scope) ->
-  Strict.Vector.Vector (Constraint s scope) ->
+  Constraints s scope ->
   Type s (Scope.Local ':+ scope) ->
   Scheme s scope
 scheme parameters constraints result =
@@ -201,7 +207,7 @@ scheme parameters constraints result =
 -- todo, this function isn't safe
 schemeOver ::
   Strict.Vector (Type s scope) ->
-  Strict.Vector (Constraint s scope) ->
+  Constraints s scope ->
   typex s (Scope.Local ':+ scope) ->
   SchemeOver typex s scope
 schemeOver parameters constraints result =
@@ -210,6 +216,12 @@ schemeOver parameters constraints result =
       constraints,
       result
     }
+
+constraints :: Strict.Vector (Constraint s scope) -> Constraints s scope
+constraints = Constraints
+
+none :: Constraints s scope
+none = None
 
 constraintx ::
   Type2.Index scope ->
@@ -227,7 +239,7 @@ mono :: (Shift (typex s)) => typex s scope -> SchemeOver typex s scope
 mono result =
   SchemeOver
     { parameters = Strict.Vector.empty,
-      constraints = Strict.Vector.empty,
+      constraints = Constraints.None,
       result = shift result
     }
 
@@ -242,6 +254,9 @@ super = Evidence.Super
 
 instanciation :: Strict.Vector (Evidence s scope) -> Instanciation s scope
 instanciation = Instanciation
+
+monoInstanciation :: Instanciation s scope
+monoInstanciation = Instanciation.Mono
 
 instanciate :: Context s scope -> Position -> Scheme s scope -> ST s (Type s scope, Instanciation s scope)
 instanciate context position Scheme {runScheme} =

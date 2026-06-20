@@ -1,14 +1,14 @@
 module Semantic.Check.Temporary.Declaration where
 
 import Control.Monad.ST (ST)
-import qualified Core.Tree.Constraint as Simple.Constraint (simplify)
+import qualified Core.Tree.Constraints as Simple.Constraints (simplify)
 import qualified Core.Tree.Type as Simple (simplify)
 import qualified Data.Vector as Vector
 import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Context (Context (..), groupTermBindings)
 import qualified Semantic.Check.Go.Scheme as Solved.Scheme
 import qualified Semantic.Check.Mask as Mask
-import qualified Semantic.Check.Simple.Constraint as Simple.Constraint (lift)
+import qualified Semantic.Check.Simple.Constraints as Simple.Constraints (lift)
 import qualified Semantic.Check.Simple.Scheme as Simple.Scheme
 import Semantic.Check.Simple.Type (lift)
 import qualified Semantic.Check.Temporary.Definition3 as Definition3
@@ -123,7 +123,7 @@ checkAnnotation
       pure $
         Unify.schemeOver
           (lift . TypePattern.typex' <$> parameters)
-          (Simple.Constraint.lift . Simple.Constraint.simplify <$> constraints)
+          (Simple.Constraints.lift $ Simple.Constraints.simplify $ constraints)
           definition
 
 solve :: Declaration locality s scope -> Unify.Solve s (Solved.Declaration locality Group Check scope)

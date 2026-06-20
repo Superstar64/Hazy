@@ -2,6 +2,7 @@ module Core.Tree.Builtin.Functor where
 
 import Core.Tree.Class (Class (..))
 import Core.Tree.ClassExtra (ClassExtra (..))
+import qualified Core.Tree.Constraints as Constraints
 import Core.Tree.Evidence (Evidence (Variable, instanciation, variable))
 import Core.Tree.Expression (Expression (Hook, hook))
 import Core.Tree.Hook (Hook (..))
@@ -32,7 +33,7 @@ functor =
         Scheme
           SchemeOver
             { parameters = Strict.Vector.fromList [Type.smallType, Type.smallType],
-              constraints = Strict.Vector.empty,
+              constraints = Constraints.None,
               result =
                 (a `Type.Function` b)
                   `Type.Function` f
@@ -44,7 +45,7 @@ functor =
         Scheme
           SchemeOver
             { parameters = Strict.Vector.fromList [Type.smallType, Type.smallType],
-              constraints = Strict.Vector.empty,
+              constraints = Constraints.None,
               result = a `Type.Function` f `Type.Call` b `Type.Function` f `Type.Call` b
             }
 
@@ -60,4 +61,4 @@ functorExtra =
           Hook {hook = DefaultFunctor {functor, evidence = Variable {variable, instanciation}}}
           where
             variable = Evidence.Index $ Evidence0.Shift $ Evidence0.Assumed 0
-            instanciation = Instanciation.empty
+            instanciation = Instanciation.Mono

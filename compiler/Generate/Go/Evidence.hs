@@ -3,6 +3,7 @@ module Generate.Go.Evidence where
 import Control.Monad.ST (ST)
 import Core.Tree.Evidence (Evidence (..))
 import Core.Tree.Instanciation (Instanciation (Instanciation))
+import qualified Core.Tree.Instanciation as Instanciation
 import Data.Foldable (toList)
 import qualified Data.Map as Map
 import qualified Generate.Binding.Evidence as Evidence (Binding (..))
@@ -18,23 +19,27 @@ import qualified Semantic.Index.Evidence as Evidence (Builtin (..), Index (..))
 
 generate :: Context s scope -> Evidence scope -> ST s Javascript.Expression
 generate context = \case
-  Variable {variable = Evidence.Builtin (EqTuple number), instanciation = Instanciation arguments} -> do
-    let Mangle.Builtin {eqTuple} = Context.builtin context
-    arguments <- traverse (generate context) (toList arguments)
-    pure
-      Javascript.Call
-        { function = Javascript.Variable {name = eqTuple},
-          arguments = unpackTuple number : arguments
-        }
-  Variable {variable = Evidence.Builtin (OrdTuple number), instanciation = Instanciation arguments} -> do
-    let Mangle.Builtin {ordTuple} = Context.builtin context
-    arguments <- traverse (generate context) (toList arguments)
-    pure
-      Javascript.Call
-        { function = Javascript.Variable {name = ordTuple},
-          arguments = unpackTuple number : arguments
-        }
-  Variable {variable, instanciation = Instanciation arguments} -> do
+  Variable {variable = Evidence.Builtin (EqTuple number), instanciation}
+    | Instanciation arguments <- instanciation -> do
+        let Mangle.Builtin {eqTuple} = Context.builtin context
+        arguments <- traverse (generate context) (toList arguments)
+        pure
+          Javascript.Call
+            { function = Javascript.Variable {name = eqTuple},
+              arguments = unpackTuple number : arguments
+            }
+    | otherwise -> error "bad tuple instance"
+  Variable {variable = Evidence.Builtin (OrdTuple number), instanciation}
+    | Instanciation arguments <- instanciation -> do
+        let Mangle.Builtin {ordTuple} = Context.builtin context
+        arguments <- traverse (generate context) (toList arguments)
+        pure
+          Javascript.Call
+            { function = Javascript.Variable {name = ordTuple},
+              arguments = unpackTuple number : arguments
+            }
+    | otherwise -> error "bad tuple instance"
+  Variable {variable, instanciation} -> do
     let strict = case variable of
           Evidence.Index {} -> True
           Evidence.Class {} -> False
@@ -135,13 +140,13 @@ generate context = \case
               applicativeST,
               monadST
             } = Context.builtin context
-    if null arguments
-      then
+    case instanciation of
+      Instanciation.Mono ->
         pure $
           if strict
             then literal
             else force literal
-      else do
+      Instanciation arguments -> do
         arguments <- traverse (generate context) (toList arguments)
         pure $
           Javascript.Call

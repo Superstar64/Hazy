@@ -3,6 +3,7 @@ module Core.Tree.Builtin.MonadFail where
 import Core.Tree.Class (Class (..))
 import Core.Tree.ClassExtra (ClassExtra (..))
 import Core.Tree.Constraint (Constraint (..))
+import qualified Core.Tree.Constraints as Constraints
 import Core.Tree.Evidence (Evidence (Variable, instanciation, variable))
 import Core.Tree.Expression (Expression (Hook, hook))
 import Core.Tree.Hook (Hook (..))
@@ -37,7 +38,7 @@ monadFail =
       Scheme
         SchemeOver
           { parameters = Strict.Vector.singleton Type.smallType,
-            constraints = Strict.Vector.empty,
+            constraints = Constraints.None,
             result =
               Type.Constructor Type2.List
                 `Type.Call` Type.Constructor Type2.Char
@@ -56,4 +57,4 @@ monadFailExtra =
           Hook {hook = DefaultMonadFail {monadFail, evidence = Variable {variable, instanciation}}}
           where
             variable = Evidence.Index $ Evidence0.Shift $ Evidence0.Assumed 0
-            instanciation = Instanciation.empty
+            instanciation = Instanciation.Mono

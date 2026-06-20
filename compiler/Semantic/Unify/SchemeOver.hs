@@ -35,7 +35,8 @@ import Semantic.Unify.Class
   )
 import qualified Semantic.Unify.Class as Class
 import Semantic.Unify.Constraint (Constraint (..))
-import qualified Semantic.Unify.Constraint as Constraint
+import Semantic.Unify.Constraints (Constraints (..))
+import qualified Semantic.Unify.Constraints as Constraints
 import Semantic.Unify.Instanciation (Instanciation (..))
 import Semantic.Unify.Type
   ( Box (..),
@@ -50,14 +51,14 @@ import Prelude hiding (Functor, map)
 
 data SchemeOver typex s scope = SchemeOver
   { parameters :: !(Strict.Vector (Type s scope)),
-    constraints :: !(Strict.Vector (Constraint s scope)),
+    constraints :: !(Constraints s scope),
     result :: !(typex s (Scope.Local ':+ scope))
   }
 
 instance (Zonk typex) => Zonk (SchemeOver typex) where
   zonk zonker SchemeOver {parameters, constraints, result} = do
     parameters <- traverse (zonk zonker) parameters
-    constraints <- traverse (zonk zonker) constraints
+    constraints <- zonk zonker constraints
     result <- zonk zonker result
     pure SchemeOver {parameters, constraints, result}
 
@@ -68,7 +69,7 @@ instance (Functor (typex s)) => Functor (SchemeOver typex s) where
   map category SchemeOver {parameters, constraints, result} =
     SchemeOver
       { parameters = Class.map category <$> parameters,
-        constraints = Class.map category <$> constraints,
+        constraints = Class.map category constraints,
         result = Class.map (Class.Over category) result
       }
 
@@ -80,11 +81,15 @@ instanciateOver ::
   ST s (typex s scope, Instanciation s scope)
 instanciateOver context position SchemeOver {parameters, constraints, result} = do
   fresh <- traverse fresh parameters
-  evidence <- for constraints $ \Constraint {classx, head, arguments} -> do
-    head <- pure $ fresh Strict.Vector.! head
-    arguments <- pure $ toList $ fmap (substitute $ Substitute fresh) arguments
-    constrainWith context position classx head arguments
-  pure $ (substitute (Substitute fresh) result, Instanciation evidence)
+  instanciation <- case constraints of
+    Constraints constraints -> do
+      evidence <- for constraints $ \Constraint {classx, head, arguments} -> do
+        head <- pure $ fresh Strict.Vector.! head
+        arguments <- pure $ toList $ fmap (substitute $ Substitute fresh) arguments
+        constrainWith context position classx head arguments
+      pure $ Instanciation evidence
+    None -> pure Mono
+  pure $ (substitute (Substitute fresh) result, instanciation)
 
 newtype Generalize typex s scopes = Generalize
   { runGeneralize ::
@@ -129,12 +134,12 @@ generalizeBody position context (Generalize run) = do
   pure $
     SchemeOver
       { parameters,
-        constraints = Strict.Vector.empty,
+        constraints = Constraints.None,
         result
       }
       ::: do
         parameters <- traverse (Type.solve position) parameters
-        constraints <- traverse (Constraint.solve position) Strict.Vector.empty
+        constraints <- Constraints.solve position Constraints.None
         result <- term
         pure
           Simple.SchemeOver
@@ -191,7 +196,7 @@ solve ::
   Solve s (Simple.SchemeOver target scope)
 solve (SolveScheme go) position SchemeOver {parameters, constraints, result} = do
   parameters <- traverse (Type.solve position) parameters
-  constraints <- traverse (Constraint.solve position) constraints
+  constraints <- Constraints.solve position constraints
   result <- go position result
   pure $
     Simple.SchemeOver

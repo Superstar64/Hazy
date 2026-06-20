@@ -3,10 +3,10 @@ module Syntax.Tree.Scheme where
 
 import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
-import Syntax.Parser (Parser, asum, betweenParens, many, position, sepByComma, token, try, (<**>))
+import Syntax.Parser (Parser, asum, many, position, token)
 import Syntax.Position (Position)
-import Syntax.Tree.Constraint (Constraint)
-import qualified Syntax.Tree.Constraint as Constraint
+import Syntax.Tree.Constraints (Constraints)
+import qualified Syntax.Tree.Constraints as Constraints
 import Syntax.Tree.Type (Type)
 import qualified Syntax.Tree.Type as Type
 import Syntax.Tree.TypePattern (TypePattern)
@@ -18,14 +18,14 @@ data Scheme position
     Explicit
       { startPosition :: !position,
         parameters :: !(Strict.Vector (TypePattern position)),
-        constraints :: !(Strict.Vector (Constraint position)),
+        constraints :: !(Constraints position),
         result :: !(Type position)
       }
   | -- |
     -- > C x => t
     Implicit
       { startPosition :: !position,
-        constraints :: !(Strict.Vector (Constraint position)),
+        constraints :: !(Constraints position),
         result :: !(Type position)
       }
   deriving (Show)
@@ -34,45 +34,28 @@ mono :: Type position -> Scheme position
 mono result =
   Implicit
     { startPosition = Type.startPosition result,
-      constraints = Strict.Vector.empty,
+      constraints = Constraints.None,
       result
     }
 
 parse :: Parser (Scheme Position)
 parse =
-  let parseConstraint constrain mono =
-        asum
-          [ constrain
-              <$> try (betweenParens (Strict.Vector.fromList <$> sepByComma Constraint.parse) <* token "=>")
-              <*> Type.parse,
-            constrain <$> try (Strict.Vector.singleton <$> Constraint.parse <* token "=>") <*> Type.parse,
-            mono <$> Type.parse
-          ]
-   in position
-        <**> asum
-          [ forallx <**> parseConstraint explicit unqualified,
-            parseConstraint implicit mono
-          ]
+  asum
+    [ explicit <$> position <*> forallx <*> Constraints.parse <*> Type.parse,
+      implicit <$> position <*> Constraints.parse <*> Type.parse
+    ]
   where
-    explicit constraints result parameters startPosition =
+    explicit startPosition parameters constraints result =
       Explicit
         { startPosition,
           parameters,
           constraints,
           result
         }
-    unqualified result parameters startPosition =
-      Explicit
-        { startPosition,
-          parameters,
-          constraints = Strict.Vector.empty,
-          result
-        }
-    implicit constraints result startPosition = Implicit {startPosition, constraints, result}
-    mono result startPosition =
+    implicit startPosition constraints result =
       Implicit
         { startPosition,
-          constraints = Strict.Vector.empty,
+          constraints,
           result
         }
     forallx = token "forall" *> (Strict.Vector.fromList <$> many TypePattern.parse) <* token "."

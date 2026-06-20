@@ -12,8 +12,9 @@ import Control.Monad.ST (ST)
 import {-# SOURCE #-} qualified Core.Tree.Builtin as Builtin
 import {-# SOURCE #-} qualified Core.Tree.Class as Class (Class (..))
 import Core.Tree.Constraint (Constraint (..))
+import Core.Tree.Constraints (Constraints (..))
 import qualified Core.Tree.Evidence as Evidence (Evidence (..))
-import qualified Core.Tree.Instanciation as Instanciation (empty)
+import qualified Core.Tree.Instanciation as Instanciation
 import Core.Tree.SchemeOver (SchemeOver (..))
 import Core.Tree.Type (Type)
 import {-# SOURCE #-} Core.Tree.TypeDeclaration (assumeClass)
@@ -29,7 +30,7 @@ import Order (orderWithInt)
 import Semantic.Check.Context (Context (..))
 import qualified Semantic.Check.LocalBinding as LocalBinding
 import Semantic.Check.Mask (Mask)
-import qualified Semantic.Check.Simple.Constraint as Constraint (lift)
+import qualified Semantic.Check.Simple.Constraints as Constraints
 import qualified Semantic.Check.Simple.Type as Type (lift)
 import qualified Semantic.Check.TypeBinding as TypeBinding
 import qualified Semantic.Index.Evidence as Evidence (assumed)
@@ -56,14 +57,14 @@ lift :: Lift typex typex' s -> SchemeOver typex scope -> Unify.SchemeOver typex'
 lift (Lift liftResult) SchemeOver {parameters, constraints, result} =
   Unify.schemeOver
     (fmap Type.lift parameters)
-    (fmap Constraint.lift constraints)
+    (Constraints.lift constraints)
     (liftResult result)
 
 augmentNamed ::
   (Int -> VariableIdentifier) ->
   Position ->
   Strict.Vector (Type scope) ->
-  Strict.Vector (Constraint scope) ->
+  Constraints scope ->
   Mask ->
   Context s scope ->
   ST s (Context s (Local ':+ scope))
@@ -73,8 +74,9 @@ augmentNamed name position parameters constraints mask Context {termEnvironment,
             Class.Class {constraints} <- do
               let get index = assumeClass <$> TypeBinding.content (typeEnvironment Type.! index)
               Builtin.index pure get classx
-            children <- for (zip [0 ..] $ toList constraints) $ \(index, Constraint {classx, arguments = arguments'}) ->
-              entailed classx (arguments <> arguments') Evidence.Super {base = evidence, index}
+            children <- for (zip [0 ..] $ toList constraints) $
+              \(index, Constraint {classx, arguments = arguments'}) ->
+                entailed classx (arguments <> arguments') Evidence.Super {base = evidence, index}
             let root =
                   LocalBinding.Constraint
                     { arguments,
@@ -82,10 +84,16 @@ augmentNamed name position parameters constraints mask Context {termEnvironment,
                     }
             pure $ (shift classx, root) : concat children
           collect index Constraint {classx, head, arguments} = do
-            let evidence = Evidence.Variable {variable = Evidence.assumed index, instanciation = Instanciation.empty}
+            let evidence =
+                  Evidence.Variable
+                    { variable = Evidence.assumed index,
+                      instanciation = Instanciation.Mono
+                    }
             entail <- entailed classx arguments evidence
             pure (head, entail)
-      collected <- zipWithM collect [0 ..] $ toList constraints
+      collected <- case constraints of
+        Constraints constraints -> zipWithM collect [0 ..] $ toList constraints
+        None -> pure []
       let ordered = orderWithInt (++) [] (length parameters) collected
           constraints = Vector.map (Map.fromListWith $ LocalBinding.combine position) ordered
           rigid index typex constraints =
@@ -107,7 +115,7 @@ augmentNamed name position parameters constraints mask Context {termEnvironment,
 augment ::
   Position ->
   Strict.Vector.Vector (Type scope) ->
-  Strict.Vector.Vector (Constraint scope) ->
+  Constraints scope ->
   Mask ->
   Context s scope ->
   ST s (Context s (Local ':+ scope))

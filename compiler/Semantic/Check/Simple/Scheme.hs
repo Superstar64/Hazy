@@ -13,7 +13,7 @@ import Core.Tree.SchemeOver (SchemeOver (..))
 import qualified Data.Vector.Strict as Strict
 import {-# SOURCE #-} Semantic.Check.Context (Context (..))
 import Semantic.Check.Mask (Mask)
-import qualified Semantic.Check.Simple.Constraint as Constraint
+import qualified Semantic.Check.Simple.Constraints as Constraints
 import Semantic.Check.Simple.SchemeOver (augment)
 import qualified Semantic.Check.Simple.SchemeOver as SchemeOver
 import qualified Semantic.Check.Simple.Type as Type
@@ -32,7 +32,7 @@ instanciate' :: Strict.Vector (Unify.Type s scope) -> Scheme (Local ':+ scope) -
 instanciate' fresh (Scheme SchemeOver {parameters, constraints, result}) =
   Unify.scheme
     (Type.instanciate fresh <$> parameters)
-    (Constraint.instanciate fresh <$> constraints)
+    (Constraints.instanciate fresh constraints)
     (Type.instanciate' fresh result)
 
 augment' :: Position -> Scheme scope -> Mask -> Context s scope -> ST s (Context s (Local ':+ scope))

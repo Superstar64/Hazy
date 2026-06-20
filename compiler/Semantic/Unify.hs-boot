@@ -4,6 +4,7 @@ module Semantic.Unify
   ( module Semantic.Unify,
     Evidence,
     Zonk (..),
+    Constraints,
     Constraint,
     Instanciation,
     SchemeOver,
@@ -29,6 +30,7 @@ import qualified Semantic.Scope as Scope
 import Semantic.Shift (Shift)
 import {-# SOURCE #-} Semantic.Unify.Class
 import {-# SOURCE #-} Semantic.Unify.Constraint hiding (solve, unify)
+import {-# SOURCE #-} Semantic.Unify.Constraints (Constraints)
 import Semantic.Unify.Evidence (Evidence)
 import {-# SOURCE #-} Semantic.Unify.Instanciation hiding (solve, unify)
 import {-# SOURCE #-} Semantic.Unify.SchemeOver
@@ -66,16 +68,19 @@ universe :: Type s scope
 variable' :: Evidence.Index scope -> Instanciation s scope -> Evidence s scope
 super :: Evidence s scope -> Int -> Evidence s scope
 instanciation :: Strict.Vector (Evidence s scope) -> Instanciation s scope
+monoInstanciation :: Instanciation s scope
 scheme ::
   Strict.Vector (Type s scope) ->
-  Strict.Vector (Constraint s scope) ->
+  Constraints s scope ->
   Type s (Scope.Local ':+ scope) ->
   Scheme s scope
 schemeOver ::
   Strict.Vector (Type s scope) ->
-  Strict.Vector (Constraint s scope) ->
+  Constraints s scope ->
   typex s (Scope.Local ':+ scope) ->
   SchemeOver typex s scope
+constraints :: Strict.Vector (Constraint s scope) -> Constraints s scope
+none :: Constraints s scope
 constraintx ::
   Type2.Index scope ->
   Int ->

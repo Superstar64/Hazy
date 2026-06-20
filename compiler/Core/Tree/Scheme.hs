@@ -2,7 +2,8 @@ module Core.Tree.Scheme (Scheme (..), mono, constraintCount, simplify) where
 
 import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
-import qualified Core.Tree.Constraint as Constraint
+import Core.Tree.Constraints (ConstraintCount)
+import qualified Core.Tree.Constraints as Constraints
 import Core.Tree.SchemeOver (SchemeOver (..))
 import qualified Core.Tree.SchemeOver as SchemeOver
 import Core.Tree.Type (Type)
@@ -37,13 +38,13 @@ instance Scope.Show Scheme where
 mono :: Type scope -> Scheme scope
 mono = Scheme . SchemeOver.mono
 
-constraintCount :: Scheme scope -> Int
+constraintCount :: Scheme scope -> ConstraintCount
 constraintCount (Scheme scheme) = SchemeOver.constraintCount scheme
 
 simplify :: Solved.Scheme position Check scope -> Scheme scope
 simplify Solved.Scheme {parameters, constraints, result}
   | parameters <- fmap Solved.TypePattern.typex' parameters,
-    constraints <- fmap Constraint.simplify constraints,
+    constraints <- Constraints.simplify constraints,
     result <- Type.simplify result =
       Scheme
         SchemeOver

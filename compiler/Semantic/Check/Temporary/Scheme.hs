@@ -9,8 +9,8 @@ import Semantic.Check.Context (Context (..))
 import qualified Semantic.Check.Go.Scheme as Solved (Scheme (..))
 import Semantic.Check.LocalBinding (LocalBinding (Wobbly, label, wobbly))
 import qualified Semantic.Check.Simple.Type as Simple.Type
-import Semantic.Check.Temporary.Constraint (Constraint)
-import qualified Semantic.Check.Temporary.Constraint as Constraint
+import Semantic.Check.Temporary.Constraints (Constraints)
+import qualified Semantic.Check.Temporary.Constraints as Constraints
 import Semantic.Check.Temporary.Type (Type)
 import {-# SOURCE #-} qualified Semantic.Check.Temporary.Type as Type (check, solve)
 import Semantic.Check.Temporary.TypePattern (TypePattern (TypePattern))
@@ -33,25 +33,25 @@ data Scheme s scope = Scheme
   { startPosition :: !Position,
     implicit :: !Bool,
     parameters :: !(Strict.Vector (TypePattern s scope)),
-    constraints :: !(Strict.Vector (Constraint s scope)),
+    constraints :: !(Constraints s scope),
     result :: !(Type s (Local ':+ scope))
   }
 
 check :: Context s scope -> Semantic.Scheme Position Resolve scope -> ST s (Scheme s scope)
-check context (Semantic.Scheme {startPosition, implicit, parameters, constraints, result}) = do
+check context Semantic.Scheme {startPosition, implicit, parameters, constraints, result} = do
   let fresh Semantic.TypePattern {position, name} = do
         level <- Unify.fresh Unify.universe
         typex <- Unify.fresh (Unify.typeWith level)
         pure TypePattern {position, name, typex}
   parameters <- traverse fresh parameters
-  constraints <- traverse (Constraint.check (augment parameters context)) constraints
+  constraints <- Constraints.check (augment parameters context) constraints
   result <- Type.check (augment parameters context) Unify.typex result
   pure $ Scheme {startPosition, implicit, parameters, constraints, result}
 
 solve :: Context s scope -> Scheme s scope -> Unify.Solve s (Solved.Scheme Position Check scope)
 solve context Scheme {startPosition, implicit, parameters = wobbly, constraints, result} = do
   parameters <- traverse TypePattern.solve wobbly
-  constraints <- traverse (Constraint.solve (augment wobbly context)) constraints
+  constraints <- Constraints.solve (augment wobbly context) constraints
   result <- Type.solve (augment wobbly context) result
   pure $ Solved.Scheme {startPosition, implicit, parameters, constraints, result}
 

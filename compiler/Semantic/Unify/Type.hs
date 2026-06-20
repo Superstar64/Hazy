@@ -53,6 +53,7 @@ import {-# SOURCE #-} Semantic.Unify.Error (Error (..), abort)
 import Semantic.Unify.Evidence (Evidence)
 import qualified Semantic.Unify.Evidence as Evidence (Box (..), Evidence (..), unify, unshift)
 import Semantic.Unify.Instanciation (Instanciation (..))
+import qualified Semantic.Unify.Instanciation as Instanciation
 import Syntax.Position (Position)
 import Prelude hiding (Functor, head, map)
 
@@ -544,7 +545,9 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
         quit = abort position (Constrain context_ classx_ term_ arguments_)
 
     proof :: forall scope s. Evidence.Index scope -> Strict.Vector (Evidence s scope) -> Evidence s scope
-    proof variable arguments = Evidence.Variable variable (Instanciation arguments)
+    proof variable arguments
+      | null arguments = Evidence.Variable variable Instanciation.Mono
+      | otherwise = Evidence.Variable variable (Instanciation arguments)
 
 reconstrain :: Context s scope -> Position -> Map (Type2.Index scope) (Delay s scope) -> Type s scope -> ST s ()
 reconstrain context position constraints term =

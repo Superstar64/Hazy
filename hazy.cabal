@@ -42,6 +42,7 @@ executable hazy
     Core.Tree.Class
     Core.Tree.ClassExtra
     Core.Tree.Constraint
+    Core.Tree.Constraints
     Core.Tree.Constructor
     Core.Tree.ConstructorInfo
     Core.Tree.Data
@@ -215,6 +216,7 @@ executable hazy
     Semantic.Check.Mask
     Semantic.Check.Simple.Class
     Semantic.Check.Simple.Constraint
+    Semantic.Check.Simple.Constraints
     Semantic.Check.Simple.Constructor
     Semantic.Check.Simple.ConstructorInfo
     Semantic.Check.Simple.Data
@@ -232,6 +234,7 @@ executable hazy
     Semantic.Check.Temporary.CallHead
     Semantic.Check.Temporary.Comprehension
     Semantic.Check.Temporary.Constraint
+    Semantic.Check.Temporary.Constraints
     Semantic.Check.Temporary.Constructor
     Semantic.Check.Temporary.ConstructorInfo
     Semantic.Check.Temporary.Declaration
@@ -336,6 +339,7 @@ executable hazy
     Semantic.Resolve.Go.Body
     Semantic.Resolve.Go.CallHead
     Semantic.Resolve.Go.Constraint
+    Semantic.Resolve.Go.Constraints
     Semantic.Resolve.Go.Declarations
     Semantic.Resolve.Go.Entry
     Semantic.Resolve.Go.Expression
@@ -393,6 +397,7 @@ executable hazy
     Semantic.Tree.Combinators.Implicit
     Semantic.Tree.Combinators.Inferred
     Semantic.Tree.Constraint
+    Semantic.Tree.Constraints
     Semantic.Tree.Constructor
     Semantic.Tree.Declaration
     Semantic.Tree.Declarations
@@ -430,6 +435,7 @@ executable hazy
     Semantic.Unify.Builtin
     Semantic.Unify.Class
     Semantic.Unify.Constraint
+    Semantic.Unify.Constraints
     Semantic.Unify.Error
     Semantic.Unify.Evidence
     Semantic.Unify.Instanciation
@@ -451,6 +457,7 @@ executable hazy
     Syntax.Tree.ClassDeclaration
     Syntax.Tree.ClassDeclarations
     Syntax.Tree.Constraint
+    Syntax.Tree.Constraints
     Syntax.Tree.Constructor
     Syntax.Tree.Data
     Syntax.Tree.Declaration

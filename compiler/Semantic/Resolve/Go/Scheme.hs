@@ -9,7 +9,7 @@ import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
 import qualified Semantic.Index.Local as Local
 import Semantic.Resolve.Context (Context (..))
-import qualified Semantic.Resolve.Go.Constraint as Constraint
+import qualified Semantic.Resolve.Go.Constraints as Constraints
 import qualified Semantic.Resolve.Go.Type as Type
 import qualified Semantic.Resolve.Go.TypePattern as TypePattern (resolve)
 import Semantic.Scope (Environment ((:+)), Local)
@@ -43,7 +43,7 @@ resolve context (Syntax.Explicit {startPosition, parameters, constraints, result
         { startPosition,
           implicit,
           parameters,
-          constraints = fmap (Constraint.resolve context) constraints,
+          constraints = Constraints.resolve context constraints,
           result = Type.resolve context result
         }
   where
@@ -54,7 +54,7 @@ resolve context Syntax.Implicit {startPosition, constraints, result}
         { startPosition,
           implicit,
           parameters,
-          constraints = fmap (Constraint.resolve context) constraints,
+          constraints = Constraints.resolve context constraints,
           result = Type.resolve context result
         }
   where
@@ -70,6 +70,6 @@ resolve context Syntax.Implicit {startPosition, constraints, result}
     free =
       map (\(_ :@ name) -> name) $
         mconcat
-          [ foldMap Syntax.freeTypeVariables constraints,
+          [ Syntax.freeTypeVariables constraints,
             Syntax.freeTypeVariables result
           ]
