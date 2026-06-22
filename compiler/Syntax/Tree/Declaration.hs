@@ -66,7 +66,7 @@ import qualified Syntax.Variable as Variable
 
 data Declaration position
   = -- |
-    --  > type T = A
+    -- > type T = A
     Synonym
       { startPosition :: !position,
         typePosition :: !position,
@@ -75,7 +75,7 @@ data Declaration position
         typeDefinition :: !(Type position)
       }
   | -- |
-    --  > data T
+    -- > data T
     Data
       { startPosition :: !position,
         brand :: !Brand,
@@ -85,7 +85,7 @@ data Declaration position
         dataDefinition :: !(Data position)
       }
   | -- |
-    --  > class C
+    -- > class C
     Class
       { startPosition :: !position,
         superClasses :: !(Strict.Vector (Constraint position)),
@@ -95,7 +95,7 @@ data Declaration position
         classDefinition :: !(ClassDeclarations position)
       }
   | -- |
-    --  > instance C T
+    -- > instance C T
     Instance
       { startPosition :: !position,
         prerequisites :: !(Constraints position),
@@ -105,38 +105,44 @@ data Declaration position
         instanceDefinition :: !(InstanceDeclarations position)
       }
   | -- |
-    --  > x :: a
+    -- > x :: a
     Annotation
       { termNames :: !(Strict.Vector1 (Marked Variable position)),
         annotation :: !(Scheme position)
       }
   | -- |
-    --  > type T :: A
+    -- > type T :: A
     KindAnnotation
       { typeNames :: !(Strict.Vector1 (Marked ConstructorIdentifier position)),
         kindAnnotation :: !(Type position)
       }
   | -- |
-    --  > infix `x`
+    -- > infix `x`
     Infix
       { fixity :: !Fixity,
         termNames' :: !(Strict.Vector1 (Marked Name position))
       }
   | -- |
-    --  > x = e
+    -- > x = e
     Definition
       { startPosition :: !position,
         leftHandSide :: !(LeftHandSide position),
         rightHandSide :: !(RightHandSide position)
       }
   | -- |
-    --  > import M
+    -- > import M
     Import
       { qualification :: !Qualification,
         targetPosition :: !position,
         target :: !FullQualifiers,
         alias :: !Alias,
         symbols :: !Symbols
+      }
+  | -- |
+    -- > import {-# BUILTIN #-} M
+    Builtin
+      { targetPosition :: !position,
+        target :: !FullQualifiers
       }
   | -- |
     -- > {-# UNORDEREDRECORDS A #-}
@@ -183,40 +189,42 @@ fromClass = \case
     } -> Infix {fixity, termNames'}
 
 fromImport :: Import position -> Declaration position
-fromImport
+fromImport = \case
   Import.Import
     { qualification,
       targetPosition,
       target,
       alias,
       symbols
-    } =
-    Import
-      { qualification,
-        targetPosition,
-        target,
-        alias,
-        symbols
-      }
-
-toImport :: Declaration position -> Maybe (Import position)
-toImport
-  Import
-    { qualification,
-      targetPosition,
-      target,
-      alias,
-      symbols
-    } =
-    Just
-      Import.Import
+    } ->
+      Import
         { qualification,
           targetPosition,
           target,
           alias,
           symbols
         }
-toImport _ = Nothing
+  Import.Builtin {targetPosition, target} -> Builtin {targetPosition, target}
+
+toImport :: Declaration position -> Maybe (Import position)
+toImport = \case
+  Import
+    { qualification,
+      targetPosition,
+      target,
+      alias,
+      symbols
+    } ->
+      Just
+        Import.Import
+          { qualification,
+            targetPosition,
+            target,
+            alias,
+            symbols
+          }
+  Builtin {targetPosition, target} -> Just Import.Builtin {targetPosition, target}
+  _ -> Nothing
 
 parse :: Parser (Declaration Position)
 parse =

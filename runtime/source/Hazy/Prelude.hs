@@ -25,7 +25,7 @@ module Hazy.Prelude
 where
 
 import Hazy
-import Hazy.Builtin
+import {-# BUILTIN #-} Hazy.Builtin
 import Hazy.Helper (Strict (..), enumCompare, enumEqual, ratio, reduce)
 import Hazy.PreludeChar
 import Hazy.PreludeIO

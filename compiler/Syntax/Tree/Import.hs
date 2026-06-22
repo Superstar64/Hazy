@@ -1,7 +1,7 @@
 {-# LANGUAGE_HAZY UnorderedRecords #-}
 module Syntax.Tree.Import where
 
-import Syntax.Parser (Parser, position, token)
+import Syntax.Parser (Parser, asum, betweenBuiltinPragma, position, token)
 import Syntax.Position (Position)
 import Syntax.Tree.Alias (Alias)
 import qualified Syntax.Tree.Alias as Alias
@@ -16,22 +16,31 @@ data Import position
   = -- |
     --  > import M
     Import
-    { qualification :: !Qualification,
-      targetPosition :: !position,
-      target :: !FullQualifiers,
-      alias :: !Alias,
-      symbols :: !Symbols
-    }
+      { qualification :: !Qualification,
+        targetPosition :: !position,
+        target :: !FullQualifiers,
+        alias :: !Alias,
+        symbols :: !Symbols
+      }
+  | -- |
+    -- > import {-# BUILTIN #-} M
+    Builtin
+      { targetPosition :: !position,
+        target :: !FullQualifiers
+      }
 
 parse :: Parser (Import Position)
 parse =
-  importx
-    <$ token "import"
-    <*> Qualification.parse
-    <*> position
-    <*> Variable.parse
-    <*> Alias.parse
-    <*> ImportSymbols.parse
+  token "import"
+    *> asum
+      [ importx
+          <$> Qualification.parse
+          <*> position
+          <*> Variable.parse
+          <*> Alias.parse
+          <*> ImportSymbols.parse,
+        builtin <$ betweenBuiltinPragma (pure ()) <*> position <*> Variable.parse
+      ]
   where
     importx qualification targetPosition target alias symbols =
       Import
@@ -41,3 +50,4 @@ parse =
           alias,
           symbols
         }
+    builtin targetPosition target = Builtin {targetPosition, target}

@@ -4,7 +4,7 @@
 -- This is the module for accessing primitives defined in Javascript
 module Hazy where
 
-import Hazy.Builtin
+import {-# BUILTIN #-} Hazy.Builtin
 import Hazy.Prelude (GeneralCategory, IO, Text)
 
 -- The usage of 'missing' variable is deliberate. It's not a special compiler

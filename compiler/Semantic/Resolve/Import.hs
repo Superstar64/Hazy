@@ -499,16 +499,20 @@ pickImports' ::
   Map FullQualifiers (m (Bindings () a b c)) ->
   Map Qualifiers (m (Dependency Stability Canonical scope))
 pickImports' Extensions {stableImports, hygienicHiding} declarations request =
-  Map.fromListWith (liftM2 (<>)) $ do
-    Syntax.Import
-      { qualification,
-        targetPosition = position,
-        target = name,
-        alias,
-        symbols
-      } <-
-      declarations
-    let qualifiedName = case alias of
+  Map.fromListWith (liftM2 (<>)) $ foldMap selections declarations
+  where
+    selections Syntax.Builtin {targetPosition, target} =
+      [(Local, bindings), (name, bindings)]
+      where
+        bindings = pure $ updateStability (Stable [targetPosition]) $ constant' builtin
+        name
+          | root :.. name <- target = root :. name
+    selections Syntax.Import {qualification, targetPosition = position, target = name, alias, symbols} =
+      (qualifiedName, bindings) : case qualification of
+        Qualified -> []
+        Unqualified -> [(Local, bindings)]
+      where
+        qualifiedName = case alias of
           Syntax.NoAlias | root :.. name <- name -> root :. name
           Syntax.Alias {name} | root :.. name <- name -> root :. name
         base = case Map.lookup name request of
@@ -575,10 +579,6 @@ pickImports' Extensions {stableImports, hygienicHiding} declarations request =
                   pure typeVariable
             pure $ contramap (Contramap (! position :@ name)) $ Dependency $ bindings
 
-    (qualifiedName, bindings) : case qualification of
-      Qualified -> []
-      Unqualified -> [(Local, bindings)]
-
 pickExports ::
   (Monad m) =>
   Regular.Bindings () scope ->
@@ -611,7 +611,6 @@ pickExports _ Syntax.Exports {exports} request = do
           pure $ contramap (Contramap (Core.! position :@ root)) $ updateStability (Stable [position]) bindings
   bindings <- traverse pick exports
   pure $ Dependency $ Bindings.updateStability () $ foldMap runDependency bindings
-pickExports _ Syntax.Builtin _ = pure $ constant' builtin
 pickExports defaultx Syntax.Default _ = pure $ constant' defaultx
 
 data Module = Module
