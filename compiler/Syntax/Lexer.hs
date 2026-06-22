@@ -739,8 +739,8 @@ stringText = char '"' *> string <* char '"'
     spaces = Nothing <$ some space <* char '\\'
 
 lexeme :: Parser Stream Lexeme
--- The order here matters. There is some overlap.
-lexeme = try number <|> try charText <|> special <|> identifier <|> reserved <|> stringText
+-- Both `charText` and `special` parse `'`. Everything else should be independent.
+lexeme = try charText <|> special <|> number <|> identifier <|> reserved <|> stringText
 
 lex :: String -> Lexeme
 lex = parse (flip seq <$> lexeme <*> eof) . startStream internal . pack
