@@ -1,3 +1,5 @@
+{-# LANGUAGE_HAZY UnorderedRecords #-}
+
 -- |
 -- General purpose parser combinator
 module Syntax.ParserCombinator
@@ -46,12 +48,13 @@ import Control.Applicative (Alternative, (<**>))
 import qualified Control.Applicative ((<|>))
 import Control.Applicative.Combinators (between, empty, many, optional, sepBy, sepEndBy)
 import Control.Applicative.Combinators.NonEmpty (sepBy1, sepEndBy1, some)
+import Control.Monad (ap, liftM)
 import Data.Char (isDigit, isHexDigit, isOctDigit)
 import Data.Foldable (asum)
 import Data.Text (Text, pack)
 import qualified Data.Text as Text
 import Data.Text.Lazy.Builder (Builder, fromString)
-import {-# SOURCE #-} Error (expected, locate, locateHint)
+import {-# SOURCE #-} Error (expected, locate)
 import {-# SOURCE #-} qualified Error as Strings
 
 -- right associativity is better for lazyness
@@ -101,31 +104,30 @@ startStream file stream = Stream {location, stream}
 internal :: Text
 internal = pack "<internal>"
 
-data Error
-  = Basic !Builder
-  | Try !Int !Int !Builder
-  deriving (Eq, Ord, Show)
-
-data Lookahead
-  = Valid
-  | Invalid [Error]
+newtype Error
+  = Basic Builder
   deriving (Show)
 
-data Status
-  = Pure [Error]
+data Lookahead stream
+  = Valid stream
+  | Invalid stream [Error]
+  deriving (Show)
+
+data Status stream
+  = Pure
   | Error [Error]
-  | Consumed Lookahead
+  | Consumed (Lookahead stream)
   deriving (Show)
 
-lookahead :: Status -> Lookahead
-lookahead status = case status of
-  Pure {} -> Valid
-  Error error -> Invalid error
+lookahead :: stream -> Status stream -> Lookahead stream
+lookahead stream status = case status of
+  Pure -> Valid stream
+  Error error -> Invalid stream error
   Consumed lookahead -> lookahead
 
-class Source s where
-  info :: s -> Position
-  found :: s -> Builder
+class Source stream where
+  info :: stream -> Position
+  found :: stream -> Builder
 
 instance Source Stream where
   info = location
@@ -133,100 +135,68 @@ instance Source Stream where
     Just (c, _) -> fromString (show [c])
     Nothing -> Strings.endOfFile
 
-{-
-If `status` is `Error _`, then `value` must be bottom.
-This is needed to ensure `p <|> empty = p`, as `<|>` only evaluates it's second argument when `status` is `Error`.
--}
-data Result s a = Result
-  { status :: !Status,
-    value :: a,
-    remaining :: s
-  }
+-- If the status is `Error {}`, then value must be bottom.
+data Result stream a = !(Status stream) :? a
   deriving (Show)
 
-newtype Parser s a = Parser (s -> Result s a)
+infix 5 :?
 
-errorResult :: (Source s) => s -> [Error] -> Result s a
-errorResult stream expect = Result (Error expect) bottom stream
+newtype Parser stream a = Parser (stream -> Result stream a)
+
+abandon :: (Source stream) => stream -> [Error] -> b
+abandon remaining expect = expected (info remaining) (unpack <$> expect) (found remaining)
   where
-    bottom :: a
-    bottom = expected (info stream) (format <$> expect) (found stream)
-      where
-        format = \case
-          Basic error -> error
-          Try line column error ->
-            let Position file _ _ = info stream
-             in locateHint (Position file line column) error
+    unpack (Basic error) = error
 
-instance (Source s) => Functor (Parser s) where
-  fmap f (Parser parser) = Parser $ \stream -> case parser stream of
-    Result (Error error) _ stream -> errorResult stream error
-    Result status x stream -> Result status (f x) stream
+instance (Source stream) => Functor (Parser stream) where
+  fmap = liftM
 
-instance (Source s) => Applicative (Parser s) where
-  pure a = Parser $ \stream -> Result (Pure []) a stream
-  Parser parser <*> Parser parser' = Parser $ \stream -> case parser stream of
-    Result (Error error) _ stream -> errorResult stream error
-    Result (Pure error1) f stream -> case parser' stream of
-      Result (Pure error2) a stream -> Result (Pure (error1 ++ error2)) (f a) stream
-      Result (Error error2) _ stream -> errorResult stream (error1 ++ error2)
-      Result status x stream -> Result status (f x) stream
-    Result (Consumed a) f stream -> Result (Consumed (lookahead status)) (f x) stream'
-      where
-        Result status x stream' = case a of
-          Valid -> parser' stream
-          Invalid error -> errorResult stream error
+instance (Source stream) => Applicative (Parser stream) where
+  pure value = Parser $ \_ -> Pure :? value
+  (<*>) = ap
 
-instance (Source s) => Monad (Parser s) where
-  return = pure
+instance (Source stream) => Monad (Parser stream) where
   Parser parser >>= after = Parser $ \stream -> case parser stream of
-    Result (Error error) _ stream -> errorResult stream error
-    Result (Pure error1) value stream
-      | Parser parser <- after value -> case parser stream of
-          Result (Pure error2) value stream -> Result (Pure (error1 ++ error2)) value stream
-          Result (Error error2) _ stream -> errorResult stream (error1 ++ error2)
-          Result status value stream -> Result status value stream
-    Result (Consumed look) value stream -> Result (Consumed (lookahead status)) value' stream'
-      where
-        Result status value' stream' = case look of
-          Valid
-            | Parser parser <- after value -> parser stream
-          Invalid error -> errorResult stream error
+    status :? value
+      | Parser parser <- after value -> case status of
+          Pure -> parser stream
+          Error error -> Error error :? abandon stream error
+          Consumed look ->
+            let status :? value = parser $ case look of
+                  Valid stream -> stream
+                  Invalid stream error -> abandon stream error
+                fetch = case look of
+                  Valid stream -> lookahead stream status
+                  Invalid {} -> look
+             in Consumed fetch :? value
 
-instance (Source s) => Alternative (Parser s) where
-  empty = Parser $ \stream -> errorResult stream mempty
-  Parser parser <|> Parser parser' = Parser $ \stream -> case parser stream of
-    result@Result {status = Consumed _} -> result
-    result@Result {status = Pure {}} -> result
-    Result {status = Error error1} -> case parser' stream of
-      Result {status = Error error2} -> errorResult stream (error1 ++ error2)
-      Result (Pure error2) a stream -> Result (Pure $ error1 ++ error2) a stream
+instance (Source stream) => Alternative (Parser stream) where
+  empty = Parser $ \stream -> Error [] :? abandon stream []
+  Parser attempt <|> Parser fallback = Parser $ \stream -> case attempt stream of
+    Error error1 :? _ -> case fallback stream of
+      Error error2 :? _ -> Error (error1 ++ error2) :? abandon stream (error1 ++ error2)
       result -> result
+    result -> result
 
-try :: (Source s) => Parser s a -> Parser s a
+try :: (Source stream) => Parser stream a -> Parser stream a
 try (Parser parser) = Parser $ \stream -> case parser stream of
-  Result {status = Consumed (Invalid error), remaining} -> errorResult stream (map raise error)
-    where
-      Position _ line column = info remaining
-      raise = \case
-        Basic error -> Try line column error
-        error@Try {} -> error
+  Consumed Invalid {} :? _ -> Error [] :? abandon stream []
   result -> result
 
-peek :: Parser s s
-peek = Parser $ \stream -> Result (Pure []) stream stream
+peek :: Parser stream stream
+peek = Parser $ \stream -> Pure :? stream
 
-position :: (Source s) => Parser s Position
+position :: (Source stream) => Parser stream Position
 position = info <$> peek
 
-data Bind s a
-  = Parse a s
+data Bind stream a
+  = Parse a stream
   | Fail
 
-satifyBind :: (Source s) => Builder -> (s -> Bind s a) -> Parser s a
+satifyBind :: (Source stream) => Builder -> (stream -> Bind stream a) -> Parser stream a
 satifyBind token parse = Parser $ \stream -> case parse stream of
-  Parse a stream -> Result (Consumed Valid) a stream
-  Fail -> errorResult stream [Basic token]
+  Parse value stream -> Consumed (Valid stream) :? value
+  Fail -> Error [Basic token] :? abandon stream [Basic token]
 
 satify :: Builder -> (Char -> Bool) -> Parser Stream Char
 satify token legal = satifyBind token $ \Stream {location, stream} -> case Text.uncons stream of
@@ -265,5 +235,6 @@ digit = satify Strings.digit isDigit
 octDigit = satify Strings.octal isOctDigit
 hexDigit = satify Strings.hexadecimal isHexDigit
 
-parse :: Parser s a -> s -> a
-parse (Parser parser) stream = value (parser stream)
+parse :: Parser stream a -> stream -> a
+parse (Parser parser) stream = case parser stream of
+  _ :? value -> value

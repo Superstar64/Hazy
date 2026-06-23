@@ -33,7 +33,6 @@ module Error
     pragmaIdentionError,
     Position,
     locate,
-    locateHint,
     expected,
     missingMethodEntry,
     missingVariableEntry,
@@ -221,15 +220,6 @@ formatError position error = mconcat builders
         fromString " error: ",
         error
       ]
-
-locateHint :: Position -> Builder -> Builder
-locateHint position error =
-  mconcat
-    [ fromString "(at ",
-      locate position,
-      fromString ") ",
-      error
-    ]
 
 data Type
   = Expected

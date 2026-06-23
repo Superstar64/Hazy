@@ -5,5 +5,4 @@ import {-# SOURCE #-} Syntax.ParserCombinator (Position)
 
 pathCharacter, digit, octal, hexadecimal, endOfFile, character :: Builder
 locate :: Position -> Builder
-locateHint :: Position -> Builder -> Builder
 expected :: Position -> [Builder] -> Builder -> a
