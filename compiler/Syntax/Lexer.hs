@@ -33,7 +33,7 @@ where
 
 import qualified Control.Applicative as Applicative (some)
 import Control.Arrow (first)
-import Data.Char (chr, isAlphaNum, isLower, isPrint, isSpace, isUpper, showLitChar)
+import Data.Char (chr, isAlphaNum, isLower, isPrint, isUpper, showLitChar)
 import qualified Data.Char as Char (isSymbol)
 import Data.List (sortOn)
 import Data.Map (Map)
@@ -67,6 +67,7 @@ import Syntax.ParserCombinator
     internal,
     line,
     many,
+    newline,
     octDigit,
     optional,
     parse,
@@ -74,7 +75,7 @@ import Syntax.ParserCombinator
     satify,
     satifyBind,
     single,
-    some,
+    spaces,
     startStream,
     step,
     string,
@@ -727,16 +728,13 @@ charText = char '\'' *> letter <* char '\''
   where
     letter = Char <$> (escape id empty <|> textual '\'')
 
-space :: Parser Stream Char
-space = satify Strings.whitespace isSpace
-
 stringText :: Parser Stream Lexeme
 stringText = char '"' *> string <* char '"'
   where
     string = String . StringLiteral.pack . catMaybes <$> many (escape Just gap <|> Just <$> textual '"')
-    gap = ampersand <|> spaces
+    gap = ampersand <|> blanks
     ampersand = Nothing <$ char '&'
-    spaces = Nothing <$ some space <* char '\\'
+    blanks = Nothing <$ spaces <* char '\\'
 
 lexeme :: Parser Stream Lexeme
 -- Both `charText` and `special` parse `'`. Everything else should be independent.
@@ -753,16 +751,12 @@ data Premarked
   | Predone !Position
   deriving (Show)
 
-newlines :: String
-newlines = "\n\r\f"
-
 comment, ncomment, ncommentBody :: Parser Stream ()
 comment = try (dashes *> body)
   where
-    body = newline <|> satify Strings.nonSymbol (not . isSymbol) *> line
     dashes = char '-' *> char '-' *> many (char '-')
-    newline = () <$ satify Strings.newline (`elem` newlines) <|> eof
-    line = newline <|> single *> line
+    body = newline <|> eof <|> satify Strings.nonSymbol (not . isSymbol) *> line
+    line = newline <|> eof <|> single *> line
 ncomment = () <$ string (pack "{-") *> ncommentBody
 ncommentBody = finish <|> nested <|> pass
   where
@@ -773,14 +767,14 @@ ncommentBody = finish <|> nested <|> pass
 header :: Parser Stream [Toggle]
 header =
   asum
-    [ space *> header,
+    [ spaces *> header,
       comment *> header,
       pragma,
       ncomment *> header,
       pure []
     ]
   where
-    pragma = string (pack "{-#") *> many space *> body
+    pragma = string (pack "{-#") *> (spaces <|> pure ()) *> body
     body = (++) <$> known <*> header <|> ncommentBody *> header
     known = symbol *> toggles <* string (pack "#-}")
     symbol = stringIgnoreCase (pack "language_hazy") <|> stringIgnoreCase (pack "language")
@@ -788,13 +782,13 @@ header =
 toggles :: Parser Stream [Toggle]
 toggles =
   asum
-    [ space *> toggles,
+    [ spaces *> toggles,
       (:) <$> toggle <*> next
     ]
   where
     next =
       asum
-        [ space *> next,
+        [ spaces *> next,
           string (pack ",") *> toggles,
           pure []
         ]
@@ -814,7 +808,7 @@ toggle =
 premarked :: Parser Stream Premarked
 premarked =
   asum
-    [ space *> premarked,
+    [ spaces *> premarked,
       comment *> premarked,
       pragma,
       ncomment *> premarked,
@@ -822,7 +816,7 @@ premarked =
       done
     ]
   where
-    pragma = position <* string (pack "{-#") <* many space <**> body
+    pragma = position <* string (pack "{-#") <* (spaces <|> pure ()) <**> body
     body = known <|> const <$ ncommentBody <*> premarked
     known =
       asum

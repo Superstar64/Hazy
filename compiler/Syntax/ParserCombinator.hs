@@ -38,6 +38,9 @@ module Syntax.ParserCombinator
     single,
     eof,
     digit,
+    newline,
+    space,
+    spaces,
     octDigit,
     hexDigit,
     parse,
@@ -49,7 +52,7 @@ import qualified Control.Applicative ((<|>))
 import Control.Applicative.Combinators (between, empty, many, optional, sepBy, sepEndBy)
 import Control.Applicative.Combinators.NonEmpty (sepBy1, sepEndBy1, some)
 import Control.Monad (ap, liftM)
-import Data.Char (isDigit, isHexDigit, isOctDigit)
+import Data.Char (isDigit, isHexDigit, isOctDigit, isSpace)
 import Data.Foldable (asum)
 import Data.Text (Text, pack)
 import qualified Data.Text as Text
@@ -234,6 +237,24 @@ digit, octDigit, hexDigit :: Parser Stream Char
 digit = satify Strings.digit isDigit
 octDigit = satify Strings.octal isOctDigit
 hexDigit = satify Strings.hexadecimal isHexDigit
+
+newline :: Parser Stream ()
+newline = satifyBind Strings.newline $ \Stream {location, stream} ->
+  if
+    | line <- Text.take 2 stream,
+      line == pack "\r\n" ->
+        Parse () Stream {location = step location '\n', stream = Text.drop 2 stream}
+    | otherwise -> case Text.uncons stream of
+        Just (head, stream) | head `elem` lines -> Parse () Stream {location = step location '\n', stream}
+        _ -> Fail
+  where
+    lines = "\r\n\f"
+
+space :: Parser Stream ()
+space = newline <|> () <$ satify Strings.whitespace isSpace
+
+spaces :: Parser Stream ()
+spaces = () <$ some space
 
 parse :: Parser stream a -> stream -> a
 parse (Parser parser) stream = case parser stream of
