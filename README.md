@@ -429,8 +429,15 @@ are supported for completeness for `DataKinds`.
 
 ### NamedFieldPuns
 * Pragma: `NamedFieldPuns`
+* Toggleable: False
 
 Named field pun syntax is supported.
+
+### MultilineStrings
+* Pragma: `MultilineStrings`
+* Toggleable: False
+
+Multiline strings are supported.
 
 # Deviations:
 ## Bugs

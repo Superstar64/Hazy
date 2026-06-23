@@ -36,6 +36,8 @@ import Control.Arrow (first)
 import Data.Char (chr, isAlphaNum, isLower, isPrint, isUpper, showLitChar)
 import qualified Data.Char as Char (isSymbol)
 import Data.List (sortOn)
+import Data.List.NonEmpty (NonEmpty (..))
+import qualified Data.List.NonEmpty as NonEmpty
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe (catMaybes)
@@ -167,6 +169,7 @@ data Extension
   | LambdaCase
   | MonomorphismRestriction
   | MonoLocalBinds
+  | MultilineStrings
   | MultiwayIf
   | NamedFieldPuns
   | NegativeLiterals
@@ -720,25 +723,128 @@ escape lift gap = char '\\' *> asum [gap, literals, decimal, octal, hexadecimal]
     octal = lift . chr . read . ("0o" ++) <$> (char 'o' *> Applicative.some octDigit)
     hexadecimal = lift . chr . read . ("0x" ++) <$> (char 'x' *> Applicative.some hexDigit)
 
-textual :: Char -> Parser Stream Char
-textual end = satify Strings.stringCharacter (\letter -> isPrint letter && letter /= end)
+textual :: (Char -> Bool) -> Parser Stream Char
+textual end = satify Strings.stringCharacter (\letter -> isPrint letter && end letter)
 
 charText :: Parser Stream Lexeme
 charText = char '\'' *> letter <* char '\''
   where
-    letter = Char <$> (escape id empty <|> textual '\'')
+    letter = Char <$> (escape id empty <|> textual (/= '\''))
 
 stringText :: Parser Stream Lexeme
 stringText = char '"' *> string <* char '"'
   where
-    string = String . StringLiteral.pack . catMaybes <$> many (escape Just gap <|> Just <$> textual '"')
+    string = String . StringLiteral.pack . catMaybes <$> many (escape Just gap <|> Just <$> textual (/= '"'))
     gap = ampersand <|> blanks
     ampersand = Nothing <$ char '&'
     blanks = Nothing <$ spaces <* char '\\'
 
+data Multiline
+  = Bare !Char !Multiline
+  | Escape !Char !Multiline
+  | Gap !Multiline
+  | Stop
+  deriving (Show)
+
+reverseMulti :: Multiline -> Multiline
+reverseMulti = go Stop
+  where
+    go accumulate = \case
+      Stop -> accumulate
+      Bare char multi -> go (Bare char accumulate) multi
+      Escape char multi -> go (Escape char accumulate) multi
+      Gap multi -> go (Gap accumulate) multi
+
+splitMulti :: Multiline -> NonEmpty Multiline
+splitMulti = go (Stop :| [])
+  where
+    go (head :| tail) = \case
+      Bare '\n' multi -> go (Stop :| reverseMulti head : tail) multi
+      Bare char multi -> go (Bare char head :| tail) multi
+      Escape char multi -> go (Escape char head :| tail) multi
+      Gap multi -> go (Gap head :| tail) multi
+      Stop -> NonEmpty.reverse (reverseMulti head :| tail)
+
+leadingTabs :: Multiline -> Multiline
+leadingTabs = go 0
+  where
+    go column = \case
+      Bare '\t' multi -> go (column + 8 - (column `rem` 8)) multi
+      Bare ' ' multi -> go (column + 1) multi
+      multi -> pad column
+        where
+          pad 0 = multi
+          pad n = Bare ' ' $ pad (n - 1)
+
+removePrefix :: NonEmpty Multiline -> NonEmpty Multiline
+removePrefix (head :| tail) = (head :| map remove tail)
+  where
+    allWhite = \case
+      Bare ' ' multi -> allWhite multi
+      Stop -> True
+      _ -> False
+
+    commonPrefix = minimum $ map prefix $ filter (not . allWhite) tail
+      where
+        prefix = \case
+          Bare ' ' multi -> 1 + prefix multi
+          _ -> 0
+
+    remove multi
+      | allWhite multi = Stop
+      | otherwise = drop commonPrefix multi
+      where
+        drop 0 multi = multi
+        drop n (Bare ' ' multi) = drop (n - 1) multi
+        drop _ _ = error "bad leading prefix"
+
+joinMulti :: NonEmpty Multiline -> Multiline
+joinMulti = go Stop
+  where
+    go accumulate = \case
+      Bare char multi :| next -> go (Bare char accumulate) (multi :| next)
+      Escape char multi :| next -> go (Escape char accumulate) (multi :| next)
+      Gap multi :| next -> go (Gap accumulate) (multi :| next)
+      Stop :| (head : tail) -> go (Bare '\n' accumulate) (head :| tail)
+      Stop :| [] -> reverseMulti accumulate
+
+stripMulti :: Multiline -> Multiline
+stripMulti = \case
+  Bare '\n' multi -> go Stop multi
+  multi -> go Stop multi
+  where
+    go accumulate = \case
+      Bare '\n' Stop -> reverseMulti accumulate
+      Stop -> reverseMulti accumulate
+      Bare char multi -> go (Bare char accumulate) multi
+      Escape char multi -> go (Escape char accumulate) multi
+      Gap multi -> go (Gap accumulate) multi
+
+processMulti :: Multiline -> Multiline
+processMulti = stripMulti . joinMulti . removePrefix . fmap leadingTabs . splitMulti
+
+unpackMulti :: Multiline -> String
+unpackMulti = \case
+  Bare char multi -> char : unpackMulti multi
+  Escape char multi -> char : unpackMulti multi
+  Gap multi -> unpackMulti multi
+  Stop -> ""
+
+multilineText :: Parser Stream Lexeme
+multilineText = String . process <$ string (pack "\"\"\"") <*> raw
+  where
+    process = StringLiteral.pack . unpackMulti . processMulti
+    raw =
+      asum
+        [ Stop <$ string (pack "\"\"\""),
+          escape Escape gap <*> raw,
+          Bare <$> ('\n' <$ newline) <*> raw,
+          Bare <$> textual (const True) <*> raw
+        ]
+    gap = Gap <$ char '&' <|> Gap <$ spaces <* char '\\'
+
 lexeme :: Parser Stream Lexeme
--- Both `charText` and `special` parse `'`. Everything else should be independent.
-lexeme = try charText <|> special <|> number <|> identifier <|> reserved <|> stringText
+lexeme = try charText <|> special <|> number <|> identifier <|> reserved <|> multilineText <|> stringText
 
 lex :: String -> Lexeme
 lex = parse (flip seq <$> lexeme <*> eof) . startStream internal . pack
