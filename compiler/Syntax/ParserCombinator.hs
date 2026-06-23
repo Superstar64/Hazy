@@ -87,7 +87,7 @@ at position = Position file line column
 
 step :: Position -> Char -> Position
 step (Position file line _) '\n' = Position file (line + 1) 1
-step (Position file line column) '\t' = Position file line (column + 8)
+step (Position file line column) '\t' = Position file line (8 - (column - 1) `rem` 8 + column)
 step (Position file line column) _ = Position file line (column + 1)
 
 data Stream = Stream
