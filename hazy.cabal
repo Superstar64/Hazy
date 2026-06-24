@@ -14,6 +14,24 @@ category: Development
 executable hazy
   main-is: Main.hs
   other-modules:
+    Builtin
+    Builtin.Applicative
+    Builtin.Bool
+    Builtin.Enum
+    Builtin.Eq
+    Builtin.Fractional
+    Builtin.Functor
+    Builtin.Integral
+    Builtin.List
+    Builtin.Monad
+    Builtin.MonadFail
+    Builtin.Num
+    Builtin.Ord
+    Builtin.Ordering
+    Builtin.Ratio
+    Builtin.Real
+    Builtin.Tuple
+    Core.Builtin
     Core.Index.Table.Term
     Core.Index.Term
     Core.Shift
@@ -22,23 +40,6 @@ executable hazy
     Core.Temporary.Function
     Core.Temporary.Pattern
     Core.Temporary.RightHandSide
-    Core.Tree.Builtin
-    Core.Tree.Builtin.Applicative
-    Core.Tree.Builtin.Bool
-    Core.Tree.Builtin.Enum
-    Core.Tree.Builtin.Eq
-    Core.Tree.Builtin.Fractional
-    Core.Tree.Builtin.Functor
-    Core.Tree.Builtin.Integral
-    Core.Tree.Builtin.List
-    Core.Tree.Builtin.Monad
-    Core.Tree.Builtin.MonadFail
-    Core.Tree.Builtin.Num
-    Core.Tree.Builtin.Ord
-    Core.Tree.Builtin.Ordering
-    Core.Tree.Builtin.Ratio
-    Core.Tree.Builtin.Real
-    Core.Tree.Builtin.Tuple
     Core.Tree.Class
     Core.Tree.ClassExtra
     Core.Tree.Constraint
@@ -308,20 +309,6 @@ executable hazy
     Semantic.Resolve.Binding.Type
     Semantic.Resolve.Bindings
     Semantic.Resolve.Builtin
-    Semantic.Resolve.Builtin.Applicative
-    Semantic.Resolve.Builtin.Bool
-    Semantic.Resolve.Builtin.Enum
-    Semantic.Resolve.Builtin.Eq
-    Semantic.Resolve.Builtin.Fractional
-    Semantic.Resolve.Builtin.Functor
-    Semantic.Resolve.Builtin.Integral
-    Semantic.Resolve.Builtin.Monad
-    Semantic.Resolve.Builtin.MonadFail
-    Semantic.Resolve.Builtin.Num
-    Semantic.Resolve.Builtin.Ord
-    Semantic.Resolve.Builtin.Ordering
-    Semantic.Resolve.Builtin.Ratio
-    Semantic.Resolve.Builtin.Real
     Semantic.Resolve.Canonical
     Semantic.Resolve.Context
     Semantic.Resolve.Core
@@ -513,6 +500,7 @@ executable hazy
     GADTs
     LambdaCase
     MonoLocalBinds
+    MultilineStrings
     MultiWayIf
     NamedFieldPuns
     PolymorphicComponents

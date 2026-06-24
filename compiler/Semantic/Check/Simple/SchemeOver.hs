@@ -9,7 +9,7 @@ where
 
 import Control.Monad (zipWithM)
 import Control.Monad.ST (ST)
-import {-# SOURCE #-} qualified Core.Tree.Builtin as Builtin
+import {-# SOURCE #-} qualified Core.Builtin as Builtin
 import {-# SOURCE #-} qualified Core.Tree.Class as Class (Class (..))
 import Core.Tree.Constraint (Constraint (..))
 import Core.Tree.Constraints (Constraints (..))

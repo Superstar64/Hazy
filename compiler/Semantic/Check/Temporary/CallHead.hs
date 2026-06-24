@@ -1,7 +1,7 @@
 module Semantic.Check.Temporary.CallHead where
 
 import Control.Monad.ST (ST)
-import qualified Core.Tree.Builtin as Builtin
+import qualified Core.Builtin as Builtin
 import Core.Tree.TypeDeclaration (assumeClass, assumeData)
 import qualified Data.Vector.Strict as Strict.Vector
 import qualified Semantic.Check.ClassInstance as ClassInstance

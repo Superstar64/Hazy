@@ -1,7 +1,7 @@
 module Semantic.Check.Temporary.Constraint where
 
 import Control.Monad.ST (ST)
-import {-# SOURCE #-} qualified Core.Tree.Builtin as Builtin
+import {-# SOURCE #-} qualified Core.Builtin as Builtin
 import {-# SOURCE #-} Core.Tree.TypeDeclaration (assumeData)
 import Data.Foldable (toList)
 import Data.List.Reverse (List (Nil, (:>)))

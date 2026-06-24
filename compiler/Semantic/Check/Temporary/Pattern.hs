@@ -2,7 +2,7 @@ module Semantic.Check.Temporary.Pattern where
 
 import Control.Monad (when)
 import Control.Monad.ST (ST)
-import qualified Core.Tree.Builtin as Builtin
+import qualified Core.Builtin as Builtin
 import Core.Tree.TypeDeclaration (assumeData)
 import Data.Map (Map)
 import Data.Strict.Vector1 (toVector)

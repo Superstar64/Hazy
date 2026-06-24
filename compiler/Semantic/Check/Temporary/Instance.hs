@@ -1,9 +1,9 @@
 module Semantic.Check.Temporary.Instance where
 
 import Control.Monad.ST (ST)
+import {-# SOURCE #-} qualified Core.Builtin as Builtin
 import Core.Substitute (Category (Substitute))
 import qualified Core.Substitute as Substitute
-import {-# SOURCE #-} qualified Core.Tree.Builtin as Builtin
 import {-# SOURCE #-} qualified Core.Tree.Class as Simple.Class
 import Core.Tree.ClassExtra (ClassExtra (..))
 import qualified Core.Tree.Constraint as Simple (Constraint (Constraint))

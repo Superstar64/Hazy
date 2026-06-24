@@ -1,5 +1,20 @@
 module Semantic.Resolve.Builtin (builtin) where
 
+import {-# SOURCE #-} qualified Builtin.Applicative as Applicative
+import {-# SOURCE #-} qualified Builtin.Bool as Bool
+import {-# SOURCE #-} qualified Builtin.Enum as Enum
+import {-# SOURCE #-} qualified Builtin.Eq as Eq
+import {-# SOURCE #-} qualified Builtin.Fractional as Fractional
+import {-# SOURCE #-} qualified Builtin.Functor as Functor
+import {-# SOURCE #-} qualified Builtin.Integral as Integral
+import {-# SOURCE #-} qualified Builtin.List as List
+import {-# SOURCE #-} qualified Builtin.Monad as Monad
+import {-# SOURCE #-} qualified Builtin.MonadFail as MonadFail
+import {-# SOURCE #-} qualified Builtin.Num as Num
+import {-# SOURCE #-} qualified Builtin.Ord as Ord
+import {-# SOURCE #-} qualified Builtin.Ordering as Ordering
+import {-# SOURCE #-} qualified Builtin.Ratio as Ratio
+import {-# SOURCE #-} qualified Builtin.Real as Real
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import Data.Text (pack)
@@ -10,57 +25,6 @@ import Semantic.Resolve.Binding.Term (Selector (Normal))
 import qualified Semantic.Resolve.Binding.Term as Term
 import qualified Semantic.Resolve.Binding.Type as Type
 import Semantic.Resolve.Bindings (Bindings (..))
-import Semantic.Resolve.Builtin.Applicative
-  ( ap,
-    applicative,
-    discardLeft,
-    discardRight,
-    liftA2,
-    pure,
-  )
-import Semantic.Resolve.Builtin.Bool (bool, false, true)
-import Semantic.Resolve.Builtin.Enum
-  ( enum,
-    enumFrom,
-    enumFromThen,
-    enumFromThenTo,
-    enumFromTo,
-    fromEnum,
-    pred,
-    succ,
-    toEnum,
-  )
-import Semantic.Resolve.Builtin.Eq (eq, equal, notEqual)
-import Semantic.Resolve.Builtin.Fractional (divide, fractional, fromRational, recip)
-import Semantic.Resolve.Builtin.Functor (fconst, fmap, functor)
-import Semantic.Resolve.Builtin.Integral (div, divMod, integral, mod, quot, quotRem, rem, toInteger)
-import Semantic.Resolve.Builtin.Monad (bind, monad, return, thenx)
-import Semantic.Resolve.Builtin.MonadFail (fail, monadFail)
-import Semantic.Resolve.Builtin.Num
-  ( abs,
-    fromInteger,
-    minus,
-    multiply,
-    negate,
-    num,
-    plus,
-    signum,
-  )
-import Semantic.Resolve.Builtin.Ord
-  ( compare,
-    greaterThen,
-    greaterThenEqual,
-    lessThen,
-    lessThenEqual,
-    max,
-    min,
-    ord,
-  )
-import Semantic.Resolve.Builtin.Ordering (gt, lt, ordering)
-import qualified Semantic.Resolve.Builtin.Ordering as Ordering
-import Semantic.Resolve.Builtin.Ratio (ratio)
-import qualified Semantic.Resolve.Builtin.Ratio as Ratio
-import Semantic.Resolve.Builtin.Real (real, toRational)
 import Syntax.Lexer (constructorIdentifier, variableIdentifier)
 import qualified Syntax.Position as Position
 import Syntax.Tree.Associativity (Associativity (..))
@@ -250,97 +214,49 @@ levity =
 
 builtin :: Bindings () scope
 builtin =
-  Bindings
-    { terms =
-        Map.fromListWith
-          undefined
-          [ plus,
-            minus,
-            multiply,
-            negate,
-            abs,
-            signum,
-            fromInteger,
-            succ,
-            pred,
-            toEnum,
-            fromEnum,
-            enumFrom,
-            enumFromThen,
-            enumFromTo,
-            enumFromThenTo,
-            equal,
-            notEqual,
-            compare,
-            lessThen,
-            lessThenEqual,
-            greaterThen,
-            greaterThenEqual,
-            max,
-            min,
-            toRational,
-            quot,
-            rem,
-            div,
-            mod,
-            quotRem,
-            divMod,
-            toInteger,
-            divide,
-            recip,
-            fromRational,
-            runST,
-            fmap,
-            fconst,
-            pure,
-            ap,
-            liftA2,
-            discardLeft,
-            discardRight,
-            bind,
-            thenx,
-            return,
-            fail
-          ],
-      constructors =
-        Map.fromListWith
-          undefined
-          [ false,
-            true,
-            lt,
-            Ordering.eq,
-            gt,
-            Ratio.make
-          ],
-      types =
-        Map.fromListWith
-          undefined
-          [ bool,
-            char,
-            typex,
-            constraint,
-            small,
-            large,
-            universe,
-            st,
-            integer,
-            int,
-            ordering,
-            ratio,
-            num,
-            enum,
-            eq,
-            ord,
-            real,
-            integral,
-            fractional,
-            functor,
-            applicative,
-            monad,
-            monadFail,
-            lazy,
-            strict,
-            levity
-          ],
-      stability = ()
-    }
+  mconcat
+    [ baseline,
+      Applicative.bindings,
+      Bool.bindings,
+      Enum.bindings,
+      Eq.bindings,
+      Fractional.bindings,
+      Functor.bindings,
+      Integral.bindings,
+      List.bindings,
+      Monad.bindings,
+      MonadFail.bindings,
+      Num.bindings,
+      Ord.bindings,
+      Ordering.bindings,
+      Ratio.bindings,
+      Real.bindings
+    ]
+  where
+    baseline =
+      Bindings
+        { terms =
+            Map.fromListWith
+              undefined
+              [ runST
+              ],
+          constructors =
+            Map.empty,
+          types =
+            Map.fromListWith
+              undefined
+              [ char,
+                typex,
+                constraint,
+                small,
+                large,
+                universe,
+                st,
+                integer,
+                int,
+                lazy,
+                strict,
+                levity
+              ],
+          stability = ()
+        }

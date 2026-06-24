@@ -1,7 +1,7 @@
 module Semantic.Check.Temporary.Expression where
 
 import Control.Monad.ST (ST)
-import {-# SOURCE #-} qualified Core.Tree.Builtin as Builtin
+import {-# SOURCE #-} qualified Core.Builtin as Builtin
 import {-# SOURCE #-} Core.Tree.TypeDeclaration (assumeData)
 import qualified Data.Strict.Vector1 as Strict (Vector1)
 import qualified Data.Strict.Vector2 as Strict (Vector2)

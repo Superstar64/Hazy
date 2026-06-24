@@ -2,7 +2,7 @@ module Semantic.Unify.Type where
 
 import Control.Monad (zipWithM_)
 import Control.Monad.ST (ST)
-import {-# SOURCE #-} qualified Core.Tree.Builtin as Builtin (index, kind)
+import {-# SOURCE #-} qualified Core.Builtin as Builtin (index, kind)
 import qualified Core.Tree.Constraint as Simple (argument)
 import qualified Core.Tree.Constraint as Simple.Constraint
 import qualified Core.Tree.Constraints as Simple (Constraints (..))

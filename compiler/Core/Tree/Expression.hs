@@ -1,5 +1,11 @@
 module Core.Tree.Expression where
 
+import {-# SOURCE #-} qualified Builtin.Applicative as Applicative
+import {-# SOURCE #-} qualified Builtin.Eq as Eq
+import {-# SOURCE #-} qualified Builtin.Fractional as Fractional
+import {-# SOURCE #-} qualified Builtin.Monad as Monad
+import {-# SOURCE #-} qualified Builtin.MonadFail as MonadFail
+import {-# SOURCE #-} qualified Builtin.Num as Num
 import qualified Core.Index.Term as Term
 import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
@@ -9,12 +15,6 @@ import Core.Temporary.Function (Function (Bound))
 import qualified Core.Temporary.Function as Function
 import qualified Core.Temporary.Pattern as Pattern
 import qualified Core.Temporary.RightHandSide as RightHandSide
-import {-# SOURCE #-} qualified Core.Tree.Builtin.Applicative as Builtin (applicative)
-import {-# SOURCE #-} qualified Core.Tree.Builtin.Eq as Builtin (eq)
-import {-# SOURCE #-} qualified Core.Tree.Builtin.Fractional as Builtin (fractional)
-import {-# SOURCE #-} qualified Core.Tree.Builtin.Monad as Builtin (monad)
-import {-# SOURCE #-} qualified Core.Tree.Builtin.MonadFail as Builtin (monadFail)
-import {-# SOURCE #-} qualified Core.Tree.Builtin.Num as Builtin (num)
 import qualified Core.Tree.Class as Class
 import Core.Tree.ConstructorInfo (ConstructorInfo (..))
 import {-# SOURCE #-} qualified Core.Tree.Declaration as Declaration
@@ -245,7 +245,7 @@ eq evidence left right =
     { method = Method.equal,
       evidence,
       instanciation = Instanciation.Mono,
-      methodInfo = Class.info Builtin.eq
+      methodInfo = Class.info Eq.definition
     }
     `call` left
     `call` right
@@ -256,7 +256,7 @@ purex evidence value =
     { method = Method.pure,
       evidence,
       instanciation = Instanciation.Mono,
-      methodInfo = Class.info Builtin.applicative
+      methodInfo = Class.info Applicative.definition
     }
     `call` value
 
@@ -266,7 +266,7 @@ run evidence ignore thenx =
     { method = Method.thenx,
       evidence,
       instanciation = Instanciation.Mono,
-      methodInfo = Class.info Builtin.monad
+      methodInfo = Class.info Monad.definition
     }
     `call` ignore
     `call` thenx
@@ -280,7 +280,7 @@ bind fail evidence input output =
           then Evidence.Super {base = evidence, index = 0}
           else evidence,
       instanciation = Instanciation.Mono,
-      methodInfo = Class.info Builtin.monad
+      methodInfo = Class.info Monad.definition
     }
     `call` input
     `call` output
@@ -291,7 +291,7 @@ failx evidence =
     { method = Method.fail,
       evidence,
       instanciation = Instanciation.Mono,
-      methodInfo = Class.info Builtin.monadFail
+      methodInfo = Class.info MonadFail.definition
     }
     `call` nil
 
@@ -303,7 +303,7 @@ integer_ integer evidence =
           { method = Method.fromInteger,
             evidence,
             instanciation = Instanciation.Mono,
-            methodInfo = Class.info Builtin.num
+            methodInfo = Class.info Num.definition
           },
       argument = Integer {integer}
     }
@@ -316,7 +316,7 @@ float_ float evidence =
           { method = Method.fromRational,
             evidence,
             instanciation = Instanciation.Mono,
-            methodInfo = Class.info Builtin.fractional
+            methodInfo = Class.info Fractional.definition
           },
       argument =
         Constructor
@@ -762,7 +762,7 @@ simplifyWith expression [] = case expression of
             { method = Method.negate,
               evidence,
               instanciation = Instanciation.Mono,
-              methodInfo = Class.info Builtin.num
+              methodInfo = Class.info Num.definition
             },
         argument = simplify negative
       }
