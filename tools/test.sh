@@ -20,7 +20,7 @@ fi
 # Run the bad parse tests
 echo "=== Bad Parse ==="
 for bad in test/bad/parse/**/*.hs; do
-    echo "$HAZY --debug-fail Expected --parse $bad"
+    echo "Parsing $(basename $bad)"
     $HAZY --debug-fail "Expected" --parse "$bad"
 done
 
