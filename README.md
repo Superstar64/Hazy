@@ -28,9 +28,13 @@ Haskell features are missing, only a test Javascript backend is implemented.
 
 # Quickstart
 
-Ensure that GHC 9.14 and Cabal are downloaded.
+Ensure that GHC 9.14 and Cabal 3.16 are downloaded. Other GHC and Cabal versions
+will probably work too but aren't tested regularly.
 
 ```sh
+# (optional) Tell Cabal to use GHC 9.14
+cabal configure --with-compiler=ghc-9.14
+
 # Run the build script
 tools/build.sh .dist
 
