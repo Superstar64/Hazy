@@ -23,7 +23,8 @@ import Error
     moduleNotInScope,
     typeNotInScope,
   )
-import Graph.Topological (Formula (..), Loeb (..), Loeb3 (..), loeb, loeb3)
+import Graph.Topological (Loeb1 (..), Loeb3 (..), loeb1, loeb3)
+import Graph.Topological1 (Formula1 (..))
 import Graph.Topological3 (Formula3 (..))
 import qualified Semantic.Resolve.Bindings as Regular (Bindings)
 import qualified Semantic.Resolve.Bindings as Regular.Bindings
@@ -659,7 +660,7 @@ pickModule (root :.. name) Module {modulePosition, extensions, exports, imports,
 
 pickModules :: Map FullQualifiers Module -> Regular.Canonical Scope.Global
 pickModules modules =
-  Regular.Canonical.fromFunctor $ loeb3 $ Loeb3 $ Canonical $ loeb $ Loeb $ Map.mapWithKey pick modules
+  Regular.Canonical.fromFunctor $ loeb3 $ Loeb3 $ Canonical $ loeb1 $ Loeb1 $ Map.mapWithKey pick modules
   where
     pick path modulex =
       let (cycle, run) = pickModule path modulex
@@ -668,7 +669,7 @@ pickModules modules =
           algebraA = formula3 . fmap runAlgebra3A
           algebraB = formula3 . fmap runAlgebra3B
           algebraC = formula3 . fmap runAlgebra3C
-       in Formula
+       in Formula1
             { cycle = absurd cycle,
               run = fmap (trimap algebraA algebraB algebraC . runDependency) . run
             }

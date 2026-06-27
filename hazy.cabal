@@ -66,6 +66,7 @@ executable hazy
     Core.Tree.TypeDeclaration
     Core.Tree.TypeDeclarationExtra
     Core.Tree.TypeDefinition
+    Data.Functor2
     Data.Heptafoldable
     Data.Heptafunctor
     Data.Heptatraversable
@@ -73,6 +74,7 @@ executable hazy
     Data.Hexafunctor
     Data.Hexatraversable
     Data.List.Reverse
+    Data.NaturalTransformation
     Data.Octafoldable
     Data.Octafunctor
     Data.Octatraversable
@@ -85,6 +87,7 @@ executable hazy
     Data.Strict.Maybe
     Data.Strict.Vector1
     Data.Strict.Vector2
+    Data.Traversable2
     Data.Trifoldable
     Data.Trifunctor
     Data.Tritraversable
