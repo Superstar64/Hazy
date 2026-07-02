@@ -1,6 +1,7 @@
 module Semantic.Resolve.Temporary.Complete.Definition where
 
 import Data.Foldable (toList)
+import Data.Functor.Identity (Identity (..))
 import Semantic.Layout (Normal)
 import qualified Semantic.Resolve.Binding.Term as Term
 import Semantic.Resolve.Context (Context, (!-))
@@ -47,8 +48,8 @@ resolve failure context leftHandSide rightHandSide = case leftHandSide of
     }
       | functionPosition <- Syntax.Infix.startPosition patternx,
         functionPosition' <- Syntax.Infix.startPosition patternx',
-        ~Term.Binding {fixity = Fixity {associativity, precedence}} <-
-          context !- (position :@ Local :- operator),
+        ~(_ Term.:@ Identity Term.Binding {fixity = Fixity {associativity, precedence}}) <-
+          context !- position :@ Local :- operator,
         patternx <- case associativity of
           Left -> Pattern.Infix.fixWith (Just Left) precedence $ Pattern.Infix.resolve context patternx
           _ -> Pattern.Infix.fixWith Nothing (precedence + 1) $ Pattern.Infix.resolve context patternx,

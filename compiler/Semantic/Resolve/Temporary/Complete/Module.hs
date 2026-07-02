@@ -17,7 +17,7 @@ import qualified Semantic.Resolve.Bindings as Bindings
 import Semantic.Resolve.Canonical (Canonical)
 import Semantic.Resolve.Context (Context (..), (</>))
 import qualified Semantic.Resolve.Context as Context
-import Semantic.Resolve.Core (Core (Core))
+import Semantic.Resolve.Core (CoreF (Core))
 import qualified Semantic.Resolve.Core as Core
 import Semantic.Resolve.Import (pickImports, pickPrelude)
 import qualified Semantic.Resolve.Import as Import

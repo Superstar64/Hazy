@@ -6,15 +6,16 @@ module Semantic.Resolve.Import
   )
 where
 
+import Control.Applicative (liftA)
 import Control.Monad (liftM2)
-import Control.Monad.ST (ST)
-import Data.Foldable (toList)
+import Data.Foldable (fold, toList)
+import Data.Functor.Const (Const (..))
 import Data.Functor.Identity (Identity (..), runIdentity)
+import Data.Kind (Type)
 import Data.Map (Map)
 import qualified Data.Map as Map
+import Data.NaturalTransformation (NaturalTransformation (..))
 import qualified Data.Set as Set
-import Data.Trifunctor (Trifunctor (trimap))
-import Data.Void (Void, absurd)
 import Error
   ( constructorNotInScope,
     cyclicalImports,
@@ -23,29 +24,21 @@ import Error
     moduleNotInScope,
     typeNotInScope,
   )
-import Graph.Topological (Loeb1 (..), Loeb3 (..), loeb1, loeb3)
+import Graph.Topological (Loeb (..), Loeb1 (..), loeb, loeb1)
+import qualified Graph.Topological as Graph
 import Graph.Topological1 (Formula1 (..))
-import Graph.Topological3 (Formula3 (..))
-import qualified Semantic.Resolve.Bindings as Regular (Bindings)
-import qualified Semantic.Resolve.Bindings as Regular.Bindings
+import qualified Semantic.Resolve.Binding.Constructor as Constructor
+import qualified Semantic.Resolve.Binding.Term as Term
+import qualified Semantic.Resolve.Binding.Type as Type
+import Semantic.Resolve.Bindings (Bindings, BindingsF (..), (!-), (!=), (!=.))
+import qualified Semantic.Resolve.Bindings as Bindings
 import Semantic.Resolve.Builtin (builtin)
-import qualified Semantic.Resolve.Canonical as Regular (Canonical)
-import qualified Semantic.Resolve.Canonical as Regular.Canonical
-import qualified Semantic.Resolve.Core as Regular (Core)
-import qualified Semantic.Resolve.Core as Regular.Core
-import qualified Semantic.Resolve.Detail.Binding.Constructor as Detail.Constructor
-import qualified Semantic.Resolve.Detail.Binding.Term as Detail.Term
-import qualified Semantic.Resolve.Detail.Binding.Type as Detail.Type
-import qualified Semantic.Resolve.Functor.Binding.Constructor as Functor.Constructor
-import qualified Semantic.Resolve.Functor.Binding.Term as Functor.Term
-import qualified Semantic.Resolve.Functor.Binding.Type as Functor.Type
-import Semantic.Resolve.Functor.Bindings (Bindings (..), (!-), (!=), (!=.))
-import qualified Semantic.Resolve.Functor.Bindings as Bindings
-import Semantic.Resolve.Functor.Canonical (Canonical (Canonical, runCanonical), (!))
-import Semantic.Resolve.Functor.Core (Core (..))
-import qualified Semantic.Resolve.Functor.Core as Core
-import Semantic.Resolve.Functor.Same (Same (..))
+import Semantic.Resolve.Canonical (Canonical (..), CanonicalF (..), (!))
+import Semantic.Resolve.Core (Core (..), CoreF)
+import qualified Semantic.Resolve.Core as Core
+import Semantic.Resolve.Functor2 (Proper (..), Traversable2, fmap2)
 import Semantic.Resolve.Stability (Stability (..))
+import Semantic.Scope (Environment)
 import qualified Semantic.Scope as Scope
 import Syntax.Extensions (Extensions (Extensions, implicitPrelude, stableImports))
 import qualified Syntax.Extensions as Syntax (Extensions (..))
@@ -72,246 +65,155 @@ import Syntax.Variable
     prelude,
     prelude',
   )
-import qualified Syntax.Variable as Variable (Constructor)
 
-newtype Algebra3A f a b c = Algebra3A
-  { runAlgebra3A :: forall m. (Monad m) => f (m a) (m b) (m c) -> m a
+type Formula :: ((Type -> Type) -> Environment -> Type) -> Environment -> Type -> Type
+data Formula f scope a = Formula
+  { position :: [Position],
+    run :: forall m. (Monad m) => f m scope -> m a
   }
 
-newtype Algebra3B f a b c = Algebra3B
-  { runAlgebra3B :: forall m. (Monad m) => f (m a) (m b) (m c) -> m b
-  }
+instance Functor (Formula f scope) where
+  fmap = liftA
 
-newtype Algebra3C f a b c = Algebra3C
-  { runAlgebra3C :: forall m. (Monad m) => f (m a) (m b) (m c) -> m c
-  }
+instance Applicative (Formula f scope) where
+  pure a = Formula {position = [], run = const $ pure a}
+  Formula {position = position1, run = function} <*> Formula {position = position2, run = argument} =
+    Formula
+      { position = position1 ++ position2,
+        run = \complete -> function complete <*> (argument complete)
+      }
 
-instance (Same a) => Same (Algebra3A f a b c) where
-  same abort (Algebra3A leftRun) (Algebra3A rightRun) =
-    Algebra3A $ \spreadsheet -> do
-      left <- leftRun spreadsheet
-      right <- rightRun spreadsheet
-      pure $ same abort left right
+proper :: Formula f scope a -> Graph.Formula (Proper f scope) s a
+proper Formula {position, run} =
+  Graph.Formula
+    { -- todo merge error messages for cycles
+      cycle = case position of
+        [] -> undefined
+        position : _ -> cyclicalImports position,
+      run = \(Proper proper) -> run proper
+    }
 
-instance (Same b) => Same (Algebra3B f a b c) where
-  same abort (Algebra3B leftRun) (Algebra3B rightRun) =
-    Algebra3B $ \spreadsheet -> do
-      left <- leftRun spreadsheet
-      right <- rightRun spreadsheet
-      pure $ same abort left right
+type Morph2 ::
+  ((Type -> Type) -> Environment -> Type) ->
+  ((Type -> Type) -> Environment -> Type) ->
+  Environment ->
+  Type
+newtype Morph2 f g scope = Morph2 (forall m. (Monad m) => f m scope -> g m scope)
 
-instance (Same c) => Same (Algebra3C f a b c) where
-  same abort (Algebra3C leftRun) (Algebra3C rightRun) =
-    Algebra3C $ \spreadsheet -> do
-      left <- leftRun spreadsheet
-      right <- rightRun spreadsheet
-      pure $ same abort left right
+contra :: Morph2 f1 f2 scope -> NaturalTransformation (Formula f2 scope) (Formula f1 scope)
+contra (Morph2 f) = Morph (\Formula {position, run} -> Formula {position, run = run . f})
 
-newtype Dependency stability request scope = Dependency
-  { runDependency ::
-      Bindings
-        stability
-        ( Void,
-          Algebra3A
-            request
-            (Detail.Term.Binding scope)
-            (Detail.Constructor.Binding scope)
-            (Detail.Type.Binding scope)
-        )
-        ( Void,
-          Algebra3B
-            request
-            (Detail.Term.Binding scope)
-            (Detail.Constructor.Binding scope)
-            (Detail.Type.Binding scope)
-        )
-        ( Void,
-          Algebra3C
-            request
-            (Detail.Term.Binding scope)
-            (Detail.Constructor.Binding scope)
-            (Detail.Type.Binding scope)
-        )
-  }
-
-instance (Semigroup stability) => Semigroup (Dependency stability request scope) where
-  Dependency left <> Dependency right = Dependency $ left <> right
-
-prefer :: Dependency stability request scope -> Dependency stability request scope -> Dependency stability request scope
-prefer (Dependency left) (Dependency right) = Dependency $ Bindings.unionWith const const const const left right
-
-updateStability :: stability -> Dependency stability' request scope -> Dependency stability request scope
-updateStability stability (Dependency dependency) = Dependency (Bindings.updateStability stability dependency)
-
-constant' :: Regular.Bindings stability scope -> Dependency stability request scope
-constant' bindings = constant (Regular.Bindings.toFunctor bindings)
-
-constant ::
-  Bindings
-    stability
-    (Detail.Term.Binding scope)
-    (Detail.Constructor.Binding scope)
-    (Detail.Type.Binding scope) ->
-  Dependency stability request scope
-constant bindings =
-  Dependency $
-    trimap
-      (unfailable . algebra3A)
-      (unfailable . algebra3B)
-      (unfailable . algebra3C)
-      bindings
-  where
-    unfailable value = (undefined, value)
-    algebra3A value = Algebra3A $ \_ -> pure value
-    algebra3B value = Algebra3B $ \_ -> pure value
-    algebra3C value = Algebra3C $ \_ -> pure value
+contramap :: (Traversable2 f) => Morph2 f1 f2 scope -> f (Formula f2 scope) scope -> f (Formula f1 scope) scope
+contramap = fmap2 . contra
 
 strict ::
-  (Trifunctor request, Monad m) =>
-  request
-    (m (Detail.Term.Binding scope))
-    (m (Detail.Constructor.Binding scope))
-    (m (Detail.Type.Binding scope)) ->
-  Dependency stability request scope ->
-  Bindings
-    stability
-    (m (Detail.Term.Binding scope))
-    (m (Detail.Constructor.Binding scope))
-    (m (Detail.Type.Binding scope))
-strict request = trimap (runAlgebra3A . snd) (runAlgebra3B . snd) (runAlgebra3C . snd) . runDependency
-  where
-    runAlgebra3A (Algebra3A run) = run request
-    runAlgebra3B (Algebra3B run) = run request
-    runAlgebra3C (Algebra3C run) = run request
+  (Monad m) =>
+  ( Map FullQualifiers (Identity (BindingsF () m scope)) ->
+    Map Qualifiers (Identity (BindingsF Stability (Formula CanonicalF scope) scope))
+  ) ->
+  CanonicalF m scope ->
+  CoreF m scope
+strict pick' canonical =
+  Core.fromMap
+    $ fmap (fmap2 $ Morph $ \Formula {run} -> run canonical)
+    $ fmap runIdentity
+      . pick'
+      . fmap Identity
+    $ runCanonical canonical
 
-newtype Contramap request' scope request
-  = Contramap
-      ( forall m.
-        (Monad m) =>
-        request'
-          (m (Detail.Term.Binding scope))
-          (m (Detail.Constructor.Binding scope))
-          (m (Detail.Type.Binding scope)) ->
-        request
-          (m (Detail.Term.Binding scope))
-          (m (Detail.Constructor.Binding scope))
-          (m (Detail.Type.Binding scope))
-      )
-
-contramap ::
-  Contramap request' scope request ->
-  Dependency stability request scope ->
-  Dependency stability request' scope
-contramap (Contramap map) (Dependency dependency) =
-  Dependency
-    ( trimap
-        (fmap $ \(Algebra3A run) -> Algebra3A $ run . map)
-        (fmap $ \(Algebra3B run) -> Algebra3B $ run . map)
-        (fmap $ \(Algebra3C run) -> Algebra3C $ run . map)
-        dependency
-    )
-
-reselectTerm ::
-  Position ->
+selectTerm ::
   Variable ->
-  Functor.Term.Binding x ->
-  Functor.Term.Binding (Void, Algebra3A (Bindings stability) a b c)
-reselectTerm position name = fmap $ const (cyclicalImports position, algebra)
-  where
-    algebra = Algebra3A $ \canonical -> Functor.Term.value $ canonical !- position :@ name
+  Term.BindingF m' scope' ->
+  Term.BindingF (Formula (BindingsF ()) scope) scope
+selectTerm name (position Term.:@ _) =
+  position
+    Term.:@ Formula
+      { position = [position],
+        run = \bindings -> Term.value $ bindings !- position :@ name
+      }
 
-reselectConstructor ::
-  Position ->
-  Variable.Constructor ->
-  Functor.Constructor.Binding x ->
-  Functor.Constructor.Binding (Void, Algebra3B (Bindings stability) a b c)
-reselectConstructor position name = fmap $ const (cyclicalImports position, algebra)
-  where
-    algebra = Algebra3B $ \canonical -> Functor.Constructor.value $ canonical != position :@ name
+selectConstructor ::
+  Constructor ->
+  Constructor.BindingF m' scope' ->
+  Constructor.BindingF (Formula (BindingsF ()) scope) scope
+selectConstructor name (position Constructor.:@ _) =
+  position
+    Constructor.:@ Formula
+      { position = [position],
+        run = \bindings -> Constructor.value $ bindings != position :@ name
+      }
 
-reselectType ::
-  Position ->
+selectType ::
   ConstructorIdentifier ->
-  Functor.Type.Binding x ->
-  Functor.Type.Binding (Void, Algebra3C (Bindings stability) a b c)
-reselectType position name = fmap $ const (cyclicalImports position, algebra)
-  where
-    algebra = Algebra3C $ \canonical -> Functor.Type.value $ canonical !=. position :@ name
+  Type.BindingF m' scope' ->
+  Type.BindingF (Formula (BindingsF ()) scope) scope
+selectType name (header@Type.Header {position} Type.:@ _) =
+  header
+    Type.:@ Formula
+      { position = [position],
+        run = \bindings -> Type.value $ bindings !=. position :@ name
+      }
 
 pickTerm ::
   (Monad m) =>
   Position ->
   Variable ->
-  m (Dependency () (Bindings ()) scope)
+  m (BindingsF () (Formula (BindingsF ()) scope) scope)
 pickTerm position name =
-  let term =
-        Functor.Term.Binding
-          { position,
-            value
-          }
-        where
-          value = (cyclicalImports position, algebra)
-          algebra = Algebra3A $ \bindings -> Functor.Term.value $ bindings !- position :@ name
-   in pure $
-        Dependency $
-          Bindings
-            { terms = Map.singleton name term,
-              constructors = Map.empty,
-              types = Map.empty,
-              stability = ()
-            }
+  pure
+    Bindings
+      { terms = Map.singleton name (selectTerm name value),
+        constructors = Map.empty,
+        types = Map.empty,
+        stability = ()
+      }
+  where
+    value = position Term.:@ Const ()
 
 pickData ::
   (Monad m) =>
   Position ->
   ConstructorIdentifier ->
   Fields ->
-  m (Bindings stability a b c) ->
-  m (Dependency () (Bindings ()) scope)
+  m (BindingsF stability m' scope') ->
+  m (BindingsF () (Formula (BindingsF ()) scope) scope)
 pickData position name AllFields request = do
   Bindings {terms, constructors, types} <- request
   let term name =
-        Functor.Term.Binding
-          { position = Functor.Term.position (terms Map.! name),
-            value
-          }
-        where
-          value = (cyclicalImports position, algebra)
-          algebra = Algebra3A $ \bindings -> Functor.Term.value $ bindings !- position :@ name
+        selectTerm name (Term.position (terms Map.! name) Term.:@ Const ())
+
       constructor name =
-        Functor.Constructor.Binding
-          { position = Functor.Constructor.position (constructors Map.! name),
-            value
-          }
+        selectConstructor name (Constructor.position (constructors Map.! name) Constructor.:@ Const ())
+      typex = selectType name (header Type.:@ Const ())
         where
-          value = (cyclicalImports position, algebra)
-          algebra = Algebra3B $ \bindings -> Functor.Constructor.value $ bindings != position :@ name
-      typex =
-        Functor.Type.Binding
-          { position,
-            value,
-            fields = Functor.Type.fields $ types Map.! name,
-            constructors = Functor.Type.constructors $ types Map.! name
-          }
-        where
-          value = (cyclicalImports position, algebra)
-          algebra = Algebra3C $ \bindings -> Functor.Type.value $ bindings !=. position :@ name
+          header =
+            Type.Header
+              { position,
+                fields = Type.fields $ Type.header $ types Map.! name,
+                constructors = Type.constructors $ Type.header $ types Map.! name
+              }
   case Map.lookup name types of
-    Just Functor.Type.Binding {fields, constructors} -> do
+    Just (Type.Header {fields, constructors} Type.:@ _) -> do
       pure $
-        Dependency $
-          Bindings
-            { terms = Map.fromSet term fields,
-              constructors = Map.fromSet constructor constructors,
-              types = Map.singleton name typex,
-              stability = ()
-            }
+        Bindings
+          { terms = Map.fromSet term fields,
+            constructors = Map.fromSet constructor constructors,
+            types = Map.singleton name typex,
+            stability = ()
+          }
     Nothing -> typeNotInScope position
-pickData position name Fields {picks} _ = pure $ Dependency acyclic
+pickData position name Fields {picks} _ =
+  pure
+    Bindings
+      { terms = Map.mapWithKey term fields,
+        constructors = Map.mapWithKey constructor constructors,
+        types,
+        stability = ()
+      }
   where
-    forceType :: (Monad m) => Bindings () a b (m c) -> m ()
+    forceType :: (Monad m) => BindingsF stable m scope -> m ()
     forceType bindings = do
-      _ <- Functor.Type.value $ bindings !=. position :@ name
+      _ <- Type.value $ bindings !=. position :@ name
       pure ()
     constructors =
       Map.fromList [(name, position) | position :@ Constructor name <- toList picks]
@@ -319,65 +221,54 @@ pickData position name Fields {picks} _ = pure $ Dependency acyclic
       Map.fromList [(name, position) | position :@ Variable name <- toList picks]
 
     term name position =
-      Functor.Term.Binding
-        { position,
-          value
-        }
-      where
-        value = (cyclicalImports position, algebra)
-        algebra = Algebra3A $ \bindings ->
-          forceType bindings >> do
-            Functor.Term.value $ bindings !- position :@ name
+      position
+        Term.:@ Formula
+          { position = [position],
+            run = \bindings -> do
+              forceType bindings
+              Term.value $ bindings !- position :@ name
+          }
     constructor name position =
-      Functor.Constructor.Binding
-        { position,
-          value
-        }
-      where
-        value = (cyclicalImports position, algebra)
-        algebra = Algebra3B $ \bindings ->
-          forceType bindings >> do
-            Functor.Constructor.value $ bindings != position :@ name
+      position
+        Constructor.:@ Formula
+          { position = [position],
+            run = \bindings -> do
+              forceType bindings
+              Constructor.value $ bindings != position :@ name
+          }
     types = Map.singleton name typex
       where
         typex =
-          Functor.Type.Binding
+          Type.Header
             { position,
-              value,
               constructors = Map.keysSet constructors,
               fields = Map.keysSet fields
             }
-          where
-            value = (cyclicalImports position, algebra)
-            algebra = Algebra3C $ \bindings ->
-              let checkSelector name position ()
-                    | Set.member name realSelectors = ()
-                    | otherwise = fieldNotInScope position name
-                  checkConstructor name position ()
-                    | Set.member name realConstructors = ()
-                    | otherwise = constructorNotInScope position name
-                  Functor.Type.Binding
-                    { value,
-                      fields = realSelectors,
-                      constructors = realConstructors
-                    } = bindings !=. position :@ name
-               in if
-                    | () <- Map.foldrWithKey checkSelector () fields,
-                      () <- Map.foldrWithKey checkConstructor () constructors ->
-                        value
-    acyclic =
-      Bindings
-        { terms = Map.mapWithKey term fields,
-          constructors = Map.mapWithKey constructor constructors,
-          types,
-          stability = ()
-        }
+            Type.:@ Formula
+              { position = [position],
+                run = \bindings ->
+                  let checkSelector name position ()
+                        | Set.member name realSelectors = ()
+                        | otherwise = fieldNotInScope position name
+                      checkConstructor name position ()
+                        | Set.member name realConstructors = ()
+                        | otherwise = constructorNotInScope position name
+                      Type.Header
+                        { fields = realSelectors,
+                          constructors = realConstructors
+                        }
+                        Type.:@ value = bindings !=. position :@ name
+                   in if
+                        | () <- Map.foldrWithKey checkSelector () fields,
+                          () <- Map.foldrWithKey checkConstructor () constructors ->
+                            value
+              }
 
 pickSymbol ::
   (Monad m) =>
   Syntax.Import.Symbol ->
-  m (Bindings stability a b c) ->
-  m (Dependency () (Bindings ()) scope)
+  m (BindingsF stability m' scope') ->
+  m (BindingsF () (Formula (BindingsF ()) scope) scope)
 pickSymbol Syntax.Import.Definition {variable = startPosition :@ variable} _ =
   pickTerm startPosition variable
 pickSymbol
@@ -388,82 +279,12 @@ pickSymbol
   request =
     pickData startPosition typeVariable fields request
 
--- stolen from profunctors
-dimap :: (a -> b) -> (c -> d) -> (b -> c) -> a -> d
-dimap f g go = g . go . f
-
-dimapIdentity :: (Functor f1, Functor f2) => (f2 (Identity a) -> f1 (Identity b)) -> f2 a -> f1 b
-dimapIdentity = dimap (fmap Identity) (fmap runIdentity)
-
-dimapIdentity3 ::
-  (Trifunctor f1, Trifunctor f2) =>
-  ( f1 (Identity a1) (Identity a2) (Identity a3) ->
-    f2 (Identity b1) (Identity b2) (Identity b3)
-  ) ->
-  f1 a1 a2 a3 ->
-  f2 b1 b2 b3
-dimapIdentity3 pick = run . pick . wrap
-  where
-    run = trimap runIdentity runIdentity runIdentity
-    wrap = trimap Identity Identity Identity
-
-dimapImport ::
-  ( Canonical
-      (Detail.Term.Binding scope1)
-      (Detail.Constructor.Binding scope1)
-      (Detail.Type.Binding scope1) ->
-    Core
-      Stability
-      (Detail.Term.Binding scope2)
-      (Detail.Constructor.Binding scope2)
-      (Detail.Type.Binding scope2)
-  ) ->
-  Regular.Canonical.Canonical scope1 ->
-  Regular.Core scope2
-dimapImport = dimap Regular.Canonical.toFunctor Regular.Core.fromFunctor
-
-pickStrict ::
-  (Monad m) =>
-  ( Map FullQualifiers (Bindings () () () ()) ->
-    Map Qualifiers (Dependency Stability Canonical scope)
-  ) ->
-  Canonical
-    (m (Detail.Term.Binding scope))
-    (m (Detail.Constructor.Binding scope))
-    (m (Detail.Type.Binding scope)) ->
-  Core
-    Stability
-    (m (Detail.Term.Binding scope))
-    (m (Detail.Constructor.Binding scope))
-    (m (Detail.Type.Binding scope))
-pickStrict pick canonical =
-  Core.fromMap $ refine <$> pick lookahead
-  where
-    refine = strict canonical
-    constant = trimap (const ()) (const ()) (const ())
-    lookahead = constant <$> runCanonical canonical
-
-normalizeImport ::
-  ( Map FullQualifiers (Identity (Bindings () () () ())) ->
-    Map Qualifiers (Identity (Dependency Stability Canonical scope2))
-  ) ->
-  Regular.Canonical.Canonical scope2 ->
-  Regular.Core scope2
-normalizeImport = dimapImport . dimapIdentity3 . pickStrict . dimapIdentity
-
-pickPrelude ::
-  Position ->
-  [Syntax.Import Position] ->
-  Regular.Canonical.Canonical scope ->
-  Regular.Core scope
-pickPrelude position declarations = normalizeImport $ pickPrelude' position declarations
-
 pickPrelude' ::
   (Monad m) =>
   Position ->
   [Syntax.Import Position] ->
-  Map FullQualifiers (m (Bindings () a b c)) ->
-  Map Qualifiers (m (Dependency Stability Canonical scope))
+  Map FullQualifiers (m (BindingsF stable' m' scope')) ->
+  Map Qualifiers (m (BindingsF Stability (Formula (CanonicalF) scope) scope))
 pickPrelude' position declarations request = case not $ any isPrelude declarations of
   True
     | Just request <- Map.lookup prelude request ->
@@ -471,12 +292,12 @@ pickPrelude' position declarations request = case not $ any isPrelude declaratio
               Bindings {terms, constructors, types} <- request
               let bindings =
                     Bindings
-                      { terms = Map.mapWithKey (reselectTerm position) terms,
-                        constructors = Map.mapWithKey (reselectConstructor position) constructors,
-                        types = Map.mapWithKey (reselectType position) types,
+                      { terms = Map.mapWithKey selectTerm terms,
+                        constructors = Map.mapWithKey selectConstructor constructors,
+                        types = Map.mapWithKey selectType types,
                         stability = Stable [position]
                       }
-              pure $ contramap (Contramap (! position :@ prelude)) $ Dependency $ bindings
+              pure $ contramap (Morph2 (! position :@ prelude)) bindings
          in Map.fromList [(Local, binding), (prelude', binding)]
     | otherwise -> error "no prelude"
   False -> Map.empty
@@ -486,26 +307,21 @@ pickPrelude' position declarations request = case not $ any isPrelude declaratio
       | target == prelude = True
     isPrelude _ = False
 
-pickImports ::
-  Extensions ->
-  [Syntax.Import Position] ->
-  Regular.Canonical.Canonical scope ->
-  Regular.Core.Core scope
-pickImports extensions declarations = normalizeImport (pickImports' extensions declarations)
-
 pickImports' ::
   (Monad m) =>
   Extensions ->
   [Syntax.Import Position] ->
-  Map FullQualifiers (m (Bindings () a b c)) ->
-  Map Qualifiers (m (Dependency Stability Canonical scope))
+  Map FullQualifiers (m (BindingsF stable' m' scope')) ->
+  Map Qualifiers (m (BindingsF Stability (Formula CanonicalF scope) scope))
 pickImports' Extensions {stableImports, hygienicHiding} declarations request =
   Map.fromListWith (liftM2 (<>)) $ foldMap selections declarations
   where
     selections Syntax.Builtin {targetPosition, target} =
       [(Local, bindings), (name, bindings)]
       where
-        bindings = pure $ updateStability (Stable [targetPosition]) $ constant' builtin
+        update = Bindings.updateStability (Stable [targetPosition])
+        poly = fmap2 (Morph $ pure . runIdentity)
+        bindings = pure $ update $ poly builtin
         name
           | root :.. name <- target = root :. name
     selections Syntax.Import {qualification, targetPosition = position, target = name, alias, symbols} =
@@ -528,19 +344,19 @@ pickImports' Extensions {stableImports, hygienicHiding} declarations request =
           Bindings {terms, constructors, types, stability} <- base
           pure
             Bindings
-              { terms = Map.mapWithKey (reselectTerm position) terms,
-                constructors = Map.mapWithKey (reselectConstructor position) constructors,
-                types = Map.mapWithKey (reselectType position) types,
+              { terms = Map.mapWithKey selectTerm terms,
+                constructors = Map.mapWithKey selectConstructor constructors,
+                types = Map.mapWithKey selectType types,
                 stability
               }
         bindings = case symbols of
           Syntax.Symbols {symbols} -> update <$> foldr combine empty items
             where
               combine = liftM2 (<>)
-              empty = pure $ Dependency $ mempty
-              items = [contramap (Contramap (! position :@ name)) <$> pickSymbol symbol base | symbol <- toList symbols]
-              update = updateStability (Stable [position])
-          Syntax.All -> contramap (Contramap (! position :@ name)) . Dependency <$> all
+              empty = pure $ mempty
+              items = [contramap (Morph2 (! position :@ name)) <$> pickSymbol symbol base | symbol <- toList symbols]
+              update = Bindings.updateStability (Stable [position])
+          Syntax.All -> contramap (Morph2 (! position :@ name)) <$> all
           Syntax.Hiding {symbols} -> do
             base@Bindings {terms, constructors, types, stability} <- all
             let bindings =
@@ -557,7 +373,7 @@ pickImports' Extensions {stableImports, hygienicHiding} declarations request =
                     Syntax.Import.Data {typeVariable, fields} ->
                       case fields of
                         Syntax.AllFields -> case base !=. typeVariable of
-                          Functor.Type.Binding {fields} -> toList fields
+                          Type.Header {fields} Type.:@ _ -> toList fields
                         Syntax.Fields {picks} -> do
                           _ :@ Variable name <- toList picks
                           pure name
@@ -571,21 +387,21 @@ pickImports' Extensions {stableImports, hygienicHiding} declarations request =
                     toList symbols
                   case fields of
                     Syntax.AllFields -> case base !=. typeVariable of
-                      Functor.Type.Binding {constructors} -> toList constructors
+                      Type.Header {constructors} Type.:@ _ -> toList constructors
                     Syntax.Fields {picks} -> do
                       _ :@ Constructor name <- toList picks
                       pure name
                 typeDeletions = do
                   Syntax.Import.Data {typeVariable = _ :@ typeVariable} <- toList symbols
                   pure typeVariable
-            pure $ contramap (Contramap (! position :@ name)) $ Dependency $ bindings
+            pure $ contramap (Morph2 (! position :@ name)) $ bindings
 
 pickExports ::
   (Monad m) =>
-  Regular.Bindings () scope ->
+  BindingsF () Identity scope ->
   Syntax.Exports ->
-  Map Qualifiers (m (Bindings Stability a b c)) ->
-  m (Dependency () (Core ()) scope)
+  Map Qualifiers (m (BindingsF Stability scope' m')) ->
+  m (BindingsF () (Formula CoreF scope) scope)
 pickExports _ Syntax.Exports {exports} request = do
   let pick export = case export of
         Syntax.Export.Module {modulex = position :@ root :.. name} ->
@@ -594,82 +410,97 @@ pickExports _ Syntax.Exports {exports} request = do
               Bindings {terms, constructors, types, stability} <- request
               let bindings =
                     Bindings
-                      { terms = Map.mapWithKey (reselectTerm position) terms,
-                        constructors = Map.mapWithKey (reselectConstructor position) constructors,
-                        types = Map.mapWithKey (reselectType position) types,
+                      { terms = Map.mapWithKey selectTerm terms,
+                        constructors = Map.mapWithKey selectConstructor constructors,
+                        types = Map.mapWithKey selectType types,
                         stability
                       }
-              pure $ contramap (Contramap (Core.! position :@ root :. name)) $ Dependency $ bindings
+              pure $
+                contramap (Morph2 (Bindings.updateStability () . (Core.! position :@ root :. name))) $
+                  bindings
             Nothing -> moduleNotInScope position
         Syntax.Export.Definition {variable = position :@ root :- name} -> do
           bindings <- pickTerm position name
-          pure $ contramap (Contramap (Core.! position :@ root)) $ updateStability (Stable [position]) bindings
+          pure $
+            contramap (Morph2 (Bindings.updateStability () . (Core.! position :@ root))) $
+              Bindings.updateStability (Stable [position]) bindings
         Syntax.Export.Data {typeVariable = position :@ root :=. name, fields} -> do
           let base = case Map.lookup root request of
                 Just base -> base
                 Nothing -> moduleNotInScope position
           bindings <- pickData position name fields base
-          pure $ contramap (Contramap (Core.! position :@ root)) $ updateStability (Stable [position]) bindings
+          pure $
+            contramap (Morph2 (Bindings.updateStability () . (Core.! position :@ root))) $
+              Bindings.updateStability (Stable [position]) bindings
   bindings <- traverse pick exports
-  pure $ Dependency $ Bindings.updateStability () $ foldMap runDependency bindings
-pickExports defaultx Syntax.Default _ = pure $ constant' defaultx
+  pure $ Bindings.updateStability () $ fold bindings
+pickExports defaultx Syntax.Default _ = pure $ poly defaultx
+  where
+    poly = fmap2 (Morph $ pure . runIdentity)
 
 data Module = Module
   { modulePosition :: Position,
     extensions :: Syntax.Extensions,
     imports :: [Syntax.Import Position],
     exports :: Syntax.Exports,
-    base :: Regular.Bindings () Scope.Global
+    base :: Bindings () Scope.Global
   }
 
 pickModule ::
-  (Monad m) =>
   FullQualifiers ->
   Module ->
-  ( Void,
-    Map FullQualifiers (m (Bindings () a b c)) ->
-    m (Dependency () Canonical Scope.Global)
-  )
+  Formula1 (Map FullQualifiers) s (BindingsF () (Graph.Formula (Proper CanonicalF Scope.Global) s') Scope.Global)
 pickModule (root :.. name) Module {modulePosition, extensions, exports, imports, base} =
-  (cyclicalImports modulePosition, algebra)
+  Formula1
+    { cycle = cyclicalImports modulePosition,
+      run = \modules -> do
+        let regular = base
+            update = Bindings.updateStability (Stable [modulePosition])
+        base <- pure $ update base
+        let pick ::
+              (Monad m) =>
+              Map FullQualifiers (m (BindingsF stability m' Scope.Global)) ->
+              Map Qualifiers (m (BindingsF Stability (Formula CanonicalF Scope.Global) Scope.Global))
+            pick request =
+              let base = pickImports' extensions imports request
+                  prelude =
+                    if implicitPrelude
+                      then pickPrelude' modulePosition imports request
+                      else Map.empty
+                  combined = Map.unionWith (liftM2 (<>)) base prelude
+                  shadower = pure <$> shadow
+               in Map.unionWith (liftM2 Bindings.prefer) shadower combined
+            shadow =
+              let morph = Morph $ pure . runIdentity
+               in Map.fromList [(Local, fmap2 morph base), (root :. name, fmap2 morph base)]
+        let imports = pick modules
+        exports <- pickExports regular exports imports
+        pure $ fmap2 (Morph proper) $ contramap (Morph2 $ strict pick) exports
+    }
   where
     Extensions {implicitPrelude} = extensions
-    algebra modules = do
-      let regular = base
-          update = Bindings.updateStability (Stable [modulePosition])
-      base <- pure $ update $ Regular.Bindings.toFunctor base
-      let pick ::
-            (Monad m) =>
-            Map FullQualifiers (m (Bindings () a b c)) ->
-            Map Qualifiers (m (Dependency Stability Canonical Scope.Global))
-          pick request =
-            let base = pickImports' extensions imports request
-                prelude =
-                  if implicitPrelude
-                    then pickPrelude' modulePosition imports request
-                    else Map.empty
-                combined = Map.unionWith (liftM2 (<>)) base prelude
-                shadower = pure <$> shadow
-             in Map.unionWith (liftM2 prefer) shadower combined
-          shadow = Map.fromList [(Local, constant base), (root :. name, constant base)]
-      let imports = pick modules
-      exports <- pickExports regular exports (fmap runDependency <$> imports)
-      let go = Contramap (Core.updateStability () . pickStrict (dimapIdentity pick))
-          bindings = contramap go exports
-      pure bindings
 
-pickModules :: Map FullQualifiers Module -> Regular.Canonical Scope.Global
+pickPrelude ::
+  Position ->
+  [Syntax.Import Position] ->
+  Canonical scope ->
+  Core scope
+pickPrelude position declarations = strict (pickPrelude' position declarations)
+
+pickImports ::
+  Extensions ->
+  [Syntax.Import Position] ->
+  Canonical scope ->
+  Core scope
+pickImports extensions declarations = strict (pickImports' extensions declarations)
+
+pickModules :: Map FullQualifiers Module -> Canonical Scope.Global
 pickModules modules =
-  Regular.Canonical.fromFunctor $ loeb3 $ Loeb3 $ Canonical $ loeb1 $ Loeb1 $ Map.mapWithKey pick modules
-  where
-    pick path modulex =
-      let (cycle, run) = pickModule path modulex
-          formula3 :: (Void, t (ST s a) (ST s b) (ST s c) -> ST s z) -> Formula3 t s a b c z
-          formula3 (cycle, run) = Formula3 {cycle = absurd cycle, run}
-          algebraA = formula3 . fmap runAlgebra3A
-          algebraB = formula3 . fmap runAlgebra3B
-          algebraC = formula3 . fmap runAlgebra3C
-       in Formula1
-            { cycle = absurd cycle,
-              run = fmap (trimap algebraA algebraB algebraC . runDependency) . run
-            }
+  runProper $
+    loeb $
+      Loeb $
+        Proper $
+          Canonical $
+            loeb1 $
+              Loeb1 $
+                Map.mapWithKey pickModule modules

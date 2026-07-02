@@ -1,18 +1,12 @@
 module Semantic.Resolve.Core where
 
+import Data.Functor.Identity (Identity (..))
 import Data.Map (Map)
 import qualified Data.Map as Map
-import Error (fieldNotInScope, moduleNotInScope, orderDependentUsage)
-import qualified Semantic.Resolve.Binding.Constructor as Constructor
-import qualified Semantic.Resolve.Binding.Term as Term
-import qualified Semantic.Resolve.Binding.Type as Type
-import Semantic.Resolve.Bindings (Bindings)
+import Error (moduleNotInScope)
+import Semantic.Resolve.Bindings (BindingsF (..))
 import qualified Semantic.Resolve.Bindings as Bindings
-import qualified Semantic.Resolve.Detail.Binding.Constructor as Detail.Constructor
-import qualified Semantic.Resolve.Detail.Binding.Term as Detail.Term
-import qualified Semantic.Resolve.Detail.Binding.Type as Detail.Type
-import qualified Semantic.Resolve.Functor.Core as Functor
-import Semantic.Resolve.Stability (Stability)
+import Semantic.Resolve.Stability (Stability (..))
 import Syntax.Tree.Marked (Marked (..))
 import Syntax.Variable
   ( FullQualifiers ((:..)),
@@ -22,13 +16,15 @@ import Syntax.Variable
     Qualifiers (..),
   )
 
-data Core scope = Core
-  { globals :: !(Map FullQualifiers (Bindings Stability scope)),
-    locals :: !(Bindings Stability scope)
+type Core = CoreF Identity
+
+data CoreF m scope = Core
+  { globals :: !(Map FullQualifiers (BindingsF Stability m scope)),
+    locals :: !(BindingsF Stability m scope)
   }
   deriving (Show)
 
-instance Semigroup (Core scope) where
+instance (Applicative m) => Semigroup (CoreF m scope) where
   Core {globals = globals1, locals = locals1}
     <> Core {globals = globals2, locals = locals2} =
       Core
@@ -49,41 +45,34 @@ core != position :@ qualifiers := name = core ! position :@ qualifiers Bindings.
 
 core !=. position :@ qualifiers :=. name = core ! position :@ qualifiers Bindings.!=. position :@ name
 
-infixl 3 !-%, !-*, !=~, !=*~, !=.*
-
-core !-% index
-  | Term.Binding {selector = Term.Selector select} <- core !- index = select
-_ !-% (position :@ _) = fieldNotInScope position
-
-(!-*) = (Term.index .) . (!-)
-
-core !=~ index
-  | binding@Constructor.Binding {unordered = False} <- core != index = binding
-_ !=~ (position :@ _) = orderDependentUsage position
-
-(!=*) = (Constructor.index .) . (!=)
-
-(!=*~) = (Constructor.index .) . (!=~)
-
-(!=.*) = (Type.index .) . (!=.)
+updateStability stability Core {locals, globals} =
+  Core
+    { locals = Bindings.updateStability stability locals,
+      globals = Map.map (Bindings.updateStability stability) globals
+    }
 
 infixr 5 </>
 
+(</>) :: Core scope -> Core scope -> Core scope
 Core {globals = globals1, locals = locals1} </> Core {globals = globals2, locals = locals2} =
   Core
     { globals = Map.unionWith (Bindings.</>) globals1 globals2,
       locals = locals1 Bindings.</> locals2
     }
 
-fromFunctor ::
-  Functor.Core
-    Stability
-    (Detail.Term.Binding scope)
-    (Detail.Constructor.Binding scope)
-    (Detail.Type.Binding scope) ->
-  Core scope
-fromFunctor Functor.Core {globals, locals} =
+fromMap map =
   Core
-    { globals = fmap Bindings.fromFunctor globals,
-      locals = Bindings.fromFunctor locals
+    { locals = Map.findWithDefault unbound Local map,
+      globals = Map.mapKeysMonotonic assume $ Map.delete Local map
     }
+  where
+    unbound =
+      Bindings
+        { terms = Map.empty,
+          constructors = Map.empty,
+          types = Map.empty,
+          stability = Ignore
+        }
+    assume :: Qualifiers -> FullQualifiers
+    assume (root :. name) = root :.. name
+    assume Local = error "bad assume"

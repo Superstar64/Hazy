@@ -3,6 +3,7 @@
 module Semantic.Resolve.Go.Expression where
 
 import Data.Foldable (toList)
+import Data.Functor.Identity (Identity (..))
 import Data.List.Reverse (List (..))
 import qualified Data.List.Reverse as Reverse
 import qualified Semantic.Index.Constructor as Constructor (Index (..), cons)
@@ -10,8 +11,8 @@ import qualified Semantic.Index.Method as Method
 import qualified Semantic.Index.Selector as Selector
 import qualified Semantic.Index.Term2 as Term2
 import Semantic.Layout (Normal)
-import qualified Semantic.Resolve.Binding.Constructor as Constructor (Binding (..))
-import qualified Semantic.Resolve.Binding.Term as Term (Binding (..))
+import qualified Semantic.Resolve.Binding.Constructor as Constructor (BindingF (..), Detail (..))
+import qualified Semantic.Resolve.Binding.Term as Term (BindingF (..), Detail (..))
 import Semantic.Resolve.Context
   ( Context (..),
     (!-),
@@ -153,9 +154,12 @@ resolveWith context expression [] = case expression of
       }
   Syntax.Record {startPosition, constructor, fields} ->
     case context != constructor of
-      binding@Constructor.Binding
-        { index = Constructor.Index typex constructorIndex
-        } ->
+      _
+        Constructor.:@ Identity
+                         ( binding@Constructor.Binding
+                             { index = Constructor.Index typex constructorIndex
+                             }
+                           ) ->
           Record
             { constructorPosition = startPosition,
               constructor = Constructor.Index typex constructorIndex,
@@ -251,11 +255,11 @@ resolveWith context expression [] = case expression of
   Syntax.LeftSection {leftSection, operator = operatorPosition :@ operator} -> case operator of
     QualifiedVariable operator -> resolveTerm2 position index (Nil :> left)
       where
-        Term.Binding {position, index, fixity} = context !- operatorPosition :@ operator
+        position Term.:@ Identity Term.Binding {index, fixity} = context !- operatorPosition :@ operator
         left = section Left fixity leftSection
     QualifiedConstructor operator -> resolveConstructor2 position index (Nil :> left)
       where
-        Constructor.Binding {position, index, fixity} = context !=~ operatorPosition :@ operator
+        position Constructor.:@ Identity Constructor.Binding {index, fixity} = context !=~ operatorPosition :@ operator
         left = section Left fixity leftSection
   Syntax.LeftSectionCons {operatorPosition, leftSection} ->
     resolveConstructor2 operatorPosition Constructor.cons (Nil :> left)
@@ -265,12 +269,12 @@ resolveWith context expression [] = case expression of
   Syntax.RightSection {operator = operatorPosition :@ operator, rightSection} -> case operator of
     QualifiedVariable operator -> RightSection {operatorPosition, left, right}
       where
-        Term.Binding {index, fixity} = context !- operatorPosition :@ operator
+        _ Term.:@ Identity Term.Binding {index, fixity} = context !- operatorPosition :@ operator
         left = CallHead.resolveVariable operatorPosition index
         right = section Right fixity rightSection
     QualifiedConstructor name -> RightSection {operatorPosition, left, right}
       where
-        Constructor.Binding {index, fixity} = context !=~ operatorPosition :@ name
+        _ Constructor.:@ Identity Constructor.Binding {index, fixity} = context !=~ operatorPosition :@ name
         left = CallHead.resolveConstructor operatorPosition index
         right = section Right fixity rightSection
   Syntax.RightSectionCons {operatorPosition, rightSection} ->

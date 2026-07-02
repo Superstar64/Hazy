@@ -16,7 +16,7 @@ import qualified Semantic.Index.Term0 as Term0 (Index (..))
 import qualified Semantic.Index.Type0 as Type0
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Layout (Normal)
-import Semantic.Resolve.Bindings (Bindings (Bindings))
+import Semantic.Resolve.Bindings (Bindings, BindingsF (Bindings))
 import qualified Semantic.Resolve.Bindings as Bindings
 import Semantic.Resolve.Context (Context (..))
 import qualified Semantic.Resolve.Temporary.Complete.ClassInstance as ClassInstance

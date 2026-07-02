@@ -5,7 +5,11 @@
 -- See this article on vanilla loeb: https://github.com/quchen/articles/blob/master/loeb-moeb.md
 -- Also see standard topological sort: https://en.wikipedia.org/wiki/Topological_sorting#Depth-first_search
 module Graph.Topological
-  ( Formula1 (Formula1),
+  ( Formula (..),
+    Loeb (..),
+    loeb,
+    loebST,
+    Formula1 (Formula1),
     Loeb1 (..),
     loeb1,
     loebST1,

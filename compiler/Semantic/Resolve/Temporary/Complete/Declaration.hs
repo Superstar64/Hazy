@@ -1,6 +1,7 @@
 module Semantic.Resolve.Temporary.Complete.Declaration where
 
 import Data.Foldable (toList)
+import Data.Functor.Identity (Identity (..))
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.Map (Map)
 import qualified Data.Map as Map
@@ -21,8 +22,8 @@ import qualified Semantic.Index.Term2 as Term2
 import qualified Semantic.Index.Type0 as Type0
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Layout (Normal)
+import qualified Semantic.Resolve.Binding.Term as Selector (Selector (..))
 import qualified Semantic.Resolve.Binding.Term as Term
-import qualified Semantic.Resolve.Detail.Binding.Term as Selector (Selector (..))
 import Semantic.Resolve.Temporary.Partial.Declaration (Key (..))
 import qualified Semantic.Resolve.Temporary.Partial.Declaration as Partial
 import qualified Semantic.Resolve.Temporary.Partial.More.Choice as More (Choice (Choice))
@@ -244,12 +245,13 @@ bindings index index' terms =
           (name, value) : makeIndexes (n + 1) declarations
           where
             value =
-              Term.Binding
-                { position,
-                  index = Term2.Index $ Term0.normal $ index n,
-                  fixity,
-                  selector = Selector.Normal
-                }
+              position
+                Term.:@ Identity
+                  Term.Binding
+                    { index = Term2.Index $ Term0.normal $ index n,
+                      fixity,
+                      selector = Selector.Normal
+                    }
         Select More.Selector {typeIndex, selectorIndex} ->
           (name, value) : makeIndexes n declarations
           where
@@ -259,12 +261,13 @@ bindings index index' terms =
                   selectorIndex
                 }
             value =
-              Term.Binding
-                { position,
-                  index = Term2.Select select,
-                  fixity,
-                  selector = Selector.Selector select
-                }
+              position
+                Term.:@ Identity
+                  Term.Binding
+                    { index = Term2.Select select,
+                      fixity,
+                      selector = Selector.Selector select
+                    }
         Method More.Method {typeIndex, methodIndex} ->
           (name, value) : makeIndexes n declarations
           where
@@ -274,9 +277,10 @@ bindings index index' terms =
                   methodIndex
                 }
             value =
-              Term.Binding
-                { position,
-                  index = Term2.Method method,
-                  fixity,
-                  selector = Selector.Normal
-                }
+              position
+                Term.:@ Identity
+                  Term.Binding
+                    { index = Term2.Method method,
+                      fixity,
+                      selector = Selector.Normal
+                    }

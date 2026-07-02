@@ -1,9 +1,10 @@
 module Semantic.Resolve.Temporary.TypeInfix where
 
+import Data.Functor.Identity (Identity (..))
 import Data.Void (Void, absurd)
 import qualified Semantic.Index.Constructor as Constructor (cons)
 import qualified Semantic.Index.Type2 as Type2
-import qualified Semantic.Resolve.Binding.Constructor as Constructor (Binding (..))
+import qualified Semantic.Resolve.Binding.Constructor as Constructor (BindingF (..), Detail (..))
 import Semantic.Resolve.Context
   ( Context (..),
     (!=~),
@@ -33,7 +34,7 @@ import qualified Syntax.Tree.TypeInfix as Syntax (Infix (..))
 import Prelude hiding (Either (Left, Right))
 
 data Index scope
-  = Constructor !Position !(Constructor.Binding scope)
+  = Constructor !Position !(Constructor.Detail scope)
   | Cons !Position
 
 instance Infix.Token (Index scope) where
@@ -89,10 +90,11 @@ fix = fixWith Nothing 0
 resolve :: Context scope -> Syntax.Infix Position -> Infix Void (Index scope) (Type Position Resolve scope)
 resolve context = \case
   Syntax.Type type1 -> Single (Type.resolve context type1)
-  Syntax.Infix {left, operator = operator@(operatorPosition :@ _), right} ->
-    Infix
-      (Type.resolve context left)
-      (Constructor operatorPosition $ context !=~ operator)
-      (resolve context right)
+  Syntax.Infix {left, operator = operator@(operatorPosition :@ _), right}
+    | _ Constructor.:@ Identity binding <- context !=~ operator ->
+        Infix
+          (Type.resolve context left)
+          (Constructor operatorPosition binding)
+          (resolve context right)
   Syntax.InfixCons {head, operatorPosition, tail} ->
     Infix (Type.resolve context head) (Cons operatorPosition) (resolve context tail)

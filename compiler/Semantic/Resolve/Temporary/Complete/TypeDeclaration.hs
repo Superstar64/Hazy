@@ -1,6 +1,7 @@
 module Semantic.Resolve.Temporary.Complete.TypeDeclaration where
 
 import Data.Foldable (toList)
+import Data.Functor.Identity (Identity (..))
 import Data.List.NonEmpty (NonEmpty ((:|)))
 import Data.Map (Map)
 import qualified Data.Map as Map
@@ -14,7 +15,7 @@ import qualified Semantic.Index.Type0 as Type0
 import qualified Semantic.Index.Type2 as Type2
 import qualified Semantic.Index.Type3 as Type3
 import Semantic.Layout (Normal)
-import qualified Semantic.Resolve.Binding.Type as Type (Binding (..))
+import qualified Semantic.Resolve.Binding.Type as Type (Binding, BindingF (..), Detail (..), Header (..))
 import Semantic.Resolve.Temporary.Complete.Constructor (Constructor (Constructor))
 import qualified Semantic.Resolve.Temporary.Complete.Constructor as Constructor
 import Semantic.Resolve.Temporary.Complete.GADTConstructor (GADTConstructor (GADTConstructor))
@@ -344,9 +345,8 @@ bindings ::
 bindings index types = Map.map typeIndex (indexes types)
   where
     typeIndex vectorIndex =
-      Type.Binding
+      Type.Header
         { position,
-          index = Type3.Index $ Type2.Index $ Type0.normal $ index vectorIndex,
           constructors =
             case constructors of
               ADT constructors ->
@@ -360,12 +360,16 @@ bindings index types = Map.map typeIndex (indexes types)
             case fields of
               Selectors selectors -> Set.fromList [name | Selector {name} <- toList selectors]
               Methods methods -> Set.fromList [name | Method {name} <- toList methods]
-              NoFields -> Set.empty,
-          methods =
-            case fields of
-              Methods methods -> Map.fromList (zipWith (\(Method {name}) i -> (name, i)) (toList methods) [0 ..])
-              _ -> Map.empty
+              NoFields -> Set.empty
         }
+        Type.:@ Identity
+          Type.Binding
+            { index = Type3.Index $ Type2.Index $ Type0.normal $ index vectorIndex,
+              methods =
+                case fields of
+                  Methods methods -> Map.fromList (zipWith (\(Method {name}) i -> (name, i)) (toList methods) [0 ..])
+                  _ -> Map.empty
+            }
       where
         TypeDeclaration {position, fields, constructors} =
           types Strict.Vector.! vectorIndex

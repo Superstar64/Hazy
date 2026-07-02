@@ -315,16 +315,7 @@ executable hazy
     Semantic.Resolve.Canonical
     Semantic.Resolve.Context
     Semantic.Resolve.Core
-    Semantic.Resolve.Detail.Binding.Constructor
-    Semantic.Resolve.Detail.Binding.Term
-    Semantic.Resolve.Detail.Binding.Type
-    Semantic.Resolve.Functor.Binding.Constructor
-    Semantic.Resolve.Functor.Binding.Term
-    Semantic.Resolve.Functor.Binding.Type
-    Semantic.Resolve.Functor.Bindings
-    Semantic.Resolve.Functor.Canonical
-    Semantic.Resolve.Functor.Core
-    Semantic.Resolve.Functor.Same
+    Semantic.Resolve.Functor2
     Semantic.Resolve.Go.Alternative
     Semantic.Resolve.Go.Body
     Semantic.Resolve.Go.CallHead

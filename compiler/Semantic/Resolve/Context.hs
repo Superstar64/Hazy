@@ -20,22 +20,27 @@ module Semantic.Resolve.Context
 where
 
 import Data.Foldable (toList)
+import Data.Functor.Identity (Identity (..))
 import Data.Map (Map)
 import qualified Data.Map as Map
 import qualified Data.Vector.Strict as Strict
 import Error
-  ( typeNotInScope,
+  ( fieldNotInScope,
+    orderDependentUsage,
+    typeNotInScope,
   )
 import qualified Semantic.Index.Constructor as Constructor (Index)
 import qualified Semantic.Index.Local as Local
 import qualified Semantic.Index.Selector as Selector
 import qualified Semantic.Index.Term2 as Term2
 import qualified Semantic.Index.Type3 as Type3
-import qualified Semantic.Resolve.Binding.Constructor as Constructor (Binding)
+import qualified Semantic.Resolve.Binding.Constructor as Constructor (Binding, BindingF (..), Detail (..))
+import qualified Semantic.Resolve.Binding.Term as Term
+import qualified Semantic.Resolve.Binding.Type as Type
 import Semantic.Resolve.Bindings (Bindings)
 import Semantic.Resolve.Canonical (Canonical)
 import qualified Semantic.Resolve.Canonical as Canonical
-import Semantic.Resolve.Core (Core (Core))
+import Semantic.Resolve.Core (Core, CoreF (Core))
 import qualified Semantic.Resolve.Core as Core
 import Semantic.Resolve.Stability (Stability)
 import Semantic.Scope (Environment (..))
@@ -107,38 +112,50 @@ augmentLocalTypes parameters context
     names = TypePattern.name <$> parameters
     types = Map.fromList $ zip (toList names) [Local.Local i | i <- [0 ..]]
 
-infixl 3 !, !-, !-%, !-*, !=., !=.*, !=, !=~, !=*, !=*~, !$
+infixl 3 !, !-, !=., !=, !=*, !$
 
 (!) :: Context scope -> Marked Qualifiers Position -> Bindings Stability scope
 (!) = (Core.!) . core
 
+(!-) :: Context scope -> Marked QualifiedVariable Position -> Term.Binding scope
 (!-) = (Core.!-) . core
 
-(!-%) :: Context scope -> Marked QualifiedVariable Position -> Selector.Index scope
-(!-%) = (Core.!-%) . core
-
-(!-*) :: Context scope -> Marked QualifiedVariable Position -> Term2.Index scope
-(!-*) = (Core.!-*) . core
-
+(!=.) :: Context scope -> Marked QualifiedConstructorIdentifier Position -> Type.Binding scope
 (!=.) = (Core.!=.) . core
-
-(!=.*) :: Context scope -> Marked QualifiedConstructorIdentifier Position -> Type3.Index scope
-(!=.*) = (Core.!=.*) . core
 
 (!=) :: Context scope -> Marked QualifiedConstructor Position -> Constructor.Binding scope
 (!=) = (Core.!=) . core
 
+infixl 3 !-%, !-*, !=~, !=*~, !=.*
+
+(!-%) :: Context scope -> Marked QualifiedVariable Position -> Selector.Index scope
+context !-% index
+  | _ Term.:@ Identity Term.Binding {selector = Term.Selector select} <- context !- index = select
+_ !-% (position :@ _) = fieldNotInScope position
+
+(!-*) :: Context scope -> Marked QualifiedVariable Position -> Term2.Index scope
+context !-* index = case context !- index of
+  _ Term.:@ Identity Term.Binding {index} -> index
+
 (!=~) :: Context scope -> Marked QualifiedConstructor Position -> Constructor.Binding scope
-(!=~) = (Core.!=~) . core
+context !=~ index
+  | binding@(_ Constructor.:@ Identity Constructor.Binding {unordered = False}) <- context != index = binding
+_ !=~ (position :@ _) = orderDependentUsage position
 
 (!=*) :: Context scope -> Marked QualifiedConstructor Position -> Constructor.Index scope
-(!=*) = (Core.!=*) . core
+context !=* index = case context != index of
+  _ Constructor.:@ Identity Constructor.Binding {index} -> index
 
 (!=*~) :: Context scope -> Marked QualifiedConstructor Position -> Constructor.Index scope
-(!=*~) = (Core.!=*~) . core
+context !=*~ index = case context !=~ index of
+  _ Constructor.:@ Identity Constructor.Binding {index} -> index
+
+(!=.*) :: Context scope -> Marked QualifiedConstructorIdentifier Position -> Type3.Index scope
+context !=.* index = case context !=. index of
+  _ Type.:@ Identity Type.Binding {index} -> index
 
 (!$) :: Context scope -> Marked VariableIdentifier Position -> Local.Index scope
-(!$) Context {localTypes} (position :@ name)
+Context {localTypes} !$ position :@ name
   | Just index <- Map.lookup name localTypes = index
   | otherwise = typeNotInScope position
 

@@ -3,6 +3,7 @@
 module Semantic.Resolve.Temporary.Complete.ConstructorDeclaration where
 
 import Data.Foldable (toList)
+import Data.Functor.Identity (Identity (..))
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.Map (Map)
 import qualified Data.Map as Map
@@ -19,7 +20,7 @@ import Error
 import qualified Semantic.Index.Constructor as Constructor (Index (..))
 import qualified Semantic.Index.Type0 as Type0
 import qualified Semantic.Index.Type2 as Type2
-import qualified Semantic.Resolve.Binding.Constructor as Constructor (Binding (..))
+import qualified Semantic.Resolve.Binding.Constructor as Constructor (Binding, BindingF (..), Detail (..))
 import qualified Semantic.Resolve.Temporary.Partial.ConstructorDeclaration as Source
 import qualified Semantic.Resolve.Temporary.Partial.More.Constructor as More
 import Syntax.Extensions (Extensions (..))
@@ -106,20 +107,21 @@ bindings ::
 bindings index constructors = Map.map constructorIndex (indexes constructors)
   where
     constructorIndex vectorIndex =
-      Constructor.Binding
-        { position,
-          index =
-            Constructor.Index
-              { typeIndex = Type2.Index $ Type0.normal $ index typeIndex,
-                constructorIndex
-              },
-          fixity,
-          fields,
-          selections,
-          unordered,
-          fielded,
-          single
-        }
+      position
+        Constructor.:@ Identity
+          Constructor.Binding
+            { index =
+                Constructor.Index
+                  { typeIndex = Type2.Index $ Type0.normal $ index typeIndex,
+                    constructorIndex
+                  },
+              fixity,
+              fields,
+              selections,
+              unordered,
+              fielded,
+              single
+            }
       where
         Constructor
           { position,

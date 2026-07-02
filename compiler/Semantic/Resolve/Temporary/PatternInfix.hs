@@ -1,10 +1,11 @@
 module Semantic.Resolve.Temporary.PatternInfix where
 
+import Data.Functor.Identity (Identity (..))
 import qualified Data.Map as Map
 import qualified Data.Vector.Strict as Strict.Vector
 import Data.Void (Void, absurd)
 import qualified Semantic.Index.Constructor as Constructor (cons)
-import qualified Semantic.Resolve.Binding.Constructor as Constructor (Binding (..))
+import qualified Semantic.Resolve.Binding.Constructor as Constructor (BindingF (..), Detail (..))
 import Semantic.Resolve.Context (Context (..), (!=~))
 import qualified Semantic.Resolve.Go.Pattern as Pattern (resolve)
 import Semantic.Resolve.Temporary.Infix (Infix (..))
@@ -20,7 +21,7 @@ import qualified Syntax.Tree.PatternInfix as Syntax (Infix (..))
 import Prelude hiding (Either (Left, Right))
 
 data Index scope
-  = Constructor !Position !(Constructor.Binding scope)
+  = Constructor !Position !(Constructor.Detail scope)
   | Cons !Position
 
 instance Infix.Token (Index scope) where
@@ -34,11 +35,12 @@ instance Infix.Token (Index scope) where
 resolve :: Context scope -> Syntax.Infix Position -> Infix Void (Index scope) (Pattern Resolve scope)
 resolve context = \case
   Syntax.Pattern {patternx} -> Single (Pattern.resolve context patternx)
-  Syntax.Infix {left, operator, operatorPosition, right} ->
-    Infix
-      (Pattern.resolve context left)
-      (Constructor operatorPosition $ context !=~ operator)
-      (resolve context right)
+  Syntax.Infix {left, operator, operatorPosition, right}
+    | _ Constructor.:@ Identity binding <- context !=~ operator ->
+        Infix
+          (Pattern.resolve context left)
+          (Constructor operatorPosition binding)
+          (resolve context right)
   Syntax.InfixCons {left, operatorPosition, right} ->
     Infix (Pattern.resolve context left) (Cons operatorPosition) (resolve context right)
 

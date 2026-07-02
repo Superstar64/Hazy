@@ -1,73 +1,90 @@
-module Semantic.Resolve.Binding.Term (Binding (..), Selector (..), fromFunctor, toFunctor) where
+module Semantic.Resolve.Binding.Term where
 
+import Data.Functor.Classes (Show1 (..))
+import Data.Functor.Compose (Compose (..))
+import Data.Functor.Identity (Identity)
+import Data.NaturalTransformation (NaturalTransformation (..))
 import Error (duplicateVariableEntries)
+import qualified Semantic.Index.Selector as Selector
 import qualified Semantic.Index.Term2 as Term2
-import Semantic.Resolve.Detail.Binding.Term (Selector (..))
-import qualified Semantic.Resolve.Detail.Binding.Term as Detail
-import qualified Semantic.Resolve.Functor.Binding.Term as Functor
+import Semantic.Resolve.Functor2 (Traversable2 (..))
 import Semantic.Shift (Shift (..), shiftDefault)
 import qualified Semantic.Shift as Shift
 import Syntax.Position (Position)
 import Syntax.Tree.Fixity (Fixity)
 
-data Binding scope = Binding
+type Binding = BindingF Identity
+
+data BindingF m scope = (:@)
   { position :: !Position,
-    index :: !(Term2.Index scope),
+    value :: m (Detail scope)
+  }
+
+instance (Show1 m) => Show (BindingF m scope) where
+  showsPrec d (position :@ binding) =
+    showParen (d > 9) $
+      showsPrec 10 position . showString " :@ " . liftShowsPrec showsPrec showList 10 binding
+
+instance (Functor m) => Shift (BindingF m) where
+  shift = shiftDefault
+
+instance (Functor m) => Shift.Functor (BindingF m) where
+  map category (position :@ binding) = position :@ fmap (Shift.map category) binding
+
+instance (Applicative m) => Semigroup (BindingF m scope) where
+  position :@ binding <> position2 :@ binding' =
+    position :@ (liftA2 (combine position position2) binding binding')
+
+instance Traversable2 BindingF where
+  traverse2 (Morph f) (position :@ binding) = (:@) position <$> getCompose (f binding)
+
+data Detail scope = Binding
+  { index :: !(Term2.Index scope),
     fixity :: !Fixity,
     selector :: Selector scope
   }
   deriving (Show)
 
-instance Semigroup (Binding scope) where
-  binding@Binding {index = index1, position = position1}
-    <> Binding {index = index2, position = position2}
-      | index1 == index2 = binding
-      | otherwise = duplicateVariableEntries [position1, position2]
+combine
+  position1
+  position2
+  Binding {index = index1, fixity, selector = selector1}
+  Binding {index = index2, selector = selector2}
+    | index1 == index2 =
+        Binding
+          { index = index1,
+            fixity,
+            selector = selector1 <> selector2
+          }
+    | otherwise = duplicateVariableEntries [position1, position2]
 
-instance Shift Binding where
+instance Shift Detail where
   shift = shiftDefault
 
-instance Shift.Functor Binding where
-  map category Binding {position, index, fixity, selector} =
+instance Shift.Functor Detail where
+  map category Binding {index, fixity, selector} =
     Binding
-      { position,
-        index = Shift.map category index,
+      { index = Shift.map category index,
         fixity,
         selector = Shift.map category selector
       }
 
-fromFunctor :: Functor.Binding (Detail.Binding scope) -> Binding scope
-fromFunctor
-  Functor.Binding
-    { position,
-      value =
-        Detail.Binding
-          { index,
-            fixity,
-            selector
-          }
-    } =
-    Binding
-      { position,
-        index,
-        fixity,
-        selector
-      }
+data Selector scope
+  = Selector !(Selector.Index scope)
+  | Normal
+  deriving (Show)
 
-toFunctor :: Binding scope -> Functor.Binding (Detail.Binding scope)
-toFunctor
-  Binding
-    { position,
-      index,
-      fixity,
-      selector
-    } =
-    Functor.Binding
-      { position,
-        value =
-          Detail.Binding
-            { index,
-              fixity,
-              selector
-            }
-      }
+instance Shift Selector where
+  shift = shiftDefault
+
+instance Shift.Functor Selector where
+  map category = \case
+    Selector index -> Selector (Shift.map category index)
+    Normal -> Normal
+
+instance Semigroup (Selector scope) where
+  field@Selector {} <> _ = field
+  Normal <> field = field
+
+instance Monoid (Selector scope) where
+  mempty = Normal

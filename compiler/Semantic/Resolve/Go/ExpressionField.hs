@@ -7,7 +7,7 @@ import Error (mismatchSelectors, unneededFieldQualification)
 import qualified Semantic.Index.Constructor as Constructor (Index (..))
 import qualified Semantic.Index.Selector as Selector
 import Semantic.Layout (Normal)
-import qualified Semantic.Resolve.Binding.Constructor as Constructor (Binding (..))
+import qualified Semantic.Resolve.Binding.Constructor as Constructor (Detail (..))
 import Semantic.Resolve.Context (Context (..), (!-%), (!-*))
 import qualified Semantic.Resolve.Go.CallHead as CallHead
 import {-# SOURCE #-} qualified Semantic.Resolve.Go.Expression as Expression (resolve)
@@ -21,7 +21,7 @@ import Syntax.Variable (QualifiedVariable (..), Qualifiers (..))
 
 resolve ::
   Context scope ->
-  Constructor.Binding scope ->
+  Constructor.Detail scope ->
   Syntax.Field Position ->
   Field Normal Resolve scope
 resolve context binding field = case field of

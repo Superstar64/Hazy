@@ -15,6 +15,7 @@ import {-# SOURCE #-} qualified Builtin.Ord as Ord
 import {-# SOURCE #-} qualified Builtin.Ordering as Ordering
 import {-# SOURCE #-} qualified Builtin.Ratio as Ratio
 import {-# SOURCE #-} qualified Builtin.Real as Real
+import Data.Functor.Identity (Identity (..))
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import Data.Text (pack)
@@ -24,12 +25,12 @@ import qualified Semantic.Index.Type3 as Type3
 import Semantic.Resolve.Binding.Term (Selector (Normal))
 import qualified Semantic.Resolve.Binding.Term as Term
 import qualified Semantic.Resolve.Binding.Type as Type
-import Semantic.Resolve.Bindings (Bindings (..))
+import Semantic.Resolve.Bindings (Bindings (..), BindingsF (..))
 import Syntax.Lexer (constructorIdentifier, variableIdentifier)
 import qualified Syntax.Position as Position
 import Syntax.Tree.Associativity (Associativity (..))
 import Syntax.Tree.Fixity (Fixity (..))
-import Syntax.Variable (Variable (..))
+import Syntax.Variable (ConstructorIdentifier, Variable (..))
 import Prelude hiding
   ( Applicative (..),
     Either (..),
@@ -44,173 +45,20 @@ import Prelude hiding
     Real (..),
   )
 
-charName = constructorIdentifier (pack "Char")
-
-typeName = constructorIdentifier (pack "Type")
-
-constraintName = constructorIdentifier (pack "Constraint")
-
-smallName = constructorIdentifier (pack "Small")
-
-largeName = constructorIdentifier (pack "Large")
-
-universeName = constructorIdentifier (pack "Universe")
-
-stName = constructorIdentifier (pack "ST")
-
-runSTName = VariableIdentifier $ variableIdentifier (pack "runST")
-
-integerName = constructorIdentifier (pack "Integer")
-
-intName = constructorIdentifier (pack "Int")
-
-lazyName = constructorIdentifier (pack "Lazy")
-
-strictName = constructorIdentifier (pack "Strict")
-
-levityName = constructorIdentifier (pack "Levity")
-
-char =
-  ( charName,
-    Type.Binding
-      { position = Position.internal,
-        index = Type3.Index $ Type2.Char,
-        constructors = Set.empty,
-        fields = Set.empty,
-        methods = Map.empty
-      }
-  )
-
-typex =
-  ( typeName,
-    Type.Binding
-      { position = Position.internal,
-        index = Type3.Type,
-        constructors = Set.empty,
-        fields = Set.empty,
-        methods = Map.empty
-      }
-  )
-
-constraint =
-  ( constraintName,
-    Type.Binding
-      { position = Position.internal,
-        index = Type3.Constraint,
-        constructors = Set.empty,
-        fields = Set.empty,
-        methods = Map.empty
-      }
-  )
-
-small =
-  ( smallName,
-    Type.Binding
-      { position = Position.internal,
-        index = Type3.Small,
-        constructors = Set.empty,
-        fields = Set.empty,
-        methods = Map.empty
-      }
-  )
-
-large =
-  ( largeName,
-    Type.Binding
-      { position = Position.internal,
-        index = Type3.Large,
-        constructors = Set.empty,
-        fields = Set.empty,
-        methods = Map.empty
-      }
-  )
-
-universe =
-  ( universeName,
-    Type.Binding
-      { position = Position.internal,
-        index = Type3.Universe,
-        constructors = Set.empty,
-        fields = Set.empty,
-        methods = Map.empty
-      }
-  )
-
-st =
-  ( stName,
-    Type.Binding
-      { position = Position.internal,
-        index = Type3.Index $ Type2.ST,
-        constructors = Set.empty,
-        fields = Set.empty,
-        methods = Map.empty
-      }
-  )
-
-runST =
-  ( runSTName,
-    Term.Binding
-      { position = Position.internal,
-        fixity = Fixity {associativity = Left, precedence = 9},
-        index = Term2.RunST,
-        selector = Normal
-      }
-  )
-
-integer =
-  ( integerName,
-    Type.Binding
-      { position = Position.internal,
-        index = Type3.Index Type2.Integer,
-        constructors = Set.empty,
-        fields = Set.empty,
-        methods = Map.empty
-      }
-  )
-
-int =
-  ( intName,
-    Type.Binding
-      { position = Position.internal,
-        index = Type3.Index Type2.Int,
-        constructors = Set.empty,
-        fields = Set.empty,
-        methods = Map.empty
-      }
-  )
-
-lazy =
-  ( lazyName,
-    Type.Binding
-      { position = Position.internal,
-        index = Type3.Index Type2.Lazy,
-        constructors = Set.empty,
-        fields = Set.empty,
-        methods = Map.empty
-      }
-  )
-
-strict =
-  ( strictName,
-    Type.Binding
-      { position = Position.internal,
-        index = Type3.Index Type2.Strict,
-        constructors = Set.empty,
-        fields = Set.empty,
-        methods = Map.empty
-      }
-  )
-
-levity =
-  ( levityName,
-    Type.Binding
-      { position = Position.internal,
-        index = Type3.Levity,
-        constructors = Set.empty,
-        fields = Set.empty,
-        methods = Map.empty
-      }
-  )
+builtinType :: [Char] -> Type3.Index scope -> (ConstructorIdentifier, Type.Binding scope)
+builtinType name index = (constructorIdentifier $ pack name, binding)
+  where
+    binding =
+      Type.Header
+        { position = Position.internal,
+          constructors = Set.empty,
+          fields = Set.empty
+        }
+        Type.:@ Identity
+          Type.Binding
+            { index,
+              methods = Map.empty
+            }
 
 builtin :: Bindings () scope
 builtin =
@@ -238,25 +86,33 @@ builtin =
         { terms =
             Map.fromListWith
               undefined
-              [ runST
+              [ ( VariableIdentifier $ variableIdentifier $ pack "runST",
+                  Position.internal
+                    Term.:@ Identity
+                      Term.Binding
+                        { fixity = Fixity {associativity = Left, precedence = 9},
+                          index = Term2.RunST,
+                          selector = Normal
+                        }
+                )
               ],
           constructors =
             Map.empty,
           types =
             Map.fromListWith
               undefined
-              [ char,
-                typex,
-                constraint,
-                small,
-                large,
-                universe,
-                st,
-                integer,
-                int,
-                lazy,
-                strict,
-                levity
+              [ builtinType "Char" $ Type3.Index Type2.Char,
+                builtinType "Type" Type3.Type,
+                builtinType "Constraint" Type3.Constraint,
+                builtinType "Small" Type3.Small,
+                builtinType "Large" Type3.Large,
+                builtinType "Universe" Type3.Universe,
+                builtinType "ST" $ Type3.Index Type2.ST,
+                builtinType "Integer" $ Type3.Index Type2.Integer,
+                builtinType "Int" $ Type3.Index Type2.Int,
+                builtinType "Lazy" $ Type3.Index Type2.Lazy,
+                builtinType "Strict" $ Type3.Index Type2.Strict,
+                builtinType "Levity" Type3.Levity
               ],
           stability = ()
         }

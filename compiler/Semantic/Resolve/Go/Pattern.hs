@@ -3,6 +3,7 @@
 module Semantic.Resolve.Go.Pattern where
 
 import Data.Foldable (toList)
+import Data.Functor.Identity (Identity (..))
 import Data.Map (Map)
 import qualified Data.Map as Map
 import qualified Data.Strict.Vector1 as Strict.Vector1
@@ -12,8 +13,8 @@ import Error (duplicateVariableEntries)
 import qualified Semantic.Index.Constructor as Constructor (cons, nil, tuple)
 import qualified Semantic.Index.Term as Term (Bound (..), Index (..))
 import qualified Semantic.Index.Term2 as Term2
-import qualified Semantic.Resolve.Binding.Constructor as Constructor (Binding (..))
-import qualified Semantic.Resolve.Binding.Term as Term (Binding (..), Selector (..))
+import qualified Semantic.Resolve.Binding.Constructor as Constructor (BindingF (..), Detail (..))
+import qualified Semantic.Resolve.Binding.Term as Term (BindingF (..), Detail (..), Selector (..))
 import Semantic.Resolve.Bindings (constructors, stability, terms, types, (</>))
 import qualified Semantic.Resolve.Bindings as Bindings
 import Semantic.Resolve.Context
@@ -47,7 +48,10 @@ augment patternx context
         { locals = bindings patternx </> locals
         }
 
-bindings :: (Monoid stability) => Pattern Resolve scope' -> Bindings.Bindings stability (Scope.Pattern ':+ scope)
+bindings ::
+  (Monoid stability) =>
+  Pattern Resolve scope' ->
+  Bindings.Bindings stability (Scope.Pattern ':+ scope)
 bindings patternx =
   Bindings.Bindings
     { terms = Map.map termIndex (selections patternx),
@@ -57,12 +61,13 @@ bindings patternx =
     }
   where
     termIndex (position :@ x) =
-      Term.Binding
-        { position,
-          index = Term2.index $ Term.Pattern x,
-          fixity = Fixity {associativity = Left, precedence = 9},
-          selector = Term.Normal
-        }
+      position
+        Term.:@ Identity
+          Term.Binding
+            { index = Term2.index $ Term.Pattern x,
+              fixity = Fixity {associativity = Left, precedence = 9},
+              selector = Term.Normal
+            }
 
 selections :: Pattern Resolve scope -> Map Variable (Marked Term.Bound Position)
 selections patternx = Map.map single (selections patternx)
@@ -122,7 +127,7 @@ resolve context = \case
   Syntax.Irrefutable {patternx} -> lazy (resolve context patternx)
   Syntax.Constructor {startPosition, constructor, patterns} ->
     case context !=~ startPosition :@ constructor of
-      Constructor.Binding {index = constructor, single} ->
+      _ Constructor.:@ Identity Constructor.Binding {index = constructor, single} ->
         Constructor
           { names = Map.empty,
             irrefutable = Prelude.False,
@@ -134,10 +139,13 @@ resolve context = \case
           }
   Syntax.Record {startPosition, constructor, fields} ->
     case context != startPosition :@ constructor of
-      binding@Constructor.Binding
-        { index = constructor,
-          single
-        } ->
+      _
+        Constructor.:@ Identity
+                         ( binding@Constructor.Binding
+                             { index = constructor,
+                               single
+                             }
+                           ) ->
           Record
             { names = Map.empty,
               irrefutable = Prelude.False,

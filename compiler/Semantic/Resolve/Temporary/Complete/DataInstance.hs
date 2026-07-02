@@ -1,5 +1,6 @@
 module Semantic.Resolve.Temporary.Complete.DataInstance where
 
+import Data.Functor.Identity (Identity (..))
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.Map (Map)
 import qualified Data.Map as Map
@@ -53,7 +54,7 @@ resolve context lookup = \case
     }
       | Just dataIndex <- lookup datax,
         valid ->
-          let Type.Binding {index, methods} = context !=. classPosition :@ className
+          let _ Type.:@ Identity Type.Binding {index, methods} = context !=. classPosition :@ className
               classIndex = Type3.toType2 (illegalInstanceClass classPosition) index
               entry =
                 DataInstance

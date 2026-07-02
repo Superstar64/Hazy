@@ -1,9 +1,10 @@
 module Semantic.Resolve.Temporary.ExpressionInfix where
 
+import Data.Functor.Identity (Identity (..))
 import Data.List.Reverse (List (..))
 import qualified Semantic.Index.Constructor as Constructor (cons)
 import Semantic.Layout (Normal)
-import qualified Semantic.Resolve.Binding.Constructor as Constructor (Binding (..))
+import qualified Semantic.Resolve.Binding.Constructor as Constructor (BindingF (..), Detail (..))
 import qualified Semantic.Resolve.Binding.Term as Term
 import Semantic.Resolve.Context
   ( Context (..),
@@ -30,8 +31,8 @@ import Syntax.Variable (QualifiedName (..))
 import Prelude hiding (Either (Left, Right))
 
 data Index scope
-  = Term !Position !(Term.Binding scope)
-  | Constructor !Position !(Constructor.Binding scope)
+  = Term !Position !(Term.Detail scope)
+  | Constructor !Position !(Constructor.Detail scope)
   | Cons !Position
 
 instance Infix.Token (Index scope) where
@@ -57,10 +58,12 @@ resolve context = \case
     Infix (Expression.resolve context left) (lookup operator) (resolve context right)
     where
       lookup = \case
-        operatorPosition :@ QualifiedVariable operator ->
-          Term operatorPosition (context !- (operatorPosition :@ operator))
-        operatorPosition :@ QualifiedConstructor operator ->
-          Constructor operatorPosition (context !=~ operatorPosition :@ operator)
+        operatorPosition :@ QualifiedVariable operator
+          | _ Term.:@ Identity binding <- context !- operatorPosition :@ operator ->
+              Term operatorPosition binding
+        operatorPosition :@ QualifiedConstructor operator
+          | _ Constructor.:@ Identity binding <- context !=~ operatorPosition :@ operator ->
+              Constructor operatorPosition binding
   Syntax.InfixCons {head, operatorPosition, tail} ->
     Infix (Expression.resolve context head) (Cons operatorPosition) (resolve context tail)
   Syntax.Negate {startPosition, negative} -> Prefix (Negate startPosition) (resolve context negative)
