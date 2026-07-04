@@ -27,6 +27,7 @@ import qualified Semantic.Scope as Scope
 import Semantic.Shift (Shift, shift, shiftDefault)
 import qualified Semantic.Shift as Shift
 import Semantic.Stage (Check)
+import qualified Semantic.Tree.Declarations as Semantic.Declarations
 import qualified Semantic.Tree.Statements as Semantic (Guard, Statements (..))
 import qualified Syntax.StringLiteral as StringLiteral
 
@@ -307,7 +308,7 @@ simplify = \case
       (Pattern.simplify patternx)
       (Expression.simplify effect)
       (simplify thenx)
-  Semantic.Let {declarations, body} ->
+  Semantic.Let {declarations = Semantic.Declarations.Local declarations, body} ->
     Let
       { declarations = Declarations.simplify declarations,
         letBody = simplify body

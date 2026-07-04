@@ -2,7 +2,6 @@ module Semantic.Check.Temporary.Do where
 
 import Control.Monad.ST (ST)
 import Semantic.Check.Context (Context)
-import Semantic.Check.Temporary.Declarations (Declarations)
 import qualified Semantic.Check.Temporary.Declarations as Declarations
 import {-# SOURCE #-} Semantic.Check.Temporary.Expression (Expression)
 import {-# SOURCE #-} qualified Semantic.Check.Temporary.Expression as Expression
@@ -10,7 +9,6 @@ import Semantic.Check.Temporary.Pattern (Pattern)
 import qualified Semantic.Check.Temporary.Pattern as Pattern
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Layout (Group)
-import Semantic.Locality (Local)
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope
 import Semantic.Shift (shift)
@@ -43,7 +41,7 @@ data Do s scope
       }
   | Let
       { startPosition :: !Position,
-        declarations :: !(Declarations Local s (Scope.Declaration ':+ scope)),
+        declarations :: !(Declarations.Local s scope),
         body :: !(Do s (Scope.Declaration ':+ scope))
       }
 
@@ -115,6 +113,6 @@ solve = \case
           fail
         }
   Let {startPosition, declarations, body} -> do
-    declarations <- Declarations.solve declarations
+    declarations <- Declarations.solveLocal declarations
     body <- solve body
     pure Solved.Let {startPosition, declarations, body}

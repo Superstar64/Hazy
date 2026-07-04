@@ -26,7 +26,6 @@ import qualified Semantic.Check.Temporary.Comprehension as Comprehension
 import Semantic.Check.Temporary.ConstructorInfo (ConstructorInfo)
 import qualified Semantic.Check.Temporary.ConstructorInfo as ConstructorInfo
 import qualified Semantic.Check.Temporary.Declaration as Declaration
-import Semantic.Check.Temporary.Declarations (Declarations)
 import qualified Semantic.Check.Temporary.Declarations as Declarations
 import Semantic.Check.Temporary.Do (Do)
 import qualified Semantic.Check.Temporary.Do as Do
@@ -48,7 +47,6 @@ import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Table.Type as Type
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Layout (Group)
-import Semantic.Locality (Local)
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope
 import Semantic.Shift (shift)
@@ -117,7 +115,7 @@ data Expression s scope
         argument :: !(Expression s scope)
       }
   | Let
-      { declarations :: !(Declarations Local s (Scope.Declaration ':+ scope)),
+      { declarations :: !(Declarations.Local s scope),
         letBody :: !(Expression s (Scope.Declaration ':+ scope))
       }
   | If
@@ -349,7 +347,7 @@ solve = \case
     argument <- solve argument
     pure $ Solved.Call {function, argument}
   Let declarations body -> do
-    declarations <- Declarations.solve declarations
+    declarations <- Declarations.solveLocal declarations
     body <- solve body
     pure $ Solved.Let {declarations, letBody = body}
   If condition true false -> do

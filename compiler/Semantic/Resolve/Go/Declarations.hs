@@ -18,7 +18,7 @@ import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope
 import Semantic.Shift (shift)
 import Semantic.Stage (Resolve)
-import Semantic.Tree.Declarations (Declarations (..))
+import qualified Semantic.Tree.Declarations as Declarations
 import Syntax.Position (Position)
 import qualified Syntax.Tree.Declaration as Syntax (toImport)
 import qualified Syntax.Tree.Declarations as Syntax (Declarations (..))
@@ -27,10 +27,10 @@ resolve ::
   Context scope ->
   Syntax.Declarations Position ->
   ( Context (Scope.Declaration ':+ scope),
-    Declarations locality Normal Resolve (Scope.Declaration ':+ scope)
+    Declarations.Local Normal Resolve scope
   )
 resolve initial@Context {canonical, extensions} Syntax.Declarations {declarations} =
-  (context, Complete.shrink complete)
+  (context, Declarations.Local $ Complete.shrink complete)
   where
     context
       | context <- initial,

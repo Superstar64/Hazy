@@ -16,6 +16,7 @@ import qualified Semantic.Shift as Shift
 import Semantic.Stage (Check)
 import qualified Semantic.Tree.Body as Semantic (Body (Body))
 import qualified Semantic.Tree.Body as Semantic.Body
+import qualified Semantic.Tree.Declarations as Semantic.Declarations
 import qualified Semantic.Tree.Expression as Semantic (Expression)
 import qualified Semantic.Tree.RightHandSide as Semantic (RightHandSide (..))
 
@@ -55,16 +56,16 @@ class Simplify source where
   simplify :: source Normal Check scope -> RightHandSide scope
 
 instance Simplify Semantic.RightHandSide where
-  simplify Semantic.RightHandSide {body, declarations}
-    | letBody <- case body of
-        Semantic.Body {body} ->
-          Statements.Done {done = Expression.simplify body}
-        Semantic.Body.Guards {guards} ->
-          foldr1 Statements.Branch (Statements.simplify <$> guards) =
-        RightHandSide
-          { letBody,
-            declarations = Declarations.simplify declarations
-          }
+  simplify
+    Semantic.RightHandSide {body, declarations = Semantic.Declarations.Local declarations} =
+      RightHandSide
+        { letBody = case body of
+            Semantic.Body {body} ->
+              Statements.Done {done = Expression.simplify body}
+            Semantic.Body.Guards {guards} ->
+              foldr1 Statements.Branch (Statements.simplify <$> guards),
+          declarations = Declarations.simplify declarations
+        }
 
 instance Simplify Semantic.Expression where
   simplify done = Done {done = Expression.simplify done}

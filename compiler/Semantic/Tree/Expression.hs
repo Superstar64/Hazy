@@ -17,7 +17,6 @@ import qualified Semantic.FreeVariables as FreeVariables
 import qualified Semantic.Index.Constructor as Constructor (Index (..))
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Layout (Normal)
-import qualified Semantic.Locality as Locality
 import Semantic.Scope as Null (Environment (..))
 import qualified Semantic.Scope as Scope
 import Semantic.Shift (Shift (shift), shiftDefault)
@@ -26,7 +25,6 @@ import Semantic.Stage (Check, Resolve, Unsupported)
 import Semantic.Tree.Alternative (Alternative (..))
 import Semantic.Tree.CallHead (CallHead)
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
-import {-# SOURCE #-} Semantic.Tree.Declarations (Declarations)
 import {-# SOURCE #-} qualified Semantic.Tree.Declarations as Declarations
 import Semantic.Tree.ExpressionField (Field)
 import Semantic.Tree.Lambda (Lambda (..))
@@ -94,7 +92,7 @@ data Expression layout stage scope
         argument :: !(Expression layout stage scope)
       }
   | Let
-      { declarations :: !(Declarations Locality.Local layout stage (Scope.Declaration ':+ scope)),
+      { declarations :: !(Declarations.Local layout stage scope),
         letBody :: !(Expression layout stage (Scope.Declaration ':+ scope))
       }
   | If
@@ -210,7 +208,7 @@ instance Shift.Functor (Expression layout stage) where
         }
     Let {declarations, letBody} ->
       Let
-        { declarations = Shift.map (Shift.Over category) declarations,
+        { declarations = Shift.map category declarations,
           letBody = Shift.map (Shift.Over category) letBody
         }
     If {condition, thenx, elsex} ->
@@ -287,7 +285,7 @@ instance FreeTermVariables (Expression layout) where
     Call {function, argument} -> freeTermVariables target function ++ freeTermVariables target argument
     Let {declarations, letBody} ->
       concat
-        [ freeTermVariables (FreeVariables.Over target) declarations,
+        [ freeTermVariables target declarations,
           freeTermVariables (FreeVariables.Over target) letBody
         ]
     If {condition, thenx, elsex} ->
@@ -382,7 +380,7 @@ instance Connect Expression where
         }
     Let {declarations, letBody} ->
       Let
-        { declarations = Declarations.connect declarations,
+        { declarations = connect declarations,
           letBody = connect letBody
         }
     If {condition, thenx, elsex} ->
@@ -489,7 +487,7 @@ instance Connect Expression where
         }
     Let {declarations, letBody} ->
       Let
-        { declarations = Declarations.seperate declarations,
+        { declarations = seperate declarations,
           letBody = seperate letBody
         }
     If {condition, thenx, elsex} ->

@@ -4,13 +4,11 @@ import qualified Core.Tree.Evidence as Simple (Evidence)
 import Semantic.Connect (Connect (..))
 import Semantic.FreeVariables (FreeTermVariables (..))
 import qualified Semantic.FreeVariables as FreeVariables
-import qualified Semantic.Locality as Locality
 import Semantic.Scope (Environment ((:+)))
 import qualified Semantic.Scope as Scope
 import Semantic.Shift (Shift (..), shiftDefault)
 import qualified Semantic.Shift as Shift
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
-import {-# SOURCE #-} Semantic.Tree.Declarations (Declarations)
 import {-# SOURCE #-} qualified Semantic.Tree.Declarations as Declarations
 import {-# SOURCE #-} Semantic.Tree.Expression (Expression)
 import Semantic.Tree.Pattern (Pattern)
@@ -48,7 +46,7 @@ data Statements syntax layout stage scope
       }
   | Let
       { startPosition :: !Position,
-        declarations :: !(Declarations Locality.Local layout stage (Scope.Declaration ':+ scope)),
+        declarations :: !(Declarations.Local layout stage scope),
         body :: !(Statements syntax layout stage (Scope.Declaration ':+ scope))
       }
   deriving (Show)
@@ -82,7 +80,7 @@ instance Shift.Functor (Statements syntax layout stage) where
     Let {startPosition, declarations, body} ->
       Let
         { startPosition,
-          declarations = Shift.map (Shift.Over category) declarations,
+          declarations = Shift.map category declarations,
           body = Shift.map (Shift.Over category) body
         }
 
@@ -101,7 +99,7 @@ instance FreeTermVariables (Statements syntax layout) where
         ]
     Let {declarations, body} ->
       concat
-        [ freeTermVariables (FreeVariables.Over target) declarations,
+        [ freeTermVariables target declarations,
           freeTermVariables (FreeVariables.Over target) body
         ]
 
@@ -131,7 +129,7 @@ instance Connect (Statements syntax) where
     Let {startPosition, declarations, body} ->
       Let
         { startPosition,
-          declarations = Declarations.connect declarations,
+          declarations = connect declarations,
           body = connect body
         }
   seperate = \case
@@ -159,7 +157,7 @@ instance Connect (Statements syntax) where
     Let {startPosition, declarations, body} ->
       Let
         { startPosition,
-          declarations = Declarations.seperate declarations,
+          declarations = seperate declarations,
           body = seperate body
         }
 

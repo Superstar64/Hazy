@@ -4,10 +4,8 @@ import Control.Monad.ST (ST)
 import Semantic.Check.Context (Context)
 import Semantic.Check.Temporary.Body (Body)
 import qualified Semantic.Check.Temporary.Body as Body
-import {-# SOURCE #-} Semantic.Check.Temporary.Declarations (Declarations)
 import {-# SOURCE #-} qualified Semantic.Check.Temporary.Declarations as Declarations
 import Semantic.Layout (Group)
-import Semantic.Locality (Local)
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope (Declaration)
 import Semantic.Shift (shift)
@@ -19,7 +17,7 @@ import qualified Semantic.Unify as Unify
 data RightHandSide s scope
   = RightHandSide
       !(Body s (Scope.Declaration ':+ scope))
-      !(Declarations Local s (Scope.Declaration ':+ scope))
+      !(Declarations.Local s scope)
 
 check ::
   Context s scope ->
@@ -34,5 +32,5 @@ check context typex (Semantic.RightHandSide body declarations) = do
 solve :: RightHandSide s scope -> Unify.Solve s (Solved.RightHandSide Group Check scope)
 solve (RightHandSide body declarations) = do
   body <- Body.solve body
-  declarations <- Declarations.solve declarations
+  declarations <- Declarations.solveLocal declarations
   pure $ Solved.RightHandSide body declarations

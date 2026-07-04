@@ -57,6 +57,7 @@ import qualified Semantic.Shift as Shift
 import Semantic.Stage (Check)
 import qualified Semantic.Tree.CallHead as Semantic (CallHead (..))
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
+import qualified Semantic.Tree.Declarations as Semantic.Declarations
 import qualified Semantic.Tree.Definition as Semantic (Definition)
 import Semantic.Tree.Expression (Explicit (Known))
 import qualified Semantic.Tree.Expression as Semantic (Expression (..))
@@ -450,7 +451,7 @@ instance Monadic 'Semantic.Statements.Comprehension where
 instance (Monadic syntax) => Simplify (Semantic.Statements syntax) where
   simplify = \case
     Semantic.Statements.Done {done} -> lift (Proxy :: Proxy syntax) (simplify done)
-    Semantic.Statements.Let {declarations, body} ->
+    Semantic.Statements.Let {declarations = Semantic.Declarations.Local declarations, body} ->
       Let
         { declarations = Declarations.simplify declarations,
           letBody = simplify body
@@ -667,7 +668,7 @@ simplifyWith expression [] = case expression of
   Semantic.List {items} ->
     foldr (cons . simplify) nil items
   Semantic.Comprehension {statements} -> simplify statements
-  Semantic.Let {declarations, letBody} ->
+  Semantic.Let {declarations = Semantic.Declarations.Local declarations, letBody} ->
     Let
       { declarations = Declarations.simplify declarations,
         letBody = simplify letBody

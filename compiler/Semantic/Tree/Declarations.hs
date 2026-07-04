@@ -8,8 +8,10 @@ import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Graph.StronglyConnected (Index (..), tarjan)
 import qualified Graph.StronglyConnected as StronglyConnected
+import Semantic.Connect (Connect)
 import qualified Semantic.Connect as Connect
 import Semantic.FreeVariables (FreeTermVariables (..))
+import qualified Semantic.FreeVariables as FreeVariables
 import {-# SOURCE #-} qualified Semantic.Group.Functor.Term.Declarations as Functor.Term
 import {-# SOURCE #-} qualified Semantic.Group.Functor.Type.Declarations as Functor.Type
 import qualified Semantic.Index.Link.Term as Term
@@ -18,7 +20,7 @@ import qualified Semantic.Index.Term0 as Term0 (Index (..))
 import qualified Semantic.Index.Type0 as Type0
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Layout (Group, Normal)
-import Semantic.Locality (Local)
+import qualified Semantic.Locality as Locality
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope
 import Semantic.Shift (Shift, shift, shiftDefault)
@@ -33,7 +35,8 @@ import Semantic.Tree.TypeDeclaration (TypeDeclaration (..))
 import qualified Semantic.Tree.TypeDeclaration as TypeDeclaration
 import Semantic.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 import qualified Semantic.Tree.TypeDefinition2 as TypeDefinition2
-import Syntax.Variable (Qualifiers (Local))
+import Syntax.Variable (Qualifiers)
+import qualified Syntax.Variable as Variable
 
 data Declarations locality layout stage scope = Declarations
   { terms :: !(Vector (Declaration locality layout stage scope)),
@@ -134,10 +137,10 @@ ungroup
 
 connect ::
   forall scope.
-  Declarations Local Normal Resolve (Scope.Declaration ':+ scope) ->
-  Declarations Local Group Resolve (Scope.Declaration ':+ scope)
+  Declarations Locality.Local Normal Resolve (Scope.Declaration ':+ scope) ->
+  Declarations Locality.Local Group Resolve (Scope.Declaration ':+ scope)
 connect declarations@Declarations {terms, types} =
-  group Local Term.local Type.local indexTerm' indexType' termGroups typeGroups declarations
+  group Variable.Local Term.local Type.local indexTerm' indexType' termGroups typeGroups declarations
   where
     termIndexes = Functor.Term.indexes Term.Declaration declarations
     typeIndexes = Functor.Type.indexes Type.Declaration declarations
@@ -163,22 +166,44 @@ connect declarations@Declarations {terms, types} =
 
 seperate ::
   forall scope.
-  Declarations Local Group Check (Scope.Declaration ':+ scope) ->
-  Declarations Local Normal Check (Scope.Declaration ':+ scope)
+  Declarations Locality.Local Group Check (Scope.Declaration ':+ scope) ->
+  Declarations Locality.Local Normal Check (Scope.Declaration ':+ scope)
 seperate declarations@Declarations {terms, types} =
   ungroup Term.unlocal Type.unlocal lookupTerm lookupType declarations
   where
-    lookupTerm :: Term.Link Local -> Implicit (Definition4.Set Local Check) Check (Scope.Declaration ':+ scope)
+    lookupTerm ::
+      Term.Link Locality.Local ->
+      Implicit (Definition4.Set Locality.Local Check) Check (Scope.Declaration ':+ scope)
     lookupTerm = \case
       Term.Declaration index
         | Declaration {definition} <- terms Vector.! index,
           _ Definition4.:::: set <- definition ->
             set
       _ -> error "bad term lookup"
-    lookupType :: Type.Link Local -> TypeDefinition2.Set Local Check (Scope.Declaration ':+ scope)
+    lookupType ::
+      Type.Link Locality.Local ->
+      TypeDefinition2.Set Locality.Local Check (Scope.Declaration ':+ scope)
     lookupType = \case
       Type.Declaration index
         | TypeDeclaration {definition} <- types Vector.! index,
           _ TypeDefinition2.:::: set <- definition ->
             set
       _ -> error "bad type lookup"
+
+newtype Local layout stage scope
+  = Local (Declarations Locality.Local layout stage (Scope.Declaration ':+ scope))
+  deriving (Show)
+
+instance Shift (Local layout stage) where
+  shift = shiftDefault
+
+instance Shift.Functor (Local layout stage) where
+  map category (Local declarations) = Local (Shift.map (Shift.Over category) declarations)
+
+instance FreeTermVariables (Local layout) where
+  freeTermVariables target (Local declarations) =
+    freeTermVariables (FreeVariables.Over target) declarations
+
+instance Connect Local where
+  connect (Local declarations) = Local (connect declarations)
+  seperate (Local declarations) = Local (seperate declarations)
