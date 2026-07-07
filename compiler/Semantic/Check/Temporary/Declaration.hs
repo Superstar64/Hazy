@@ -63,7 +63,9 @@ check context linked annotation Semantic.Declaration {position, name, definition
           Declaration
             { position,
               name,
-              definition = Semantic.Annotated annotation ::: definition,
+              definition =
+                Semantic.Annotated annotation
+                  ::: Unify.solveSchemeOver (Unify.SolveScheme Definition3.solve) position definition,
               typex = Simple.Scheme.lift annotation'
             }
     | otherwise -> error "bad type annotation"
@@ -74,10 +76,14 @@ check context linked annotation Semantic.Declaration {position, name, definition
         let element' = Shift.map (Shift.Over Shift) element
             typex = fresh Vector.! index
         element <- Definition3.checkAuto (groupTermBindings fresh context) (shift typex) element'
-        pure Element {element, link}
+        pure
+          Element
+            { element = Definition3.solve position element,
+              link
+            }
       let types = Types (Strict.Vector.fromLazy fresh)
           solved = do
-            set <- traverse (solveElement position) set
+            set <- traverse solveElement set
             pure $ Solved.Set set
       pure $ types Unify.::: solved
     let initial = Unify.MapScheme $ \(Types types) -> Strict.Vector.head types

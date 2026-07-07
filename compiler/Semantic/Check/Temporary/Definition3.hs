@@ -22,16 +22,18 @@ checkManual ::
   Unify.Type s (Local ':+ scopes) ->
   Semantic.Definition3 Annotated Group Resolve scopes ->
   ST s (Definition3 Annotated s (Local ':+ scopes))
-checkManual context typex (Semantic.Label info definition) =
-  Label info <$> Definition2.checkManual context typex definition
+checkManual context typex (Semantic.Label info definition) = do
+  definition <- Definition2.checkManual context typex definition
+  pure $ Label info definition
 
 checkAuto ::
   Context s scopes ->
   Unify.Type s scopes ->
   Semantic.Definition3 Inferred Group Resolve scopes ->
   ST s (Definition3 Inferred s scopes)
-checkAuto context typex (Semantic.Label info definition) =
-  Label info <$> Definition2.checkAuto context typex definition
+checkAuto context typex (Semantic.Label info definition) = do
+  definition <- Definition2.checkAuto context typex definition
+  pure $ Label info definition
 
 solve :: Position -> Definition3 mark s scope -> Unify.Solve s (Solved.Definition3 mark Group Check scope)
 solve position (Label info definition) = do
