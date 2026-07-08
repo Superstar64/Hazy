@@ -31,7 +31,7 @@ import Semantic.Tree.Type (Synonym (NoSynonym))
 import qualified Semantic.Tree.Type as Semantic
 import Semantic.Unify.Class (Collected (..), Collector (..))
 import qualified Semantic.Unify.Class as Collect
-import Semantic.Unify.Type (Box (..), Type (..))
+import Semantic.Unify.Type (Box (..), Logical (..), Type (..))
 import qualified Syntax.Lexer as Lexer
 import Syntax.Position (Position)
 import qualified Syntax.Printer as Syntax (build)
@@ -120,7 +120,7 @@ abort position = \case
       Type s scope ->
       ST s (Semantic.Type () Resolve scope')
     fabricate category names = \case
-      Logical reference ->
+      Logical (Box reference) ->
         readSTRef reference >>= \case
           Solved typex -> fabricate category names typex
           Unsolved {} -> case lookup (Collect reference) names of
@@ -131,7 +131,7 @@ abort position = \case
                     variable
                   }
             Nothing -> error "uncollected variable"
-      Shift typex -> fabricate (category Shift.:. Shift.Shift) names' typex
+      Logical (Shift logical) -> fabricate (category Shift.:. Shift.Shift) names' (Logical logical)
         where
           names' = [(collect, name) | (Reach collect, name) <- names]
       Variable variable ->

@@ -40,6 +40,7 @@ import qualified Semantic.Unify.Constraints as Constraints
 import Semantic.Unify.Instanciation (Instanciation (..))
 import Semantic.Unify.Type
   ( Box (..),
+    Logical (..),
     Type (Logical, Variable),
     constrainWith,
     fresh,
@@ -157,7 +158,7 @@ generalizeBody position context (Generalize run) = do
                 _ <- unshift fail fail kind
                 pure ()
             | otherwise -> do
-                _ <- unshift fail fail $ Logical reference
+                _ <- unshift fail fail $ Logical (Box reference)
                 pure ()
             where
               fail :: a

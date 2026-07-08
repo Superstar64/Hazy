@@ -57,33 +57,25 @@ import qualified Semantic.Unify.Instanciation as Instanciation
 import Syntax.Position (Position)
 import Prelude hiding (Functor, head, map)
 
-{-
-todo:
-
-There are two ways to shift types without logical variables:
-> Shift (Variable (Local x))
-> Variable (Local (Local.Shift x))
-
-These redundent states should be elimated at some point and instead there should
-only be a shift constructor for logical variables only.
--}
-
 type Type :: Data.Kind.Type -> Environment -> Data.Kind.Type
-data Type s scopes where
-  Logical :: !(STRef s (Box s scopes)) -> Type s scopes
+data Type s scopes
+  = Logical !(Logical s scopes)
+  | Variable !(Local.Index scopes)
+  | Constructor !(Type2.Index scopes)
+  | Call !(Type s scopes) !(Type s scopes)
+  | Function !(Type s scopes) !(Type s scopes)
+  | Type !(Type s scopes)
+  | Constraint
+  | Small
+  | Large
+  | Universe
+  | Levity
+
+data Logical s scopes where
+  Box :: !(STRef s (Box s scopes)) -> Logical s scopes
   -- |
   -- Bring a type from a higher scope into current scope
-  Shift :: !(Type s scopes) -> Type s (scope ':+ scopes)
-  Variable :: !(Local.Index scopes) -> Type s scopes
-  Constructor :: !(Type2.Index scopes) -> Type s scopes
-  Call :: !(Type s scopes) -> !(Type s scopes) -> Type s scopes
-  Function :: !(Type s scopes) -> !(Type s scopes) -> Type s scopes
-  Type :: !(Type s scopes) -> Type s scopes
-  Constraint :: Type s scopes
-  Small :: Type s scopes
-  Large :: Type s scopes
-  Universe :: Type s scopes
-  Levity :: Type s scope
+  Shift :: !(Logical s scopes) -> Logical s (scope ':+ scopes)
 
 data Box s scope
   = Unsolved
@@ -99,13 +91,11 @@ data Delay s scope = Delay
   }
 
 instance Shift (Type s) where
-  shift = Shift
+  shift = Class.map Class.Shift
 
 instance Functor (Type s) where
-  map Class.Shift typex = Shift typex
-  map (Class.Over category) (Shift typex) = Shift (Class.map category typex)
-  map (Class.Over _) (Logical _) = error "can't map over logical"
-  map category typex = case typex of
+  map category = \case
+    Logical logical -> Logical (Class.map category logical)
     Variable index -> Variable (Shift.map (Class.general category) index)
     Constructor index -> Constructor (Shift.map (Class.general category) index)
     Call function argument -> Call (Class.map category function) (Class.map category argument)
@@ -117,16 +107,24 @@ instance Functor (Type s) where
     Universe -> Universe
     Levity -> Levity
 
+instance Shift (Logical s) where
+  shift = Shift
+
+instance Functor (Logical s) where
+  map Class.Shift logical = Shift logical
+  map (Class.Over category) (Shift logical) = Shift (Class.map category logical)
+  map Class.Over {} Box {} = error "can't map over logical"
+
 instance Zonk Type where
   zonk Zonker = zonk
     where
       zonk :: Type s scope -> ST s (Type s scope)
       zonk = \case
-        Logical reference ->
+        Logical (Box reference) ->
           readSTRef reference >>= \case
             Solved solved -> zonk solved
-            Unsolved {} -> pure $ Logical reference
-        Shift typex -> Shift <$> zonk typex
+            Unsolved {} -> pure $ Logical $ Box reference
+        Logical (Shift logical) -> shift <$> zonk (Logical logical)
         Variable index -> pure $ Variable index
         Constructor index -> pure $ Constructor index
         Call function argument -> do
@@ -149,13 +147,13 @@ instance Generalizable Type where
     where
       collect :: Type s scopes -> ST s [Collected s scopes]
       collect = \case
-        Logical reference ->
+        Logical (Box reference) ->
           readSTRef reference >>= \case
             Solved typex -> collect typex
             Unsolved {erasure}
               | Mask.valid mask erasure -> pure [Collect reference]
               | otherwise -> pure []
-        Shift typex -> fmap Reach <$> collect typex
+        Logical (Shift logical) -> fmap Reach <$> collect (Logical logical)
         Variable {} -> pure []
         Constructor {} -> pure []
         Call function argument -> do
@@ -176,7 +174,7 @@ instance Generalizable Type where
 
 instance Instantiatable Type where
   substitute replacements = \case
-    Logical _ -> error "logic variables can not be under a scheme"
+    Logical Box {} -> error "logic variables can not be under a scheme"
     Call function argument ->
       Call (substitute replacements function) (substitute replacements argument)
     Function parameter result ->
@@ -189,7 +187,7 @@ instance Instantiatable Type where
     Levity -> Levity
     typex -> case replacements of
       Substitute replacements -> case typex of
-        Shift typex -> typex
+        Logical (Shift typex) -> Logical typex
         Variable (Local.Local index) -> replacements Strict.Vector.! index
         Variable (Local.Shift index) -> Variable index
         Constructor index -> Constructor (Type2.map Type.unlocal index)
@@ -197,7 +195,7 @@ instance Instantiatable Type where
 fresh :: Type s scope -> ST s (Type s scope)
 fresh kind = do
   box <- newSTRef $! Unsolved {kind, constraints = Map.empty, erasure = Mask.Erased}
-  pure (Logical box)
+  pure (Logical (Box box))
 
 -- | Unify two types
 --
@@ -213,7 +211,7 @@ unify context_ position term1_ term2_ = unifyWith context_ term1_ term2_
     unifyWith :: forall scope. Context s scope -> Type s scope -> Type s scope -> ST s ()
     unifyWith context = unify
       where
-        unify (Logical reference) (Logical reference')
+        unify (Logical (Box reference)) (Logical (Box reference'))
           | reference == reference' = pure ()
           | otherwise = do
               box <- readSTRef reference
@@ -221,10 +219,10 @@ unify context_ position term1_ term2_ = unifyWith context_ term1_ term2_
               combine box box'
           where
             combine (Solved term) (Solved term') = unify term term'
-            combine (Solved (Logical reference)) Unsolved {} = do
-              unify (Logical reference) (Logical reference')
-            combine Unsolved {} (Solved (Logical reference')) = do
-              unify (Logical reference) (Logical reference')
+            combine (Solved (Logical logical)) Unsolved {} = do
+              unify (Logical logical) (Logical (Box reference'))
+            combine Unsolved {} (Solved (Logical logical')) = do
+              unify (Logical (Box reference)) (Logical logical')
             combine (Solved term) Unsolved {kind, constraints, erasure} = do
               occurs context position erasure reference' term
               typeCheck context position kind term
@@ -252,8 +250,8 @@ unify context_ position term1_ term2_ = unifyWith context_ term1_ term2_
                       Semantic.Unify.Type.unify context position kind1 kind2
                       constraints <- sequence $ Map.unionWith merge constraints1 constraints2
                       writeSTRef reference' $! Unsolved {kind = kind1, constraints, erasure = erasure1 <> erasure2}
-                      writeSTRef reference $! Solved (Logical reference')
-        unify (Logical reference) term' =
+                      writeSTRef reference $! Solved (Logical (Box reference'))
+        unify (Logical (Box reference)) term' =
           readSTRef reference >>= \case
             Unsolved {kind, constraints, erasure} -> do
               occurs context position erasure reference term'
@@ -261,7 +259,7 @@ unify context_ position term1_ term2_ = unifyWith context_ term1_ term2_
               reconstrain context position constraints term'
               writeSTRef reference $ Solved term'
             Solved term -> unify term term'
-        unify term (Logical reference') =
+        unify term (Logical (Box reference')) =
           readSTRef reference' >>= \case
             Unsolved {kind, constraints, erasure} -> do
               occurs context position erasure reference' term
@@ -270,12 +268,12 @@ unify context_ position term1_ term2_ = unifyWith context_ term1_ term2_
               writeSTRef reference' $ Solved term
             Solved term' -> unify term term'
         -- Types involving a higher scope must be solved in said scope
-        unify (Shift term) term' = do
+        unify (Logical (Shift logical)) term' = do
           term' <- unshift context position term'
-          unifyWith (Shift.unshift context) term term'
-        unify term (Shift term') = do
+          unifyWith (Shift.unshift context) (Logical logical) term'
+        unify term (Logical (Shift logical)) = do
           term <- unshift context position term
-          unifyWith (Shift.unshift context) term term'
+          unifyWith (Shift.unshift context) term (Logical logical)
         unify (Variable index) (Variable index')
           | index == index' = pure ()
           | otherwise = mismatch
@@ -318,14 +316,14 @@ typeCheck context_ position = typeCheckWith context_
     typeCheckWith context@Context {localEnvironment, typeEnvironment} = typeCheck
       where
         typeCheck kind = \case
-          Logical reference ->
+          Logical (Box reference) ->
             readSTRef reference >>= \case
               Solved typex -> typeCheck kind typex
               Unsolved {kind = kind'} -> do
                 unify context position kind kind'
-          Shift typex -> do
+          Logical (Shift logical) -> do
             kind <- unshift context position kind
-            typeCheckWith (Shift.unshift context) kind typex
+            typeCheckWith (Shift.unshift context) kind (Logical logical)
           Variable index -> case localEnvironment Local.Table.! index of
             Local.Rigid {rigid} -> do
               unify context position kind (Simple.lift rigid)
@@ -381,14 +379,14 @@ mark context position erasure term_ = mark context term_
   where
     mark :: Context s scope' -> Type s scope' -> ST s ()
     mark context@Context {localEnvironment} = \case
-      Logical reference'
+      Logical (Box reference')
         | otherwise ->
             readSTRef reference' >>= \case
               Unsolved {kind, constraints, erasure = erasure'} -> do
                 writeSTRef reference' Unsolved {kind, constraints, erasure = erasure <> erasure'}
               Solved typex -> mark context typex
-      Shift typex -> do
-        mark (Shift.unshift context) typex
+      Logical (Shift logical) -> do
+        mark (Shift.unshift context) (Logical logical)
       Variable index -> case localEnvironment Local.Table.! index of
         Local.Rigid {mask}
           | Mask.valid mask erasure -> pure ()
@@ -413,13 +411,13 @@ occurs context position erasure reference term_ = do
   mark context position erasure term_
   where
     occurs = \case
-      Logical reference'
+      Logical (Box reference')
         | reference == reference' -> occurrenece
         | otherwise ->
             readSTRef reference' >>= \case
               Unsolved {} -> pure ()
               Solved typex -> occurs typex
-      Shift _ -> pure ()
+      Logical Shift {} -> pure ()
       Variable _ -> pure ()
       Constructor _ -> pure ()
       Call term1 term2 -> do
@@ -462,7 +460,7 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
       Type s scope ->
       [Type s scope] ->
       ST s (Evidence s scope)
-    constrainWith context@Context {typeEnvironment} classx term@(Logical reference) arguments =
+    constrainWith context@Context {typeEnvironment} classx term@(Logical (Box reference)) arguments =
       readSTRef reference >>= \case
         Solved term -> constrainWith context classx term arguments
         Unsolved {kind, constraints, erasure} -> do
@@ -495,11 +493,11 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
                   zipWithM_ (unify context position) arguments arguments'
                   pure evidence
               | otherwise -> error "error argument length doesn't match"
-    constrainWith context classx (Shift term) arguments = do
+    constrainWith context classx (Logical (Shift logical)) arguments = do
       arguments <- traverse (unshift context position) arguments
       let quit = abort position $ Unshift context (Constructor classx)
       classx <- Shift.partialUnshift quit classx
-      Evidence.Shift <$> constrainWith (Shift.unshift context) classx term arguments
+      Evidence.Shift <$> constrainWith (Shift.unshift context) classx (Logical logical) arguments
     constrainWith context@Context {localEnvironment} classx (Variable index) arguments
       | Local.Rigid {constraints} <- localEnvironment Local.Table.! index,
         Just Local.Constraint {arguments = arguments', evidence} <- Map.lookup classx constraints,
@@ -563,7 +561,7 @@ unshift ::
 unshift context position typex = unshift typex
   where
     unshift = \case
-      Logical reference ->
+      Logical (Box reference) ->
         readSTRef reference >>= \case
           Unsolved {kind, constraints, erasure} -> do
             let unshiftDelay (key, Delay {arguments, evidence}) = do
@@ -576,14 +574,13 @@ unshift context position typex = unshift typex
             -- itself. To allow unshifting these cycles, the unshifted box is
             -- initialized with undefined then later let to it's proper value.
             box <- newSTRef $ error "unshift cycle"
-            let term = Logical box
-            writeSTRef reference $! Solved $ Shift term
+            writeSTRef reference $! Solved $ Logical $ Shift $ Box box
             -- there's no Map.traverseKeysMonotonic
             constraints <- Map.fromAscList <$> traverse unshiftDelay (Map.toAscList constraints)
             writeSTRef box $! Unsolved {kind, constraints, erasure}
-            pure term
+            pure $ Logical $ Box box
           Solved term -> unshift term
-      Shift term -> pure term
+      Logical (Shift logical) -> pure (Logical logical)
       Variable index -> Variable <$> Shift.partialUnshift misshift index
       Constructor index -> Constructor <$> Shift.partialUnshift misshift index
       Call term1 term2 -> do
@@ -612,7 +609,7 @@ defaultFrom,
     Type s scope ->
     ST s (Simple.Type scope)
 defaultFrom position constraints kind = case kind of
-  Logical reference ->
+  Logical (Box reference) ->
     readSTRef reference >>= \case
       Solved kind -> defaultFrom position constraints kind
       Unsolved {} -> unsupportedFeatureConstraintedTypeDefaulting position
@@ -620,7 +617,7 @@ defaultFrom position constraints kind = case kind of
   Levity -> pure $ Simple.Constructor Type2.Lazy
   _ -> unsupportedFeatureConstraintedTypeDefaulting position
 defaultUniverse position constraints universe = case universe of
-  Logical reference ->
+  Logical (Box reference) ->
     readSTRef reference >>= \case
       Solved kind -> defaultUniverse position constraints kind
       Unsolved {} -> pure $ Simple.Type Simple.Small
@@ -637,11 +634,11 @@ solve position = Solve . solve
   where
     solve :: Type s scope -> ST s (Simple.Type scope)
     solve = \case
-      Logical reference ->
+      Logical (Box reference) ->
         readSTRef reference >>= \case
           Solved typex -> solve typex
           Unsolved {kind, constraints} -> defaultFrom position constraints kind
-      Shift typex -> shift <$> solve typex
+      Logical (Shift logical) -> shift <$> solve (Logical logical)
       Variable name -> pure $ Simple.Variable name
       Constructor index -> pure $ Simple.Constructor index
       Call function argument -> do
