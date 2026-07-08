@@ -5,6 +5,7 @@ import qualified Core.Tree.Instanciation as Simple
 import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Scope (Environment (..))
+import Semantic.Shift (Shift (..))
 import Semantic.Unify.Class (Solve, Zonk (..))
 import {-# SOURCE #-} Semantic.Unify.Evidence (Evidence)
 import {-# SOURCE #-} qualified Semantic.Unify.Evidence as Evidence
@@ -13,6 +14,11 @@ import Syntax.Position (Position)
 data Instanciation s scope
   = Instanciation !(Strict.Vector (Evidence s scope))
   | Mono
+
+instance Shift (Instanciation s) where
+  shift = \case
+    Instanciation instanciation -> Instanciation (shift <$> instanciation)
+    Mono -> Mono
 
 instance Zonk Instanciation where
   zonk zonker = \case

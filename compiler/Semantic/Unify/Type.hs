@@ -51,7 +51,7 @@ import Semantic.Unify.Class
 import qualified Semantic.Unify.Class as Class
 import {-# SOURCE #-} Semantic.Unify.Error (Error (..), abort)
 import Semantic.Unify.Evidence (Evidence)
-import qualified Semantic.Unify.Evidence as Evidence (Box (..), Evidence (..), unify, unshift)
+import qualified Semantic.Unify.Evidence as Evidence (Box (..), Evidence (..), Logical (..), unify, unshift)
 import Semantic.Unify.Instanciation (Instanciation (..))
 import qualified Semantic.Unify.Instanciation as Instanciation
 import Syntax.Position (Position)
@@ -485,9 +485,9 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
 
               typeCheck context position target (foldl Call term arguments)
               logical <- newSTRef Evidence.Unsolved {}
-              let delay = Delay {arguments, evidence = Evidence.Logical logical}
+              let delay = Delay {arguments, evidence = Evidence.Logical (Evidence.Box logical)}
               writeSTRef reference $! Unsolved {kind, constraints = Map.insert classx delay constraints, erasure}
-              pure $ Evidence.Logical logical
+              pure $ Evidence.Logical (Evidence.Box logical)
             Just Delay {arguments = arguments', evidence}
               | length arguments == length arguments' -> do
                   zipWithM_ (unify context position) arguments arguments'
@@ -497,7 +497,7 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
       arguments <- traverse (unshift context position) arguments
       let quit = abort position $ Unshift context (Constructor classx)
       classx <- Shift.partialUnshift quit classx
-      Evidence.Shift <$> constrainWith (Shift.unshift context) classx (Logical logical) arguments
+      shift <$> constrainWith (Shift.unshift context) classx (Logical logical) arguments
     constrainWith context@Context {localEnvironment} classx (Variable index) arguments
       | Local.Rigid {constraints} <- localEnvironment Local.Table.! index,
         Just Local.Constraint {arguments = arguments', evidence} <- Map.lookup classx constraints,

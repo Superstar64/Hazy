@@ -6,6 +6,7 @@ import Control.Monad.ST (ST)
 import {-# SOURCE #-} qualified Core.Tree.Evidence as Solved (Evidence)
 import qualified Data.Kind as Kind
 import Semantic.Scope (Environment (..))
+import Semantic.Shift (Shift)
 import Semantic.Unify.Class (Solve, Zonk)
 import Syntax.Position (Position)
 
@@ -13,6 +14,8 @@ type role Evidence nominal nominal
 
 type Evidence :: Kind.Type -> Environment -> Kind.Type
 data Evidence s scope
+
+instance Shift (Evidence s)
 
 instance Zonk Evidence
 
