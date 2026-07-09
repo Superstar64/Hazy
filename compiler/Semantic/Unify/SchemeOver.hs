@@ -2,7 +2,7 @@ module Semantic.Unify.SchemeOver where
 
 import Control.Monad (zipWithM_)
 import Control.Monad.ST (ST)
-import qualified Core.Tree.SchemeOver as Simple (SchemeOver (..))
+import qualified Core.Tree.SchemeOver as Simple (SchemeOver, SchemeOverF (..))
 import Data.Foldable (toList, traverse_)
 import qualified Data.Kind as Kind
 import Data.List (nub)

@@ -2,7 +2,7 @@ module Semantic.Check.Temporary.MethodAbstract where
 
 import Control.Monad.ST (ST)
 import qualified Core.Tree.Scheme as Simple (Scheme (..), simplify)
-import qualified Core.Tree.SchemeOver as Simple (SchemeOver (..))
+import qualified Core.Tree.SchemeOver as Simple (SchemeOverF (..))
 import Semantic.Check.Context (Context)
 import qualified Semantic.Check.Mask as Mask
 import Semantic.Check.Simple.SchemeOver (augment')

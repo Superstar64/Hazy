@@ -9,7 +9,7 @@ where
 
 import Control.Monad.ST (ST)
 import Core.Tree.Scheme (Scheme (..))
-import Core.Tree.SchemeOver (SchemeOver (..))
+import Core.Tree.SchemeOver (SchemeOverF (..))
 import qualified Data.Vector.Strict as Strict
 import {-# SOURCE #-} Semantic.Check.Context (Context (..))
 import Semantic.Check.Mask (Mask)

@@ -1,6 +1,6 @@
 module Semantic.Tree.Definition4 where
 
-import Core.Tree.SchemeOver (SchemeOver (..))
+import Core.Tree.SchemeOver (SchemeOver, SchemeOverF (..))
 import qualified Core.Tree.SchemeOver as SchemeOver
 import qualified Core.Tree.Type as Simple
 import Data.Kind (Type)

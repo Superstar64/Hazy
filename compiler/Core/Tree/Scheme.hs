@@ -4,7 +4,7 @@ import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
 import Core.Tree.Constraints (ConstraintCount)
 import qualified Core.Tree.Constraints as Constraints
-import Core.Tree.SchemeOver (SchemeOver (..))
+import Core.Tree.SchemeOver (SchemeOver, SchemeOverF (..))
 import qualified Core.Tree.SchemeOver as SchemeOver
 import Core.Tree.Type (Type)
 import qualified Core.Tree.Type as Type

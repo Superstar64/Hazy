@@ -10,7 +10,7 @@ import Core.Tree.Expression (Expression (..))
 import Core.Tree.Instanciation (Instanciation (Instanciation))
 import qualified Core.Tree.Instanciation as Instanciation
 import Core.Tree.MethodInfo (MethodInfo (..))
-import Core.Tree.SchemeOver (SchemeOver (..))
+import Core.Tree.SchemeOver (SchemeOver, SchemeOverF (..))
 import qualified Core.Tree.SchemeOver as SchemeOver
 import Data.Char (ord)
 import Data.Foldable (toList)

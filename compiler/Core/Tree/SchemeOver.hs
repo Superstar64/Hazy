@@ -4,25 +4,27 @@ import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
 import Core.Tree.Constraints (ConstraintCount, Constraints)
 import qualified Core.Tree.Constraints as Constraints
-import Core.Tree.Type (Type)
+import Core.Tree.Type (TypeF)
 import qualified Data.Kind
 import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
-import Semantic.Scope (Environment (..), Local)
+import Semantic.Scope (Environment (..), IsVacuous, Local, Vacuous)
 import qualified Semantic.Scope as Scope
 import Semantic.Shift (Shift (..), shiftDefault)
 import qualified Semantic.Shift as Shift
 
-data SchemeOver typex scope = SchemeOver
-  { parameters :: !(Strict.Vector (Type scope)),
+type SchemeOver = SchemeOverF Vacuous
+
+data SchemeOverF logical typex scope = SchemeOver
+  { parameters :: !(Strict.Vector (TypeF logical scope)),
     constraints :: !(Constraints scope),
     result :: !(typex (Local ':+ scope))
   }
 
-instance (Scope.Show typex) => Scope.Show (SchemeOver typex) where
+instance (Scope.Show logical, Scope.Show typex) => Scope.Show (SchemeOverF logical typex) where
   showsPrec = showsPrec
 
-instance (Scope.Show typex) => Show (SchemeOver typex scope) where
+instance (Scope.Show logical, Scope.Show typex) => Show (SchemeOverF logical typex scope) where
   showsPrec _ SchemeOver {parameters, constraints, result} =
     foldr
       (.)
@@ -36,10 +38,10 @@ instance (Scope.Show typex) => Show (SchemeOver typex scope) where
         showString " }"
       ]
 
-instance (Shift.Functor typex) => Shift (SchemeOver typex) where
+instance (Shift.Functor logical, Shift.Functor typex) => Shift (SchemeOverF logical typex) where
   shift = shiftDefault
 
-instance (Shift.Functor typex) => Shift.Functor (SchemeOver typex) where
+instance (Shift.Functor logical, Shift.Functor typex) => Shift.Functor (SchemeOverF logical typex) where
   map category SchemeOver {parameters, constraints, result} =
     SchemeOver
       { parameters = fmap (Shift.map category) parameters,
@@ -47,7 +49,10 @@ instance (Shift.Functor typex) => Shift.Functor (SchemeOver typex) where
         result = Shift.map (Shift.Over category) result
       }
 
-instance (Shift2.Functor typex) => Shift2.Functor (SchemeOver typex) where
+instance
+  (IsVacuous logical, Shift.Functor logical, Shift2.Functor typex) =>
+  Shift2.Functor (SchemeOverF logical typex)
+  where
   map category SchemeOver {parameters, constraints, result} =
     SchemeOver
       { parameters = fmap (Shift2.map category) parameters,
@@ -55,7 +60,10 @@ instance (Shift2.Functor typex) => Shift2.Functor (SchemeOver typex) where
         result = Shift2.map (Shift2.Over category) result
       }
 
-instance (Substitute.Functor typex) => Substitute.Functor (SchemeOver typex) where
+instance
+  (IsVacuous logical, Shift.Functor logical, Substitute.Functor typex) =>
+  Substitute.Functor (SchemeOverF logical typex)
+  where
   map category SchemeOver {parameters, constraints, result} =
     SchemeOver
       { parameters = fmap (Substitute.map category) parameters,

@@ -8,7 +8,7 @@ import Core.Tree.Expression (Expression)
 import qualified Core.Tree.Expression as Expression
 import Core.Tree.Scheme (Scheme)
 import qualified Core.Tree.Scheme as Scheme
-import Core.Tree.SchemeOver (SchemeOver (..))
+import Core.Tree.SchemeOver (SchemeOver, SchemeOverF (..))
 import qualified Core.Tree.SchemeOver as SchemeOver
 import qualified Core.Tree.Statements as Statements
 import qualified Semantic.Check.Go.Scheme as Semantic (Scheme)

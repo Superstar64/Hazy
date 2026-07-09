@@ -15,7 +15,7 @@ import Core.Tree.Constraint (ConstraintF (..))
 import Core.Tree.Constraints (Constraints (..))
 import qualified Core.Tree.Evidence as Evidence (Evidence (..))
 import qualified Core.Tree.Instanciation as Instanciation
-import Core.Tree.SchemeOver (SchemeOver (..))
+import Core.Tree.SchemeOver (SchemeOver, SchemeOverF (..))
 import Core.Tree.Type (Type)
 import {-# SOURCE #-} Core.Tree.TypeDeclaration (assumeClass)
 import Data.Foldable (toList)
