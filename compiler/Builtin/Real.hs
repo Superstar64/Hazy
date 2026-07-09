@@ -3,7 +3,7 @@ module Builtin.Real where
 import Builtin (builtinClass)
 import Core.Tree.Class (Class (..))
 import Core.Tree.ClassExtra (ClassExtra (..))
-import Core.Tree.Evidence (Evidence (..))
+import Core.Tree.Evidence (EvidenceF (..))
 import Core.Tree.Expression (Expression (Hook, hook))
 import Core.Tree.Hook (Hook (..))
 import qualified Core.Tree.Instanciation as Instanciation

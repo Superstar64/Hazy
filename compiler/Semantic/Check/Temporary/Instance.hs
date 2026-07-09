@@ -10,7 +10,7 @@ import qualified Core.Tree.Constraint as Simple (ConstraintF (Constraint))
 import qualified Core.Tree.Constraint as Simple.Constraint
 import qualified Core.Tree.Evidence as Simple (Evidence)
 import qualified Core.Tree.Evidence as Simple.Evidence
-import qualified Core.Tree.Instanciation as Simple (Instanciation (..))
+import qualified Core.Tree.Instanciation as Simple (InstanciationF (..))
 import qualified Core.Tree.Instanciation as Simple.Instanciation
 import qualified Core.Tree.Scheme as Simple (Scheme (..))
 import qualified Core.Tree.SchemeOver as Simple (SchemeOverF (..))

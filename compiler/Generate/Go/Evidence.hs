@@ -1,8 +1,8 @@
 module Generate.Go.Evidence where
 
 import Control.Monad.ST (ST)
-import Core.Tree.Evidence (Evidence (..))
-import Core.Tree.Instanciation (Instanciation (Instanciation))
+import Core.Tree.Evidence (Evidence, EvidenceF (..))
+import Core.Tree.Instanciation (InstanciationF (Instanciation))
 import qualified Core.Tree.Instanciation as Instanciation
 import Data.Foldable (toList)
 import qualified Data.Map as Map

@@ -1,7 +1,7 @@
 module Semantic.Unify.Evidence where
 
 import Control.Monad.ST (ST)
-import qualified Core.Tree.Evidence as Simple (Evidence (..))
+import qualified Core.Tree.Evidence as Simple (Evidence, EvidenceF (..))
 import Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 import Error (unsupportedFeatureConstraintedTypeDefaulting)
 import qualified Semantic.Index.Evidence as Evidence

@@ -3,7 +3,7 @@ module Builtin.Num where
 import Builtin (builtinClass)
 import Core.Tree.Class (Class)
 import Core.Tree.ClassExtra (ClassExtra (..))
-import Core.Tree.Evidence (Evidence (Variable, instanciation, variable))
+import Core.Tree.Evidence (EvidenceF (Variable, instanciation, variable))
 import Core.Tree.Expression (Expression (Hook, hook))
 import Core.Tree.Hook (Hook (DefaultNum))
 import qualified Core.Tree.Hook

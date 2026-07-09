@@ -1,6 +1,6 @@
 module Semantic.Check.Simple.Evidence where
 
-import Core.Tree.Evidence (Evidence (..))
+import Core.Tree.Evidence (Evidence, EvidenceF (..))
 import qualified Semantic.Check.Simple.Instanciation as Instanciation (lift)
 import {-# SOURCE #-} qualified Semantic.Unify as Unify
 

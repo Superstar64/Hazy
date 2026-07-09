@@ -7,7 +7,7 @@ import Core.Tree.ConstructorInfo (ConstructorInfo (..))
 import Core.Tree.EntryInfo (EntryInfo (EntryInfo))
 import qualified Core.Tree.EntryInfo
 import Core.Tree.Expression (Expression (..))
-import Core.Tree.Instanciation (Instanciation (Instanciation))
+import Core.Tree.Instanciation (Instanciation, InstanciationF (Instanciation))
 import qualified Core.Tree.Instanciation as Instanciation
 import Core.Tree.MethodInfo (MethodInfo (..))
 import Core.Tree.SchemeOver (SchemeOver, SchemeOverF (..))

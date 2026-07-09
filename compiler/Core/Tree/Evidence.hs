@@ -1,49 +1,79 @@
-module Core.Tree.Evidence (Evidence (..)) where
+module Core.Tree.Evidence (Evidence, EvidenceF (..)) where
 
 import qualified Core.Shift as Shift2
 import Core.Substitute (Category (Substitute))
 import qualified Core.Substitute as Substitute
-import {-# SOURCE #-} Core.Tree.Instanciation (Instanciation)
+import {-# SOURCE #-} Core.Tree.Instanciation (InstanciationF)
 import {-# SOURCE #-} qualified Core.Tree.Instanciation as Instanciation
 import qualified Data.Vector as Vector
 import qualified Semantic.Index.Evidence as Evidence
 import qualified Semantic.Index.Evidence0 as Evidence0
 import qualified Semantic.Index.Type as Type
 import qualified Semantic.Index.Type2 as Type2
+import Semantic.Scope (Equal (..), IsVacuous (isVacuous), Vacuous)
 import qualified Semantic.Scope as Scope
 import Semantic.Shift (Shift, shift, shiftDefault)
 import qualified Semantic.Shift as Shift
 
-data Evidence scope
-  = Variable
+type Evidence = EvidenceF Vacuous
+
+data EvidenceF logical scope
+  = Logical !(logical scope)
+  | Variable
       { variable :: !(Evidence.Index scope),
-        instanciation :: !(Instanciation scope)
+        instanciation :: !(InstanciationF logical scope)
       }
   | Super
-      { base :: !(Evidence scope),
+      { base :: !(EvidenceF logical scope),
         index :: !Int
       }
-  deriving (Show)
 
-instance Scope.Show Evidence where
+instance (Scope.Show logical) => Show (EvidenceF logical scope) where
+  showsPrec d = \case
+    Logical logical -> showParen (d > 10) $ showString "Logical " . Scope.showsPrec 11 logical
+    Variable {variable, instanciation} ->
+      showString "Variable { variable = "
+        . showsPrec 11 variable
+        . showString ", instanciation = "
+        . showsPrec 11 instanciation
+        . showString " }"
+    Super {base, index} ->
+      showString "Super { base = "
+        . showsPrec 11 base
+        . showString ", index = "
+        . showsPrec 11 index
+        . showString " }"
+
+instance (Scope.Show logical) => Scope.Show (EvidenceF logical) where
   showsPrec = showsPrec
 
-instance Shift Evidence where
+instance (Shift.Functor logical) => Shift (EvidenceF logical) where
   shift = shiftDefault
 
-instance Shift.Functor Evidence where
-  map = Shift2.mapDefault
+instance (Shift.Functor logical) => Shift.Functor (EvidenceF logical) where
+  map category = \case
+    Logical logical -> Logical (Shift.map category logical)
+    Variable {variable, instanciation} ->
+      Variable
+        { variable = Shift.map category variable,
+          instanciation = Shift.map category instanciation
+        }
+    Super {base, index} ->
+      Super
+        { base = Shift.map category base,
+          index
+        }
 
-instance Shift2.Functor Evidence where
+instance (IsVacuous logical, Shift.Functor logical) => Shift2.Functor (EvidenceF logical) where
   map = Substitute.mapDefault
 
-instance Substitute.Functor Evidence where
+instance (IsVacuous logical, Shift.Functor logical) => Substitute.Functor (EvidenceF logical) where
   map
     (Substitute _ _ replacements)
     Variable
       { variable = Evidence.Index (Evidence0.Assumed index),
         instanciation = Instanciation.Mono
-      } = replacements Vector.! index
+      } | Refl <- isVacuous :: Scope.Equal Vacuous logical = replacements Vector.! index
   map
     (Substitute.Over category)
     Variable
@@ -57,7 +87,7 @@ instance Substitute.Functor Evidence where
             { variable = Evidence.Index index,
               instanciation = Instanciation.Mono
             }
-  map category evidence = case evidence of
+  map category evidence | Refl <- isVacuous :: Scope.Equal Vacuous logical = case evidence of
     Variable {variable, instanciation} ->
       Variable
         { variable =
