@@ -6,7 +6,7 @@ import {-# SOURCE #-} qualified Core.Builtin as Builtin (index, kind)
 import qualified Core.Tree.Constraint as Simple (argument)
 import qualified Core.Tree.Constraint as Simple.Constraint
 import qualified Core.Tree.Constraints as Simple (Constraints (..))
-import qualified Core.Tree.Type as Simple (Type (..))
+import qualified Core.Tree.Type as Simple (Type, TypeF (..))
 import {-# SOURCE #-} Core.Tree.TypeDeclaration (assumeData)
 import Data.Foldable (for_, toList, traverse_)
 import qualified Data.Kind

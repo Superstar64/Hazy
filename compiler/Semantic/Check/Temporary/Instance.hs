@@ -14,7 +14,7 @@ import qualified Core.Tree.Instanciation as Simple (Instanciation (..))
 import qualified Core.Tree.Instanciation as Simple.Instanciation
 import qualified Core.Tree.Scheme as Simple (Scheme (..))
 import qualified Core.Tree.SchemeOver as Simple (SchemeOver (..))
-import qualified Core.Tree.Type as Simple.Type (Type (..))
+import qualified Core.Tree.Type as Simple.Type (TypeF (..))
 import Core.Tree.TypeDeclaration (assumeClass)
 import qualified Core.Tree.TypeDeclarationExtra as Extra
 import Data.Traversable (for)

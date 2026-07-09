@@ -17,12 +17,15 @@ import {-# SOURCE #-} qualified Semantic.Index.Term0 as Term0
 import {-# SOURCE #-} qualified Semantic.Index.Type as Type
 import {-# SOURCE #-} qualified Semantic.Index.Type0 as Type0
 import {-# SOURCE #-} Semantic.Index.Type2 as Type2 (Index)
-import Semantic.Scope (Environment ((:+)))
+import Semantic.Scope (Environment ((:+)), Vacuous)
 import qualified Semantic.Scope as Scope
 import Prelude hiding (Functor, id, map, (.))
 
 class Shift f where
   shift :: f scopes -> f (scope ':+ scopes)
+
+instance Shift Vacuous where
+  shift = \case {}
 
 data Category scope scope' where
   Id :: Category scope scope
@@ -47,6 +50,9 @@ infixr 9 :.
 
 class (Shift f) => Functor f where
   map :: Category scope scope' -> f scope -> f scope'
+
+instance Functor Vacuous where
+  map _ = \case {}
 
 mapInstances ::
   Category scope scope' ->

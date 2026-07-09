@@ -2,35 +2,31 @@
 
 module Core.Tree.Type where
 
-import qualified Semantic.Index.Local as Local
-import qualified Semantic.Index.Type2 as Type2
+import qualified Data.Kind
+import Semantic.Scope (Environment, Vacuous)
 import qualified Semantic.Scope as Scope
 import Semantic.Shift (Shift)
 import qualified Semantic.Shift as Shift
 import Semantic.Stage (Check)
 import {-# SOURCE #-} qualified Semantic.Tree.Type as Semantic
 
-data Type scope
-  = Variable !(Local.Index scope)
-  | Constructor !(Type2.Index scope)
-  | Call !(Type scope) !(Type scope)
-  | Function !(Type scope) !(Type scope)
-  | Type !(Type scope)
-  | Constraint
-  | Small
-  | Large
-  | Universe
-  | Levity
+type Type = TypeF Vacuous
 
-instance Eq (Type scope)
+type TypeF :: (Environment -> Data.Kind.Type) -> Environment -> Data.Kind.Type
 
-instance Show (Type scope)
+type role TypeF representational nominal
 
-instance Shift Type
+data TypeF logical scope
 
-instance Shift.Functor Type
+instance (Scope.Eq logical) => Eq (TypeF logical scope)
 
-instance Scope.Show Type
+instance (Scope.Show logical) => Show (TypeF logical scope)
+
+instance (Shift.Functor logical) => Shift (TypeF logical)
+
+instance (Shift.Functor logical) => Shift.Functor (TypeF logical)
+
+instance (Scope.Show logical) => Scope.Show (TypeF logical)
 
 smallType :: Type scope
 simplify :: Semantic.Type position Check scope -> Type scope

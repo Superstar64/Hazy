@@ -1,6 +1,6 @@
 module Semantic.Check.Simple.Type where
 
-import Core.Tree.Type (Type (..))
+import Core.Tree.Type (Type, TypeF (..))
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
 import qualified Semantic.Index.Local as Local

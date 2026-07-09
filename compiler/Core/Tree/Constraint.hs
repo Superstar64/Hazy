@@ -2,7 +2,7 @@ module Core.Tree.Constraint where
 
 import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
-import Core.Tree.Type (Type (Call, Variable))
+import Core.Tree.Type (Type, TypeF (Call, Variable))
 import qualified Core.Tree.Type as Type
 import qualified Data.Vector.Strict as Strict
 import qualified Semantic.Index.Local as Local

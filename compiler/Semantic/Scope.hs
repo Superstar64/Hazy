@@ -10,12 +10,16 @@ module Semantic.Scope
     SimpleDeclaration,
     Global,
     Show (..),
+    Eq (..),
     shows,
+    Vacuous,
+    IsVacuous (..),
+    Equal (..),
   )
 where
 
 import Data.Kind (Constraint, Type)
-import Prelude hiding (Show, shows, showsPrec)
+import Prelude hiding (Eq (..), Show, shows, showsPrec)
 
 data Environment
   = Scope :+ Environment
@@ -54,3 +58,27 @@ class Show typex where
 
 shows :: (Show typex) => typex scope -> ShowS
 shows = showsPrec 0
+
+type Eq :: (Environment -> Type) -> Constraint
+class Eq typex where
+  (==) :: typex scope -> typex scope -> Bool
+  infix 4 ==
+
+type Vacuous :: Environment -> Type
+data Vacuous scope
+
+instance Show Vacuous where
+  showsPrec _ = \case {}
+
+instance Eq Vacuous where
+  (==) = \case {}
+
+class IsVacuous functor where
+  isVacuous :: Equal Vacuous functor
+
+instance IsVacuous Vacuous where
+  isVacuous = Refl
+
+type Equal :: (Environment -> Type) -> (Environment -> Type) -> Type
+data Equal functor functor' where
+  Refl :: Equal functor functor

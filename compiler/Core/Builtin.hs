@@ -22,7 +22,7 @@ import Core.Tree.ClassExtra (ClassExtra (..))
 import Core.Tree.Data (Data)
 import qualified Core.Tree.Data as Data
 import Core.Tree.Type (Type)
-import qualified Core.Tree.Type as Type (Type (..), smallType)
+import qualified Core.Tree.Type as Type (TypeF (..), smallType)
 import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Type as Type (Index)
 import qualified Semantic.Index.Type2 as Type2

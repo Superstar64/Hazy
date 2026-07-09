@@ -491,6 +491,7 @@ executable hazy
     DeriveFunctor
     DeriveTraversable
     DisambiguateRecordFields
+    EmptyCase
     GADTs
     LambdaCase
     MonoLocalBinds

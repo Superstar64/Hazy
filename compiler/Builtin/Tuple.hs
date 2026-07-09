@@ -4,7 +4,7 @@ import Core.Tree.Constructor (Constructor (..))
 import Core.Tree.Data (Data (Data))
 import qualified Core.Tree.Data as Data
 import Core.Tree.Entry (Entry (..))
-import qualified Core.Tree.Type as Type (Type (..), smallType)
+import qualified Core.Tree.Type as Type
 import Data.Foldable (Foldable (toList))
 import qualified Data.Vector.Strict as Strict.Vector
 import qualified Semantic.Index.Constructor as Constructor
