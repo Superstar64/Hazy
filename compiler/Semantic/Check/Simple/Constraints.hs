@@ -1,6 +1,6 @@
 module Semantic.Check.Simple.Constraints where
 
-import Core.Tree.Constraints (Constraints (..))
+import Core.Tree.Constraints (Constraints, ConstraintsF (..))
 import qualified Data.Vector.Strict as Strict
 import qualified Semantic.Check.Simple.Constraint as Constraint
 import Semantic.Scope (Environment (..), Local)

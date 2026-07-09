@@ -2,7 +2,7 @@ module Core.Tree.SchemeOver where
 
 import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
-import Core.Tree.Constraints (ConstraintCount, Constraints)
+import Core.Tree.Constraints (ConstraintCount, ConstraintsF)
 import qualified Core.Tree.Constraints as Constraints
 import Core.Tree.Type (TypeF)
 import qualified Data.Kind
@@ -17,7 +17,7 @@ type SchemeOver = SchemeOverF Vacuous
 
 data SchemeOverF logical typex scope = SchemeOver
   { parameters :: !(Strict.Vector (TypeF logical scope)),
-    constraints :: !(Constraints scope),
+    constraints :: !(ConstraintsF logical scope),
     result :: !(typex (Local ':+ scope))
   }
 
