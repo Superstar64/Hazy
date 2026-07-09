@@ -7,29 +7,36 @@ import qualified Core.Tree.Type as Type
 import qualified Data.Vector.Strict as Strict
 import qualified Semantic.Index.Local as Local
 import qualified Semantic.Index.Type2 as Type2
-import Semantic.Scope (Environment (..), Local)
+import Semantic.Scope (Environment (..), IsVacuous, Local, Vacuous)
 import Semantic.Shift (Shift, shift, shiftDefault)
 import qualified Semantic.Shift as Shift
 import Semantic.Stage (Check)
 import qualified Semantic.Tree.Constraint as Solved
 
-data Constraint scope = Constraint
+type Constraint = ConstraintF Vacuous
+
+data ConstraintF logical scope = Constraint
   { classx :: !(Type2.Index scope),
     head :: !Int,
-    arguments :: !(Strict.Vector (Type (Local ':+ scope)))
+    arguments :: !(Strict.Vector (TypeF logical (Local ':+ scope)))
   }
   deriving (Show)
 
-instance Shift Constraint where
+instance (Shift.Functor logical) => Shift (ConstraintF logical) where
   shift = shiftDefault
 
-instance Shift.Functor Constraint where
-  map = Shift2.mapDefault
+instance (Shift.Functor logical) => Shift.Functor (ConstraintF logical) where
+  map category Constraint {classx, head, arguments} =
+    Constraint
+      { classx = Shift.map category classx,
+        head,
+        arguments = Shift.map (Shift.Over category) <$> arguments
+      }
 
-instance Shift2.Functor Constraint where
+instance (IsVacuous logical, Shift.Functor logical) => Shift2.Functor (ConstraintF logical) where
   map = Substitute.mapDefault
 
-instance Substitute.Functor Constraint where
+instance (IsVacuous logical, Shift.Functor logical) => Substitute.Functor (ConstraintF logical) where
   map category Constraint {classx, head, arguments} =
     Constraint
       { classx = Substitute.map category classx,

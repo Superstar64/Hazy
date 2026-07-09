@@ -6,8 +6,8 @@ import Core.Substitute (Category (Substitute))
 import qualified Core.Substitute as Substitute
 import {-# SOURCE #-} qualified Core.Tree.Class as Simple.Class
 import Core.Tree.ClassExtra (ClassExtra (..))
-import qualified Core.Tree.Constraint as Simple (Constraint (Constraint))
-import qualified Core.Tree.Constraint as Simple.Constraint (Constraint (..))
+import qualified Core.Tree.Constraint as Simple (ConstraintF (Constraint))
+import qualified Core.Tree.Constraint as Simple.Constraint
 import qualified Core.Tree.Evidence as Simple (Evidence)
 import qualified Core.Tree.Evidence as Simple.Evidence
 import qualified Core.Tree.Instanciation as Simple (Instanciation (..))

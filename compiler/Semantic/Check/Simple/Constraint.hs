@@ -1,6 +1,6 @@
 module Semantic.Check.Simple.Constraint where
 
-import Core.Tree.Constraint (Constraint (..))
+import Core.Tree.Constraint (Constraint, ConstraintF (..))
 import qualified Data.Vector.Strict as Strict
 import qualified Semantic.Check.Simple.Type as Type (instanciate', lift)
 import qualified Semantic.Index.Type as Type (unlocal)

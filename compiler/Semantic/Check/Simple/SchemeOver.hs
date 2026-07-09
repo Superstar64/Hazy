@@ -11,7 +11,7 @@ import Control.Monad (zipWithM)
 import Control.Monad.ST (ST)
 import {-# SOURCE #-} qualified Core.Builtin as Builtin
 import {-# SOURCE #-} qualified Core.Tree.Class as Class (Class (..))
-import Core.Tree.Constraint (Constraint (..))
+import Core.Tree.Constraint (ConstraintF (..))
 import Core.Tree.Constraints (Constraints (..))
 import qualified Core.Tree.Evidence as Evidence (Evidence (..))
 import qualified Core.Tree.Instanciation as Instanciation

@@ -1,7 +1,7 @@
 module Semantic.Check.Temporary.TypeDeclarationExtra where
 
 import Control.Monad.ST (ST)
-import qualified Core.Tree.Constraint as Simple (Constraint (..))
+import qualified Core.Tree.Constraint as Simple (ConstraintF (..))
 import qualified Core.Tree.Constraint as Simple.Constraint
 import Core.Tree.Constraints as Simple (Constraints (Constraints))
 import qualified Data.Vector.Strict as Strict (Vector)
