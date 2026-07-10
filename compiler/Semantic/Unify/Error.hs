@@ -2,6 +2,7 @@ module Semantic.Unify.Error where
 
 import Control.Monad (liftM2)
 import Control.Monad.ST (ST)
+import Core.Tree.Type (TypeF (..))
 import Data.List (nub)
 import Data.STRef (STRef, readSTRef)
 import qualified Data.Text as Text
@@ -37,15 +38,15 @@ import Syntax.Position (Position)
 import qualified Syntax.Printer as Syntax (build)
 import qualified Syntax.Tree.Type as Syntax (Type (Call, argument, function, startPosition), print)
 
-collect :: Type s scopes -> ST s [Collected s scopes]
-collect = Collect.collect (Collector Mask.Inline)
+collect :: TypeF (Logical s) scopes -> ST s [Collected s scopes]
+collect = Collect.collect (Collector Mask.Inline) . Typex
 
 data Error s where
-  Unify :: Context s scope -> Type s scope -> Type s scope -> Error s
-  Occurs :: Context s scope -> STRef s (Box s scope) -> Type s scope -> Error s
-  Mismask :: Context s scope -> Type s scope -> Error s
-  Constrain :: Context s scope -> Type2.Index scope -> Type s scope -> [Type s scope] -> Error s
-  Unshift :: Context s (scope ':+ scopes) -> Type s (scope ':+ scopes) -> Error s
+  Unify :: Context s scope -> TypeF (Logical s) scope -> TypeF (Logical s) scope -> Error s
+  Occurs :: Context s scope -> STRef s (Box s scope) -> TypeF (Logical s) scope -> Error s
+  Mismask :: Context s scope -> TypeF (Logical s) scope -> Error s
+  Constrain :: Context s scope -> Type2.Index scope -> TypeF (Logical s) scope -> [TypeF (Logical s) scope] -> Error s
+  Unshift :: Context s (scope ':+ scopes) -> TypeF (Logical s) (scope ':+ scopes) -> Error s
 
 abort :: Position -> Error s -> ST s a
 abort position = \case
@@ -117,7 +118,7 @@ abort position = \case
     fabricate ::
       Shift.Category scope scope' ->
       [(Collected s scope, Local.Index scope')] ->
-      Type s scope ->
+      TypeF (Logical s) scope ->
       ST s (Semantic.Type () Resolve scope')
     fabricate category names = \case
       Logical (Box reference) ->

@@ -22,9 +22,9 @@ data TypeF logical scope
   = Logical !(logical scope)
   | Variable !(Local.Index scope)
   | Constructor !(Type2.Index scope)
-  | Call !(Type scope) !(Type scope)
-  | Function !(Type scope) !(Type scope)
-  | Type !(Type scope)
+  | Call !(TypeF logical scope) !(TypeF logical scope)
+  | Function !(TypeF logical scope) !(TypeF logical scope)
+  | Type !(TypeF logical scope)
   | Constraint
   | Small
   | Large

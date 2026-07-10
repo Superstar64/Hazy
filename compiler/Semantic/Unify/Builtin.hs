@@ -1,20 +1,20 @@
 module Semantic.Unify.Builtin where
 
+import Core.Tree.Evidence (EvidenceF (..))
+import Core.Tree.Instanciation (InstanciationF (..))
 import Data.Vector.Strict (fromList)
 import qualified Semantic.Index.Evidence as Evidence (Builtin (..), Index (..))
 import qualified Semantic.Index.Type2 as Type2
-import Semantic.Unify.Evidence (Evidence)
-import qualified Semantic.Unify.Evidence as Evidence (Evidence (..))
-import Semantic.Unify.Instanciation (Instanciation (..))
+import Semantic.Unify.Evidence (Logical)
 
 constrain ::
   (Monad m) =>
-  m (Evidence s scope) ->
-  (Type2.Index scope -> t -> m (Evidence s scope)) ->
+  m (EvidenceF (Logical s) scope) ->
+  (Type2.Index scope -> t -> m (EvidenceF (Logical s) scope)) ->
   Type2.Index scope ->
   Type2.Index scope ->
   [t] ->
-  m (Evidence s scope)
+  m (EvidenceF (Logical s) scope)
 constrain fallthough constrain = table
   where
     table Type2.Num Type2.Integer [] =
@@ -109,5 +109,5 @@ constrain fallthough constrain = table
       pure $ single Evidence.MonadST
     table _ _ _ = fallthough
 
-    single builtin = Evidence.Variable (Evidence.Builtin builtin) Mono
-    call builtin list = Evidence.Variable (Evidence.Builtin builtin) $ Instanciation $ fromList list
+    single builtin = Variable (Evidence.Builtin builtin) Mono
+    call builtin list = Variable (Evidence.Builtin builtin) $ Instanciation $ fromList list

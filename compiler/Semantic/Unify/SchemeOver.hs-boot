@@ -2,10 +2,7 @@
 
 module Semantic.Unify.SchemeOver where
 
-import qualified Data.Kind as Kind
-import Semantic.Scope (Environment)
+import Core.Tree.SchemeOver (SchemeOverF)
+import {-# SOURCE #-} Semantic.Unify.Type (Logical)
 
-type role SchemeOver representational nominal nominal
-
-type SchemeOver :: (Kind.Type -> Environment -> Kind.Type) -> Kind.Type -> Environment -> Kind.Type
-data SchemeOver typex s scope
+newtype SchemeOver typex s scope = SchemeOverx {runSchemeOverx :: SchemeOverF (Logical s) (typex s) scope}

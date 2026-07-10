@@ -14,9 +14,6 @@ type Zonk :: (Kind.Type -> Environment -> Kind.Type) -> Kind.Constraint
 class Zonk typex where
   zonk :: Zonker s s' -> typex s scope -> ST s (typex s' scope)
 
-type Functor :: (Environment -> Kind.Type) -> Kind.Constraint
-class Functor typex
-
 type role Solve nominal representational
 
 data Solve s a

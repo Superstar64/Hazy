@@ -9,17 +9,15 @@ module Semantic.Unify
     Instanciation,
     SchemeOver,
     Type,
-    fresh,
-    mark,
-    unify,
     Solve,
-    solve,
   )
 where
 
 import Control.Monad.ST (ST)
+import qualified Core.Tree.Type as Simple
 import qualified Data.Vector.Strict as Strict
 import {-# SOURCE #-} Semantic.Check.Context (Context)
+import qualified Semantic.Check.Mask as Mask
 import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Evidence as Evidence
 import qualified Semantic.Index.Local as Local
@@ -89,3 +87,7 @@ constraintx ::
 instanciate :: Context s scope -> Position -> Scheme s scope -> ST s (Type s scope, Instanciation s scope)
 liftST :: ST s a -> Solve s a
 runSolve :: Solve s a -> ST s a
+fresh :: Type s scope -> ST s (Type s scope)
+mark :: Context s scope -> Position -> Mask.Erasure -> Type s scope -> ST s ()
+solve :: Position -> Type s scope -> Solve s (Simple.Type scope)
+unify :: Context s scope -> Position -> Type s scope -> Type s scope -> ST s ()

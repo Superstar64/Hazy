@@ -2,10 +2,7 @@
 
 module Semantic.Unify.Constraint where
 
-import qualified Data.Kind as Kind
-import Semantic.Scope (Environment)
+import Core.Tree.Constraint (ConstraintF)
+import {-# SOURCE #-} Semantic.Unify.Type (Logical)
 
-type role Constraint nominal nominal
-
-type Constraint :: Kind.Type -> Environment -> Kind.Type
-data Constraint s scope
+newtype Constraint s scope = Constraintx {runConstraintx :: ConstraintF (Logical s) scope}

@@ -2,10 +2,7 @@
 
 module Semantic.Unify.Instanciation where
 
-import qualified Data.Kind as Kind
-import Semantic.Scope (Environment)
+import Core.Tree.Instanciation (InstanciationF)
+import {-# SOURCE #-} Semantic.Unify.Evidence (Logical)
 
-type role Instanciation nominal nominal
-
-type Instanciation :: Kind.Type -> Environment -> Kind.Type
-data Instanciation s scope
+newtype Instanciation s scope = Instanciationx {runInstanciationx :: InstanciationF (Logical s) scope}

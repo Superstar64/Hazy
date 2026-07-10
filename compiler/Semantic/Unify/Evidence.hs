@@ -1,53 +1,57 @@
 module Semantic.Unify.Evidence where
 
 import Control.Monad.ST (ST)
+import Core.Tree.Evidence (EvidenceF (..))
 import qualified Core.Tree.Evidence as Simple (Evidence, EvidenceF (..))
 import Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 import Error (unsupportedFeatureConstraintedTypeDefaulting)
-import qualified Semantic.Index.Evidence as Evidence
 import Semantic.Scope (Environment (..))
 import Semantic.Shift (Shift, shift)
 import qualified Semantic.Shift as Shift
 import Semantic.Unify.Class (Solve (..), Zonk (..), Zonker (..))
-import Semantic.Unify.Instanciation (Instanciation)
+import Semantic.Unify.Instanciation (Instanciation (..))
 import qualified Semantic.Unify.Instanciation as Instanciation
 import Syntax.Position (Position)
 
-data Evidence s scope
-  = Logical !(Logical s scope)
-  | Variable !(Evidence.Index scope) !(Instanciation s scope)
-  | Super !(Evidence s scope) !Int
+newtype Evidence s scope = Evidencex {runEvidencex :: EvidenceF (Logical s) scope}
+
+instance Shift (Evidence s) where
+  shift (Evidencex evidence) = Evidencex (shift evidence)
 
 data Logical s scope where
   Box :: !(STRef s (Box s scope)) -> Logical s scope
   Shift :: !(Logical s scopes) -> Logical s (scope ':+ scopes)
 
-instance Shift (Evidence s) where
-  shift = \case
-    Logical logical -> Logical (Shift logical)
-    Variable variable instanciation -> Variable (shift variable) (shift instanciation)
-    Super evidence index -> Super (shift evidence) index
+instance Shift (Logical s) where
+  shift = Shift
+
+instance Shift.Functor (Logical s) where
+  map Shift.Shift logical = Shift logical
+  map (Shift.Over category) (Shift logical) = Shift (Shift.map category logical)
+  map Shift.Over {} Box {} = error "can't map over logical"
+  map _ _ = error "unsuppported shift"
 
 instance Zonk Evidence where
-  zonk Zonker = \case
-    Variable variable instanciation -> do
-      instanciation <- zonk Zonker instanciation
-      pure $ Variable variable instanciation
-    Super evidence index -> do
-      evidence <- zonk Zonker evidence
-      pure $ Super evidence index
-    Logical (Box reference) ->
-      readSTRef reference >>= \case
-        Solved evidence -> zonk Zonker evidence
-        Unsolved {} -> pure $ Logical (Box reference)
-    Logical (Shift logical) -> shift <$> zonk Zonker (Logical logical)
+  zonk Zonker (Evidencex evidence) =
+    Evidencex <$> case evidence of
+      Variable variable instanciation -> do
+        Instanciationx instanciation <- zonk Zonker (Instanciationx instanciation)
+        pure $ Variable variable instanciation
+      Super evidence index -> do
+        Evidencex evidence <- zonk Zonker (Evidencex evidence)
+        pure $ Super evidence index
+      Logical (Box reference) ->
+        readSTRef reference >>= \case
+          Solved evidence -> runEvidencex <$> zonk Zonker (Evidencex evidence)
+          Unsolved {} -> pure $ Logical (Box reference)
+      Logical (Shift logical) -> shift <$> (runEvidencex <$> zonk Zonker (Evidencex $ Logical logical))
 
 data Box s scope
-  = Solved !(Evidence s scope)
+  = Solved !(EvidenceF (Logical s) scope)
   | Unsolved {}
 
 -- unification between evidence should never fail
-unify :: Evidence s scope -> Evidence s scope -> ST s ()
+unify :: EvidenceF (Logical s) scope -> EvidenceF (Logical s) scope -> ST s ()
 unify (Logical (Box reference)) (Logical (Box reference'))
   | reference == reference' = pure ()
   | otherwise = do
@@ -79,7 +83,7 @@ unify evidence (Logical (Shift logical')) = do
   unify evidence (Logical logical')
 unify _ _ = error "unify evidence can't fail"
 
-unshift :: Evidence s (scope ':+ scopes) -> ST s (Evidence s scopes)
+unshift :: EvidenceF (Logical s) (scope ':+ scopes) -> ST s (EvidenceF (Logical s) scopes)
 unshift = \case
   Variable variable instanciation -> do
     let fail = error "unshift can't fail"
@@ -97,7 +101,7 @@ unshift = \case
     evidence <- unshift evidence
     pure $ Super evidence index
 
-solve :: Position -> Evidence s scope -> Solve s (Simple.Evidence scope)
+solve :: Position -> EvidenceF (Logical s) scope -> Solve s (Simple.Evidence scope)
 solve position = \case
   Variable variable instanciation -> do
     instanciation <- Instanciation.solve position instanciation

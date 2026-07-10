@@ -1,42 +1,25 @@
 module Semantic.Unify.Constraint where
 
+import Core.Tree.Constraint (ConstraintF (..))
 import qualified Core.Tree.Constraint as Simple
-import qualified Data.Vector.Strict as Strict
-import qualified Semantic.Index.Type2 as Type2
-import Semantic.Scope (Environment (..))
-import qualified Semantic.Scope as Scope
 import Semantic.Shift (Shift (..))
-import qualified Semantic.Shift as Shift
-import Semantic.Unify.Class (Functor (..), Solve, Zonk (..))
-import qualified Semantic.Unify.Class as Class
-import {-# SOURCE #-} Semantic.Unify.Type (Type)
+import Semantic.Unify.Class (Solve, Zonk (..))
+import {-# SOURCE #-} Semantic.Unify.Type (Logical, Type (..))
 import {-# SOURCE #-} qualified Semantic.Unify.Type as Type
 import Syntax.Position (Position)
 import Prelude hiding (Functor, map)
 
-data Constraint s scope = Constraint
-  { classx :: !(Type2.Index scope),
-    head :: Int,
-    arguments :: !(Strict.Vector (Type s (Scope.Local ':+ scope)))
-  }
+newtype Constraint s scope = Constraintx {runConstraintx :: ConstraintF (Logical s) scope}
 
 instance Zonk Constraint where
-  zonk zonker Constraint {classx, head, arguments} = do
-    arguments <- traverse (zonk zonker) arguments
-    pure Constraint {classx, head, arguments}
+  zonk zonker (Constraintx Constraint {classx, head, arguments}) = do
+    arguments <- traverse (fmap runTypex . zonk zonker . Typex) arguments
+    pure $ Constraintx Constraint {classx, head, arguments}
 
 instance Shift (Constraint s) where
-  shift = Class.shiftDefault
+  shift (Constraintx constraint) = Constraintx (shift constraint)
 
-instance Functor (Constraint s) where
-  map category Constraint {classx, head, arguments} =
-    Constraint
-      { classx = Shift.map (Class.general category) classx,
-        head,
-        arguments = Class.map (Class.Over category) <$> arguments
-      }
-
-solve :: Position -> Constraint s scope -> Solve s (Simple.Constraint scope)
+solve :: Position -> ConstraintF (Logical s) scope -> Solve s (Simple.Constraint scope)
 solve position Constraint {classx, head, arguments} = do
   arguments <- traverse (Type.solve position) arguments
   pure $

@@ -8,8 +8,6 @@ import qualified Data.Vector.Strict as Strict
 import Semantic.Check.Mask (Mask)
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope
-import Semantic.Shift (Shift)
-import qualified Semantic.Shift as Shift
 import {-# SOURCE #-} Semantic.Unify.Type (Box, Type)
 import Prelude hiding (Functor, map)
 import qualified Prelude
@@ -56,20 +54,6 @@ data Collector s s' where
 
 class (Zonk typex) => Generalizable typex where
   collect :: Collector s s' -> typex s scopes -> ST s [Collected s' scopes]
-
-data Category scope scope' where
-  Shift :: Category scopes (scope ':+ scopes)
-  Over :: Category scopes scopes' -> Category (scope1 ':+ scopes) (scope1 ':+ scopes')
-
-general :: Category scope scope' -> Shift.Category scope scope'
-general Shift = Shift.Shift
-general (Over category) = Shift.Over (general category)
-
-class (Shift typex) => Functor typex where
-  map :: Category scope scope' -> typex scope -> typex scope'
-
-shiftDefault :: (Functor typex) => typex scopes -> typex (scope ':+ scopes)
-shiftDefault = map Shift
 
 newtype Solve s a = Solve (ST s a)
 

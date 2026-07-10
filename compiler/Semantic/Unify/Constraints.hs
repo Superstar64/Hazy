@@ -1,33 +1,27 @@
 module Semantic.Unify.Constraints where
 
+import Core.Tree.Constraints (ConstraintsF (..))
 import qualified Core.Tree.Constraints as Simple
-import qualified Data.Vector.Strict as Strict
 import Semantic.Shift (Shift (..))
-import Semantic.Unify.Class (Functor (..), Solve, Zonk (..), shiftDefault)
-import qualified Semantic.Unify.Class as Class
-import Semantic.Unify.Constraint (Constraint)
+import Semantic.Unify.Class (Solve, Zonk (..))
+import Semantic.Unify.Constraint (Constraint (..))
 import qualified Semantic.Unify.Constraint as Constraint
+import Semantic.Unify.Type (Logical)
 import Syntax.Position (Position)
-import Prelude hiding (Functor (..))
 
-data Constraints s scope
-  = Constraints !(Strict.Vector (Constraint s scope))
-  | None
+newtype Constraints s scope = Constraintsx {runConstraintsx :: ConstraintsF (Logical s) scope}
 
 instance Zonk Constraints where
-  zonk zonker = \case
-    Constraints constraints -> Constraints <$> traverse (zonk zonker) constraints
-    None -> pure None
+  zonk zonker (Constraintsx constraints) = case constraints of
+    Constraints constraints ->
+      Constraintsx . Constraints
+        <$> traverse (fmap runConstraintx . zonk zonker . Constraintx) constraints
+    None -> pure (Constraintsx None)
 
 instance Shift (Constraints s) where
-  shift = shiftDefault
+  shift (Constraintsx constraints) = Constraintsx $ shift constraints
 
-instance Functor (Constraints s) where
-  map category = \case
-    Constraints constraints -> Constraints $ Class.map category <$> constraints
-    None -> None
-
-solve :: Position -> Constraints s scope -> Solve s (Simple.Constraints scope)
+solve :: Position -> ConstraintsF (Logical s) scope -> Solve s (Simple.Constraints scope)
 solve position = \case
   Constraints constraints -> Simple.Constraints <$> traverse (Constraint.solve position) constraints
   None -> pure Simple.None

@@ -59,65 +59,64 @@ module Semantic.Unify
     solveSchemeOver,
     solveScheme,
     instanciate,
-    Functor (..),
-    Category,
     MapScheme (..),
     mapScheme,
   )
 where
 
 import Control.Monad.ST (ST)
+import qualified Core.Tree.Constraint as Constraint (ConstraintF (..))
 import qualified Core.Tree.Constraint as Simple (Constraint)
+import Core.Tree.Constraints (ConstraintsF (..))
+import qualified Core.Tree.Evidence as Evidence (EvidenceF (..))
 import qualified Core.Tree.Evidence as Simple (Evidence)
+import Core.Tree.Instanciation (InstanciationF (..))
 import qualified Core.Tree.Instanciation as Simple (Instanciation)
 import qualified Core.Tree.Scheme as Simple (Scheme (..))
+import Core.Tree.SchemeOver (SchemeOverF (SchemeOver))
+import qualified Core.Tree.SchemeOver
 import qualified Core.Tree.SchemeOver as Simple (SchemeOver)
+import Core.Tree.Type (TypeF (..))
+import qualified Core.Tree.Type as Simple (Type)
 import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Context (Context (..))
+import qualified Semantic.Check.Mask as Mask
 import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Evidence as Evidence (Index (..))
 import qualified Semantic.Index.Local as Local
-import qualified Semantic.Index.Type as Type
+import qualified Semantic.Index.Type as Type (Index)
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope
 import Semantic.Shift (Shift (..))
+import qualified Semantic.Shift as Shift
 import Semantic.Unify.Class
-  ( Category,
-    Functor (..),
-    Generalizable (collect),
+  ( Generalizable (collect),
     Solve (..),
     Zonk (..),
     Zonker (..),
   )
-import Semantic.Unify.Constraint (Constraint)
-import qualified Semantic.Unify.Constraint as Constraint
+import Semantic.Unify.Constraint (Constraint (..))
+import qualified Semantic.Unify.Constraint as Constraint (solve)
 import Semantic.Unify.Constraints (Constraints (..))
-import qualified Semantic.Unify.Constraints as Constraints
-import Semantic.Unify.Evidence (Evidence)
-import qualified Semantic.Unify.Evidence as Evidence (Evidence (..), solve)
+import Semantic.Unify.Evidence (Evidence (..))
+import qualified Semantic.Unify.Evidence as Evidence (solve)
 import Semantic.Unify.Instanciation (Instanciation (..))
 import qualified Semantic.Unify.Instanciation as Instanciation
 import Semantic.Unify.SchemeOver
   ( Body ((:::)),
     Generalize (..),
     MapScheme (..),
-    SchemeOver (SchemeOver),
+    SchemeOver (..),
     SolveScheme (..),
     generalizeBody,
     instanciateOver,
     mapScheme,
   )
 import qualified Semantic.Unify.SchemeOver as SchemeOver
-import Semantic.Unify.Type
-  ( Type (..),
-    constrain,
-    fresh,
-    mark,
-    solve,
-    unify,
-  )
+import Semantic.Unify.Type (Type (..))
+import qualified Semantic.Unify.Type as Type (constrain, fresh, mark, solve, unify)
 import Syntax.Position (Position)
 import Prelude hiding (Functor, head)
 
@@ -126,7 +125,15 @@ newtype Scheme s scope = Scheme
   }
 
 instance Shift (Scheme s) where
-  shift (Scheme scheme) = Scheme (shift scheme)
+  shift (Scheme (SchemeOverx SchemeOver {parameters, constraints, result = Typex result})) =
+    Scheme
+      ( SchemeOverx
+          SchemeOver
+            { parameters = fmap shift parameters,
+              constraints = shift constraints,
+              result = Typex $ Shift.map (Shift.Over Shift.Shift) result
+            }
+      )
 
 instance Zonk Scheme where
   zonk zonker (Scheme scheme) = do
@@ -134,13 +141,13 @@ instance Zonk Scheme where
     pure (Scheme scheme)
 
 variable :: Local.Index scope -> Type s scope
-variable = Variable
+variable = Typex . Variable
 
 constructor :: Type2.Index scope -> Type s scope
-constructor = Constructor
+constructor = Typex . Constructor
 
 call :: Type s scope -> Type s scope -> Type s scope
-call = Call
+call (Typex argument) (Typex result) = Typex (Call argument result)
 
 index :: Type.Index scope -> Type s scope
 index = constructor . Type2.Index
@@ -167,33 +174,33 @@ char :: Type s scope
 char = constructor Type2.Char
 
 typex :: Type s scope
-typex = Type small
+typex = Typex $ Type Small
 
 kind :: Type s scope
-kind = Type large
+kind = Typex $ Type Large
 
 typeWith :: Type s scopes -> Type s scopes
-typeWith = Type
+typeWith (Typex universe) = Typex $ Type universe
 
 small :: Type s scopes
-small = Small
+small = Typex Small
 
 large :: Type s scopes
-large = Large
+large = Typex Large
 
 universe :: Type s scopes
-universe = Universe
+universe = Typex Universe
 
 constraint :: Type s scope
-constraint = Constraint
+constraint = Typex Constraint
 
 levity :: Type s scope
-levity = Levity
+levity = Typex Levity
 
 infixr 0 `function`
 
 function :: Type s scope -> Type s scope -> Type s scope
-function = Function
+function (Typex parameter) (Typex result) = Typex $ Function parameter result
 
 scheme ::
   Strict.Vector.Vector (Type s scope) ->
@@ -211,17 +218,18 @@ schemeOver ::
   typex s (Scope.Local ':+ scope) ->
   SchemeOver typex s scope
 schemeOver parameters constraints result =
-  SchemeOver
-    { parameters,
-      constraints,
-      result
-    }
+  SchemeOverx
+    SchemeOver
+      { parameters = fmap runTypex parameters,
+        constraints = runConstraintsx constraints,
+        result
+      }
 
 constraints :: Strict.Vector (Constraint s scope) -> Constraints s scope
-constraints = Constraints
+constraints constraints = Constraintsx $ Constraints $ fmap runConstraintx constraints
 
 none :: Constraints s scope
-none = None
+none = Constraintsx None
 
 constraintx ::
   Type2.Index scope ->
@@ -229,38 +237,46 @@ constraintx ::
   Strict.Vector (Type s (Scope.Local ':+ scope)) ->
   Constraint s scope
 constraintx classx head arguments =
-  Constraint.Constraint
-    { classx,
-      head,
-      arguments
-    }
+  Constraintx
+    Constraint.Constraint
+      { classx,
+        head,
+        arguments = fmap runTypex arguments
+      }
 
 mono :: (Shift (typex s)) => typex s scope -> SchemeOver typex s scope
 mono result =
-  SchemeOver
-    { parameters = Strict.Vector.empty,
-      constraints = Constraints.None,
-      result = shift result
-    }
+  SchemeOverx
+    SchemeOver
+      { parameters = Strict.Vector.empty,
+        constraints = None,
+        result = shift result
+      }
 
 monoScheme :: Type s scope -> Scheme s scope
 monoScheme = Scheme . mono
 
 variable' :: Evidence.Index scope -> Instanciation s scope -> Evidence s scope
-variable' = Evidence.Variable
+variable' variable (Instanciationx instanciation) = Evidencex $ Evidence.Variable {variable, instanciation}
 
 super :: Evidence s scope -> Int -> Evidence s scope
-super = Evidence.Super
+super (Evidencex base) index =
+  Evidencex
+    Evidence.Super
+      { base,
+        index
+      }
 
 instanciation :: Strict.Vector (Evidence s scope) -> Instanciation s scope
-instanciation = Instanciation
+instanciation instanciation = Instanciationx $ Instanciation $ fmap runEvidencex instanciation
 
 monoInstanciation :: Instanciation s scope
-monoInstanciation = Instanciation.Mono
+monoInstanciation = Instanciationx $ Mono
 
 instanciate :: Context s scope -> Position -> Scheme s scope -> ST s (Type s scope, Instanciation s scope)
-instanciate context position Scheme {runScheme} =
-  instanciateOver context position runScheme
+instanciate context position (Scheme (SchemeOverx scheme)) = do
+  (typex, instanciation) <- instanciateOver context position $ scheme
+  pure (typex, Instanciationx instanciation)
 
 -- todo, figure out how to make sure nodes that are being solved early have a
 -- rigid context
@@ -272,13 +288,13 @@ liftST :: ST s a -> Solve s a
 liftST = Solve
 
 solveEvidence :: Position -> Evidence s scope -> Solve s (Simple.Evidence scope)
-solveEvidence = Evidence.solve
+solveEvidence position (Evidencex evidence) = Evidence.solve position evidence
 
 solveInstanciation :: Position -> Instanciation s scope -> Solve s (Simple.Instanciation scope)
-solveInstanciation = Instanciation.solve
+solveInstanciation position (Instanciationx instanciation) = Instanciation.solve position instanciation
 
 solveConstraint :: Position -> Constraint s scope -> Solve s (Simple.Constraint scope)
-solveConstraint = Constraint.solve
+solveConstraint position (Constraintx constraint) = Constraint.solve position constraint
 
 solveScheme :: Position -> Scheme s scope -> Solve s (Simple.Scheme scope)
 solveScheme position (Scheme scheme) = Simple.Scheme <$> solveSchemeOver (SolveScheme solve) position scheme
@@ -288,4 +304,34 @@ solveSchemeOver ::
   Position ->
   SchemeOver source s scope ->
   Solve s (Simple.SchemeOver target scope)
-solveSchemeOver = SchemeOver.solve
+solveSchemeOver solve position (SchemeOverx scheme) = SchemeOver.solve solve position scheme
+
+fresh :: Type s scope -> ST s (Type s scope)
+fresh (Typex typex) = Typex <$> Type.fresh typex
+
+mark :: Context s scope -> Position -> Mask.Erasure -> Type s scope -> ST s ()
+mark context position erasure (Typex typex) = Type.mark context position erasure typex
+
+solve :: Position -> Type s scope -> Solve s (Simple.Type scope)
+solve position (Typex typex) = Type.solve position typex
+
+-- | Unify two types
+--
+-- The first argument is the expected type.
+-- The second argument is the actual type.
+--
+-- Both arguments must be well kinded, though they may have different kinds.
+-- Alternatively, they may be untypeable, in which case they never unify with
+-- unification variables and instead only do syntatic equality.
+unify :: Context s scope -> Position -> Type s scope -> Type s scope -> ST s ()
+unify context position (Typex type1) (Typex type2) = Type.unify context position type1 type2
+
+constrain ::
+  Context s scope ->
+  Position ->
+  Type2.Index scope ->
+  Type s scope ->
+  ST s (Evidence s scope)
+constrain context position classx (Typex argument) = do
+  evidence <- Type.constrain context position classx argument
+  pure $ Evidencex evidence
