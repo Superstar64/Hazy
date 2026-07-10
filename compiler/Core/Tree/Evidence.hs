@@ -8,8 +8,6 @@ import {-# SOURCE #-} qualified Core.Tree.Instanciation as Instanciation
 import qualified Data.Vector as Vector
 import qualified Semantic.Index.Evidence as Evidence
 import qualified Semantic.Index.Evidence0 as Evidence0
-import qualified Semantic.Index.Type as Type
-import qualified Semantic.Index.Type2 as Type2
 import Semantic.Scope (Equal (..), IsVacuous (isVacuous), Vacuous)
 import qualified Semantic.Scope as Scope
 import Semantic.Shift (Shift, shift, shiftDefault)
@@ -68,54 +66,58 @@ instance (IsVacuous logical, Shift.Functor logical) => Shift2.Functor (EvidenceF
   map = Substitute.mapDefault
 
 instance (IsVacuous logical, Shift.Functor logical) => Substitute.Functor (EvidenceF logical) where
-  map
+  map | Refl <- isVacuous :: Scope.Equal Vacuous logical = Substitute.mapEvidence
+
+instance Substitute.EvidenceFunctor EvidenceF where
+  mapEvidence
     (Substitute _ _ replacements)
     Variable
       { variable = Evidence.Index (Evidence0.Assumed index),
         instanciation = Instanciation.Mono
-      } | Refl <- isVacuous :: Scope.Equal Vacuous logical = replacements Vector.! index
-  map
+      } = replacements Vector.! index
+  mapEvidence
     (Substitute.Over category)
     Variable
       { variable = Evidence.Index (Evidence0.Shift index),
         instanciation = Instanciation.Mono
       } =
       shift $
-        Substitute.map
+        Substitute.mapEvidence
           category
           Variable
             { variable = Evidence.Index index,
               instanciation = Instanciation.Mono
             }
-  map category evidence | Refl <- isVacuous :: Scope.Equal Vacuous logical = case evidence of
+  mapEvidence category evidence = case evidence of
     Variable {variable, instanciation} ->
       Variable
-        { variable =
-            let map1 :: Category scope1 scope2 -> Type.Index scope1 -> Type.Index scope2
-                map1 (Substitute.Lift category) index = Shift2.map category index
-                map1 (Substitute category _ _) index = Shift.map category $ Type.unlocal index
-                map1 (Substitute.Over category) (Type.Shift index) = Type.Shift $ map1 category index
-                map1 Substitute.Over {} (Type.Declaration index) = Type.Declaration index
-                map1 Substitute.Over {} (Type.Group index) = Type.Group index
-                map2 :: Category scope1 scope2 -> Type2.Index scope1 -> Type2.Index scope2
-                map2 = Type2.map . map1
-                map3 :: Category scope1 scope2 -> Evidence0.Index scope1 -> Evidence0.Index scope2
-                map3 (Substitute.Lift category) index = Shift2.map category index
-                map3 Substitute {} Evidence0.Assumed {} =
-                  error "can't substitute evidence into instanciated evidence variable"
-                map3 Substitute.Over {} (Evidence0.Assumed index) = Evidence0.Assumed index
-                map3 (Substitute.Over category) (Evidence0.Shift index) =
-                  Evidence0.Shift $ map3 category index
-                map3 (Substitute category _ _) (Evidence0.Shift index) = Shift.map category index
-             in case variable of
-                  Evidence.Builtin builtin -> Evidence.Builtin builtin
-                  Evidence.Class index1 index2 -> Evidence.Class (map1 category index1) (map2 category index2)
-                  Evidence.Data index1 index2 -> Evidence.Data (map2 category index1) (map1 category index2)
-                  Evidence.Index index -> Evidence.Index $ map3 category index,
-          instanciation = Substitute.map category instanciation
+        { variable = case variable of
+            Evidence.Builtin builtin -> Evidence.Builtin builtin
+            Evidence.Class index1 index2 ->
+              Evidence.Class
+                (Shift2.map (Substitute.general category) index1)
+                (Shift2.map (Substitute.general category) index2)
+            Evidence.Data index1 index2 ->
+              Evidence.Data
+                (Shift2.map (Substitute.general category) index1)
+                (Shift2.map (Substitute.general category) index2)
+            Evidence.Index index -> Evidence.Index $ map category index,
+          instanciation = Substitute.mapEvidence category instanciation
         }
+      where
+        map ::
+          Category logicalType logcialEvidence scope1 scope2 ->
+          Evidence0.Index scope1 ->
+          Evidence0.Index scope2
+        map (Substitute.Lift category) index = Shift2.map category index
+        map Substitute {} Evidence0.Assumed {} =
+          error "can't substitute evidence into instanciated evidence variable"
+        map Substitute.Over {} (Evidence0.Assumed index) = Evidence0.Assumed index
+        map (Substitute.Over category) (Evidence0.Shift index) =
+          Evidence0.Shift $ map category index
+        map (Substitute category _ _) (Evidence0.Shift index) = Shift.map category index
     Super {base, index} ->
       Super
-        { base = Substitute.map category base,
+        { base = Substitute.mapEvidence category base,
           index
         }

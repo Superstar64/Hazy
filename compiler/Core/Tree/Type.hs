@@ -1,7 +1,7 @@
 module Core.Tree.Type where
 
 import qualified Core.Shift as Shift2
-import Core.Substitute (Category (..), map)
+import Core.Substitute (Category (..))
 import qualified Core.Substitute as Substitute
 import qualified Data.Vector as Vector
 import qualified Semantic.Index.Constructor as Constructor
@@ -14,7 +14,6 @@ import Semantic.Shift (Shift, shift, shiftDefault)
 import qualified Semantic.Shift as Shift
 import Semantic.Stage (Check)
 import qualified Semantic.Tree.Type as Solved
-import Prelude hiding (Functor, map)
 
 type Type = TypeF Vacuous
 
@@ -104,20 +103,22 @@ instance (IsVacuous logical, Shift.Functor logical) => Shift2.Functor (TypeF log
   map = Substitute.mapDefault
 
 instance (IsVacuous logical, Shift.Functor logical) => Substitute.Functor (TypeF logical) where
-  map (Substitute lift replacements _) (Variable index)
-    | Refl <- isVacuous :: Scope.Equal Vacuous logical = case index of
-        Local index -> replacements Vector.! index
-        Shift index -> Variable (Shift.map lift index)
-  map (Substitute.Lift category) (Variable index) = Variable $ Shift2.map category index
-  map Substitute.Over {} (Variable (Local.Local index)) = Variable (Local.Local index)
-  map (Substitute.Over category) (Variable (Local.Shift index))
-    | Refl <- isVacuous :: Scope.Equal Vacuous logical = shift $ map category (Variable index)
-  map category typex | Refl <- isVacuous :: Scope.Equal Vacuous logical = case typex of
-    Constructor index -> Constructor (map category index)
-    Call function argument -> Call (map category function) (map category argument)
+  map | Refl <- isVacuous :: Scope.Equal Vacuous logical = Substitute.mapType
+
+instance Substitute.TypeFunctor TypeF where
+  mapType (Substitute lift replacements _) (Variable index) = case index of
+    Local index -> replacements Vector.! index
+    Shift index -> Variable (Shift.map lift index)
+  mapType (Substitute.Lift category) (Variable index) = Variable $ Shift2.map category index
+  mapType Substitute.Over {} (Variable (Local.Local index)) = Variable (Local.Local index)
+  mapType (Substitute.Over category) (Variable (Local.Shift index)) =
+    shift $ Substitute.mapType category (Variable index)
+  mapType category typex = case typex of
+    Constructor index -> Constructor (Shift2.map (Substitute.general category) index)
+    Call function argument -> Call (Substitute.mapType category function) (Substitute.mapType category argument)
     Function parameter result ->
-      Function (map category parameter) (map category result)
-    Type universe -> Type (map category universe)
+      Function (Substitute.mapType category parameter) (Substitute.mapType category result)
+    Type universe -> Type (Substitute.mapType category universe)
     Constraint -> Constraint
     Small -> Small
     Large -> Large
@@ -129,7 +130,7 @@ simplify typex = simplifyWith typex []
 
 simplifyWith :: Solved.Type position Check scope -> [Type scope] -> Type scope
 simplifyWith Solved.Constructor {constructor, synonym} arguments = case synonym of
-  Solved.Synonym synonym -> map category synonym
+  Solved.Synonym synonym -> Substitute.map category synonym
     where
       category = Substitute Shift.Id (Vector.fromList arguments) (error "no evidence")
   Solved.NoSynonym -> foldl Call (Constructor constructor) arguments

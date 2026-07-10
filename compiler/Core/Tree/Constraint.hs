@@ -7,7 +7,8 @@ import qualified Core.Tree.Type as Type
 import qualified Data.Vector.Strict as Strict
 import qualified Semantic.Index.Local as Local
 import qualified Semantic.Index.Type2 as Type2
-import Semantic.Scope (Environment (..), IsVacuous, Local, Vacuous)
+import Semantic.Scope (Environment (..), Equal (..), IsVacuous (isVacuous), Local, Vacuous)
+import qualified Semantic.Scope as Scope
 import Semantic.Shift (Shift, shift, shiftDefault)
 import qualified Semantic.Shift as Shift
 import Semantic.Stage (Check)
@@ -37,11 +38,14 @@ instance (IsVacuous logical, Shift.Functor logical) => Shift2.Functor (Constrain
   map = Substitute.mapDefault
 
 instance (IsVacuous logical, Shift.Functor logical) => Substitute.Functor (ConstraintF logical) where
-  map category Constraint {classx, head, arguments} =
+  map | Refl <- isVacuous :: Scope.Equal Vacuous logical = Substitute.mapType
+
+instance Substitute.TypeFunctor ConstraintF where
+  mapType category Constraint {classx, head, arguments} =
     Constraint
-      { classx = Substitute.map category classx,
+      { classx = Shift2.map (Substitute.general category) classx,
         head,
-        arguments = Substitute.map (Substitute.Over category) <$> arguments
+        arguments = Substitute.mapType (Substitute.Over category) <$> arguments
       }
 
 argument :: Constraint scope -> Type (Local ':+ scope)

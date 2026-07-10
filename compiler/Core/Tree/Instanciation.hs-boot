@@ -24,3 +24,5 @@ instance (Shift.Functor logical) => Shift.Functor (InstanciationF logical)
 instance (IsVacuous logical, Shift.Functor logical) => Shift2.Functor (InstanciationF logical)
 
 instance (IsVacuous logical, Shift.Functor logical) => Substitute.Functor (InstanciationF logical)
+
+instance Substitute.EvidenceFunctor InstanciationF
