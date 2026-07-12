@@ -14,6 +14,8 @@ import Syntax.Parser
     asum,
     betweenParens,
     position,
+    token,
+    try,
   )
 import Syntax.Position (Position)
 import qualified Syntax.Tree.Marked as Marked
@@ -25,39 +27,55 @@ data Constraint position
     --  > x :: F a => a
     --  >      ^^^
     Constraint
-    { startPosition :: !position,
-      classVariable :: !(Marked.QualifiedConstructorIdentifier position),
-      typeVariable :: !(Marked.VariableIdentifier position),
-      arguments :: !(Strict.Vector (Type position))
-    }
+      { startPosition :: !position,
+        classVariable :: !(Marked.QualifiedConstructorIdentifier position),
+        typeVariable :: !(Marked.VariableIdentifier position),
+        arguments :: !(Strict.Vector (Type position))
+      }
+  | Equality
+      { startPosition :: !position,
+        left :: !(Type position),
+        right :: !(Type position)
+      }
   deriving (Show)
 
 instance FreeTypeVariables Constraint where
-  freeTypeVariables Constraint {typeVariable, arguments} = typeVariable : foldMap freeTypeVariables arguments
+  freeTypeVariables = \case
+    Constraint {typeVariable, arguments} -> typeVariable : foldMap freeTypeVariables arguments
+    Equality {left, right} -> freeTypeVariables left ++ freeTypeVariables right
 
 parse :: Parser (Constraint Position)
-parse = Marked.parse <**> body
-  where
-    body =
-      asum
-        [ makeSimple <$> position <*> Marked.parse,
-          betweenParens $
-            makeComplex
-              <$> position
-              <*> Marked.parse
-              <*> (Strict.Vector.fromList <$> Applicative.some Type.parse3)
-        ]
-    makeSimple startPosition typeVariable classVariable =
-      Constraint
-        { startPosition,
-          classVariable,
-          typeVariable,
-          arguments = Strict.Vector.empty
-        }
-    makeComplex startPosition typeVariable arguments classVariable =
-      Constraint
-        { startPosition,
-          classVariable,
-          typeVariable,
-          arguments
-        }
+parse =
+  asum
+    [ let equality startPosition left right =
+            Equality
+              { startPosition,
+                left,
+                right
+              }
+       in equality <$> position <*> try (Type.parse <* token "~") <*> Type.parse,
+      let body =
+            asum
+              [ makeSimple <$> position <*> Marked.parse,
+                betweenParens $
+                  makeComplex
+                    <$> position
+                    <*> Marked.parse
+                    <*> (Strict.Vector.fromList <$> Applicative.some Type.parse3)
+              ]
+          makeSimple startPosition typeVariable classVariable =
+            Constraint
+              { startPosition,
+                classVariable,
+                typeVariable,
+                arguments = Strict.Vector.empty
+              }
+          makeComplex startPosition typeVariable arguments classVariable =
+            Constraint
+              { startPosition,
+                classVariable,
+                typeVariable,
+                arguments
+              }
+       in Marked.parse <**> body
+    ]

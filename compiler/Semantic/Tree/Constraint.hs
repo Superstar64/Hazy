@@ -8,42 +8,72 @@ import qualified Semantic.Index.Type2 as Type2
 import Semantic.Scope (Environment ((:+)), Local)
 import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import Semantic.Stage (Unsupported)
 import Semantic.Tree.Type (Type)
 import qualified Semantic.Tree.Type as Type (anonymize)
 import Prelude hiding (head)
 
-data Constraint position stage scope = Constraint
-  { startPosition :: !position,
-    classx :: !(Type2.Index scope),
-    head :: !Int,
-    arguments :: !(Strict.Vector (Type position stage (Local ':+ scope)))
-  }
+data Constraint position stage scope
+  = Constraint
+      { startPosition :: !position,
+        classx :: !(Type2.Index scope),
+        head :: !Int,
+        arguments :: !(Strict.Vector (Type position stage (Local ':+ scope)))
+      }
+  | Equality
+      { startPosition :: !position,
+        left :: !(Type position stage (Local ':+ scope)),
+        right :: !(Type position stage (Local ':+ scope)),
+        unsupported :: !(Unsupported stage)
+      }
   deriving (Show, Eq)
 
 instance Shift (Constraint position stage) where
   shift = shiftDefault
 
 instance Shift.Functor (Constraint position stage) where
-  map category Constraint {startPosition, classx, head, arguments} =
-    Constraint
-      { startPosition,
-        classx = Shift.map category classx,
-        head,
-        arguments = fmap (Shift.map (Shift.Over category)) arguments
-      }
+  map category = \case
+    Constraint {startPosition, classx, head, arguments} ->
+      Constraint
+        { startPosition,
+          classx = Shift.map category classx,
+          head,
+          arguments = fmap (Shift.map (Shift.Over category)) arguments
+        }
+    Equality {startPosition, left, right, unsupported} ->
+      Equality
+        { startPosition,
+          left = Shift.map (Shift.Over category) left,
+          right = Shift.map (Shift.Over category) right,
+          unsupported
+        }
 
 instance FreeTypeVariables (Constraint position) where
-  freeTypeVariables target Constraint {classx, arguments} =
-    concat
-      [ FreeVariables.type2 target classx,
-        foldMap (freeTypeVariables $ FreeTermVariables.Over target) arguments
-      ]
+  freeTypeVariables target = \case
+    Constraint {classx, arguments} ->
+      concat
+        [ FreeVariables.type2 target classx,
+          foldMap (freeTypeVariables $ FreeTermVariables.Over target) arguments
+        ]
+    Equality {left, right} ->
+      concat
+        [ freeTypeVariables (FreeTermVariables.Over target) left,
+          freeTypeVariables (FreeTermVariables.Over target) right
+        ]
 
 anonymize :: Constraint position stage scope -> Constraint () stage scope
-anonymize Constraint {classx, head, arguments} =
-  Constraint
-    { startPosition = (),
-      classx,
-      head,
-      arguments = Type.anonymize <$> arguments
-    }
+anonymize = \case
+  Constraint {classx, head, arguments} ->
+    Constraint
+      { startPosition = (),
+        classx,
+        head,
+        arguments = Type.anonymize <$> arguments
+      }
+  Equality {left, right, unsupported} ->
+    Equality
+      { startPosition = (),
+        left = Type.anonymize left,
+        right = Type.anonymize right,
+        unsupported
+      }

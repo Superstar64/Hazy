@@ -91,6 +91,7 @@ module Error
     unsupportedFeatureStrictFunctions,
     unsupportedFeaturePolymorphicComponents,
     unsupportedFeatureGADTs,
+    unsupportedFeatureEqualityConstraints,
   )
 where
 
@@ -549,6 +550,8 @@ constraintedTypeDefaulting = fromString "constrained type defaulting"
 
 runST = fromString "runST"
 
+equalityConstraints = fromString "equality constraints"
+
 unsupportedFeature :: Builder -> Position -> a
 unsupportedFeature feature position =
   errorAt UnsupportedFeature position $ fromString "unsupported feature: " <> feature
@@ -570,3 +573,6 @@ unsupportedFeaturePolymorphicComponents =
 
 unsupportedFeatureGADTs :: Position -> a
 unsupportedFeatureGADTs = unsupportedFeature gadts
+
+unsupportedFeatureEqualityConstraints :: Position -> a
+unsupportedFeatureEqualityConstraints = unsupportedFeature equalityConstraints

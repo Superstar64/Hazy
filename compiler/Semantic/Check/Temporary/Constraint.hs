@@ -8,6 +8,7 @@ import Data.List.Reverse (List (Nil, (:>)))
 import qualified Data.List.Reverse as Reverse
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
+import Error (unsupportedFeatureEqualityConstraints)
 import Semantic.Check.Context (Context (..))
 import qualified Semantic.Check.DataInstance as DataInstance
 import qualified Semantic.Check.LocalBinding as LocalBinding
@@ -85,6 +86,7 @@ check
     arguments <- Strict.Vector.fromList . toList <$> check context target (Reverse.fromList $ toList arguments)
 
     pure $ Constraint {startPosition, classx, head, arguments}
+check _ Semantic.Equality {startPosition} = unsupportedFeatureEqualityConstraints startPosition
 
 solve :: Context s (Local ':+ scope) -> Constraint s scope -> Unify.Solve s (Solved.Constraint Position Check scope)
 solve context Constraint {startPosition, classx, head, arguments} = do
