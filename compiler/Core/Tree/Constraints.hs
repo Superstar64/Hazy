@@ -5,7 +5,7 @@ import qualified Core.Substitute as Substitute
 import Core.Tree.Constraint (ConstraintF)
 import qualified Core.Tree.Constraint as Constraint
 import qualified Data.Vector.Strict as Strict
-import Semantic.Scope (IsVacuous, Vacuous)
+import Semantic.Scope (Vacuous)
 import Semantic.Shift (Shift (..), shiftDefault)
 import qualified Semantic.Shift as Shift
 import Semantic.Stage (Check)
@@ -26,10 +26,10 @@ instance (Shift.Functor logical) => Shift.Functor (ConstraintsF logical) where
     Constraints constraints -> Constraints $ Shift.map category <$> constraints
     None -> None
 
-instance (IsVacuous logical, Shift.Functor logical) => Shift2.Functor (ConstraintsF logical) where
+instance (logical ~ Vacuous) => Shift2.Functor (ConstraintsF logical) where
   map = Substitute.mapDefault
 
-instance (IsVacuous logical, Shift.Functor logical) => Substitute.Functor (ConstraintsF logical) where
+instance (logical ~ Vacuous) => Substitute.Functor (ConstraintsF logical) where
   map category = \case
     Constraints constraints -> Constraints $ Substitute.map category <$> constraints
     None -> None

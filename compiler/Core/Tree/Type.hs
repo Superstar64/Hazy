@@ -8,7 +8,7 @@ import qualified Semantic.Index.Constructor as Constructor
 import Semantic.Index.Local (Index (Local, Shift))
 import qualified Semantic.Index.Local as Local
 import qualified Semantic.Index.Type2 as Type2
-import Semantic.Scope (Equal (..), IsVacuous (isVacuous), Vacuous)
+import Semantic.Scope (Vacuous)
 import qualified Semantic.Scope as Scope
 import Semantic.Shift (Shift, shift, shiftDefault)
 import qualified Semantic.Shift as Shift
@@ -98,12 +98,11 @@ instance (Shift.Functor logical) => Shift.Functor (TypeF logical) where
 instance (Scope.Show logical) => Scope.Show (TypeF logical) where
   showsPrec = showsPrec
 
--- todo include Shift.Functor as superclass as IsVacuous
-instance (IsVacuous logical, Shift.Functor logical) => Shift2.Functor (TypeF logical) where
+instance (logical ~ Vacuous) => Shift2.Functor (TypeF logical) where
   map = Substitute.mapDefault
 
-instance (IsVacuous logical, Shift.Functor logical) => Substitute.Functor (TypeF logical) where
-  map | Refl <- isVacuous :: Scope.Equal Vacuous logical = Substitute.mapType
+instance (logical ~ Vacuous) => Substitute.Functor (TypeF logical) where
+  map = Substitute.mapType
 
 instance Substitute.TypeFunctor TypeF where
   mapType (Substitute lift replacements _) (Variable index) = case index of

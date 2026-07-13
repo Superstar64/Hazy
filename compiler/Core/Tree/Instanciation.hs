@@ -4,7 +4,7 @@ import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
 import Core.Tree.Evidence (EvidenceF)
 import qualified Data.Vector.Strict as Strict
-import Semantic.Scope (Equal (..), IsVacuous (isVacuous), Vacuous)
+import Semantic.Scope (Vacuous)
 import qualified Semantic.Scope as Scope
 import Semantic.Shift (Shift (..), shiftDefault)
 import qualified Semantic.Shift as Shift
@@ -29,11 +29,11 @@ instance (Shift.Functor logical) => Shift.Functor (InstanciationF logical) where
       Instanciation (Shift.map category <$> instanciation)
     Mono -> Mono
 
-instance (IsVacuous logical, Shift.Functor logical) => Shift2.Functor (InstanciationF logical) where
+instance (logical ~ Vacuous) => Shift2.Functor (InstanciationF logical) where
   map = Substitute.mapDefault
 
-instance (IsVacuous logical, Shift.Functor logical) => Substitute.Functor (InstanciationF logical) where
-  map | Refl <- isVacuous :: Scope.Equal Vacuous logical = Substitute.mapEvidence
+instance (logical ~ Vacuous) => Substitute.Functor (InstanciationF logical) where
+  map = Substitute.mapEvidence
 
 instance Substitute.EvidenceFunctor InstanciationF where
   mapEvidence category = \case

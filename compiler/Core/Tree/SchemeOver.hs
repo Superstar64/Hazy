@@ -8,7 +8,7 @@ import Core.Tree.Type (TypeF)
 import qualified Data.Kind
 import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
-import Semantic.Scope (Environment (..), IsVacuous, Local, Vacuous)
+import Semantic.Scope (Environment (..), Local, Vacuous)
 import qualified Semantic.Scope as Scope
 import Semantic.Shift (Shift (..), shiftDefault)
 import qualified Semantic.Shift as Shift
@@ -49,10 +49,7 @@ instance (Shift.Functor logical, Shift.Functor typex) => Shift.Functor (SchemeOv
         result = Shift.map (Shift.Over category) result
       }
 
-instance
-  (IsVacuous logical, Shift.Functor logical, Shift2.Functor typex) =>
-  Shift2.Functor (SchemeOverF logical typex)
-  where
+instance (logical ~ Vacuous, Shift2.Functor typex) => Shift2.Functor (SchemeOverF logical typex) where
   map category SchemeOver {parameters, constraints, result} =
     SchemeOver
       { parameters = fmap (Shift2.map category) parameters,
@@ -60,10 +57,7 @@ instance
         result = Shift2.map (Shift2.Over category) result
       }
 
-instance
-  (IsVacuous logical, Shift.Functor logical, Substitute.Functor typex) =>
-  Substitute.Functor (SchemeOverF logical typex)
-  where
+instance (logical ~ Vacuous, Substitute.Functor typex) => Substitute.Functor (SchemeOverF logical typex) where
   map category SchemeOver {parameters, constraints, result} =
     SchemeOver
       { parameters = fmap (Substitute.map category) parameters,

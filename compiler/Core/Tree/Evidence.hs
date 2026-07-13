@@ -8,7 +8,7 @@ import {-# SOURCE #-} qualified Core.Tree.Instanciation as Instanciation
 import qualified Data.Vector as Vector
 import qualified Semantic.Index.Evidence as Evidence
 import qualified Semantic.Index.Evidence0 as Evidence0
-import Semantic.Scope (Equal (..), IsVacuous (isVacuous), Vacuous)
+import Semantic.Scope (Vacuous)
 import qualified Semantic.Scope as Scope
 import Semantic.Shift (Shift, shift, shiftDefault)
 import qualified Semantic.Shift as Shift
@@ -62,11 +62,11 @@ instance (Shift.Functor logical) => Shift.Functor (EvidenceF logical) where
           index
         }
 
-instance (IsVacuous logical, Shift.Functor logical) => Shift2.Functor (EvidenceF logical) where
+instance (logical ~ Vacuous) => Shift2.Functor (EvidenceF logical) where
   map = Substitute.mapDefault
 
-instance (IsVacuous logical, Shift.Functor logical) => Substitute.Functor (EvidenceF logical) where
-  map | Refl <- isVacuous :: Scope.Equal Vacuous logical = Substitute.mapEvidence
+instance (logical ~ Vacuous) => Substitute.Functor (EvidenceF logical) where
+  map = Substitute.mapEvidence
 
 instance Substitute.EvidenceFunctor EvidenceF where
   mapEvidence

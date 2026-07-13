@@ -7,8 +7,7 @@ import qualified Core.Tree.Type as Type
 import qualified Data.Vector.Strict as Strict
 import qualified Semantic.Index.Local as Local
 import qualified Semantic.Index.Type2 as Type2
-import Semantic.Scope (Environment (..), Equal (..), IsVacuous (isVacuous), Local, Vacuous)
-import qualified Semantic.Scope as Scope
+import Semantic.Scope (Environment (..), Local, Vacuous)
 import Semantic.Shift (Shift, shift, shiftDefault)
 import qualified Semantic.Shift as Shift
 import Semantic.Stage (Check)
@@ -34,11 +33,11 @@ instance (Shift.Functor logical) => Shift.Functor (ConstraintF logical) where
         arguments = Shift.map (Shift.Over category) <$> arguments
       }
 
-instance (IsVacuous logical, Shift.Functor logical) => Shift2.Functor (ConstraintF logical) where
+instance (logical ~ Vacuous) => Shift2.Functor (ConstraintF logical) where
   map = Substitute.mapDefault
 
-instance (IsVacuous logical, Shift.Functor logical) => Substitute.Functor (ConstraintF logical) where
-  map | Refl <- isVacuous :: Scope.Equal Vacuous logical = Substitute.mapType
+instance (logical ~ Vacuous) => Substitute.Functor (ConstraintF logical) where
+  map = Substitute.mapType
 
 instance Substitute.TypeFunctor ConstraintF where
   mapType category Constraint {classx, head, arguments} =

@@ -13,8 +13,6 @@ module Semantic.Scope
     Eq (..),
     shows,
     Vacuous,
-    IsVacuous (..),
-    Equal (..),
   )
 where
 
@@ -72,13 +70,3 @@ instance Show Vacuous where
 
 instance Eq Vacuous where
   (==) = \case {}
-
-class IsVacuous functor where
-  isVacuous :: Equal Vacuous functor
-
-instance IsVacuous Vacuous where
-  isVacuous = Refl
-
-type Equal :: (Environment -> Type) -> (Environment -> Type) -> Type
-data Equal functor functor' where
-  Refl :: Equal functor functor
