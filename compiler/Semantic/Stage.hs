@@ -30,10 +30,3 @@ class IsResolve stage where
 
 instance IsResolve 'Resolve where
   isResolve = Refl
-
-type IsCheck :: Stage -> Constraint
-class IsCheck stage where
-  isCheck :: Equal Check stage
-
-instance IsCheck 'Check where
-  isCheck = Refl
