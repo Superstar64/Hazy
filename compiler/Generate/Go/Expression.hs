@@ -10,8 +10,8 @@ import Core.Tree.Expression (Expression (..))
 import Core.Tree.Instanciation (Instanciation, InstanciationF (Instanciation))
 import qualified Core.Tree.Instanciation as Instanciation
 import Core.Tree.MethodInfo (MethodInfo (..))
-import Core.Tree.SchemeOver (SchemeOver, SchemeOverF (..))
-import qualified Core.Tree.SchemeOver as SchemeOver
+import Core.Tree.TypeLambda (TypeLambda, TypeLambdaOver (..))
+import qualified Core.Tree.TypeLambda as TypeLambda
 import Data.Char (ord)
 import Data.Foldable (toList)
 import qualified Data.Vector as Vector
@@ -282,9 +282,9 @@ generateInto context target = \case
     (extra, value) <- generateImpure context expression
     pure $ extra ++ [finish target value]
 
-declaration :: Context s scope -> SchemeOver Expression scope -> ST s Javascript.Expression
-declaration context scheme@SchemeOver {result = expression} = do
-  let constraintCount = SchemeOver.constraintCount scheme
+declaration :: Context s scope -> TypeLambda scope -> ST s Javascript.Expression
+declaration context scheme@TypeLambdaOver {result = expression} = do
+  let constraintCount = TypeLambda.constraintCount scheme
       actualCount = case constraintCount of
         ConstraintCount count -> count
         Null -> 0

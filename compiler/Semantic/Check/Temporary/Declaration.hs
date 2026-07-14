@@ -3,12 +3,12 @@ module Semantic.Check.Temporary.Declaration where
 import Control.Monad.ST (ST)
 import qualified Core.Tree.Constraints as Simple.Constraints (simplify)
 import qualified Core.Tree.Type as Simple (simplify)
+import qualified Core.Tree.TypeLambda as Simple (TypeLambdaOver (..))
 import qualified Data.Vector as Vector
 import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Context (Context (..), groupTermBindings)
 import qualified Semantic.Check.Go.Scheme as Solved.Scheme
 import qualified Semantic.Check.Mask as Mask
-import qualified Semantic.Check.Simple.Constraints as Simple.Constraints (lift)
 import qualified Semantic.Check.Simple.Scheme as Simple.Scheme
 import Semantic.Check.Simple.Type (lift)
 import qualified Semantic.Check.Temporary.Definition3 as Definition3
@@ -43,29 +43,28 @@ data Declaration locality s scope
   { position :: !Position,
     name :: !Key,
     definition :: !(Definition4 locality s scope),
-    typex :: !(Unify.Scheme s scope)
+    typex :: !(Unify.Forall s scope)
   }
 
 typex' = typex
 
 check ::
   Context s scope ->
-  (Term.Link locality -> Int -> ST s (Unify.Scheme s scope)) ->
+  (Term.Link locality -> Int -> ST s (Unify.Forall s scope)) ->
   TypeAnnotation scope ->
   Semantic.Declaration locality Group Resolve scope ->
   ST s (Declaration locality s scope)
 check context linked annotation Semantic.Declaration {position, name, definition} = case definition of
   Semantic.Annotated {} Semantic.::: Implicit.Resolve definition
     | Annotated Annotation {annotation, annotation'} <- annotation -> do
-        definition <- checkAnnotation context position annotation $ \context typex ->
-          Definition3.checkManual context typex definition
+        definition <- checkAnnotation context position annotation $ \context typex -> do
+          definition <- Definition3.checkManual context typex definition
+          pure $ Definition3.solve position definition
         pure
           Declaration
             { position,
               name,
-              definition =
-                Semantic.Annotated annotation
-                  ::: Unify.solveSchemeOver (Unify.SolveScheme Definition3.solve) position definition,
+              definition = Semantic.Annotated annotation ::: definition,
               typex = Simple.Scheme.lift annotation'
             }
     | otherwise -> error "bad type annotation"
@@ -86,13 +85,13 @@ check context linked annotation Semantic.Declaration {position, name, definition
             set <- traverse solveElement set
             pure $ Solved.Set set
       pure $ types Unify.::: solved
-    let initial = Unify.MapScheme $ \(Types types) -> Strict.Vector.head types
+    let initial = Unify.MapForall $ \(Types types) -> Strict.Vector.head types
     pure
       Declaration
         { position,
           name,
           definition = types Definition4.:::: set,
-          typex = Unify.Scheme $ Unify.mapScheme initial types
+          typex = Unify.mapForall initial types
         }
   Semantic.Link link id -> do
     typex <- linked link id
@@ -110,9 +109,9 @@ checkAnnotation ::
   Solved.Scheme Position Check scope ->
   ( Context s (Local ':+ scope) ->
     Unify.Type s (Local ':+ scope) ->
-    ST s (typex s (Local ':+ scope))
+    ST s (Unify.Solve s (typex (Local ':+ scope)))
   ) ->
-  ST s (Unify.SchemeOver typex s scope)
+  ST s (Unify.Solve s (Simple.TypeLambdaOver typex scope))
 checkAnnotation
   context
   position
@@ -126,14 +125,17 @@ checkAnnotation
       let typex = lift $ Simple.simplify result
       context <- Solved.Scheme.augment position parameters constraints Mask.Runtime context
       definition <- go context typex
-      pure $
-        Unify.schemeOver
-          (lift . TypePattern.typex' <$> parameters)
-          (Simple.Constraints.lift $ Simple.Constraints.simplify $ constraints)
-          definition
+      pure $ do
+        definition <- definition
+        pure
+          Simple.TypeLambdaOver
+            { parameters = TypePattern.typex' <$> parameters,
+              constraints = Simple.Constraints.simplify constraints,
+              result = definition
+            }
 
 solve :: Declaration locality s scope -> Unify.Solve s (Solved.Declaration locality Group Check scope)
 solve Declaration {position, name, definition, typex} = do
   definition <- Definition4.solve position definition
-  typex <- Unify.solveScheme position typex
+  typex <- Unify.solveForall position typex
   pure Solved.Declaration {position, name, definition, typex = Solved typex}

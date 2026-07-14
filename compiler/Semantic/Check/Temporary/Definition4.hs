@@ -1,10 +1,10 @@
 module Semantic.Check.Temporary.Definition4 where
 
-import qualified Core.Tree.SchemeOver as Simple (SchemeOver)
+import qualified Core.Tree.TypeLambda as Simple (TypeLambdaOver)
 import qualified Data.Vector.Strict as Strict
 import qualified Semantic.Index.Link.Term as Term
 import Semantic.Layout (Group)
-import Semantic.Scope (Environment (..))
+import Semantic.Scope (Environment (..), Vacuous)
 import qualified Semantic.Scope as Scope
 import Semantic.Stage (Check)
 import qualified Semantic.Tree.Combinators.Implicit as Implicit
@@ -24,12 +24,12 @@ import Syntax.Position (Position)
 data Definition4 locality s scope where
   (:::) ::
     !(Solved.Annotation mark Group Check scope) ->
-    !(Unify.Solve s (Simple.SchemeOver (Solved.Definition3 mark Group Check) scope)) ->
+    !(Unify.Solve s (Simple.TypeLambdaOver (Solved.Definition3 mark Group Check) scope)) ->
     Definition4 locality s scope
   Link :: !(Term.Link locality) -> !Int -> Definition4 locality s scope
   (::::) ::
-    !(Unify.SchemeOver Types s scope) ->
-    !(Unify.Solve s (Simple.SchemeOver (Solved.Set locality Check) scope)) ->
+    !(Unify.ForallOver Types s scope) ->
+    !(Unify.Solve s (Simple.TypeLambdaOver (Solved.Set locality Check) scope)) ->
     Definition4 locality s scope
 
 infix 5 :::, ::::
@@ -56,11 +56,11 @@ solve position = \case
     pure $ annotation Solved.::: Implicit.Check definition
   Link link id -> pure (Solved.Link link id)
   types :::: set -> do
-    types <- Unify.solveSchemeOver (Unify.SolveScheme solveTypes) position types
+    types <- Unify.solveForallOver (Unify.SolveForall solveTypes) position types
     set <- set
     pure $ Inferred.Solved types Solved.:::: Implicit.Check set
 
-solveTypes :: Position -> Types s1 scope1 -> Unify.Solve s1 (Solved.Types scope1)
+solveTypes :: Position -> Types s1 scope1 -> Unify.Solve s1 (Solved.Types Vacuous scope1)
 solveTypes position (Types types) = do
   types <- traverse (Unify.solve position) types
   pure $ Solved.Types types

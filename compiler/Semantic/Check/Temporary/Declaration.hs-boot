@@ -12,4 +12,4 @@ type role Declaration nominal nominal nominal
 type Declaration :: Locality -> Type -> Environment -> Type
 data Declaration locality s scope
 
-typex' :: Declaration locality s scope -> Unify.Scheme s scope
+typex' :: Declaration locality s scope -> Unify.Forall s scope

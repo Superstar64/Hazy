@@ -3,7 +3,7 @@
 module Semantic.Check.TypeAnnotation where
 
 import Control.Monad.ST (ST)
-import {-# SOURCE #-} qualified Core.Tree.Scheme as Simple
+import qualified Core.Tree.Forall as Simple
 import {-# SOURCE #-} Semantic.Check.Context (Context)
 import {-# SOURCE #-} qualified Semantic.Check.Temporary.Scheme as Scheme (check, solve)
 import Semantic.Layout (Group)
@@ -17,7 +17,7 @@ import Syntax.Position (Position)
 
 data Annotation scope = Annotation
   { annotation :: !(Scheme Position Check scope),
-    annotation' :: !(Simple.Scheme scope)
+    annotation' :: !(Simple.Forall scope)
   }
 
 data TypeAnnotation scope

@@ -1,8 +1,10 @@
 module Semantic.Tree.Definition4 where
 
-import Core.Tree.SchemeOver (SchemeOver, SchemeOverF (..))
-import qualified Core.Tree.SchemeOver as SchemeOver
-import qualified Core.Tree.Type as Simple
+import qualified Core.Show as Core
+import Core.Tree.Forall (ForallOver (..))
+import qualified Core.Tree.Type as Simple (TypeF)
+import Core.Tree.TypeLambda (TypeLambdaOver (..))
+import qualified Core.Tree.TypeLambda as TypeLambda
 import Data.Kind (Type)
 import qualified Data.Set as Set
 import qualified Data.Strict.Maybe as Strict.Maybe
@@ -17,7 +19,7 @@ import qualified Semantic.Index.Link.Term as Term
 import qualified Semantic.Index.Term0 as Term0
 import Semantic.Layout (Group, Layout, Normal)
 import Semantic.Locality (Locality)
-import Semantic.Scope (Environment (..))
+import Semantic.Scope (Environment (..), Vacuous)
 import qualified Semantic.Scope as Scope
 import Semantic.Shift (Shift, shift, shiftDefault)
 import qualified Semantic.Shift as Shift
@@ -40,7 +42,7 @@ data Definition4 locality layout stage scope where
     Definition4 locality layout stage scope
   Link :: !(Term.Link locality) -> !Int -> Definition4 locality Group stage scope
   (::::) ::
-    !(Inferred (SchemeOver Types) stage scope) ->
+    !(Inferred (ForallOver Types Vacuous) stage scope) ->
     !(Implicit (Set locality stage) stage scope) ->
     Definition4 locality Group stage scope
 
@@ -92,16 +94,19 @@ instance Show (Annotation mark scope layout stage) where
     Annotated scheme -> showParen (d > 10) $ showString "Annotated " . showsPrec 11 scheme
     Inferred -> showString "Inferred"
 
-newtype Types scope = Types (Strict.Vector (Simple.Type scope))
+newtype Types logical scope = Types (Strict.Vector (Simple.TypeF logical scope))
   deriving (Show)
 
-instance Scope.Show Types where
+instance Core.Show Types where
   showsPrec = showsPrec
 
-instance Shift Types where
+instance (Scope.Show logcial) => Scope.Show (Types logcial) where
+  showsPrec = showsPrec
+
+instance (Shift.Functor logical) => Shift (Types logical) where
   shift = shiftDefault
 
-instance Shift.Functor Types where
+instance (Shift.Functor logical) => Shift.Functor (Types logical) where
   map category (Types types) = Types (Shift.map category <$> types)
 
 newtype Set locality stage scope
@@ -171,14 +176,14 @@ ungroup ::
   Definition4 locality Group Check scope ->
   Definition4 locality Normal Check scope
 ungroup _ _ (Annotated annotation ::: Implicit.Check definition) =
-  Annotated annotation ::: Implicit.Check (SchemeOver.map (SchemeOver.Map Connect.seperate) definition)
+  Annotated annotation ::: Implicit.Check (TypeLambda.map (TypeLambda.Map Connect.seperate) definition)
 ungroup index lookup definition = case definition of
   Link index id -> Inferred ::: go id (lookup index)
   (_ :::: set) -> Inferred ::: go 0 set
   where
-    go id (Implicit.Check SchemeOver {parameters, constraints, result = Set set}) =
+    go id (Implicit.Check TypeLambdaOver {parameters, constraints, result = Set set}) =
       Implicit.Check $
-        SchemeOver
+        TypeLambdaOver
           { parameters,
             constraints,
             result = Connect.seperate $ Shift.map (Shift.UngroupTerm original) element

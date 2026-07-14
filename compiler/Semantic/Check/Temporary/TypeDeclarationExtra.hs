@@ -10,7 +10,7 @@ import Semantic.Check.Context (Context)
 import Semantic.Check.Go.TypeDeclaration (TypeDeclaration (..))
 import qualified Semantic.Check.Go.TypeDeclaration as TypeDeclaration
 import qualified Semantic.Check.Mask as Mask
-import Semantic.Check.Simple.SchemeOver (augment)
+import Semantic.Check.Simple.Scheme (augment)
 import Semantic.Check.Temporary.MethodAbstract (MethodAbstract)
 import qualified Semantic.Check.Temporary.MethodAbstract as MethodAbstract
 import qualified Semantic.Index.Type as Type

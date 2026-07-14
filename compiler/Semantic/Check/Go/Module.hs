@@ -1,8 +1,7 @@
 module Semantic.Check.Go.Module (Module (..), check) where
 
 import Control.Monad.ST (ST)
-import Core.Tree.Scheme (Scheme (..))
-import qualified Core.Tree.SchemeOver as Scheme
+import qualified Core.Tree.Forall as Forall
 import qualified Core.Tree.Type as Simple
 import qualified Data.Map as Map
 import Data.Vector (Vector)
@@ -162,16 +161,16 @@ checkTermDeclaration global local declaration = Formula7 {cycle, run}
       let Functor.Module {declarations} = modules Vector.! global
           Functor.Declarations {terms} = declarations
           Functor.Annotated {meta} = terms Vector.! local
-          link :: Link.Term.Link Locality.Global -> Int -> ST s (Unify.Scheme s Global)
+          link :: Link.Term.Link Locality.Global -> Int -> ST s (Unify.Forall s Global)
           link (Link.Term.Global global local) id = do
             let Functor.Module {declarations} = modules Vector.! global
                 Functor.Declarations {terms} = declarations
                 Functor.Annotated {content} = terms Vector.! local
             Declaration {definition} <- content
             pure $ case definition of
-              Solved types Definition4.:::: _ -> Simple.Scheme.lift $ Scheme $ Scheme.map go types
+              Solved types Definition4.:::: _ -> Simple.Scheme.lift $ Forall.map go types
                 where
-                  go = Scheme.Map $ \case
+                  go = Forall.Map $ \case
                     Definition4.Types types -> types Strict.Vector.! id
               _ -> error "bad link lookup"
       annotation <- meta

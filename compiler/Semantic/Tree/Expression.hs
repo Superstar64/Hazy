@@ -4,8 +4,7 @@ module Semantic.Tree.Expression where
 
 import qualified Core.Tree.Evidence as Simple (Evidence)
 import qualified Core.Tree.Instanciation as Simple (Instanciation (..))
-import qualified Core.Tree.SchemeOver as SchemeOver
-import qualified Core.Tree.SchemeOver as Simple (SchemeOver)
+import qualified Core.Tree.TypeLambda as Simple (Map (..), TypeLambdaOver (..), map)
 import qualified Data.Strict.Vector1 as Strict (Vector1)
 import qualified Data.Strict.Vector2 as Strict (Vector2)
 import qualified Data.Vector.Strict as Strict (Vector)
@@ -544,7 +543,7 @@ instance Connect Expression where
 
 data Explicit layout stage scope where
   Explicit :: !(Expression layout Resolve (Scope.Local ':+ scope)) -> Explicit layout Resolve scope
-  Known :: !(Simple.SchemeOver (Expression layout Check) scope) -> Explicit layout Check scope
+  Known :: !(Simple.TypeLambdaOver (Expression layout Check) scope) -> Explicit layout Check scope
 
 instance Show (Explicit layout stage scope) where
   showsPrec d = \case
@@ -564,7 +563,7 @@ instance FreeTermVariables (Explicit layout) where
 
 instance Connect Explicit where
   connect (Explicit expression) = Explicit (connect expression)
-  seperate (Known expression) = Known (SchemeOver.map (SchemeOver.Map seperate) expression)
+  seperate (Known expression) = Known (Simple.map (Simple.Map seperate) expression)
 
 callHead_ :: CallHead Resolve scope -> Expression Normal Resolve scope
 callHead_ callHead = CallHead {callHead}

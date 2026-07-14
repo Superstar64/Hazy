@@ -4,19 +4,19 @@ import Control.Monad.ST (ST)
 import {-# SOURCE #-} qualified Core.Builtin as Builtin
 import Core.Substitute (Category (Substitute))
 import qualified Core.Substitute as Substitute
-import {-# SOURCE #-} qualified Core.Tree.Class as Simple.Class
+import qualified Core.Tree.Class as Simple.Class
 import Core.Tree.ClassExtra (ClassExtra (..))
 import qualified Core.Tree.Constraint as Simple (ConstraintF (Constraint))
 import qualified Core.Tree.Constraint as Simple.Constraint
 import qualified Core.Tree.Evidence as Simple (Evidence)
 import qualified Core.Tree.Evidence as Simple.Evidence
+import qualified Core.Tree.Forall as Simple (ForallOver (..))
 import qualified Core.Tree.Instanciation as Simple (InstanciationF (..))
 import qualified Core.Tree.Instanciation as Simple.Instanciation
-import qualified Core.Tree.Scheme as Simple (Scheme (..))
-import qualified Core.Tree.SchemeOver as Simple (SchemeOverF (..))
 import qualified Core.Tree.Type as Simple.Type (TypeF (..))
 import Core.Tree.TypeDeclaration (assumeClass)
 import qualified Core.Tree.TypeDeclarationExtra as Extra
+import qualified Core.Tree.TypeLambda as Simple (TypeLambdaOver (..))
 import Data.Traversable (for)
 import qualified Data.Vector as Vector
 import Data.Vector.Strict (izipWithM)
@@ -27,8 +27,7 @@ import qualified Semantic.Check.Go.Scheme as Scheme
 import Semantic.Check.InstanceAnnotation (InstanceAnnotation (InstanceAnnotation))
 import qualified Semantic.Check.InstanceAnnotation as InstanceAnnotation
 import qualified Semantic.Check.Mask as Mask
-import qualified Semantic.Check.Simple.Constraints as Simple.Constraints
-import qualified Semantic.Check.Simple.Scheme as Simple.Scheme (augment')
+import qualified Semantic.Check.Simple.Scheme as Simple.Scheme (augmentForall)
 import qualified Semantic.Check.Simple.Type as Simple.Type (lift)
 import qualified Semantic.Check.Temporary.Definition as Definition
 import Semantic.Check.Temporary.MethodConcrete (MethodConcrete (..))
@@ -141,13 +140,12 @@ check
           pure $
             let replacements = Vector.singleton base
                 category = Substitute.Over $ Substitute Shift.Shift replacements (error "no evidence")
-                substitute (Simple.Scheme Simple.SchemeOver {parameters, constraints, result}) =
-                  Simple.Scheme
-                    Simple.SchemeOver
-                      { parameters,
-                        constraints,
-                        result = Substitute.map category result
-                      }
+                substitute Simple.ForallOver {parameters, constraints, result} =
+                  Simple.ForallOver
+                    { parameters,
+                      constraints,
+                      result = Substitute.map category result
+                    }
              in substitute <$> methods
 
         evidence <- for constraints $
@@ -156,25 +154,28 @@ check
             evidence <- Unify.constrain context startPosition (shift classx) (Simple.Type.lift parameter)
             Unify.runSolve $ Unify.solveEvidence startPosition evidence
         let check _ scheme Semantic.Definition {definition = Semantic.Resolve member} = do
-              let Simple.Scheme Simple.SchemeOver {parameters, constraints, result} = scheme
+              let Simple.ForallOver {parameters, constraints, result} = scheme
               result <- pure $ Simple.Type.lift result
-              context <- Simple.Scheme.augment' startPosition scheme Mask.Runtime context
+              context <- Simple.Scheme.augmentForall startPosition scheme Mask.Runtime context
               definition <- Definition.check context result member
               pure
                 Definition
                   { position = startPosition,
-                    definition =
-                      Unify.schemeOver
-                        (Simple.Type.lift <$> parameters)
-                        (Simple.Constraints.lift constraints)
-                        definition
+                    definition = do
+                      result <- Definition.solve definition
+                      pure
+                        Simple.TypeLambdaOver
+                          { parameters,
+                            constraints,
+                            result
+                          }
                   }
             check index scheme Semantic.Default {} = do
-              let Simple.Scheme Simple.SchemeOver {parameters, constraints} = scheme
+              let Simple.ForallOver {parameters, constraints} = scheme
                   defaultx = do
                     ClassExtra {defaults} <- extra
                     pure $
-                      Simple.SchemeOver
+                      Simple.TypeLambdaOver
                         { parameters,
                           constraints,
                           result = defaults Strict.Vector.! index

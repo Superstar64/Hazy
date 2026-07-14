@@ -8,7 +8,7 @@ import qualified Core.Tree.Constraint as Constraint
 import qualified Core.Tree.Constructor as Constructor
 import Core.Tree.Data (Data)
 import qualified Core.Tree.Data as Data
-import qualified Core.Tree.Scheme as Scheme
+import qualified Core.Tree.Forall as Forall
 import Core.Tree.Type (Type)
 import qualified Core.Tree.Type as Type
 import Semantic.Scope (Environment ((:+)), Local)
@@ -68,6 +68,6 @@ simplify = \case
       Class.Class
         { parameter,
           constraints = Constraint.simplify <$> constraints,
-          methods = Scheme.simplify . Solved.Method.annotation <$> methods
+          methods = Forall.simplify . Solved.Method.annotation <$> methods
         }
   Solved.Synonym {synonym} -> Synonym (Type.simplify synonym)

@@ -2,7 +2,7 @@
 
 module Core.Tree.Declaration where
 
-import Core.Tree.SchemeOver (SchemeOver)
+import Core.Tree.TypeLambda (TypeLambdaOver)
 import Data.Kind (Type)
 import qualified Semantic.Check.Go.Scheme as Semantic
 import Semantic.Layout (Normal)
@@ -19,6 +19,6 @@ data Declaration scope
 instance Shift Declaration
 
 annotation ::
-  SchemeOver (Semantic.Expression Normal Check) scope ->
+  TypeLambdaOver (Semantic.Expression Normal Check) scope ->
   Semantic.Scheme position Check scope ->
   Declaration scope

@@ -6,11 +6,11 @@ import qualified Core.Substitute as Substitute
 import qualified Core.Temporary.Pattern as Pattern
 import Core.Tree.Expression (Expression)
 import qualified Core.Tree.Expression as Expression
-import Core.Tree.Scheme (Scheme)
-import qualified Core.Tree.Scheme as Scheme
-import Core.Tree.SchemeOver (SchemeOver, SchemeOverF (..))
-import qualified Core.Tree.SchemeOver as SchemeOver
+import Core.Tree.Forall (Forall)
+import qualified Core.Tree.Forall as Forall
 import qualified Core.Tree.Statements as Statements
+import Core.Tree.TypeLambda (TypeLambda, TypeLambdaOver (..))
+import qualified Core.Tree.TypeLambda as TypeLambda
 import qualified Semantic.Check.Go.Scheme as Semantic (Scheme)
 import qualified Semantic.Index.Term as Semantic.Term
 import Semantic.Layout (Normal)
@@ -29,8 +29,8 @@ import qualified Semantic.Tree.Expression as Semantic (Expression)
 
 data Declaration scope = Declaration
   { name :: !Key,
-    definition :: SchemeOver Expression scope,
-    typex :: Scheme scope
+    definition :: TypeLambda scope,
+    typex :: Forall scope
   }
   deriving (Show)
 
@@ -65,7 +65,7 @@ simplify = \case
           definition =
             case definition of
               _ Semantic.::: Check definition ->
-                SchemeOver.map (SchemeOver.Map definition3) definition,
+                TypeLambda.map (TypeLambda.Map definition3) definition,
           typex = case typex of Solved typex -> typex
         }
   where
@@ -94,17 +94,17 @@ simplify = \case
       Semantic.Definition2.Shared shared -> Expression.simplify shared
 
 annotation ::
-  SchemeOver (Semantic.Expression Normal Check) scope ->
+  TypeLambdaOver (Semantic.Expression Normal Check) scope ->
   Semantic.Scheme position Check scope ->
   Declaration scope
-annotation SchemeOver {parameters, constraints, result} scheme =
+annotation TypeLambdaOver {parameters, constraints, result} scheme =
   Declaration
     { name = Unnamed 0,
       definition =
-        SchemeOver
+        TypeLambdaOver
           { parameters,
             constraints,
             result = Expression.simplify result
           },
-      typex = Scheme.simplify scheme
+      typex = Forall.simplify scheme
     }

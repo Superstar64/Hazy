@@ -1,6 +1,7 @@
 module Core.Tree.Type where
 
 import qualified Core.Shift as Shift2
+import qualified Core.Show as Core
 import Core.Substitute (Category (..))
 import qualified Core.Substitute as Substitute
 import qualified Data.Vector as Vector
@@ -33,6 +34,9 @@ data TypeF logical scope
 infixr 0 `Function`
 
 infixl 9 `Call`
+
+instance Core.Show TypeF where
+  showsPrec = showsPrec
 
 instance (Scope.Show logical) => Show (TypeF logical scope) where
   showsPrec p = \case

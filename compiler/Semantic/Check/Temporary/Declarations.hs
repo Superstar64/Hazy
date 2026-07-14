@@ -155,14 +155,14 @@ checkTermDeclaration context index declaration = Formula7 {cycle, run}
     run declarations@Functor.Declarations {terms} = do
       context <- pure $ localBindings declarations context
       let Functor.Annotated {meta} = terms Vector.! index
-          link :: Term.Link Locality.Local -> Int -> ST s (Unify.Scheme s (Scope.Declaration ':+ scope))
+          link :: Term.Link Locality.Local -> Int -> ST s (Unify.Forall s (Scope.Declaration ':+ scope))
           link (Term.Declaration local) id = do
             let Functor.Annotated {content} = terms Vector.! local
             Declaration {definition} <- content
             pure $ case definition of
-              types Definition4.:::: _ -> Unify.Scheme $ Unify.mapScheme go types
+              types Definition4.:::: _ -> Unify.mapForall go types
                 where
-                  go = Unify.MapScheme $ \case
+                  go = Unify.MapForall $ \case
                     Definition4.Types types -> types Strict.Vector.! id
               _ -> error "bad link lookup"
       annotation <- meta

@@ -8,12 +8,12 @@ import {-# SOURCE #-} qualified Semantic.Unify as Unify
 data ClassInstance s scope = ClassInstance
   { typex :: !(Unify.Type s scope),
     evidence :: !(Unify.Evidence s scope),
-    methods :: !(Strict.Vector (Unify.Scheme s scope)),
+    methods :: !(Strict.Vector (Unify.Forall s scope)),
     constraintCount :: !Int
   }
 
 info :: ClassInstance s scope -> MethodInfo scope
 info ClassInstance {constraintCount} = MethodInfo {constraintCount}
 
-methodFunction :: ClassInstance s scope -> Int -> Unify.Scheme s scope
+methodFunction :: ClassInstance s scope -> Int -> Unify.Forall s scope
 methodFunction ClassInstance {methods} index = methods Strict.Vector.! index

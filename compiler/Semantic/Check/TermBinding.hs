@@ -1,7 +1,7 @@
 module Semantic.Check.TermBinding where
 
 import Control.Monad.ST (ST)
-import {-# SOURCE #-} qualified Core.Tree.Scheme as Simple (Scheme)
+import qualified Core.Tree.Forall as Simple (Forall)
 import qualified Semantic.Check.Functor.Annotated as Functor (Annotated (..))
 import {-# SOURCE #-} qualified Semantic.Check.Temporary.Declaration as Temporary
 import Semantic.Check.TypeAnnotation (Annotation (..), TypeAnnotation (..))
@@ -13,8 +13,8 @@ import {-# SOURCE #-} qualified Semantic.Tree.Declaration as Declaration
 import {-# SOURCE #-} qualified Semantic.Unify as Unify
 
 data Type s scope
-  = Wobbly !(Unify.Scheme s scope)
-  | Rigid !(Simple.Scheme scope)
+  = Wobbly !(Unify.Forall s scope)
+  | Rigid !(Simple.Forall scope)
 
 newtype TermBinding s scope = TermBinding
   {typex :: ST s (Type s scope)}
@@ -54,4 +54,4 @@ wobbly Functor.Annotated {meta, content} = TermBinding $ do
       Wobbly . Temporary.typex' <$> content
 
 group :: Unify.Type s scopes -> TermBinding s (GroupTerm ':+ scopes)
-group = TermBinding . pure . Wobbly . Unify.monoScheme . shift
+group = TermBinding . pure . Wobbly . Unify.mono . shift

@@ -30,8 +30,11 @@ instance (logical ~ Vacuous) => Shift2.Functor (ConstraintsF logical) where
   map = Substitute.mapDefault
 
 instance (logical ~ Vacuous) => Substitute.Functor (ConstraintsF logical) where
-  map category = \case
-    Constraints constraints -> Constraints $ Substitute.map category <$> constraints
+  map = Substitute.mapType
+
+instance Substitute.TypeFunctor ConstraintsF where
+  mapType category = \case
+    Constraints constraints -> Constraints $ Substitute.mapType category <$> constraints
     None -> None
 
 data ConstraintCount

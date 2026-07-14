@@ -1,10 +1,8 @@
 module Semantic.Tree.MethodConcrete where
 
 import qualified Core.Tree.Evidence as Simple (Evidence)
-import {-# SOURCE #-} qualified Core.Tree.Expression as Simple (Expression)
-import qualified Core.Tree.SchemeOver as SchemeOver
-import qualified Core.Tree.SchemeOver as Simple (SchemeOver)
 import qualified Core.Tree.Type as Simple (Type)
+import qualified Core.Tree.TypeLambda as Simple (Map (..), TypeLambda, map)
 import Semantic.Connect (Connect (..))
 import Semantic.Scope (Environment (..), Local)
 import Semantic.Shift (Shift, shiftDefault)
@@ -20,7 +18,7 @@ data MethodConcrete layout stage scope
   | Default
       { base :: !(Inferred Simple.Type stage (Local ':+ scope)),
         self :: !(Inferred Simple.Evidence stage (Local ':+ scope)),
-        defaultx :: !(Inferred (Simple.SchemeOver Simple.Expression) stage (Local ':+ scope))
+        defaultx :: !(Inferred (Simple.TypeLambda) stage (Local ':+ scope))
       }
   deriving (Show)
 
@@ -55,7 +53,7 @@ instance Connect MethodConcrete where
   seperate = \case
     Definition {definition = Check definition} ->
       Definition
-        { definition = Check (SchemeOver.map (SchemeOver.Map seperate) definition)
+        { definition = Check (Simple.map (Simple.Map seperate) definition)
         }
     Default {base, self, defaultx} ->
       Default

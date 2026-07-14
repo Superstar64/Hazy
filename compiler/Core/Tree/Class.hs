@@ -3,8 +3,8 @@ module Core.Tree.Class where
 import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
 import Core.Tree.Constraint (Constraint)
+import Core.Tree.Forall (Forall)
 import Core.Tree.MethodInfo (MethodInfo (..))
-import Core.Tree.Scheme (Scheme)
 import Core.Tree.Type (Type)
 import qualified Core.Tree.Type as Type
 import qualified Data.Vector.Strict as Strict
@@ -15,7 +15,7 @@ import qualified Semantic.Shift as Shift
 data Class scope = Class
   { parameter :: !(Type scope),
     constraints :: !(Strict.Vector (Constraint scope)),
-    methods :: !(Strict.Vector (Scheme (Local ':+ scope)))
+    methods :: !(Strict.Vector (Forall (Local ':+ scope)))
   }
   deriving (Show)
 

@@ -2,7 +2,7 @@ module Generate.Go.Expression where
 
 import Control.Monad.ST (ST)
 import Core.Tree.Expression (Expression)
-import Core.Tree.SchemeOver (SchemeOver)
+import Core.Tree.TypeLambda (TypeLambda)
 import Generate.Context (Context)
 import Generate.Target (Target)
 import qualified Javascript.Tree.Expression as Javascript (Expression)
@@ -24,4 +24,4 @@ data Binder
 
 force :: Javascript.Expression -> Javascript.Expression
 thunk :: Context s scope -> Binder -> Expression scope -> ST s Javascript.Expression
-declaration :: Context s scope -> SchemeOver Expression scope -> ST s Javascript.Expression
+declaration :: Context s scope -> TypeLambda scope -> ST s Javascript.Expression

@@ -1,11 +1,10 @@
 module Semantic.Check.Temporary.MethodAbstract where
 
 import Control.Monad.ST (ST)
-import qualified Core.Tree.Scheme as Simple (Scheme (..), simplify)
-import qualified Core.Tree.SchemeOver as Simple (SchemeOverF (..))
+import qualified Core.Tree.Forall as Simple (ForallOver (..), simplify)
 import Semantic.Check.Context (Context)
 import qualified Semantic.Check.Mask as Mask
-import Semantic.Check.Simple.SchemeOver (augment')
+import Semantic.Check.Simple.Scheme (augmentForall)
 import qualified Semantic.Check.Simple.Type as Simple.Type
 import Semantic.Check.Temporary.Definition (Definition)
 import qualified Semantic.Check.Temporary.Definition as Definition
@@ -31,8 +30,8 @@ check ::
   ST s (MethodAbstract s scope)
 check _ _ _ Semantic.Abstract = pure Abstract
 check context position Method {annotation} (Semantic.DefaultResolve definition)
-  | Simple.Scheme scheme@Simple.SchemeOver {result} <- Simple.simplify annotation = do
-      context <- augment' position scheme Mask.Runtime context
+  | scheme@Simple.ForallOver {result} <- Simple.simplify annotation = do
+      context <- augmentForall position scheme Mask.Runtime context
       definition <- Definition.check context (Simple.Type.lift result) (shift definition)
       pure $ DefaultCheck definition
 

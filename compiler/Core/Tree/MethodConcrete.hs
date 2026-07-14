@@ -4,9 +4,8 @@ import qualified Core.Shift as Shift2
 import Core.Substitute (Category (Substitute))
 import qualified Core.Substitute as Substitute
 import qualified Core.Tree.Expression as Expression
-import {-# SOURCE #-} Core.Tree.Expression (Expression)
-import Core.Tree.SchemeOver (SchemeOver (..))
-import qualified Core.Tree.SchemeOver as SchemeOver
+import Core.Tree.TypeLambda (TypeLambda)
+import qualified Core.Tree.TypeLambda as TypeLambda
 import qualified Data.Vector as Vector
 import Semantic.Layout (Normal)
 import Semantic.Scope (Environment (..), Local)
@@ -18,7 +17,7 @@ import Semantic.Tree.Combinators.Inferred (Inferred (Solved))
 import qualified Semantic.Tree.MethodConcrete as Semantic
 
 newtype MethodConcrete scope = Definition
-  { definition :: SchemeOver Expression (Local ':+ scope)
+  { definition :: TypeLambda (Local ':+ scope)
   }
   deriving (Show)
 
@@ -41,7 +40,7 @@ simplify :: Semantic.MethodConcrete Normal Check scope -> MethodConcrete scope
 simplify = \case
   Semantic.Definition {definition = Check definition} ->
     Definition
-      { definition = SchemeOver.map (SchemeOver.Map Expression.simplify) definition
+      { definition = TypeLambda.map (TypeLambda.Map Expression.simplify) definition
       }
   Semantic.Default {base = Solved base, self = Solved self, defaultx = Solved defaultx} ->
     Definition

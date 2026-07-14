@@ -1,7 +1,7 @@
 module Semantic.Check.Simple.Class where
 
 import Control.Monad.ST (ST)
-import {-# SOURCE #-} Core.Tree.Class (Class (..))
+import Core.Tree.Class (Class (..))
 import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.ClassInstance (ClassInstance (ClassInstance))
 import qualified Semantic.Check.ClassInstance as ClassInstance

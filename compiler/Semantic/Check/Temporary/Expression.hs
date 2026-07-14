@@ -3,6 +3,7 @@ module Semantic.Check.Temporary.Expression where
 import Control.Monad.ST (ST)
 import {-# SOURCE #-} qualified Core.Builtin as Builtin
 import {-# SOURCE #-} Core.Tree.TypeDeclaration (assumeData)
+import qualified Core.Tree.TypeLambda as Simple
 import qualified Data.Strict.Vector1 as Strict (Vector1)
 import qualified Data.Strict.Vector2 as Strict (Vector2)
 import qualified Data.Strict.Vector2 as Strict.Vector2
@@ -145,7 +146,7 @@ data Expression s scope
         dox :: !(Do s scope)
       }
   | Annotation
-      { expression :: !(Unify.SchemeOver Expression s scope),
+      { expression :: !(Unify.Solve s (Simple.TypeLambdaOver (Solved.Expression Group Check) scope)),
         operatorPosition :: !Position,
         annotation :: !(Scheme Position Check scope),
         instanciation :: !(Unify.Instanciation s scope)
@@ -297,7 +298,7 @@ check context typex Semantic.RightSection {left, operatorPosition, right} = do
 check context typex Semantic.Annotation {expression = Explicit expression, operatorPosition, annotation} = do
   Annotation.Annotation {annotation, annotation'} <- Annotation.checkAnnotation context annotation
   expression <- Declaration.checkAnnotation context operatorPosition annotation $
-    \context typex -> check context typex expression
+    \context typex -> solve <$> check context typex expression
   (typex', instanciation) <- instanciate context operatorPosition annotation'
   Unify.unify context operatorPosition typex typex'
   pure Annotation {expression, operatorPosition, annotation, instanciation}
@@ -384,7 +385,7 @@ solve = \case
     dox <- Do.solve dox
     pure Solved.Do {startPosition, dox}
   Annotation {expression, operatorPosition, annotation, instanciation} -> do
-    expression <- Unify.solveSchemeOver (Unify.SolveScheme $ const solve) operatorPosition expression
+    expression <- expression
     instanciation <- Unify.solveInstanciation operatorPosition instanciation
     pure
       Solved.Annotation

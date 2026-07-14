@@ -7,7 +7,8 @@ module Semantic.Unify
     Constraints,
     Constraint,
     Instanciation,
-    SchemeOver,
+    Forall,
+    ForallOver,
     Type,
     Solve,
   )
@@ -30,18 +31,12 @@ import {-# SOURCE #-} Semantic.Unify.Class
 import {-# SOURCE #-} Semantic.Unify.Constraint hiding (solve, unify)
 import {-# SOURCE #-} Semantic.Unify.Constraints (Constraints)
 import Semantic.Unify.Evidence (Evidence)
+import {-# SOURCE #-} Semantic.Unify.Forall (Forall, ForallOver)
 import {-# SOURCE #-} Semantic.Unify.Instanciation hiding (solve, unify)
-import {-# SOURCE #-} Semantic.Unify.SchemeOver
 import {-# SOURCE #-} Semantic.Unify.Type
 import Syntax.Position (Position)
 
-newtype Scheme s scope = Scheme
-  { runScheme :: SchemeOver Type s scope
-  }
-
-instance Shift (Scheme s)
-
-monoScheme :: Type s scope -> Scheme s scope
+mono :: (Shift (typex s)) => typex s scope -> ForallOver typex s scope
 variable :: Local.Index scope -> Type s scope
 constructor :: Type2.Index scope -> Type s scope
 call :: Type s scope -> Type s scope -> Type s scope
@@ -67,16 +62,11 @@ variable' :: Evidence.Index scope -> Instanciation s scope -> Evidence s scope
 super :: Evidence s scope -> Int -> Evidence s scope
 instanciation :: Strict.Vector (Evidence s scope) -> Instanciation s scope
 monoInstanciation :: Instanciation s scope
-scheme ::
-  Strict.Vector (Type s scope) ->
-  Constraints s scope ->
-  Type s (Scope.Local ':+ scope) ->
-  Scheme s scope
-schemeOver ::
+forallx ::
   Strict.Vector (Type s scope) ->
   Constraints s scope ->
   typex s (Scope.Local ':+ scope) ->
-  SchemeOver typex s scope
+  ForallOver typex s scope
 constraints :: Strict.Vector (Constraint s scope) -> Constraints s scope
 none :: Constraints s scope
 constraintx ::
@@ -84,7 +74,7 @@ constraintx ::
   Int ->
   Strict.Vector (Type s (Scope.Local ':+ scope)) ->
   Constraint s scope
-instanciate :: Context s scope -> Position -> Scheme s scope -> ST s (Type s scope, Instanciation s scope)
+instanciate :: Context s scope -> Position -> Forall s scope -> ST s (Type s scope, Instanciation s scope)
 liftST :: ST s a -> Solve s a
 runSolve :: Solve s a -> ST s a
 fresh :: Type s scope -> ST s (Type s scope)

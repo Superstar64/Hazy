@@ -2,7 +2,7 @@
 
 module Semantic.Tree.Declaration where
 
-import {-# SOURCE #-} qualified Core.Tree.Scheme as Simple
+import {-# SOURCE #-} qualified Core.Tree.Forall as Simple
 import Data.Kind (Type)
 import Semantic.Layout (Layout, Normal)
 import Semantic.Locality (Locality)
@@ -16,7 +16,7 @@ type role Declaration nominal nominal nominal nominal
 type Declaration :: Locality -> Layout -> Stage -> Environment -> Type
 data Declaration locality layout stage scope
 
-typex' :: Declaration locality layout Check scope -> Simple.Scheme scope
+typex' :: Declaration locality layout Check scope -> Simple.Forall scope
 
 newtype Groupable scope
   = Groupable

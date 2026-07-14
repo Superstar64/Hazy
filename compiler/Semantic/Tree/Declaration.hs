@@ -2,7 +2,7 @@
 
 module Semantic.Tree.Declaration where
 
-import {-# SOURCE #-} qualified Core.Tree.Scheme as Simple (Scheme)
+import qualified Core.Tree.Forall as Simple (Forall)
 import qualified Graph.StronglyConnected as StronglyConnected
 import Semantic.FreeVariables (FreeTermVariables (..), Target (Target))
 import qualified Semantic.Index.Link.Term as Term
@@ -33,7 +33,7 @@ data Declaration locality layout stage scope
   { position :: !Position,
     name :: !Key,
     definition :: Definition4 locality layout stage scope,
-    typex :: Inferred Simple.Scheme stage scope
+    typex :: Inferred Simple.Forall stage scope
   }
   deriving (Show)
 
@@ -49,7 +49,7 @@ lazy Declaration {position, name} ~Declaration {definition, typex} =
       typex
     }
 
-typex' :: Declaration locality layout Check scope -> Simple.Scheme scope
+typex' :: Declaration locality layout Check scope -> Simple.Forall scope
 typex' Declaration {typex = Solved typex} = typex
 
 instance Shift (Declaration layout locality stage) where

@@ -35,6 +35,7 @@ executable hazy
     Core.Index.Table.Term
     Core.Index.Term
     Core.Shift
+    Core.Show
     Core.Substitute
     Core.Temporary.Definition
     Core.Temporary.Function
@@ -53,19 +54,19 @@ executable hazy
     Core.Tree.EntryInfo
     Core.Tree.Evidence
     Core.Tree.Expression
+    Core.Tree.Forall
     Core.Tree.Hook
     Core.Tree.Instance
     Core.Tree.Instanciation
     Core.Tree.MethodConcrete
     Core.Tree.MethodInfo
     Core.Tree.Module
-    Core.Tree.Scheme
-    Core.Tree.SchemeOver
     Core.Tree.Statements
     Core.Tree.Type
     Core.Tree.TypeDeclaration
     Core.Tree.TypeDeclarationExtra
     Core.Tree.TypeDefinition
+    Core.Tree.TypeLambda
     Data.Functor2
     Data.Heptafoldable
     Data.Heptafunctor
@@ -229,7 +230,6 @@ executable hazy
     Semantic.Check.Simple.Instanciation
     Semantic.Check.Simple.MethodInfo
     Semantic.Check.Simple.Scheme
-    Semantic.Check.Simple.SchemeOver
     Semantic.Check.Simple.SelectorInfo
     Semantic.Check.Simple.Type
     Semantic.Check.Simple.UpdateInfo
@@ -419,8 +419,8 @@ executable hazy
     Semantic.Unify.Constraints
     Semantic.Unify.Error
     Semantic.Unify.Evidence
+    Semantic.Unify.Forall
     Semantic.Unify.Instanciation
-    Semantic.Unify.SchemeOver
     Semantic.Unify.Type
     Syntax.Extensions
     Syntax.FreeVariables

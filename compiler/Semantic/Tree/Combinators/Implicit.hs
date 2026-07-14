@@ -1,6 +1,6 @@
 module Semantic.Tree.Combinators.Implicit where
 
-import qualified Core.Tree.SchemeOver as Simple
+import qualified Core.Tree.TypeLambda as Simple
 import qualified Semantic.Scope as Scope
 import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
@@ -12,7 +12,7 @@ import Prelude hiding (map)
 
 data Implicit ast stage scope where
   Resolve :: !(ast scope) -> Implicit ast Resolve scope
-  Check :: !(Simple.SchemeOver ast scope) -> Implicit ast Check scope
+  Check :: !(Simple.TypeLambdaOver ast scope) -> Implicit ast Check scope
 
 instance (Scope.Show ast) => Show (Implicit ast stage scope) where
   showsPrec d = \case
