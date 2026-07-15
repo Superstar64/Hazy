@@ -3,7 +3,7 @@ module Semantic.Unify.Type where
 import Control.Monad (zipWithM_)
 import Control.Monad.ST (ST)
 import {-# SOURCE #-} qualified Core.Builtin as Builtin (index, kind)
-import Core.Substitute (logicalType, substituteType)
+import Core.Substitute (logicalEvidence, logicalType, substituteType)
 import qualified Core.Tree.Constraint as Simple (argument)
 import qualified Core.Tree.Constraint as Simple.Constraint
 import Core.Tree.Constraints (ConstraintsF (..))
@@ -28,7 +28,6 @@ import qualified Semantic.Check.DataInstance as DataInstance
 import qualified Semantic.Check.LocalBinding as Local (Constraint (..), LocalBinding (..))
 import qualified Semantic.Check.Mask as Mask
 import qualified Semantic.Check.Simple.Data as Simple.Data
-import qualified Semantic.Check.Simple.Evidence as Simple.Evidence (lift)
 import Semantic.Check.TypeBinding (TypeBinding (TypeBinding))
 import qualified Semantic.Check.TypeBinding as TypeBinding
 import qualified Semantic.Index.Constructor as Constructor
@@ -54,7 +53,6 @@ import Semantic.Unify.Class
     Zonker (..),
   )
 import {-# SOURCE #-} Semantic.Unify.Error (Error (..), abort)
-import Semantic.Unify.Evidence (runEvidencex)
 import qualified Semantic.Unify.Evidence as Evidence (Box (..), Logical (..), unify, unshift)
 import Syntax.Position (Position)
 import Prelude hiding (Functor, head, map)
@@ -493,7 +491,7 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
         arguments' <- [logicalType argument | argument <- toList arguments'],
         length arguments' == length arguments = do
           traverse_ (uncurry $ unify context position) (zip arguments arguments')
-          pure (runEvidencex $ Simple.Evidence.lift evidence)
+          pure (logicalEvidence evidence)
     constrainWith context@Context {typeEnvironment} (Type2.Index classx) (Constructor index) arguments
       | TypeBinding {classInstances} <- typeEnvironment Type.Table.! classx,
         Just instancex <- Map.lookup index classInstances = do

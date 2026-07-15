@@ -68,7 +68,7 @@ module Semantic.Unify
 where
 
 import Control.Monad.ST (ST)
-import Core.Substitute (Category (Substitute), substituteType)
+import Core.Substitute (Category (Substitute), logicalType, substituteType)
 import qualified Core.Substitute as Substitute
 import qualified Core.Tree.Constraint as Constraint (ConstraintF (..))
 import qualified Core.Tree.Constraint as Simple (Constraint)
@@ -321,7 +321,7 @@ liftWith' substitution typex = Typex $ Substitute.mapType substitute typex
     wrapped = Strict.Vector.toLazy $ fmap runTypex substitution
 
 lift :: TypeF Vacuous scope -> Type s scope
-lift = liftWith Strict.Vector.empty . shift
+lift = Typex . logicalType
 
 liftSchemeWith :: Strict.Vector (Type s scope) -> Core.Forall (Scope.Local ':+ scope) -> Forall s scope
 liftSchemeWith substitution forallx =

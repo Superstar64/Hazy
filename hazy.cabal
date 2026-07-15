@@ -224,8 +224,6 @@ executable hazy
     Semantic.Check.Simple.ConstructorInfo
     Semantic.Check.Simple.Data
     Semantic.Check.Simple.EntryInfo
-    Semantic.Check.Simple.Evidence
-    Semantic.Check.Simple.Instanciation
     Semantic.Check.Simple.MethodInfo
     Semantic.Check.Simple.Scheme
     Semantic.Check.Simple.SelectorInfo
