@@ -15,6 +15,7 @@ module Semantic.Unify
 where
 
 import Control.Monad.ST (ST)
+import qualified Core.Tree.Forall as Core (Forall)
 import Core.Tree.Type (TypeF)
 import qualified Core.Tree.Type as Simple
 import qualified Data.Vector.Strict as Strict
@@ -88,3 +89,4 @@ liftWith' ::
   TypeF Vacuous (Scope.Local ':+ Scope.Local ':+ scope) ->
   Type s (Scope.Local ':+ scope)
 lift :: TypeF Vacuous scope -> Type s scope
+liftScheme :: Core.Forall scope -> Forall s scope

@@ -6,7 +6,6 @@ import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.ClassInstance (ClassInstance (ClassInstance))
 import qualified Semantic.Check.ClassInstance as ClassInstance
 import Semantic.Check.Context (Context)
-import qualified Semantic.Check.Simple.Scheme as Simple.Scheme
 import qualified Semantic.Index.Type2 as Type2
 import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
@@ -16,7 +15,7 @@ instanciate context position index Class {parameter, constraints, methods} = do
   typex <- Unify.fresh (Unify.lift parameter)
   evidence <- Unify.constrain context position index typex
   let types = Strict.Vector.singleton typex
-  methods <- pure $ Simple.Scheme.instanciate' types <$> methods
+  methods <- pure $ Unify.liftSchemeWith types <$> methods
   pure
     ClassInstance
       { typex,

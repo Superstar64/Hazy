@@ -220,8 +220,6 @@ executable hazy
     Semantic.Check.LocalBinding
     Semantic.Check.Mask
     Semantic.Check.Simple.Class
-    Semantic.Check.Simple.Constraint
-    Semantic.Check.Simple.Constraints
     Semantic.Check.Simple.Constructor
     Semantic.Check.Simple.ConstructorInfo
     Semantic.Check.Simple.Data

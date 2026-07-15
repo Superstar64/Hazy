@@ -25,7 +25,6 @@ import Semantic.Check.InstanceAnnotation (InstanceAnnotation)
 import qualified Semantic.Check.InstanceAnnotation as InstanceAnnotation
 import Semantic.Check.KindAnnotation (KindAnnotation)
 import qualified Semantic.Check.KindAnnotation as KindAnnotation
-import qualified Semantic.Check.Simple.Scheme as Simple.Scheme
 import qualified Semantic.Check.Temporary.Declaration as Declaration.Unsolved
 import qualified Semantic.Check.Temporary.Instance as Instance (Key (..), check, solve)
 import qualified Semantic.Check.Temporary.TypeDeclarationExtra as TypeDeclarationExtra
@@ -168,7 +167,7 @@ checkTermDeclaration global local declaration = Formula7 {cycle, run}
                 Functor.Annotated {content} = terms Vector.! local
             Declaration {definition} <- content
             pure $ case definition of
-              Solved types Definition4.:::: _ -> Simple.Scheme.lift $ Forall.map go types
+              Solved types Definition4.:::: _ -> Unify.liftScheme $ Forall.map go types
                 where
                   go = Forall.Map $ \case
                     Definition4.Types types -> types Strict.Vector.! id

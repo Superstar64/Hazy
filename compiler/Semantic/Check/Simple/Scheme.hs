@@ -12,7 +12,6 @@ import qualified Core.Tree.Instanciation as Instanciation
 import Core.Tree.Type (Type)
 import {-# SOURCE #-} Core.Tree.TypeDeclaration (assumeClass)
 import Data.Foldable (toList)
-import qualified Data.Kind as Kind
 import qualified Data.Map as Map
 import Data.Text (pack)
 import Data.Traversable (for)
@@ -23,7 +22,6 @@ import Order (orderWithInt)
 import Semantic.Check.Context (Context (..))
 import qualified Semantic.Check.LocalBinding as LocalBinding
 import Semantic.Check.Mask (Mask)
-import qualified Semantic.Check.Simple.Constraints as Constraints
 import qualified Semantic.Check.TypeBinding as TypeBinding
 import qualified Semantic.Index.Evidence as Evidence (assumed)
 import qualified Semantic.Index.Table.Local as Local
@@ -38,32 +36,8 @@ import Syntax.Position (Position)
 import Syntax.Variable (VariableIdentifier)
 import Prelude hiding (head)
 
-lift :: Forall scope -> Unify.Forall s scope
-lift = liftOver (Lift Unify.lift)
-
-type Lift ::
-  ((Environment -> Kind.Type) -> Environment -> Kind.Type) ->
-  (Kind.Type -> Environment -> Kind.Type) ->
-  Kind.Type ->
-  Kind.Type
-newtype Lift typex typex' s = Lift (forall scope. typex Vacuous scope -> typex' s scope)
-
-liftOver :: Lift typex typex' s -> ForallOver typex Vacuous scope -> Unify.ForallOver typex' s scope
-liftOver (Lift liftResult) ForallOver {parameters, constraints, result} =
-  Unify.forallx
-    (fmap Unify.lift parameters)
-    (Constraints.lift constraints)
-    (liftResult result)
-
 instanciate :: Context s scope -> Position -> Forall scope -> ST s (Unify.Type s scope, Unify.Instanciation s scope)
-instanciate context position = Unify.instanciate context position . lift
-
-instanciate' :: Strict.Vector (Unify.Type s scope) -> Forall (Local ':+ scope) -> Unify.Forall s scope
-instanciate' fresh ForallOver {parameters, constraints, result} =
-  Unify.forallx
-    (Unify.liftWith fresh <$> parameters)
-    (Constraints.instanciate fresh constraints)
-    (Unify.liftWith' fresh result)
+instanciate context position = Unify.instanciate context position . Unify.liftScheme
 
 augmentNamed ::
   (Int -> VariableIdentifier) ->

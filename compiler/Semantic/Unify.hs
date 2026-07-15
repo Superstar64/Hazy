@@ -62,6 +62,8 @@ module Semantic.Unify
     liftWith,
     liftWith',
     lift,
+    liftSchemeWith,
+    liftScheme,
   )
 where
 
@@ -73,6 +75,7 @@ import qualified Core.Tree.Constraint as Simple (Constraint)
 import Core.Tree.Constraints (ConstraintsF (..))
 import qualified Core.Tree.Evidence as Evidence (EvidenceF (..))
 import qualified Core.Tree.Evidence as Simple (Evidence)
+import qualified Core.Tree.Forall as Core (Forall, ForallOver (..))
 import qualified Core.Tree.Forall as Simple (Forall, ForallOver)
 import Core.Tree.Instanciation (InstanciationF (..))
 import qualified Core.Tree.Instanciation as Simple (Instanciation)
@@ -319,3 +322,16 @@ liftWith' substitution typex = Typex $ Substitute.mapType substitute typex
 
 lift :: TypeF Vacuous scope -> Type s scope
 lift = liftWith Strict.Vector.empty . shift
+
+liftSchemeWith :: Strict.Vector (Type s scope) -> Core.Forall (Scope.Local ':+ scope) -> Forall s scope
+liftSchemeWith substitution forallx =
+  case Type.liftWith (Strict.Vector.toLazy $ fmap runTypex substitution) forallx of
+    Core.ForallOver {parameters, constraints, result} ->
+      ForallOver
+        { parameters,
+          constraints,
+          result = Typex result
+        }
+
+liftScheme :: Core.Forall scope -> Forall s scope
+liftScheme = liftSchemeWith Strict.Vector.empty . shift

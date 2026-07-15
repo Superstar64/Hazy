@@ -9,7 +9,6 @@ import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Context (Context (..), groupTermBindings)
 import qualified Semantic.Check.Go.Scheme as Solved.Scheme
 import qualified Semantic.Check.Mask as Mask
-import qualified Semantic.Check.Simple.Scheme as Simple.Scheme
 import qualified Semantic.Check.Temporary.Definition3 as Definition3
 import Semantic.Check.Temporary.Definition4 (Definition4 (..), Element (Element), Types (..), solveElement)
 import qualified Semantic.Check.Temporary.Definition4 as Definition4
@@ -64,7 +63,7 @@ check context linked annotation Semantic.Declaration {position, name, definition
             { position,
               name,
               definition = Semantic.Annotated annotation ::: definition,
-              typex = Simple.Scheme.lift annotation'
+              typex = Unify.liftScheme annotation'
             }
     | otherwise -> error "bad type annotation"
   _ Semantic.:::: Implicit.Resolve (Semantic.Set set) -> do
