@@ -5,7 +5,6 @@ import qualified Core.Tree.Forall as Simple (ForallOver (..), simplify)
 import Semantic.Check.Context (Context)
 import qualified Semantic.Check.Mask as Mask
 import Semantic.Check.Simple.Scheme (augmentForall)
-import qualified Semantic.Check.Simple.Type as Simple.Type
 import Semantic.Check.Temporary.Definition (Definition)
 import qualified Semantic.Check.Temporary.Definition as Definition
 import Semantic.Layout (Group)
@@ -32,7 +31,7 @@ check _ _ _ Semantic.Abstract = pure Abstract
 check context position Method {annotation} (Semantic.DefaultResolve definition)
   | scheme@Simple.ForallOver {result} <- Simple.simplify annotation = do
       context <- augmentForall position scheme Mask.Runtime context
-      definition <- Definition.check context (Simple.Type.lift result) (shift definition)
+      definition <- Definition.check context (Unify.lift result) (shift definition)
       pure $ DefaultCheck definition
 
 solve :: MethodAbstract s scope -> Unify.Solve s (Solved.MethodAbstract Group Check scope)

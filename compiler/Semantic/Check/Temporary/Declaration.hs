@@ -10,7 +10,6 @@ import Semantic.Check.Context (Context (..), groupTermBindings)
 import qualified Semantic.Check.Go.Scheme as Solved.Scheme
 import qualified Semantic.Check.Mask as Mask
 import qualified Semantic.Check.Simple.Scheme as Simple.Scheme
-import Semantic.Check.Simple.Type (lift)
 import qualified Semantic.Check.Temporary.Definition3 as Definition3
 import Semantic.Check.Temporary.Definition4 (Definition4 (..), Element (Element), Types (..), solveElement)
 import qualified Semantic.Check.Temporary.Definition4 as Definition4
@@ -122,7 +121,7 @@ checkAnnotation
     }
   go =
     do
-      let typex = lift $ Simple.simplify result
+      let typex = Unify.lift $ Simple.simplify result
       context <- Solved.Scheme.augment position parameters constraints Mask.Runtime context
       definition <- go context typex
       pure $ do

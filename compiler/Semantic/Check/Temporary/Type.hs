@@ -14,7 +14,6 @@ import qualified Semantic.Check.Context as Context
 import qualified Semantic.Check.DataInstance as DataInstance
 import qualified Semantic.Check.LocalBinding as LocalBinding (LocalBinding (..))
 import qualified Semantic.Check.Simple.Data as Simple.Data
-import Semantic.Check.Simple.Type (lift)
 import Semantic.Check.TypeBinding (TypeBinding (TypeBinding))
 import qualified Semantic.Check.TypeBinding as TypeBinding
 import qualified Semantic.Index.Constructor as Constructor
@@ -68,14 +67,14 @@ check :: Context s scope -> Unify.Type s scope -> Semantic.Type Position Resolve
 check context@Context {localEnvironment, typeEnvironment} kind = \case
   Semantic.Variable {startPosition, variable} -> case localEnvironment Local.Table.! variable of
     LocalBinding.Rigid {rigid}
-      | rigid <- lift rigid -> do
+      | rigid <- Unify.lift rigid -> do
           Unify.unify context startPosition kind rigid
           pure $ Variable {startPosition, variable}
     LocalBinding.Wobbly {wobbly} -> do
       Unify.unify context startPosition kind wobbly
       pure Variable {startPosition, variable}
   Semantic.Constructor {startPosition, constructorPosition, constructor} -> do
-    kind' <- Builtin.kind (pure . lift) indexType indexLift constructor
+    kind' <- Builtin.kind (pure . Unify.lift) indexType indexLift constructor
     Unify.unify context constructorPosition kind kind'
     pure Constructor {startPosition, constructorPosition, constructor}
     where
@@ -84,7 +83,7 @@ check context@Context {localEnvironment, typeEnvironment} kind = \case
             do
               kind <- kind
               case kind of
-                TypeBinding.Rigid kind -> pure $ lift kind
+                TypeBinding.Rigid kind -> pure $ Unify.lift kind
                 TypeBinding.Wobbly kind -> pure kind
       indexLift constructor@Constructor.Index {typeIndex} = do
         datax <- do

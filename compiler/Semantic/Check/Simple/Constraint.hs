@@ -2,7 +2,6 @@ module Semantic.Check.Simple.Constraint where
 
 import Core.Tree.Constraint (Constraint, ConstraintF (..))
 import qualified Data.Vector.Strict as Strict
-import qualified Semantic.Check.Simple.Type as Type (instanciate', lift)
 import qualified Semantic.Index.Type as Type (unlocal)
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Scope (Environment (..), Local)
@@ -14,11 +13,11 @@ lift Constraint {classx, head, arguments} =
   Unify.constraintx
     classx
     head
-    (Type.lift <$> arguments)
+    (Unify.lift <$> arguments)
 
 instanciate :: Strict.Vector (Unify.Type s scope) -> Constraint (Local ':+ scope) -> Unify.Constraint s scope
 instanciate fresh Constraint {classx, head, arguments} =
   Unify.constraintx
     (Type2.map Type.unlocal classx)
     head
-    (Type.instanciate' fresh <$> arguments)
+    (Unify.liftWith' fresh <$> arguments)

@@ -5,7 +5,6 @@ import qualified Core.Tree.Type as Simple (Type, simplify)
 import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import qualified Data.Vector.Strict as Strict (Vector)
 import Semantic.Check.Context (Context)
-import qualified Semantic.Check.Simple.Type as Simple (lift)
 import qualified Semantic.Check.Temporary.Scheme as Unsolved.Scheme
 import qualified Semantic.Check.Temporary.Type as Type
 import qualified Semantic.Check.Temporary.Type as Unsolved.Type
@@ -64,7 +63,7 @@ check
           universe <- Unify.fresh Unify.universe
           annotation <- Type.check context (Unify.typeWith universe) annotation
           annotation <- Unify.runSolve $ Type.solve context annotation
-          Unify.unify context position kind (Simple.lift $ Simple.simplify annotation)
+          Unify.unify context position kind (Unify.lift $ Simple.simplify annotation)
           pure $ Strict.Just annotation
       context <- pure $ Unsolved.Scheme.augment parameters context
       synonym <- Unsolved.Type.check context (shift target) synonym

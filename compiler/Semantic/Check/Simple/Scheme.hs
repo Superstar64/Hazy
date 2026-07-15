@@ -24,7 +24,6 @@ import Semantic.Check.Context (Context (..))
 import qualified Semantic.Check.LocalBinding as LocalBinding
 import Semantic.Check.Mask (Mask)
 import qualified Semantic.Check.Simple.Constraints as Constraints
-import qualified Semantic.Check.Simple.Type as Type (instanciate, instanciate', lift)
 import qualified Semantic.Check.TypeBinding as TypeBinding
 import qualified Semantic.Index.Evidence as Evidence (assumed)
 import qualified Semantic.Index.Table.Local as Local
@@ -40,7 +39,7 @@ import Syntax.Variable (VariableIdentifier)
 import Prelude hiding (head)
 
 lift :: Forall scope -> Unify.Forall s scope
-lift = liftOver (Lift Type.lift)
+lift = liftOver (Lift Unify.lift)
 
 type Lift ::
   ((Environment -> Kind.Type) -> Environment -> Kind.Type) ->
@@ -52,7 +51,7 @@ newtype Lift typex typex' s = Lift (forall scope. typex Vacuous scope -> typex' 
 liftOver :: Lift typex typex' s -> ForallOver typex Vacuous scope -> Unify.ForallOver typex' s scope
 liftOver (Lift liftResult) ForallOver {parameters, constraints, result} =
   Unify.forallx
-    (fmap Type.lift parameters)
+    (fmap Unify.lift parameters)
     (Constraints.lift constraints)
     (liftResult result)
 
@@ -62,9 +61,9 @@ instanciate context position = Unify.instanciate context position . lift
 instanciate' :: Strict.Vector (Unify.Type s scope) -> Forall (Local ':+ scope) -> Unify.Forall s scope
 instanciate' fresh ForallOver {parameters, constraints, result} =
   Unify.forallx
-    (Type.instanciate fresh <$> parameters)
+    (Unify.liftWith fresh <$> parameters)
     (Constraints.instanciate fresh constraints)
-    (Type.instanciate' fresh result)
+    (Unify.liftWith' fresh result)
 
 augmentNamed ::
   (Int -> VariableIdentifier) ->

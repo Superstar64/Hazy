@@ -9,7 +9,6 @@ import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Context (Context (..), groupTypeBindings)
 import qualified Semantic.Check.KindAnnotation as KindAnnotation
 import qualified Semantic.Check.KindAnnotation as Semantic
-import qualified Semantic.Check.Simple.Type as Simple.Type
 import qualified Semantic.Check.Temporary.TypeDefinition as Temporary.TypeDefinition
 import qualified Semantic.Check.Temporary.TypeDefinition as TypeDefinition
 import qualified Semantic.Check.Temporary.TypeDefinition2 as Temporary
@@ -56,7 +55,7 @@ check context linked annotation TypeDeclaration {position, name, constructorName
     Annotated {} ::: definition
       | KindAnnotation.Annotation {annotation, kind} <- annotation,
         Inject <- assumeInject definition -> do
-          definition <- Temporary.TypeDefinition.check context (Simple.Type.lift kind) definition
+          definition <- Temporary.TypeDefinition.check context (Unify.lift kind) definition
           definition <- Unify.runSolve $ Temporary.TypeDefinition.solve context definition
           pure
             TypeDeclaration

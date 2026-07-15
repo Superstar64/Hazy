@@ -6,13 +6,12 @@ import Semantic.Check.Context (Context)
 import Semantic.Check.DataInstance (DataInstance (DataInstance))
 import qualified Semantic.Check.DataInstance as DataInstance
 import qualified Semantic.Check.Simple.Constructor as Constructor
-import qualified Semantic.Check.Simple.Type as Type
 import {-# SOURCE #-} qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
 
 instanciate :: Context s scope -> Position -> Data scope -> ST s (DataInstance s scope)
 instanciate context position Data {parameters, constructors, selectors, brand} = do
-  types <- traverse (Unify.fresh . Type.lift) parameters
+  types <- traverse (Unify.fresh . Unify.lift) parameters
   let datax =
         DataInstance
           { position,

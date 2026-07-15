@@ -28,7 +28,6 @@ import Semantic.Check.InstanceAnnotation (InstanceAnnotation (InstanceAnnotation
 import qualified Semantic.Check.InstanceAnnotation as InstanceAnnotation
 import qualified Semantic.Check.Mask as Mask
 import qualified Semantic.Check.Simple.Scheme as Simple.Scheme (augmentForall)
-import qualified Semantic.Check.Simple.Type as Simple.Type (lift)
 import qualified Semantic.Check.Temporary.Definition as Definition
 import Semantic.Check.Temporary.MethodConcrete (MethodConcrete (..))
 import qualified Semantic.Check.Temporary.MethodConcrete as MethodConcrete
@@ -151,11 +150,11 @@ check
         evidence <- for constraints $
           \Simple.Constraint {classx, arguments} -> do
             let parameter = foldl Simple.Type.Call base arguments
-            evidence <- Unify.constrain context startPosition (shift classx) (Simple.Type.lift parameter)
+            evidence <- Unify.constrain context startPosition (shift classx) (Unify.lift parameter)
             Unify.runSolve $ Unify.solveEvidence startPosition evidence
         let check _ scheme Semantic.Definition {definition = Semantic.Resolve member} = do
               let Simple.ForallOver {parameters, constraints, result} = scheme
-              result <- pure $ Simple.Type.lift result
+              result <- pure $ Unify.lift result
               context <- Simple.Scheme.augmentForall startPosition scheme Mask.Runtime context
               definition <- Definition.check context result member
               pure

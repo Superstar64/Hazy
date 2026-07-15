@@ -59,10 +59,15 @@ module Semantic.Unify
     instanciate,
     MapForall (..),
     mapForall,
+    liftWith,
+    liftWith',
+    lift,
   )
 where
 
 import Control.Monad.ST (ST)
+import Core.Substitute (Category (Substitute))
+import qualified Core.Substitute as Substitute
 import qualified Core.Tree.Constraint as Constraint (ConstraintF (..))
 import qualified Core.Tree.Constraint as Simple (Constraint)
 import Core.Tree.Constraints (ConstraintsF (..))
@@ -73,6 +78,7 @@ import Core.Tree.Instanciation (InstanciationF (..))
 import qualified Core.Tree.Instanciation as Simple (Instanciation)
 import Core.Tree.Type (TypeF (..))
 import qualified Core.Tree.Type as Simple (Type)
+import qualified Data.Vector as Vector
 import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Context (Context (..))
@@ -85,6 +91,7 @@ import qualified Semantic.Index.Type2 as Type2
 import Semantic.Scope (Environment (..), Vacuous)
 import qualified Semantic.Scope as Scope
 import Semantic.Shift (Shift (..))
+import qualified Semantic.Shift as Shift
 import Semantic.Unify.Class
   ( Generalizable (collect),
     Solve (..),
@@ -112,7 +119,7 @@ import qualified Semantic.Unify.Forall as Forall
 import Semantic.Unify.Instanciation (Instanciation (..))
 import qualified Semantic.Unify.Instanciation as Instanciation
 import Semantic.Unify.Type (Type (..))
-import qualified Semantic.Unify.Type as Type (constrain, fresh, mark, solve, unify)
+import qualified Semantic.Unify.Type as Type (constrain, fresh, liftWith, mark, solve, unify)
 import Syntax.Position (Position)
 import Prelude hiding (Functor, head)
 
@@ -297,3 +304,18 @@ constrain ::
 constrain context position classx (Typex argument) = do
   evidence <- Type.constrain context position classx argument
   pure $ Evidencex evidence
+
+liftWith :: Strict.Vector (Type s scope) -> TypeF Vacuous (Scope.Local ':+ scope) -> Type s scope
+liftWith substitution typex = Typex $ Type.liftWith (Strict.Vector.toLazy $ runTypex <$> substitution) typex
+
+liftWith' ::
+  Strict.Vector (Type s scope) ->
+  TypeF Vacuous (Scope.Local ':+ Scope.Local ':+ scope) ->
+  Type s (Scope.Local ':+ scope)
+liftWith' substitution typex = Typex $ Substitute.mapType substitute typex
+  where
+    substitute = Substitute.Over $ Substitute Shift.Id wrapped Vector.empty
+    wrapped = Strict.Vector.toLazy $ fmap runTypex substitution
+
+lift :: TypeF Vacuous scope -> Type s scope
+lift = liftWith Strict.Vector.empty . shift

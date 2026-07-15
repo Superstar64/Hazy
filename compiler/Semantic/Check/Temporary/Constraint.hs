@@ -13,8 +13,6 @@ import Semantic.Check.Context (Context (..))
 import qualified Semantic.Check.DataInstance as DataInstance
 import qualified Semantic.Check.LocalBinding as LocalBinding
 import qualified Semantic.Check.Simple.Data as Simple.Data
-import Semantic.Check.Simple.Type (lift)
-import qualified Semantic.Check.Simple.Type as Simple (lift)
 import Semantic.Check.Temporary.Type (Type)
 import qualified Semantic.Check.Temporary.Type as Type (check, solve)
 import Semantic.Check.TypeBinding (TypeBinding (TypeBinding))
@@ -58,7 +56,7 @@ check
               do
                 kind <- kind
                 case kind of
-                  TypeBinding.Rigid kind -> pure $ lift kind
+                  TypeBinding.Rigid kind -> pure $ Unify.lift kind
                   TypeBinding.Wobbly kind -> pure kind
         indexLift constructor@Constructor.Index {typeIndex} = do
           datax <- do
@@ -66,7 +64,7 @@ check
             datax <- Builtin.index pure get typeIndex
             Simple.Data.instanciate context startPosition datax
           pure $ DataInstance.constructorFunction datax constructor
-    real <- Builtin.kind (pure . lift) indexType indexLift (shift classx)
+    real <- Builtin.kind (pure . Unify.lift) indexType indexLift (shift classx)
 
     Unify.unify context startPosition (Unify.function target Unify.constraint) real
 
@@ -80,7 +78,7 @@ check
             Unify.unify context startPosition kind wobbly
             pure Nil
           LocalBinding.Rigid {rigid} -> do
-            Unify.unify context startPosition kind (Simple.lift rigid)
+            Unify.unify context startPosition kind (Unify.lift rigid)
             pure Nil
 
     arguments <- Strict.Vector.fromList . toList <$> check context target (Reverse.fromList $ toList arguments)

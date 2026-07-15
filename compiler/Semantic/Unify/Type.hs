@@ -3,6 +3,7 @@ module Semantic.Unify.Type where
 import Control.Monad (zipWithM_)
 import Control.Monad.ST (ST)
 import {-# SOURCE #-} qualified Core.Builtin as Builtin (index, kind)
+import qualified Core.Substitute as Core
 import qualified Core.Tree.Constraint as Simple (argument)
 import qualified Core.Tree.Constraint as Simple.Constraint
 import Core.Tree.Constraints (ConstraintsF (..))
@@ -19,6 +20,8 @@ import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 import Data.Traversable (for)
+import Data.Vector (Vector)
+import qualified Data.Vector as Vector
 import qualified Data.Vector.Strict as Strict.Vector
 import Error (unsupportedFeatureConstraintedTypeDefaulting)
 import Semantic.Check.Context (Context (..))
@@ -27,7 +30,6 @@ import qualified Semantic.Check.LocalBinding as Local (Constraint (..), LocalBin
 import qualified Semantic.Check.Mask as Mask
 import qualified Semantic.Check.Simple.Data as Simple.Data
 import qualified Semantic.Check.Simple.Evidence as Simple.Evidence (lift)
-import qualified Semantic.Check.Simple.Type as Simple (instanciate, lift)
 import Semantic.Check.TypeBinding (TypeBinding (TypeBinding))
 import qualified Semantic.Check.TypeBinding as TypeBinding
 import qualified Semantic.Index.Constructor as Constructor
@@ -38,7 +40,8 @@ import qualified Semantic.Index.Table.Type as Type ((!))
 import qualified Semantic.Index.Table.Type as Type.Table
 import qualified Semantic.Index.Type as Type (unlocal)
 import qualified Semantic.Index.Type2 as Type2
-import Semantic.Scope (Environment (..))
+import Semantic.Scope (Environment (..), Vacuous)
+import qualified Semantic.Scope as Scope
 import Semantic.Shift (Shift (..))
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Unify.Builtin as Builtin (constrain)
@@ -172,6 +175,18 @@ instance Instantiatable Type where
               | Typex typex <- replacements Strict.Vector.! index -> typex
             Variable (Local.Shift index) -> Variable index
             Constructor index -> Constructor (Type2.map Type.unlocal index)
+
+liftWith ::
+  (Core.TypeFunctor typef, Shift.Functor logical) =>
+  Vector (TypeF logical scope) -> typef Vacuous (Scope.Local ':+ scope) -> typef logical scope
+liftWith substitution typex = Core.mapType substitute typex
+  where
+    substitute = Core.Substitute Shift.Id substitution Vector.empty
+
+lift ::
+  (Core.TypeFunctor typef, Shift.Functor logical, Shift (typef Vacuous)) =>
+  typef Vacuous scope -> typef logical scope
+lift = liftWith Vector.empty . shift
 
 fresh :: TypeF (Logical s) scope -> ST s (TypeF (Logical s) scope)
 fresh kind = do
@@ -308,11 +323,11 @@ typeCheck context_ position = typeCheckWith context_
             typeCheckWith (Shift.unshift context) kind (Logical logical)
           Variable index -> case localEnvironment Local.Table.! index of
             Local.Rigid {rigid} -> do
-              unify context position kind (runTypex $ Simple.lift rigid)
+              unify context position kind (lift rigid)
             Local.Wobbly {wobbly = Typex wobbly} -> do
               unify context position kind wobbly
           Constructor constructor -> do
-            Typex kind' <- Builtin.kind (pure . Simple.lift) indexType indexLift constructor
+            Typex kind' <- Builtin.kind (pure . Typex . lift) indexType indexLift constructor
             unify context position kind' kind
             where
               indexType index =
@@ -320,7 +335,7 @@ typeCheck context_ position = typeCheckWith context_
                   TypeBinding {kind} -> do
                     kind <- kind
                     case kind of
-                      TypeBinding.Rigid kind -> pure $ Simple.lift kind
+                      TypeBinding.Rigid kind -> pure $ Typex $ lift kind
                       TypeBinding.Wobbly kind -> pure kind
               indexLift constructor@Constructor.Index {typeIndex} = do
                 datax <- do
@@ -460,7 +475,7 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
                       TypeBinding {kind} -> do
                         kind <- kind
                         case kind of
-                          TypeBinding.Rigid kind -> pure $ Simple.lift kind
+                          TypeBinding.Rigid kind -> pure $ Typex $ lift kind
                           TypeBinding.Wobbly wobbly -> pure wobbly
                   indexLift constructor@Constructor.Index {typeIndex} = do
                     datax <- do
@@ -468,7 +483,7 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
                       datax <- Builtin.index pure get typeIndex
                       Simple.Data.instanciate context position datax
                     pure $ DataInstance.constructorFunction datax constructor
-              Typex real <- Builtin.kind (pure . Simple.lift) indexType indexLift classx
+              Typex real <- Builtin.kind (pure . Typex . lift) indexType indexLift classx
               unify context position (Function target Constraint) real
 
               typeCheck context position target (foldl Call term arguments)
@@ -489,7 +504,7 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
     constrainWith context@Context {localEnvironment} classx (Variable index) arguments
       | Local.Rigid {constraints} <- localEnvironment Local.Table.! index,
         Just Local.Constraint {arguments = arguments', evidence} <- Map.lookup classx constraints,
-        arguments' <- [runTypex $ Simple.lift argument | argument <- toList arguments'],
+        arguments' <- [lift argument | argument <- toList arguments'],
         length arguments' == length arguments = do
           traverse_ (uncurry $ unify context position) (zip arguments arguments')
           pure (runEvidencex $ Simple.Evidence.lift evidence)
@@ -500,10 +515,7 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
           case dependencies of
             Constraints dependencies -> do
               arguments <- for dependencies $ \constraint@Simple.Constraint.Constraint {classx} ->
-                let Typex argument =
-                      Simple.instanciate
-                        (Strict.Vector.fromList $ Typex <$> arguments)
-                        (Simple.argument constraint)
+                let argument = liftWith (Vector.fromList arguments) (Simple.argument constraint)
                  in constrain context position classx argument
               pure $ Evidence.Variable (Evidence.Class classx index) (Instanciation arguments)
             None -> pure $ Evidence.Variable (Evidence.Class classx index) Instanciation.Mono
@@ -514,10 +526,7 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
           case dependencies of
             Constraints dependencies -> do
               arguments <- for dependencies $ \constraint@Simple.Constraint.Constraint {classx} ->
-                let Typex argument =
-                      Simple.instanciate
-                        (Strict.Vector.fromList $ Typex <$> arguments)
-                        (Simple.argument constraint)
+                let argument = liftWith (Vector.fromList arguments) (Simple.argument constraint)
                  in constrain context position classx argument
               pure $ Evidence.Variable (Evidence.Data classx index) (Instanciation arguments)
             None -> pure $ Evidence.Variable (Evidence.Data classx index) Instanciation.Mono

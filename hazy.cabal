@@ -231,7 +231,6 @@ executable hazy
     Semantic.Check.Simple.MethodInfo
     Semantic.Check.Simple.Scheme
     Semantic.Check.Simple.SelectorInfo
-    Semantic.Check.Simple.Type
     Semantic.Check.Simple.UpdateInfo
     Semantic.Check.Temporary.Alternative
     Semantic.Check.Temporary.Body

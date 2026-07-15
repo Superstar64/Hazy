@@ -8,7 +8,6 @@ import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Context (Context (..))
 import qualified Semantic.Check.Go.Scheme as Solved (Scheme (..))
 import Semantic.Check.LocalBinding (LocalBinding (Wobbly, label, wobbly))
-import qualified Semantic.Check.Simple.Type as Simple.Type
 import Semantic.Check.Temporary.Constraints (Constraints)
 import qualified Semantic.Check.Temporary.Constraints as Constraints
 import Semantic.Check.Temporary.Type (Type)
@@ -89,5 +88,5 @@ augmentSolve scheme Context {termEnvironment, localEnvironment, typeEnvironment}
       Solved.TypePattern {name, typex = Solved wobbly} =
         Wobbly
           { label = Label.LocalBinding {name},
-            wobbly = Simple.Type.lift $ shift wobbly
+            wobbly = Unify.lift $ shift wobbly
           }
