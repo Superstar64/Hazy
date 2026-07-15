@@ -68,7 +68,7 @@ module Semantic.Unify
 where
 
 import Control.Monad.ST (ST)
-import Core.Substitute (Category (Substitute))
+import Core.Substitute (Category (Substitute), substituteType)
 import qualified Core.Substitute as Substitute
 import qualified Core.Tree.Constraint as Constraint (ConstraintF (..))
 import qualified Core.Tree.Constraint as Simple (Constraint)
@@ -122,7 +122,7 @@ import qualified Semantic.Unify.Forall as Forall
 import Semantic.Unify.Instanciation (Instanciation (..))
 import qualified Semantic.Unify.Instanciation as Instanciation
 import Semantic.Unify.Type (Type (..))
-import qualified Semantic.Unify.Type as Type (constrain, fresh, liftWith, mark, solve, unify)
+import qualified Semantic.Unify.Type as Type (constrain, fresh, mark, solve, unify)
 import Syntax.Position (Position)
 import Prelude hiding (Functor, head)
 
@@ -309,7 +309,7 @@ constrain context position classx (Typex argument) = do
   pure $ Evidencex evidence
 
 liftWith :: Strict.Vector (Type s scope) -> TypeF Vacuous (Scope.Local ':+ scope) -> Type s scope
-liftWith substitution typex = Typex $ Type.liftWith (Strict.Vector.toLazy $ runTypex <$> substitution) typex
+liftWith substitution typex = Typex $ substituteType (Strict.Vector.toLazy $ runTypex <$> substitution) typex
 
 liftWith' ::
   Strict.Vector (Type s scope) ->
@@ -325,7 +325,7 @@ lift = liftWith Strict.Vector.empty . shift
 
 liftSchemeWith :: Strict.Vector (Type s scope) -> Core.Forall (Scope.Local ':+ scope) -> Forall s scope
 liftSchemeWith substitution forallx =
-  case Type.liftWith (Strict.Vector.toLazy $ fmap runTypex substitution) forallx of
+  case substituteType (Strict.Vector.toLazy $ fmap runTypex substitution) forallx of
     Core.ForallOver {parameters, constraints, result} ->
       ForallOver
         { parameters,
