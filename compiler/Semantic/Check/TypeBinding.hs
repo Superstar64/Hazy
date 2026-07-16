@@ -19,7 +19,6 @@ import {-# SOURCE #-} Semantic.Check.InstanceAnnotation (InstanceAnnotation)
 import {-# SOURCE #-} qualified Semantic.Check.InstanceAnnotation as InstanceAnnotation
 import {-# SOURCE #-} Semantic.Check.KindAnnotation (KindAnnotation)
 import {-# SOURCE #-} qualified Semantic.Check.KindAnnotation as KindAnnotation
-import {-# SOURCE #-} qualified Semantic.Check.Temporary.TypeDeclarationExtra as Temporary
 import qualified Semantic.Connect as Connect
 import qualified Semantic.Index.Link.Type as Type
 import qualified Semantic.Index.Type0 as Type0
@@ -33,6 +32,7 @@ import Semantic.Stage (Check)
 import Semantic.Tree.TypeDeclaration (ungroupM)
 import {-# SOURCE #-} Semantic.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 import qualified Semantic.Tree.TypeDefinition2 as TypeDefinition2
+import {-# SOURCE #-} Semantic.Unify (Solve)
 import {-# SOURCE #-} qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
 
@@ -73,65 +73,18 @@ instance Shift (TypeBinding s) where
     where
       category = Shift
 
-rigid ::
+binding ::
   (Type.Link locality -> Type0.Index scope) ->
   (Type.Link locality -> ST s (TypeDefinition2.Set locality Check scope)) ->
   Functor.Annotated
     Label.TypeBinding
     (ST s (KindAnnotation scope))
     (ST s (TypeDeclaration locality Group Check scope)) ->
-  ST s (TypeDeclarationExtra Group Check scope) ->
+  ST s (Solve s (TypeDeclarationExtra Group Check scope)) ->
   Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) b) ->
   Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) d) ->
   TypeBinding s scope
-rigid = bindingImpl (pure . SimpleExtra.simplify . Connect.seperate)
-
-wobbly ::
-  (Type.Link locality -> Type0.Index scope) ->
-  (Type.Link locality -> ST s (TypeDefinition2.Set locality Check scope)) ->
-  Functor.Annotated
-    Label.TypeBinding
-    (ST s (KindAnnotation scope))
-    (ST s (TypeDeclaration locality Group Check scope)) ->
-  ST s (Temporary.TypeDeclarationExtra s scope) ->
-  Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) b) ->
-  Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) d) ->
-  TypeBinding s scope
-wobbly = bindingImpl go
-  where
-    go extra = do
-      extra <- Temporary.solve extra
-      pure $ SimpleExtra.simplify $ Connect.seperate extra
-
-group :: Position -> Label.TypeBinding scope -> Unify.Type s scopes -> TypeBinding s (GroupType ':+ scopes)
-group position Label.TypeBinding {name, constructorNames} binding =
-  TypeBinding
-    { label = Label.TypeBinding {name, constructorNames},
-      kind = pure $ Wobbly $ shift binding,
-      content = abort,
-      extra = abort,
-      synonym = pure Strict.Nothing,
-      dataInstances = abort,
-      classInstances = abort
-    }
-  where
-    abort :: a
-    abort = improperBindingGroup position
-
-bindingImpl ::
-  (a -> Unify.Solve s (Simple.TypeDeclarationExtra scope)) ->
-  (Type.Link locality -> Type0.Index scope) ->
-  (Type.Link locality -> ST s (TypeDefinition2.Set locality Check scope)) ->
-  Functor.Annotated
-    Label.TypeBinding
-    (ST s (KindAnnotation scope))
-    (ST s (TypeDeclaration locality Group Check scope)) ->
-  ST s a ->
-  Map (Type2.Index scope) (Functor.Annotated label1 (ST s (InstanceAnnotation scope)) b1) ->
-  Map (Type2.Index scope) (Functor.Annotated label2 (ST s (InstanceAnnotation scope)) b2) ->
-  TypeBinding s scope
-bindingImpl
-  simpleExtra
+binding
   index
   lookup
   Functor.Annotated
@@ -150,7 +103,7 @@ bindingImpl
           definition <- content
           definition <- ungroupM index lookup definition
           pure $ Simple.simplify definition,
-        extra = simpleExtra <$> extra,
+        extra = fmap (SimpleExtra.simplify . Connect.seperate) <$> extra,
         dataInstances = Map.map (fmap (Instance . InstanceAnnotation.prerequisites'_) . Functor.meta) dataInstances,
         classInstances = Map.map (fmap (Instance . InstanceAnnotation.prerequisites'_) . Functor.meta) classInstances
       }
@@ -166,6 +119,21 @@ bindingImpl
         case annotation of
           KindAnnotation.Synonym {synonym} -> pure $ Strict.Just (Simple.Type.simplify synonym)
           _ -> pure Strict.Nothing
+
+group :: Position -> Label.TypeBinding scope -> Unify.Type s scopes -> TypeBinding s (GroupType ':+ scopes)
+group position Label.TypeBinding {name, constructorNames} binding =
+  TypeBinding
+    { label = Label.TypeBinding {name, constructorNames},
+      kind = pure $ Wobbly $ shift binding,
+      content = abort,
+      extra = abort,
+      synonym = pure Strict.Nothing,
+      dataInstances = abort,
+      classInstances = abort
+    }
+  where
+    abort :: a
+    abort = improperBindingGroup position
 
 newtype Instance scope = Instance (Constraints scope)
 

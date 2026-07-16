@@ -16,7 +16,7 @@ import {-# SOURCE #-} Semantic.Check.KindAnnotation (KindAnnotation (..))
 import Semantic.Check.LocalBinding (LocalBinding)
 import qualified Semantic.Check.LocalBinding as LocalBinding
 import {-# SOURCE #-} qualified Semantic.Check.Temporary.Declaration as Temporary (Declaration)
-import {-# SOURCE #-} qualified Semantic.Check.Temporary.TypeDeclarationExtra as Temporary (TypeDeclarationExtra)
+import {-# SOURCE #-} qualified Semantic.Check.Temporary.TypeDeclarationExtra as Temporary (TypeDeclarationExtra, solve)
 import Semantic.Check.TermBinding (TermBinding)
 import qualified Semantic.Check.TermBinding as TermBinding
 import {-# SOURCE #-} Semantic.Check.TypeAnnotation (TypeAnnotation)
@@ -81,8 +81,8 @@ globalBindings (Functor.ModuleSet modules) =
     termBindings Functor.Declarations {terms} =
       TermBinding.rigid <$> terms
     typeBindings Functor.Declarations {types, typeExtras, classInstances, dataInstances} =
-      Vector.zipWith4 go types typeExtras dataInstances classInstances
-    go = TypeBinding.rigid Link.Type.unglobal $ \case
+      Vector.zipWith4 go types (fmap pure <$> typeExtras) dataInstances classInstances
+    go = TypeBinding.binding Link.Type.unglobal $ \case
       Link.Type.Global global local
         | Functor.Module {declarations} <- modules Vector.! global,
           Functor.Declarations {types} <- declarations,
@@ -114,8 +114,8 @@ localBindings
       }
     where
       termBindings = TermBinding.wobbly <$> terms
-      typeBindings = Vector.zipWith4 go types typeExtras dataInstances classInstances
-      go = TypeBinding.wobbly Link.Type.unlocal $ \case
+      typeBindings = Vector.zipWith4 go types (fmap Temporary.solve <$> typeExtras) dataInstances classInstances
+      go = TypeBinding.binding Link.Type.unlocal $ \case
         Link.Type.Declaration local
           | Functor.Annotated {content} <- types Vector.! local -> do
               Semantic.TypeDeclaration {definition} <- content
