@@ -5,8 +5,8 @@ import qualified Core.Tree.Type as Simple (Type)
 import qualified Core.Tree.TypeLambda as Simple (Map (..), TypeLambda, map)
 import Semantic.Connect (Connect (..))
 import Semantic.Scope (Environment (..), Local)
-import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Tree.Combinators.Implicit (Implicit (..))
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import Semantic.Tree.Definition (Definition)
@@ -22,8 +22,8 @@ data MethodConcrete layout stage scope
       }
   deriving (Show)
 
-instance Shift (MethodConcrete layout stage) where
-  shift = shiftDefault
+instance Shift0.Functor (MethodConcrete layout stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (MethodConcrete layout stage) where
   map category = \case

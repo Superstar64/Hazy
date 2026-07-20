@@ -7,8 +7,8 @@ import Semantic.FreeVariables (FreeTermVariables (..))
 import qualified Semantic.FreeVariables as FreeTermVariables
 import Semantic.Scope (Environment ((:+)))
 import qualified Semantic.Scope as Scope (Pattern)
-import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import {-# SOURCE #-} Semantic.Tree.Expression (Expression)
 import Semantic.Tree.Pattern (Pattern)
 import Syntax.Position (Position)
@@ -24,8 +24,8 @@ data Lambda layout stage scope
       }
   deriving (Show)
 
-instance Shift (Lambda layout stage) where
-  shift = shiftDefault
+instance Shift0.Functor (Lambda layout stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Lambda layout stage) where
   map category = \case

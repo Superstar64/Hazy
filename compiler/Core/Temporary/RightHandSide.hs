@@ -11,8 +11,8 @@ import qualified Core.Tree.Statements as Statements
 import Semantic.Layout (Normal)
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope
-import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
 import qualified Semantic.Tree.Body as Semantic (Body (Body))
 import qualified Semantic.Tree.Body as Semantic.Body
@@ -32,8 +32,8 @@ data RightHandSide scope
   | Done {done :: !(Expression scope)}
   deriving (Show)
 
-instance Shift RightHandSide where
-  shift = shiftDefault
+instance Shift0.Functor RightHandSide where
+  map = Shift.mapDefault
 
 instance Shift.Functor RightHandSide where
   map = Shift2.mapDefault

@@ -3,8 +3,8 @@ module Semantic.Index.Type3 where
 import Data.Functor.Identity (Identity (Identity, runIdentity))
 import qualified Semantic.Index.Type as Type1
 import qualified Semantic.Index.Type2 as Type2
-import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Prelude hiding (map, traverse)
 
 data Index scope
@@ -30,8 +30,8 @@ traverse run = \case
   Universe -> pure Universe
   Levity -> pure Levity
 
-instance Shift Index where
-  shift = shiftDefault
+instance Shift0.Functor Index where
+  map = Shift.mapDefault
 
 instance Shift.Functor Index where
   map category = map (Shift.map category)

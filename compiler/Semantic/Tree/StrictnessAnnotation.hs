@@ -1,8 +1,8 @@
 module Semantic.Tree.StrictnessAnnotation where
 
 import Semantic.FreeVariables (FreeTypeVariables (freeTypeVariables))
-import Semantic.Shift (Shift (..), shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Tree.Type (Type)
 import qualified Semantic.Tree.Type as Type
 
@@ -14,8 +14,8 @@ data StrictnessAnnotation position stage scope
       }
   deriving (Show, Eq)
 
-instance Shift (StrictnessAnnotation position stage) where
-  shift = shiftDefault
+instance Shift0.Functor (StrictnessAnnotation position stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (StrictnessAnnotation position stage) where
   map category = \case

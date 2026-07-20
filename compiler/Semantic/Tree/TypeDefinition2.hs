@@ -17,8 +17,8 @@ import Semantic.Layout (Group, Layout, Normal)
 import Semantic.Locality (Locality)
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope
-import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check, Resolve, Stage)
 import Semantic.Tree.Combinators.Inferred (Inferred)
 import qualified Semantic.Tree.Combinators.Inferred as Combinators
@@ -58,8 +58,8 @@ instance Show (TypeDefinition2 locality layout stage scope) where
       showParen (d > 5) $
         showsPrec 6 types . showString " :::: " . showsPrec 6 set
 
-instance Shift (TypeDefinition2 locality layout stage) where
-  shift = shiftDefault
+instance Shift0.Functor (TypeDefinition2 locality layout stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (TypeDefinition2 locality layout stage) where
   map category = \case
@@ -85,8 +85,8 @@ instance Show (Annotation equality mark stage scope) where
     InferredCyclic -> showString "InferredCyclic"
     InferredAcyclic -> showString "InferredAcyclic"
 
-instance Shift (Annotation equality mark stage) where
-  shift = shiftDefault
+instance Shift0.Functor (Annotation equality mark stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Annotation equality mark stage) where
   map category = \case
@@ -106,8 +106,8 @@ newtype Types scope = Types (Strict.Vector (Simple.Type scope))
 instance Scope.Show Types where
   showsPrec = showsPrec
 
-instance Shift Types where
-  shift = shiftDefault
+instance Shift0.Functor Types where
+  map = Shift.mapDefault
 
 instance Shift.Functor Types where
   map category (Types types) = Types (Shift.map category <$> types)
@@ -116,8 +116,8 @@ newtype Set locality stage scope
   = Set (Strict.Vector (Element locality stage scope))
   deriving (Show)
 
-instance Shift (Set locality stage) where
-  shift = shiftDefault
+instance Shift0.Functor (Set locality stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Set locality stage) where
   map category (Set set) = Set (Shift.map category <$> set)
@@ -135,8 +135,8 @@ data Element locality stage scope = Element
   }
   deriving (Show)
 
-instance Shift (Element locality stage) where
-  shift = shiftDefault
+instance Shift0.Functor (Element locality stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Element locality stage) where
   map category Element {element, typex, position, name, constructorNames, link} =

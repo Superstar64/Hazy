@@ -6,8 +6,8 @@ import Semantic.FreeVariables (FreeTermVariables (..))
 import qualified Semantic.FreeVariables as FreeVariables
 import Semantic.Scope (Environment ((:+)))
 import qualified Semantic.Scope as Scope
-import Semantic.Shift (Shift (..), shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import {-# SOURCE #-} qualified Semantic.Tree.Declarations as Declarations
 import {-# SOURCE #-} Semantic.Tree.Expression (Expression)
@@ -51,8 +51,8 @@ data Statements syntax layout stage scope
       }
   deriving (Show)
 
-instance Shift (Statements syntax layout stage) where
-  shift = shiftDefault
+instance Shift0.Functor (Statements syntax layout stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Statements syntax layout stage) where
   map category = \case
@@ -175,8 +175,8 @@ instance Show (Evidence syntax scope) where
 instance Scope.Show (Evidence syntax) where
   showsPrec = showsPrec
 
-instance Shift (Evidence syntax) where
-  shift = shiftDefault
+instance Shift0.Functor (Evidence syntax) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Evidence syntax) where
   map category = \case

@@ -10,8 +10,8 @@ import qualified Data.Kind as Kind
 import qualified Data.Vector.Strict as Strict
 import Semantic.Scope (Environment ((:+)), Local)
 import qualified Semantic.Scope as Scope
-import Semantic.Shift (Shift (..), shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 
 type TypeLambda = TypeLambdaOver Expression
 
@@ -21,8 +21,8 @@ data TypeLambdaOver term scope = TypeLambdaOver
     result :: !(term (Local ':+ scope))
   }
 
-instance (Shift.Functor term) => Shift (TypeLambdaOver term) where
-  shift = shiftDefault
+instance (Shift.Functor term) => Shift0.Functor (TypeLambdaOver term) where
+  map = Shift.mapDefault
 
 instance (Shift.Functor term) => Shift.Functor (TypeLambdaOver term) where
   map category TypeLambdaOver {parameters, constraints, result} =

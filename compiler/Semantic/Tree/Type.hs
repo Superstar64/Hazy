@@ -17,8 +17,8 @@ import qualified Semantic.Label.Binding.Type as Label (TypeBinding (..))
 import qualified Semantic.Label.Context as Label (Context, (!-.*), (!=.), (!=.*))
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope
-import Semantic.Shift (Shift (..), shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check, Equal (..), IsResolve (..), Resolve, Unsupported)
 import Syntax.Lexer (constructorIdentifier)
 import Syntax.Tree.Marked (Marked (..))
@@ -99,8 +99,8 @@ data Type position stage scope
       {startPosition :: !position}
   deriving (Show, Eq)
 
-instance Shift (Type stage position) where
-  shift = shiftDefault
+instance Shift0.Functor (Type stage position) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Type stage position) where
   map category = \case
@@ -211,8 +211,8 @@ instance (IsResolve stage) => Eq (Synonym stage scope) where
       NoSynonym <- synonym' =
         Prelude.True
 
-instance Shift (Synonym stage) where
-  shift = shiftDefault
+instance Shift0.Functor (Synonym stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Synonym stage) where
   map category = \case

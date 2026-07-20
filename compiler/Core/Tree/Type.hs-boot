@@ -5,8 +5,8 @@ module Core.Tree.Type where
 import qualified Data.Kind
 import Semantic.Scope (Environment, Vacuous)
 import qualified Semantic.Scope as Scope
-import Semantic.Shift (Shift)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
 import {-# SOURCE #-} qualified Semantic.Tree.Type as Semantic
 
@@ -22,7 +22,7 @@ instance (Scope.Eq logical) => Eq (TypeF logical scope)
 
 instance (Scope.Show logical) => Show (TypeF logical scope)
 
-instance (Shift.Functor logical) => Shift (TypeF logical)
+instance (Shift.Functor logical) => Shift0.Functor (TypeF logical)
 
 instance (Shift.Functor logical) => Shift.Functor (TypeF logical)
 

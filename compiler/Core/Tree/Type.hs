@@ -11,8 +11,9 @@ import qualified Semantic.Index.Local as Local
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Scope (Vacuous)
 import qualified Semantic.Scope as Scope
-import Semantic.Shift (Shift, shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import Semantic.Shift0 (shift)
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
 import qualified Semantic.Tree.Type as Solved
 
@@ -81,8 +82,8 @@ instance (Scope.Eq logical) => Eq (TypeF logical scope) where
 smallType :: Type scope
 smallType = Type Small
 
-instance (Shift.Functor logical) => Shift (TypeF logical) where
-  shift = shiftDefault
+instance (Shift.Functor logical) => Shift0.Functor (TypeF logical) where
+  map = Shift.mapDefault
 
 instance (Shift.Functor logical) => Shift.Functor (TypeF logical) where
   map category typex = case typex of

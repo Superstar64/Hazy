@@ -16,8 +16,8 @@ import qualified Data.Vector as Vector
 import qualified Semantic.Check.Go.Declarations as Semantic
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Layout (Normal)
-import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
 
 data Declarations scope = Declarations
@@ -29,8 +29,8 @@ data Declarations scope = Declarations
   }
   deriving (Show)
 
-instance Shift Declarations where
-  shift = shiftDefault
+instance Shift0.Functor Declarations where
+  map = Shift.mapDefault
 
 instance Shift.Functor Declarations where
   map = Shift2.mapDefault

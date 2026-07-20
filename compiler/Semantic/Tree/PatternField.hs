@@ -1,7 +1,7 @@
 module Semantic.Tree.PatternField where
 
-import Semantic.Shift (Shift (shift), shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import {-# SOURCE #-} Semantic.Tree.Pattern (Pattern)
 import {-# SOURCE #-} qualified Semantic.Tree.Pattern as Pattern (neverFails)
 
@@ -11,8 +11,8 @@ data Field stage scope = Field
   }
   deriving (Show)
 
-instance Shift (Field stage) where
-  shift = shiftDefault
+instance Shift0.Functor (Field stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Field stage) where
   map category = \case

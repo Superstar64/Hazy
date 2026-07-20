@@ -13,7 +13,8 @@ import Semantic.Scope
     SimpleDeclaration,
     SimplePattern,
   )
-import Semantic.Shift (Shift (shift))
+import Semantic.Shift (shift)
+import qualified Semantic.Shift0 as Shift0
 
 type Table :: (Environment -> Type) -> Environment -> Type
 data Table value scope where
@@ -32,7 +33,7 @@ data Table value scope where
   Local :: Table value scope -> Table value (Local ':+ scope)
   Global :: Vector (Vector (value Global)) -> Table value Global
 
-(!) :: (Shift value) => Table value scope -> Index scope -> value scope
+(!) :: (Shift0.Functor value) => Table value scope -> Index scope -> value scope
 Declaration values _ ! Index.Declaration index = values Vector.! index
 SimplePattern values _ ! Index.SimplePattern index = values Vector.! index
 SimpleDeclaration value _ ! Index.SimpleDeclaration = value

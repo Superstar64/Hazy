@@ -3,8 +3,8 @@ module Semantic.Tree.Definition3 where
 import Semantic.Connect (Connect (..))
 import Semantic.FreeVariables (FreeTermVariables (..))
 import qualified Semantic.Scope as Scope
-import Semantic.Shift (Shift (..), shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Tree.Definition2 (Definition2 (..), Share, Single)
 import Syntax.Tree.Fixity (Fixity)
 import Syntax.Variable (Variable)
@@ -26,8 +26,8 @@ instance Show (Definition3 mark layout stage scope) where
         . showString " "
         . showsPrec 11 definition
 
-instance Shift (Definition3 mark layout stage) where
-  shift = shiftDefault
+instance Shift0.Functor (Definition3 mark layout stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Definition3 mark layout stage) where
   map category (Label info definition) = Label info $ Shift.map category definition

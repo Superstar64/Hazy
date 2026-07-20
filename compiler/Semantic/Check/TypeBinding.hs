@@ -26,8 +26,9 @@ import qualified Semantic.Index.Type2 as Type2
 import qualified Semantic.Label.Binding.Type as Label
 import Semantic.Layout (Group)
 import Semantic.Scope (Environment (..), GroupType, Local)
-import Semantic.Shift (Category (Shift), Shift (..), shiftDefault)
 import qualified Semantic.Shift as Shift
+import Semantic.Shift0 (shift)
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
 import Semantic.Tree.TypeDeclaration (ungroupM)
 import {-# SOURCE #-} Semantic.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
@@ -40,10 +41,10 @@ data Kind s scope
   = Wobbly !(Unify.Type s scope)
   | Rigid !(Simple.Type scope)
 
-instance Shift (Kind s) where
-  shift = \case
-    Wobbly typex -> Wobbly (shift typex)
-    Rigid typex -> Rigid (shift typex)
+instance Shift0.Functor (Kind s) where
+  map category = \case
+    Wobbly typex -> Wobbly (Shift0.map category typex)
+    Rigid typex -> Rigid (Shift0.map category typex)
 
 type TypeBinding :: Data.Kind.Type -> Environment -> Data.Kind.Type
 data TypeBinding s scope = TypeBinding
@@ -59,8 +60,9 @@ data TypeBinding s scope = TypeBinding
 synonym_ :: TypeBinding s scope -> ST s (Strict.Maybe (Simple.Type (Local ':+ scope)))
 synonym_ = synonym
 
-instance Shift (TypeBinding s) where
-  shift TypeBinding {label, kind, synonym, extra, content, dataInstances, classInstances} =
+instance Shift0.Functor (TypeBinding s) where
+  map Shift0.Id binding = binding
+  map Shift0.Shift TypeBinding {label, kind, synonym, extra, content, dataInstances, classInstances} =
     TypeBinding
       { label,
         kind = fmap shift kind,
@@ -71,7 +73,7 @@ instance Shift (TypeBinding s) where
         classInstances = Map.map (fmap $ Shift.map category) $ Shift.mapInstances category classInstances
       }
     where
-      category = Shift
+      category = Shift.Shift
 
 binding ::
   (Type.Link locality -> Type0.Index scope) ->
@@ -137,8 +139,8 @@ group position Label.TypeBinding {name, constructorNames} binding =
 
 newtype Instance scope = Instance (Constraints scope)
 
-instance Shift Instance where
-  shift = shiftDefault
+instance Shift0.Functor Instance where
+  map = Shift.mapDefault
 
 instance Shift.Functor Instance where
   map category (Instance constraints) = Instance (Shift.map category constraints)

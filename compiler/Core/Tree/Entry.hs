@@ -5,8 +5,8 @@ import qualified Core.Substitute as Substitute
 import Core.Tree.Type (Type)
 import qualified Core.Tree.Type as Type
 import qualified Semantic.Index.Type2 as Type2
-import Semantic.Shift (Shift (..), shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
 import Semantic.Tree.Entry (Restricted (..))
 import qualified Semantic.Tree.Entry as Solved
@@ -18,8 +18,8 @@ data Entry scope = Entry
   }
   deriving (Show)
 
-instance Shift Entry where
-  shift = shiftDefault
+instance Shift0.Functor Entry where
+  map = Shift.mapDefault
 
 instance Shift.Functor Entry where
   map = Shift2.mapDefault

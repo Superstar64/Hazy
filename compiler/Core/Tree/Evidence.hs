@@ -10,8 +10,9 @@ import qualified Semantic.Index.Evidence as Evidence
 import qualified Semantic.Index.Evidence0 as Evidence0
 import Semantic.Scope (Vacuous)
 import qualified Semantic.Scope as Scope
-import Semantic.Shift (Shift, shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import Semantic.Shift0 (shift)
+import qualified Semantic.Shift0 as Shift0
 
 type Evidence = EvidenceF Vacuous
 
@@ -45,8 +46,8 @@ instance (Scope.Show logical) => Show (EvidenceF logical scope) where
 instance (Scope.Show logical) => Scope.Show (EvidenceF logical) where
   showsPrec = showsPrec
 
-instance (Shift.Functor logical) => Shift (EvidenceF logical) where
-  shift = shiftDefault
+instance (Shift.Functor logical) => Shift0.Functor (EvidenceF logical) where
+  map = Shift.mapDefault
 
 instance (Shift.Functor logical) => Shift.Functor (EvidenceF logical) where
   map category = \case

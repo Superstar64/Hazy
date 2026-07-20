@@ -10,8 +10,8 @@ import qualified Data.Vector.Strict as Strict (Vector)
 import Error (duplicateConstructorEntries)
 import qualified Semantic.Index.Constructor as Constructor
 import Semantic.Resolve.Functor2 (Traversable2 (..))
-import Semantic.Shift (Shift (..), shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Syntax.Position (Position)
 import Syntax.Tree.Fixity (Fixity)
 import Syntax.Variable (Variable)
@@ -29,8 +29,8 @@ instance (Show1 m) => Show (BindingF m scope) where
     showParen (d > 9) $
       showsPrec 10 position . showString " :@ " . liftShowsPrec showsPrec showList 10 binding
 
-instance (Functor m) => Shift (BindingF m) where
-  shift = shiftDefault
+instance (Functor m) => Shift0.Functor (BindingF m) where
+  map = Shift.mapDefault
 
 instance (Functor m) => Shift.Functor (BindingF m) where
   map category (position :@ binding) = position :@ fmap (Shift.map category) binding
@@ -58,8 +58,8 @@ combine position1 position2 binding@Binding {index = index1} Binding {index = in
   | index1 == index2 = binding
   | otherwise = duplicateConstructorEntries [position1, position2]
 
-instance Shift Detail where
-  shift = shiftDefault
+instance Shift0.Functor Detail where
+  map = Shift.mapDefault
 
 instance Shift.Functor Detail where
   map category Binding {index, fixity, fields, selections, unordered, fielded, single} =

@@ -45,8 +45,9 @@ import qualified Semantic.Resolve.Core as Core
 import Semantic.Resolve.Stability (Stability)
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope (Local)
-import Semantic.Shift (Shift (..), shiftDefault)
 import qualified Semantic.Shift as Shift
+import Semantic.Shift0 (shift)
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Resolve)
 import Semantic.Tree.TypePattern (TypePattern)
 import qualified Semantic.Tree.TypePattern as TypePattern
@@ -76,8 +77,8 @@ core Context {globals, locals} = Core {globals, locals}
 
 updateCore Core {globals, locals} context = context {globals, locals}
 
-instance Shift Context where
-  shift = shiftDefault
+instance Shift0.Functor Context where
+  map = Shift.mapDefault
 
 instance Shift.Functor Context where
   map category Context {canonical, globals, locals, localTypes, extensions} =

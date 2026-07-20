@@ -21,8 +21,9 @@ import Semantic.Layout (Group, Layout, Normal)
 import Semantic.Locality (Locality)
 import Semantic.Scope (Environment (..), Vacuous)
 import qualified Semantic.Scope as Scope
-import Semantic.Shift (Shift, shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import Semantic.Shift0 (shift)
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check, Resolve, Stage)
 import Semantic.Tree.Combinators.Implicit (Implicit)
 import qualified Semantic.Tree.Combinators.Implicit as Implicit
@@ -62,8 +63,8 @@ instance Show (Definition4 locality layout stage scope) where
     showParen (d > 5) $
       showsPrec 6 types . showString " :::: " . showsPrec 6 set
 
-instance Shift (Definition4 locality layout stage) where
-  shift = shiftDefault
+instance Shift0.Functor (Definition4 locality layout stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Definition4 locality layout stage) where
   map category = \case
@@ -81,8 +82,8 @@ data Annotation mark layout stage scope where
   Annotated :: !(Scheme Position stage scope) -> Annotation Mark.Annotated layout stage scope
   Inferred :: Annotation Mark.Inferred Normal stage scope
 
-instance Shift (Annotation mark layout stage) where
-  shift = shiftDefault
+instance Shift0.Functor (Annotation mark layout stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Annotation mark layout stage) where
   map category = \case
@@ -103,8 +104,8 @@ instance Core.Show Types where
 instance (Scope.Show logcial) => Scope.Show (Types logcial) where
   showsPrec = showsPrec
 
-instance (Shift.Functor logical) => Shift (Types logical) where
-  shift = shiftDefault
+instance (Shift.Functor logical) => Shift0.Functor (Types logical) where
+  map = Shift.mapDefault
 
 instance (Shift.Functor logical) => Shift.Functor (Types logical) where
   map category (Types types) = Types (Shift.map category <$> types)
@@ -116,8 +117,8 @@ newtype Set locality stage scope
 instance Scope.Show (Set locality stage) where
   showsPrec = showsPrec
 
-instance Shift (Set locality stage) where
-  shift = shiftDefault
+instance Shift0.Functor (Set locality stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Set locality stage) where
   map category (Set set) = Set (Shift.map category <$> set)
@@ -131,8 +132,8 @@ data Element locality stage scope = Element
   }
   deriving (Show)
 
-instance Shift (Element locality stage) where
-  shift = shiftDefault
+instance Shift0.Functor (Element locality stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Element locality stage) where
   map category Element {element, link} =

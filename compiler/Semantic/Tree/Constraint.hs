@@ -6,8 +6,8 @@ import qualified Semantic.FreeVariables as FreeTermVariables
 import qualified Semantic.FreeVariables as FreeVariables
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Scope (Environment ((:+)), Local)
-import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Unsupported)
 import Semantic.Tree.Type (Type)
 import qualified Semantic.Tree.Type as Type (anonymize)
@@ -28,8 +28,8 @@ data Constraint position stage scope
       }
   deriving (Show, Eq)
 
-instance Shift (Constraint position stage) where
-  shift = shiftDefault
+instance Shift0.Functor (Constraint position stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Constraint position stage) where
   map category = \case

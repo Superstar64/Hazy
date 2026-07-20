@@ -5,8 +5,8 @@ import Semantic.Connect (Connect (..))
 import Semantic.FreeVariables (FreeTermVariables (freeTermVariables))
 import qualified Semantic.FreeVariables as FreeVariables
 import Semantic.Scope (Environment (..), Local)
-import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Tree.MethodAbstract (MethodAbstract)
 import Syntax.Position (Position)
 
@@ -20,8 +20,8 @@ data TypeDeclarationExtra layout stage scope
   | GADT {position :: !Position}
   deriving (Show)
 
-instance Shift (TypeDeclarationExtra layout stage) where
-  shift = shiftDefault
+instance Shift0.Functor (TypeDeclarationExtra layout stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (TypeDeclarationExtra layout stage) where
   map category = \case

@@ -5,8 +5,8 @@ import qualified Core.Substitute as Substitute
 import Core.Tree.ClassExtra (ClassExtra)
 import qualified Core.Tree.ClassExtra as ClassExtra
 import Semantic.Layout (Normal)
-import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
 import qualified Semantic.Tree.TypeDeclarationExtra as Semantic
 
@@ -28,8 +28,8 @@ simplify = \case
   Semantic.GADT {} -> GADT
   Semantic.Class {methods} -> Class (ClassExtra.simplify methods)
 
-instance Shift TypeDeclarationExtra where
-  shift = shiftDefault
+instance Shift0.Functor TypeDeclarationExtra where
+  map = Shift.mapDefault
 
 instance Shift.Functor TypeDeclarationExtra where
   map = Shift2.mapDefault

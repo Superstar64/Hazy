@@ -6,15 +6,15 @@ import Core.Tree.Type (TypeF)
 import qualified Core.Tree.Type as Simple
 import qualified Data.Kind as Kind
 import Semantic.Scope (Environment)
-import Semantic.Shift (Shift)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import {-# SOURCE #-} Semantic.Unify.Class (Solve, Zonk)
 import Syntax.Position (Position)
 import Prelude hiding (Functor)
 
 newtype Type s scopes = Typex {runTypex :: TypeF (Logical s) scopes}
 
-instance Shift (Type s)
+instance Shift0.Functor (Type s)
 
 instance Zonk Type
 
@@ -23,7 +23,7 @@ type role Logical nominal nominal
 type Logical :: Kind.Type -> Environment -> Kind.Type
 data Logical s scopes
 
-instance Shift (Logical s)
+instance Shift0.Functor (Logical s)
 
 instance Shift.Functor (Logical s)
 

@@ -12,8 +12,9 @@ import qualified Core.Tree.Statements as Statements
 import Semantic.Layout (Normal)
 import Semantic.Scope (Environment ((:+)))
 import qualified Semantic.Scope as Scope
-import Semantic.Shift (Shift, shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import Semantic.Shift0 (shift)
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
 import qualified Semantic.Tree.Alternative as Semantic (Alternative (..))
 import qualified Semantic.Tree.Function as Semantic (Function (..))
@@ -33,8 +34,8 @@ data Function scope
       }
   deriving (Show)
 
-instance Shift Function where
-  shift = shiftDefault
+instance Shift0.Functor Function where
+  map = Shift.mapDefault
 
 instance Shift.Functor Function where
   map = Shift2.mapDefault

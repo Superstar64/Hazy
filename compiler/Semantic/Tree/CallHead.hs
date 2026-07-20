@@ -11,8 +11,8 @@ import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Method as Method
 import qualified Semantic.Index.Selector as Selector
 import qualified Semantic.Index.Term as Term
-import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Tree.Combinators.Inferred (Inferred)
 import Syntax.Position (Position)
 
@@ -41,8 +41,8 @@ data CallHead stage scope
       }
   deriving (Show)
 
-instance Shift (CallHead stage) where
-  shift = shiftDefault
+instance Shift0.Functor (CallHead stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (CallHead stage) where
   map category = \case

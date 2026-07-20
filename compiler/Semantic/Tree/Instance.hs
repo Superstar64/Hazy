@@ -7,8 +7,8 @@ import qualified Data.Vector.Strict as Strict (Vector)
 import Semantic.Connect (Connect (..))
 import Semantic.Scope (Environment (..), Local)
 import qualified Semantic.Scope as Scope
-import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import Semantic.Tree.Constraints (Constraints)
 import Semantic.Tree.MethodConcrete (MethodConcrete (..))
@@ -24,8 +24,8 @@ data Instance layout stage scope = Instance
   }
   deriving (Show)
 
-instance Shift (Instance layout stage) where
-  shift = shiftDefault
+instance Shift0.Functor (Instance layout stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Instance layout stage) where
   map category Instance {startPosition, prerequisites, parameters, members, evidence} =
@@ -68,8 +68,8 @@ newtype Evidence scope = Evidence (Strict.Vector (Simple.Evidence (Local ':+ sco
 instance Scope.Show Evidence where
   showsPrec = showsPrec
 
-instance Shift Evidence where
-  shift = shiftDefault
+instance Shift0.Functor Evidence where
+  map = Shift.mapDefault
 
 instance Shift.Functor Evidence where
   map category (Evidence evidence) = Evidence (Shift.map (Shift.Over category) <$> evidence)

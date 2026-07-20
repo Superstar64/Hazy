@@ -8,8 +8,8 @@ import Error (duplicateVariableEntries)
 import qualified Semantic.Index.Selector as Selector
 import qualified Semantic.Index.Term2 as Term2
 import Semantic.Resolve.Functor2 (Traversable2 (..))
-import Semantic.Shift (Shift (..), shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Syntax.Position (Position)
 import Syntax.Tree.Fixity (Fixity)
 
@@ -25,8 +25,8 @@ instance (Show1 m) => Show (BindingF m scope) where
     showParen (d > 9) $
       showsPrec 10 position . showString " :@ " . liftShowsPrec showsPrec showList 10 binding
 
-instance (Functor m) => Shift (BindingF m) where
-  shift = shiftDefault
+instance (Functor m) => Shift0.Functor (BindingF m) where
+  map = Shift.mapDefault
 
 instance (Functor m) => Shift.Functor (BindingF m) where
   map category (position :@ binding) = position :@ fmap (Shift.map category) binding
@@ -58,8 +58,8 @@ combine
           }
     | otherwise = duplicateVariableEntries [position1, position2]
 
-instance Shift Detail where
-  shift = shiftDefault
+instance Shift0.Functor Detail where
+  map = Shift.mapDefault
 
 instance Shift.Functor Detail where
   map category Binding {index, fixity, selector} =
@@ -74,8 +74,8 @@ data Selector scope
   | Normal
   deriving (Show)
 
-instance Shift Selector where
-  shift = shiftDefault
+instance Shift0.Functor Selector where
+  map = Shift.mapDefault
 
 instance Shift.Functor Selector where
   map category = \case

@@ -12,8 +12,9 @@ import qualified Data.Vector as Vector
 import Semantic.Index.Local (Index)
 import qualified Semantic.Index.Local as Index
 import Semantic.Scope (Declaration, Environment (..), Global, GroupTerm, GroupType, Local, Pattern)
-import Semantic.Shift (Shift (..))
 import qualified Semantic.Shift as Shift (Unshift (..))
+import Semantic.Shift0 (shift)
+import qualified Semantic.Shift0 as Shift0
 import Prelude hiding (map)
 
 data Table value scope where
@@ -24,7 +25,7 @@ data Table value scope where
   GroupTerm :: Table value scope -> Table value (GroupTerm ':+ scope)
   GroupType :: Table value scope -> Table value (GroupType ':+ scope)
 
-(!) :: (Shift value) => Table value scope -> Index scope -> value scope
+(!) :: (Shift0.Functor value) => Table value scope -> Index scope -> value scope
 table ! Index.Local index | Local values _ <- table = values Vector.! index
 Local _ table ! Index.Shift index = shift $ table ! index
 Declaration table ! Index.Shift index = shift $ table ! index

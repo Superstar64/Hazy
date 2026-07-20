@@ -15,8 +15,9 @@ import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Index.Term (Index)
 import qualified Semantic.Index.Term as Index
 import Semantic.Scope (Declaration, Environment (..), Global, GroupTerm, GroupType, Local, Pattern)
-import Semantic.Shift (Shift (..))
 import qualified Semantic.Shift as Shift
+import Semantic.Shift0 (shift)
+import qualified Semantic.Shift0 as Shift0
 import Prelude hiding (map)
 
 type Table :: (Environment -> Type) -> Environment -> Type
@@ -41,7 +42,7 @@ data Bound value scope = Bound
     select :: !(Strict.Vector (Bound value scope))
   }
 
-(!) :: (Shift value) => Table value scope -> Index scope -> value scope
+(!) :: (Shift0.Functor value) => Table value scope -> Index scope -> value scope
 Declaration values _ ! Index.Declaration index = values Vector.! index
 Pattern bound _ ! Index.Pattern index = indexPattern bound index
   where

@@ -9,8 +9,8 @@ import qualified Data.Strict.Vector1 as Strict (Vector1)
 import qualified Data.Vector.Strict as Strict (Vector)
 import Semantic.Check.Simple.ConstructorInfo (ConstructorInfo)
 import qualified Semantic.Index.Constructor as Constructor (Index (..))
-import Semantic.Shift (Shift, shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import Semantic.Tree.PatternField (Field (..))
 import qualified Semantic.Tree.PatternField as Field (neverFails)
@@ -78,8 +78,8 @@ data Pattern stage scope
       }
   deriving (Show)
 
-instance Shift (Pattern stage) where
-  shift = shiftDefault
+instance Shift0.Functor (Pattern stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Pattern stage) where
   map category = \case

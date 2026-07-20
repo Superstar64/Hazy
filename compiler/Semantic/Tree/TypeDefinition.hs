@@ -4,8 +4,8 @@ import qualified Data.Vector.Strict as Strict
 import Semantic.FreeVariables (FreeTypeVariables (..))
 import qualified Semantic.FreeVariables as FreeVariables
 import Semantic.Scope (Environment (..), Local)
-import Semantic.Shift (Shift (..), shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Unsupported)
 import Semantic.Tree.Constraint (Constraint)
 import Semantic.Tree.Constructor (Constructor)
@@ -68,8 +68,8 @@ data TypeDefinition equality stage scope
       }
   deriving (Show)
 
-instance Shift (TypeDefinition equality stage) where
-  shift = shiftDefault
+instance Shift0.Functor (TypeDefinition equality stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (TypeDefinition equality stage) where
   map category = \case

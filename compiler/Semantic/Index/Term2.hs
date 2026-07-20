@@ -3,8 +3,8 @@ module Semantic.Index.Term2 where
 import qualified Semantic.Index.Method as Method
 import qualified Semantic.Index.Selector as Selector
 import qualified Semantic.Index.Term as Term
-import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 
 data Index scope
   = Index !(Term.Index scope)
@@ -13,8 +13,8 @@ data Index scope
   | RunST
   deriving (Eq, Show)
 
-instance Shift Index where
-  shift = shiftDefault
+instance Shift0.Functor Index where
+  map = Shift.mapDefault
 
 instance Shift.Functor Index where
   map category = \case

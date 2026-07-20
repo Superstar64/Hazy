@@ -33,7 +33,7 @@ import qualified Semantic.Index.Term as Bound (Bound (..))
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope
-import Semantic.Shift (Shift (..))
+import Semantic.Shift0 (shift)
 import Semantic.Stage (Check, Resolve)
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import qualified Semantic.Tree.Pattern as Semantic

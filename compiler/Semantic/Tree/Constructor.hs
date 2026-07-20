@@ -4,8 +4,8 @@ module Semantic.Tree.Constructor where
 
 import qualified Data.Vector.Strict as Strict (Vector)
 import Semantic.FreeVariables (FreeTypeVariables (freeTypeVariables))
-import Semantic.Shift (Shift, shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Tree.Entry (Entry)
 import Semantic.Tree.Field (Field)
 import Syntax.Position (Position)
@@ -24,8 +24,8 @@ data Constructor stage scope
       }
   deriving (Show)
 
-instance Shift (Constructor stage) where
-  shift = shiftDefault
+instance Shift0.Functor (Constructor stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Constructor stage) where
   map category = \case

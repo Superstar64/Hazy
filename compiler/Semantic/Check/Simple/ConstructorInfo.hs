@@ -4,8 +4,8 @@ import qualified Core.Shift as Shift2
 import qualified Data.Vector.Strict as Strict
 import Semantic.Check.Simple.EntryInfo (EntryInfo)
 import qualified Semantic.Scope as Scope
-import Semantic.Shift (Shift (..), shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 
 data ConstructorInfo scope
   = ConstructorInfo
@@ -21,8 +21,8 @@ entryCount :: ConstructorInfo scope -> Int
 entryCount ConstructorInfo {entries} = length entries
 entryCount Newtype = 1
 
-instance Shift ConstructorInfo where
-  shift = shiftDefault
+instance Shift0.Functor ConstructorInfo where
+  map = Shift.mapDefault
 
 instance Shift.Functor ConstructorInfo where
   map = Shift2.mapDefault

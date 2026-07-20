@@ -52,8 +52,9 @@ import qualified Semantic.Index.Type2 as Type2
 import Semantic.Layout (Normal)
 import Semantic.Scope (Environment ((:+)))
 import qualified Semantic.Scope as Scope
-import Semantic.Shift (Shift, shift, shiftDefault)
+import Semantic.Shift (shift)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
 import qualified Semantic.Tree.CallHead as Semantic (CallHead (..))
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
@@ -127,8 +128,8 @@ data Direction = Construct | Destruct
 instance Scope.Show Expression where
   showsPrec = showsPrec
 
-instance Shift Expression where
-  shift = shiftDefault
+instance Shift0.Functor Expression where
+  map = Shift.mapDefault
 
 instance Shift.Functor Expression where
   map = Shift2.mapDefault

@@ -11,8 +11,8 @@ import qualified Data.Kind as Kind
 import qualified Data.Vector.Strict as Strict
 import Semantic.Scope (Environment (..), Local, Vacuous)
 import qualified Semantic.Scope as Scope
-import Semantic.Shift (Functor (..), Shift (..), shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
 import qualified Semantic.Tree.Scheme as Solved
 import qualified Semantic.Tree.TypePattern as Solved.TypePattern
@@ -42,8 +42,8 @@ instance (Scope.Show logical, Core.Show typef) => Show (ForallOver typef logical
         showString " }"
       ]
 
-instance (Shift.Functor logical, Shift.Functor (typef logical)) => Shift (ForallOver typef logical) where
-  shift = shiftDefault
+instance (Shift.Functor logical, Shift.Functor (typef logical)) => Shift0.Functor (ForallOver typef logical) where
+  map = Shift.mapDefault
 
 instance (Shift.Functor logical, Shift.Functor (typef logical)) => Shift.Functor (ForallOver typef logical) where
   map category ForallOver {parameters, constraints, result} =

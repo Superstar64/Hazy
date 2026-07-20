@@ -3,8 +3,8 @@ module Generate.Binding.Term where
 import Data.Kind (Type)
 import Generate.Variable (Variable)
 import Semantic.Scope (Environment)
-import Semantic.Shift (Shift, shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 
 type Binding :: Environment -> Type
 data Binding scope = Binding
@@ -15,8 +15,8 @@ data Binding scope = Binding
 binding :: Variable -> Binding scope
 binding name = Binding {name, strict = False}
 
-instance Shift Binding where
-  shift = shiftDefault
+instance Shift0.Functor Binding where
+  map = Shift.mapDefault
 
 instance Shift.Functor Binding where
   map _ Binding {name, strict} = Binding {name, strict}

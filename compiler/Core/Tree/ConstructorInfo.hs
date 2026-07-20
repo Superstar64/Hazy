@@ -4,16 +4,16 @@ import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
 import Core.Tree.EntryInfo (EntryInfo)
 import qualified Data.Vector.Strict as Strict (Vector)
-import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 
 newtype ConstructorInfo scope = ConstructorInfo
   { entries :: Strict.Vector (EntryInfo scope)
   }
   deriving (Show)
 
-instance Shift ConstructorInfo where
-  shift = shiftDefault
+instance Shift0.Functor ConstructorInfo where
+  map = Shift.mapDefault
 
 instance Shift.Functor ConstructorInfo where
   map = Shift2.mapDefault

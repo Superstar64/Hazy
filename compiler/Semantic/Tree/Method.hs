@@ -3,8 +3,8 @@
 module Semantic.Tree.Method where
 
 import Semantic.FreeVariables (FreeTypeVariables (freeTypeVariables))
-import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Tree.Scheme (Scheme)
 import Syntax.Position (Position)
 import Syntax.Variable (Variable)
@@ -16,8 +16,8 @@ data Method stage scope = Method
   }
   deriving (Show)
 
-instance Shift (Method stage) where
-  shift = shiftDefault
+instance Shift0.Functor (Method stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Method stage) where
   map category Method {position, name, annotation} =

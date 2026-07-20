@@ -9,8 +9,8 @@ import Core.Tree.Type (Type)
 import qualified Core.Tree.Type as Type
 import qualified Data.Vector.Strict as Strict
 import Semantic.Scope (Environment ((:+)), Local)
-import Semantic.Shift (Shift (shift), shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 
 data Class scope = Class
   { parameter :: !(Type scope),
@@ -19,8 +19,8 @@ data Class scope = Class
   }
   deriving (Show)
 
-instance Shift Class where
-  shift = shiftDefault
+instance Shift0.Functor Class where
+  map = Shift.mapDefault
 
 instance Shift.Functor Class where
   map = Shift2.mapDefault

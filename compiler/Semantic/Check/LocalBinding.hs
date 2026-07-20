@@ -11,7 +11,7 @@ import Semantic.Check.Mask (Mask)
 import qualified Semantic.Index.Type2 as Type2
 import qualified Semantic.Label.Binding.Local as Label
 import Semantic.Scope (Environment)
-import Semantic.Shift (Shift (shift))
+import qualified Semantic.Shift0 as Shift0
 import {-# SOURCE #-} qualified Semantic.Unify as Unify (Type)
 import Syntax.Position (Position)
 
@@ -28,16 +28,16 @@ data LocalBinding s scope
         wobbly :: !(Unify.Type s scope)
       }
 
-instance Shift (LocalBinding s) where
-  shift = \case
+instance Shift0.Functor (LocalBinding s) where
+  map category = \case
     Rigid {label, rigid, constraints, mask} ->
       Rigid
         { label,
-          rigid = shift rigid,
-          constraints = Map.map shift $ Map.mapKeysMonotonic shift constraints,
+          rigid = Shift0.map category rigid,
+          constraints = Map.map (Shift0.map category) $ Map.mapKeysMonotonic (Shift0.map category) constraints,
           mask
         }
-    Wobbly {label, wobbly} -> Wobbly {label, wobbly = shift wobbly}
+    Wobbly {label, wobbly} -> Wobbly {label, wobbly = Shift0.map category wobbly}
 
 data Constraint scope = Constraint
   { arguments :: !(Strict.Vector (Simple.Type scope)),
@@ -51,9 +51,9 @@ combine position left@Constraint {arguments} Constraint {arguments = argument'}
   | arguments == argument' = left
   | otherwise = nonUniqueConstraints position
 
-instance Shift Constraint where
-  shift Constraint {arguments, evidence} =
+instance Shift0.Functor Constraint where
+  map category Constraint {arguments, evidence} =
     Constraint
-      { arguments = fmap shift arguments,
-        evidence = shift evidence
+      { arguments = fmap (Shift0.map category) arguments,
+        evidence = (Shift0.map category) evidence
       }

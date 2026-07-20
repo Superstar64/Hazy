@@ -15,6 +15,7 @@ import qualified Semantic.Index.Type2 as Type2
 import Semantic.Scope (Environment (..), Local, Vacuous)
 import Semantic.Shift (shift)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Prelude hiding (Functor, map)
 
 data Category typex evidence scope1 scope2 where
@@ -75,7 +76,7 @@ substituteType substitution typex = mapType substitute typex
     substitute = Substitute Shift.Id substitution Vector.empty
 
 logicalType ::
-  (TypeFunctor typef, Shift.Functor logical, Shift.Shift (typef Vacuous)) =>
+  (TypeFunctor typef, Shift.Functor logical, Shift0.Functor (typef Vacuous)) =>
   typef Vacuous scope2 -> typef logical scope2
 logicalType = substituteType Vector.empty . shift
 
@@ -96,7 +97,7 @@ substituteEvidence substitution evidence = mapEvidence substitute evidence
     substitute = Substitute Shift.Id Vector.empty substitution
 
 logicalEvidence ::
-  (EvidenceFunctor evidencef, Shift.Functor logical, Shift.Shift (evidencef Vacuous)) =>
+  (EvidenceFunctor evidencef, Shift.Functor logical, Shift0.Functor (evidencef Vacuous)) =>
   evidencef Vacuous scope2 -> evidencef logical scope2
 logicalEvidence = substituteEvidence Vector.empty . shift
 

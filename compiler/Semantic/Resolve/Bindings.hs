@@ -9,8 +9,8 @@ import qualified Semantic.Resolve.Binding.Term as Term
 import qualified Semantic.Resolve.Binding.Type as Type
 import Semantic.Resolve.Functor2 (Traversable2 (..))
 import Semantic.Resolve.Stability (Stability (..))
-import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Syntax.Lexer (ConstructorIdentifier)
 import Syntax.Tree.Marked (Marked (..))
 import Syntax.Variable (Constructor, Variable)
@@ -34,8 +34,8 @@ instance Traversable2 (BindingsF stability) where
     where
       bindings terms constructors types = Bindings {terms, constructors, types, stability}
 
-instance (Functor m) => Shift (BindingsF stability m) where
-  shift = shiftDefault
+instance (Functor m) => Shift0.Functor (BindingsF stability m) where
+  map = Shift.mapDefault
 
 instance (Functor m) => Shift.Functor (BindingsF stability m) where
   map category Bindings {terms, constructors, types, stability} =

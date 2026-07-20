@@ -6,8 +6,8 @@ import Core.Tree.Constraint (ConstraintF)
 import qualified Core.Tree.Constraint as Constraint
 import qualified Data.Vector.Strict as Strict
 import Semantic.Scope (Vacuous)
-import Semantic.Shift (Shift (..), shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
 import qualified Semantic.Tree.Constraints as Semantic
 
@@ -18,8 +18,8 @@ data ConstraintsF logical scope
   | None
   deriving (Show)
 
-instance (Shift.Functor logical) => Shift (ConstraintsF logical) where
-  shift = shiftDefault
+instance (Shift.Functor logical) => Shift0.Functor (ConstraintsF logical) where
+  map = Shift.mapDefault
 
 instance (Shift.Functor logical) => Shift.Functor (ConstraintsF logical) where
   map category = \case

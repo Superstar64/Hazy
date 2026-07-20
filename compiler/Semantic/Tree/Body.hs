@@ -3,8 +3,8 @@ module Semantic.Tree.Body where
 import qualified Data.Strict.Vector1 as Strict
 import Semantic.Connect (Connect (..))
 import Semantic.FreeVariables (FreeTermVariables (..))
-import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import {-# SOURCE #-} Semantic.Tree.Expression (Expression)
 import Semantic.Tree.Statements (Statements)
 import qualified Semantic.Tree.Statements as Statements (Guard)
@@ -14,8 +14,8 @@ data Body layout stage scope
   | Guards {guards :: !(Strict.Vector1 (Statements Statements.Guard layout stage scope))}
   deriving (Show)
 
-instance Shift (Body layout stage) where
-  shift = shiftDefault
+instance Shift0.Functor (Body layout stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Body layout stage) where
   map category = \case

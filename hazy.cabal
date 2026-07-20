@@ -366,6 +366,7 @@ executable hazy
     Semantic.Resolve.Temporary.TypeInfix
     Semantic.Scope
     Semantic.Shift
+    Semantic.Shift0
     Semantic.Stage
     Semantic.Tree.Alternative
     Semantic.Tree.Body

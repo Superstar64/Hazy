@@ -26,8 +26,9 @@ import qualified Semantic.Index.Table.Term as Table.Term
 import qualified Semantic.Index.Table.Type as Table.Type
 import Semantic.Scope (Environment (..), Vacuous)
 import qualified Semantic.Scope as Scope
-import Semantic.Shift (Shift (..))
 import qualified Semantic.Shift as Shift
+import Semantic.Shift0 (shift)
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Unify.Class
   ( Collected (..),
     Collector (..),
@@ -73,8 +74,9 @@ instance (Zonk typex) => Zonk (ForallOver typex) where
           result
         }
 
-instance (typex ~ Type) => Shift (ForallOver typex s) where
-  shift ForallOver {parameters, constraints, result = Typex result} =
+instance (typex ~ Type) => Shift0.Functor (ForallOver typex s) where
+  map Shift0.Id forallx = forallx
+  map Shift0.Shift ForallOver {parameters, constraints, result = Typex result} =
     ForallOver
       { parameters = fmap shift parameters,
         constraints = shift constraints,

@@ -5,7 +5,7 @@ import Core.Tree.Instanciation (InstanciationF (..))
 import qualified Core.Tree.Instanciation as Simple
 import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Scope (Environment (..))
-import Semantic.Shift (Shift (..))
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Unify.Class (Solve, Zonk (..))
 import {-# SOURCE #-} Semantic.Unify.Evidence (Evidence (..), Logical)
 import {-# SOURCE #-} qualified Semantic.Unify.Evidence as Evidence
@@ -13,8 +13,8 @@ import Syntax.Position (Position)
 
 newtype Instanciation s scope = Instanciationx {runInstanciationx :: InstanciationF (Logical s) scope}
 
-instance Shift (Instanciation s) where
-  shift (Instanciationx instanciation) = Instanciationx $ shift instanciation
+instance Shift0.Functor (Instanciation s) where
+  map category (Instanciationx instanciation) = Instanciationx $ Shift0.map category instanciation
 
 instance Zonk Instanciation where
   zonk zonker (Instanciationx instanciation) =

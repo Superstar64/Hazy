@@ -10,8 +10,8 @@ import qualified Semantic.Index.Term as Term
 import Semantic.Layout (Layout)
 import Semantic.Scope (Environment (..), Local)
 import qualified Semantic.Scope as Scope
-import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Resolve, Stage)
 import qualified Semantic.Tree.Combinators.Inferred as Inferred
 import Semantic.Tree.Definition (Definition)
@@ -57,8 +57,8 @@ instance Show (Definition2 source mark layout stage scope) where
   showsPrec d (Shared definition) =
     showParen (d > 10) $ showString "Shared " . showsPrec 11 definition
 
-instance Shift (Definition2 source mark stage layout) where
-  shift = shiftDefault
+instance Shift0.Functor (Definition2 source mark stage layout) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Definition2 source mark stage layout) where
   map category = \case
@@ -95,8 +95,8 @@ data Choice stage scope = Choice
   }
   deriving (Show)
 
-instance Shift (Choice stage) where
-  shift = shiftDefault
+instance Shift0.Functor (Choice stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Choice stage) where
   map category Choice {position, index, instanciation, bound, patternx} =

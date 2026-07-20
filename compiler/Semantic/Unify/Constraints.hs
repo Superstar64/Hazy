@@ -2,7 +2,7 @@ module Semantic.Unify.Constraints where
 
 import Core.Tree.Constraints (ConstraintsF (..))
 import qualified Core.Tree.Constraints as Simple
-import Semantic.Shift (Shift (..))
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Unify.Class (Solve, Zonk (..))
 import Semantic.Unify.Constraint (Constraint (..))
 import qualified Semantic.Unify.Constraint as Constraint
@@ -18,8 +18,8 @@ instance Zonk Constraints where
         <$> traverse (fmap runConstraintx . zonk zonker . Constraintx) constraints
     None -> pure (Constraintsx None)
 
-instance Shift (Constraints s) where
-  shift (Constraintsx constraints) = Constraintsx $ shift constraints
+instance Shift0.Functor (Constraints s) where
+  map category (Constraintsx constraints) = Constraintsx $ Shift0.map category constraints
 
 solve :: Position -> ConstraintsF (Logical s) scope -> Solve s (Simple.Constraints scope)
 solve position = \case

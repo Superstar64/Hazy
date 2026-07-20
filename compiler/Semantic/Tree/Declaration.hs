@@ -9,8 +9,8 @@ import qualified Semantic.Index.Link.Term as Term
 import qualified Semantic.Index.Term0 as Term0
 import qualified Semantic.Label.Binding.Term as Label
 import Semantic.Layout (Group, Normal)
-import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check, Resolve)
 import Semantic.Tree.Combinators.Implicit (Implicit)
 import qualified Semantic.Tree.Combinators.Implicit as Implicit
@@ -52,8 +52,8 @@ lazy Declaration {position, name} ~Declaration {definition, typex} =
 typex' :: Declaration locality layout Check scope -> Simple.Forall scope
 typex' Declaration {typex = Solved typex} = typex
 
-instance Shift (Declaration layout locality stage) where
-  shift = shiftDefault
+instance Shift0.Functor (Declaration layout locality stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Declaration layout locality stage) where
   map category Declaration {position, name, definition, typex} =

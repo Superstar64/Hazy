@@ -5,8 +5,8 @@ import {-# SOURCE #-} Core.Tree.Forall (Forall)
 import {-# SOURCE #-} Core.Tree.Type (Type)
 import qualified Data.Vector.Strict as Strict
 import Semantic.Scope (Environment ((:+)), Local)
-import Semantic.Shift (Shift)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 
 data Class scope = Class
   { parameter :: !(Type scope),
@@ -14,7 +14,7 @@ data Class scope = Class
     methods :: !(Strict.Vector (Forall (Local ':+ scope)))
   }
 
-instance Shift Class
+instance Shift0.Functor Class
 
 instance Shift.Functor Class
 

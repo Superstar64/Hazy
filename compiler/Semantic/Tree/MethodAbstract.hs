@@ -3,8 +3,8 @@ module Semantic.Tree.MethodAbstract where
 import Semantic.Connect (Connect (..))
 import Semantic.FreeVariables (FreeTermVariables (freeTermVariables))
 import Semantic.Scope (Environment (..), Local)
-import Semantic.Shift (Shift, shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check, Resolve)
 import Semantic.Tree.Definition (Definition)
 
@@ -31,8 +31,8 @@ instance Show (MethodAbstract layout stage scope) where
         showString "DefaultCheck "
           . showsPrec 11 definition
 
-instance Shift (MethodAbstract layout stage) where
-  shift = shiftDefault
+instance Shift0.Functor (MethodAbstract layout stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (MethodAbstract layout stage) where
   map category = \case

@@ -4,8 +4,8 @@ import Data.Functor.Identity (Identity (..))
 import {-# SOURCE #-} qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Type as Type1
 import Semantic.Scope (Environment ((:+)), Local)
-import Semantic.Shift (Shift, shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Prelude hiding (map, traverse)
 
 data Index scope
@@ -36,8 +36,8 @@ data Index scope
   | Strict
   deriving (Show, Eq, Ord)
 
-instance Shift Index where
-  shift = shiftDefault
+instance Shift0.Functor Index where
+  map = Shift.mapDefault
 
 instance Shift.Functor Index where
   map category = map (Shift.map category)

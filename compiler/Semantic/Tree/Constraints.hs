@@ -2,8 +2,8 @@ module Semantic.Tree.Constraints where
 
 import qualified Data.Vector.Strict as Strict
 import Semantic.FreeVariables (FreeTypeVariables (..))
-import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Tree.Constraint (Constraint)
 import qualified Semantic.Tree.Constraint as Constraint
 
@@ -12,8 +12,8 @@ data Constraints position stage scope
   | None
   deriving (Show, Eq)
 
-instance Shift (Constraints position stage) where
-  shift = shiftDefault
+instance Shift0.Functor (Constraints position stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Constraints position stage) where
   map category = \case

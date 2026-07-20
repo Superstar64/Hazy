@@ -6,8 +6,8 @@ import qualified Data.Strict.Maybe as Strict (Maybe)
 import qualified Data.Vector.Strict as Strict (Vector)
 import Semantic.Check.Simple.ConstructorInfo (ConstructorInfo)
 import qualified Semantic.Scope as Scope
-import Semantic.Shift (Shift (..), shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 
 data SelectorInfo scope
   = Uniform
@@ -28,8 +28,8 @@ data Select scope
   }
   deriving (Show)
 
-instance Shift SelectorInfo where
-  shift = shiftDefault
+instance Shift0.Functor SelectorInfo where
+  map = Shift.mapDefault
 
 instance Shift.Functor SelectorInfo where
   map = Shift2.mapDefault
@@ -39,8 +39,8 @@ instance Shift2.Functor SelectorInfo where
     Uniform {strict} -> Uniform {strict = Shift2.map category strict}
     Disjoint {select} -> Disjoint {select = Shift2.map category <$> select}
 
-instance Shift Select where
-  shift = shiftDefault
+instance Shift0.Functor Select where
+  map = Shift.mapDefault
 
 instance Shift.Functor Select where
   map = Shift2.mapDefault

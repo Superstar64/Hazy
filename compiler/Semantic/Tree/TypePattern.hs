@@ -1,8 +1,8 @@
 module Semantic.Tree.TypePattern where
 
 import Core.Tree.Type as Simple (Type)
-import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
 import Semantic.Tree.Combinators.Inferred (Inferred (..), get)
 import Syntax.Variable (VariableIdentifier)
@@ -19,8 +19,8 @@ instance (Eq position) => Eq (TypePattern position stage scope) where
   TypePattern {position} == TypePattern {position = position'} =
     position == position'
 
-instance Shift (TypePattern position stage) where
-  shift = shiftDefault
+instance Shift0.Functor (TypePattern position stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (TypePattern position stage) where
   map category TypePattern {position, name, typex} =

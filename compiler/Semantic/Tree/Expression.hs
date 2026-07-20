@@ -18,8 +18,8 @@ import qualified Semantic.Index.Type2 as Type2
 import Semantic.Layout (Normal)
 import Semantic.Scope as Null (Environment (..))
 import qualified Semantic.Scope as Scope
-import Semantic.Shift (Shift (shift), shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check, Resolve, Unsupported)
 import Semantic.Tree.Alternative (Alternative (..))
 import Semantic.Tree.CallHead (CallHead)
@@ -146,8 +146,8 @@ data Expression layout stage scope
 instance Scope.Show (Expression layout stage) where
   showsPrec = showsPrec
 
-instance Shift (Expression layout stage) where
-  shift = shiftDefault
+instance Shift0.Functor (Expression layout stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Expression layout stage) where
   map category = \case
@@ -550,8 +550,8 @@ instance Show (Explicit layout stage scope) where
     Explicit expression -> showParen (d > 10) $ showString "Explicit " . showsPrec 11 expression
     Known expression -> showParen (d > 10) $ showString "Known " . showsPrec 11 expression
 
-instance Shift (Explicit layout stage) where
-  shift = shiftDefault
+instance Shift0.Functor (Explicit layout stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Explicit layout stage) where
   map category = \case

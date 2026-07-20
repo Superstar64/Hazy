@@ -2,8 +2,8 @@ module Semantic.Tree.Combinators.Implicit where
 
 import qualified Core.Tree.TypeLambda as Simple
 import qualified Semantic.Scope as Scope
-import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check, Resolve)
 import Prelude hiding (map)
 
@@ -19,8 +19,8 @@ instance (Scope.Show ast) => Show (Implicit ast stage scope) where
     Resolve ast -> showParen (d > 10) $ showString "Resolve " . Scope.showsPrec 11 ast
     Check ast -> showParen (d > 10) $ showString "Check " . showsPrec 11 ast
 
-instance (Shift.Functor ast) => Shift (Implicit ast stace) where
-  shift = shiftDefault
+instance (Shift.Functor ast) => Shift0.Functor (Implicit ast stace) where
+  map = Shift.mapDefault
 
 instance (Shift.Functor ast) => Shift.Functor (Implicit ast stage) where
   map category = \case

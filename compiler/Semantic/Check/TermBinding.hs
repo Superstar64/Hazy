@@ -6,7 +6,8 @@ import qualified Semantic.Check.Functor.Annotated as Functor (Annotated (..))
 import {-# SOURCE #-} qualified Semantic.Check.Temporary.Declaration as Temporary
 import Semantic.Check.TypeAnnotation (Annotation (..), TypeAnnotation (..))
 import Semantic.Scope (Environment (..), GroupTerm)
-import Semantic.Shift (Shift (..))
+import Semantic.Shift0 (shift)
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
 import {-# SOURCE #-} Semantic.Tree.Declaration (Declaration)
 import {-# SOURCE #-} qualified Semantic.Tree.Declaration as Declaration
@@ -19,13 +20,13 @@ data Type s scope
 newtype TermBinding s scope = TermBinding
   {typex :: ST s (Type s scope)}
 
-instance Shift (Type s) where
-  shift = \case
-    Wobbly typex -> Wobbly (shift typex)
-    Rigid typex -> Rigid (shift typex)
+instance Shift0.Functor (Type s) where
+  map category = \case
+    Wobbly typex -> Wobbly (Shift0.map category typex)
+    Rigid typex -> Rigid (Shift0.map category typex)
 
-instance Shift (TermBinding s) where
-  shift TermBinding {typex} = TermBinding {typex = fmap shift typex}
+instance Shift0.Functor (TermBinding s) where
+  map category TermBinding {typex} = TermBinding {typex = fmap (Shift0.map category) typex}
 
 rigid ::
   Functor.Annotated

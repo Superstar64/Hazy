@@ -12,8 +12,8 @@ import qualified Core.Tree.Forall as Forall
 import Core.Tree.Type (Type)
 import qualified Core.Tree.Type as Type
 import Semantic.Scope (Environment ((:+)), Local)
-import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import qualified Semantic.Tree.Method as Solved.Method
@@ -35,8 +35,8 @@ assumeClass :: TypeDefinition scope -> Class scope
 assumeClass (Class classx) = classx
 assumeClass _ = error "not class"
 
-instance Shift TypeDefinition where
-  shift = shiftDefault
+instance Shift0.Functor TypeDefinition where
+  map = Shift.mapDefault
 
 instance Shift.Functor TypeDefinition where
   map = Shift2.mapDefault

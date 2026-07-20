@@ -12,8 +12,8 @@ import qualified Semantic.Index.Constructor as Constructor
 import Semantic.Layout (Normal)
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope
-import Semantic.Shift (Shift)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
 import qualified Semantic.Tree.Definition as Semantic
 import {-# SOURCE #-} qualified Semantic.Tree.Expression as Semantic
@@ -25,7 +25,7 @@ data Expression scope
 
 data Direction = Construct | Destruct
 
-instance Shift Expression
+instance Shift0.Functor Expression
 
 instance Shift.Functor Expression
 

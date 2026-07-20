@@ -9,8 +9,8 @@ import qualified Core.Tree.MethodConcrete as MethodConcrete
 import qualified Data.Vector.Strict as Strict (Vector)
 import Semantic.Layout (Normal)
 import Semantic.Scope (Environment ((:+)), Local)
-import Semantic.Shift (Shift (shift), shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
 import Semantic.Tree.Combinators.Inferred (Inferred (Solved))
 import qualified Semantic.Tree.Constraints as Semantic (Constraints (..))
@@ -23,8 +23,8 @@ data Instance scope = Instance
   }
   deriving (Show)
 
-instance Shift Instance where
-  shift = shiftDefault
+instance Shift0.Functor Instance where
+  map = Shift.mapDefault
 
 instance Shift.Functor Instance where
   map = Shift2.mapDefault

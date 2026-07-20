@@ -2,8 +2,8 @@ module Semantic.Tree.ExpressionField where
 
 import Semantic.Connect (Connect (..))
 import Semantic.FreeVariables (FreeTermVariables (freeTermVariables))
-import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import {-# SOURCE #-} Semantic.Tree.Expression (Expression)
 
 data Field layout stage scope
@@ -13,8 +13,8 @@ data Field layout stage scope
   }
   deriving (Show)
 
-instance Shift (Field layout stage) where
-  shift = shiftDefault
+instance Shift0.Functor (Field layout stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Field layout stage) where
   map category (Field pick record) =

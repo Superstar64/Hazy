@@ -19,7 +19,7 @@ import qualified Semantic.Index.Table.Term as Term
 import qualified Semantic.Index.Table.Type as Type (Table (..))
 import qualified Semantic.Label.Binding.Local as Label
 import Semantic.Scope (Environment (..), Local)
-import Semantic.Shift (Shift (..))
+import Semantic.Shift0 (shift)
 import Semantic.Stage (Check, Resolve)
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import qualified Semantic.Tree.Scheme as Semantic (Scheme (..))

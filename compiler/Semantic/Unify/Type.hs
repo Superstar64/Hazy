@@ -39,8 +39,9 @@ import qualified Semantic.Index.Table.Type as Type.Table
 import qualified Semantic.Index.Type as Type (unlocal)
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Scope (Environment (..))
-import Semantic.Shift (Shift (..))
 import qualified Semantic.Shift as Shift
+import Semantic.Shift0 (shift)
+import qualified Semantic.Shift0 as Shift0
 import qualified Semantic.Unify.Builtin as Builtin (constrain)
 import Semantic.Unify.Class
   ( Collected (..),
@@ -79,11 +80,13 @@ data Delay s scope = Delay
     evidence :: EvidenceF (Evidence.Logical s) scope
   }
 
-instance Shift (Type s) where
-  shift (Typex typex) = Typex (shift typex)
+instance Shift0.Functor (Type s) where
+  map category (Typex typex) = Typex (Shift0.map category typex)
 
-instance Shift (Logical s) where
-  shift = Shift
+instance Shift0.Functor (Logical s) where
+  map = \case
+    Shift0.Id -> id
+    Shift0.Shift -> Shift
 
 instance Shift.Functor (Logical s) where
   map Shift.Shift logical = Shift logical

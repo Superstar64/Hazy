@@ -8,8 +8,8 @@ import qualified Data.Vector.Strict as Strict
 import qualified Semantic.Index.Local as Local
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Scope (Environment (..), Local, Vacuous)
-import Semantic.Shift (Shift, shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
 import qualified Semantic.Tree.Constraint as Solved
 
@@ -22,8 +22,8 @@ data ConstraintF logical scope = Constraint
   }
   deriving (Show)
 
-instance (Shift.Functor logical) => Shift (ConstraintF logical) where
-  shift = shiftDefault
+instance (Shift.Functor logical) => Shift0.Functor (ConstraintF logical) where
+  map = Shift.mapDefault
 
 instance (Shift.Functor logical) => Shift.Functor (ConstraintF logical) where
   map category Constraint {classx, head, arguments} =

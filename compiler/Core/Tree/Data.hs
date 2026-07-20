@@ -7,8 +7,8 @@ import Core.Tree.Type (Type)
 import qualified Core.Tree.Type as Type
 import qualified Data.Vector.Strict as Strict
 import Semantic.Scope (Environment ((:+)), Local)
-import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Tree.Selector (Selector)
 import Syntax.Tree.Brand (Brand)
 
@@ -20,8 +20,8 @@ data Data scope = Data
   }
   deriving (Show)
 
-instance Shift Data where
-  shift = shiftDefault
+instance Shift0.Functor Data where
+  map = Shift.mapDefault
 
 instance Shift.Functor Data where
   map = Shift2.mapDefault

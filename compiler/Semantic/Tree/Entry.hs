@@ -3,8 +3,8 @@
 module Semantic.Tree.Entry where
 
 import Semantic.FreeVariables (FreeTypeVariables (..))
-import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check, IsResolve, Resolve)
 import Semantic.Tree.Scheme (Scheme)
 import qualified Semantic.Tree.Scheme as Scheme
@@ -20,8 +20,8 @@ data Entry position stage scope = Entry
   }
   deriving (Show, Eq)
 
-instance Shift (Entry position stage) where
-  shift = shiftDefault
+instance Shift0.Functor (Entry position stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Entry position stage) where
   map category Entry {startPosition, entry, strict} =
@@ -54,8 +54,8 @@ instance (Eq position, IsResolve stage) => Eq (Restricted position stage scope) 
   Canonical scheme1 == Canonical scheme2 = scheme1 == scheme2
   Restricted type1 == Restricted type2 = type1 == type2
 
-instance Shift (Restricted position stage) where
-  shift = shiftDefault
+instance Shift0.Functor (Restricted position stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Restricted position stage) where
   map category = \case

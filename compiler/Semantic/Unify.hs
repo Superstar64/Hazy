@@ -93,8 +93,9 @@ import qualified Semantic.Index.Type as Type (Index)
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Scope (Environment (..), Vacuous)
 import qualified Semantic.Scope as Scope
-import Semantic.Shift (Shift (..))
 import qualified Semantic.Shift as Shift
+import Semantic.Shift0 (shift)
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Unify.Class
   ( Generalizable (collect),
     Solve (..),
@@ -220,7 +221,7 @@ constraintx classx head arguments =
         arguments = fmap runTypex arguments
       }
 
-mono :: (Shift (typex s)) => typex s scope -> ForallOver typex s scope
+mono :: (Shift0.Functor (typex s)) => typex s scope -> ForallOver typex s scope
 mono result =
   ForallOver
     { parameters = Strict.Vector.empty,

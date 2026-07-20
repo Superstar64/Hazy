@@ -28,7 +28,7 @@ import qualified Semantic.Index.Type as Type
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Scope (Environment ((:+)), Vacuous)
 import qualified Semantic.Scope as Scope
-import Semantic.Shift (Shift)
+import qualified Semantic.Shift0 as Shift0
 import {-# SOURCE #-} Semantic.Unify.Class
 import {-# SOURCE #-} Semantic.Unify.Constraint hiding (solve, unify)
 import {-# SOURCE #-} Semantic.Unify.Constraints (Constraints)
@@ -38,7 +38,7 @@ import {-# SOURCE #-} Semantic.Unify.Instanciation hiding (solve, unify)
 import {-# SOURCE #-} Semantic.Unify.Type
 import Syntax.Position (Position)
 
-mono :: (Shift (typex s)) => typex s scope -> ForallOver typex s scope
+mono :: (Shift0.Functor (typex s)) => typex s scope -> ForallOver typex s scope
 variable :: Local.Index scope -> Type s scope
 constructor :: Type2.Index scope -> Type s scope
 call :: Type s scope -> Type s scope -> Type s scope

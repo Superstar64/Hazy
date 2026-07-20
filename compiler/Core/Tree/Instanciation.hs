@@ -6,8 +6,8 @@ import Core.Tree.Evidence (EvidenceF)
 import qualified Data.Vector.Strict as Strict
 import Semantic.Scope (Vacuous)
 import qualified Semantic.Scope as Scope
-import Semantic.Shift (Shift (..), shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Prelude hiding (null)
 
 type Instanciation = InstanciationF Vacuous
@@ -20,8 +20,8 @@ data InstanciationF logical scope
 instance (Scope.Show logical) => Scope.Show (InstanciationF logical) where
   showsPrec = showsPrec
 
-instance (Shift.Functor logical) => Shift (InstanciationF logical) where
-  shift = shiftDefault
+instance (Shift.Functor logical) => Shift0.Functor (InstanciationF logical) where
+  map = Shift.mapDefault
 
 instance (Shift.Functor logical) => Shift.Functor (InstanciationF logical) where
   map category = \case

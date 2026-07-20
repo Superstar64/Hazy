@@ -3,8 +3,8 @@ module Semantic.Index.Constructor where
 import Data.Functor.Identity (Identity (..))
 import qualified Semantic.Index.Type as Type
 import qualified Semantic.Index.Type2 as Type2
-import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Prelude hiding (Bool (..), Ordering (..), map, traverse)
 
 data Index scope = Index
@@ -108,8 +108,8 @@ traverse :: (Applicative m) => (Type.Index scope -> m (Type.Index scope')) -> In
 traverse run Index {typeIndex, constructorIndex} =
   Index <$> Type2.traverse run typeIndex <*> pure constructorIndex
 
-instance Shift Index where
-  shift = shiftDefault
+instance Shift0.Functor Index where
+  map = Shift.mapDefault
 
 instance Shift.Functor Index where
   map category = map (Shift.map category)

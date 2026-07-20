@@ -4,8 +4,8 @@ import qualified Data.Strict.Maybe as Strict (Maybe)
 import qualified Data.Vector.Strict as Strict (Vector)
 import Semantic.Check.Simple.ConstructorInfo (ConstructorInfo)
 import qualified Semantic.Scope as Scope
-import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 
 newtype UpdateInfo scope = UpdateInfo
   { updateInfo :: Strict.Vector (Update scope)
@@ -15,8 +15,8 @@ newtype UpdateInfo scope = UpdateInfo
 instance Scope.Show UpdateInfo where
   showsPrec = showsPrec
 
-instance Shift UpdateInfo where
-  shift = shiftDefault
+instance Shift0.Functor UpdateInfo where
+  map = Shift.mapDefault
 
 instance Shift.Functor UpdateInfo where
   map category UpdateInfo {updateInfo} =
@@ -30,8 +30,8 @@ data Update scope = Update
   }
   deriving (Show)
 
-instance Shift Update where
-  shift = shiftDefault
+instance Shift0.Functor Update where
+  map = Shift.mapDefault
 
 instance Shift.Functor Update where
   map category Update {constructorInfo, selectorIndexes} =

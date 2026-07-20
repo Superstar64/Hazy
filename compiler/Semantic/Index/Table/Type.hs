@@ -22,8 +22,9 @@ import Semantic.Scope
     SimpleDeclaration,
     SimplePattern,
   )
-import Semantic.Shift (Shift (..))
 import qualified Semantic.Shift as Shift
+import Semantic.Shift0 (shift)
+import qualified Semantic.Shift0 as Shift0
 import Prelude hiding (map)
 
 type Table :: (Environment -> Type) -> Environment -> Type
@@ -46,7 +47,7 @@ instance Shift.Unshift (Table value) where
   unshift (GroupTerm table) = table
   unshift (GroupType _ table) = table
 
-(!) :: (Shift value) => Table value scope -> Index scope -> value scope
+(!) :: (Shift0.Functor value) => Table value scope -> Index scope -> value scope
 Declaration values _ ! Index.Declaration index = values Vector.! index
 Declaration _ table ! Index.Shift index = shift $ table ! index
 Pattern table ! Index.Shift index = shift $ table ! index

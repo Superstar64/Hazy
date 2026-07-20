@@ -10,8 +10,9 @@ import Data.Void (absurd)
 import Semantic.Index.Term (Bound (..))
 import qualified Semantic.Index.Term as Semantic
 import Semantic.Scope (Declaration, Environment (..), Global, Pattern, SimpleDeclaration, SimplePattern)
-import Semantic.Shift (Shift, shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import Semantic.Shift0 (shift)
+import qualified Semantic.Shift0 as Shift0
 import Prelude hiding (Functor, map)
 
 data Index scopes where
@@ -44,8 +45,8 @@ from = \case
   Semantic.Global global local -> Global global local
   Semantic.Group {} -> error "no group in stage4"
 
-instance Shift Index where
-  shift = shiftDefault
+instance Shift0.Functor Index where
+  map = Shift.mapDefault
 
 instance Shift.Functor Index where
   map Shift.Id index = index

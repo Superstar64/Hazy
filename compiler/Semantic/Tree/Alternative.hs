@@ -5,8 +5,8 @@ import Semantic.FreeVariables (FreeTermVariables (freeTermVariables))
 import qualified Semantic.FreeVariables as FreeTermVariables
 import Semantic.Scope (Environment ((:+)))
 import qualified Semantic.Scope as Scope (Pattern)
-import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Tree.Pattern (Pattern)
 import Semantic.Tree.RightHandSide (RightHandSide)
 
@@ -17,8 +17,8 @@ data Alternative layout stage scope
   }
   deriving (Show)
 
-instance Shift (Alternative layout stage) where
-  shift = shiftDefault
+instance Shift0.Functor (Alternative layout stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Alternative layout stage) where
   map category (Alternative patternx rightHandSide) =

@@ -4,8 +4,8 @@ import Semantic.Connect (Connect (..))
 import Semantic.FreeVariables (FreeTermVariables (freeTermVariables))
 import qualified Semantic.FreeVariables as FreeVariables
 import Semantic.Scope (Declaration, Environment ((:+)))
-import Semantic.Shift (Shift (shift), shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Tree.Body (Body)
 import {-# SOURCE #-} qualified Semantic.Tree.Declarations as Declarations
 
@@ -16,8 +16,8 @@ data RightHandSide layout stage scope
   }
   deriving (Show)
 
-instance Shift (RightHandSide layout stage) where
-  shift = shiftDefault
+instance Shift0.Functor (RightHandSide layout stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (RightHandSide layout stage) where
   map category (RightHandSide body declarations) =

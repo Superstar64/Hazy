@@ -8,8 +8,8 @@ import Core.Tree.TypeDefinition (TypeDefinition)
 import qualified Core.Tree.TypeDefinition as TypeDefinition
 import qualified Semantic.Check.Go.TypeDeclaration as Solved (TypeDeclaration (..))
 import Semantic.Layout (Normal)
-import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
 import Semantic.Tree.TypeDefinition2 (TypeDefinition2 (..))
 import Syntax.Lexer (ConstructorIdentifier)
@@ -27,8 +27,8 @@ assumeData TypeDeclaration {definition} = TypeDefinition.assumeData definition
 assumeClass :: TypeDeclaration scope -> Class scope
 assumeClass TypeDeclaration {definition} = TypeDefinition.assumeClass definition
 
-instance Shift TypeDeclaration where
-  shift = shiftDefault
+instance Shift0.Functor TypeDeclaration where
+  map = Shift.mapDefault
 
 instance Shift.Functor TypeDeclaration where
   map = Shift2.mapDefault

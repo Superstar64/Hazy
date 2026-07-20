@@ -6,8 +6,9 @@ import qualified Core.Tree.Evidence as Simple (Evidence, EvidenceF (..))
 import Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 import Error (unsupportedFeatureConstraintedTypeDefaulting)
 import Semantic.Scope (Environment (..))
-import Semantic.Shift (Shift, shift)
 import qualified Semantic.Shift as Shift
+import Semantic.Shift0 (shift)
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Unify.Class (Solve (..), Zonk (..), Zonker (..))
 import Semantic.Unify.Instanciation (Instanciation (..))
 import qualified Semantic.Unify.Instanciation as Instanciation
@@ -15,15 +16,17 @@ import Syntax.Position (Position)
 
 newtype Evidence s scope = Evidencex {runEvidencex :: EvidenceF (Logical s) scope}
 
-instance Shift (Evidence s) where
-  shift (Evidencex evidence) = Evidencex (shift evidence)
+instance Shift0.Functor (Evidence s) where
+  map category (Evidencex evidence) = Evidencex (Shift0.map category evidence)
 
 data Logical s scope where
   Box :: !(STRef s (Box s scope)) -> Logical s scope
   Shift :: !(Logical s scopes) -> Logical s (scope ':+ scopes)
 
-instance Shift (Logical s) where
-  shift = Shift
+instance Shift0.Functor (Logical s) where
+  map = \case
+    Shift0.Id -> id
+    Shift0.Shift -> Shift
 
 instance Shift.Functor (Logical s) where
   map Shift.Shift logical = Shift logical

@@ -4,8 +4,8 @@ import Data.List.NonEmpty (NonEmpty (..))
 import Semantic.Connect (Connect (..))
 import Semantic.FreeVariables (FreeTermVariables (freeTermVariables))
 import qualified Semantic.Scope as Scope
-import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Tree.Function (Function)
 
 data Definition layout stage scope
@@ -19,8 +19,8 @@ data Definition layout stage scope
 instance Scope.Show (Definition layout stage) where
   showsPrec = showsPrec
 
-instance Shift (Definition layout stage) where
-  shift = shiftDefault
+instance Shift0.Functor (Definition layout stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Definition layout stage) where
   map category = \case

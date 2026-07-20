@@ -13,8 +13,8 @@ import qualified Semantic.Label.Binding.Type as Label
 import Semantic.Layout (Group, Layout, Normal)
 import Semantic.Locality (Locality)
 import Semantic.Scope (Environment (..))
-import Semantic.Shift (Shift, shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check, Resolve, Stage)
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import Semantic.Tree.TypeDefinition (Constructive, TypeDefinition)
@@ -40,8 +40,8 @@ data TypeDeclaration locality layout stage scope
   }
   deriving (Show)
 
-instance Shift (TypeDeclaration locality layout stage) where
-  shift = shiftDefault
+instance Shift0.Functor (TypeDeclaration locality layout stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (TypeDeclaration locality layout stage) where
   map category = \case

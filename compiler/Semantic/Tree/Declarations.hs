@@ -23,8 +23,8 @@ import Semantic.Layout (Group, Normal)
 import qualified Semantic.Locality as Locality
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope
-import Semantic.Shift (Shift, shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check, Resolve)
 import Semantic.Tree.Combinators.Implicit (Implicit)
 import Semantic.Tree.Declaration (Declaration (..))
@@ -47,8 +47,8 @@ data Declarations locality layout stage scope = Declarations
   }
   deriving (Show)
 
-instance Shift (Declarations locality layout stage) where
-  shift = shiftDefault
+instance Shift0.Functor (Declarations locality layout stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Declarations locality layout stage) where
   map
@@ -194,8 +194,8 @@ newtype Local layout stage scope
   = Local (Declarations Locality.Local layout stage (Scope.Declaration ':+ scope))
   deriving (Show)
 
-instance Shift (Local layout stage) where
-  shift = shiftDefault
+instance Shift0.Functor (Local layout stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Local layout stage) where
   map category (Local declarations) = Local (Shift.map (Shift.Over category) declarations)

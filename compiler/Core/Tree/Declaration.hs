@@ -14,8 +14,8 @@ import qualified Core.Tree.TypeLambda as TypeLambda
 import qualified Semantic.Check.Go.Scheme as Semantic (Scheme)
 import qualified Semantic.Index.Term as Semantic.Term
 import Semantic.Layout (Normal)
-import Semantic.Shift (Shift, shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
 import Semantic.Tree.Combinators.Implicit (Implicit (..))
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
@@ -34,8 +34,8 @@ data Declaration scope = Declaration
   }
   deriving (Show)
 
-instance Shift Declaration where
-  shift = shiftDefault
+instance Shift0.Functor Declaration where
+  map = Shift.mapDefault
 
 instance Shift.Functor Declaration where
   map = Shift2.mapDefault

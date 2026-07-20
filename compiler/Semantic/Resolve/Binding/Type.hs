@@ -9,8 +9,8 @@ import Data.Set (Set)
 import Error (duplicateTypeEntries)
 import qualified Semantic.Index.Type3 as Type3
 import Semantic.Resolve.Functor2 (Traversable2 (..))
-import Semantic.Shift (Shift (..), shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Syntax.Position (Position)
 import Syntax.Variable (Constructor, Variable)
 
@@ -26,8 +26,8 @@ instance (Show1 m) => Show (BindingF m scope) where
     showParen (d > 9) $
       showsPrec 10 header . showString " :@ " . liftShowsPrec showsPrec showList 10 binding
 
-instance (Functor m) => Shift (BindingF m) where
-  shift = shiftDefault
+instance (Functor m) => Shift0.Functor (BindingF m) where
+  map = Shift.mapDefault
 
 instance (Functor m) => Shift.Functor (BindingF m) where
   map category (header :@ binding) = header :@ fmap (Shift.map category) binding
@@ -77,8 +77,8 @@ combine
         left
     | otherwise = duplicateTypeEntries [position1, position2]
 
-instance Shift Detail where
-  shift = shiftDefault
+instance Shift0.Functor Detail where
+  map = Shift.mapDefault
 
 instance Shift.Functor Detail where
   map category Binding {index, methods} =

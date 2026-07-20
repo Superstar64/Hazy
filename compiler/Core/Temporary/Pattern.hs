@@ -6,8 +6,8 @@ import qualified Data.Strict.Vector1 as Strict (Vector1)
 import qualified Data.Vector.Strict as Strict (Vector)
 import Semantic.Check.Simple.ConstructorInfo (ConstructorInfo)
 import qualified Semantic.Index.Constructor as Constructor
-import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import qualified Semantic.Tree.Pattern as Semantic
@@ -48,8 +48,8 @@ data Bindings scope
   | String {string :: !StringLiteral}
   deriving (Show)
 
-instance Shift Pattern where
-  shift = shiftDefault
+instance Shift0.Functor Pattern where
+  map = Shift.mapDefault
 
 instance Shift.Functor Pattern where
   map = Shift2.mapDefault
@@ -63,8 +63,8 @@ instance Shift2.Functor Pattern where
           irrefutable
         }
 
-instance Shift Bindings where
-  shift = shiftDefault
+instance Shift0.Functor Bindings where
+  map = Shift.mapDefault
 
 instance Shift.Functor Bindings where
   map = Shift2.mapDefault
@@ -102,8 +102,8 @@ instance Shift2.Functor Bindings where
     Character {character} -> Character {character}
     String {string} -> String {string}
 
-instance Shift Field where
-  shift = shiftDefault
+instance Shift0.Functor Field where
+  map = Shift.mapDefault
 
 instance Shift.Functor Field where
   map = Shift2.mapDefault

@@ -2,8 +2,8 @@ module Semantic.Tree.Select where
 
 import Semantic.Connect (Connect (..))
 import Semantic.FreeVariables (FreeTermVariables (freeTermVariables))
-import Semantic.Shift (Shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import {-# SOURCE #-} Semantic.Tree.Expression (Expression)
 
 data Select layout stage scope
@@ -13,8 +13,8 @@ data Select layout stage scope
   }
   deriving (Show)
 
-instance Shift (Select layout stage) where
-  shift = shiftDefault
+instance Shift0.Functor (Select layout stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Select layout stage) where
   map category (Select pick record) =

@@ -2,7 +2,7 @@ module Semantic.Label.Binding.Term where
 
 import Data.Kind (Type)
 import Semantic.Scope (Environment)
-import Semantic.Shift (Shift, shift)
+import qualified Semantic.Shift0 as Shift0
 import Syntax.Variable (QualifiedVariable)
 
 type TermBinding :: Environment -> Type
@@ -12,6 +12,6 @@ data TermBinding scope
       }
   | SharedTermBinding
 
-instance Shift TermBinding where
-  shift TermBinding {name} = TermBinding {name}
-  shift SharedTermBinding = SharedTermBinding
+instance Shift0.Functor TermBinding where
+  map _ TermBinding {name} = TermBinding {name}
+  map _ SharedTermBinding = SharedTermBinding

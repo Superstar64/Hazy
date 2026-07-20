@@ -6,8 +6,8 @@ import qualified Data.Vector.Strict as Strict (Vector)
 import Semantic.FreeVariables (FreeTypeVariables (..))
 import qualified Semantic.FreeVariables as FreeVariables
 import Semantic.Scope (Environment ((:+)), Local)
-import Semantic.Shift (Shift, shift, shiftDefault)
 import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Tree.Constraints (Constraints)
 import qualified Semantic.Tree.Constraints as Constraints
 import Semantic.Tree.Type (Type)
@@ -24,8 +24,8 @@ data Scheme position stage scope = Scheme
   }
   deriving (Show, Eq)
 
-instance Shift (Scheme position stage) where
-  shift = shiftDefault
+instance Shift0.Functor (Scheme position stage) where
+  map = Shift.mapDefault
 
 instance Shift.Functor (Scheme position stage) where
   map category Scheme {startPosition, implicit, parameters, constraints, result} =

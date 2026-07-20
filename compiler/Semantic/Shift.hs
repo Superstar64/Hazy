@@ -1,13 +1,4 @@
-module Semantic.Shift
-  ( Shift (..),
-    Category (..),
-    Functor (..),
-    mapInstances,
-    shiftDefault,
-    PartialUnshift (..),
-    Unshift (..),
-  )
-where
+module Semantic.Shift (module Semantic.Shift, Shift0.shift) where
 
 import qualified Data.Map as Map
 import qualified Data.Strict.Maybe as Strict
@@ -21,13 +12,8 @@ import qualified Semantic.Index.Type0 as Type0
 import {-# SOURCE #-} Semantic.Index.Type2 as Type2 (Index)
 import Semantic.Scope (Environment ((:+)), Vacuous)
 import qualified Semantic.Scope as Scope
+import qualified Semantic.Shift0 as Shift0
 import Prelude hiding (Functor, id, map, (.))
-
-class Shift f where
-  shift :: f scopes -> f (scope ':+ scopes)
-
-instance Shift Vacuous where
-  shift = \case {}
 
 data Category scope scope' where
   Id :: Category scope scope
@@ -50,11 +36,8 @@ data Category scope scope' where
 
 infixr 9 :.
 
-class (Shift f) => Functor f where
+class (Shift0.Functor f) => Functor f where
   map :: Category scope scope' -> f scope -> f scope'
-
-instance Shift Term.Index where
-  shift = shiftDefault
 
 instance Functor Term.Index where
   map Id index = index
@@ -75,9 +58,6 @@ instance Functor Term.Index where
   map (UngroupTerm term) (Term.Group index) = term index
   map UngroupTerm {} (Term.Shift index) = index
   map UngroupType {} (Term.Shift index) = index
-
-instance Shift Type.Index where
-  shift = shiftDefault
 
 instance Functor Type.Index where
   map Id index = index
@@ -102,9 +82,6 @@ instance PartialUnshift Type.Index where
   partialUnshift _ (Type.Shift index) = pure index
   partialUnshift abort _ = vacuous abort
 
-instance Shift Evidence0.Index where
-  shift = shiftDefault
-
 instance Functor Evidence0.Index where
   map Id index = index
   map (Over _) (Evidence0.Assumed index) = Evidence0.Assumed index
@@ -121,9 +98,6 @@ instance Functor Evidence0.Index where
 instance PartialUnshift Evidence0.Index where
   partialUnshift abort (Evidence0.Assumed _) = vacuous abort
   partialUnshift _ (Evidence0.Shift index) = pure index
-
-instance Shift Local.Index where
-  shift = shiftDefault
 
 instance Functor Local.Index where
   map Id index = index
@@ -155,8 +129,10 @@ mapInstances UngroupType {} =
   error "group type shifts are not monotonic"
 mapInstances category = Map.mapKeysMonotonic (map category)
 
-shiftDefault :: (Functor f) => f scopes -> f (scope ':+ scopes)
-shiftDefault = map Shift
+mapDefault :: (Functor f) => Shift0.Category scope scope' -> f scope -> f scope'
+mapDefault = \case
+  Shift0.Id -> map Id
+  Shift0.Shift -> map Shift
 
 class PartialUnshift f where
   partialUnshift :: (Applicative m) => m Void -> f (scope ':+ scopes) -> m (f scopes)
