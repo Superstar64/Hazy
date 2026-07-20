@@ -11,11 +11,13 @@ where
 
 import qualified Data.Map as Map
 import qualified Data.Strict.Maybe as Strict
-import Data.Void (Void)
-import {-# SOURCE #-} qualified Semantic.Index.Term as Term
-import {-# SOURCE #-} qualified Semantic.Index.Term0 as Term0
-import {-# SOURCE #-} qualified Semantic.Index.Type as Type
-import {-# SOURCE #-} qualified Semantic.Index.Type0 as Type0
+import Data.Void (Void, absurd, vacuous)
+import qualified Semantic.Index.Evidence0 as Evidence0
+import qualified Semantic.Index.Local as Local
+import qualified Semantic.Index.Term as Term
+import qualified Semantic.Index.Term0 as Term0
+import qualified Semantic.Index.Type as Type
+import qualified Semantic.Index.Type0 as Type0
 import {-# SOURCE #-} Semantic.Index.Type2 as Type2 (Index)
 import Semantic.Scope (Environment ((:+)), Vacuous)
 import qualified Semantic.Scope as Scope
@@ -50,6 +52,95 @@ infixr 9 :.
 
 class (Shift f) => Functor f where
   map :: Category scope scope' -> f scope -> f scope'
+
+instance Shift Term.Index where
+  shift = shiftDefault
+
+instance Functor Term.Index where
+  map Id index = index
+  map Shift index = Term.Shift index
+  map (Over category) (Term.Shift index) = Term.Shift $ map category index
+  map (Over _) (Term.Declaration index) = Term.Declaration index
+  map (Over _) (Term.Pattern bound) = Term.Pattern bound
+  map (Over _) (Term.Group index) = Term.Group index
+  map (after :. before) index = map after (map before index)
+  map (Unshift _) (Term.Shift index) = index
+  map (Unshift abort) _ = absurd abort
+  map (GroupTerm term) (Term.Declaration index)
+    | Strict.Just index <- term (Term0.Declaration index) = Term.Group index
+  map (GroupTerm term) (Term.Global global local)
+    | Strict.Just index <- term (Term0.Global global local) = Term.Group index
+  map GroupTerm {} index = Term.Shift index
+  map GroupType {} index = Term.Shift index
+  map (UngroupTerm term) (Term.Group index) = term index
+  map UngroupTerm {} (Term.Shift index) = index
+  map UngroupType {} (Term.Shift index) = index
+
+instance Shift Type.Index where
+  shift = shiftDefault
+
+instance Functor Type.Index where
+  map Id index = index
+  map Shift index = Type.Shift index
+  map (Over category) (Type.Shift index) = Type.Shift (map category index)
+  map (Over _) (Type.Declaration index) = Type.Declaration index
+  map (Over _) (Type.Group index) = Type.Group index
+  map (after :. before) index = map after (map before index)
+  map (Unshift _) (Type.Shift index) = index
+  map (Unshift abort) _ = absurd abort
+  map (GroupType typex) (Type.Declaration index)
+    | Strict.Just index <- typex (Type0.Declaration index) = Type.Group index
+  map (GroupType typex) (Type.Global global local)
+    | Strict.Just index <- typex (Type0.Global global local) = Type.Group index
+  map GroupTerm {} index = Type.Shift index
+  map GroupType {} index = Type.Shift index
+  map (UngroupType typex) (Type.Group index) = typex index
+  map UngroupType {} (Type.Shift index) = index
+  map UngroupTerm {} (Type.Shift index) = index
+
+instance PartialUnshift Type.Index where
+  partialUnshift _ (Type.Shift index) = pure index
+  partialUnshift abort _ = vacuous abort
+
+instance Shift Evidence0.Index where
+  shift = shiftDefault
+
+instance Functor Evidence0.Index where
+  map Id index = index
+  map (Over _) (Evidence0.Assumed index) = Evidence0.Assumed index
+  map (Over category) (Evidence0.Shift index) = Evidence0.Shift (map category index)
+  map Shift index = Evidence0.Shift index
+  map (after :. before) index = map after $ map before index
+  map (Unshift _) (Evidence0.Shift index) = index
+  map (Unshift abort) Evidence0.Assumed {} = absurd abort
+  map GroupTerm {} index = Evidence0.Shift index
+  map GroupType {} index = Evidence0.Shift index
+  map UngroupTerm {} (Evidence0.Shift index) = index
+  map UngroupType {} (Evidence0.Shift index) = index
+
+instance PartialUnshift Evidence0.Index where
+  partialUnshift abort (Evidence0.Assumed _) = vacuous abort
+  partialUnshift _ (Evidence0.Shift index) = pure index
+
+instance Shift Local.Index where
+  shift = shiftDefault
+
+instance Functor Local.Index where
+  map Id index = index
+  map Shift index = Local.Shift index
+  map (Over category) (Local.Shift index) = Local.Shift $ map category index
+  map (Over _) (Local.Local index) = Local.Local index
+  map (after :. before) index = map after (map before index)
+  map (Unshift _) (Local.Shift index) = index
+  map (Unshift abort) Local.Local {} = absurd abort
+  map (GroupTerm _) index = Local.Shift index
+  map (GroupType _) index = Local.Shift index
+  map UngroupTerm {} (Local.Shift index) = index
+  map UngroupType {} (Local.Shift index) = index
+
+instance PartialUnshift Local.Index where
+  partialUnshift _ (Local.Shift index) = pure index
+  partialUnshift abort Local.Local {} = vacuous abort
 
 instance Functor Vacuous where
   map _ = \case {}

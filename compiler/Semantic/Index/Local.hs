@@ -1,10 +1,7 @@
 module Semantic.Index.Local where
 
 import Data.Kind (Type)
-import Data.Void (absurd, vacuous)
 import Semantic.Scope (Environment (..), Local)
-import Semantic.Shift (Shift, shiftDefault)
-import qualified Semantic.Shift as Shift
 
 type Index :: Environment -> Type
 data Index scopes where
@@ -20,23 +17,3 @@ instance Show (Index scope) where
   showsPrec d = \case
     Local local -> showParen (d > 10) $ showString "Local " . showsPrec 11 local
     Shift index -> showParen (d > 10) $ showString "Shift " . showsPrec 11 index
-
-instance Shift Index where
-  shift = shiftDefault
-
-instance Shift.Functor Index where
-  map Shift.Id index = index
-  map Shift.Shift index = Shift index
-  map (Shift.Over category) (Shift index) = Shift $ Shift.map category index
-  map (Shift.Over _) (Local index) = Local index
-  map (after Shift.:. before) index = Shift.map after (Shift.map before index)
-  map (Shift.Unshift _) (Shift index) = index
-  map (Shift.Unshift abort) Local {} = absurd abort
-  map (Shift.GroupTerm _) index = Shift index
-  map (Shift.GroupType _) index = Shift index
-  map Shift.UngroupTerm {} (Shift index) = index
-  map Shift.UngroupType {} (Shift index) = index
-
-instance Shift.PartialUnshift Index where
-  partialUnshift _ (Shift index) = pure index
-  partialUnshift abort Local {} = vacuous abort

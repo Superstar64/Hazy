@@ -1,11 +1,8 @@
 module Semantic.Index.Evidence0 where
 
 import Data.Kind (Type)
-import Data.Void (absurd, vacuous)
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope
-import Semantic.Shift (Shift (..), shiftDefault)
-import qualified Semantic.Shift as Shift
 
 type Index :: Environment -> Type
 data Index scope where
@@ -26,23 +23,3 @@ instance Show (Index scopes) where
     showParen (d > 10) $
       showString "Shift "
         . showsPrec 11 ix
-
-instance Shift Index where
-  shift = shiftDefault
-
-instance Shift.Functor Index where
-  map Shift.Id index = index
-  map (Shift.Over _) (Assumed index) = Assumed index
-  map (Shift.Over category) (Shift index) = Shift (Shift.map category index)
-  map Shift.Shift index = Shift index
-  map (category1 Shift.:. category2) index = Shift.map category1 $ Shift.map category2 index
-  map (Shift.Unshift _) (Shift index) = index
-  map (Shift.Unshift abort) Assumed {} = absurd abort
-  map Shift.GroupTerm {} index = Shift index
-  map Shift.GroupType {} index = Shift index
-  map Shift.UngroupTerm {} (Shift index) = index
-  map Shift.UngroupType {} (Shift index) = index
-
-instance Shift.PartialUnshift Index where
-  partialUnshift abort (Assumed _) = vacuous abort
-  partialUnshift _ (Shift index) = pure index
