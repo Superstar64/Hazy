@@ -9,15 +9,11 @@ import Semantic.Scope (Environment (..))
 import qualified Semantic.Shift as Shift
 import Semantic.Shift0 (shift)
 import qualified Semantic.Shift0 as Shift0
-import Semantic.Unify.Class (Solve (..), Zonk (..), Zonker (..))
-import Semantic.Unify.Instanciation (Instanciation (..))
 import qualified Semantic.Unify.Instanciation as Instanciation
+import Semantic.Unify.Solve (Solve (..))
 import Syntax.Position (Position)
 
-newtype Evidence s scope = Evidencex {runEvidencex :: EvidenceF (Logical s) scope}
-
-instance Shift0.Functor (Evidence s) where
-  map category (Evidencex evidence) = Evidencex (Shift0.map category evidence)
+type Evidence s = EvidenceF (Logical s)
 
 data Logical s scope where
   Box :: !(STRef s (Box s scope)) -> Logical s scope
@@ -33,21 +29,6 @@ instance Shift.Functor (Logical s) where
   map (Shift.Over category) (Shift logical) = Shift (Shift.map category logical)
   map Shift.Over {} Box {} = error "can't map over logical"
   map _ _ = error "unsuppported shift"
-
-instance Zonk Evidence where
-  zonk Zonker (Evidencex evidence) =
-    Evidencex <$> case evidence of
-      Variable variable instanciation -> do
-        Instanciationx instanciation <- zonk Zonker (Instanciationx instanciation)
-        pure $ Variable variable instanciation
-      Super evidence index -> do
-        Evidencex evidence <- zonk Zonker (Evidencex evidence)
-        pure $ Super evidence index
-      Logical (Box reference) ->
-        readSTRef reference >>= \case
-          Solved evidence -> runEvidencex <$> zonk Zonker (Evidencex evidence)
-          Unsolved {} -> pure $ Logical (Box reference)
-      Logical (Shift logical) -> shift <$> (runEvidencex <$> zonk Zonker (Evidencex $ Logical logical))
 
 data Box s scope
   = Solved !(EvidenceF (Logical s) scope)

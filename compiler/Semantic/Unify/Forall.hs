@@ -5,9 +5,11 @@ import Control.Monad.ST (ST)
 import Core.Tree.Constraint (ConstraintF (..))
 import Core.Tree.Constraints (ConstraintsF (..))
 import qualified Core.Tree.Constraints as Constraints (ConstraintsF (..))
+import Core.Tree.Forall (ForallOver (..))
 import qualified Core.Tree.Forall as Simple (ForallOver (..))
 import Core.Tree.Instanciation (InstanciationF (..))
 import Core.Tree.Type (TypeF (Logical, Variable))
+import qualified Core.Tree.Type as Type (TypeF (..))
 import qualified Core.Tree.TypeLambda as Simple (TypeLambdaOver (..))
 import Data.Foldable (toList, traverse_)
 import qualified Data.Kind as Kind
@@ -16,7 +18,6 @@ import Data.Maybe (catMaybes)
 import Data.STRef (STRef, readSTRef, writeSTRef)
 import Data.Traversable (for)
 import qualified Data.Vector as Vector
-import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Context (Context (..))
 import qualified Semantic.Check.Mask as Mask
@@ -24,24 +25,13 @@ import qualified Semantic.Index.Local as Local
 import qualified Semantic.Index.Table.Local as Table.Local
 import qualified Semantic.Index.Table.Term as Table.Term
 import qualified Semantic.Index.Table.Type as Table.Type
+import qualified Semantic.Index.Type2 as Type2
 import Semantic.Scope (Environment (..), Vacuous)
 import qualified Semantic.Scope as Scope
-import qualified Semantic.Shift as Shift
-import Semantic.Shift0 (shift)
-import qualified Semantic.Shift0 as Shift0
-import Semantic.Unify.Class
-  ( Collected (..),
-    Collector (..),
-    Generalizable (..),
-    Instantiatable (..),
-    Solve,
-    Substitute (..),
-    Zonk (..),
-    Zonker (..),
-  )
-import Semantic.Unify.Constraints (Constraints (..))
 import qualified Semantic.Unify.Constraints as Constraints (solve)
 import qualified Semantic.Unify.Evidence as Evidence
+import Semantic.Unify.Generalizable (Collected (..), Collector (..), Generalizable (..))
+import Semantic.Unify.Solve (Solve (..))
 import Semantic.Unify.Type
   ( Box (..),
     Logical (..),
@@ -50,56 +40,51 @@ import Semantic.Unify.Type
     fresh,
     unshift,
   )
-import qualified Semantic.Unify.Type as Type
+import qualified Semantic.Unify.Type as Type (solve)
+import Semantic.Unify.Zonk (Zonker (..), zonk)
 import Syntax.Position (Position)
 import Prelude hiding (Functor, map)
 
-type Forall = ForallOver Type
+type Forall s = ForallOver TypeF (Logical s)
 
-data ForallOver typex s scope = ForallOver
-  { parameters :: !(Strict.Vector (TypeF (Logical s) scope)),
-    constraints :: !(ConstraintsF (Logical s) scope),
-    result :: !(typex s (Scope.Local ':+ scope))
-  }
+-- todo move this to Core
+substitute ::
+  Strict.Vector.Vector (TypeF (Logical s) scope) ->
+  TypeF (Logical s) (Scope.Local ':+ scope) ->
+  TypeF (Logical s) scope
+substitute replacements (Variable index) = case index of
+  Local.Local index -> replacements Strict.Vector.! index
+  Local.Shift index -> Variable index
+substitute replacements typex = case typex of
+  Type.Logical (Shift logical) -> Type.Logical logical
+  Type.Logical Box {} -> error "can't substitute box"
+  Type.Constructor index -> Type.Constructor (Type2.unlocal index)
+  Type.Call function argument -> Type.Call (substitute replacements function) (substitute replacements argument)
+  Type.Function parameter result ->
+    Type.Function (substitute replacements parameter) (substitute replacements result)
+  Type.Type universe -> Type.Type (substitute replacements universe)
+  Type.Constraint -> Type.Constraint
+  Type.Small -> Type.Small
+  Type.Large -> Type.Large
+  Type.Universe -> Type.Universe
+  Type.Levity -> Type.Levity
 
-instance (Zonk typex) => Zonk (ForallOver typex) where
-  zonk zonker ForallOver {parameters, constraints, result} = do
-    parameters <- traverse (zonk zonker) (fmap Typex parameters)
-    constraints <- zonk zonker (Constraintsx constraints)
-    result <- zonk zonker result
-    pure $
-      ForallOver
-        { parameters = fmap runTypex parameters,
-          constraints = runConstraintsx constraints,
-          result
-        }
-
-instance (typex ~ Type) => Shift0.Functor (ForallOver typex s) where
-  map Shift0.Id forallx = forallx
-  map Shift0.Shift ForallOver {parameters, constraints, result = Typex result} =
-    ForallOver
-      { parameters = fmap shift parameters,
-        constraints = shift constraints,
-        result = Typex $ Shift.map (Shift.Over Shift.Shift) result
-      }
-
-instanciateOver ::
-  (Instantiatable typex) =>
+instanciate ::
   Context s scope ->
   Position ->
-  ForallOver typex s scope ->
-  ST s (typex s scope, InstanciationF (Evidence.Logical s) scope)
-instanciateOver context position ForallOver {parameters, constraints, result} = do
-  fresh <- traverse (fmap Typex . fresh) parameters
+  Forall s scope ->
+  ST s (Type s scope, InstanciationF (Evidence.Logical s) scope)
+instanciate context position ForallOver {parameters, constraints, result} = do
+  fresh <- traverse fresh parameters
   instanciation <- case constraints of
     Constraints constraints -> do
       evidence <- for constraints $ \Constraint {classx, head, arguments} -> do
-        Typex head <- pure $ fresh Strict.Vector.! head
-        arguments <- pure $ toList $ fmap (runTypex . substitute (Substitute fresh)) $ fmap Typex arguments
+        head <- pure $ fresh Strict.Vector.! head
+        arguments <- pure $ toList $ fmap (substitute fresh) arguments
         constrainWith context position classx head arguments
       pure $ Instanciation evidence
     None -> pure Mono
-  pure $ (substitute (Substitute fresh) result, instanciation)
+  pure $ (substitute fresh result, instanciation)
 
 newtype Generalize typex s scopes = Generalize
   { runGeneralize ::
@@ -109,13 +94,13 @@ newtype Generalize typex s scopes = Generalize
   }
 
 type Body ::
-  (Kind.Type -> Environment -> Kind.Type) ->
+  ((Environment -> Kind.Type) -> Environment -> Kind.Type) ->
   (Environment -> Kind.Type) ->
   Kind.Type ->
   Environment ->
   Kind.Type
-data Body typex term s scope = (:::)
-  { typex :: !(typex s scope),
+data Body typef term s scope = (:::)
+  { typex :: !(typef (Logical s) scope),
     term :: !(Solve s (term scope))
   }
 
@@ -143,12 +128,12 @@ generalizeBody position context (Generalize run) = do
   result <- zonk Zonker typex
   pure $
     ForallOver
-      { parameters = fmap runTypex parameters,
+      { parameters,
         constraints = Constraints.None,
         result
       }
       ::: do
-        parameters <- traverse (Type.solve position . runTypex) parameters
+        parameters <- traverse (Type.solve position) parameters
         constraints <- Constraints.solve position Constraints.None
         result <- term
         pure
@@ -186,7 +171,7 @@ generalizeBody position context (Generalize run) = do
     parameter :: STRef s (Box s (scope' ':+ scope)) -> ST s (Type s scope)
     parameter reference =
       readSTRef reference >>= \case
-        Unsolved {kind} -> Typex <$> unshift fail fail kind
+        Unsolved {kind} -> unshift fail fail kind
           where
             fail :: a
             fail = error "parameter can't fail"
@@ -196,17 +181,17 @@ generalizeBody position context (Generalize run) = do
       writeSTRef reference $ Solved $ Variable $ Local.Local variable
 
 type SolveForall ::
-  (Kind.Type -> Environment -> Kind.Type) ->
+  ((Environment -> Kind.Type) -> Environment -> Kind.Type) ->
   ((Environment -> Kind.Type) -> Environment -> Kind.Type) ->
   Kind.Type
-newtype SolveForall source target
-  = SolveForall (forall s scope. Position -> source s scope -> Solve s (target Vacuous scope))
+newtype SolveForall typef typef'
+  = SolveForall (forall s scope. Position -> typef (Logical s) scope -> Solve s (typef' Vacuous scope))
 
 solve ::
-  SolveForall source target ->
+  SolveForall typef typef' ->
   Position ->
-  ForallOver source s scope ->
-  Solve s (Simple.ForallOver target Vacuous scope)
+  ForallOver typef (Logical s) scope ->
+  Solve s (Simple.ForallOver typef' Vacuous scope)
 solve (SolveForall go) position ForallOver {parameters, constraints, result} = do
   parameters <- traverse (Type.solve position) parameters
   constraints <- Constraints.solve position constraints
@@ -219,12 +204,12 @@ solve (SolveForall go) position ForallOver {parameters, constraints, result} = d
       }
 
 type MapForall ::
-  (Kind.Type -> Environment -> Kind.Type) ->
-  (Kind.Type -> Environment -> Kind.Type) ->
+  ((Environment -> Kind.Type) -> Environment -> Kind.Type) ->
+  ((Environment -> Kind.Type) -> Environment -> Kind.Type) ->
   Kind.Type
-newtype MapForall typex typex' = MapForall (forall s scope. typex s scope -> typex' s scope)
+newtype MapForall typef typef' = MapForall (forall s scope. typef (Logical s) scope -> typef' (Logical s) scope)
 
-mapForall :: MapForall typex typex' -> ForallOver typex s scope -> ForallOver typex' s scope
+mapForall :: MapForall typef typef' -> ForallOver typef (Logical s) scope -> ForallOver typef' (Logical s) scope
 mapForall (MapForall map) ForallOver {parameters, constraints, result} =
   ForallOver
     { parameters,

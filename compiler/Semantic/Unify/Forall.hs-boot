@@ -2,16 +2,14 @@
 
 module Semantic.Unify.Forall where
 
-import qualified Data.Kind as Kind
-import Semantic.Scope (Environment)
-import Semantic.Shift0 as Shift0
-import {-# SOURCE #-} Semantic.Unify.Type (Type)
+import Control.Monad.ST (ST)
+import Core.Tree.Forall (ForallOver)
+import Core.Tree.Type (TypeF)
+import {-# SOURCE #-} Semantic.Check.Context (Context)
+import {-# SOURCE #-} Semantic.Unify.Instanciation
+import {-# SOURCE #-} Semantic.Unify.Type
+import Syntax.Position (Position)
 
-type Forall = ForallOver Type
+type Forall s = ForallOver TypeF (Logical s)
 
-type role ForallOver representational nominal nominal
-
-type ForallOver :: (Kind.Type -> Environment -> Kind.Type) -> Kind.Type -> Environment -> Kind.Type
-data ForallOver typex s scope
-
-instance (typex ~ Type) => Shift0.Functor (ForallOver typex s)
+instanciate :: Context s scope -> Position -> Forall s scope -> ST s (Type s scope, Instanciation s scope)

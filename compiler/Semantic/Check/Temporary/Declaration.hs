@@ -10,7 +10,7 @@ import Semantic.Check.Context (Context (..), groupTermBindings)
 import qualified Semantic.Check.Go.Scheme as Solved.Scheme
 import qualified Semantic.Check.Mask as Mask
 import qualified Semantic.Check.Temporary.Definition3 as Definition3
-import Semantic.Check.Temporary.Definition4 (Definition4 (..), Element (Element), Types (..), solveElement)
+import Semantic.Check.Temporary.Definition4 (Definition4 (..), Element (Element), solveElement)
 import qualified Semantic.Check.Temporary.Definition4 as Definition4
 import Semantic.Check.TypeAnnotation (Annotation (..), TypeAnnotation (..))
 import qualified Semantic.Index.Link.Term as Term
@@ -24,6 +24,7 @@ import Semantic.Tree.Combinators.Inferred (Inferred (Solved))
 import Semantic.Tree.Declaration (Key)
 import qualified Semantic.Tree.Declaration as Semantic (Declaration (..))
 import qualified Semantic.Tree.Declaration as Solved (Declaration (..))
+import Semantic.Tree.Definition4 (Types (..))
 import qualified Semantic.Tree.Definition4 as Semantic
   ( Annotation (..),
     Definition4 (..),

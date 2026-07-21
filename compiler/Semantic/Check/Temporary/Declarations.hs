@@ -45,6 +45,7 @@ import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import qualified Semantic.Tree.Declaration as Semantic (Declaration)
 import qualified Semantic.Tree.Declaration as Semantic.Declaration
 import qualified Semantic.Tree.Declarations as Semantic (Local (..))
+import qualified Semantic.Tree.Definition4 as Proper.Definition4
 import qualified Semantic.Tree.Instance as Semantic (Instance)
 import qualified Semantic.Tree.Instance as Semantic.Instance
 import qualified Semantic.Tree.TypeDeclaration as Semantic (TypeDeclaration)
@@ -163,7 +164,7 @@ checkTermDeclaration context index declaration = Formula7 {cycle, run}
               types Definition4.:::: _ -> Unify.mapForall go types
                 where
                   go = Unify.MapForall $ \case
-                    Definition4.Types types -> types Strict.Vector.! id
+                    Proper.Definition4.Types types -> types Strict.Vector.! id
               _ -> error "bad link lookup"
       annotation <- meta
       Declaration.check context link annotation declaration

@@ -410,14 +410,16 @@ executable hazy
     Semantic.Tree.TypePattern
     Semantic.Unify
     Semantic.Unify.Builtin
-    Semantic.Unify.Class
     Semantic.Unify.Constraint
     Semantic.Unify.Constraints
     Semantic.Unify.Error
     Semantic.Unify.Evidence
     Semantic.Unify.Forall
+    Semantic.Unify.Generalizable
     Semantic.Unify.Instanciation
+    Semantic.Unify.Solve
     Semantic.Unify.Type
+    Semantic.Unify.Zonk
     Syntax.Extensions
     Syntax.FreeVariables
     Syntax.Lexer

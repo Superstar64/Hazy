@@ -8,15 +8,11 @@ import qualified Data.Kind as Kind
 import Semantic.Scope (Environment)
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
-import {-# SOURCE #-} Semantic.Unify.Class (Solve, Zonk)
+import Semantic.Unify.Solve (Solve)
 import Syntax.Position (Position)
 import Prelude hiding (Functor)
 
-newtype Type s scopes = Typex {runTypex :: TypeF (Logical s) scopes}
-
-instance Shift0.Functor (Type s)
-
-instance Zonk Type
+type Type s = TypeF (Logical s)
 
 type role Logical nominal nominal
 

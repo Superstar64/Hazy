@@ -9,14 +9,10 @@ import qualified Data.Kind as Kind
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
-import Semantic.Unify.Class (Solve, Zonk)
+import Semantic.Unify.Solve (Solve)
 import Syntax.Position (Position)
 
-newtype Evidence s scope = Evidencex {runEvidencex :: EvidenceF (Logical s) scope}
-
-instance Shift0.Functor (Evidence s)
-
-instance Zonk Evidence
+type Evidence s = EvidenceF (Logical s)
 
 type role Logical nominal nominal
 

@@ -15,13 +15,11 @@ import Core.Tree.Type (TypeF (..))
 import qualified Core.Tree.Type as Simple (Type)
 import {-# SOURCE #-} Core.Tree.TypeDeclaration (assumeData)
 import Data.Foldable (for_, toList, traverse_)
-import qualified Data.Kind
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 import Data.Traversable (for)
 import qualified Data.Vector as Vector
-import qualified Data.Vector.Strict as Strict.Vector
 import Error (unsupportedFeatureConstraintedTypeDefaulting)
 import Semantic.Check.Context (Context (..))
 import qualified Semantic.Check.DataInstance as DataInstance
@@ -32,34 +30,22 @@ import Semantic.Check.TypeBinding (TypeBinding (TypeBinding))
 import qualified Semantic.Check.TypeBinding as TypeBinding
 import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Evidence as Evidence (Index (..))
-import qualified Semantic.Index.Local as Local (Index (..))
 import qualified Semantic.Index.Table.Local as Local.Table
 import qualified Semantic.Index.Table.Type as Type ((!))
 import qualified Semantic.Index.Table.Type as Type.Table
-import qualified Semantic.Index.Type as Type (unlocal)
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Shift as Shift
 import Semantic.Shift0 (shift)
 import qualified Semantic.Shift0 as Shift0
 import qualified Semantic.Unify.Builtin as Builtin (constrain)
-import Semantic.Unify.Class
-  ( Collected (..),
-    Collector (..),
-    Generalizable (..),
-    Instantiatable (..),
-    Solve (..),
-    Substitute (..),
-    Zonk (..),
-    Zonker (..),
-  )
 import {-# SOURCE #-} Semantic.Unify.Error (Error (..), abort)
 import qualified Semantic.Unify.Evidence as Evidence (Box (..), Logical (..), unify, unshift)
+import Semantic.Unify.Solve (Solve (..))
 import Syntax.Position (Position)
 import Prelude hiding (Functor, head, map)
 
-type Type :: Data.Kind.Type -> Environment -> Data.Kind.Type
-newtype Type s scopes = Typex {runTypex :: TypeF (Logical s) scopes}
+type Type s = TypeF (Logical s)
 
 data Logical s scopes where
   Box :: !(STRef s (Box s scopes)) -> Logical s scopes
@@ -80,100 +66,18 @@ data Delay s scope = Delay
     evidence :: EvidenceF (Evidence.Logical s) scope
   }
 
-instance Shift0.Functor (Type s) where
-  map category (Typex typex) = Typex (Shift0.map category typex)
-
 instance Shift0.Functor (Logical s) where
   map = \case
     Shift0.Id -> id
     Shift0.Shift -> Shift
 
+-- todo, remove this instance somehow.
+-- It would be nice if `shift` on `Logical` was total
 instance Shift.Functor (Logical s) where
   map Shift.Shift logical = Shift logical
   map (Shift.Over category) (Shift logical) = Shift (Shift.map category logical)
   map Shift.Over {} Box {} = error "can't map over logical"
   map _ _ = error "unsupported shift"
-
-instance Zonk Type where
-  zonk Zonker (Typex typex) = Typex <$> zonk typex
-    where
-      zonk :: TypeF (Logical s) scope -> ST s (TypeF (Logical s) scope)
-      zonk = \case
-        Logical (Box reference) ->
-          readSTRef reference >>= \case
-            Solved solved -> zonk solved
-            Unsolved {} -> pure $ Logical $ Box reference
-        Logical (Shift logical) -> shift <$> zonk (Logical logical)
-        Variable index -> pure $ Variable index
-        Constructor index -> pure $ Constructor index
-        Call function argument -> do
-          function <- zonk function
-          argument <- zonk argument
-          pure $ Call function argument
-        Function parameter result -> do
-          parameter <- zonk parameter
-          result <- zonk result
-          pure $ Function parameter result
-        Type universe -> Type <$> zonk universe
-        Constraint -> pure Constraint
-        Small -> pure Small
-        Large -> pure Large
-        Universe -> pure Universe
-        Levity -> pure Levity
-
-instance Generalizable Type where
-  collect (Collector mask) (Typex typex) = collect typex
-    where
-      collect :: TypeF (Logical s) scope -> ST s [Collected s scope]
-      collect = \case
-        Logical (Box reference) ->
-          readSTRef reference >>= \case
-            Solved typex -> collect typex
-            Unsolved {erasure}
-              | Mask.valid mask erasure -> pure [Collect reference]
-              | otherwise -> pure []
-        Logical (Shift logical) -> fmap Reach <$> collect (Logical logical)
-        Variable {} -> pure []
-        Constructor {} -> pure []
-        Call function argument -> do
-          function <- collect function
-          argument <- collect argument
-          pure (function ++ argument)
-        Function argument result -> do
-          argument <- collect argument
-          result <- collect result
-          pure $ argument ++ result
-        Type universe -> do
-          collect universe
-        Constraint -> pure []
-        Small -> pure []
-        Large -> pure []
-        Universe -> pure []
-        Levity -> pure []
-
-instance Instantiatable Type where
-  substitute replacements (Typex typex) = Typex $ substitute replacements typex
-    where
-      substitute :: Substitute s scope scope' -> TypeF (Logical s) scope -> TypeF (Logical s) scope'
-      substitute replacements = \case
-        Logical Box {} -> error "logic variables can not be under a scheme"
-        Call function argument ->
-          Call (substitute replacements function) (substitute replacements argument)
-        Function parameter result ->
-          Function (substitute replacements parameter) (substitute replacements result)
-        Type universe -> Type (substitute replacements universe)
-        Constraint -> Constraint
-        Small -> Small
-        Large -> Large
-        Universe -> Universe
-        Levity -> Levity
-        typex -> case replacements of
-          Substitute replacements -> case typex of
-            Logical (Shift typex) -> Logical typex
-            Variable (Local.Local index)
-              | Typex typex <- replacements Strict.Vector.! index -> typex
-            Variable (Local.Shift index) -> Variable index
-            Constructor index -> Constructor (Type2.map Type.unlocal index)
 
 fresh :: TypeF (Logical s) scope -> ST s (TypeF (Logical s) scope)
 fresh kind = do
@@ -311,10 +215,10 @@ typeCheck context_ position = typeCheckWith context_
           Variable index -> case localEnvironment Local.Table.! index of
             Local.Rigid {rigid} -> do
               unify context position kind (logicalType rigid)
-            Local.Wobbly {wobbly = Typex wobbly} -> do
+            Local.Wobbly {wobbly} -> do
               unify context position kind wobbly
           Constructor constructor -> do
-            Typex kind' <- Builtin.kind (pure . Typex . logicalType) indexType indexLift constructor
+            kind' <- Builtin.kind (pure . logicalType) indexType indexLift constructor
             unify context position kind' kind
             where
               indexType index =
@@ -322,7 +226,7 @@ typeCheck context_ position = typeCheckWith context_
                   TypeBinding {kind} -> do
                     kind <- kind
                     case kind of
-                      TypeBinding.Rigid kind -> pure $ Typex $ logicalType kind
+                      TypeBinding.Rigid kind -> pure $ logicalType kind
                       TypeBinding.Wobbly kind -> pure kind
               indexLift constructor@Constructor.Index {typeIndex} = do
                 datax <- do
@@ -462,7 +366,7 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
                       TypeBinding {kind} -> do
                         kind <- kind
                         case kind of
-                          TypeBinding.Rigid kind -> pure $ Typex $ logicalType kind
+                          TypeBinding.Rigid kind -> pure $ logicalType kind
                           TypeBinding.Wobbly wobbly -> pure wobbly
                   indexLift constructor@Constructor.Index {typeIndex} = do
                     datax <- do
@@ -470,7 +374,7 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
                       datax <- Builtin.index pure get typeIndex
                       Simple.Data.instanciate context position datax
                     pure $ DataInstance.constructorFunction datax constructor
-              Typex real <- Builtin.kind (pure . Typex . logicalType) indexType indexLift classx
+              real <- Builtin.kind (pure . logicalType) indexType indexLift classx
               unify context position (Function target Constraint) real
 
               typeCheck context position target (foldl Call term arguments)

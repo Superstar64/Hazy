@@ -30,16 +30,16 @@ import qualified Semantic.Shift as Shift
 import Semantic.Stage (Equal (..), Resolve)
 import Semantic.Tree.Type (Synonym (NoSynonym))
 import qualified Semantic.Tree.Type as Semantic
-import Semantic.Unify.Class (Collected (..), Collector (..))
-import qualified Semantic.Unify.Class as Collect
-import Semantic.Unify.Type (Box (..), Logical (..), Type (..))
+import Semantic.Unify.Generalizable (Collected (..), Collector (..))
+import qualified Semantic.Unify.Generalizable as Generalizable
+import Semantic.Unify.Type (Box (..), Logical (..))
 import qualified Syntax.Lexer as Lexer
 import Syntax.Position (Position)
 import qualified Syntax.Printer as Syntax (build)
 import qualified Syntax.Tree.Type as Syntax (Type (Call, argument, function, startPosition), print)
 
 collect :: TypeF (Logical s) scopes -> ST s [Collected s scopes]
-collect = Collect.collect (Collector Mask.Inline) . Typex
+collect = Generalizable.collect (Collector Mask.Inline)
 
 data Error s where
   Unify :: Context s scope -> TypeF (Logical s) scope -> TypeF (Logical s) scope -> Error s

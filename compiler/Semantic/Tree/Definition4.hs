@@ -33,6 +33,7 @@ import {-# SOURCE #-} Semantic.Tree.Declaration (Groupable (..))
 import qualified Semantic.Tree.Definition2 as Mark
 import Semantic.Tree.Definition3 (Definition3)
 import Semantic.Tree.Scheme (Scheme)
+import {-# SOURCE #-} qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
 
 type Definition4 :: Locality -> Layout -> Stage -> Environment -> Type
@@ -109,6 +110,12 @@ instance (Shift.Functor logical) => Shift0.Functor (Types logical) where
 
 instance (Shift.Functor logical) => Shift.Functor (Types logical) where
   map category (Types types) = Types (Shift.map category <$> types)
+
+instance Unify.Zonk Types where
+  zonk zonker (Types types) = Types <$> traverse (Unify.zonk zonker) types
+
+instance Unify.Generalizable Types where
+  collect collector (Types types) = foldMap (Unify.collect collector) types
 
 newtype Set locality stage scope
   = Set (Strict.Vector (Element locality stage scope))

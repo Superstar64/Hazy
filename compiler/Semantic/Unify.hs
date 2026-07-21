@@ -1,7 +1,8 @@
 -- |
 -- Unification public api
 module Semantic.Unify
-  ( Type,
+  ( Logical,
+    Type,
     Forall,
     ForallOver,
     Constraints,
@@ -75,8 +76,9 @@ import qualified Core.Tree.Constraint as Simple (Constraint)
 import Core.Tree.Constraints (ConstraintsF (..))
 import qualified Core.Tree.Evidence as Evidence (EvidenceF (..))
 import qualified Core.Tree.Evidence as Simple (Evidence)
-import qualified Core.Tree.Forall as Core (Forall, ForallOver (..))
-import qualified Core.Tree.Forall as Simple (Forall, ForallOver)
+import Core.Tree.Forall (ForallOver (ForallOver))
+import qualified Core.Tree.Forall as Core (Forall)
+import qualified Core.Tree.Forall as Simple (Forall, ForallOver (..))
 import Core.Tree.Instanciation (InstanciationF (..))
 import qualified Core.Tree.Instanciation as Simple (Instanciation)
 import Core.Tree.Type (TypeF (..))
@@ -96,12 +98,6 @@ import qualified Semantic.Scope as Scope
 import qualified Semantic.Shift as Shift
 import Semantic.Shift0 (shift)
 import qualified Semantic.Shift0 as Shift0
-import Semantic.Unify.Class
-  ( Generalizable (collect),
-    Solve (..),
-    Zonk (..),
-    Zonker (..),
-  )
 import Semantic.Unify.Constraint (Constraint (..))
 import qualified Semantic.Unify.Constraint as Constraint (solve)
 import Semantic.Unify.Constraints (Constraints (..))
@@ -110,31 +106,32 @@ import qualified Semantic.Unify.Evidence as Evidence (solve)
 import Semantic.Unify.Forall
   ( Body ((:::)),
     Forall,
-    ForallOver (ForallOver),
     Generalize (..),
     MapForall (..),
     SolveForall (..),
     generalizeBody,
-    instanciateOver,
+    instanciate,
     mapForall,
   )
-import qualified Semantic.Unify.Forall
 import qualified Semantic.Unify.Forall as Forall
+import Semantic.Unify.Generalizable (Generalizable (..))
 import Semantic.Unify.Instanciation (Instanciation (..))
 import qualified Semantic.Unify.Instanciation as Instanciation
-import Semantic.Unify.Type (Type (..))
+import Semantic.Unify.Solve (Solve (..))
+import Semantic.Unify.Type (Logical, Type (..))
 import qualified Semantic.Unify.Type as Type (constrain, fresh, mark, solve, unify)
+import Semantic.Unify.Zonk (Zonk (..), Zonker)
 import Syntax.Position (Position)
 import Prelude hiding (Functor, head)
 
 variable :: Local.Index scope -> Type s scope
-variable = Typex . Variable
+variable = Variable
 
 constructor :: Type2.Index scope -> Type s scope
-constructor = Typex . Constructor
+constructor = Constructor
 
 call :: Type s scope -> Type s scope -> Type s scope
-call (Typex argument) (Typex result) = Typex (Call argument result)
+call argument result = Call argument result
 
 index :: Type.Index scope -> Type s scope
 index = constructor . Type2.Index
@@ -161,52 +158,52 @@ char :: Type s scope
 char = constructor Type2.Char
 
 typex :: Type s scope
-typex = Typex $ Type Small
+typex = Type Small
 
 kind :: Type s scope
-kind = Typex $ Type Large
+kind = Type Large
 
 typeWith :: Type s scopes -> Type s scopes
-typeWith (Typex universe) = Typex $ Type universe
+typeWith universe = Type universe
 
 small :: Type s scopes
-small = Typex Small
+small = Small
 
 large :: Type s scopes
-large = Typex Large
+large = Large
 
 universe :: Type s scopes
-universe = Typex Universe
+universe = Universe
 
 constraint :: Type s scope
-constraint = Typex Constraint
+constraint = Constraint
 
 levity :: Type s scope
-levity = Typex Levity
+levity = Levity
 
 infixr 0 `function`
 
 function :: Type s scope -> Type s scope -> Type s scope
-function (Typex parameter) (Typex result) = Typex $ Function parameter result
+function parameter result = Function parameter result
 
 -- todo, this function isn't safe
 forallx ::
   Strict.Vector (Type s scope) ->
   Constraints s scope ->
-  typex s (Scope.Local ':+ scope) ->
-  ForallOver typex s scope
+  typef (Logical s) (Scope.Local ':+ scope) ->
+  ForallOver typef (Logical s) scope
 forallx parameters constraints result =
   ForallOver
-    { parameters = fmap runTypex parameters,
-      constraints = runConstraintsx constraints,
+    { parameters,
+      constraints,
       result
     }
 
 constraints :: Strict.Vector (Constraint s scope) -> Constraints s scope
-constraints constraints = Constraintsx $ Constraints $ fmap runConstraintx constraints
+constraints constraints = Constraints constraints
 
 none :: Constraints s scope
-none = Constraintsx None
+none = None
 
 constraintx ::
   Type2.Index scope ->
@@ -214,12 +211,11 @@ constraintx ::
   Strict.Vector (Type s (Scope.Local ':+ scope)) ->
   Constraint s scope
 constraintx classx head arguments =
-  Constraintx
-    Constraint.Constraint
-      { classx,
-        head,
-        arguments = fmap runTypex arguments
-      }
+  Constraint.Constraint
+    { classx,
+      head,
+      arguments
+    }
 
 mono :: (Shift0.Functor (typex s)) => typex s scope -> ForallOver typex s scope
 mono result =
@@ -230,26 +226,20 @@ mono result =
     }
 
 variable' :: Evidence.Index scope -> Instanciation s scope -> Evidence s scope
-variable' variable (Instanciationx instanciation) = Evidencex $ Evidence.Variable {variable, instanciation}
+variable' variable instanciation = Evidence.Variable {variable, instanciation}
 
 super :: Evidence s scope -> Int -> Evidence s scope
-super (Evidencex base) index =
-  Evidencex
-    Evidence.Super
-      { base,
-        index
-      }
+super base index =
+  Evidence.Super
+    { base,
+      index
+    }
 
 instanciation :: Strict.Vector (Evidence s scope) -> Instanciation s scope
-instanciation instanciation = Instanciationx $ Instanciation $ fmap runEvidencex instanciation
+instanciation instanciation = Instanciation instanciation
 
 monoInstanciation :: Instanciation s scope
-monoInstanciation = Instanciationx $ Mono
-
-instanciate :: Context s scope -> Position -> Forall s scope -> ST s (Type s scope, Instanciation s scope)
-instanciate context position scheme = do
-  (typex, instanciation) <- instanciateOver context position $ scheme
-  pure (typex, Instanciationx instanciation)
+monoInstanciation = Mono
 
 -- todo, figure out how to make sure nodes that are being solved early have a
 -- rigid context
@@ -261,32 +251,32 @@ liftST :: ST s a -> Solve s a
 liftST = Solve
 
 solveEvidence :: Position -> Evidence s scope -> Solve s (Simple.Evidence scope)
-solveEvidence position (Evidencex evidence) = Evidence.solve position evidence
+solveEvidence position evidence = Evidence.solve position evidence
 
 solveInstanciation :: Position -> Instanciation s scope -> Solve s (Simple.Instanciation scope)
-solveInstanciation position (Instanciationx instanciation) = Instanciation.solve position instanciation
+solveInstanciation position instanciation = Instanciation.solve position instanciation
 
 solveConstraint :: Position -> Constraint s scope -> Solve s (Simple.Constraint scope)
-solveConstraint position (Constraintx constraint) = Constraint.solve position constraint
+solveConstraint position constraint = Constraint.solve position constraint
 
 solveForall :: Position -> Forall s scope -> Solve s (Simple.Forall scope)
 solveForall = solveForallOver (SolveForall solve)
 
 solveForallOver ::
-  SolveForall source target ->
+  SolveForall typef typef' ->
   Position ->
-  ForallOver source s scope ->
-  Solve s (Simple.ForallOver target Vacuous scope)
+  ForallOver typef (Logical s) scope ->
+  Solve s (Simple.ForallOver typef' Vacuous scope)
 solveForallOver solve position scheme = Forall.solve solve position scheme
 
 fresh :: Type s scope -> ST s (Type s scope)
-fresh (Typex typex) = Typex <$> Type.fresh typex
+fresh typex = Type.fresh typex
 
 mark :: Context s scope -> Position -> Mask.Erasure -> Type s scope -> ST s ()
-mark context position erasure (Typex typex) = Type.mark context position erasure typex
+mark context position erasure typex = Type.mark context position erasure typex
 
 solve :: Position -> Type s scope -> Solve s (Simple.Type scope)
-solve position (Typex typex) = Type.solve position typex
+solve position typex = Type.solve position typex
 
 -- | Unify two types
 --
@@ -297,7 +287,7 @@ solve position (Typex typex) = Type.solve position typex
 -- Alternatively, they may be untypeable, in which case they never unify with
 -- unification variables and instead only do syntatic equality.
 unify :: Context s scope -> Position -> Type s scope -> Type s scope -> ST s ()
-unify context position (Typex type1) (Typex type2) = Type.unify context position type1 type2
+unify context position type1 type2 = Type.unify context position type1 type2
 
 constrain ::
   Context s scope ->
@@ -305,33 +295,33 @@ constrain ::
   Type2.Index scope ->
   Type s scope ->
   ST s (Evidence s scope)
-constrain context position classx (Typex argument) = do
+constrain context position classx argument = do
   evidence <- Type.constrain context position classx argument
-  pure $ Evidencex evidence
+  pure evidence
 
 liftWith :: Strict.Vector (Type s scope) -> TypeF Vacuous (Scope.Local ':+ scope) -> Type s scope
-liftWith substitution typex = Typex $ substituteType (Strict.Vector.toLazy $ runTypex <$> substitution) typex
+liftWith substitution typex = substituteType (Strict.Vector.toLazy $ substitution) typex
 
 liftWith' ::
   Strict.Vector (Type s scope) ->
   TypeF Vacuous (Scope.Local ':+ Scope.Local ':+ scope) ->
   Type s (Scope.Local ':+ scope)
-liftWith' substitution typex = Typex $ Substitute.mapType substitute typex
+liftWith' substitution typex = Substitute.mapType substitute typex
   where
     substitute = Substitute.Over $ Substitute Shift.Id wrapped Vector.empty
-    wrapped = Strict.Vector.toLazy $ fmap runTypex substitution
+    wrapped = Strict.Vector.toLazy substitution
 
 lift :: TypeF Vacuous scope -> Type s scope
-lift = Typex . logicalType
+lift = logicalType
 
 liftSchemeWith :: Strict.Vector (Type s scope) -> Core.Forall (Scope.Local ':+ scope) -> Forall s scope
 liftSchemeWith substitution forallx =
-  case substituteType (Strict.Vector.toLazy $ fmap runTypex substitution) forallx of
-    Core.ForallOver {parameters, constraints, result} ->
+  case substituteType (Strict.Vector.toLazy substitution) forallx of
+    ForallOver {parameters, constraints, result} ->
       ForallOver
         { parameters,
           constraints,
-          result = Typex result
+          result
         }
 
 liftScheme :: Core.Forall scope -> Forall s scope
