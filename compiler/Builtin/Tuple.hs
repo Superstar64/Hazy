@@ -15,7 +15,7 @@ import qualified Syntax.Tree.Brand as Brand
 definition :: Int -> Data scope
 definition n =
   Data
-    { parameters = Strict.Vector.replicate n Type.smallType,
+    { parameters = Strict.Vector.replicate n Type.typex,
       constructors = Strict.Vector.fromList $ toList set,
       selectors = Strict.Vector.empty,
       brand = Brand.Boxed

@@ -79,9 +79,6 @@ instance (Scope.Eq logical) => Eq (TypeF logical scope) where
   Levity == Levity = True
   _ == _ = False
 
-smallType :: Type scope
-smallType = Type Small
-
 instance (Shift.Functor logical) => Shift0.Functor (TypeF logical) where
   map = Shift.mapDefault
 
@@ -128,6 +125,64 @@ instance Substitute.TypeFunctor TypeF where
     Large -> Large
     Universe -> Universe
     Levity -> Levity
+
+infixl 9 #
+
+(#) :: TypeF logical scope -> TypeF logical scope -> TypeF logical scope
+(#) = Call
+
+infixr 0 -#>
+
+(-#>) :: TypeF logical scope -> TypeF logical scope -> TypeF logical scope
+(-#>) = Function
+
+variable :: Index scope -> TypeF logical scope
+variable = Variable
+
+constructor :: Type2.Index scope -> TypeF logical scope
+constructor = Constructor
+
+arrow :: TypeF logical scope
+arrow = Constructor Type2.Arrow
+
+listing :: TypeF logical scope
+listing = Constructor Type2.List
+
+list :: TypeF logical scope -> TypeF logical scope
+list = Call (Constructor Type2.List)
+
+tupling :: Int -> TypeF logical scope
+tupling size = Constructor (Type2.Tuple size)
+
+bool :: TypeF logical scope
+bool = Constructor Type2.Bool
+
+char :: TypeF logical scope
+char = Constructor Type2.Char
+
+typex :: TypeF logical scope
+typex = Type Small
+
+kind :: TypeF logical scope
+kind = Type Large
+
+typeWith :: TypeF logical scope -> TypeF logical scope
+typeWith = Type
+
+small :: TypeF logical scope
+small = Small
+
+large :: TypeF logical scope
+large = Large
+
+universe :: TypeF logical scope
+universe = Universe
+
+constraint :: TypeF logical scope
+constraint = Constraint
+
+levity :: TypeF logical scope
+levity = Levity
 
 simplify :: Solved.Type position Check scope -> Type scope
 simplify typex = simplifyWith typex []

@@ -1,6 +1,8 @@
 module Semantic.Check.Temporary.Comprehension where
 
 import Control.Monad.ST (ST)
+import Core.Tree.Type ((#))
+import qualified Core.Tree.Type as Core
 import Semantic.Check.Context (Context)
 import qualified Semantic.Check.Temporary.Declarations as Declarations
 import {-# SOURCE #-} Semantic.Check.Temporary.Expression (Expression)
@@ -49,27 +51,27 @@ check ::
   ST s (Comprehension s scope)
 check context typex = \case
   Semantic.Done {startPosition, done} -> do
-    let monad = Unify.list
-    inner <- Unify.fresh Unify.typex
+    let monad = Core.listing
+    inner <- Unify.fresh Core.typex
     done <- Expression.check context inner done
-    Unify.unify context startPosition (Unify.call monad inner) typex
+    Unify.unify context startPosition (monad # inner) typex
     pure Done {startPosition, done}
   Semantic.Run {startPosition, effect, after} -> do
-    let monad = Unify.list
-    kept <- Unify.fresh Unify.typex
-    Unify.unify context startPosition (Unify.call monad kept) typex
-    effect <- Expression.check context Unify.bool effect
+    let monad = Core.listing
+    kept <- Unify.fresh Core.typex
+    Unify.unify context startPosition (monad # kept) typex
+    effect <- Expression.check context Core.bool effect
     after <- check context typex after
     pure Run {startPosition, effect, after}
   Semantic.Bind {startPosition, patternx, effect, thenx} -> do
-    let monad = Unify.list
-    input <- Unify.fresh Unify.typex
-    output <- Unify.fresh Unify.typex
+    let monad = Core.listing
+    input <- Unify.fresh Core.typex
+    output <- Unify.fresh Core.typex
     let neverFail = Semantic.Pattern.neverFails patternx
-    Unify.unify context startPosition (Unify.call monad output) typex
+    Unify.unify context startPosition (monad # output) typex
     patternx <- Pattern.check context input patternx
-    effect <- Expression.check context (Unify.call monad input) effect
-    thenx <- check (Pattern.augment patternx context) (shift $ Unify.call monad output) thenx
+    effect <- Expression.check context (monad # input) effect
+    thenx <- check (Pattern.augment patternx context) (shift $ monad # output) thenx
     pure Bind {startPosition, patternx, effect, thenx, fail = not neverFail}
   Semantic.Let {startPosition, declarations, body} -> do
     (context, declarations) <- Declarations.check context declarations

@@ -1,6 +1,8 @@
 module Semantic.Check.Temporary.Function where
 
 import Control.Monad.ST (ST)
+import Core.Tree.Type ((-#>))
+import qualified Core.Tree.Type as Core
 import Semantic.Check.Context (Context)
 import Semantic.Check.Temporary.Pattern (Pattern)
 import qualified Semantic.Check.Temporary.Pattern as Pattern
@@ -28,9 +30,9 @@ check :: Context s scope -> Unify.Type s scope -> Semantic.Function Group Resolv
 check context typex = \case
   Semantic.Plain {rightHandSide} -> Plain <$> RightHandSide.check context typex rightHandSide
   Semantic.Bound {functionPosition, patternx, function} -> do
-    argument <- Unify.fresh Unify.typex
-    result <- Unify.fresh Unify.typex
-    Unify.unify context functionPosition typex (Unify.function argument result)
+    argument <- Unify.fresh Core.typex
+    result <- Unify.fresh Core.typex
+    Unify.unify context functionPosition typex (argument -#> result)
     pattern1 <- Pattern.check context argument patternx
     context <- pure $ Pattern.augment pattern1 context
     function1 <- check context (shift result) function

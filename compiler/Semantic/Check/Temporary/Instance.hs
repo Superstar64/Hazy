@@ -13,6 +13,7 @@ import qualified Core.Tree.Evidence as Simple.Evidence
 import qualified Core.Tree.Forall as Simple (ForallOver (..))
 import qualified Core.Tree.Instanciation as Simple (InstanciationF (..))
 import qualified Core.Tree.Instanciation as Simple.Instanciation
+import Core.Tree.Type ((#))
 import qualified Core.Tree.Type as Simple.Type (TypeF (..))
 import Core.Tree.TypeDeclaration (assumeClass)
 import qualified Core.Tree.TypeDeclarationExtra as Extra
@@ -111,7 +112,7 @@ check
                 pure (Extra.assumeClass <$> extra)
           Builtin.index (pure . pure) get index
         let Simple.Class.Class {constraints, methods} = classx
-            base = foldl Simple.Type.Call (shift $ Simple.Type.Constructor head) variables
+            base = foldl (#) (shift $ Simple.Type.Constructor head) variables
               where
                 variables = [Simple.Type.Variable $ Local.Local i | i <- [0 .. length parameters - 1]]
             self = Simple.Evidence.Variable {variable = shift variable, instanciation}
@@ -149,7 +150,7 @@ check
 
         evidence <- for constraints $
           \Simple.Constraint {classx, arguments} -> do
-            let parameter = foldl Simple.Type.Call base arguments
+            let parameter = foldl (#) base arguments
             evidence <- Unify.constrain context startPosition (shift classx) (Unify.lift parameter)
             Unify.runSolve $ Unify.solveEvidence startPosition evidence
         let check _ scheme Semantic.Definition {definition = Semantic.Resolve member} = do

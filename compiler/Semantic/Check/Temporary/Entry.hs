@@ -1,6 +1,7 @@
 module Semantic.Check.Temporary.Entry where
 
 import Control.Monad.ST (ST)
+import qualified Core.Tree.Type as Core
 import Error (Position, unsupportedFeaturePolymorphicComponents)
 import Semantic.Check.Context (Context (..))
 import Semantic.Check.Temporary.StrictnessAnnotation (StrictnessAnnotation)
@@ -23,7 +24,7 @@ data Entry s scope = Entry
 check :: Context s scope -> Semantic.Entry Position Resolve scope -> ST s (Entry s scope)
 check context Semantic.Entry {startPosition, entry = Semantic.Canonical Semantic.Scheme {result}, strict} = do
   entry <- pure $ Shift.map (Shift.Unshift $ unsupportedFeaturePolymorphicComponents startPosition) result
-  entry <- Type.check context Unify.typex entry
+  entry <- Type.check context Core.typex entry
   strict <- StrictnessAnnotation.check context strict
   pure
     Entry

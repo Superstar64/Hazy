@@ -1,6 +1,7 @@
 module Semantic.Check.ConstructorInstance where
 
 import Control.Monad.ST (ST)
+import Core.Tree.Type ((-#>))
 import Data.Foldable (traverse_)
 import qualified Data.Vector.Strict as Strict
 import Semantic.Check.Context (Context)
@@ -25,7 +26,7 @@ types :: ConstructorInstance s scope -> Strict.Vector (Unify.Type s scope)
 types ConstructorInstance {entries} = entry <$> entries
 
 function :: ConstructorInstance s scope -> Unify.Type s scope -> Unify.Type s scope
-function ConstructorInstance {entries} base = foldr (Unify.function . entry) base entries
+function ConstructorInstance {entries} base = foldr ((-#>) . entry) base entries
 
 mark :: Context s scope -> ConstructorInstance s scope -> ST s ()
 mark context ConstructorInstance {entries} =

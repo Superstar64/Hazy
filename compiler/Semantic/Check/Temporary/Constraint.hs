@@ -2,6 +2,8 @@ module Semantic.Check.Temporary.Constraint where
 
 import Control.Monad.ST (ST)
 import {-# SOURCE #-} qualified Core.Builtin as Builtin
+import Core.Tree.Type ((-#>))
+import qualified Core.Tree.Type as Core
 import {-# SOURCE #-} Core.Tree.TypeDeclaration (assumeData)
 import Data.Foldable (toList)
 import Data.List.Reverse (List (Nil, (:>)))
@@ -50,7 +52,7 @@ check
       head,
       arguments
     } = do
-    target <- Unify.fresh Unify.kind
+    target <- Unify.fresh Core.kind
     let indexType constructor
           | TypeBinding {kind} <- typeEnvironment Type.Table.! constructor =
               do
@@ -66,11 +68,11 @@ check
           pure $ DataInstance.constructorFunction datax constructor
     real <- Builtin.kind (pure . Unify.lift) indexType indexLift (shift classx)
 
-    Unify.unify context startPosition (Unify.function target Unify.constraint) real
+    Unify.unify context startPosition (target -#> Core.constraint) real
 
     let check context kind (arguments :> argument) = do
-          parameterType <- Unify.fresh Unify.kind
-          arguments <- check context (Unify.function parameterType kind) arguments
+          parameterType <- Unify.fresh Core.kind
+          arguments <- check context (parameterType -#> kind) arguments
           argument <- Type.check context parameterType argument
           pure (arguments :> argument)
         check context kind Nil = case localEnvironment Table.Local.! Local head of

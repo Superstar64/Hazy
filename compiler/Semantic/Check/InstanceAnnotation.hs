@@ -3,6 +3,7 @@ module Semantic.Check.InstanceAnnotation where
 import Control.Monad.ST (ST)
 import qualified Core.Tree.Constraints as Simple
 import qualified Core.Tree.Constraints as Simple.Constraints
+import qualified Core.Tree.Type as Core
 import qualified Data.Vector.Strict as Strict (Vector)
 import Semantic.Check.Context (Context)
 import qualified Semantic.Check.Temporary.Constraints as Unsolved.Constraints
@@ -33,8 +34,8 @@ check ::
   ST s (InstanceAnnotation scope)
 check context Semantic.Instance {parameters, prerequisites} = do
   let fresh Semantic.TypePattern {name, position} = do
-        level <- Unify.fresh Unify.universe
-        typex <- Unify.fresh (Unify.typeWith level)
+        level <- Unify.fresh Core.universe
+        typex <- Unify.fresh (Core.typeWith level)
         pure
           Unsolved.TypePattern
             { name,

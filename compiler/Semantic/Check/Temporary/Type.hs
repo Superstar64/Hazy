@@ -4,6 +4,8 @@ module Semantic.Check.Temporary.Type where
 
 import Control.Monad.ST (ST)
 import {-# SOURCE #-} qualified Core.Builtin as Builtin
+import Core.Tree.Type ((-#>))
+import qualified Core.Tree.Type as Core
 import {-# SOURCE #-} Core.Tree.TypeDeclaration as Simple (assumeData)
 import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import qualified Data.Strict.Vector1 as Strict (Vector1)
@@ -92,49 +94,49 @@ check context@Context {localEnvironment, typeEnvironment} kind = \case
           Simple.Data.instanciate context constructorPosition datax
         pure $ DataInstance.constructorFunction datax constructor
   Semantic.Tuple {startPosition, elements} -> do
-    elements <- traverse (check context Unify.typex) elements
-    Unify.unify context startPosition kind Unify.typex
+    elements <- traverse (check context Core.typex) elements
+    Unify.unify context startPosition kind Core.typex
     pure Tuple {startPosition, elements}
   Semantic.Call {startPosition, function, argument} -> do
-    level <- Unify.fresh Unify.universe
-    parameterType <- Unify.fresh (Unify.typeWith level)
-    function <- check context (Unify.function parameterType kind) function
+    level <- Unify.fresh Core.universe
+    parameterType <- Unify.fresh (Core.typeWith level)
+    function <- check context (parameterType -#> kind) function
     argument <- check context parameterType argument
     pure Call {startPosition, function, argument}
   Semantic.Function {startPosition, parameter, operatorPosition, result} -> do
-    level <- Unify.fresh Unify.universe
-    level' <- Unify.fresh Unify.universe
-    parameter <- check context (Unify.typeWith level) parameter
-    result <- check context (Unify.typeWith level') result
-    Unify.unify context operatorPosition (Unify.typeWith level') kind
+    level <- Unify.fresh Core.universe
+    level' <- Unify.fresh Core.universe
+    parameter <- check context (Core.typeWith level) parameter
+    result <- check context (Core.typeWith level') result
+    Unify.unify context operatorPosition (Core.typeWith level') kind
     pure Function {startPosition, operatorPosition, parameter, result}
   Semantic.List {startPosition, element} -> do
-    element <- check context Unify.typex element
-    Unify.unify context startPosition kind Unify.typex
+    element <- check context Core.typex element
+    Unify.unify context startPosition kind Core.typex
     pure List {startPosition, element}
   Semantic.SmallType {startPosition} -> do
-    Unify.unify context startPosition kind Unify.kind
+    Unify.unify context startPosition kind Core.kind
     pure SmallType {startPosition}
   Semantic.StrictFunction {operatorPosition} ->
     unsupportedFeatureStrictFunctions operatorPosition
   Semantic.LiftedList {startPosition, items} -> do
-    inner <- Unify.fresh Unify.typex
-    Unify.unify context startPosition kind (Unify.listWith inner)
+    inner <- Unify.fresh Core.typex
+    Unify.unify context startPosition kind (Core.list inner)
     items <- traverse (check context inner) items
     pure LiftedList {startPosition, items}
   Semantic.Type {startPosition, universe} -> case universe of
     Semantic.Small {} -> do
-      Unify.unify context startPosition kind Unify.kind
+      Unify.unify context startPosition kind Core.kind
       pure SmallType {startPosition}
     _ -> universeMustBeSmall startPosition
   Semantic.Constraint {startPosition} -> do
-    Unify.unify context startPosition kind Unify.kind
+    Unify.unify context startPosition kind Core.kind
     pure Constraint {startPosition}
   Semantic.Small {startPosition} -> uncheckable startPosition
   Semantic.Large {startPosition} -> uncheckable startPosition
   Semantic.Universe {startPosition} -> uncheckable startPosition
   Semantic.Levity {startPosition} -> do
-    Unify.unify context startPosition kind Unify.kind
+    Unify.unify context startPosition kind Core.kind
     pure Levity {startPosition}
 
 solve :: Context s scope -> Type s scope -> Unify.Solve s (Solved.Type Position Check scope)

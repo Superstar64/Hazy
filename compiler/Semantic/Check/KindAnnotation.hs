@@ -1,6 +1,8 @@
 module Semantic.Check.KindAnnotation where
 
 import Control.Monad.ST (ST)
+import Core.Tree.Type ((-#>))
+import qualified Core.Tree.Type as Core
 import qualified Core.Tree.Type as Simple (Type, simplify)
 import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import qualified Data.Vector.Strict as Strict (Vector)
@@ -46,8 +48,8 @@ check
     } =
     do
       let fresh Semantic.TypePattern {name, position} = do
-            level <- Unify.fresh Unify.universe
-            typex <- Unify.fresh (Unify.typeWith level)
+            level <- Unify.fresh Core.universe
+            typex <- Unify.fresh (Core.typeWith level)
             pure
               Unsolved.TypePattern
                 { name,
@@ -55,13 +57,13 @@ check
                   position
                 }
       parameters <- traverse fresh parameters
-      target <- Unify.fresh (Unify.typeWith Unify.large)
-      let kind = foldr (Unify.function . Unsolved.TypePattern.typex) target parameters
+      target <- Unify.fresh (Core.typeWith Core.large)
+      let kind = foldr ((-#>) . Unsolved.TypePattern.typex) target parameters
       annotation' <- case annotation of
         Semantic.InferredAcyclic -> pure Strict.Nothing
         Semantic.Annotated annotation -> do
-          universe <- Unify.fresh Unify.universe
-          annotation <- Type.check context (Unify.typeWith universe) annotation
+          universe <- Unify.fresh Core.universe
+          annotation <- Type.check context (Core.typeWith universe) annotation
           annotation <- Unify.runSolve $ Type.solve context annotation
           Unify.unify context position kind (Unify.lift $ Simple.simplify annotation)
           pure $ Strict.Just annotation
@@ -73,8 +75,8 @@ check
       pure Synonym {annotation', kind, parameters, synonym}
 check context Semantic.TypeDeclaration {definition} = case definition of
   Semantic.Annotated annotation Semantic.::: _ -> do
-    universe <- Unify.fresh Unify.universe
-    annotation <- Type.check context (Unify.typeWith universe) annotation
+    universe <- Unify.fresh Core.universe
+    annotation <- Type.check context (Core.typeWith universe) annotation
     annotation <- Unify.runSolve $ Type.solve context annotation
     pure $ Annotation {annotation, kind = Simple.simplify annotation}
   _ -> pure Inferred

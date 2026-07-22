@@ -2,6 +2,8 @@ module Semantic.Check.Temporary.Expression where
 
 import Control.Monad.ST (ST)
 import {-# SOURCE #-} qualified Core.Builtin as Builtin
+import Core.Tree.Type ((#), (-#>))
+import qualified Core.Tree.Type as Core
 import {-# SOURCE #-} Core.Tree.TypeDeclaration (assumeData)
 import qualified Core.Tree.TypeLambda as Simple
 import qualified Data.Strict.Vector1 as Strict (Vector1)
@@ -181,8 +183,8 @@ check
         Builtin.index pure get typeIndex
       DataInstance {types, constructors} <-
         Simple.Data.instanciate context constructorPosition datax
-      let root = Unify.constructor typeIndex
-          base = foldl Unify.call root types
+      let root = Core.constructor typeIndex
+          base = foldl (#) root types
           instancex = constructors Strict.Vector.! constructorIndex
           entries = ConstructorInstance.types instancex
           constructorInfo = ConstructorInstance.info instancex
@@ -191,13 +193,13 @@ check
       fields <- traverse (Field.check context lookup) fields
       pure $ Record {constructorPosition, constructor, fields, constructorInfo}
 check context typex Semantic.List {startPosition, items} = do
-  inner <- Unify.fresh Unify.typex
-  Unify.unify context startPosition typex (Unify.listWith inner)
+  inner <- Unify.fresh Core.typex
+  Unify.unify context startPosition typex (Core.list inner)
   items <- traverse (check context inner) items
   pure List {startPosition, items}
 check context resultType Semantic.Call {function, argument} = do
-  argumentType <- Unify.fresh Unify.typex
-  function1 <- check context (Unify.function argumentType resultType) function
+  argumentType <- Unify.fresh Core.typex
+  function1 <- check context (argumentType -#> resultType) function
   argument <- check context argumentType argument
   pure (Call function1 argument)
 check context typex Semantic.Let {declarations, letBody} = do
@@ -205,7 +207,7 @@ check context typex Semantic.Let {declarations, letBody} = do
   letBody <- check context (shift typex) letBody
   pure (Let declarations letBody)
 check context typex Semantic.If {condition, thenx, elsex} = do
-  condition <- check context Unify.bool condition
+  condition <- check context Core.bool condition
   thenx <- check context typex thenx
   elsex <- check context typex elsex
   pure (If condition thenx elsex)
@@ -219,18 +221,18 @@ check context typex Semantic.Float {startPosition, float} = do
   evidence <- Unify.constrain context startPosition Type2.Fractional typex
   pure $ Float {startPosition, float, evidence}
 check context typex Semantic.String {startPosition, string} = do
-  Unify.unify context startPosition typex (Unify.listWith Unify.char)
+  Unify.unify context startPosition typex (Core.list Core.char)
   pure $ String {startPosition, string}
 check context typex Semantic.Character {startPosition, character} = do
-  Unify.unify context startPosition typex Unify.char
+  Unify.unify context startPosition typex Core.char
   pure $ Character {startPosition, character}
 check context typex Semantic.Tuple {startPosition, elements} = do
   items <- for elements $ \element -> do
-    typex <- Unify.fresh Unify.typex
+    typex <- Unify.fresh Core.typex
     element <- check context typex element
     pure (typex, element)
   let (types, elements) = Strict.Vector2.unzip items
-  let target = foldl Unify.call (Unify.tuple $ length elements) types
+  let target = foldl (#) (Core.tupling $ length elements) types
   Unify.unify context startPosition typex target
   pure $ Tuple {startPosition, elements}
 check context typex Semantic.Comprehension {startPosition, statements} = do
@@ -266,7 +268,7 @@ check
           permissive
         }
 check context typex Semantic.Case {startPosition, scrutinee, cases} = do
-  binder <- Unify.fresh Unify.typex
+  binder <- Unify.fresh Core.typex
   scrutinee <- check context binder scrutinee
   cases <- traverse (Alternative.check context typex binder) cases
   pure Case {startPosition, scrutinee, cases}
@@ -274,26 +276,26 @@ check context typex Semantic.Do {startPosition, dox} = do
   dox <- Do.check context typex dox
   pure Do {startPosition, dox}
 check context typex Semantic.Lambda {startPosition, parameter, body} = do
-  parameterType <- Unify.fresh Unify.typex
+  parameterType <- Unify.fresh Core.typex
   parameter <- Pattern.check context parameterType parameter
-  resultType <- Unify.fresh Unify.typex
+  resultType <- Unify.fresh Core.typex
   body <- Lambda.check (Pattern.augment parameter context) (shift resultType) body
-  Unify.unify context startPosition typex (Unify.function parameterType resultType)
+  Unify.unify context startPosition typex (parameterType -#> resultType)
   pure Lambda {startPosition, parameter, body}
 check context typex Semantic.LambdaCase {startPosition, cases} = do
-  parameterType <- Unify.fresh Unify.typex
-  resultType <- Unify.fresh Unify.typex
+  parameterType <- Unify.fresh Core.typex
+  resultType <- Unify.fresh Core.typex
   cases <- traverse (Alternative.check context resultType parameterType) cases
-  Unify.unify context startPosition typex (Unify.function parameterType resultType)
+  Unify.unify context startPosition typex (parameterType -#> resultType)
   pure LambdaCase {startPosition, cases}
 check context typex Semantic.RightSection {left, operatorPosition, right} = do
-  argumentType1 <- Unify.fresh Unify.typex
-  argumentType2 <- Unify.fresh Unify.typex
-  result <- Unify.fresh Unify.typex
-  let target = argumentType1 `Unify.function` argumentType2 `Unify.function` result
+  argumentType1 <- Unify.fresh Core.typex
+  argumentType2 <- Unify.fresh Core.typex
+  result <- Unify.fresh Core.typex
+  let target = argumentType1 -#> argumentType2 -#> result
   left <- CallHead.check context target left
   right <- check context argumentType2 right
-  Unify.unify context operatorPosition typex (argumentType1 `Unify.function` result)
+  Unify.unify context operatorPosition typex (argumentType1 -#> result)
   pure RightSection {operatorPosition, left, right}
 check context typex Semantic.Annotation {expression = Explicit expression, operatorPosition, annotation} = do
   Annotation.Annotation {annotation, annotation'} <- Annotation.checkAnnotation context annotation

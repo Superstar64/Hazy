@@ -14,26 +14,6 @@ module Semantic.Unify
     none,
     constraintx,
     mono,
-    variable,
-    constructor,
-    call,
-    index,
-    lifted,
-    arrow,
-    list,
-    listWith,
-    tuple,
-    bool,
-    char,
-    typex,
-    kind,
-    typeWith,
-    small,
-    large,
-    universe,
-    constraint,
-    levity,
-    function,
     variable',
     super,
     instanciation,
@@ -88,10 +68,7 @@ import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Context (Context (..))
 import qualified Semantic.Check.Mask as Mask
-import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Evidence as Evidence (Index (..))
-import qualified Semantic.Index.Local as Local
-import qualified Semantic.Index.Type as Type (Index)
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Scope (Environment (..), Vacuous)
 import qualified Semantic.Scope as Scope
@@ -123,68 +100,6 @@ import qualified Semantic.Unify.Type as Type (constrain, fresh, mark, solve, uni
 import Semantic.Unify.Zonk (Zonk (..), Zonker)
 import Syntax.Position (Position)
 import Prelude hiding (Functor, head)
-
-variable :: Local.Index scope -> Type s scope
-variable = Variable
-
-constructor :: Type2.Index scope -> Type s scope
-constructor = Constructor
-
-call :: Type s scope -> Type s scope -> Type s scope
-call argument result = Call argument result
-
-index :: Type.Index scope -> Type s scope
-index = constructor . Type2.Index
-
-lifted :: Constructor.Index scope -> Type s scope
-lifted index = constructor (Type2.Lifted index)
-
-arrow :: Type s scope
-arrow = constructor Type2.Arrow
-
-list :: Type s scope
-list = constructor Type2.List
-
-listWith :: Type s scope -> Type s scope
-listWith = call list
-
-tuple :: Int -> Type s scope
-tuple size = constructor (Type2.Tuple size)
-
-bool :: Type s scope
-bool = constructor Type2.Bool
-
-char :: Type s scope
-char = constructor Type2.Char
-
-typex :: Type s scope
-typex = Type Small
-
-kind :: Type s scope
-kind = Type Large
-
-typeWith :: Type s scopes -> Type s scopes
-typeWith universe = Type universe
-
-small :: Type s scopes
-small = Small
-
-large :: Type s scopes
-large = Large
-
-universe :: Type s scopes
-universe = Universe
-
-constraint :: Type s scope
-constraint = Constraint
-
-levity :: Type s scope
-levity = Levity
-
-infixr 0 `function`
-
-function :: Type s scope -> Type s scope -> Type s scope
-function parameter result = Function parameter result
 
 -- todo, this function isn't safe
 forallx ::

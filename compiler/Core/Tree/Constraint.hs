@@ -2,7 +2,7 @@ module Core.Tree.Constraint where
 
 import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
-import Core.Tree.Type (Type, TypeF (Call, Variable))
+import Core.Tree.Type (Type, TypeF (Variable), (#))
 import qualified Core.Tree.Type as Type
 import qualified Data.Vector.Strict as Strict
 import qualified Semantic.Index.Local as Local
@@ -49,7 +49,7 @@ instance Substitute.TypeFunctor ConstraintF where
 
 argument :: Constraint scope -> Type (Local ':+ scope)
 argument Constraint {head, arguments} =
-  foldl Call (Variable (Local.Local head)) arguments
+  foldl (#) (Variable (Local.Local head)) arguments
 
 simplify :: Solved.Constraint position Check scope -> Constraint scope
 simplify Solved.Constraint {classx, head, arguments} = do

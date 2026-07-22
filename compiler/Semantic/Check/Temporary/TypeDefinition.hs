@@ -1,6 +1,8 @@
 module Semantic.Check.Temporary.TypeDefinition where
 
 import Control.Monad.ST (ST)
+import Core.Tree.Type ((-#>))
+import qualified Core.Tree.Type as Core
 import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
 import Error (unsupportedFeatureGADTs)
@@ -56,7 +58,7 @@ check context kind = \case
     } ->
       do
         parameters <- traverse fresh parameters
-        let kind' = foldr (Unify.function . TypePattern.typex) Unify.typex parameters
+        let kind' = foldr ((-#>) . TypePattern.typex) Core.typex parameters
         Unify.unify context position kind' kind
         context <- pure $ Scheme.augment parameters context
         constructors <- traverse (Constructor.check context) constructors
@@ -75,7 +77,7 @@ check context kind = \case
       parameter
     } -> do
       parameter <- fresh parameter
-      let kind' = Unify.function (TypePattern.typex parameter) Unify.constraint
+      let kind' = TypePattern.typex parameter -#> Core.constraint
       Unify.unify context position kind' kind
       context <- pure $ Scheme.augment (Strict.Vector.singleton parameter) context
       constraints <- traverse (Constraint.check context) constraints
@@ -90,8 +92,8 @@ check context kind = \case
   Semantic.GADT {position} -> unsupportedFeatureGADTs position
   where
     fresh Semantic.TypePattern {name, position} = do
-      level <- Unify.fresh Unify.universe
-      typex <- Unify.fresh (Unify.typeWith level)
+      level <- Unify.fresh Core.universe
+      typex <- Unify.fresh (Core.typeWith level)
       pure
         TypePattern
           { name,

@@ -1,6 +1,7 @@
 module Semantic.Check.Temporary.Statements where
 
 import Control.Monad.ST (ST)
+import qualified Core.Tree.Type as Core
 import Semantic.Check.Context (Context)
 import qualified Semantic.Check.Temporary.Declarations as Declarations
 import {-# SOURCE #-} Semantic.Check.Temporary.Expression (Expression)
@@ -51,11 +52,11 @@ check context typex = \case
     done <- Expression.check context typex done
     pure Done {startPosition, done}
   Semantic.Run {startPosition, effect, after} -> do
-    effect <- Expression.check context Unify.bool effect
+    effect <- Expression.check context Core.bool effect
     after <- check context typex after
     pure Run {startPosition, effect, after}
   Semantic.Bind {startPosition, patternx, effect, thenx} -> do
-    binder <- Unify.fresh Unify.typex
+    binder <- Unify.fresh Core.typex
     patternx <- Pattern.check context binder patternx
     effect <- Expression.check context binder effect
     thenx <- check (Pattern.augment patternx context) (shift typex) thenx

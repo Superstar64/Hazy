@@ -2,6 +2,8 @@ module Semantic.Check.Temporary.CallHead where
 
 import Control.Monad.ST (ST)
 import qualified Core.Builtin as Builtin
+import Core.Tree.Type ((#))
+import qualified Core.Tree.Type as Core
 import Core.Tree.TypeDeclaration (assumeClass, assumeData)
 import qualified Data.Vector.Strict as Strict.Vector
 import qualified Semantic.Check.ClassInstance as ClassInstance
@@ -76,8 +78,8 @@ check context@Context {typeEnvironment} typex Semantic.Constructor {constructorP
       Builtin.index pure get typeIndex
     DataInstance {types, constructors} <-
       Simple.Data.instanciate context constructorPosition datax
-    let root = Unify.constructor typeIndex
-        base = foldl Unify.call root types
+    let root = Core.constructor typeIndex
+        base = foldl (#) root types
         instancex = constructors Strict.Vector.! constructorIndex
         typex' = ConstructorInstance.function instancex base
         constructorInfo = ConstructorInstance.info instancex

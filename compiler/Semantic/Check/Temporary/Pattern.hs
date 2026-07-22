@@ -3,6 +3,8 @@ module Semantic.Check.Temporary.Pattern where
 import Control.Monad (when)
 import Control.Monad.ST (ST)
 import qualified Core.Builtin as Builtin
+import Core.Tree.Type ((#))
+import qualified Core.Tree.Type as Core
 import Core.Tree.TypeDeclaration (assumeData)
 import Data.Map (Map)
 import Data.Strict.Vector1 (toVector)
@@ -162,8 +164,8 @@ check context@Context {typeEnvironment} typex = \case
           Builtin.index pure get typeIndex
         DataInstance {types, constructors} <-
           Simple.Data.instanciate context constructorPosition datax
-        let root = Unify.constructor typeIndex
-            base = foldl Unify.call root types
+        let root = Core.constructor typeIndex
+            base = foldl (#) root types
             instancex = constructors Strict.Vector.! constructorIndex
             entries = ConstructorInstance.types instancex
             constructorInfo = ConstructorInstance.info instancex
@@ -195,8 +197,8 @@ check context@Context {typeEnvironment} typex = \case
         Builtin.index pure get typeIndex
       DataInstance {types, constructors} <-
         Simple.Data.instanciate context constructorPosition datax
-      let root = Unify.constructor typeIndex
-          base = foldl Unify.call root types
+      let root = Core.constructor typeIndex
+          base = foldl (#) root types
           instancex = constructors Strict.Vector.! constructorIndex
           entries = ConstructorInstance.types instancex
           constructorInfo = ConstructorInstance.info instancex
@@ -215,15 +217,15 @@ check context@Context {typeEnvironment} typex = \case
             constructorInfo
           }
   Semantic.List {irrefutable, names, startPosition, items} -> do
-    element <- Unify.fresh Unify.typex
+    element <- Unify.fresh Core.typex
     items <- traverse (check context element) items
-    Unify.unify context startPosition typex (Unify.listWith element)
+    Unify.unify context startPosition typex (Core.list element)
     pure $ List {typex, names, startPosition, irrefutable, items}
   Semantic.Character {irrefutable, names, startPosition, character} -> do
-    Unify.unify context startPosition typex Unify.char
+    Unify.unify context startPosition typex Core.char
     pure $ Character {typex, names, startPosition, irrefutable, character}
   Semantic.String {irrefutable, names, startPosition, string} -> do
-    Unify.unify context startPosition typex (Unify.listWith Unify.char)
+    Unify.unify context startPosition typex (Core.list Core.char)
     pure $ String {typex, names, startPosition, irrefutable, string}
   Semantic.Integer {irrefutable, names, startPosition, integer} -> do
     evidence <- Unify.constrain context startPosition Type2.Num typex

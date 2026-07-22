@@ -1,6 +1,7 @@
 module Semantic.Check.Go.TypeDeclaration (TypeDeclaration (..), kind', check, lazy) where
 
 import Control.Monad.ST (ST)
+import qualified Core.Tree.Type as Core
 import qualified Core.Tree.Type as Simple
 import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import qualified Data.Vector as Vector
@@ -67,7 +68,7 @@ check context linked annotation TypeDeclaration {position, name, constructorName
               }
       | otherwise -> error "bad annotation"
     _ :::: Set set -> do
-      fresh <- Vector.replicateM (length set) (Unify.fresh Unify.kind)
+      fresh <- Vector.replicateM (length set) (Unify.fresh Core.kind)
       let context' =
             groupTypeBindings
               (TypeDefinition2.position <$> toLazy set)

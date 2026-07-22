@@ -3,6 +3,7 @@
 module Semantic.Check.Temporary.Scheme where
 
 import Control.Monad.ST (ST)
+import qualified Core.Tree.Type as Core
 import Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Context (Context (..))
@@ -39,12 +40,12 @@ data Scheme s scope = Scheme
 check :: Context s scope -> Semantic.Scheme Position Resolve scope -> ST s (Scheme s scope)
 check context Semantic.Scheme {startPosition, implicit, parameters, constraints, result} = do
   let fresh Semantic.TypePattern {position, name} = do
-        level <- Unify.fresh Unify.universe
-        typex <- Unify.fresh (Unify.typeWith level)
+        level <- Unify.fresh Core.universe
+        typex <- Unify.fresh (Core.typeWith level)
         pure TypePattern {position, name, typex}
   parameters <- traverse fresh parameters
   constraints <- Constraints.check (augment parameters context) constraints
-  result <- Type.check (augment parameters context) Unify.typex result
+  result <- Type.check (augment parameters context) Core.typex result
   pure $ Scheme {startPosition, implicit, parameters, constraints, result}
 
 solve :: Context s scope -> Scheme s scope -> Unify.Solve s (Solved.Scheme Position Check scope)

@@ -1,6 +1,8 @@
 module Semantic.Check.Temporary.Lambda where
 
 import Control.Monad.ST (ST)
+import Core.Tree.Type ((-#>))
+import qualified Core.Tree.Type as Core
 import Semantic.Check.Context (Context)
 import {-# SOURCE #-} Semantic.Check.Temporary.Expression (Expression)
 import {-# SOURCE #-} qualified Semantic.Check.Temporary.Expression as Expression
@@ -32,11 +34,11 @@ check context typex = \case
     plain <- Expression.check context typex plain
     pure Plain {plain}
   Semantic.Bound {boundPosition, parameter, body} -> do
-    parameterType <- Unify.fresh Unify.typex
+    parameterType <- Unify.fresh Core.typex
     parameter <- Pattern.check context parameterType parameter
-    resultType <- Unify.fresh Unify.typex
+    resultType <- Unify.fresh Core.typex
     body <- check (Pattern.augment parameter context) (shift resultType) body
-    Unify.unify context boundPosition typex (Unify.function parameterType resultType)
+    Unify.unify context boundPosition typex (parameterType -#> resultType)
     pure Bound {boundPosition, parameter, body}
 
 solve :: Lambda s scope -> Unify.Solve s (Solved.Lambda Group Check scope)

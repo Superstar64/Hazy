@@ -1,6 +1,7 @@
 module Semantic.Check.Temporary.StrictnessAnnotation where
 
 import Control.Monad.ST (ST)
+import qualified Core.Tree.Type as Core
 import Semantic.Check.Context (Context)
 import Semantic.Check.Temporary.Type (Type)
 import qualified Semantic.Check.Temporary.Type as Type
@@ -22,7 +23,7 @@ check context = \case
   Semantic.Lazy -> pure Lazy
   Semantic.Strict -> pure Strict
   Semantic.Polymorphic {levity} -> do
-    levity <- Type.check context Unify.levity levity
+    levity <- Type.check context Core.levity levity
     pure Polymorphic {levity}
 
 solve ::

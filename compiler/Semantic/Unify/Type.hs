@@ -11,7 +11,7 @@ import Core.Tree.Evidence (EvidenceF)
 import qualified Core.Tree.Evidence as Evidence (EvidenceF (..))
 import Core.Tree.Instanciation (InstanciationF (Instanciation))
 import qualified Core.Tree.Instanciation as Instanciation (InstanciationF (..))
-import Core.Tree.Type (TypeF (..))
+import Core.Tree.Type (TypeF (..), (#))
 import qualified Core.Tree.Type as Simple (Type)
 import {-# SOURCE #-} Core.Tree.TypeDeclaration (assumeData)
 import Data.Foldable (for_, toList, traverse_)
@@ -377,7 +377,7 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
               real <- Builtin.kind (pure . logicalType) indexType indexLift classx
               unify context position (Function target Constraint) real
 
-              typeCheck context position target (foldl Call term arguments)
+              typeCheck context position target (foldl (#) term arguments)
               logical <- newSTRef Evidence.Unsolved {}
               let delay = Delay {arguments, evidence = Evidence.Logical (Evidence.Box logical)}
               writeSTRef reference $! Unsolved {kind, constraints = Map.insert classx delay constraints, erasure}

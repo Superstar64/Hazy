@@ -21,8 +21,8 @@ import qualified Core.Tree.Class as Class
 import Core.Tree.ClassExtra (ClassExtra (..))
 import Core.Tree.Data (Data)
 import qualified Core.Tree.Data as Data
-import Core.Tree.Type (Type)
-import qualified Core.Tree.Type as Type (TypeF (..), smallType)
+import Core.Tree.Type (Type, (-#>))
+import qualified Core.Tree.Type as Type (TypeF (..), typex)
 import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Type as Type (Index)
 import qualified Semantic.Index.Type2 as Type2
@@ -42,11 +42,11 @@ kind pure typex constructor = \case
     Type2.Tuple {} -> dataKind
     Type2.Ordering -> dataKind
     Type2.Ratio -> dataKind
-    Type2.Char -> Type.smallType
-    Type2.ST -> Type.smallType `Type.Function` Type.smallType `Type.Function` Type.smallType
-    Type2.Arrow -> Type.smallType `Type.Function` Type.smallType `Type.Function` Type.smallType
-    Type2.Integer -> Type.smallType
-    Type2.Int -> Type.smallType
+    Type2.Char -> Type.typex
+    Type2.ST -> Type.typex -#> Type.typex -#> Type.typex
+    Type2.Arrow -> Type.typex -#> Type.typex -#> Type.typex
+    Type2.Integer -> Type.typex
+    Type2.Int -> Type.typex
     Type2.Num -> classKind
     Type2.Enum -> classKind
     Type2.Eq -> classKind

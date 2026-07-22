@@ -3,7 +3,7 @@ module Core.Tree.Data where
 import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
 import Core.Tree.Constructor (Constructor)
-import Core.Tree.Type (Type)
+import Core.Tree.Type (Type, (-#>))
 import qualified Core.Tree.Type as Type
 import qualified Data.Vector.Strict as Strict
 import Semantic.Scope (Environment ((:+)), Local)
@@ -39,4 +39,4 @@ instance Substitute.Functor Data where
       }
 
 kind :: Data scope -> Type scope
-kind Data {parameters} = foldr Type.Function Type.smallType parameters
+kind Data {parameters} = foldr (-#>) Type.typex parameters

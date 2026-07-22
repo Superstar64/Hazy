@@ -2,6 +2,7 @@ module Semantic.Check.Temporary.Declaration where
 
 import Control.Monad.ST (ST)
 import qualified Core.Tree.Constraints as Simple.Constraints (simplify)
+import qualified Core.Tree.Type as Core
 import qualified Core.Tree.Type as Simple (simplify)
 import qualified Core.Tree.TypeLambda as Simple (TypeLambdaOver (..))
 import qualified Data.Vector as Vector
@@ -69,7 +70,7 @@ check context linked annotation Semantic.Declaration {position, name, definition
     | otherwise -> error "bad type annotation"
   _ Semantic.:::: Implicit.Resolve (Semantic.Set set) -> do
     types Unify.::: set <- Unify.generalizeBody position context $ Unify.Generalize $ \context -> do
-      fresh <- Vector.replicateM (length set) $ Unify.fresh Unify.typex
+      fresh <- Vector.replicateM (length set) $ Unify.fresh Core.typex
       set <- flip Strict.Vector.imapM set $ \index Semantic.Element {element, link} -> do
         let element' = Shift.map (Shift.Over Shift) element
             typex = fresh Vector.! index

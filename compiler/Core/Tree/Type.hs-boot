@@ -28,5 +28,5 @@ instance (Shift.Functor logical) => Shift.Functor (TypeF logical)
 
 instance (Scope.Show logical) => Scope.Show (TypeF logical)
 
-smallType :: Type scope
+typex :: TypeF logical scope
 simplify :: Semantic.Type position Check scope -> Type scope

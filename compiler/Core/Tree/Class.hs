@@ -5,7 +5,7 @@ import qualified Core.Substitute as Substitute
 import Core.Tree.Constraint (Constraint)
 import Core.Tree.Forall (Forall)
 import Core.Tree.MethodInfo (MethodInfo (..))
-import Core.Tree.Type (Type)
+import Core.Tree.Type (Type, (-#>))
 import qualified Core.Tree.Type as Type
 import qualified Data.Vector.Strict as Strict
 import Semantic.Scope (Environment ((:+)), Local)
@@ -37,7 +37,7 @@ instance Substitute.Functor Class where
       }
 
 kind :: Class scope -> Type scope
-kind Class {parameter} = Type.Function parameter Type.Constraint
+kind Class {parameter} = parameter -#> Type.Constraint
 
 info :: Class scope -> MethodInfo scope
 info Class {constraints} = MethodInfo {constraintCount = length constraints}

@@ -1,6 +1,8 @@
 module Semantic.Check.DataInstance where
 
 import Control.Monad.ST (ST)
+import Core.Tree.Type ((#), (-#>))
+import qualified Core.Tree.Type as Core
 import Data.Foldable (toList, traverse_)
 import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import qualified Data.Vector.Strict as Strict (Vector)
@@ -30,7 +32,7 @@ data DataInstance s scope = DataInstance
   }
 
 baseType :: DataInstance s scope -> Type2.Index scope -> Unify.Type s scope
-baseType DataInstance {types} typeIndex = foldl Unify.call (Unify.constructor typeIndex) types
+baseType DataInstance {types} typeIndex = foldl (#) (Core.constructor typeIndex) types
 
 constructorFunction :: DataInstance s scope -> Constructor.Index scope -> Unify.Type s scope
 constructorFunction instancex@DataInstance {constructors} Constructor.Index {typeIndex, constructorIndex} =
@@ -40,7 +42,7 @@ constructorFunction instancex@DataInstance {constructors} Constructor.Index {typ
 
 selectorFunction :: DataInstance s scope -> Selector.Index scope -> Unify.Type s scope
 selectorFunction instancex (Selector.Index typeIndex selectorIndex) =
-  baseType instancex typeIndex `Unify.function` selectorType instancex selectorIndex
+  baseType instancex typeIndex -#> selectorType instancex selectorIndex
 
 selectorType :: DataInstance s scope -> Int -> Unify.Type s scope
 selectorType DataInstance {constructors, selectors} selectorIndex = entry
