@@ -1,6 +1,7 @@
 module Semantic.Check.TermBinding where
 
 import Control.Monad.ST (ST)
+import qualified Core.Tree.Forall as Core
 import qualified Core.Tree.Forall as Simple (Forall)
 import qualified Semantic.Check.Functor.Annotated as Functor (Annotated (..))
 import {-# SOURCE #-} qualified Semantic.Check.Temporary.Declaration as Temporary
@@ -55,4 +56,4 @@ wobbly Functor.Annotated {meta, content} = TermBinding $ do
       Wobbly . Temporary.typex' <$> content
 
 group :: Unify.Type s scopes -> TermBinding s (GroupTerm ':+ scopes)
-group = TermBinding . pure . Wobbly . Unify.mono . shift
+group = TermBinding . pure . Wobbly . Core.mono . shift

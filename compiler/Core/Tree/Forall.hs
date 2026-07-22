@@ -3,14 +3,16 @@ module Core.Tree.Forall where
 import qualified Core.Shift as Shift2
 import qualified Core.Show as Core
 import qualified Core.Substitute as Substitute
-import Core.Tree.Constraints (ConstraintsF)
+import Core.Tree.Constraints (ConstraintsF (None))
 import qualified Core.Tree.Constraints as Constraints
 import Core.Tree.Type (TypeF)
 import qualified Core.Tree.Type as Type
 import qualified Data.Kind as Kind
 import qualified Data.Vector.Strict as Strict
+import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Scope (Environment (..), Local, Vacuous)
 import qualified Semantic.Scope as Scope
+import Semantic.Shift (shift)
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
@@ -72,6 +74,14 @@ instance (Substitute.TypeFunctor typex) => Substitute.TypeFunctor (ForallOver ty
         constraints = Substitute.mapType category constraints,
         result = Substitute.mapType (Substitute.Over category) result
       }
+
+mono :: (Shift0.Functor (typef logical)) => typef logical scope -> ForallOver typef logical scope
+mono result =
+  ForallOver
+    { parameters = Strict.Vector.empty,
+      constraints = None,
+      result = shift result
+    }
 
 constraintCount :: ForallOver typef Vacuous scope -> Constraints.ConstraintCount
 constraintCount ForallOver {constraints} = Constraints.constraintCount constraints
