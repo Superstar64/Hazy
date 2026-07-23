@@ -1,6 +1,7 @@
 module Semantic.Check.Temporary.Declaration where
 
 import Control.Monad.ST (ST)
+import Core.Substitute (logicalType)
 import qualified Core.Tree.Constraints as Simple.Constraints (simplify)
 import qualified Core.Tree.Type as Core
 import qualified Core.Tree.Type as Simple (simplify)
@@ -65,7 +66,7 @@ check context linked annotation Semantic.Declaration {position, name, definition
             { position,
               name,
               definition = Semantic.Annotated annotation ::: definition,
-              typex = Unify.liftScheme annotation'
+              typex = logicalType annotation'
             }
     | otherwise -> error "bad type annotation"
   _ Semantic.:::: Implicit.Resolve (Semantic.Set set) -> do
@@ -122,7 +123,7 @@ checkAnnotation
     }
   go =
     do
-      let typex = Unify.lift $ Simple.simplify result
+      let typex = logicalType $ Simple.simplify result
       context <- Solved.Scheme.augment position parameters constraints Mask.Runtime context
       definition <- go context typex
       pure $ do

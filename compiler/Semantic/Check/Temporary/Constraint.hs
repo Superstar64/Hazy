@@ -2,6 +2,7 @@ module Semantic.Check.Temporary.Constraint where
 
 import Control.Monad.ST (ST)
 import {-# SOURCE #-} qualified Core.Builtin as Builtin
+import Core.Substitute (logicalType)
 import Core.Tree.Type ((-#>))
 import qualified Core.Tree.Type as Core
 import {-# SOURCE #-} Core.Tree.TypeDeclaration (assumeData)
@@ -58,7 +59,7 @@ check
               do
                 kind <- kind
                 case kind of
-                  TypeBinding.Rigid kind -> pure $ Unify.lift kind
+                  TypeBinding.Rigid kind -> pure $ logicalType kind
                   TypeBinding.Wobbly kind -> pure kind
         indexLift constructor@Constructor.Index {typeIndex} = do
           datax <- do
@@ -66,7 +67,7 @@ check
             datax <- Builtin.index pure get typeIndex
             Simple.Data.instanciate context startPosition datax
           pure $ DataInstance.constructorFunction datax constructor
-    real <- Builtin.kind (pure . Unify.lift) indexType indexLift (shift classx)
+    real <- Builtin.kind (pure . logicalType) indexType indexLift (shift classx)
 
     Unify.unify context startPosition (target -#> Core.constraint) real
 
@@ -80,7 +81,7 @@ check
             Unify.unify context startPosition kind wobbly
             pure Nil
           LocalBinding.Rigid {rigid} -> do
-            Unify.unify context startPosition kind (Unify.lift rigid)
+            Unify.unify context startPosition kind (logicalType rigid)
             pure Nil
 
     arguments <- Strict.Vector.fromList . toList <$> check context target (Reverse.fromList $ toList arguments)

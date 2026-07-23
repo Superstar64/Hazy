@@ -1,6 +1,7 @@
 module Semantic.Check.Simple.Data where
 
 import Control.Monad.ST (ST)
+import Core.Substitute (logicalType)
 import Core.Tree.Data (Data (..))
 import Semantic.Check.Context (Context)
 import Semantic.Check.DataInstance (DataInstance (DataInstance))
@@ -11,7 +12,7 @@ import Syntax.Position (Position)
 
 instanciate :: Context s scope -> Position -> Data scope -> ST s (DataInstance s scope)
 instanciate context position Data {parameters, constructors, selectors, brand} = do
-  types <- traverse (Unify.fresh . Unify.lift) parameters
+  types <- traverse (Unify.fresh . logicalType) parameters
   let datax =
         DataInstance
           { position,

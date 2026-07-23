@@ -1,6 +1,7 @@
 module Semantic.Check.KindAnnotation where
 
 import Control.Monad.ST (ST)
+import Core.Substitute (logicalType)
 import Core.Tree.Type ((-#>))
 import qualified Core.Tree.Type as Core
 import qualified Core.Tree.Type as Simple (Type, simplify)
@@ -65,7 +66,7 @@ check
           universe <- Unify.fresh Core.universe
           annotation <- Type.check context (Core.typeWith universe) annotation
           annotation <- Unify.runSolve $ Type.solve context annotation
-          Unify.unify context position kind (Unify.lift $ Simple.simplify annotation)
+          Unify.unify context position kind (logicalType $ Simple.simplify annotation)
           pure $ Strict.Just annotation
       context <- pure $ Unsolved.Scheme.augment parameters context
       synonym <- Unsolved.Type.check context (shift target) synonym

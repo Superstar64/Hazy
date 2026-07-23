@@ -4,6 +4,7 @@ module Semantic.Check.Temporary.Type where
 
 import Control.Monad.ST (ST)
 import {-# SOURCE #-} qualified Core.Builtin as Builtin
+import Core.Substitute (logicalType)
 import Core.Tree.Type ((-#>))
 import qualified Core.Tree.Type as Core
 import {-# SOURCE #-} Core.Tree.TypeDeclaration as Simple (assumeData)
@@ -69,14 +70,14 @@ check :: Context s scope -> Unify.Type s scope -> Semantic.Type Position Resolve
 check context@Context {localEnvironment, typeEnvironment} kind = \case
   Semantic.Variable {startPosition, variable} -> case localEnvironment Local.Table.! variable of
     LocalBinding.Rigid {rigid}
-      | rigid <- Unify.lift rigid -> do
+      | rigid <- logicalType rigid -> do
           Unify.unify context startPosition kind rigid
           pure $ Variable {startPosition, variable}
     LocalBinding.Wobbly {wobbly} -> do
       Unify.unify context startPosition kind wobbly
       pure Variable {startPosition, variable}
   Semantic.Constructor {startPosition, constructorPosition, constructor} -> do
-    kind' <- Builtin.kind (pure . Unify.lift) indexType indexLift constructor
+    kind' <- Builtin.kind (pure . logicalType) indexType indexLift constructor
     Unify.unify context constructorPosition kind kind'
     pure Constructor {startPosition, constructorPosition, constructor}
     where
@@ -85,7 +86,7 @@ check context@Context {localEnvironment, typeEnvironment} kind = \case
             do
               kind <- kind
               case kind of
-                TypeBinding.Rigid kind -> pure $ Unify.lift kind
+                TypeBinding.Rigid kind -> pure $ logicalType kind
                 TypeBinding.Wobbly kind -> pure kind
       indexLift constructor@Constructor.Index {typeIndex} = do
         datax <- do

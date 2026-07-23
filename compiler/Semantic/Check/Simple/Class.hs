@@ -1,6 +1,7 @@
 module Semantic.Check.Simple.Class where
 
 import Control.Monad.ST (ST)
+import Core.Substitute (logicalType, substituteType)
 import Core.Tree.Class (Class (..))
 import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.ClassInstance (ClassInstance (ClassInstance))
@@ -12,10 +13,10 @@ import Syntax.Position (Position)
 
 instanciate :: Context s scope -> Position -> Type2.Index scope -> Class scope -> ST s (ClassInstance s scope)
 instanciate context position index Class {parameter, constraints, methods} = do
-  typex <- Unify.fresh (Unify.lift parameter)
+  typex <- Unify.fresh (logicalType parameter)
   evidence <- Unify.constrain context position index typex
   let types = Strict.Vector.singleton typex
-  methods <- pure $ Unify.liftSchemeWith types <$> methods
+  methods <- pure $ substituteType (Strict.Vector.toLazy types) <$> methods
   pure
     ClassInstance
       { typex,

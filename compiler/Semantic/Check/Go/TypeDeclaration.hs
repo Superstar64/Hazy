@@ -1,6 +1,7 @@
 module Semantic.Check.Go.TypeDeclaration (TypeDeclaration (..), kind', check, lazy) where
 
 import Control.Monad.ST (ST)
+import Core.Substitute (logicalType)
 import qualified Core.Tree.Type as Core
 import qualified Core.Tree.Type as Simple
 import qualified Data.Strict.Maybe as Strict (Maybe (..))
@@ -56,7 +57,7 @@ check context linked annotation TypeDeclaration {position, name, constructorName
     Annotated {} ::: definition
       | KindAnnotation.Annotation {annotation, kind} <- annotation,
         Inject <- assumeInject definition -> do
-          definition <- Temporary.TypeDefinition.check context (Unify.lift kind) definition
+          definition <- Temporary.TypeDefinition.check context (logicalType kind) definition
           definition <- Unify.runSolve $ Temporary.TypeDefinition.solve context definition
           pure
             TypeDeclaration

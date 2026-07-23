@@ -1,8 +1,10 @@
 module Semantic.Check.EntryInstance where
 
 import Control.Monad.ST (ST)
+import Core.Substitute (substituteType)
 import Core.Tree.Entry (Entry (..))
 import qualified Data.Vector.Strict as Strict
+import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Context (Context)
 import qualified Semantic.Check.Mask as Mask
 import Semantic.Check.Temporary.EntryInfo (EntryInfo (..))
@@ -20,8 +22,8 @@ instanciate :: Position -> Strict.Vector (Unify.Type s scope) -> Entry (Local ':
 instanciate position fresh Entry {entry, strict} =
   EntryInstance
     { position,
-      entry = Unify.liftWith fresh entry,
-      strict = Unify.liftWith fresh strict
+      entry = substituteType (Strict.Vector.toLazy fresh) entry,
+      strict = substituteType (Strict.Vector.toLazy fresh) strict
     }
 
 info :: EntryInstance s scope -> EntryInfo s scope

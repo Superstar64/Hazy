@@ -3,6 +3,7 @@ module Semantic.Check.Simple.Scheme where
 import Control.Monad (zipWithM)
 import Control.Monad.ST (ST)
 import {-# SOURCE #-} qualified Core.Builtin as Builtin
+import Core.Substitute (logicalType)
 import qualified Core.Tree.Class as Class (Class (..))
 import Core.Tree.Constraint (ConstraintF (..))
 import Core.Tree.Constraints (Constraints, ConstraintsF (..))
@@ -37,7 +38,7 @@ import Syntax.Variable (VariableIdentifier)
 import Prelude hiding (head)
 
 instanciate :: Context s scope -> Position -> Forall scope -> ST s (Unify.Type s scope, Unify.Instanciation s scope)
-instanciate context position = Unify.instanciate context position . Unify.liftScheme
+instanciate context position = Unify.instanciate context position . logicalType
 
 augmentNamed ::
   (Int -> VariableIdentifier) ->

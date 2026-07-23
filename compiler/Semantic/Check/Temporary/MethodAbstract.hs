@@ -1,6 +1,7 @@
 module Semantic.Check.Temporary.MethodAbstract where
 
 import Control.Monad.ST (ST)
+import Core.Substitute (logicalType)
 import qualified Core.Tree.Forall as Simple (ForallOver (..), simplify)
 import Semantic.Check.Context (Context)
 import qualified Semantic.Check.Mask as Mask
@@ -31,7 +32,7 @@ check _ _ _ Semantic.Abstract = pure Abstract
 check context position Method {annotation} (Semantic.DefaultResolve definition)
   | scheme@Simple.ForallOver {result} <- Simple.simplify annotation = do
       context <- augmentForall position scheme Mask.Runtime context
-      definition <- Definition.check context (Unify.lift result) (shift definition)
+      definition <- Definition.check context (logicalType result) (shift definition)
       pure $ DefaultCheck definition
 
 solve :: MethodAbstract s scope -> Unify.Solve s (Solved.MethodAbstract Group Check scope)

@@ -2,7 +2,7 @@ module Semantic.Check.Temporary.Instance where
 
 import Control.Monad.ST (ST)
 import {-# SOURCE #-} qualified Core.Builtin as Builtin
-import Core.Substitute (Category (Substitute))
+import Core.Substitute (Category (Substitute), logicalType)
 import qualified Core.Substitute as Substitute
 import qualified Core.Tree.Class as Simple.Class
 import Core.Tree.ClassExtra (ClassExtra (..))
@@ -151,11 +151,11 @@ check
         evidence <- for constraints $
           \Simple.Constraint {classx, arguments} -> do
             let parameter = foldl (#) base arguments
-            evidence <- Unify.constrain context startPosition (shift classx) (Unify.lift parameter)
+            evidence <- Unify.constrain context startPosition (shift classx) (logicalType parameter)
             Unify.runSolve $ Unify.solveEvidence startPosition evidence
         let check _ scheme Semantic.Definition {definition = Semantic.Resolve member} = do
               let Simple.ForallOver {parameters, constraints, result} = scheme
-              result <- pure $ Unify.lift result
+              result <- pure $ logicalType result
               context <- Simple.Scheme.augmentForall startPosition scheme Mask.Runtime context
               definition <- Definition.check context result member
               pure

@@ -31,35 +31,20 @@ module Semantic.Unify
     instanciate,
     MapForall (..),
     mapForall,
-    liftWith,
-    liftWith',
-    lift,
-    liftSchemeWith,
-    liftScheme,
   )
 where
 
 import Control.Monad.ST (ST)
-import Core.Substitute (Category (Substitute), logicalType, substituteType)
-import qualified Core.Substitute as Substitute
 import qualified Core.Tree.Constraint as Simple (Constraint)
 import qualified Core.Tree.Evidence as Simple (Evidence)
-import Core.Tree.Forall (ForallOver (ForallOver))
-import qualified Core.Tree.Forall as Core (Forall)
+import Core.Tree.Forall (ForallOver)
 import qualified Core.Tree.Forall as Simple (Forall, ForallOver (..))
 import qualified Core.Tree.Instanciation as Simple (Instanciation)
-import Core.Tree.Type (TypeF (..))
 import qualified Core.Tree.Type as Simple (Type)
-import qualified Data.Vector as Vector
-import qualified Data.Vector.Strict as Strict
-import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Context (Context (..))
 import qualified Semantic.Check.Mask as Mask
 import qualified Semantic.Index.Type2 as Type2
-import Semantic.Scope (Environment (..), Vacuous)
-import qualified Semantic.Scope as Scope
-import qualified Semantic.Shift as Shift
-import Semantic.Shift0 (shift)
+import Semantic.Scope (Vacuous)
 import Semantic.Unify.Constraint (Constraint (..))
 import qualified Semantic.Unify.Constraint as Constraint (solve)
 import Semantic.Unify.Constraints (Constraints (..))
@@ -143,31 +128,3 @@ constrain ::
 constrain context position classx argument = do
   evidence <- Type.constrain context position classx argument
   pure evidence
-
-liftWith :: Strict.Vector (Type s scope) -> TypeF Vacuous (Scope.Local ':+ scope) -> Type s scope
-liftWith substitution typex = substituteType (Strict.Vector.toLazy $ substitution) typex
-
-liftWith' ::
-  Strict.Vector (Type s scope) ->
-  TypeF Vacuous (Scope.Local ':+ Scope.Local ':+ scope) ->
-  Type s (Scope.Local ':+ scope)
-liftWith' substitution typex = Substitute.mapType substitute typex
-  where
-    substitute = Substitute.Over $ Substitute Shift.Id wrapped Vector.empty
-    wrapped = Strict.Vector.toLazy substitution
-
-lift :: TypeF Vacuous scope -> Type s scope
-lift = logicalType
-
-liftSchemeWith :: Strict.Vector (Type s scope) -> Core.Forall (Scope.Local ':+ scope) -> Forall s scope
-liftSchemeWith substitution forallx =
-  case substituteType (Strict.Vector.toLazy substitution) forallx of
-    ForallOver {parameters, constraints, result} ->
-      ForallOver
-        { parameters,
-          constraints,
-          result
-        }
-
-liftScheme :: Core.Forall scope -> Forall s scope
-liftScheme = liftSchemeWith Strict.Vector.empty . shift

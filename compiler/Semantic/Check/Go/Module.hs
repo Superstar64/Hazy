@@ -1,6 +1,7 @@
 module Semantic.Check.Go.Module (Module (..), check) where
 
 import Control.Monad.ST (ST)
+import Core.Substitute (logicalType)
 import qualified Core.Tree.Forall as Forall
 import qualified Core.Tree.Type as Simple
 import qualified Data.Map as Map
@@ -167,7 +168,7 @@ checkTermDeclaration global local declaration = Formula7 {cycle, run}
                 Functor.Annotated {content} = terms Vector.! local
             Declaration {definition} <- content
             pure $ case definition of
-              Solved types Definition4.:::: _ -> Unify.liftScheme $ Forall.map go types
+              Solved types Definition4.:::: _ -> logicalType $ Forall.map go types
                 where
                   go = Forall.Map $ \case
                     Definition4.Types types -> types Strict.Vector.! id
