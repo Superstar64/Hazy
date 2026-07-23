@@ -84,6 +84,14 @@ fresh kind = do
   box <- newSTRef $! Unsolved {kind, constraints = Map.empty, erasure = Mask.Erased}
   pure $ Logical $ Box box
 
+-- | Unify two types
+--
+-- The first argument is the expected type.
+-- The second argument is the actual type.
+--
+-- Both arguments must be well kinded, though they may have different kinds.
+-- Alternatively, they may be untypeable, in which case they never unify with
+-- unification variables and instead only do syntatic equality.
 unify :: forall s scope. Context s scope -> Position -> TypeF (Logical s) scope -> TypeF (Logical s) scope -> ST s ()
 unify context_ position term1_ term2_ = unifyWith context_ term1_ term2_
   where
