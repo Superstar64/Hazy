@@ -31,8 +31,8 @@ module Semantic.Unify
 where
 
 import Core.Tree.Forall (ForallOver)
-import {-# SOURCE #-} Semantic.Unify.Constraint (Constraint)
-import {-# SOURCE #-} Semantic.Unify.Constraints (Constraints)
+import Semantic.Unify.Constraint (Constraint)
+import Semantic.Unify.Constraints (Constraints)
 import Semantic.Unify.Evidence (Evidence)
 import {-# SOURCE #-} Semantic.Unify.Forall
   ( Body ((:::)),
