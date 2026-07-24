@@ -24,7 +24,7 @@ import qualified Semantic.Tree.TypeDefinition2 as Semantic (Annotation (..), Typ
 import qualified Semantic.Tree.TypePattern
 import qualified Semantic.Tree.TypePattern as Semantic (TypePattern (TypePattern))
 import qualified Semantic.Tree.TypePattern as Solved (TypePattern)
-import {-# SOURCE #-} qualified Semantic.Unify as Unify
+import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
 
 data KindAnnotation scope

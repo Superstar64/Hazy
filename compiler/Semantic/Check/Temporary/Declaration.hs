@@ -138,5 +138,5 @@ checkAnnotation
 solve :: Declaration locality s scope -> Unify.Solve s (Solved.Declaration locality Group Check scope)
 solve Declaration {position, name, definition, typex} = do
   definition <- Definition4.solve position definition
-  typex <- Unify.solveForall position typex
+  typex <- Unify.solve position typex
   pure Solved.Declaration {position, name, definition, typex = Solved typex}

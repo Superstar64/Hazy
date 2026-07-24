@@ -13,7 +13,7 @@ import qualified Semantic.Scope as Scope
 import Semantic.Stage (Check, Resolve)
 import qualified Semantic.Tree.Declarations as Semantic
 import qualified Semantic.Tree.Declarations as Solved
-import {-# SOURCE #-} qualified Semantic.Unify as Unify
+import qualified Semantic.Unify as Unify
 
 type role Declarations nominal nominal nominal
 

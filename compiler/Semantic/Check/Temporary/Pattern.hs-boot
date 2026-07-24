@@ -12,7 +12,7 @@ import Semantic.Scope (Environment ((:+)))
 import Semantic.Stage (Check, Resolve)
 import qualified Semantic.Tree.Pattern as Semantic
 import qualified Semantic.Tree.Pattern as Solved
-import {-# SOURCE #-} qualified Semantic.Unify as Unify
+import qualified Semantic.Unify as Unify
 
 type role Pattern nominal nominal
 

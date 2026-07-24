@@ -39,7 +39,7 @@ import {-# SOURCE #-} Semantic.Tree.Declaration (Declaration)
 import qualified Semantic.Tree.TypeDeclaration as Semantic (TypeDeclaration (..))
 import {-# SOURCE #-} Semantic.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 import qualified Semantic.Tree.TypeDefinition2 as Semantic (TypeDefinition2 (..))
-import {-# SOURCE #-} qualified Semantic.Unify as Unify
+import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
 
 type Context :: Data.Kind.Type -> Environment -> Data.Kind.Type

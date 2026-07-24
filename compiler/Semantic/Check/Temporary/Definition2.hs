@@ -91,7 +91,7 @@ solve position = \case
     definition <- Definition.solve definition
     pure $ Solved.Definition definition
   Piece Choice {index, instanciation, patternx, bound} -> do
-    instanciation <- Unify.solveInstanciation position instanciation
+    instanciation <- Unify.solveEvidence position instanciation
     patternx <- Pattern.solve patternx
     pure $
       Solved.Piece

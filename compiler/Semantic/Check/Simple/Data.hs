@@ -7,7 +7,7 @@ import Semantic.Check.Context (Context)
 import Semantic.Check.DataInstance (DataInstance (DataInstance))
 import qualified Semantic.Check.DataInstance as DataInstance
 import qualified Semantic.Check.Simple.Constructor as Constructor
-import {-# SOURCE #-} qualified Semantic.Unify as Unify
+import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
 
 instanciate :: Context s scope -> Position -> Data scope -> ST s (DataInstance s scope)

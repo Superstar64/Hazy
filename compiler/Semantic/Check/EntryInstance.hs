@@ -9,7 +9,7 @@ import Semantic.Check.Context (Context)
 import qualified Semantic.Check.Mask as Mask
 import Semantic.Check.Temporary.EntryInfo (EntryInfo (..))
 import Semantic.Scope (Environment (..), Local)
-import {-# SOURCE #-} qualified Semantic.Unify as Unify
+import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
 
 data EntryInstance s scope = EntryInstance

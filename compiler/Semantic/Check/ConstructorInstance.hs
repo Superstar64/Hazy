@@ -8,7 +8,7 @@ import Semantic.Check.Context (Context)
 import Semantic.Check.EntryInstance (EntryInstance, entry)
 import qualified Semantic.Check.EntryInstance as EntryInstance
 import Semantic.Check.Temporary.ConstructorInfo (ConstructorInfo (..))
-import {-# SOURCE #-} qualified Semantic.Unify as Unify
+import qualified Semantic.Unify as Unify
 import Syntax.Tree.Brand (Brand)
 import qualified Syntax.Tree.Brand as Brand
 

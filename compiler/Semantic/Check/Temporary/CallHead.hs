@@ -117,7 +117,7 @@ check
 
 solve = \case
   Variable {variablePosition, variable, instanciation} -> do
-    instanciation <- Unify.solveInstanciation variablePosition instanciation
+    instanciation <- Unify.solveEvidence variablePosition instanciation
     pure
       Solved.Variable
         { variablePosition,
@@ -142,7 +142,7 @@ solve = \case
         }
   Method {methodPosition, method, evidence, instanciation, methodInfo} -> do
     evidence <- Unify.solveEvidence methodPosition evidence
-    instanciation <- Unify.solveInstanciation methodPosition instanciation
+    instanciation <- Unify.solveEvidence methodPosition instanciation
     pure $
       Solved.Method
         { methodPosition,

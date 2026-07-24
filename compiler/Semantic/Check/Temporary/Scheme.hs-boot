@@ -9,7 +9,7 @@ import Semantic.Scope (Environment)
 import Semantic.Stage (Check, Resolve)
 import qualified Semantic.Tree.Scheme as Semantic
 import {-# SOURCE #-} qualified Semantic.Tree.Scheme as Solved
-import {-# SOURCE #-} qualified Semantic.Unify as Unify
+import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
 
 type role Scheme nominal nominal

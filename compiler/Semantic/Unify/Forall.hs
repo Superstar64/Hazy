@@ -6,7 +6,6 @@ import Core.Tree.Constraint (ConstraintF (..))
 import Core.Tree.Constraints (ConstraintsF (..))
 import qualified Core.Tree.Constraints as Constraints (ConstraintsF (..))
 import Core.Tree.Forall (ForallOver (..))
-import qualified Core.Tree.Forall as Simple (ForallOver (..))
 import Core.Tree.Instanciation (InstanciationF (..))
 import Core.Tree.Type (TypeF (Logical, Variable))
 import qualified Core.Tree.Type as Type (TypeF (..))
@@ -26,12 +25,11 @@ import qualified Semantic.Index.Table.Local as Table.Local
 import qualified Semantic.Index.Table.Term as Table.Term
 import qualified Semantic.Index.Table.Type as Table.Type
 import qualified Semantic.Index.Type2 as Type2
-import Semantic.Scope (Environment (..), Vacuous)
+import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope
-import qualified Semantic.Unify.Constraints as Constraints (solve)
 import qualified Semantic.Unify.Evidence as Evidence
 import Semantic.Unify.Generalizable (Collected (..), Collector (..), Generalizable (..))
-import Semantic.Unify.Solve (Solve (..))
+import Semantic.Unify.Solve (Solve (..), SolveType (solve))
 import Semantic.Unify.Type
   ( Box (..),
     Logical (..),
@@ -40,7 +38,6 @@ import Semantic.Unify.Type
     fresh,
     unshift,
   )
-import qualified Semantic.Unify.Type as Type (solve)
 import Semantic.Unify.Zonk (Zonker (..), zonk)
 import Syntax.Position (Position)
 import Prelude hiding (Functor, map)
@@ -133,8 +130,8 @@ generalizeBody position context (Generalize run) = do
         result
       }
       ::: do
-        parameters <- traverse (Type.solve position) parameters
-        constraints <- Constraints.solve position Constraints.None
+        parameters <- traverse (solve position) parameters
+        constraints <- solve position Constraints.None
         result <- term
         pure
           Simple.TypeLambdaOver
@@ -179,29 +176,6 @@ generalizeBody position context (Generalize run) = do
     writeVariable :: Int -> STRef s (Box s (Scope.Local ':+ scopes)) -> ST s ()
     writeVariable variable reference =
       writeSTRef reference $ Solved $ Variable $ Local.Local variable
-
-type SolveForall ::
-  ((Environment -> Kind.Type) -> Environment -> Kind.Type) ->
-  ((Environment -> Kind.Type) -> Environment -> Kind.Type) ->
-  Kind.Type
-newtype SolveForall typef typef'
-  = SolveForall (forall s scope. Position -> typef (Logical s) scope -> Solve s (typef' Vacuous scope))
-
-solve ::
-  SolveForall typef typef' ->
-  Position ->
-  ForallOver typef (Logical s) scope ->
-  Solve s (Simple.ForallOver typef' Vacuous scope)
-solve (SolveForall go) position ForallOver {parameters, constraints, result} = do
-  parameters <- traverse (Type.solve position) parameters
-  constraints <- Constraints.solve position constraints
-  result <- go position result
-  pure $
-    Simple.ForallOver
-      { parameters,
-        constraints,
-        result
-      }
 
 type MapForall ::
   ((Environment -> Kind.Type) -> Environment -> Kind.Type) ->

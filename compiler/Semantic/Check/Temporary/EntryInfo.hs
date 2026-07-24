@@ -1,7 +1,7 @@
 module Semantic.Check.Temporary.EntryInfo where
 
 import qualified Semantic.Check.Simple.EntryInfo as Solved
-import {-# SOURCE #-} qualified Semantic.Unify as Unify
+import qualified Semantic.Unify as Unify (Solve, Type, solve)
 import Syntax.Position (Position)
 
 data EntryInfo s scope = EntryInfo

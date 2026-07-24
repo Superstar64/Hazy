@@ -3,7 +3,7 @@ module Semantic.Check.ClassInstance where
 import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Simple.MethodInfo (MethodInfo (..))
-import {-# SOURCE #-} qualified Semantic.Unify as Unify
+import qualified Semantic.Unify as Unify
 
 data ClassInstance s scope = ClassInstance
   { typex :: !(Unify.Type s scope),

@@ -12,7 +12,7 @@ import qualified Semantic.Index.Type2 as Type2
 import qualified Semantic.Label.Binding.Local as Label
 import Semantic.Scope (Environment)
 import qualified Semantic.Shift0 as Shift0
-import {-# SOURCE #-} qualified Semantic.Unify as Unify (Type)
+import qualified Semantic.Unify as Unify (Type)
 import Syntax.Position (Position)
 
 type LocalBinding :: Data.Kind.Type -> Environment -> Data.Kind.Type

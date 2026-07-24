@@ -21,7 +21,7 @@ import qualified Semantic.Index.Selector as Selector (Index (..))
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Tree.Selector (Selector (..))
 import qualified Semantic.Tree.Selector as Selector (Uniform (..))
-import {-# SOURCE #-} qualified Semantic.Unify as Unify
+import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
 
 data DataInstance s scope = DataInstance

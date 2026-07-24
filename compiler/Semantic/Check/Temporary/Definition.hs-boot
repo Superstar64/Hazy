@@ -10,7 +10,7 @@ import Semantic.Scope (Environment)
 import Semantic.Stage (Check, Resolve)
 import qualified Semantic.Tree.Definition as Semantic
 import qualified Semantic.Tree.Definition as Solved
-import {-# SOURCE #-} qualified Semantic.Unify as Unify
+import qualified Semantic.Unify as Unify
 
 type role Definition nominal nominal
 

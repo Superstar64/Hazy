@@ -47,7 +47,7 @@ solve position = \case
     pure $ annotation Solved.::: Implicit.Check definition
   Link link id -> pure (Solved.Link link id)
   types :::: set -> do
-    types <- Unify.solveForallOver (Unify.SolveForall solveTypes) position types
+    types <- Unify.solve position types
     set <- set
     pure $ Inferred.Solved types Solved.:::: Implicit.Check set
 

@@ -12,7 +12,7 @@ import qualified Semantic.Tree.Declaration as Semantic (Declaration (..))
 import qualified Semantic.Tree.Definition4 as Semantic (Annotation (..), Definition4 (..))
 import Semantic.Tree.Scheme (Scheme)
 import qualified Semantic.Tree.Scheme as Semantic (Scheme (..))
-import {-# SOURCE #-} qualified Semantic.Unify as Unify
+import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
 
 data Annotation scope = Annotation

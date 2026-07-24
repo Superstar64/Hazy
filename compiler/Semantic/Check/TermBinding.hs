@@ -12,7 +12,7 @@ import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
 import {-# SOURCE #-} Semantic.Tree.Declaration (Declaration)
 import {-# SOURCE #-} qualified Semantic.Tree.Declaration as Declaration
-import {-# SOURCE #-} qualified Semantic.Unify as Unify
+import qualified Semantic.Unify as Unify
 
 data Type s scope
   = Wobbly !(Unify.Forall s scope)

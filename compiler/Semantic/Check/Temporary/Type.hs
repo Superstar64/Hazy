@@ -28,7 +28,7 @@ import qualified Semantic.Index.Type2 as Type2
 import Semantic.Stage (Check, Resolve)
 import qualified Semantic.Tree.Type as Semantic (Synonym (..), Type (..))
 import qualified Semantic.Tree.Type as Solved
-import {-# SOURCE #-} qualified Semantic.Unify as Unify
+import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
 
 data Type s scope

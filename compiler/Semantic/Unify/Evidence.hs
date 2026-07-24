@@ -2,16 +2,11 @@ module Semantic.Unify.Evidence where
 
 import Control.Monad.ST (ST)
 import Core.Tree.Evidence (EvidenceF (..))
-import qualified Core.Tree.Evidence as Simple (Evidence, EvidenceF (..))
 import Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
-import Error (unsupportedFeatureConstraintedTypeDefaulting)
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Shift as Shift
-import Semantic.Shift0 (shift)
 import qualified Semantic.Shift0 as Shift0
 import qualified Semantic.Unify.Instanciation as Instanciation
-import Semantic.Unify.Solve (Solve (..))
-import Syntax.Position (Position)
 
 type Evidence s = EvidenceF (Logical s)
 
@@ -84,17 +79,3 @@ unshift = \case
   Super evidence index -> do
     evidence <- unshift evidence
     pure $ Super evidence index
-
-solve :: Position -> EvidenceF (Logical s) scope -> Solve s (Simple.Evidence scope)
-solve position = \case
-  Variable variable instanciation -> do
-    instanciation <- Instanciation.solve position instanciation
-    pure Simple.Variable {variable, instanciation}
-  Super base index -> do
-    base <- solve position base
-    pure $ Simple.Super {base, index}
-  Logical (Shift evidence) -> shift <$> solve position (Logical evidence)
-  Logical (Box reference) ->
-    Solve (readSTRef reference) >>= \case
-      Solved evidence -> solve position evidence
-      Unsolved -> unsupportedFeatureConstraintedTypeDefaulting position

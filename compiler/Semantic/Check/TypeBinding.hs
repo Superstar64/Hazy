@@ -33,8 +33,8 @@ import Semantic.Stage (Check)
 import Semantic.Tree.TypeDeclaration (ungroupM)
 import {-# SOURCE #-} Semantic.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 import qualified Semantic.Tree.TypeDefinition2 as TypeDefinition2
-import {-# SOURCE #-} Semantic.Unify (Solve)
-import {-# SOURCE #-} qualified Semantic.Unify as Unify
+import Semantic.Unify (Solve)
+import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
 
 data Kind s scope

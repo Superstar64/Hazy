@@ -31,7 +31,7 @@ import qualified Semantic.Index.Table.Type as Type (Table (..), (!))
 import qualified Semantic.Label.Binding.Local as Label
 import Semantic.Scope (Environment ((:+)), Local, Vacuous)
 import Semantic.Shift (shift)
-import {-# SOURCE #-} qualified Semantic.Unify as Unify
+import qualified Semantic.Unify as Unify
 import Syntax.Lexer (variableIdentifier)
 import Syntax.Position (Position)
 import Syntax.Variable (VariableIdentifier)

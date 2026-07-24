@@ -388,7 +388,7 @@ solve = \case
     pure Solved.Do {startPosition, dox}
   Annotation {expression, operatorPosition, annotation, instanciation} -> do
     expression <- expression
-    instanciation <- Unify.solveInstanciation operatorPosition instanciation
+    instanciation <- Unify.solveEvidence operatorPosition instanciation
     pure
       Solved.Annotation
         { operatorPosition,

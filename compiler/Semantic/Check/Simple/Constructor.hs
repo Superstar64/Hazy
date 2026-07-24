@@ -6,7 +6,7 @@ import Semantic.Check.ConstructorInstance (ConstructorInstance (ConstructorInsta
 import qualified Semantic.Check.ConstructorInstance as ConstructorInstance
 import qualified Semantic.Check.EntryInstance as EntryInstance
 import Semantic.Scope (Environment ((:+)), Local)
-import {-# SOURCE #-} qualified Semantic.Unify as Unify
+import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
 import Syntax.Tree.Brand (Brand)
 

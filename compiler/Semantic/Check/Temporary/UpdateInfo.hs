@@ -5,7 +5,7 @@ import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Semantic.Check.Simple.UpdateInfo as Solved
 import Semantic.Check.Temporary.ConstructorInfo (ConstructorInfo)
 import qualified Semantic.Check.Temporary.ConstructorInfo as ConstructorInfo
-import {-# SOURCE #-} qualified Semantic.Unify as Unify
+import qualified Semantic.Unify as Unify
 
 newtype UpdateInfo s scope = UpdateInfo
   { updateInfo :: Strict.Vector (Update s scope)

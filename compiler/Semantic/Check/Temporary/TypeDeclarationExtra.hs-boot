@@ -7,7 +7,7 @@ import Semantic.Layout (Group)
 import Semantic.Scope (Environment)
 import Semantic.Stage (Check)
 import {-# SOURCE #-} qualified Semantic.Tree.TypeDeclarationExtra as Solved
-import {-# SOURCE #-} qualified Semantic.Unify as Unify
+import qualified Semantic.Unify as Unify
 
 type role TypeDeclarationExtra nominal nominal
 

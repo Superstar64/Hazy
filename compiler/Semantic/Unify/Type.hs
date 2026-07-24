@@ -41,7 +41,6 @@ import qualified Semantic.Shift0 as Shift0
 import qualified Semantic.Unify.Builtin as Builtin (constrain)
 import {-# SOURCE #-} Semantic.Unify.Error (Error (..), abort)
 import qualified Semantic.Unify.Evidence as Evidence (Box (..), Logical (..), unify, unshift)
-import Semantic.Unify.Solve (Solve (..))
 import Syntax.Position (Position)
 import Prelude hiding (Functor, head, map)
 
@@ -529,32 +528,3 @@ defaultUniverse position constraints universe = case universe of
     | null constraints -> pure $ Type Small
     | otherwise -> error "unexpected kind constraints"
   _ -> error "unexpected universe kind"
-
-solve :: Position -> TypeF (Logical s) scope -> Solve s (Simple.Type scope)
-solve position = Solve . solve
-  where
-    solve :: TypeF (Logical s) scope -> ST s (Simple.Type scope)
-    solve = \case
-      Logical (Box reference) ->
-        readSTRef reference >>= \case
-          Solved typex -> solve typex
-          Unsolved {kind, constraints} -> defaultFrom position constraints kind
-      Logical (Shift logical) -> shift <$> solve (Logical logical)
-      Variable name -> pure $ Variable name
-      Constructor index -> pure $ Constructor index
-      Call function argument -> do
-        function <- solve function
-        argument <- solve argument
-        pure $ Call function argument
-      Function argument result -> do
-        argument <- solve argument
-        result <- solve result
-        pure $ Function argument result
-      Type universe -> do
-        universe <- solve universe
-        pure $ Type universe
-      Constraint -> pure Constraint
-      Small -> pure Small
-      Large -> pure Large
-      Universe -> pure Universe
-      Levity -> pure Levity
