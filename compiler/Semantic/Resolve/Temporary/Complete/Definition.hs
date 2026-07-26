@@ -45,28 +45,32 @@ resolve failure context leftHandSide rightHandSide = case leftHandSide of
       operator = position :@ operator,
       rightHandSide = patternx',
       parameters = patterns
-    }
-      | functionPosition <- Syntax.Infix.startPosition patternx,
-        functionPosition' <- Syntax.Infix.startPosition patternx',
-        ~(_ Term.:@ Identity Term.Binding {fixity = Fixity {associativity, precedence}}) <-
-          context !- position :@ Local :- operator,
-        patternx <- case associativity of
-          Left -> Pattern.Infix.fixWith (Just Left) precedence $ Pattern.Infix.resolve context patternx
-          _ -> Pattern.Infix.fixWith Nothing (precedence + 1) $ Pattern.Infix.resolve context patternx,
-        context <- Pattern.augment patternx context,
-        patternx' <- case associativity of
-          Right -> Pattern.Infix.fixWith (Just Right) precedence $ Pattern.Infix.resolve context patternx'
-          _ -> Pattern.Infix.fixWith Nothing (precedence + 1) $ Pattern.Infix.resolve context patternx',
-        context <- Pattern.augment patternx' context ->
-          Definition position operator $
-            Bound
-              { functionPosition,
-                patternx,
-                function =
-                  Bound
-                    { functionPosition = functionPosition',
-                      patternx = patternx',
-                      function = Function.resolve context (toList patterns) rightHandSide
-                    }
-              }
+    } ->
+      Definition position operator proper
+      where
+        functionPosition = Syntax.Infix.startPosition patternx
+        functionPosition' = Syntax.Infix.startPosition patternx'
+        Identity Term.Binding {fixity = Fixity {associativity, precedence}} =
+          Term.value $ context !- position :@ Local :- operator
+        proper
+          | operators <- Pattern.Infix.resolve context patternx,
+            patternx <- case associativity of
+              Left -> Pattern.Infix.fixWith (Just Left) precedence operators
+              _ -> Pattern.Infix.fixWith Nothing (precedence + 1) operators,
+            context <- Pattern.augment patternx context,
+            operators' <- Pattern.Infix.resolve context patternx',
+            patternx' <- case associativity of
+              Right -> Pattern.Infix.fixWith (Just Right) precedence operators'
+              _ -> Pattern.Infix.fixWith Nothing (precedence + 1) operators',
+            context <- Pattern.augment patternx' context =
+              Bound
+                { functionPosition,
+                  patternx,
+                  function =
+                    Bound
+                      { functionPosition = functionPosition',
+                        patternx = patternx',
+                        function = Function.resolve context (toList patterns) rightHandSide
+                      }
+                }
   _ -> failure
