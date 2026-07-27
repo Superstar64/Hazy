@@ -15,7 +15,7 @@ import Semantic.Connect (connect)
 import qualified Semantic.Connect as Connect
 import Semantic.FreeVariables (FreeTermVariables (freeTermVariables))
 import qualified Semantic.FreeVariables as FreeVariables
-import qualified Semantic.Index.Link.Term as Term
+import qualified Semantic.Index.Link.Term as Term (Link (..))
 import qualified Semantic.Index.Term0 as Term0
 import Semantic.Layout (Group, Layout, Normal)
 import Semantic.Locality (Locality)
@@ -24,6 +24,7 @@ import qualified Semantic.Scope as Scope
 import qualified Semantic.Shift as Shift
 import Semantic.Shift0 (shift)
 import qualified Semantic.Shift0 as Shift0
+import qualified Semantic.Show as Term (Show (..))
 import Semantic.Stage (Check, Resolve, Stage)
 import Semantic.Tree.Combinators.Implicit (Implicit)
 import qualified Semantic.Tree.Combinators.Implicit as Implicit
@@ -40,12 +41,12 @@ type Definition4 :: Locality -> Layout -> Stage -> Environment -> Type
 data Definition4 locality layout stage scope where
   (:::) ::
     !(Annotation mark layout stage scope) ->
-    !(Implicit (Definition3 mark layout stage) stage scope) ->
+    !(Implicit (Definition3 mark) layout stage scope) ->
     Definition4 locality layout stage scope
   Link :: !(Term.Link locality) -> !Int -> Definition4 locality Group stage scope
   (::::) ::
     !(Inferred (ForallOver Types Vacuous) stage scope) ->
-    !(Implicit (Set locality Group stage) stage scope) ->
+    !(Implicit (Set locality) Group stage scope) ->
     Definition4 locality Group stage scope
 
 infix 5 :::, ::::
@@ -75,9 +76,9 @@ instance Shift.Functor (Definition4 locality layout stage) where
 
 instance FreeTermVariables (Definition4 locality) where
   freeTermVariables target = \case
-    _ ::: Implicit.Resolve definition -> freeTermVariables target definition
+    _ ::: definition -> freeTermVariables target definition
     Link {} -> []
-    _ :::: Implicit.Resolve set -> freeTermVariables target set
+    _ :::: set -> freeTermVariables target set
 
 data Annotation mark layout stage scope where
   Annotated :: !(Scheme Position stage scope) -> Annotation Mark.Annotated layout stage scope
@@ -124,14 +125,23 @@ newtype Set locality layout stage scope
   = Set (Strict.Vector (Element locality layout stage scope))
   deriving (Show)
 
+instance Term.Show (Set locality) where
+  showsPrec = showsPrec
+
 instance Scope.Show (Set locality layout stage) where
   showsPrec = showsPrec
 
 instance Shift0.Functor (Set locality layout stage) where
   map = Shift.mapDefault
 
+instance Shift0.TermFunctor (Set locality) where
+  mapTerm = Shift0.map
+
 instance Shift.Functor (Set locality layout stage) where
   map category (Set set) = Set (Shift.map category <$> set)
+
+instance Shift.TermFunctor (Set locality) where
+  mapTerm = Shift.map
 
 instance FreeTermVariables (Set locality) where
   freeTermVariables target (Set set) = foldMap (freeTermVariables target) set
@@ -183,7 +193,7 @@ group link index group (Inferred ::: _) = case group of
 
 ungroup ::
   (Term.Link locality -> Term0.Index scope) ->
-  (Term.Link locality -> Implicit (Set locality Group Check) Check scope) ->
+  (Term.Link locality -> Implicit (Set locality) Group Check scope) ->
   Definition4 locality Group Check scope ->
   Definition4 locality Normal Check scope
 ungroup _ _ (Annotated annotation ::: Implicit.Check definition) =

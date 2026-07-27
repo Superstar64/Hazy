@@ -1,5 +1,6 @@
 module Semantic.Shift (module Semantic.Shift, Shift0.shift) where
 
+import Data.Kind (Constraint, Type)
 import qualified Data.Map as Map
 import qualified Data.Strict.Maybe as Strict
 import Data.Void (Void, absurd, vacuous)
@@ -10,9 +11,11 @@ import qualified Semantic.Index.Term0 as Term0
 import qualified Semantic.Index.Type as Type
 import qualified Semantic.Index.Type0 as Type0
 import {-# SOURCE #-} Semantic.Index.Type2 as Type2 (Index)
+import Semantic.Layout (Layout)
 import Semantic.Scope (Environment ((:+)), Vacuous)
 import qualified Semantic.Scope as Scope
 import qualified Semantic.Shift0 as Shift0
+import Semantic.Stage (Stage)
 import Prelude hiding (Functor, id, map, (.))
 
 data Category scope scope' where
@@ -139,3 +142,7 @@ class PartialUnshift f where
 
 class Unshift f where
   unshift :: f (scope ':+ scopes) -> f scopes
+
+type TermFunctor :: (Layout -> Stage -> Environment -> Type) -> Constraint
+class (Shift0.TermFunctor term) => TermFunctor term where
+  mapTerm :: Category scope scope' -> term layout stage scope -> term layout stage scope'

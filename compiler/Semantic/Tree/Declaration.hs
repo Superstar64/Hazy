@@ -99,7 +99,7 @@ group link index' group = \case
 
 ungroup ::
   (Term.Link locality -> Term0.Index scope) ->
-  (Term.Link locality -> Implicit (Definition4.Set locality Group Check) Check scope) ->
+  (Term.Link locality -> Implicit (Definition4.Set locality) Group Check scope) ->
   Declaration locality Group Check scope ->
   Declaration locality Normal Check scope
 ungroup index lookup Declaration {position, name, definition, typex} =

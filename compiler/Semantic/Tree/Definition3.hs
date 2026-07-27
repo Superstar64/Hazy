@@ -5,6 +5,7 @@ import Semantic.FreeVariables (FreeTermVariables (..))
 import qualified Semantic.Scope as Scope
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
+import qualified Semantic.Show as Term
 import Semantic.Tree.Definition2 (Definition2 (..), Share, Single)
 import Syntax.Tree.Fixity (Fixity)
 import Syntax.Variable (Variable)
@@ -14,6 +15,9 @@ data Definition3 mark layout stage scope where
     !(Info source) ->
     !(Definition2 source mark layout stage scope) ->
     Definition3 mark layout stage scope
+
+instance Term.Show (Definition3 mark) where
+  showsPrec = showsPrec
 
 instance Scope.Show (Definition3 mark layout stage) where
   showsPrec = showsPrec
@@ -29,8 +33,14 @@ instance Show (Definition3 mark layout stage scope) where
 instance Shift0.Functor (Definition3 mark layout stage) where
   map = Shift.mapDefault
 
+instance Shift0.TermFunctor (Definition3 mark) where
+  mapTerm = Shift0.map
+
 instance Shift.Functor (Definition3 mark layout stage) where
   map category (Label info definition) = Label info $ Shift.map category definition
+
+instance Shift.TermFunctor (Definition3 mark) where
+  mapTerm = Shift.map
 
 instance FreeTermVariables (Definition3 mark) where
   freeTermVariables target (Label _ definition) = freeTermVariables target definition

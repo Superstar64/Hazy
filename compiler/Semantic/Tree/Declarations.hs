@@ -111,7 +111,7 @@ group
 ungroup ::
   (Term.Link locality -> Term0.Index scope) ->
   (Type.Link locality -> Type0.Index scope) ->
-  (Term.Link locality -> Implicit (Definition4.Set locality Group Check) Check scope) ->
+  (Term.Link locality -> Implicit (Definition4.Set locality) Group Check scope) ->
   (Type.Link locality -> TypeDefinition2.Set locality Check scope) ->
   Declarations locality Group Check scope ->
   Declarations locality Normal Check scope
@@ -173,7 +173,7 @@ seperate declarations@Declarations {terms, types} =
   where
     lookupTerm ::
       Term.Link Locality.Local ->
-      Implicit (Definition4.Set Locality.Local Group Check) Check (Scope.Declaration ':+ scope)
+      Implicit (Definition4.Set Locality.Local) Group Check (Scope.Declaration ':+ scope)
     lookupTerm = \case
       Term.Declaration index
         | Declaration {definition} <- terms Vector.! index,

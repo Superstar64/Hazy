@@ -367,7 +367,9 @@ executable hazy
     Semantic.Scope
     Semantic.Shift
     Semantic.Shift0
+    Semantic.Show
     Semantic.Stage
+    Semantic.Term
     Semantic.Tree.Alternative
     Semantic.Tree.Body
     Semantic.Tree.CallHead

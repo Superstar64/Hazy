@@ -128,7 +128,7 @@ seperate modules = go <$> modules
               lookupType
               declarations
         }
-    lookupTerm :: Term.Link Locality.Global -> Implicit (Definition4.Set Locality.Global Group Check) Check Global
+    lookupTerm :: Term.Link Locality.Global -> Implicit (Definition4.Set Locality.Global) Group Check Global
     lookupTerm = \case
       Term.Global global local
         | Module {declarations = Declarations {terms}} <- modules Vector.! global,

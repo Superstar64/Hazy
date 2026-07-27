@@ -2,7 +2,7 @@ module Semantic.Tree.MethodConcrete where
 
 import qualified Core.Tree.Evidence as Simple (Evidence)
 import qualified Core.Tree.Type as Simple (Type)
-import qualified Core.Tree.TypeLambda as Simple (Map (..), TypeLambda, map)
+import qualified Core.Tree.TypeLambda as Simple (TypeLambda)
 import Semantic.Connect (Connect (..))
 import Semantic.Scope (Environment (..), Local)
 import qualified Semantic.Shift as Shift
@@ -13,7 +13,7 @@ import Semantic.Tree.Definition (Definition)
 
 data MethodConcrete layout stage scope
   = Definition
-      { definition :: !(Implicit (Definition layout stage) stage (Local ':+ scope))
+      { definition :: !(Implicit Definition layout stage (Local ':+ scope))
       }
   | Default
       { base :: !(Inferred Simple.Type stage (Local ':+ scope)),
@@ -40,9 +40,9 @@ instance Shift.Functor (MethodConcrete layout stage) where
 
 instance Connect MethodConcrete where
   connect = \case
-    Definition {definition = Resolve definition} ->
+    Definition {definition} ->
       Definition
-        { definition = Resolve (connect definition)
+        { definition = connect definition
         }
     Default {} ->
       Default
@@ -51,9 +51,9 @@ instance Connect MethodConcrete where
           defaultx = Inferred
         }
   seperate = \case
-    Definition {definition = Check definition} ->
+    Definition {definition} ->
       Definition
-        { definition = Check (Simple.map (Simple.Map seperate) definition)
+        { definition = seperate definition
         }
     Default {base, self, defaultx} ->
       Default
