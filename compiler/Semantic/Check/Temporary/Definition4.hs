@@ -30,7 +30,7 @@ data Definition4 locality s scope where
   Link :: !(Term.Link locality) -> !Int -> Definition4 locality s scope
   (::::) ::
     !(Unify.ForallOver Types (Logical s) scope) ->
-    !(Unify.Solve s (Simple.TypeLambdaOver (Solved.Set locality Check) scope)) ->
+    !(Unify.Solve s (Simple.TypeLambdaOver (Solved.Set locality Group Check) scope)) ->
     Definition4 locality s scope
 
 infix 5 :::, ::::
@@ -56,7 +56,7 @@ solveTypes position (Types types) = do
   types <- traverse (Unify.solve position) types
   pure $ Solved.Types types
 
-solveElement :: Element locality s scope -> Unify.Solve s (Solved.Element locality Check scope)
+solveElement :: Element locality s scope -> Unify.Solve s (Solved.Element locality Group Check scope)
 solveElement Element {element, link} = do
   element <- element
   pure Solved.Element {element, link}

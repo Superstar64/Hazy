@@ -15,7 +15,6 @@ import Semantic.FreeVariables (FreeTermVariables (..))
 import qualified Semantic.FreeVariables as FreeVariables
 import qualified Semantic.Index.Constructor as Constructor (Index (..))
 import qualified Semantic.Index.Type2 as Type2
-import Semantic.Layout (Normal)
 import Semantic.Scope as Null (Environment (..))
 import qualified Semantic.Scope as Scope
 import qualified Semantic.Shift as Shift
@@ -40,7 +39,7 @@ import qualified Prelude
 
 data Expression layout stage scope
   = CallHead
-      { callHead :: !(CallHead stage scope)
+      { callHead :: !(CallHead layout stage scope)
       }
   | Integer
       { startPosition :: !Position,
@@ -122,7 +121,7 @@ data Expression layout stage scope
       }
   | RightSection
       { operatorPosition :: !Position,
-        left :: !(CallHead stage scope),
+        left :: !(CallHead layout stage scope),
         right :: !(Expression layout stage scope)
       }
   | Annotation
@@ -268,7 +267,7 @@ instance Shift.Functor (Expression layout stage) where
           negative = Shift.map category negative
         }
 
-instance FreeTermVariables (Expression layout) where
+instance FreeTermVariables Expression where
   freeTermVariables target = \case
     CallHead {callHead} -> freeTermVariables target callHead
     Integer {} -> []
@@ -317,7 +316,7 @@ instance Connect Expression where
   connect = \case
     CallHead {callHead} ->
       CallHead
-        { callHead
+        { callHead = connect callHead
         }
     Integer {startPosition, integer} ->
       Integer
@@ -417,7 +416,7 @@ instance Connect Expression where
     RightSection {operatorPosition, left, right} ->
       RightSection
         { operatorPosition,
-          left,
+          left = connect left,
           right = connect right
         }
     Annotation {expression, operatorPosition, annotation} ->
@@ -442,7 +441,7 @@ instance Connect Expression where
   seperate = \case
     CallHead {callHead} ->
       CallHead
-        { callHead
+        { callHead = seperate callHead
         }
     Integer {startPosition, integer, evidence} -> Integer {startPosition, integer, evidence}
     Float {startPosition, float, evidence} -> Float {startPosition, float, evidence}
@@ -524,7 +523,7 @@ instance Connect Expression where
     RightSection {operatorPosition, left, right} ->
       RightSection
         { operatorPosition,
-          left,
+          left = seperate left,
           right = seperate right
         }
     Annotation {expression, operatorPosition, annotation, instanciation} ->
@@ -558,12 +557,12 @@ instance Shift.Functor (Explicit layout stage) where
     Explicit expression -> Explicit (Shift.map (Shift.Over category) expression)
     Known expression -> Known (Shift.map category expression)
 
-instance FreeTermVariables (Explicit layout) where
+instance FreeTermVariables Explicit where
   freeTermVariables target (Explicit expression) = freeTermVariables (FreeVariables.Over target) expression
 
 instance Connect Explicit where
   connect (Explicit expression) = Explicit (connect expression)
   seperate (Known expression) = Known (Simple.map (Simple.Map seperate) expression)
 
-callHead_ :: CallHead Resolve scope -> Expression Normal Resolve scope
+callHead_ :: CallHead layout stage scope -> Expression layout stage scope
 callHead_ callHead = CallHead {callHead}

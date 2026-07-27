@@ -58,7 +58,7 @@ data CallHead s scope
         methodInfo :: !(MethodInfo scope)
       }
 
-check :: Context s scope -> Unify.Type s scope -> Semantic.CallHead Resolve scope -> ST s (CallHead s scope)
+check :: Context s scope -> Unify.Type s scope -> Semantic.CallHead layout Resolve scope -> ST s (CallHead s scope)
 check context@Context {termEnvironment} typex Semantic.Variable {variablePosition, variable} = do
   let TermBinding binding = termEnvironment Term.! variable
   binding >>= \case

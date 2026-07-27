@@ -1,20 +1,23 @@
 module Semantic.FreeVariables where
 
 import Control.Applicative (Const (..))
+import Data.Kind (Constraint, Type)
 import qualified Semantic.Index.Term as Term
 import qualified Semantic.Index.Term0 as Term0
 import qualified Semantic.Index.Type as Type
 import qualified Semantic.Index.Type0 as Type0
 import qualified Semantic.Index.Type2 as Type2
+import Semantic.Layout (Layout)
 import Semantic.Scope (Environment (..))
-import Semantic.Stage (Resolve)
+import Semantic.Stage (Resolve, Stage)
 
 data Target scope scope' where
   Target :: Target scope scope
   Over :: Target scopes scopes' -> Target (scope ':+ scopes) scopes'
 
+type FreeTermVariables :: (Layout -> Stage -> Environment -> Type) -> Constraint
 class FreeTermVariables expression where
-  freeTermVariables :: Target scope scope' -> expression Resolve scope -> [Term0.Index scope']
+  freeTermVariables :: Target scope scope' -> expression layout Resolve scope -> [Term0.Index scope']
 
 term :: Target scope scope' -> Term.Index scope -> [Term0.Index scope']
 term Target (Term.Declaration index) = [Term0.Declaration index]

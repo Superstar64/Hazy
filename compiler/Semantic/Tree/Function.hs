@@ -36,7 +36,7 @@ instance Shift.Functor (Function layout stage) where
           function = Shift.map (Shift.Over category) function
         }
 
-instance FreeTermVariables (Function layout) where
+instance FreeTermVariables Function where
   freeTermVariables target = \case
     Plain {rightHandSide} -> freeTermVariables target rightHandSide
     Bound {function} -> freeTermVariables (FreeTermVariables.Over target) function

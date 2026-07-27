@@ -40,7 +40,7 @@ instance Shift.Functor (MethodAbstract layout stage) where
     DefaultResolve definition -> DefaultResolve (Shift.map category definition)
     DefaultCheck definition -> DefaultCheck (Shift.map (Shift.Over category) definition)
 
-instance FreeTermVariables (MethodAbstract layout) where
+instance FreeTermVariables MethodAbstract where
   freeTermVariables target = \case
     Abstract -> []
     DefaultResolve definition -> freeTermVariables target definition

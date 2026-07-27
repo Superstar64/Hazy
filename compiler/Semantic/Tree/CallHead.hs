@@ -2,21 +2,27 @@ module Semantic.Tree.CallHead where
 
 import qualified Core.Tree.Evidence as Simple (Evidence)
 import qualified Core.Tree.Instanciation as Simple (Instanciation)
+import Data.Kind (Type)
 import Semantic.Check.Simple.ConstructorInfo (ConstructorInfo)
 import Semantic.Check.Simple.MethodInfo (MethodInfo)
 import Semantic.Check.Simple.SelectorInfo (SelectorInfo)
+import Semantic.Connect (Connect (..))
 import Semantic.FreeVariables (FreeTermVariables (..))
 import qualified Semantic.FreeVariables as FreeVariables
 import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Method as Method
 import qualified Semantic.Index.Selector as Selector
 import qualified Semantic.Index.Term as Term
+import Semantic.Layout (Layout)
+import Semantic.Scope (Environment)
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
+import Semantic.Stage (Stage)
 import Semantic.Tree.Combinators.Inferred (Inferred)
 import Syntax.Position (Position)
 
-data CallHead stage scope
+type CallHead :: Layout -> Stage -> Environment -> Type
+data CallHead layout stage scope
   = Variable
       { variablePosition :: !Position,
         variable :: !(Term.Index scope),
@@ -41,10 +47,10 @@ data CallHead stage scope
       }
   deriving (Show)
 
-instance Shift0.Functor (CallHead stage) where
+instance Shift0.Functor (CallHead layout stage) where
   map = Shift.mapDefault
 
-instance Shift.Functor (CallHead stage) where
+instance Shift.Functor (CallHead layout stage) where
   map category = \case
     Variable {variablePosition, variable, instanciation} ->
       Variable
@@ -79,3 +85,18 @@ instance FreeTermVariables CallHead where
     Constructor {} -> []
     Selector {} -> []
     Method {} -> []
+
+instance Connect CallHead where
+  connect = layout
+  seperate = layout
+
+layout :: CallHead layout stage scope -> CallHead layout' stage scope
+layout = \case
+  Variable {variablePosition, variable, instanciation} ->
+    Variable {variablePosition, variable, instanciation}
+  Constructor {constructorPosition, constructor, constructorInfo} ->
+    Constructor {constructorPosition, constructor, constructorInfo}
+  Selector {selectorPosition, selector, selectorInfo} ->
+    Selector {selectorPosition, selector, selectorInfo}
+  Method {methodPosition, method, evidence, instanciation, methodInfo} ->
+    Method {methodPosition, method, evidence, instanciation, methodInfo}

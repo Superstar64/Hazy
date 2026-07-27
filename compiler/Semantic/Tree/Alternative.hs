@@ -26,7 +26,7 @@ instance Shift.Functor (Alternative layout stage) where
       (Shift.map category patternx)
       (Shift.map (Shift.Over category) rightHandSide)
 
-instance FreeTermVariables (Alternative layout) where
+instance FreeTermVariables Alternative where
   freeTermVariables target Alternative {rightHandSide} =
     freeTermVariables (FreeTermVariables.Over target) rightHandSide
 

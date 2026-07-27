@@ -29,6 +29,6 @@ instance Shift0.Functor (Local layout stage)
 
 instance Shift.Functor (Local layout stage)
 
-instance FreeTermVariables (Local layout)
+instance FreeTermVariables Local
 
 instance Connect Local

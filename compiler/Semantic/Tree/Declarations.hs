@@ -68,7 +68,7 @@ instance Shift.Functor (Declarations locality layout stage) where
           classInstances = fmap (Shift.mapInstances category . fmap (Shift.map category)) classInstances
         }
 
-instance FreeTermVariables (Declarations locality layout) where
+instance FreeTermVariables (Declarations locality) where
   freeTermVariables target Declarations {terms, typeExtras} =
     concat
       [ foldMap (freeTermVariables target) terms,
@@ -111,7 +111,7 @@ group
 ungroup ::
   (Term.Link locality -> Term0.Index scope) ->
   (Type.Link locality -> Type0.Index scope) ->
-  (Term.Link locality -> Implicit (Definition4.Set locality Check) Check scope) ->
+  (Term.Link locality -> Implicit (Definition4.Set locality Group Check) Check scope) ->
   (Type.Link locality -> TypeDefinition2.Set locality Check scope) ->
   Declarations locality Group Check scope ->
   Declarations locality Normal Check scope
@@ -173,7 +173,7 @@ seperate declarations@Declarations {terms, types} =
   where
     lookupTerm ::
       Term.Link Locality.Local ->
-      Implicit (Definition4.Set Locality.Local Check) Check (Scope.Declaration ':+ scope)
+      Implicit (Definition4.Set Locality.Local Group Check) Check (Scope.Declaration ':+ scope)
     lookupTerm = \case
       Term.Declaration index
         | Declaration {definition} <- terms Vector.! index,
@@ -200,7 +200,7 @@ instance Shift0.Functor (Local layout stage) where
 instance Shift.Functor (Local layout stage) where
   map category (Local declarations) = Local (Shift.map (Shift.Over category) declarations)
 
-instance FreeTermVariables (Local layout) where
+instance FreeTermVariables Local where
   freeTermVariables target (Local declarations) =
     freeTermVariables (FreeVariables.Over target) declarations
 

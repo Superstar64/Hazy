@@ -64,7 +64,7 @@ instance Shift.Functor (Declaration layout locality stage) where
         typex = Shift.map category typex
       }
 
-instance FreeTermVariables (Declaration layout locality) where
+instance FreeTermVariables (Declaration locality) where
   freeTermVariables target Declaration {definition} = freeTermVariables target definition
 
 labelBinding :: Qualifiers -> Declaration locality layout stage scope -> Label.TermBinding scope'
@@ -99,7 +99,7 @@ group link index' group = \case
 
 ungroup ::
   (Term.Link locality -> Term0.Index scope) ->
-  (Term.Link locality -> Implicit (Definition4.Set locality Check) Check scope) ->
+  (Term.Link locality -> Implicit (Definition4.Set locality Group Check) Check scope) ->
   Declaration locality Group Check scope ->
   Declaration locality Normal Check scope
 ungroup index lookup Declaration {position, name, definition, typex} =

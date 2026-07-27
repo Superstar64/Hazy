@@ -8,7 +8,7 @@ import Semantic.Tree.CallHead (CallHead (..))
 import Semantic.Tree.Combinators.Inferred (Inferred (Inferred))
 import Syntax.Position (Position)
 
-resolveVariable :: Position -> Term2.Index scope -> CallHead Resolve scope
+resolveVariable :: Position -> Term2.Index scope -> CallHead layout Resolve scope
 resolveVariable variablePosition@selectorPosition@methodPosition = \case
   Term2.Index variable ->
     Variable
@@ -32,7 +32,7 @@ resolveVariable variablePosition@selectorPosition@methodPosition = \case
       }
   Term2.RunST -> badRunSTCall variablePosition
 
-resolveConstructor :: Position -> Constructor.Index scope -> CallHead Resolve scope
+resolveConstructor :: Position -> Constructor.Index scope -> CallHead layout Resolve scope
 resolveConstructor constructorPosition constructor =
   Constructor
     { constructorPosition,
@@ -40,7 +40,7 @@ resolveConstructor constructorPosition constructor =
       constructorInfo = Inferred
     }
 
-resolveTupling :: Position -> Int -> CallHead Resolve scope
+resolveTupling :: Position -> Int -> CallHead layout Resolve scope
 resolveTupling constructorPosition count =
   Constructor
     { constructorPosition,
@@ -48,7 +48,7 @@ resolveTupling constructorPosition count =
       constructorInfo = Inferred
     }
 
-resolveCons :: Position -> CallHead Resolve scope
+resolveCons :: Position -> CallHead layout Resolve scope
 resolveCons constructorPosition =
   Constructor
     { constructorPosition,

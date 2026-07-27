@@ -379,7 +379,7 @@ class Simplify source where
 instance Simplify Semantic.Expression where
   simplify expression = simplifyWith expression []
 
-simplifyCallHead :: Semantic.CallHead Check scope -> Expression scope
+simplifyCallHead :: Semantic.CallHead layout Check scope -> Expression scope
 simplifyCallHead = \case
   Semantic.Variable {variable, instanciation = Solved instanciation} ->
     Variable

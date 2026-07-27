@@ -37,7 +37,7 @@ instance Shift.Functor (Lambda layout stage) where
           body = Shift.map (Shift.Over category) body
         }
 
-instance FreeTermVariables (Lambda layout) where
+instance FreeTermVariables Lambda where
   freeTermVariables target = \case
     Plain {plain} -> freeTermVariables target plain
     Bound {body} -> freeTermVariables (FreeTermVariables.Over target) body

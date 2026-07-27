@@ -30,7 +30,7 @@ instance Shift.Functor (Definition layout stage) where
         (Shift.map category function)
         (Shift.map category definition)
 
-instance FreeTermVariables (Definition layout) where
+instance FreeTermVariables Definition where
   freeTermVariables target = \case
     Definition function -> freeTermVariables target function
     Alternative function definition ->

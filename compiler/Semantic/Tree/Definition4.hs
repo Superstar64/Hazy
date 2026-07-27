@@ -45,7 +45,7 @@ data Definition4 locality layout stage scope where
   Link :: !(Term.Link locality) -> !Int -> Definition4 locality Group stage scope
   (::::) ::
     !(Inferred (ForallOver Types Vacuous) stage scope) ->
-    !(Implicit (Set locality stage) stage scope) ->
+    !(Implicit (Set locality Group stage) stage scope) ->
     Definition4 locality Group stage scope
 
 infix 5 :::, ::::
@@ -73,7 +73,7 @@ instance Shift.Functor (Definition4 locality layout stage) where
     Link link id -> Link link id
     types :::: set -> Shift.map category types :::: Shift.map category set
 
-instance FreeTermVariables (Definition4 locality layout) where
+instance FreeTermVariables (Definition4 locality) where
   freeTermVariables target = \case
     _ ::: Implicit.Resolve definition -> freeTermVariables target definition
     Link {} -> []
@@ -120,32 +120,32 @@ instance Unify.Generalizable Types where
 instance Unify.SolveType Types where
   solve position (Types types) = Types <$> traverse (Unify.solve position) types
 
-newtype Set locality stage scope
-  = Set (Strict.Vector (Element locality stage scope))
+newtype Set locality layout stage scope
+  = Set (Strict.Vector (Element locality layout stage scope))
   deriving (Show)
 
-instance Scope.Show (Set locality stage) where
+instance Scope.Show (Set locality layout stage) where
   showsPrec = showsPrec
 
-instance Shift0.Functor (Set locality stage) where
+instance Shift0.Functor (Set locality layout stage) where
   map = Shift.mapDefault
 
-instance Shift.Functor (Set locality stage) where
+instance Shift.Functor (Set locality layout stage) where
   map category (Set set) = Set (Shift.map category <$> set)
 
 instance FreeTermVariables (Set locality) where
   freeTermVariables target (Set set) = foldMap (freeTermVariables target) set
 
-data Element locality stage scope = Element
-  { element :: !(Definition3 Mark.Inferred Group stage (Scope.GroupTerm ':+ scope)),
+data Element locality layout stage scope = Element
+  { element :: !(Definition3 Mark.Inferred layout stage (Scope.GroupTerm ':+ scope)),
     link :: !(Term.Link locality)
   }
   deriving (Show)
 
-instance Shift0.Functor (Element locality stage) where
+instance Shift0.Functor (Element locality layout stage) where
   map = Shift.mapDefault
 
-instance Shift.Functor (Element locality stage) where
+instance Shift.Functor (Element locality layout stage) where
   map category Element {element, link} =
     Element
       { element = Shift.map (Shift.Over category) element,
@@ -183,7 +183,7 @@ group link index group (Inferred ::: _) = case group of
 
 ungroup ::
   (Term.Link locality -> Term0.Index scope) ->
-  (Term.Link locality -> Implicit (Set locality Check) Check scope) ->
+  (Term.Link locality -> Implicit (Set locality Group Check) Check scope) ->
   Definition4 locality Group Check scope ->
   Definition4 locality Normal Check scope
 ungroup _ _ (Annotated annotation ::: Implicit.Check definition) =

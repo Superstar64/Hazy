@@ -67,7 +67,7 @@ instance Shift.Functor (Definition2 source mark stage layout) where
     Piece choice -> Piece (Shift.map category choice)
     Shared definition -> Shared (Shift.map category definition)
 
-instance FreeTermVariables (Definition2 source mark layout) where
+instance FreeTermVariables (Definition2 source mark) where
   freeTermVariables target = \case
     Scoped definition ->
       freeTermVariables (FreeTermVariables.Over target) definition
