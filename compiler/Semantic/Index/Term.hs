@@ -1,6 +1,14 @@
 module Semantic.Index.Term where
 
-import Semantic.Scope (Declaration, Environment (..), Global, GroupTerm, Pattern)
+import Semantic.Scope
+  ( Declaration,
+    Environment (..),
+    Global,
+    GroupTerm,
+    Pattern,
+    SimpleDeclaration,
+    SimplePattern,
+  )
 import Prelude hiding (Functor, map)
 
 data Index scopes where
@@ -9,6 +17,8 @@ data Index scopes where
   Shift :: !(Index scopes) -> Index (scope ':+ scopes)
   Global :: !Int -> !Int -> Index Global
   Group :: !Int -> Index (GroupTerm ':+ scope)
+  SimplePattern :: !Int -> Index (SimplePattern ':+ scopes)
+  SimpleDeclaration :: Index (SimpleDeclaration ':+ scopes)
 
 instance Eq (Index scope) where
   Declaration local1 == Declaration local2 = local1 == local2
@@ -29,6 +39,8 @@ instance Show (Index scope) where
           . showsPrec 11 global
           . showString " "
           . showsPrec 11 local
+    SimplePattern local -> showParen (d > 10) $ showString "SimplePattern " . showsPrec 11 local
+    SimpleDeclaration -> showString "SimpleDeclaration"
 
 data Bound
   = At

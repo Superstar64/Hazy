@@ -2,7 +2,6 @@ module Generate.Context where
 
 import Control.Monad.ST (ST)
 import qualified Core.Index.Table.Term as Term (Table (..), (!))
-import qualified Core.Index.Term as Term (Index)
 import Core.Tree.ConstructorInfo (ConstructorInfo (..))
 import Core.Tree.EntryInfo (EntryInfo (..))
 import Data.Map (Map)
@@ -29,6 +28,7 @@ import Generate.Variable (Variable (..))
 import qualified Semantic.Index.Evidence0 as Evidence0 (Index)
 import qualified Semantic.Index.Table.Evidence0 as Evidence0 (Table (..), (!))
 import qualified Semantic.Index.Table.Type as Type (Table (..), (!))
+import qualified Semantic.Index.Term as Term (Index)
 import qualified Semantic.Index.Type as Type (Index)
 import Semantic.Scope (Environment ((:+)))
 import qualified Semantic.Scope as Scope

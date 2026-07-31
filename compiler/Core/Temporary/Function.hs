@@ -1,6 +1,5 @@
 module Core.Temporary.Function where
 
-import qualified Core.Index.Term as Term
 import qualified Core.Shift as Shift2
 import Core.Temporary.Pattern (Pattern)
 import qualified Core.Temporary.Pattern as Pattern
@@ -9,6 +8,7 @@ import qualified Core.Temporary.RightHandSide as RightHandSide
 import {-# SOURCE #-} qualified Core.Tree.Expression as Expression
 import Core.Tree.Statements (Statements)
 import qualified Core.Tree.Statements as Statements
+import qualified Semantic.Index.Term as Term
 import Semantic.Layout (Normal)
 import Semantic.Scope (Environment ((:+)))
 import qualified Semantic.Scope as Scope

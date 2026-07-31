@@ -33,7 +33,6 @@ executable hazy
     Builtin.Tuple
     Core.Builtin
     Core.Index.Table.Term
-    Core.Index.Term
     Core.Shift
     Core.Show
     Core.Substitute

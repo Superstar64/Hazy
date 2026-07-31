@@ -1,6 +1,5 @@
 module Core.Temporary.RightHandSide where
 
-import qualified Core.Index.Term as Term
 import qualified Core.Shift as Shift2
 import {-# SOURCE #-} Core.Tree.Declarations (Declarations)
 import {-# SOURCE #-} qualified Core.Tree.Declarations as Declarations
@@ -8,6 +7,7 @@ import {-# SOURCE #-} Core.Tree.Expression (Expression)
 import {-# SOURCE #-} qualified Core.Tree.Expression as Expression
 import Core.Tree.Statements (Statements)
 import qualified Core.Tree.Statements as Statements
+import qualified Semantic.Index.Term as Term
 import Semantic.Layout (Normal)
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope

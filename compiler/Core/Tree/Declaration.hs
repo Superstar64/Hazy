@@ -1,6 +1,5 @@
 module Core.Tree.Declaration where
 
-import qualified Core.Index.Term as Term
 import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
 import qualified Core.Temporary.Pattern as Pattern
@@ -81,14 +80,12 @@ simplify = \case
               Statements.bind
                 (Pattern.simplify patternx)
                 Expression.Variable
-                  { variable = Term.from index,
+                  { variable = index,
                     instanciation
                   }
                 Statements.Done
                   { done =
-                      Expression.monoVariable $
-                        Term.from $
-                          Semantic.Term.Pattern bound
+                      Expression.monoVariable $ Semantic.Term.Pattern bound
                   }
           }
       Semantic.Definition2.Shared shared -> Expression.simplify shared

@@ -1,6 +1,5 @@
 module Core.Substitute where
 
-import qualified Core.Index.Term as Term
 import qualified Core.Shift as Shift2
 import {-# SOURCE #-} Core.Tree.Evidence (Evidence, EvidenceF)
 import {-# SOURCE #-} Core.Tree.Type (Type, TypeF)
@@ -10,6 +9,7 @@ import qualified Data.Vector as Vector
 import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Method as Method
 import qualified Semantic.Index.Selector as Selector
+import qualified Semantic.Index.Term as Term
 import qualified Semantic.Index.Type as Type
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Scope (Environment (..), Local, Vacuous)

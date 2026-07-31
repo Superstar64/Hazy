@@ -2,13 +2,13 @@
 
 module Core.Tree.Expression where
 
-import qualified Core.Index.Term as Term
 import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
 import Core.Tree.Evidence (Evidence)
 import {-# SOURCE #-} Core.Tree.Statements (Statements)
 import Data.Kind (Type)
 import qualified Semantic.Index.Constructor as Constructor
+import qualified Semantic.Index.Term as Term
 import Semantic.Layout (Normal)
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope

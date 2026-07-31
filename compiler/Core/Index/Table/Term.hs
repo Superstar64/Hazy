@@ -1,10 +1,10 @@
 module Core.Index.Table.Term where
 
-import Core.Index.Term (Index)
-import qualified Core.Index.Term as Index
 import Data.Kind (Type)
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
+import Semantic.Index.Term (Index)
+import qualified Semantic.Index.Term as Index
 import Semantic.Scope
   ( Declaration,
     Environment (..),

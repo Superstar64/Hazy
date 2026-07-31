@@ -6,7 +6,6 @@ import {-# SOURCE #-} qualified Builtin.Fractional as Fractional
 import {-# SOURCE #-} qualified Builtin.Monad as Monad
 import {-# SOURCE #-} qualified Builtin.MonadFail as MonadFail
 import {-# SOURCE #-} qualified Builtin.Num as Num
-import qualified Core.Index.Term as Term
 import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
 import {-# SOURCE #-} Core.Temporary.Definition (Definition (Definition))
@@ -48,6 +47,7 @@ import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Evidence as Index.Evidence
 import qualified Semantic.Index.Method as Method
 import qualified Semantic.Index.Selector as Selector (Index (..))
+import qualified Semantic.Index.Term as Term
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Layout (Normal)
 import Semantic.Scope (Environment ((:+)))
@@ -383,7 +383,7 @@ simplifyCallHead :: Semantic.CallHead layout Check scope -> Expression scope
 simplifyCallHead = \case
   Semantic.Variable {variable, instanciation = Solved instanciation} ->
     Variable
-      { variable = Term.from variable,
+      { variable,
         instanciation
       }
   Semantic.Selector {selector, selectorInfo = Solved selectorInfo} ->

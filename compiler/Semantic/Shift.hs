@@ -49,6 +49,8 @@ instance Functor Term.Index where
   map (Over _) (Term.Declaration index) = Term.Declaration index
   map (Over _) (Term.Pattern bound) = Term.Pattern bound
   map (Over _) (Term.Group index) = Term.Group index
+  map (Over _) (Term.SimplePattern index) = Term.SimplePattern index
+  map (Over _) Term.SimpleDeclaration = Term.SimpleDeclaration
   map (after :. before) index = map after (map before index)
   map (Unshift _) (Term.Shift index) = index
   map (Unshift abort) _ = absurd abort

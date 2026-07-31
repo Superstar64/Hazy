@@ -1,6 +1,5 @@
 module Core.Tree.Statements where
 
-import qualified Core.Index.Term as Term
 import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
 import Core.Temporary.Pattern (Pattern)
@@ -20,6 +19,7 @@ import qualified Semantic.Check.Simple.ConstructorInfo as Semantic (ConstructorI
 import qualified Semantic.Check.Simple.ConstructorInfo as Semantic.ConstructorInfo
 import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Constructor as Constructor2
+import qualified Semantic.Index.Term as Term
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Layout (Normal)
 import Semantic.Scope (Environment (..))
