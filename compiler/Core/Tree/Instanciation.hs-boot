@@ -2,7 +2,6 @@
 
 module Core.Tree.Instanciation where
 
-import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
 import {-# SOURCE #-} Core.Tree.Evidence (EvidenceF)
 import qualified Data.Vector.Strict as Strict
@@ -20,8 +19,6 @@ instance (Scope.Show logical) => Show (InstanciationF logical scope)
 instance (Shift.Functor logical) => Shift0.Functor (InstanciationF logical)
 
 instance (Shift.Functor logical) => Shift.Functor (InstanciationF logical)
-
-instance (logical ~ Vacuous) => Shift2.Functor (InstanciationF logical)
 
 instance (logical ~ Vacuous) => Substitute.Functor (InstanciationF logical)
 

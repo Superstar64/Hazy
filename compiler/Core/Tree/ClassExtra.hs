@@ -1,6 +1,5 @@
 module Core.Tree.ClassExtra where
 
-import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
 import Core.Tree.Expression (Expression)
 import qualified Core.Tree.Expression as Expression
@@ -22,9 +21,6 @@ instance Shift0.Functor ClassExtra where
   map = Shift.mapDefault
 
 instance Shift.Functor ClassExtra where
-  map = Shift2.mapDefault
-
-instance Shift2.Functor ClassExtra where
   map = Substitute.mapDefault
 
 instance Substitute.Functor ClassExtra where

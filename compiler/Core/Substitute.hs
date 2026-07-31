@@ -1,6 +1,5 @@
 module Core.Substitute where
 
-import qualified Core.Shift as Shift2
 import {-# SOURCE #-} Core.Tree.Evidence (Evidence, EvidenceF)
 import {-# SOURCE #-} Core.Tree.Type (Type, TypeF)
 import qualified Data.Map as Map
@@ -19,7 +18,7 @@ import qualified Semantic.Shift0 as Shift0
 import Prelude hiding (Functor, map)
 
 data Category typex evidence scope1 scope2 where
-  Lift :: Shift2.Category scope1 scope2 -> Category typex evidence scope1 scope2
+  Lift :: Shift.Category scope1 scope2 -> Category typex evidence scope1 scope2
   Over ::
     Category typex evidence scopes scopes' ->
     Category typex evidence (scope1 ':+ scopes) (scope1 ':+ scopes')
@@ -32,32 +31,32 @@ data Category typex evidence scope1 scope2 where
     Vector (evidence scope') ->
     Category typex evidence (Local ':+ scope) scope'
 
-general :: Category logicalType logicalEvidence scope1 scope2 -> Shift2.Category scope1 scope2
+general :: Category logicalType logicalEvidence scope1 scope2 -> Shift.Category scope1 scope2
 general = \case
   Lift category -> category
-  Over category -> Shift2.Over (general category)
-  Substitute general _ _ -> Shift2.Lift (general Shift.:. Shift.Unshift (error "bad general"))
+  Over category -> Shift.Over (general category)
+  Substitute general _ _ -> general Shift.:. Shift.Unshift (error "bad general")
 
-class (Shift2.Functor typex) => Functor typex where
+class (Shift.Functor typex) => Functor typex where
   map :: Category Type Evidence scope1 scope2 -> typex scope1 -> typex scope2
 
 instance Functor Type.Index where
-  map = Shift2.map . general
+  map = Shift.map . general
 
 instance Functor Type2.Index where
-  map = Shift2.map . general
+  map = Shift.map . general
 
 instance Functor Constructor.Index where
-  map = Shift2.map . general
+  map = Shift.map . general
 
 instance Functor Selector.Index where
-  map = Shift2.map . general
+  map = Shift.map . general
 
 instance Functor Method.Index where
-  map = Shift2.map . general
+  map = Shift.map . general
 
 instance Functor Term.Index where
-  map = Shift2.map . general
+  map = Shift.map . general
 
 class TypeFunctor typef where
   mapType ::
@@ -107,5 +106,5 @@ mapInstances ::
   Map.Map (Type2.Index scope') a
 mapInstances category = Map.mapKeysMonotonic (map category)
 
-mapDefault :: (Functor typex) => Shift2.Category scope1 scope2 -> typex scope1 -> typex scope2
+mapDefault :: (Functor typex) => Shift.Category scope1 scope2 -> typex scope1 -> typex scope2
 mapDefault = map . Lift

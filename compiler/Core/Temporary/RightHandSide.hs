@@ -1,6 +1,5 @@
 module Core.Temporary.RightHandSide where
 
-import qualified Core.Shift as Shift2
 import {-# SOURCE #-} Core.Tree.Declarations (Declarations)
 import {-# SOURCE #-} qualified Core.Tree.Declarations as Declarations
 import {-# SOURCE #-} Core.Tree.Expression (Expression)
@@ -36,21 +35,18 @@ instance Shift0.Functor RightHandSide where
   map = Shift.mapDefault
 
 instance Shift.Functor RightHandSide where
-  map = Shift2.mapDefault
-
-instance Shift2.Functor RightHandSide where
   map category = \case
     RightHandSide {letBody, declarations} ->
       RightHandSide
-        { letBody = Shift2.map (Shift2.Over category) letBody,
-          declarations = Shift2.map (Shift2.Over category) declarations
+        { letBody = Shift.map (Shift.Over category) letBody,
+          declarations = Shift.map (Shift.Over category) declarations
         }
     Call {function, argument} ->
       Call
-        { function = Shift2.map category function,
-          argument = Shift2.map category argument
+        { function = Shift.map category function,
+          argument = Shift.map category argument
         }
-    Done {done} -> Done {done = Shift2.map category done}
+    Done {done} -> Done {done = Shift.map category done}
 
 class Simplify source where
   simplify :: source Normal Check scope -> RightHandSide scope

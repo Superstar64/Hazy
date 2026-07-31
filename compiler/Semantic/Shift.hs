@@ -1,4 +1,4 @@
-module Semantic.Shift (module Semantic.Shift, Shift0.shift) where
+module Semantic.Shift (module Semantic.Shift, shift) where
 
 import Data.Kind (Constraint, Type)
 import qualified Data.Map as Map
@@ -14,15 +14,18 @@ import {-# SOURCE #-} Semantic.Index.Type2 as Type2 (Index)
 import Semantic.Layout (Layout)
 import Semantic.Scope (Environment ((:+)), Vacuous)
 import qualified Semantic.Scope as Scope
+import Semantic.Shift0 (shift)
 import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Stage)
 import Prelude hiding (Functor, id, map, (.))
 
 data Category scope scope' where
+  -- Basic shifts
   Id :: Category scope scope
   Shift :: Category scopes (scope ':+ scopes)
   Over :: Category scopes scopes' -> Category (scope1 ':+ scopes) (scope1 ':+ scopes')
   (:.) :: Category scope' scope'' -> Category scope scope' -> Category scope scope''
+  -- Semantic shifs
   Unshift :: Void -> Category (scope ':+ scopes) scopes
   GroupTerm ::
     (Term0.Index scope -> Strict.Maybe Int) ->
@@ -36,8 +39,60 @@ data Category scope scope' where
   UngroupType ::
     (Int -> Type.Index scope) ->
     Category (Scope.GroupType ':+ scope) scope
+  -- Core shifts
+  ReplaceWildcard ::
+    Category
+      (Scope.Pattern ':+ scope)
+      (Scope.SimpleDeclaration ':+ scope)
+  SimplifyPattern ::
+    Int ->
+    Category
+      (Scope.Pattern ':+ scope)
+      (Scope.Pattern ':+ Scope.Pattern ':+ scope)
+  RenamePattern ::
+    (Int -> Int) ->
+    Category
+      (Scope.Pattern ':+ scope)
+      (Scope.Pattern ':+ scope)
+  SimplifyList ::
+    Category
+      (Scope.Pattern ':+ scope)
+      (Scope.Pattern ':+ scope)
+  LetPattern ::
+    Category
+      (Scope.Pattern ':+ scope)
+      (Scope.Pattern ':+ Scope.SimpleDeclaration ':+ scope)
+  FinishPattern ::
+    Category
+      (Scope.Pattern ':+ scope)
+      (Scope.SimplePattern ':+ scope)
+  FinishNewtype ::
+    Category
+      (Scope.SimplePattern ':+ scope)
+      (Scope.SimpleDeclaration ':+ scope)
+  ReplaceIrrefutable ::
+    Int ->
+    Category
+      (Scope.SimplePattern ':+ scope)
+      (Scope.SimplePattern ':+ (Scope.SimpleDeclaration ':+ scope))
 
 infixr 9 :.
+
+generalReplaceWildcard = Unshift (error "bad unshift") :. Over Shift
+
+generalSimplifyPattern = Shift
+
+generalRenamePattern = Id
+
+generalSimplifyList = Id
+
+generalLetPattern = Over Shift
+
+generalFinishPattern = Unshift (error "bad unshift") :. Over Shift
+
+generalFinishNewtype = Unshift (error "bad unshift") :. Over Shift
+
+generalReplaceIrrefutable = Over Shift
 
 class (Shift0.Functor f) => Functor f where
   map :: Category scope scope' -> f scope -> f scope'
@@ -63,6 +118,45 @@ instance Functor Term.Index where
   map (UngroupTerm term) (Term.Group index) = term index
   map UngroupTerm {} (Term.Shift index) = index
   map UngroupType {} (Term.Shift index) = index
+  map ReplaceWildcard index = case index of
+    Term.Pattern Term.At -> Term.SimpleDeclaration
+    Term.Pattern _ -> error "bad wildcard bind"
+    Term.Shift index -> Term.Shift index
+  map (SimplifyPattern target) index = case index of
+    Term.Pattern (Term.Select source bound)
+      | source == target -> Term.Pattern bound
+    Term.Pattern _ -> shift index
+    Term.Shift _ -> shift index
+  map (RenamePattern rename) index = case index of
+    Term.Pattern Term.At -> Term.Pattern Term.At
+    Term.Pattern (Term.Select index' bound) ->
+      Term.Pattern (Term.Select (rename index') bound)
+    Term.Shift index -> Term.Shift index
+  map SimplifyList index = case index of
+    Term.Pattern Term.At -> Term.Pattern Term.At
+    Term.Pattern (Term.Select 0 bound) -> Term.Pattern (Term.Select 0 bound)
+    Term.Pattern (Term.Select index bound) ->
+      Term.Pattern (Term.Select 1 (Term.Select (index - 1) bound))
+    Term.Shift index -> Term.Shift index
+  map LetPattern index = case index of
+    Term.Pattern Term.At -> Term.Shift Term.SimpleDeclaration
+    Term.Pattern (Term.Select index bound) ->
+      Term.Pattern (Term.Select index bound)
+    Term.Shift index -> Term.Shift (Term.Shift index)
+  map FinishPattern index = case index of
+    Term.Pattern (Term.Select index Term.At) -> Term.SimplePattern index
+    Term.Pattern _ -> error "bad finish pattern"
+    Term.Shift index -> Term.Shift index
+  map FinishNewtype index = case index of
+    Term.SimplePattern n
+      | n == 0 -> Term.SimpleDeclaration
+      | otherwise -> error "bad finish newtype"
+    Term.Shift index -> Term.Shift index
+  map (ReplaceIrrefutable target) index = case index of
+    Term.SimplePattern index
+      | index == target -> Term.Shift Term.SimpleDeclaration
+      | otherwise -> Term.SimplePattern index
+    Term.Shift index -> Term.Shift (Term.Shift index)
 
 instance Functor Type.Index where
   map Id index = index
@@ -82,6 +176,17 @@ instance Functor Type.Index where
   map (UngroupType typex) (Type.Group index) = typex index
   map UngroupType {} (Type.Shift index) = index
   map UngroupTerm {} (Type.Shift index) = index
+  map category index = map general index
+    where
+      general = case category of
+        ReplaceWildcard {} -> generalReplaceWildcard
+        SimplifyPattern {} -> generalSimplifyPattern
+        RenamePattern {} -> generalRenamePattern
+        SimplifyList {} -> generalSimplifyList
+        LetPattern {} -> generalLetPattern
+        FinishPattern {} -> generalFinishPattern
+        FinishNewtype {} -> generalFinishNewtype
+        ReplaceIrrefutable {} -> generalReplaceIrrefutable
 
 instance PartialUnshift Type.Index where
   partialUnshift _ (Type.Shift index) = pure index
@@ -99,6 +204,17 @@ instance Functor Evidence0.Index where
   map GroupType {} index = Evidence0.Shift index
   map UngroupTerm {} (Evidence0.Shift index) = index
   map UngroupType {} (Evidence0.Shift index) = index
+  map category index = map general index
+    where
+      general = case category of
+        ReplaceWildcard {} -> generalReplaceWildcard
+        SimplifyPattern {} -> generalSimplifyPattern
+        RenamePattern {} -> generalRenamePattern
+        SimplifyList {} -> generalSimplifyList
+        LetPattern {} -> generalLetPattern
+        FinishPattern {} -> generalFinishPattern
+        FinishNewtype {} -> generalFinishNewtype
+        ReplaceIrrefutable {} -> generalReplaceIrrefutable
 
 instance PartialUnshift Evidence0.Index where
   partialUnshift abort (Evidence0.Assumed _) = vacuous abort
@@ -116,6 +232,17 @@ instance Functor Local.Index where
   map (GroupType _) index = Local.Shift index
   map UngroupTerm {} (Local.Shift index) = index
   map UngroupType {} (Local.Shift index) = index
+  map category index = map general index
+    where
+      general = case category of
+        ReplaceWildcard {} -> generalReplaceWildcard
+        SimplifyPattern {} -> generalSimplifyPattern
+        RenamePattern {} -> generalRenamePattern
+        SimplifyList {} -> generalSimplifyList
+        LetPattern {} -> generalLetPattern
+        FinishPattern {} -> generalFinishPattern
+        FinishNewtype {} -> generalFinishNewtype
+        ReplaceIrrefutable {} -> generalReplaceIrrefutable
 
 instance PartialUnshift Local.Index where
   partialUnshift _ (Local.Shift index) = pure index

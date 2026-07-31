@@ -1,6 +1,5 @@
 module Core.Temporary.Function where
 
-import qualified Core.Shift as Shift2
 import Core.Temporary.Pattern (Pattern)
 import qualified Core.Temporary.Pattern as Pattern
 import Core.Temporary.RightHandSide (RightHandSide)
@@ -38,24 +37,21 @@ instance Shift0.Functor Function where
   map = Shift.mapDefault
 
 instance Shift.Functor Function where
-  map = Shift2.mapDefault
-
-instance Shift2.Functor Function where
   map category = \case
     Plain {plain} ->
       Plain
-        { plain = Shift2.map category plain
+        { plain = Shift.map category plain
         }
     Bound {patternx, body} ->
       Bound
-        { patternx = Shift2.map category patternx,
-          body = Shift2.map (Shift2.Over category) body
+        { patternx = Shift.map category patternx,
+          body = Shift.map (Shift.Over category) body
         }
     Bind {patternx, variable, thenx} ->
       Bind
-        { patternx = Shift2.map category patternx,
-          variable = Shift2.map category variable,
-          thenx = Shift2.map (Shift2.Over category) thenx
+        { patternx = Shift.map category patternx,
+          variable = Shift.map category variable,
+          thenx = Shift.map (Shift.Over category) thenx
         }
 
 class Simplify source where

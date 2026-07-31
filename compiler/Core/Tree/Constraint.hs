@@ -1,6 +1,5 @@
 module Core.Tree.Constraint where
 
-import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
 import Core.Tree.Type (Type, TypeF (Variable), (#))
 import qualified Core.Tree.Type as Type
@@ -33,16 +32,13 @@ instance (Shift.Functor logical) => Shift.Functor (ConstraintF logical) where
         arguments = Shift.map (Shift.Over category) <$> arguments
       }
 
-instance (logical ~ Vacuous) => Shift2.Functor (ConstraintF logical) where
-  map = Substitute.mapDefault
-
 instance (logical ~ Vacuous) => Substitute.Functor (ConstraintF logical) where
   map = Substitute.mapType
 
 instance Substitute.TypeFunctor ConstraintF where
   mapType category Constraint {classx, head, arguments} =
     Constraint
-      { classx = Shift2.map (Substitute.general category) classx,
+      { classx = Shift.map (Substitute.general category) classx,
         head,
         arguments = Substitute.mapType (Substitute.Over category) <$> arguments
       }

@@ -1,6 +1,5 @@
 module Semantic.Check.Simple.ConstructorInfo where
 
-import qualified Core.Shift as Shift2
 import qualified Data.Vector.Strict as Strict
 import Semantic.Check.Simple.EntryInfo (EntryInfo)
 import qualified Semantic.Scope as Scope
@@ -25,12 +24,9 @@ instance Shift0.Functor ConstructorInfo where
   map = Shift.mapDefault
 
 instance Shift.Functor ConstructorInfo where
-  map = Shift2.mapDefault
-
-instance Shift2.Functor ConstructorInfo where
   map category = \case
     ConstructorInfo {entries} ->
       ConstructorInfo
-        { entries = Shift2.map category <$> entries
+        { entries = Shift.map category <$> entries
         }
     Newtype -> Newtype

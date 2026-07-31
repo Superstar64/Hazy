@@ -1,6 +1,5 @@
 module Semantic.Check.Simple.MethodInfo where
 
-import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
 import Data.Kind (Type)
 import Semantic.Scope (Environment)
@@ -21,9 +20,6 @@ instance Shift0.Functor MethodInfo where
   map = Shift.mapDefault
 
 instance Shift.Functor MethodInfo where
-  map = Shift2.mapDefault
-
-instance Shift2.Functor MethodInfo where
   map = Substitute.mapDefault
 
 instance Substitute.Functor MethodInfo where

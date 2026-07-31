@@ -1,6 +1,5 @@
 module Core.Tree.ConstructorInfo where
 
-import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
 import Core.Tree.EntryInfo (EntryInfo)
 import qualified Data.Vector.Strict as Strict (Vector)
@@ -16,9 +15,6 @@ instance Shift0.Functor ConstructorInfo where
   map = Shift.mapDefault
 
 instance Shift.Functor ConstructorInfo where
-  map = Shift2.mapDefault
-
-instance Shift2.Functor ConstructorInfo where
   map = Substitute.mapDefault
 
 instance Substitute.Functor ConstructorInfo where

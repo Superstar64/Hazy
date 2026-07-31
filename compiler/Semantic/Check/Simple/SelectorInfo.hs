@@ -1,6 +1,5 @@
 module Semantic.Check.Simple.SelectorInfo where
 
-import qualified Core.Shift as Shift2
 import qualified Core.Tree.Type as Simple
 import qualified Data.Strict.Maybe as Strict (Maybe)
 import qualified Data.Vector.Strict as Strict (Vector)
@@ -32,22 +31,16 @@ instance Shift0.Functor SelectorInfo where
   map = Shift.mapDefault
 
 instance Shift.Functor SelectorInfo where
-  map = Shift2.mapDefault
-
-instance Shift2.Functor SelectorInfo where
   map category = \case
-    Uniform {strict} -> Uniform {strict = Shift2.map category strict}
-    Disjoint {select} -> Disjoint {select = Shift2.map category <$> select}
+    Uniform {strict} -> Uniform {strict = Shift.map category strict}
+    Disjoint {select} -> Disjoint {select = Shift.map category <$> select}
 
 instance Shift0.Functor Select where
   map = Shift.mapDefault
 
 instance Shift.Functor Select where
-  map = Shift2.mapDefault
-
-instance Shift2.Functor Select where
   map category Select {selectIndex, constructorInfo} =
     Select
       { selectIndex,
-        constructorInfo = Shift2.map category constructorInfo
+        constructorInfo = Shift.map category constructorInfo
       }

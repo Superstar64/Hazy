@@ -1,6 +1,5 @@
 module Semantic.Check.Simple.EntryInfo where
 
-import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
 import qualified Core.Tree.Type as Simple
 import qualified Semantic.Shift as Shift
@@ -15,9 +14,6 @@ instance Shift0.Functor EntryInfo where
   map = Shift.mapDefault
 
 instance Shift.Functor EntryInfo where
-  map = Shift2.mapDefault
-
-instance Shift2.Functor EntryInfo where
   map = Substitute.mapDefault
 
 instance Substitute.Functor EntryInfo where

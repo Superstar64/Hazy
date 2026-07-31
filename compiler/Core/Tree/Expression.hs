@@ -6,7 +6,6 @@ import {-# SOURCE #-} qualified Builtin.Fractional as Fractional
 import {-# SOURCE #-} qualified Builtin.Monad as Monad
 import {-# SOURCE #-} qualified Builtin.MonadFail as MonadFail
 import {-# SOURCE #-} qualified Builtin.Num as Num
-import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
 import {-# SOURCE #-} Core.Temporary.Definition (Definition (Definition))
 import {-# SOURCE #-} qualified Core.Temporary.Definition as Definition
@@ -132,9 +131,6 @@ instance Shift0.Functor Expression where
   map = Shift.mapDefault
 
 instance Shift.Functor Expression where
-  map = Shift2.mapDefault
-
-instance Shift2.Functor Expression where
   map = Substitute.mapDefault
 
 instance Substitute.Functor Expression where

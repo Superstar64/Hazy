@@ -2,7 +2,6 @@
 
 module Core.Tree.Expression where
 
-import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
 import Core.Tree.Evidence (Evidence)
 import {-# SOURCE #-} Core.Tree.Statements (Statements)
@@ -28,8 +27,6 @@ data Direction = Construct | Destruct
 instance Shift0.Functor Expression
 
 instance Shift.Functor Expression
-
-instance Shift2.Functor Expression
 
 instance Substitute.Functor Expression
 

@@ -1,6 +1,5 @@
 module Core.Tree.Class where
 
-import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
 import Core.Tree.Constraint (Constraint)
 import Core.Tree.Forall (Forall)
@@ -23,9 +22,6 @@ instance Shift0.Functor Class where
   map = Shift.mapDefault
 
 instance Shift.Functor Class where
-  map = Shift2.mapDefault
-
-instance Shift2.Functor Class where
   map = Substitute.mapDefault
 
 instance Substitute.Functor Class where

@@ -1,6 +1,5 @@
 module Core.Tree.Instanciation where
 
-import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
 import Core.Tree.Evidence (EvidenceF)
 import qualified Data.Vector.Strict as Strict
@@ -28,9 +27,6 @@ instance (Shift.Functor logical) => Shift.Functor (InstanciationF logical) where
     Instanciation instanciation ->
       Instanciation (Shift.map category <$> instanciation)
     Mono -> Mono
-
-instance (logical ~ Vacuous) => Shift2.Functor (InstanciationF logical) where
-  map = Substitute.mapDefault
 
 instance (logical ~ Vacuous) => Substitute.Functor (InstanciationF logical) where
   map = Substitute.mapEvidence

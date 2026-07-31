@@ -1,6 +1,5 @@
 module Core.Tree.Hook where
 
-import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
 import Core.Tree.Evidence (Evidence)
 import Data.Kind (Type)
@@ -61,9 +60,6 @@ instance Shift0.Functor Hook where
   map = Shift.mapDefault
 
 instance Shift.Functor Hook where
-  map = Shift2.mapDefault
-
-instance Shift2.Functor Hook where
   map = Substitute.mapDefault
 
 instance Substitute.Functor Hook where

@@ -1,6 +1,5 @@
 module Core.Tree.Declaration where
 
-import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
 import qualified Core.Temporary.Pattern as Pattern
 import Core.Tree.Expression (Expression)
@@ -37,9 +36,6 @@ instance Shift0.Functor Declaration where
   map = Shift.mapDefault
 
 instance Shift.Functor Declaration where
-  map = Shift2.mapDefault
-
-instance Shift2.Functor Declaration where
   map = Substitute.mapDefault
 
 instance Substitute.Functor Declaration where

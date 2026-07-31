@@ -1,6 +1,5 @@
 module Core.Tree.MethodConcrete where
 
-import qualified Core.Shift as Shift2
 import Core.Substitute (Category (Substitute))
 import qualified Core.Substitute as Substitute
 import qualified Core.Tree.Expression as Expression
@@ -25,9 +24,6 @@ instance Shift0.Functor MethodConcrete where
   map = Shift.mapDefault
 
 instance Shift.Functor MethodConcrete where
-  map = Shift2.mapDefault
-
-instance Shift2.Functor MethodConcrete where
   map = Substitute.mapDefault
 
 instance Substitute.Functor MethodConcrete where

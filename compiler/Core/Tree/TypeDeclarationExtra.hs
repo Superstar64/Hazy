@@ -1,6 +1,5 @@
 module Core.Tree.TypeDeclarationExtra where
 
-import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
 import Core.Tree.ClassExtra (ClassExtra)
 import qualified Core.Tree.ClassExtra as ClassExtra
@@ -32,9 +31,6 @@ instance Shift0.Functor TypeDeclarationExtra where
   map = Shift.mapDefault
 
 instance Shift.Functor TypeDeclarationExtra where
-  map = Shift2.mapDefault
-
-instance Shift2.Functor TypeDeclarationExtra where
   map = Substitute.mapDefault
 
 instance Substitute.Functor TypeDeclarationExtra where

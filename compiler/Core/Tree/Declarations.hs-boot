@@ -2,7 +2,6 @@
 
 module Core.Tree.Declarations where
 
-import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
 import {-# SOURCE #-} Core.Tree.Declaration (Declaration)
 import Data.Kind (Type)
@@ -23,8 +22,6 @@ instance Show (Declarations scope)
 instance Shift0.Functor Declarations
 
 instance Shift.Functor Declarations
-
-instance Shift2.Functor Declarations
 
 instance Substitute.Functor Declarations
 

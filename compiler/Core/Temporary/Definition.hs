@@ -1,6 +1,5 @@
 module Core.Temporary.Definition where
 
-import qualified Core.Shift as Shift2
 import Core.Temporary.Function (Function)
 import qualified Core.Temporary.Function as Function
 import Core.Tree.Expression (Expression)
@@ -28,18 +27,15 @@ instance Shift0.Functor Definition where
   map = Shift.mapDefault
 
 instance Shift.Functor Definition where
-  map = Shift2.mapDefault
-
-instance Shift2.Functor Definition where
   map category = \case
     Alternative {definition, alternative} ->
       Alternative
-        { definition = Shift2.map category definition,
-          alternative = Shift2.map category alternative
+        { definition = Shift.map category definition,
+          alternative = Shift.map category alternative
         }
     Definition {definition} ->
       Definition
-        { definition = Shift2.map category definition
+        { definition = Shift.map category definition
         }
 
 instance Semigroup (Definition scope) where

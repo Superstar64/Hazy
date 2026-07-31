@@ -1,6 +1,5 @@
 module Core.Tree.Forall where
 
-import qualified Core.Shift as Shift2
 import qualified Core.Show as Core
 import qualified Core.Substitute as Substitute
 import Core.Tree.Constraints (ConstraintsF (None))
@@ -54,12 +53,6 @@ instance (Shift.Functor logical, Shift.Functor (typef logical)) => Shift.Functor
         constraints = Shift.map category constraints,
         result = Shift.map (Shift.Over category) result
       }
-
-instance
-  (logical ~ Vacuous, Substitute.TypeFunctor typef, Shift.Functor (typef Vacuous)) =>
-  Shift2.Functor (ForallOver typef logical)
-  where
-  map = Substitute.mapDefault
 
 instance
   (logical ~ Vacuous, Substitute.TypeFunctor typef, Shift.Functor (typef Vacuous)) =>

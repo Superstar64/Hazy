@@ -1,6 +1,5 @@
 module Core.Tree.Evidence (Evidence, EvidenceF (..)) where
 
-import qualified Core.Shift as Shift2
 import Core.Substitute (Category (Substitute))
 import qualified Core.Substitute as Substitute
 import {-# SOURCE #-} Core.Tree.Instanciation (InstanciationF)
@@ -63,9 +62,6 @@ instance (Shift.Functor logical) => Shift.Functor (EvidenceF logical) where
           index
         }
 
-instance (logical ~ Vacuous) => Shift2.Functor (EvidenceF logical) where
-  map = Substitute.mapDefault
-
 instance (logical ~ Vacuous) => Substitute.Functor (EvidenceF logical) where
   map = Substitute.mapEvidence
 
@@ -96,12 +92,12 @@ instance Substitute.EvidenceFunctor EvidenceF where
             Evidence.Builtin builtin -> Evidence.Builtin builtin
             Evidence.Class index1 index2 ->
               Evidence.Class
-                (Shift2.map (Substitute.general category) index1)
-                (Shift2.map (Substitute.general category) index2)
+                (Shift.map (Substitute.general category) index1)
+                (Shift.map (Substitute.general category) index2)
             Evidence.Data index1 index2 ->
               Evidence.Data
-                (Shift2.map (Substitute.general category) index1)
-                (Shift2.map (Substitute.general category) index2)
+                (Shift.map (Substitute.general category) index1)
+                (Shift.map (Substitute.general category) index2)
             Evidence.Index index -> Evidence.Index $ map category index,
           instanciation = Substitute.mapEvidence category instanciation
         }
@@ -110,7 +106,7 @@ instance Substitute.EvidenceFunctor EvidenceF where
           Category logicalType logcialEvidence scope1 scope2 ->
           Evidence0.Index scope1 ->
           Evidence0.Index scope2
-        map (Substitute.Lift category) index = Shift2.map category index
+        map (Substitute.Lift category) index = Shift.map category index
         map Substitute {} Evidence0.Assumed {} =
           error "can't substitute evidence into instanciated evidence variable"
         map Substitute.Over {} (Evidence0.Assumed index) = Evidence0.Assumed index

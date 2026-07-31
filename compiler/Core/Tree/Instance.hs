@@ -1,6 +1,5 @@
 module Core.Tree.Instance where
 
-import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
 import Core.Tree.Constraints (ConstraintCount (..))
 import Core.Tree.Evidence (Evidence)
@@ -27,9 +26,6 @@ instance Shift0.Functor Instance where
   map = Shift.mapDefault
 
 instance Shift.Functor Instance where
-  map = Shift2.mapDefault
-
-instance Shift2.Functor Instance where
   map = Substitute.mapDefault
 
 instance Substitute.Functor Instance where

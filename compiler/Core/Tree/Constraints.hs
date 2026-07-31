@@ -1,6 +1,5 @@
 module Core.Tree.Constraints where
 
-import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
 import Core.Tree.Constraint (ConstraintF)
 import qualified Core.Tree.Constraint as Constraint
@@ -25,9 +24,6 @@ instance (Shift.Functor logical) => Shift.Functor (ConstraintsF logical) where
   map category = \case
     Constraints constraints -> Constraints $ Shift.map category <$> constraints
     None -> None
-
-instance (logical ~ Vacuous) => Shift2.Functor (ConstraintsF logical) where
-  map = Substitute.mapDefault
 
 instance (logical ~ Vacuous) => Substitute.Functor (ConstraintsF logical) where
   map = Substitute.mapType

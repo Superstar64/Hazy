@@ -1,6 +1,5 @@
 module Core.Tree.TypeLambda where
 
-import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
 import Core.Tree.Constraints (Constraints)
 import qualified Core.Tree.Constraints as Constraints
@@ -31,9 +30,6 @@ instance (Shift.Functor term) => Shift.Functor (TypeLambdaOver term) where
         constraints = Shift.map category constraints,
         result = Shift.map (Shift.Over category) result
       }
-
-instance (Substitute.Functor term) => Shift2.Functor (TypeLambdaOver term) where
-  map = Substitute.mapDefault
 
 instance (Substitute.Functor term) => Substitute.Functor (TypeLambdaOver term) where
   map category TypeLambdaOver {parameters, constraints, result} =

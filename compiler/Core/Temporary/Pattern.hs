@@ -1,6 +1,5 @@
 module Core.Temporary.Pattern where
 
-import qualified Core.Shift as Shift2
 import Core.Tree.Evidence (Evidence)
 import qualified Data.Strict.Vector1 as Strict (Vector1)
 import qualified Data.Vector.Strict as Strict (Vector)
@@ -52,14 +51,11 @@ instance Shift0.Functor Pattern where
   map = Shift.mapDefault
 
 instance Shift.Functor Pattern where
-  map = Shift2.mapDefault
-
-instance Shift2.Functor Pattern where
   map category = \case
     Wildcard -> Wildcard
     Match {match, irrefutable} ->
       Match
-        { match = Shift2.map category match,
+        { match = Shift.map category match,
           irrefutable
         }
 
@@ -67,37 +63,34 @@ instance Shift0.Functor Bindings where
   map = Shift.mapDefault
 
 instance Shift.Functor Bindings where
-  map = Shift2.mapDefault
-
-instance Shift2.Functor Bindings where
   map category = \case
     Constructor {constructor, patterns, constructorInfo} ->
       Constructor
-        { constructor = Shift2.map category constructor,
-          patterns = Shift2.map category <$> patterns,
-          constructorInfo = Shift2.map category constructorInfo
+        { constructor = Shift.map category constructor,
+          patterns = Shift.map category <$> patterns,
+          constructorInfo = Shift.map category constructorInfo
         }
     Record {constructor, fields, constructorInfo} ->
       Record
-        { constructor = Shift2.map category constructor,
-          fields = Shift2.map category <$> fields,
-          constructorInfo = Shift2.map category constructorInfo
+        { constructor = Shift.map category constructor,
+          fields = Shift.map category <$> fields,
+          constructorInfo = Shift.map category constructorInfo
         }
     List {items} ->
       List
-        { items = Shift2.map category <$> items
+        { items = Shift.map category <$> items
         }
     Integer {integer, evidence, equal} ->
       Integer
         { integer,
-          evidence = Shift2.map category evidence,
-          equal = Shift2.map category equal
+          evidence = Shift.map category evidence,
+          equal = Shift.map category equal
         }
     Float {float, evidence, equal} ->
       Float
         { float,
-          evidence = Shift2.map category evidence,
-          equal = Shift2.map category equal
+          evidence = Shift.map category evidence,
+          equal = Shift.map category equal
         }
     Character {character} -> Character {character}
     String {string} -> String {string}
@@ -106,10 +99,7 @@ instance Shift0.Functor Field where
   map = Shift.mapDefault
 
 instance Shift.Functor Field where
-  map = Shift2.mapDefault
-
-instance Shift2.Functor Field where
-  map category (Field index patternx) = Field index (Shift2.map category patternx)
+  map category (Field index patternx) = Field index (Shift.map category patternx)
 
 data Field scope = Field !Int !(Pattern scope)
   deriving (Show)

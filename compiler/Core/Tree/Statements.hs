@@ -1,6 +1,5 @@
 module Core.Tree.Statements where
 
-import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
 import Core.Temporary.Pattern (Pattern)
 import qualified Core.Temporary.Pattern as Pattern
@@ -65,9 +64,6 @@ instance Shift0.Functor Statements where
   map = Shift.mapDefault
 
 instance Shift.Functor Statements where
-  map = Shift2.mapDefault
-
-instance Shift2.Functor Statements where
   map = Substitute.mapDefault
 
 instance Substitute.Functor Statements where
@@ -104,7 +100,7 @@ bind :: Pattern scope -> Expression scope -> Statements (Scope.Pattern ':+ scope
 bind Pattern.Wildcard check thenx =
   LetOne
     { declaration = check,
-      body = Shift2.map Shift2.ReplaceWildcard thenx
+      body = Shift.map Shift.ReplaceWildcard thenx
     }
 bind Pattern.Match {match, irrefutable} check thenx = case match of
   Pattern.Constructor {constructor, patterns, constructorInfo} -> go (length patterns - 1)
@@ -121,7 +117,7 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
             patternx <- Pattern.Match {match, irrefutable},
             target <- shift target,
             check' <- Expression.monoVariable $ Term.Pattern $ Term.Select index Term.At,
-            thenx <- Shift2.map (Shift2.SimplifyPattern index) thenx ->
+            thenx <- Shift.map (Shift.SimplifyPattern index) thenx ->
               bind patternx check (bind target check' thenx)
   Pattern.Record {constructor, fields, constructorInfo = constructorInfo} ->
     go (length fields - 1)
@@ -132,7 +128,7 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
           match <- Pattern.Constructor {constructor, patterns, constructorInfo},
           patternx <- Pattern.Match {match, irrefutable},
           fields <- (\(Pattern.Field field _) -> field) <$> fields,
-          thenx <- Shift2.map (Shift2.RenamePattern (fields Strict.Vector.!)) thenx =
+          thenx <- Shift.map (Shift.RenamePattern (fields Strict.Vector.!)) thenx =
             expand patternx check thenx
       go index = case fields Strict.Vector.! index of
         Pattern.Field field patternx -> case patternx of
@@ -143,7 +139,7 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
               patternx <- Pattern.Match {match, irrefutable},
               target <- shift target,
               check' <- Expression.monoVariable $ Term.Pattern $ Term.Select index Term.At,
-              thenx <- Shift2.map (Shift2.SimplifyPattern index) thenx ->
+              thenx <- Shift.map (Shift.SimplifyPattern index) thenx ->
                 bind patternx check (bind target check' thenx)
   Pattern.List {items}
     | (head, items) <- Strict.Vector1.uncons items,
@@ -172,7 +168,7 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
                 }
           },
       cons <- Pattern.Match {match, irrefutable} ->
-        bind cons check (Shift2.map Shift2.SimplifyList thenx)
+        bind cons check (Shift.map Shift.SimplifyList thenx)
   Pattern.String {string}
     | let wrap character
             | match <- Pattern.Character {character} =
@@ -224,7 +220,7 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
             finish
               (shift patternx)
               Expression.lambdaVariable
-              (Shift2.map Shift2.LetPattern thenx)
+              (Shift.map Shift.LetPattern thenx)
         }
     replace ::
       Constructor2.Index scope ->
@@ -233,7 +229,7 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
       Statements (Scope.SimplePattern ':+ scope) ->
       Int ->
       Statements scope
-    replace _ _ _ thenx (-1) = Shift2.map (Shift2.Lift $ Shift.Unshift fail) thenx
+    replace _ _ _ thenx (-1) = Shift.map (Shift.Unshift fail) thenx
       where
         fail = error "bad irrefutable replace"
     replace constructor constructorInfo check thenx n =
@@ -254,7 +250,7 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
               (shift constructor)
               (shift constructorInfo)
               (shift check)
-              (Shift2.map (Shift2.ReplaceIrrefutable n) thenx)
+              (Shift.map (Shift.ReplaceIrrefutable n) thenx)
               (n - 1)
         }
     finish ::
@@ -266,12 +262,12 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
     finish Pattern.Match {match, irrefutable} check thenx
       | Pattern.Constructor {constructor, patterns, constructorInfo} <- match,
         all wildcard patterns,
-        thenx <- Shift2.map Shift2.FinishPattern thenx =
+        thenx <- Shift.map Shift.FinishPattern thenx =
           case constructorInfo of
             Semantic.Newtype ->
               LetOne
                 { declaration = Expression.newtype_ constructor check Expression.Destruct,
-                  body = Shift2.map Shift2.FinishNewtype thenx
+                  body = Shift.map Shift.FinishNewtype thenx
                 }
             Semantic.ConstructorInfo {entries}
               | irrefutable -> replace constructor constructorInfo check thenx (length patterns - 1)

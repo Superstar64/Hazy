@@ -1,6 +1,5 @@
 module Core.Tree.Type where
 
-import qualified Core.Shift as Shift2
 import qualified Core.Show as Core
 import Core.Substitute (Category (..))
 import qualified Core.Substitute as Substitute
@@ -100,9 +99,6 @@ instance (Shift.Functor logical) => Shift.Functor (TypeF logical) where
 instance (Scope.Show logical) => Scope.Show (TypeF logical) where
   showsPrec = showsPrec
 
-instance (logical ~ Vacuous) => Shift2.Functor (TypeF logical) where
-  map = Substitute.mapDefault
-
 instance (logical ~ Vacuous) => Substitute.Functor (TypeF logical) where
   map = Substitute.mapType
 
@@ -110,12 +106,12 @@ instance Substitute.TypeFunctor TypeF where
   mapType (Substitute lift replacements _) (Variable index) = case index of
     Local index -> replacements Vector.! index
     Shift index -> Variable (Shift.map lift index)
-  mapType (Substitute.Lift category) (Variable index) = Variable $ Shift2.map category index
+  mapType (Substitute.Lift category) (Variable index) = Variable $ Shift.map category index
   mapType Substitute.Over {} (Variable (Local.Local index)) = Variable (Local.Local index)
   mapType (Substitute.Over category) (Variable (Local.Shift index)) =
     shift $ Substitute.mapType category (Variable index)
   mapType category typex = case typex of
-    Constructor index -> Constructor (Shift2.map (Substitute.general category) index)
+    Constructor index -> Constructor (Shift.map (Substitute.general category) index)
     Call function argument -> Call (Substitute.mapType category function) (Substitute.mapType category argument)
     Function parameter result ->
       Function (Substitute.mapType category parameter) (Substitute.mapType category result)

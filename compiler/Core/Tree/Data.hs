@@ -1,6 +1,5 @@
 module Core.Tree.Data where
 
-import qualified Core.Shift as Shift2
 import qualified Core.Substitute as Substitute
 import Core.Tree.Constructor (Constructor)
 import Core.Tree.Type (Type, (-#>))
@@ -24,9 +23,6 @@ instance Shift0.Functor Data where
   map = Shift.mapDefault
 
 instance Shift.Functor Data where
-  map = Shift2.mapDefault
-
-instance Shift2.Functor Data where
   map = Substitute.mapDefault
 
 instance Substitute.Functor Data where
