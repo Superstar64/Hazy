@@ -2,6 +2,7 @@ module Semantic.Check.Temporary.Expression where
 
 import Control.Monad.ST (ST)
 import {-# SOURCE #-} qualified Core.Builtin as Builtin
+import Core.Functor (shiftLogical)
 import Core.Tree.Type ((#), (-#>))
 import qualified Core.Tree.Type as Core
 import {-# SOURCE #-} Core.Tree.TypeDeclaration (assumeData)
@@ -52,7 +53,6 @@ import qualified Semantic.Index.Type2 as Type2
 import Semantic.Layout (Group)
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope
-import Semantic.Shift (shift)
 import Semantic.Stage (Check, Resolve)
 import Semantic.Tree.Combinators.Inferred (Inferred (Solved))
 import Semantic.Tree.Expression (Explicit (..))
@@ -204,7 +204,7 @@ check context resultType Semantic.Call {function, argument} = do
   pure (Call function1 argument)
 check context typex Semantic.Let {declarations, letBody} = do
   (context, declarations) <- Declarations.check context declarations
-  letBody <- check context (shift typex) letBody
+  letBody <- check context (shiftLogical typex) letBody
   pure (Let declarations letBody)
 check context typex Semantic.If {condition, thenx, elsex} = do
   condition <- check context Core.bool condition
@@ -279,7 +279,7 @@ check context typex Semantic.Lambda {startPosition, parameter, body} = do
   parameterType <- Unify.fresh Core.typex
   parameter <- Pattern.check context parameterType parameter
   resultType <- Unify.fresh Core.typex
-  body <- Lambda.check (Pattern.augment parameter context) (shift resultType) body
+  body <- Lambda.check (Pattern.augment parameter context) (shiftLogical resultType) body
   Unify.unify context startPosition typex (parameterType -#> resultType)
   pure Lambda {startPosition, parameter, body}
 check context typex Semantic.LambdaCase {startPosition, cases} = do

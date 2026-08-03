@@ -2,8 +2,8 @@ module Semantic.Unify.Zonk where
 
 import Control.Monad.ST (ST)
 import Core.Tree.Type (TypeF)
-import qualified Data.Kind as Kind
-import Semantic.Scope (Environment)
+import Semantic.Scope (Environment (..))
+import qualified Semantic.Shift0 as Shift0
 import {-# SOURCE #-} Semantic.Unify.Type (Logical)
 
 data Zonker s s' where
@@ -11,6 +11,9 @@ data Zonker s s' where
 
 instance Zonk TypeF
 
-type Zonk :: ((Environment -> Kind.Type) -> Environment -> Kind.Type) -> Kind.Constraint
 class Zonk typef where
-  zonk :: Zonker s s' -> typef (Logical s) scope -> ST s (typef (Logical s') scope)
+  zonk ::
+    Zonker s s' ->
+    Shift0.Category (scope1 ':+ scopex) scope ->
+    typef (Logical s (scope1 ':+ scopex)) scope ->
+    ST s (typef (Logical s' scopex) scope)

@@ -32,21 +32,21 @@ import Semantic.Tree.Type (Synonym (NoSynonym))
 import qualified Semantic.Tree.Type as Semantic
 import Semantic.Unify.Generalizable (Collected (..), Collector (..))
 import qualified Semantic.Unify.Generalizable as Generalizable
-import Semantic.Unify.Type (Box (..), Logical (..))
+import Semantic.Unify.Type (Box (..), Logical (..), Type)
 import qualified Syntax.Lexer as Lexer
 import Syntax.Position (Position)
 import qualified Syntax.Printer as Syntax (build)
 import qualified Syntax.Tree.Type as Syntax (Type (Call, argument, function, startPosition), print)
 
-collect :: TypeF (Logical s) scopes -> ST s [Collected s scopes]
+collect :: Type s scopes -> ST s [Collected s scopes]
 collect = Generalizable.collect (Collector Mask.Inline)
 
 data Error s where
-  Unify :: Context s scope -> TypeF (Logical s) scope -> TypeF (Logical s) scope -> Error s
-  Occurs :: Context s scope -> STRef s (Box s scope) -> TypeF (Logical s) scope -> Error s
-  Mismask :: Context s scope -> TypeF (Logical s) scope -> Error s
-  Constrain :: Context s scope -> Type2.Index scope -> TypeF (Logical s) scope -> [TypeF (Logical s) scope] -> Error s
-  Unshift :: Context s (scope ':+ scopes) -> TypeF (Logical s) (scope ':+ scopes) -> Error s
+  Unify :: Context s scope -> Type s scope -> Type s scope -> Error s
+  Occurs :: Context s scope -> STRef s (Box s scope) -> Type s scope -> Error s
+  Mismask :: Context s scope -> Type s scope -> Error s
+  Constrain :: Context s scope -> Type2.Index scope -> Type s scope -> [Type s scope] -> Error s
+  Unshift :: Context s (scope ':+ scopes) -> Type s (scope ':+ scopes) -> Error s
 
 abort :: Position -> Error s -> ST s a
 abort position = \case
@@ -118,7 +118,7 @@ abort position = \case
     fabricate ::
       Shift.Category scope scope' ->
       [(Collected s scope, Local.Index scope')] ->
-      TypeF (Logical s) scope ->
+      Type s scope ->
       ST s (Semantic.Type () Resolve scope')
     fabricate category names = \case
       Logical (Box reference) ->

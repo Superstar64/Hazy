@@ -1,6 +1,7 @@
 module Semantic.Check.Temporary.Comprehension where
 
 import Control.Monad.ST (ST)
+import Core.Functor (shiftLogical)
 import Core.Tree.Type ((#))
 import qualified Core.Tree.Type as Core
 import Semantic.Check.Context (Context)
@@ -12,7 +13,6 @@ import qualified Semantic.Check.Temporary.Pattern as Pattern
 import Semantic.Layout (Group)
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope
-import Semantic.Shift (shift)
 import Semantic.Stage (Check, Resolve)
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import qualified Semantic.Tree.Pattern as Semantic.Pattern
@@ -71,11 +71,11 @@ check context typex = \case
     Unify.unify context startPosition (monad # output) typex
     patternx <- Pattern.check context input patternx
     effect <- Expression.check context (monad # input) effect
-    thenx <- check (Pattern.augment patternx context) (shift $ monad # output) thenx
+    thenx <- check (Pattern.augment patternx context) (shiftLogical $ monad # output) thenx
     pure Bind {startPosition, patternx, effect, thenx, fail = not neverFail}
   Semantic.Let {startPosition, declarations, body} -> do
     (context, declarations) <- Declarations.check context declarations
-    body <- check context (shift typex) body
+    body <- check context (shiftLogical typex) body
     pure Let {startPosition, declarations, body}
 
 solve :: Comprehension s scope -> Unify.Solve s (Solved.Statements Solved.Comprehension Group Check scope)

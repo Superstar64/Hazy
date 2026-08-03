@@ -1,6 +1,7 @@
 module Semantic.Check.Temporary.RightHandSide where
 
 import Control.Monad.ST (ST)
+import Core.Functor (shiftLogical)
 import Semantic.Check.Context (Context)
 import Semantic.Check.Temporary.Body (Body)
 import qualified Semantic.Check.Temporary.Body as Body
@@ -8,7 +9,6 @@ import {-# SOURCE #-} qualified Semantic.Check.Temporary.Declarations as Declara
 import Semantic.Layout (Group)
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope (Declaration)
-import Semantic.Shift (shift)
 import Semantic.Stage (Check, Resolve)
 import qualified Semantic.Tree.RightHandSide as Semantic (RightHandSide (..))
 import qualified Semantic.Tree.RightHandSide as Solved
@@ -26,7 +26,7 @@ check ::
   ST s (RightHandSide s scope)
 check context typex (Semantic.RightHandSide body declarations) = do
   (context, declarations) <- Declarations.check context declarations
-  body <- Body.check context (shift typex) body
+  body <- Body.check context (shiftLogical typex) body
   pure $ RightHandSide body declarations
 
 solve :: RightHandSide s scope -> Unify.Solve s (Solved.RightHandSide Group Check scope)

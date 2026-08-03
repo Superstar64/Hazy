@@ -3,11 +3,11 @@ module Semantic.Unify.Type where
 import Control.Monad (zipWithM_)
 import Control.Monad.ST (ST)
 import {-# SOURCE #-} qualified Core.Builtin as Builtin (index, kind)
+import Core.Functor (shiftLogical)
 import Core.Substitute (logicalEvidence, logicalType, substituteType)
 import qualified Core.Tree.Constraint as Simple (argument)
 import qualified Core.Tree.Constraint as Simple.Constraint
 import Core.Tree.Constraints (ConstraintsF (..))
-import Core.Tree.Evidence (EvidenceF)
 import qualified Core.Tree.Evidence as Evidence (EvidenceF (..))
 import Core.Tree.Instanciation (InstanciationF (Instanciation))
 import qualified Core.Tree.Instanciation as Instanciation (InstanciationF (..))
@@ -36,15 +36,15 @@ import qualified Semantic.Index.Table.Type as Type.Table
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Shift as Shift
-import Semantic.Shift0 (shift)
 import qualified Semantic.Shift0 as Shift0
 import qualified Semantic.Unify.Builtin as Builtin (constrain)
 import {-# SOURCE #-} Semantic.Unify.Error (Error (..), abort)
+import Semantic.Unify.Evidence (Evidence)
 import qualified Semantic.Unify.Evidence as Evidence (Box (..), Logical (..), unify, unshift)
 import Syntax.Position (Position)
 import Prelude hiding (Functor, head, map)
 
-type Type s = TypeF (Logical s)
+type Type s scope = TypeF (Logical s scope) scope
 
 data Logical s scopes where
   Box :: !(STRef s (Box s scopes)) -> Logical s scopes
@@ -54,31 +54,24 @@ data Logical s scopes where
 
 data Box s scope
   = Unsolved
-      { kind :: !(TypeF (Logical s) scope),
+      { kind :: !(Type s scope),
         constraints :: !(Map (Type2.Index scope) (Delay s scope)),
         erasure :: !Mask.Erasure
       }
-  | Solved !(TypeF (Logical s) scope)
+  | Solved !(Type s scope)
 
 data Delay s scope = Delay
-  { arguments :: [TypeF (Logical s) scope],
-    evidence :: EvidenceF (Evidence.Logical s) scope
+  { arguments :: [Type s scope],
+    evidence :: Evidence s scope
   }
 
 instance Shift0.Functor (Logical s) where
-  map = \case
-    Shift0.Id -> id
-    Shift0.Shift -> Shift
+  map category index = case category of
+    Shift0.Id -> index
+    Shift0.Shift -> Shift index
+    after Shift0.:. before -> Shift0.map after (Shift0.map before index)
 
--- todo, remove this instance somehow.
--- It would be nice if `shift` on `Logical` was total
-instance Shift.Functor (Logical s) where
-  map Shift.Shift logical = Shift logical
-  map (Shift.Over category) (Shift logical) = Shift (Shift.map category logical)
-  map Shift.Over {} Box {} = error "can't map over logical"
-  map _ _ = error "unsupported shift"
-
-fresh :: TypeF (Logical s) scope -> ST s (TypeF (Logical s) scope)
+fresh :: Type s scope -> ST s (Type s scope)
 fresh kind = do
   box <- newSTRef $! Unsolved {kind, constraints = Map.empty, erasure = Mask.Erased}
   pure $ Logical $ Box box
@@ -91,20 +84,20 @@ fresh kind = do
 -- Both arguments must be well kinded, though they may have different kinds.
 -- Alternatively, they may be untypeable, in which case they never unify with
 -- unification variables and instead only do syntatic equality.
-unify :: forall s scope. Context s scope -> Position -> TypeF (Logical s) scope -> TypeF (Logical s) scope -> ST s ()
+unify :: forall s scope. Context s scope -> Position -> Type s scope -> Type s scope -> ST s ()
 unify context_ position term1_ term2_ = unifyWith context_ term1_ term2_
   where
     unifyWith ::
       forall scope.
       Context s scope ->
-      TypeF (Logical s) scope ->
-      TypeF (Logical s) scope ->
+      Type s scope ->
+      Type s scope ->
       ST s ()
     unifyWith context = unify
       where
         unify ::
-          TypeF (Logical s) scope ->
-          TypeF (Logical s) scope ->
+          Type s scope ->
+          Type s scope ->
           ST s ()
         unify (Logical (Box reference)) (Logical (Box reference'))
           | reference == reference' = pure ()
@@ -204,10 +197,10 @@ unify context_ position term1_ term2_ = unifyWith context_ term1_ term2_
     mismatch = abort position (Unify context_ term1_ term2_)
 
 -- todo merge this with Semantic.Check.Temporary.Type checking somehow
-typeCheck :: Context s scope -> Position -> TypeF (Logical s) scope -> TypeF (Logical s) scope -> ST s ()
+typeCheck :: Context s scope -> Position -> Type s scope -> Type s scope -> ST s ()
 typeCheck context_ position = typeCheckWith context_
   where
-    typeCheckWith :: Context s scope -> TypeF (Logical s) scope -> TypeF (Logical s) scope -> ST s ()
+    typeCheckWith :: Context s scope -> Type s scope -> Type s scope -> ST s ()
     typeCheckWith context@Context {localEnvironment, typeEnvironment} = typeCheck
       where
         typeCheck kind = \case
@@ -269,10 +262,10 @@ typeCheck context_ position = typeCheckWith context_
 --
 -- This is done to allow type class variable to not be counted as runtime
 -- variables in type class default methods.
-mark :: forall s scope. Context s scope -> Position -> Mask.Erasure -> TypeF (Logical s) scope -> ST s ()
+mark :: forall s scope. Context s scope -> Position -> Mask.Erasure -> Type s scope -> ST s ()
 mark context position erasure term_ = mark context term_
   where
-    mark :: Context s scope' -> TypeF (Logical s) scope' -> ST s ()
+    mark :: Context s scope' -> Type s scope' -> ST s ()
     mark context@Context {localEnvironment} = \case
       Logical (Box reference')
         | otherwise ->
@@ -305,7 +298,7 @@ occurs ::
   Position ->
   Mask.Erasure ->
   STRef s (Box s scope) ->
-  TypeF (Logical s) scope ->
+  Type s scope ->
   ST s ()
 occurs context position erasure reference term_ = do
   occurs term_
@@ -340,8 +333,8 @@ constrain ::
   Context s scope ->
   Position ->
   Type2.Index scope ->
-  TypeF (Logical s) scope ->
-  ST s (EvidenceF (Evidence.Logical s) scope)
+  Type s scope ->
+  ST s (Evidence s scope)
 constrain context position classx term = constrainWith context position classx term []
 
 constrainWith ::
@@ -349,18 +342,18 @@ constrainWith ::
   Context s scope ->
   Position ->
   Type2.Index scope ->
-  TypeF (Logical s) scope ->
-  [TypeF (Logical s) scope] ->
-  ST s (EvidenceF (Evidence.Logical s) scope)
+  Type s scope ->
+  [Type s scope] ->
+  ST s (Evidence s scope)
 constrainWith context_ position classx_ term_ arguments_ = constrainWith context_ classx_ term_ arguments_
   where
     constrainWith ::
       forall scope.
       Context s scope ->
       Type2.Index scope ->
-      TypeF (Logical s) scope ->
-      [TypeF (Logical s) scope] ->
-      ST s (EvidenceF (Evidence.Logical s) scope)
+      Type s scope ->
+      [Type s scope] ->
+      ST s (Evidence s scope)
     constrainWith context@Context {typeEnvironment} classx term@(Logical (Box reference)) arguments =
       readSTRef reference >>= \case
         Solved term -> constrainWith context classx term arguments
@@ -398,7 +391,7 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
       arguments <- traverse (unshift context position) arguments
       let quit = abort position $ Unshift context (Constructor classx)
       classx <- Shift.partialUnshift quit classx
-      shift <$> constrainWith (Shift.unshift context) classx (Logical logical) arguments
+      shiftLogical <$> constrainWith (Shift.unshift context) classx (Logical logical) arguments
     constrainWith context@Context {localEnvironment} classx (Variable index) arguments
       | Local.Rigid {constraints} <- localEnvironment Local.Table.! index,
         Just Local.Constraint {arguments = arguments', evidence} <- Map.lookup classx constraints,
@@ -445,40 +438,44 @@ reconstrain ::
   Context s scope ->
   Position ->
   Map (Type2.Index scope) (Delay s scope) ->
-  TypeF (Logical s) scope ->
+  Type s scope ->
   ST s ()
 reconstrain context position constraints term =
   for_ (Map.toList constraints) $ \(classx, Delay {arguments, evidence}) -> do
     evidence' <- constrainWith context position classx term arguments
     Evidence.unify evidence evidence'
 
+unshiftBox misshift unshift reference kind constraints erasure = do
+  let unshiftDelay (key, Delay {arguments, evidence}) = do
+        key <- Shift.partialUnshift misshift key
+        arguments <- traverse unshift arguments
+        evidence <- Evidence.unshift evidence
+        pure (key, Delay {arguments, evidence})
+  kind <- unshift kind
+  -- Type variables may link to constraints that mention the variable
+  -- itself. To allow unshifting these cycles, the unshifted box is
+  -- initialized with undefined then later let to it's proper value.
+  box <- newSTRef $ error "unshift cycle"
+  writeSTRef reference $! Solved $ Logical $ Shift $ Box box
+  -- there's no Map.traverseKeysMonotonic
+  constraints <- Map.fromAscList <$> traverse unshiftDelay (Map.toAscList constraints)
+  writeSTRef box $! Unsolved {kind, constraints, erasure}
+  pure $ Box box
+
 unshift ::
   forall s scope scopes.
   Context s (scope ':+ scopes) ->
   Position ->
-  TypeF (Logical s) (scope ':+ scopes) ->
-  ST s (TypeF (Logical s) scopes)
+  Type s (scope ':+ scopes) ->
+  ST s (Type s scopes)
 unshift context position typex = unshift typex
   where
     unshift = \case
       Logical (Box reference) ->
         readSTRef reference >>= \case
           Unsolved {kind, constraints, erasure} -> do
-            let unshiftDelay (key, Delay {arguments, evidence}) = do
-                  key <- Shift.partialUnshift misshift key
-                  arguments <- traverse unshift arguments
-                  evidence <- Evidence.unshift evidence
-                  pure (key, Delay {arguments, evidence})
-            kind <- unshift kind
-            -- Type variables may link to constraints that mention the variable
-            -- itself. To allow unshifting these cycles, the unshifted box is
-            -- initialized with undefined then later let to it's proper value.
-            box <- newSTRef $ error "unshift cycle"
-            writeSTRef reference $! Solved $ Logical $ Shift $ Box box
-            -- there's no Map.traverseKeysMonotonic
-            constraints <- Map.fromAscList <$> traverse unshiftDelay (Map.toAscList constraints)
-            writeSTRef box $! Unsolved {kind, constraints, erasure}
-            pure $ Logical $ Box box
+            box <- unshiftBox misshift unshift reference kind constraints erasure
+            pure $ Logical box
           Solved term -> unshift term
       Logical (Shift logical) -> pure (Logical logical)
       Variable index -> Variable <$> Shift.partialUnshift misshift index
@@ -505,10 +502,11 @@ unshift context position typex = unshift typex
 defaultFrom,
   defaultUniverse ::
     Position ->
-    Map (Type2.Index scope) (Delay s scope) ->
-    TypeF (Logical s) scope ->
+    Map (Type2.Index scope') (Delay s scope') ->
+    Type s scope'' ->
     ST s (Simple.Type scope)
 defaultFrom position constraints kind = case kind of
+  Logical (Shift logical) -> defaultFrom position constraints (Logical logical)
   Logical (Box reference) ->
     readSTRef reference >>= \case
       Solved kind -> defaultFrom position constraints kind
@@ -517,6 +515,7 @@ defaultFrom position constraints kind = case kind of
   Levity -> pure $ Constructor Type2.Lazy
   _ -> unsupportedFeatureConstraintedTypeDefaulting position
 defaultUniverse position constraints universe = case universe of
+  Logical (Shift logical) -> defaultUniverse position constraints (Logical logical)
   Logical (Box reference) ->
     readSTRef reference >>= \case
       Solved kind -> defaultUniverse position constraints kind

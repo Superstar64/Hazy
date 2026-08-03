@@ -3,6 +3,7 @@ module Semantic.Check.Temporary.Pattern where
 import Control.Monad (when)
 import Control.Monad.ST (ST)
 import qualified Core.Builtin as Builtin
+import Core.Functor (shiftLogical)
 import qualified Core.Tree.Forall as Core (mono)
 import Core.Tree.Type ((#))
 import qualified Core.Tree.Type as Core (char, constructor, list, typex)
@@ -36,7 +37,6 @@ import qualified Semantic.Index.Term as Bound (Bound (..))
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope
-import Semantic.Shift0 (shift)
 import Semantic.Stage (Check, Resolve)
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import qualified Semantic.Tree.Pattern as Semantic
@@ -136,7 +136,7 @@ augment patternx Context {termEnvironment, localEnvironment, typeEnvironment} =
 augmentPattern :: Pattern s scopes -> Term.Bound (TermBinding s) (scope ':+ scopes)
 augmentPattern patternx = Term.Bound {at, select}
   where
-    at = TermBinding $ pure $ Wobbly (shift (Core.mono $ typex patternx))
+    at = TermBinding $ pure $ Wobbly (shiftLogical (Core.mono $ typex patternx))
     select = case patternx of
       Wildcard {} -> Strict.Vector.empty
       List {items} -> Strict.Vector.map augmentPattern $ Strict.Vector1.toVector items

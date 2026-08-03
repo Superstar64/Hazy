@@ -9,13 +9,12 @@ import {-# SOURCE #-} Semantic.Check.Context (Context)
 import qualified Semantic.Check.Mask as Mask
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Scope (Environment)
-import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
 import {-# SOURCE #-} Semantic.Unify.Evidence (Evidence)
 import Syntax.Position (Position)
 import Prelude hiding (Functor)
 
-type Type s = TypeF (Logical s)
+type Type s scope = TypeF (Logical s scope) scope
 
 type role Logical nominal nominal
 
@@ -23,8 +22,6 @@ type Logical :: Kind.Type -> Environment -> Kind.Type
 data Logical s scopes
 
 instance Shift0.Functor (Logical s)
-
-instance Shift.Functor (Logical s)
 
 type role Box nominal nominal
 

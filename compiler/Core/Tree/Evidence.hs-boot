@@ -3,11 +3,12 @@
 module Core.Tree.Evidence where
 
 import Data.Kind (Type)
-import Semantic.Scope (Environment, Vacuous)
+import Data.Void (Void)
+import Semantic.Scope (Environment)
 
-type Evidence = EvidenceF Vacuous
+type Evidence = EvidenceF Void
 
 type role EvidenceF representational nominal
 
-type EvidenceF :: (Environment -> Type) -> Environment -> Type
+type EvidenceF :: Type -> Environment -> Type
 data EvidenceF logical scope

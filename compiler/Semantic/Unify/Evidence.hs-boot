@@ -6,10 +6,9 @@ import Control.Monad.ST (ST)
 import Core.Tree.Evidence (EvidenceF)
 import qualified Data.Kind as Kind
 import Semantic.Scope (Environment (..))
-import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
 
-type Evidence s = EvidenceF (Logical s)
+type Evidence s scope = EvidenceF (Logical s scope) scope
 
 type role Logical nominal nominal
 
@@ -18,7 +17,5 @@ data Logical s scope
 
 instance Shift0.Functor (Logical s)
 
-instance Shift.Functor (Logical s)
-
-unify :: EvidenceF (Logical s) scope -> EvidenceF (Logical s) scope -> ST s ()
-unshift :: EvidenceF (Logical s) (scope ':+ scopes) -> ST s (EvidenceF (Logical s) scopes)
+unify :: Evidence s scope -> Evidence s scope -> ST s ()
+unshift :: Evidence s (scope ':+ scopes) -> ST s (Evidence s scopes)

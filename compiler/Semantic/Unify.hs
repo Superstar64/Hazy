@@ -24,7 +24,9 @@ module Semantic.Unify
     liftST,
     runSolve,
     SolveType (..),
+    solve,
     SolveEvidence (..),
+    solveEvidence,
     MapForall (..),
     mapForall,
   )
@@ -55,6 +57,8 @@ import {-# SOURCE #-} Semantic.Unify.Solve
     SolveType (..),
     liftST,
     runSolve,
+    solve,
+    solveEvidence,
   )
 import {-# SOURCE #-} Semantic.Unify.Type
   ( Logical,

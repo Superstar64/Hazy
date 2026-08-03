@@ -1,5 +1,6 @@
 module Semantic.Check.LocalBinding where
 
+import qualified Core.Functor as Core
 import qualified Core.Tree.Evidence as Simple (Evidence)
 import Core.Tree.Type as Simple (Type)
 import qualified Data.Kind (Type)
@@ -37,7 +38,11 @@ instance Shift0.Functor (LocalBinding s) where
           constraints = Map.map (Shift0.map category) $ Map.mapKeysMonotonic (Shift0.map category) constraints,
           mask
         }
-    Wobbly {label, wobbly} -> Wobbly {label, wobbly = Shift0.map category wobbly}
+    Wobbly {label, wobbly} ->
+      Wobbly
+        { label,
+          wobbly = Core.mapLogical category wobbly
+        }
 
 data Constraint scope = Constraint
   { arguments :: !(Strict.Vector (Simple.Type scope)),

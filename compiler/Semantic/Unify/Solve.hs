@@ -2,6 +2,7 @@ module Semantic.Unify.Solve where
 
 import Control.Monad (ap, liftM)
 import Control.Monad.ST (ST)
+import qualified Core.Functor as Core
 import Core.Tree.Constraint (ConstraintF (..))
 import Core.Tree.Constraints (ConstraintsF (..))
 import Core.Tree.Evidence (EvidenceF)
@@ -13,9 +14,10 @@ import qualified Core.Tree.Type as Type (TypeF (..))
 import Data.Kind (Constraint)
 import qualified Data.Kind as Kind
 import Data.STRef (readSTRef)
+import Data.Void (Void)
 import Error (Position, unsupportedFeatureConstraintedTypeDefaulting)
-import Semantic.Scope (Environment, Vacuous)
-import Semantic.Shift0 (shift)
+import Semantic.Scope (Environment)
+import qualified Semantic.Shift0 as Shift0
 import qualified Semantic.Unify.Evidence as Evidence (Box (..), Logical (..))
 import Semantic.Unify.Type (Logical, defaultFrom)
 import qualified Semantic.Unify.Type as Type (Box (..), Logical (..))
@@ -32,80 +34,103 @@ instance Applicative (Solve s) where
 instance Monad (Solve s) where
   Solve m >>= f = Solve (m >>= (\(Solve a) -> a) . f)
 
-type SolveType :: ((Environment -> Kind.Type) -> Environment -> Kind.Type) -> Constraint
+type SolveType :: (Kind.Type -> Environment -> Kind.Type) -> Constraint
 class SolveType typef where
-  solve :: Position -> typef (Logical s) scope -> Solve s (typef Vacuous scope)
+  solveWith ::
+    Shift0.Category scopex scope ->
+    Position ->
+    typef (Logical s scopex) scope ->
+    Solve s (typef Void scope)
+
+solve ::
+  (SolveType typef) =>
+  Position ->
+  typef (Logical s scope) scope ->
+  Solve s (typef Void scope)
+solve = solveWith Shift0.Id
 
 instance SolveType TypeF where
-  solve position = solve
-    where
-      solve :: TypeF (Logical s) scope -> Solve s (TypeF Vacuous scope)
-      solve = \case
-        Type.Logical (Type.Box reference) ->
-          Solve (readSTRef reference) >>= \case
-            Type.Solved typex -> solve typex
-            Type.Unsolved {kind, constraints} -> Solve $ defaultFrom position constraints kind
-        Type.Logical (Type.Shift logical) -> shift <$> solve (Type.Logical logical)
-        Type.Variable name -> pure $ Type.Variable name
-        Type.Constructor index -> pure $ Type.Constructor index
-        Type.Call function argument -> do
-          function <- solve function
-          argument <- solve argument
-          pure $ Type.Call function argument
-        Type.Function argument result -> do
-          argument <- solve argument
-          result <- solve result
-          pure $ Type.Function argument result
-        Type.Type universe -> do
-          universe <- solve universe
-          pure $ Type.Type universe
-        Type.Constraint -> pure Type.Constraint
-        Type.Small -> pure Type.Small
-        Type.Large -> pure Type.Large
-        Type.Universe -> pure Type.Universe
-        Type.Levity -> pure Type.Levity
+  solveWith category position = \case
+    Type.Logical (Type.Box reference) ->
+      Solve (readSTRef reference) >>= \case
+        Type.Solved typex ->
+          Shift0.map category <$> solve position typex
+        Type.Unsolved {kind, constraints} ->
+          Solve $ defaultFrom position constraints (Core.mapLogical category kind)
+    Type.Logical (Type.Shift logical) ->
+      solveWith (category Shift0.:. Shift0.Shift) position (Type.Logical logical)
+    Type.Variable name -> pure $ Type.Variable name
+    Type.Constructor index -> pure $ Type.Constructor index
+    Type.Call function argument -> do
+      function <- solveWith category position function
+      argument <- solveWith category position argument
+      pure $ Type.Call function argument
+    Type.Function argument result -> do
+      argument <- solveWith category position argument
+      result <- solveWith category position result
+      pure $ Type.Function argument result
+    Type.Type universe -> do
+      universe <- solveWith category position universe
+      pure $ Type.Type universe
+    Type.Constraint -> pure Type.Constraint
+    Type.Small -> pure Type.Small
+    Type.Large -> pure Type.Large
+    Type.Universe -> pure Type.Universe
+    Type.Levity -> pure Type.Levity
 
 instance SolveType ConstraintF where
-  solve position Constraint {classx, head, arguments} = do
-    arguments <- traverse (solve position) arguments
+  solveWith category position Constraint {classx, head, arguments} = do
+    arguments <- traverse (solveWith (Shift0.Shift Shift0.:. category) position) arguments
     pure Constraint {classx, head, arguments}
 
 instance SolveType ConstraintsF where
-  solve position = \case
+  solveWith category position = \case
     Constraints constraints -> do
-      constraints <- traverse (solve position) constraints
+      constraints <- traverse (solveWith category position) constraints
       pure $ Constraints constraints
     None -> pure None
 
 instance (SolveType typef) => SolveType (ForallOver typef) where
-  solve position ForallOver {parameters, constraints, result} = do
-    parameters <- traverse (solve position) parameters
-    constraints <- solve position constraints
-    result <- solve position result
+  solveWith category position ForallOver {parameters, constraints, result} = do
+    parameters <- traverse (solveWith category position) parameters
+    constraints <- solveWith category position constraints
+    result <- solveWith (Shift0.Shift Shift0.:. category) position result
     pure ForallOver {parameters, constraints, result}
 
-type SolveEvidence :: ((Environment -> Kind.Type) -> Environment -> Kind.Type) -> Constraint
+type SolveEvidence :: (Kind.Type -> Environment -> Kind.Type) -> Constraint
 class SolveEvidence evidencef where
-  solveEvidence :: Position -> evidencef (Evidence.Logical s) scope -> Solve s (evidencef Vacuous scope)
+  solveEvidenceWith ::
+    Shift0.Category scopex scope ->
+    Position ->
+    evidencef (Evidence.Logical s scopex) scope ->
+    Solve s (evidencef Void scope)
+
+solveEvidence ::
+  (SolveEvidence evidencef) =>
+  Position ->
+  evidencef (Evidence.Logical s scope) scope ->
+  Solve s (evidencef Void scope)
+solveEvidence = solveEvidenceWith Shift0.Id
 
 instance SolveEvidence EvidenceF where
-  solveEvidence position = \case
+  solveEvidenceWith category position = \case
     Evidence.Variable variable instanciation -> do
-      instanciation <- solveEvidence position instanciation
+      instanciation <- solveEvidenceWith category position instanciation
       pure Evidence.Variable {variable, instanciation}
     Evidence.Super base index -> do
-      base <- solveEvidence position base
+      base <- solveEvidenceWith category position base
       pure $ Evidence.Super {base, index}
-    Evidence.Logical (Evidence.Shift evidence) -> shift <$> solveEvidence position (Evidence.Logical evidence)
+    Evidence.Logical (Evidence.Shift evidence) ->
+      solveEvidenceWith (category Shift0.:. Shift0.Shift) position (Evidence.Logical evidence)
     Evidence.Logical (Evidence.Box reference) ->
       Solve (readSTRef reference) >>= \case
-        Evidence.Solved evidence -> solveEvidence position evidence
+        Evidence.Solved evidence -> Shift0.map category <$> solveEvidence position evidence
         Evidence.Unsolved -> unsupportedFeatureConstraintedTypeDefaulting position
 
 instance SolveEvidence InstanciationF where
-  solveEvidence position = \case
+  solveEvidenceWith category position = \case
     Instanciation instanciation -> do
-      instanciation <- traverse (solveEvidence position) instanciation
+      instanciation <- traverse (solveEvidenceWith category position) instanciation
       pure $ Instanciation instanciation
     Mono -> pure Mono
 

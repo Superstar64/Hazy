@@ -1,6 +1,8 @@
 module Semantic.Check.TypeBinding where
 
 import Control.Monad.ST (ST)
+import Core.Functor (shiftLogical)
+import qualified Core.Functor as Core
 import Core.Tree.Constraints (Constraints)
 import qualified Core.Tree.Type as Simple (Type)
 import qualified Core.Tree.Type as Simple.Type
@@ -27,7 +29,6 @@ import qualified Semantic.Label.Binding.Type as Label
 import Semantic.Layout (Group)
 import Semantic.Scope (Environment (..), GroupType, Local)
 import qualified Semantic.Shift as Shift
-import Semantic.Shift0 (shift)
 import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
 import Semantic.Tree.TypeDeclaration (ungroupM)
@@ -43,7 +44,7 @@ data Kind s scope
 
 instance Shift0.Functor (Kind s) where
   map category = \case
-    Wobbly typex -> Wobbly (Shift0.map category typex)
+    Wobbly typex -> Wobbly (Core.mapLogical category typex)
     Rigid typex -> Rigid (Shift0.map category typex)
 
 type TypeBinding :: Data.Kind.Type -> Environment -> Data.Kind.Type
@@ -61,11 +62,10 @@ synonym_ :: TypeBinding s scope -> ST s (Strict.Maybe (Simple.Type (Local ':+ sc
 synonym_ = synonym
 
 instance Shift0.Functor (TypeBinding s) where
-  map Shift0.Id binding = binding
-  map Shift0.Shift TypeBinding {label, kind, synonym, extra, content, dataInstances, classInstances} =
+  map category0 TypeBinding {label, kind, synonym, extra, content, dataInstances, classInstances} =
     TypeBinding
       { label,
-        kind = fmap shift kind,
+        kind = fmap (Shift0.map category0) kind,
         synonym = fmap (fmap (Shift.map (Shift.Over category))) synonym,
         content = fmap (Shift.map category) content,
         extra = fmap (Shift.map category) <$> extra,
@@ -73,7 +73,7 @@ instance Shift0.Functor (TypeBinding s) where
         classInstances = Map.map (fmap $ Shift.map category) $ Shift.mapInstances category classInstances
       }
     where
-      category = Shift.Shift
+      category = Shift.lift category0
 
 binding ::
   (Type.Link locality -> Type0.Index scope) ->
@@ -126,7 +126,7 @@ group :: Position -> Label.TypeBinding scope -> Unify.Type s scopes -> TypeBindi
 group position Label.TypeBinding {name, constructorNames} binding =
   TypeBinding
     { label = Label.TypeBinding {name, constructorNames},
-      kind = pure $ Wobbly $ shift binding,
+      kind = pure $ Wobbly $ shiftLogical binding,
       content = abort,
       extra = abort,
       synonym = pure Strict.Nothing,

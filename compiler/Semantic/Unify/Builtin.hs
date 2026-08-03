@@ -5,16 +5,16 @@ import Core.Tree.Instanciation (InstanciationF (..))
 import Data.Vector.Strict (fromList)
 import qualified Semantic.Index.Evidence as Evidence (Builtin (..), Index (..))
 import qualified Semantic.Index.Type2 as Type2
-import Semantic.Unify.Evidence (Logical)
+import Semantic.Unify.Evidence (Evidence)
 
 constrain ::
   (Monad m) =>
-  m (EvidenceF (Logical s) scope) ->
-  (Type2.Index scope -> t -> m (EvidenceF (Logical s) scope)) ->
+  m (Evidence s scope) ->
+  (Type2.Index scope -> t -> m (Evidence s scope)) ->
   Type2.Index scope ->
   Type2.Index scope ->
   [t] ->
-  m (EvidenceF (Logical s) scope)
+  m (Evidence s scope)
 constrain fallthough constrain = table
   where
     table Type2.Num Type2.Integer [] =

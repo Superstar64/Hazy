@@ -8,29 +8,24 @@ import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
 import qualified Semantic.Unify.Instanciation as Instanciation
 
-type Evidence s = EvidenceF (Logical s)
+type Evidence s scope = EvidenceF (Logical s scope) scope
 
 data Logical s scope where
   Box :: !(STRef s (Box s scope)) -> Logical s scope
   Shift :: !(Logical s scopes) -> Logical s (scope ':+ scopes)
 
 instance Shift0.Functor (Logical s) where
-  map = \case
-    Shift0.Id -> id
-    Shift0.Shift -> Shift
-
-instance Shift.Functor (Logical s) where
-  map Shift.Shift logical = Shift logical
-  map (Shift.Over category) (Shift logical) = Shift (Shift.map category logical)
-  map Shift.Over {} Box {} = error "can't map over logical"
-  map _ _ = error "unsuppported shift"
+  map category index = case category of
+    Shift0.Id -> index
+    Shift0.Shift -> Shift index
+    after Shift0.:. before -> Shift0.map after (Shift0.map before index)
 
 data Box s scope
-  = Solved !(EvidenceF (Logical s) scope)
+  = Solved !(Evidence s scope)
   | Unsolved {}
 
 -- unification between evidence should never fail
-unify :: EvidenceF (Logical s) scope -> EvidenceF (Logical s) scope -> ST s ()
+unify :: Evidence s scope -> Evidence s scope -> ST s ()
 unify (Logical (Box reference)) (Logical (Box reference'))
   | reference == reference' = pure ()
   | otherwise = do
@@ -62,7 +57,7 @@ unify evidence (Logical (Shift logical')) = do
   unify evidence (Logical logical')
 unify _ _ = error "unify evidence can't fail"
 
-unshift :: EvidenceF (Logical s) (scope ':+ scopes) -> ST s (EvidenceF (Logical s) scopes)
+unshift :: Evidence s (scope ':+ scopes) -> ST s (Evidence s scopes)
 unshift = \case
   Variable variable instanciation -> do
     let fail = error "unshift can't fail"

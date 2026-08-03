@@ -11,9 +11,9 @@ import Core.Tree.Type (TypeF)
 import qualified Core.Tree.Type as Type
 import qualified Data.Kind as Kind
 import Data.STRef (readSTRef)
-import Semantic.Scope (Environment)
-import Semantic.Shift0 (shift)
-import Semantic.Unify.Type (Box (..), Logical (..))
+import Semantic.Scope (Environment (..))
+import qualified Semantic.Shift0 as Shift0
+import Semantic.Unify.Type (Box (..), Logical (..), unshift, unshiftBox)
 
 -- |
 -- This type used to help make sure zonks are type safe.
@@ -28,52 +28,57 @@ import Semantic.Unify.Type (Box (..), Logical (..))
 data Zonker s s' where
   Zonker :: Zonker s s
 
-type Zonk :: ((Environment -> Kind.Type) -> Environment -> Kind.Type) -> Kind.Constraint
+type Zonk :: (Kind.Type -> Environment -> Kind.Type) -> Kind.Constraint
 class Zonk typef where
-  zonk :: Zonker s s' -> typef (Logical s) scope -> ST s (typef (Logical s') scope)
+  zonk ::
+    Zonker s s' ->
+    Shift0.Category (scope1 ':+ scopex) scope ->
+    typef (Logical s (scope1 ':+ scopex)) scope ->
+    ST s (typef (Logical s' scopex) scope)
 
 instance Zonk TypeF where
-  zonk Zonker = zonk
-    where
-      zonk :: TypeF (Logical s) scope -> ST s (TypeF (Logical s) scope)
-      zonk = \case
-        Type.Logical (Box reference) ->
-          readSTRef reference >>= \case
-            Solved solved -> zonk solved
-            Unsolved {} -> pure $ Type.Logical $ Box reference
-        Type.Logical (Shift logical) -> shift <$> zonk (Type.Logical logical)
-        Type.Variable index -> pure $ Type.Variable index
-        Type.Constructor index -> pure $ Type.Constructor index
-        Type.Call function argument -> do
-          function <- zonk function
-          argument <- zonk argument
-          pure $ Type.Call function argument
-        Type.Function parameter result -> do
-          parameter <- zonk parameter
-          result <- zonk result
-          pure $ Type.Function parameter result
-        Type.Type universe -> Type.Type <$> zonk universe
-        Type.Constraint -> pure Type.Constraint
-        Type.Small -> pure Type.Small
-        Type.Large -> pure Type.Large
-        Type.Universe -> pure Type.Universe
-        Type.Levity -> pure Type.Levity
+  zonk zonker@Zonker category = \case
+    Type.Logical (Box reference) ->
+      readSTRef reference >>= \case
+        Solved solved -> Shift0.map category <$> zonk zonker Shift0.Id solved
+        Unsolved {kind, constraints, erasure} -> do
+          let fail = error "zonk can't fail"
+          box <- unshiftBox (pure fail) (unshift fail fail) reference kind constraints erasure
+          pure $ Type.Logical $ box
+    Type.Logical (Shift logical) ->
+      pure $ Type.Logical logical
+    Type.Variable index -> pure $ Type.Variable index
+    Type.Constructor index -> pure $ Type.Constructor index
+    Type.Call function argument -> do
+      function <- zonk zonker category function
+      argument <- zonk zonker category argument
+      pure $ Type.Call function argument
+    Type.Function parameter result -> do
+      parameter <- zonk zonker category parameter
+      result <- zonk zonker category result
+      pure $ Type.Function parameter result
+    Type.Type universe -> Type.Type <$> zonk zonker category universe
+    Type.Constraint -> pure Type.Constraint
+    Type.Small -> pure Type.Small
+    Type.Large -> pure Type.Large
+    Type.Universe -> pure Type.Universe
+    Type.Levity -> pure Type.Levity
 
 instance Zonk ConstraintF where
-  zonk zonker Constraint.Constraint {classx, head, arguments} = do
-    arguments <- traverse (zonk zonker) arguments
+  zonk zonker category Constraint.Constraint {classx, head, arguments} = do
+    arguments <- traverse (zonk zonker (Shift0.Shift Shift0.:. category)) arguments
     pure Constraint.Constraint {classx, head, arguments}
 
 instance Zonk ConstraintsF where
-  zonk zonker = \case
+  zonk zonker category = \case
     Constraints.Constraints constraints -> do
-      constraints <- traverse (zonk zonker) constraints
+      constraints <- traverse (zonk zonker category) constraints
       pure $ Constraints.Constraints constraints
     Constraints.None -> pure Constraints.None
 
 instance (Zonk typef) => Zonk (ForallOver typef) where
-  zonk zonker Forall.ForallOver {parameters, constraints, result} = do
-    parameters <- traverse (zonk zonker) parameters
-    constraints <- zonk zonker constraints
-    result <- zonk zonker result
+  zonk zonker category Forall.ForallOver {parameters, constraints, result} = do
+    parameters <- traverse (zonk zonker category) parameters
+    constraints <- zonk zonker category constraints
+    result <- zonk zonker (Shift0.Shift Shift0.:. category) result
     pure Forall.ForallOver {parameters, constraints, result}

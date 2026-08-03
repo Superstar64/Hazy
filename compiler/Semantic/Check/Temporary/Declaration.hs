@@ -1,6 +1,7 @@
 module Semantic.Check.Temporary.Declaration where
 
 import Control.Monad.ST (ST)
+import Core.Functor (shiftLogical)
 import Core.Substitute (logicalType)
 import qualified Core.Tree.Constraints as Simple.Constraints (simplify)
 import qualified Core.Tree.Type as Core
@@ -18,7 +19,7 @@ import Semantic.Check.TypeAnnotation (Annotation (..), TypeAnnotation (..))
 import qualified Semantic.Index.Link.Term as Term
 import Semantic.Layout (Group)
 import Semantic.Scope (Environment (..), Local)
-import Semantic.Shift (Category (Shift), shift)
+import Semantic.Shift (Category (Shift))
 import qualified Semantic.Shift as Shift
 import Semantic.Stage (Check, Resolve)
 import qualified Semantic.Tree.Combinators.Implicit as Implicit
@@ -75,7 +76,7 @@ check context linked annotation Semantic.Declaration {position, name, definition
       set <- flip Strict.Vector.imapM set $ \index Semantic.Element {element, link} -> do
         let element' = Shift.map (Shift.Over Shift) element
             typex = fresh Vector.! index
-        element <- Definition3.checkAuto (groupTermBindings fresh context) (shift typex) element'
+        element <- Definition3.checkAuto (groupTermBindings fresh context) (shiftLogical typex) element'
         pure
           Element
             { element = Definition3.solve position element,

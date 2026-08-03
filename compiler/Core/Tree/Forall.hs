@@ -1,6 +1,7 @@
 module Core.Tree.Forall where
 
-import qualified Core.Show as Core
+import qualified Core.Functor as Core (Functor (..))
+import qualified Core.Show as Core (Show (..))
 import qualified Core.Substitute as Substitute
 import Core.Tree.Constraints (ConstraintsF (None))
 import qualified Core.Tree.Constraints as Constraints
@@ -9,7 +10,8 @@ import qualified Core.Tree.Type as Type
 import qualified Data.Kind as Kind
 import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
-import Semantic.Scope (Environment (..), Local, Vacuous)
+import Data.Void (Void)
+import Semantic.Scope (Environment (..), Local)
 import qualified Semantic.Scope as Scope
 import Semantic.Shift (shift)
 import qualified Semantic.Shift as Shift
@@ -18,7 +20,7 @@ import Semantic.Stage (Check)
 import qualified Semantic.Tree.Scheme as Solved
 import qualified Semantic.Tree.TypePattern as Solved.TypePattern
 
-type Forall = ForallOver TypeF Vacuous
+type Forall = ForallOver TypeF Void
 
 data ForallOver typef logical scope = ForallOver
   { parameters :: !(Strict.Vector (TypeF logical scope)),
@@ -26,10 +28,10 @@ data ForallOver typef logical scope = ForallOver
     result :: !(typef logical (Local ':+ scope))
   }
 
-instance (Scope.Show logical, Core.Show typef) => Scope.Show (ForallOver typef logical) where
+instance (Show logical, Core.Show typef) => Scope.Show (ForallOver typef logical) where
   showsPrec = showsPrec
 
-instance (Scope.Show logical, Core.Show typef) => Show (ForallOver typef logical scope) where
+instance (Show logical, Core.Show typef) => Show (ForallOver typef logical scope) where
   showsPrec _ ForallOver {parameters, constraints, result} =
     foldr
       (.)
@@ -43,10 +45,10 @@ instance (Scope.Show logical, Core.Show typef) => Show (ForallOver typef logical
         showString " }"
       ]
 
-instance (Shift.Functor logical, Shift.Functor (typef logical)) => Shift0.Functor (ForallOver typef logical) where
+instance (Shift.Functor (typef logical)) => Shift0.Functor (ForallOver typef logical) where
   map = Shift.mapDefault
 
-instance (Shift.Functor logical, Shift.Functor (typef logical)) => Shift.Functor (ForallOver typef logical) where
+instance (Shift.Functor (typef logical)) => Shift.Functor (ForallOver typef logical) where
   map category ForallOver {parameters, constraints, result} =
     ForallOver
       { parameters = Shift.map category <$> parameters,
@@ -55,7 +57,7 @@ instance (Shift.Functor logical, Shift.Functor (typef logical)) => Shift.Functor
       }
 
 instance
-  (logical ~ Vacuous, Substitute.TypeFunctor typef, Shift.Functor (typef Vacuous)) =>
+  (logical ~ Void, Substitute.TypeFunctor typef, Shift.Functor (typef Void)) =>
   Substitute.Functor (ForallOver typef logical)
   where
   map = Substitute.mapType
@@ -68,6 +70,14 @@ instance (Substitute.TypeFunctor typex) => Substitute.TypeFunctor (ForallOver ty
         result = Substitute.mapType (Substitute.Over category) result
       }
 
+instance (Core.Functor typex) => Core.Functor (ForallOver typex) where
+  map f ForallOver {parameters, constraints, result} =
+    ForallOver
+      { parameters = Core.map f <$> parameters,
+        constraints = Core.map f constraints,
+        result = Core.map f result
+      }
+
 mono :: (Shift0.Functor (typef logical)) => typef logical scope -> ForallOver typef logical scope
 mono result =
   ForallOver
@@ -76,7 +86,7 @@ mono result =
       result = shift result
     }
 
-constraintCount :: ForallOver typef Vacuous scope -> Constraints.ConstraintCount
+constraintCount :: ForallOver typef Void scope -> Constraints.ConstraintCount
 constraintCount ForallOver {constraints} = Constraints.constraintCount constraints
 
 simplify :: Solved.Scheme position Check scope -> Forall scope
@@ -91,9 +101,9 @@ simplify Solved.Scheme {parameters, constraints, result}
         }
 
 type Map ::
-  (Environment -> Kind.Type) ->
-  (((Environment -> Kind.Type)) -> Environment -> Kind.Type) ->
-  (((Environment -> Kind.Type)) -> Environment -> Kind.Type) ->
+  Kind.Type ->
+  ((Kind.Type) -> Environment -> Kind.Type) ->
+  ((Kind.Type) -> Environment -> Kind.Type) ->
   Kind.Type
 newtype Map logical typef typef' = Map (forall scope. typef logical scope -> typef' logical scope)
 

@@ -27,9 +27,10 @@ import qualified Semantic.Index.Table.Type as Table.Type
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope
-import qualified Semantic.Unify.Evidence as Evidence
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Unify.Generalizable (Collected (..), Collector (..), Generalizable (..))
-import Semantic.Unify.Solve (Solve (..), SolveType (solve))
+import Semantic.Unify.Instanciation (Instanciation)
+import Semantic.Unify.Solve (Solve (..), solve)
 import Semantic.Unify.Type
   ( Box (..),
     Logical (..),
@@ -42,19 +43,18 @@ import Semantic.Unify.Zonk (Zonker (..), zonk)
 import Syntax.Position (Position)
 import Prelude hiding (Functor, map)
 
-type Forall s = ForallOver TypeF (Logical s)
+type Forall s scope = ForallOver TypeF (Logical s scope) scope
 
 -- todo move this to Core
 substitute ::
-  Strict.Vector.Vector (TypeF (Logical s) scope) ->
-  TypeF (Logical s) (Scope.Local ':+ scope) ->
-  TypeF (Logical s) scope
+  Strict.Vector.Vector (Type s scope) ->
+  TypeF (Logical s scope) (Scope.Local ':+ scope) ->
+  Type s scope
 substitute replacements (Variable index) = case index of
   Local.Local index -> replacements Strict.Vector.! index
   Local.Shift index -> Variable index
 substitute replacements typex = case typex of
-  Type.Logical (Shift logical) -> Type.Logical logical
-  Type.Logical Box {} -> error "can't substitute box"
+  Type.Logical logical -> Type.Logical logical
   Type.Constructor index -> Type.Constructor (Type2.unlocal index)
   Type.Call function argument -> Type.Call (substitute replacements function) (substitute replacements argument)
   Type.Function parameter result ->
@@ -70,7 +70,7 @@ instanciate ::
   Context s scope ->
   Position ->
   Forall s scope ->
-  ST s (Type s scope, InstanciationF (Evidence.Logical s) scope)
+  ST s (Type s scope, Instanciation s scope)
 instanciate context position ForallOver {parameters, constraints, result} = do
   fresh <- traverse fresh parameters
   instanciation <- case constraints of
@@ -91,13 +91,13 @@ newtype Generalize typex s scopes = Generalize
   }
 
 type Body ::
-  ((Environment -> Kind.Type) -> Environment -> Kind.Type) ->
+  (Kind.Type -> Environment -> Kind.Type) ->
   (Environment -> Kind.Type) ->
   Kind.Type ->
   Environment ->
   Kind.Type
 data Body typef term s scope = (:::)
-  { typex :: !(typef (Logical s) scope),
+  { typex :: !(typef (Logical s scope) scope),
     term :: !(Solve s (term scope))
   }
 
@@ -122,7 +122,7 @@ generalizeBody position context (Generalize run) = do
   boxes <- nub . catMaybes <$> traverse selectBox candidates
   parameters <- Strict.Vector.fromList <$> traverse parameter boxes
   zipWithM_ writeVariable [0 ..] boxes
-  result <- zonk Zonker typex
+  result <- zonk Zonker Shift0.Id typex
   pure $
     ForallOver
       { parameters,
@@ -178,12 +178,16 @@ generalizeBody position context (Generalize run) = do
       writeSTRef reference $ Solved $ Variable $ Local.Local variable
 
 type MapForall ::
-  ((Environment -> Kind.Type) -> Environment -> Kind.Type) ->
-  ((Environment -> Kind.Type) -> Environment -> Kind.Type) ->
+  (Kind.Type -> Environment -> Kind.Type) ->
+  (Kind.Type -> Environment -> Kind.Type) ->
   Kind.Type
-newtype MapForall typef typef' = MapForall (forall s scope. typef (Logical s) scope -> typef' (Logical s) scope)
+newtype MapForall typef typef'
+  = MapForall (forall s scope scope'. typef (Logical s scope') scope -> typef' (Logical s scope') scope)
 
-mapForall :: MapForall typef typef' -> ForallOver typef (Logical s) scope -> ForallOver typef' (Logical s) scope
+mapForall ::
+  MapForall typef typef' ->
+  ForallOver typef (Logical s scope) scope ->
+  ForallOver typef' (Logical s scope) scope
 mapForall (MapForall map) ForallOver {parameters, constraints, result} =
   ForallOver
     { parameters,

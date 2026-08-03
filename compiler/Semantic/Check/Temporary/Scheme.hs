@@ -3,6 +3,7 @@
 module Semantic.Check.Temporary.Scheme where
 
 import Control.Monad.ST (ST)
+import Core.Functor (shiftLogical)
 import Core.Substitute (logicalType)
 import qualified Core.Tree.Type as Core
 import Data.Vector.Strict as Strict (Vector)
@@ -69,7 +70,7 @@ augment scheme Context {termEnvironment, localEnvironment, typeEnvironment}
       TypePattern {name, typex = wobbly} =
         Wobbly
           { label = Label.LocalBinding {name},
-            wobbly = shift wobbly
+            wobbly = shiftLogical wobbly
           }
 
 augmentSolve ::

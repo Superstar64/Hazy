@@ -13,6 +13,9 @@ import Prelude hiding (Functor (..), map)
 data Category scope scope' where
   Id :: Category scope scope
   Shift :: Category scopes (scope ':+ scopes)
+  (:.) :: Category scope' scope'' -> Category scope scope' -> Category scope scope''
+
+infixr 9 :.
 
 class Functor f where
   map :: Category scope scope' -> f scope -> f scope'
@@ -20,18 +23,22 @@ class Functor f where
 instance Functor Term.Index where
   map Id index = index
   map Shift index = Term.Shift index
+  map (after :. before) index = map after (map before index)
 
 instance Functor Type.Index where
   map Id index = index
   map Shift index = Type.Shift index
+  map (after :. before) index = map after (map before index)
 
 instance Functor Evidence0.Index where
   map Id index = index
   map Shift index = Evidence0.Shift index
+  map (after :. before) index = map after (map before index)
 
 instance Functor Local.Index where
   map Id index = index
   map Shift index = Local.Shift index
+  map (after :. before) index = map after (map before index)
 
 instance Functor Vacuous where
   map _ = \case {}

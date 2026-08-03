@@ -1,6 +1,7 @@
 module Semantic.Check.Temporary.Alternative where
 
 import Control.Monad.ST (ST)
+import Core.Functor (shiftLogical)
 import Semantic.Check.Context (Context)
 import Semantic.Check.Temporary.Pattern (Pattern)
 import qualified Semantic.Check.Temporary.Pattern as Pattern
@@ -9,7 +10,6 @@ import qualified Semantic.Check.Temporary.RightHandSide as RightHandSide
 import Semantic.Layout (Group)
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope (Pattern)
-import Semantic.Shift (shift)
 import Semantic.Stage (Check, Resolve)
 import qualified Semantic.Tree.Alternative as Semantic
 import qualified Semantic.Tree.Alternative as Solved
@@ -29,7 +29,7 @@ check ::
   ST s (Alternative s scope)
 check context typex binder Semantic.Alternative {parameter, rightHandSide} = do
   parameter <- Pattern.check context binder parameter
-  rightHandSide <- RightHandSide.check (Pattern.augment parameter context) (shift typex) rightHandSide
+  rightHandSide <- RightHandSide.check (Pattern.augment parameter context) (shiftLogical typex) rightHandSide
   pure Alternative {parameter, rightHandSide}
 
 solve :: Alternative s scope -> Unify.Solve s (Solved.Alternative Group Check scope)

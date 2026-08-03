@@ -1,6 +1,7 @@
 module Semantic.Check.Go.TypeDeclaration (TypeDeclaration (..), kind', check, lazy) where
 
 import Control.Monad.ST (ST)
+import Core.Functor (shiftLogical)
 import Core.Substitute (logicalType)
 import qualified Core.Tree.Type as Core
 import qualified Core.Tree.Type as Simple
@@ -16,7 +17,6 @@ import qualified Semantic.Check.Temporary.TypeDefinition as TypeDefinition
 import qualified Semantic.Check.Temporary.TypeDefinition2 as Temporary
 import qualified Semantic.Index.Link.Type as Type
 import Semantic.Layout (Group)
-import Semantic.Shift (shift)
 import Semantic.Stage (Check, Resolve)
 import Semantic.Tree.Combinators.Inferred (Inferred (Solved))
 import Semantic.Tree.TypeDeclaration (TypeDeclaration (..), kind', lazy)
@@ -81,7 +81,7 @@ check context linked annotation TypeDeclaration {position, name, constructorName
           \index
            Element {element, position, name, constructorNames, link} -> do
               let typex = fresh Vector.! index
-              element <- TypeDefinition.check context' (shift typex) element
+              element <- TypeDefinition.check context' (shiftLogical typex) element
               pure $ Temporary.Element {element, typex, position, name, constructorNames, link}
       set <- Unify.runSolve $ traverse (Temporary.solveElement context') set
       kinds <- Unify.runSolve $ traverse (Unify.solve position) fresh

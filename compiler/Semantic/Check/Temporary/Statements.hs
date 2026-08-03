@@ -1,6 +1,7 @@
 module Semantic.Check.Temporary.Statements where
 
 import Control.Monad.ST (ST)
+import Core.Functor (shiftLogical)
 import qualified Core.Tree.Type as Core
 import Semantic.Check.Context (Context)
 import qualified Semantic.Check.Temporary.Declarations as Declarations
@@ -11,7 +12,6 @@ import qualified Semantic.Check.Temporary.Pattern as Pattern
 import Semantic.Layout (Group)
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope (Declaration, Pattern)
-import Semantic.Shift (shift)
 import Semantic.Stage (Check, Resolve)
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import qualified Semantic.Tree.Pattern as Semantic.Pattern
@@ -59,11 +59,11 @@ check context typex = \case
     binder <- Unify.fresh Core.typex
     patternx <- Pattern.check context binder patternx
     effect <- Expression.check context binder effect
-    thenx <- check (Pattern.augment patternx context) (shift typex) thenx
+    thenx <- check (Pattern.augment patternx context) (shiftLogical typex) thenx
     pure Bind {startPosition, patternx, effect, thenx}
   Semantic.Let {startPosition, declarations, body} -> do
     (context, declarations) <- Declarations.check context declarations
-    body <- check context (shift typex) body
+    body <- check context (shiftLogical typex) body
     pure Let {startPosition, declarations, body}
 
 solve :: Statements s scope -> Unify.Solve s (Solved.Statements Solved.Guard Group Check scope)

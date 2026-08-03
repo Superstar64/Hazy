@@ -9,7 +9,9 @@ import Core.Tree.Instanciation (InstanciationF)
 import Core.Tree.Type (TypeF)
 import Data.Kind (Constraint)
 import qualified Data.Kind as Kind
-import Semantic.Scope (Environment, Vacuous)
+import Data.Void (Void)
+import Semantic.Scope (Environment)
+import qualified Semantic.Shift0 as Shift0
 import {-# SOURCE #-} qualified Semantic.Unify.Evidence as Evidence (Logical)
 import {-# SOURCE #-} Semantic.Unify.Type (Logical)
 import Syntax.Position (Position)
@@ -22,9 +24,19 @@ instance Applicative (Solve s)
 
 instance Monad (Solve s)
 
-type SolveType :: ((Environment -> Kind.Type) -> Environment -> Kind.Type) -> Constraint
+type SolveType :: (Kind.Type -> Environment -> Kind.Type) -> Constraint
 class SolveType typef where
-  solve :: Position -> typef (Logical s) scope -> Solve s (typef Vacuous scope)
+  solveWith ::
+    Shift0.Category scopex scope ->
+    Position ->
+    typef (Logical s scopex) scope ->
+    Solve s (typef Void scope)
+
+solve ::
+  (SolveType typef) =>
+  Position ->
+  typef (Logical s scope) scope ->
+  Solve s (typef Void scope)
 
 instance SolveType TypeF
 
@@ -34,9 +46,19 @@ instance SolveType ConstraintsF
 
 instance (SolveType typef) => SolveType (ForallOver typef)
 
-type SolveEvidence :: ((Environment -> Kind.Type) -> Environment -> Kind.Type) -> Constraint
+type SolveEvidence :: (Kind.Type -> Environment -> Kind.Type) -> Constraint
 class SolveEvidence evidencef where
-  solveEvidence :: Position -> evidencef (Evidence.Logical s) scope -> Solve s (evidencef Vacuous scope)
+  solveEvidenceWith ::
+    Shift0.Category scopex scope ->
+    Position ->
+    evidencef (Evidence.Logical s scopex) scope ->
+    Solve s (evidencef Void scope)
+
+solveEvidence ::
+  (SolveEvidence evidencef) =>
+  Position ->
+  evidencef (Evidence.Logical s scope) scope ->
+  Solve s (evidencef Void scope)
 
 instance SolveEvidence EvidenceF
 

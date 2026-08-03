@@ -1,14 +1,15 @@
 module Core.Tree.Type where
 
-import qualified Core.Show as Core
+import qualified Core.Functor as Core (Functor (..))
+import qualified Core.Show as Core (Show (..))
 import Core.Substitute (Category (..))
 import qualified Core.Substitute as Substitute
 import qualified Data.Vector as Vector
+import Data.Void (Void)
 import qualified Semantic.Index.Constructor as Constructor
 import Semantic.Index.Local (Index (Local, Shift))
 import qualified Semantic.Index.Local as Local
 import qualified Semantic.Index.Type2 as Type2
-import Semantic.Scope (Vacuous)
 import qualified Semantic.Scope as Scope
 import qualified Semantic.Shift as Shift
 import Semantic.Shift0 (shift)
@@ -16,10 +17,10 @@ import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
 import qualified Semantic.Tree.Type as Solved
 
-type Type = TypeF Vacuous
+type Type = TypeF Void
 
 data TypeF logical scope
-  = Logical !(logical scope)
+  = Logical !logical
   | Variable !(Local.Index scope)
   | Constructor !(Type2.Index scope)
   | Call !(TypeF logical scope) !(TypeF logical scope)
@@ -38,9 +39,9 @@ infixl 9 `Call`
 instance Core.Show TypeF where
   showsPrec = showsPrec
 
-instance (Scope.Show logical) => Show (TypeF logical scope) where
+instance (Show logical) => Show (TypeF logical scope) where
   showsPrec p = \case
-    Logical logical -> showParen (p > 10) $ showString "Logical " . Scope.showsPrec 11 logical
+    Logical logical -> showParen (p > 10) $ showString "Logical " . showsPrec 11 logical
     Variable variable -> showParen (p > 10) $ showString "Variable " . showsPrec 11 variable
     Constructor index -> showParen (p > 10) $ showString "Constructor " . showsPrec 11 index
     Call function argument ->
@@ -62,8 +63,8 @@ instance (Scope.Show logical) => Show (TypeF logical scope) where
     Universe -> showString "Universe"
     Levity -> showString "Levity"
 
-instance (Scope.Eq logical) => Eq (TypeF logical scope) where
-  Logical logical1 == Logical logical2 = logical1 Scope.== logical2
+instance (Eq logical) => Eq (TypeF logical scope) where
+  Logical logical1 == Logical logical2 = logical1 == logical2
   Variable variable1 == Variable variable2 = variable1 == variable2
   Constructor index1 == Constructor index2 = index1 == index2
   Call function1 argument1 == Call function2 argument2 =
@@ -78,12 +79,12 @@ instance (Scope.Eq logical) => Eq (TypeF logical scope) where
   Levity == Levity = True
   _ == _ = False
 
-instance (Shift.Functor logical) => Shift0.Functor (TypeF logical) where
+instance Shift0.Functor (TypeF logical) where
   map = Shift.mapDefault
 
-instance (Shift.Functor logical) => Shift.Functor (TypeF logical) where
+instance Shift.Functor (TypeF logical) where
   map category typex = case typex of
-    Logical logical -> Logical (Shift.map category logical)
+    Logical logical -> Logical logical
     Variable index -> Variable (Shift.map category index)
     Constructor index -> Constructor (Shift.map category index)
     Call function argument -> Call (Shift.map category function) (Shift.map category argument)
@@ -96,10 +97,10 @@ instance (Shift.Functor logical) => Shift.Functor (TypeF logical) where
     Universe -> Universe
     Levity -> Levity
 
-instance (Scope.Show logical) => Scope.Show (TypeF logical) where
+instance (Show logical) => Scope.Show (TypeF logical) where
   showsPrec = showsPrec
 
-instance (logical ~ Vacuous) => Substitute.Functor (TypeF logical) where
+instance (logical ~ Void) => Substitute.Functor (TypeF logical) where
   map = Substitute.mapType
 
 instance Substitute.TypeFunctor TypeF where
@@ -116,6 +117,20 @@ instance Substitute.TypeFunctor TypeF where
     Function parameter result ->
       Function (Substitute.mapType category parameter) (Substitute.mapType category result)
     Type universe -> Type (Substitute.mapType category universe)
+    Constraint -> Constraint
+    Small -> Small
+    Large -> Large
+    Universe -> Universe
+    Levity -> Levity
+
+instance Core.Functor TypeF where
+  map f = \case
+    Logical logical -> Logical (f logical)
+    Variable index -> Variable index
+    Constructor index -> Constructor index
+    Call function argument -> Call (Core.map f function) (Core.map f argument)
+    Function parameter result -> Function (Core.map f parameter) (Core.map f result)
+    Type universe -> Type (Core.map f universe)
     Constraint -> Constraint
     Small -> Small
     Large -> Large

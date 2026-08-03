@@ -1,6 +1,7 @@
 module Semantic.Check.Temporary.Function where
 
 import Control.Monad.ST (ST)
+import Core.Functor (shiftLogical)
 import Core.Tree.Type ((-#>))
 import qualified Core.Tree.Type as Core
 import Semantic.Check.Context (Context)
@@ -11,7 +12,6 @@ import qualified Semantic.Check.Temporary.RightHandSide as RightHandSide
 import Semantic.Layout (Group)
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope (Pattern)
-import Semantic.Shift (shift)
 import Semantic.Stage (Check, Resolve)
 import qualified Semantic.Tree.Function as Semantic (Function (..))
 import qualified Semantic.Tree.Function as Solved
@@ -35,7 +35,7 @@ check context typex = \case
     Unify.unify context functionPosition typex (argument -#> result)
     pattern1 <- Pattern.check context argument patternx
     context <- pure $ Pattern.augment pattern1 context
-    function1 <- check context (shift result) function
+    function1 <- check context (shiftLogical result) function
     pure Bound {functionPosition, patternx = pattern1, function = function1}
 
 solve :: Function s scope -> Unify.Solve s (Solved.Function Group Check scope)

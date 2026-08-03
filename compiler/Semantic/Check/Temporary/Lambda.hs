@@ -1,6 +1,7 @@
 module Semantic.Check.Temporary.Lambda where
 
 import Control.Monad.ST (ST)
+import Core.Functor (shiftLogical)
 import Core.Tree.Type ((-#>))
 import qualified Core.Tree.Type as Core
 import Semantic.Check.Context (Context)
@@ -11,7 +12,6 @@ import qualified Semantic.Check.Temporary.Pattern as Pattern
 import Semantic.Layout (Group)
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope (Pattern)
-import Semantic.Shift (shift)
 import Semantic.Stage (Check, Resolve)
 import qualified Semantic.Tree.Lambda as Semantic
 import qualified Semantic.Tree.Lambda as Solved
@@ -37,7 +37,7 @@ check context typex = \case
     parameterType <- Unify.fresh Core.typex
     parameter <- Pattern.check context parameterType parameter
     resultType <- Unify.fresh Core.typex
-    body <- check (Pattern.augment parameter context) (shift resultType) body
+    body <- check (Pattern.augment parameter context) (shiftLogical resultType) body
     Unify.unify context boundPosition typex (parameterType -#> resultType)
     pure Bound {boundPosition, parameter, body}
 

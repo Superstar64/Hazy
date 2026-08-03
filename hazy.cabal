@@ -32,6 +32,7 @@ executable hazy
     Builtin.Real
     Builtin.Tuple
     Core.Builtin
+    Core.Functor
     Core.Index.Table.Term
     Core.Show
     Core.Substitute

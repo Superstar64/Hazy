@@ -1,6 +1,7 @@
 module Semantic.Tree.Definition4 where
 
-import qualified Core.Show as Core
+import qualified Core.Functor as Core (Functor (..))
+import qualified Core.Show as Core (Show (..))
 import Core.Tree.Forall (ForallOver (..))
 import qualified Core.Tree.Type as Simple (TypeF)
 import Core.Tree.TypeLambda (TypeLambdaOver (..))
@@ -10,6 +11,7 @@ import qualified Data.Set as Set
 import qualified Data.Strict.Maybe as Strict.Maybe
 import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
+import Data.Void (Void)
 import qualified Graph.StronglyConnected as StronglyConnected
 import Semantic.Connect (connect)
 import qualified Semantic.Connect as Connect
@@ -19,7 +21,7 @@ import qualified Semantic.Index.Link.Term as Term (Link (..))
 import qualified Semantic.Index.Term0 as Term0
 import Semantic.Layout (Group, Layout, Normal)
 import Semantic.Locality (Locality)
-import Semantic.Scope (Environment (..), Vacuous)
+import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope
 import qualified Semantic.Shift as Shift
 import Semantic.Shift0 (shift)
@@ -45,7 +47,7 @@ data Definition4 locality layout stage scope where
     Definition4 locality layout stage scope
   Link :: !(Term.Link locality) -> !Int -> Definition4 locality Group stage scope
   (::::) ::
-    !(Inferred (ForallOver Types Vacuous) stage scope) ->
+    !(Inferred (ForallOver Types Void) stage scope) ->
     !(Implicit (Set locality) Group stage scope) ->
     Definition4 locality Group stage scope
 
@@ -103,23 +105,27 @@ newtype Types logical scope = Types (Strict.Vector (Simple.TypeF logical scope))
 instance Core.Show Types where
   showsPrec = showsPrec
 
-instance (Scope.Show logcial) => Scope.Show (Types logcial) where
+instance (Show logcial) => Scope.Show (Types logcial) where
   showsPrec = showsPrec
 
-instance (Shift.Functor logical) => Shift0.Functor (Types logical) where
+instance Shift0.Functor (Types logical) where
   map = Shift.mapDefault
 
-instance (Shift.Functor logical) => Shift.Functor (Types logical) where
+instance Shift.Functor (Types logical) where
   map category (Types types) = Types (Shift.map category <$> types)
 
 instance Unify.Zonk Types where
-  zonk zonker (Types types) = Types <$> traverse (Unify.zonk zonker) types
+  zonk zonker category (Types types) = Types <$> traverse (Unify.zonk zonker category) types
+
+instance Core.Functor Types where
+  map f (Types types) = Types $ Core.map f <$> types
 
 instance Unify.Generalizable Types where
   collect collector (Types types) = foldMap (Unify.collect collector) types
 
 instance Unify.SolveType Types where
-  solve position (Types types) = Types <$> traverse (Unify.solve position) types
+  solveWith category position (Types types) =
+    Types <$> traverse (Unify.solveWith category position) types
 
 newtype Set locality layout stage scope
   = Set (Strict.Vector (Element locality layout stage scope))

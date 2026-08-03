@@ -19,6 +19,7 @@ import Data.Traversable (for)
 import qualified Data.Vector as Vector
 import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
+import Data.Void (Void)
 import Order (orderWithInt)
 import Semantic.Check.Context (Context (..))
 import qualified Semantic.Check.LocalBinding as LocalBinding
@@ -29,7 +30,7 @@ import qualified Semantic.Index.Table.Local as Local
 import qualified Semantic.Index.Table.Term as Term
 import qualified Semantic.Index.Table.Type as Type (Table (..), (!))
 import qualified Semantic.Label.Binding.Local as Label
-import Semantic.Scope (Environment ((:+)), Local, Vacuous)
+import Semantic.Scope (Environment ((:+)), Local)
 import Semantic.Shift (shift)
 import qualified Semantic.Unify as Unify
 import Syntax.Lexer (variableIdentifier)
@@ -105,7 +106,7 @@ augment = augmentNamed name
 
 augmentForall ::
   Position ->
-  ForallOver typex Vacuous scope ->
+  ForallOver typex Void scope ->
   Mask ->
   Context s scope ->
   ST s (Context s (Local ':+ scope))

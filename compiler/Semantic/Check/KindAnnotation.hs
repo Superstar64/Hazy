@@ -1,6 +1,7 @@
 module Semantic.Check.KindAnnotation where
 
 import Control.Monad.ST (ST)
+import Core.Functor (shiftLogical)
 import Core.Substitute (logicalType)
 import Core.Tree.Type ((-#>))
 import qualified Core.Tree.Type as Core
@@ -15,7 +16,6 @@ import qualified Semantic.Check.Temporary.TypePattern as Unsolved
 import qualified Semantic.Check.Temporary.TypePattern as Unsolved.TypePattern
 import Semantic.Layout (Group)
 import Semantic.Scope (Environment ((:+)), Local)
-import Semantic.Shift (shift)
 import Semantic.Stage (Check, Resolve)
 import qualified Semantic.Tree.Type as Solved (Type)
 import qualified Semantic.Tree.TypeDeclaration as Semantic (TypeDeclaration (..))
@@ -69,7 +69,7 @@ check
           Unify.unify context position kind (logicalType $ Simple.simplify annotation)
           pure $ Strict.Just annotation
       context <- pure $ Unsolved.Scheme.augment parameters context
-      synonym <- Unsolved.Type.check context (shift target) synonym
+      synonym <- Unsolved.Type.check context (shiftLogical target) synonym
       kind <- Unify.runSolve $ Unify.solve position kind
       parameters <- Unify.runSolve $ traverse Unsolved.TypePattern.solve parameters
       synonym <- Unify.runSolve $ Unsolved.Type.solve context synonym

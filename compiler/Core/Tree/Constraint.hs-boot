@@ -3,24 +3,24 @@
 module Core.Tree.Constraint where
 
 import Data.Kind (Type)
-import Semantic.Scope (Environment, Vacuous)
-import qualified Semantic.Scope as Scope
+import Data.Void (Void)
+import Semantic.Scope (Environment)
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
 import qualified Semantic.Tree.Constraint as Solved
 
-type Constraint = ConstraintF Vacuous
+type Constraint = ConstraintF Void
 
 type role ConstraintF representational nominal
 
-type ConstraintF :: (Environment -> Type) -> Environment -> Type
+type ConstraintF :: Type -> Environment -> Type
 data ConstraintF logical scope
 
-instance (Scope.Show logical) => Show (ConstraintF logical scope)
+instance (Show logical) => Show (ConstraintF logical scope)
 
-instance (Shift.Functor logical) => Shift0.Functor (ConstraintF logical)
+instance Shift0.Functor (ConstraintF logical)
 
-instance (Shift.Functor logical) => Shift.Functor (ConstraintF logical)
+instance Shift.Functor (ConstraintF logical)
 
 simplify :: Solved.Constraint position Check scope -> Constraint scope

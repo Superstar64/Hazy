@@ -262,9 +262,13 @@ mapInstances UngroupType {} =
 mapInstances category = Map.mapKeysMonotonic (map category)
 
 mapDefault :: (Functor f) => Shift0.Category scope scope' -> f scope -> f scope'
-mapDefault = \case
-  Shift0.Id -> map Id
-  Shift0.Shift -> map Shift
+mapDefault category = map (lift category) where
+
+lift :: Shift0.Category scope scope' -> Category scope scope'
+lift = \case
+  Shift0.Id -> Id
+  Shift0.Shift -> Shift
+  after Shift0.:. before -> lift after :. lift before
 
 class PartialUnshift f where
   partialUnshift :: (Applicative m) => m Void -> f (scope ':+ scopes) -> m (f scopes)

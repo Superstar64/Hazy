@@ -1,9 +1,10 @@
 module Semantic.Check.Temporary.Definition4 where
 
 import qualified Core.Tree.TypeLambda as Simple (TypeLambdaOver)
+import Data.Void (Void)
 import qualified Semantic.Index.Link.Term as Term
 import Semantic.Layout (Group)
-import Semantic.Scope (Environment (..), Vacuous)
+import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope
 import Semantic.Stage (Check)
 import qualified Semantic.Tree.Combinators.Implicit as Implicit
@@ -29,7 +30,7 @@ data Definition4 locality s scope where
     Definition4 locality s scope
   Link :: !(Term.Link locality) -> !Int -> Definition4 locality s scope
   (::::) ::
-    !(Unify.ForallOver Types (Logical s) scope) ->
+    !(Unify.ForallOver Types (Logical s scope) scope) ->
     !(Unify.Solve s (Simple.TypeLambdaOver (Solved.Set locality Group Check) scope)) ->
     Definition4 locality s scope
 
@@ -51,7 +52,7 @@ solve position = \case
     set <- set
     pure $ Inferred.Solved types Solved.:::: Implicit.Check set
 
-solveTypes :: Position -> Types (Logical s1) scope1 -> Unify.Solve s1 (Solved.Types Vacuous scope1)
+solveTypes :: Position -> Types (Logical s scope) scope -> Unify.Solve s (Solved.Types Void scope)
 solveTypes position (Types types) = do
   types <- traverse (Unify.solve position) types
   pure $ Solved.Types types

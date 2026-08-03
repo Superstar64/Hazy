@@ -15,7 +15,7 @@ import {-# SOURCE #-} Semantic.Unify.Solve (Solve)
 import {-# SOURCE #-} Semantic.Unify.Type
 import Syntax.Position (Position)
 
-type Forall s = ForallOver TypeF (Logical s)
+type Forall s scope = ForallOver TypeF (Logical s scope) scope
 
 newtype Generalize typex s scopes = Generalize
   { runGeneralize ::
@@ -25,13 +25,13 @@ newtype Generalize typex s scopes = Generalize
   }
 
 type Body ::
-  ((Environment -> Kind.Type) -> Environment -> Kind.Type) ->
+  (Kind.Type -> Environment -> Kind.Type) ->
   (Environment -> Kind.Type) ->
   Kind.Type ->
   Environment ->
   Kind.Type
 data Body typef term s scope = (:::)
-  { typex :: !(typef (Logical s) scope),
+  { typex :: !(typef (Logical s scope) scope),
     term :: !(Solve s (term scope))
   }
 
@@ -46,9 +46,13 @@ generalizeBody ::
   ST s (Body (ForallOver typex) (Simple.TypeLambdaOver term) s scope)
 
 type MapForall ::
-  ((Environment -> Kind.Type) -> Environment -> Kind.Type) ->
-  ((Environment -> Kind.Type) -> Environment -> Kind.Type) ->
+  (Kind.Type -> Environment -> Kind.Type) ->
+  (Kind.Type -> Environment -> Kind.Type) ->
   Kind.Type
-newtype MapForall typef typef' = MapForall (forall s scope. typef (Logical s) scope -> typef' (Logical s) scope)
+newtype MapForall typef typef'
+  = MapForall (forall s scope scope'. typef (Logical s scope') scope -> typef' (Logical s scope') scope)
 
-mapForall :: MapForall typef typef' -> ForallOver typef (Logical s) scope -> ForallOver typef' (Logical s) scope
+mapForall ::
+  MapForall typef typef' ->
+  ForallOver typef (Logical s scope) scope ->
+  ForallOver typef' (Logical s scope) scope
