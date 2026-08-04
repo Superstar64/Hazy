@@ -3,9 +3,9 @@
 module Semantic.Check.Temporary.Scheme where
 
 import Control.Monad.ST (ST)
-import Core.Functor (shiftLogical)
 import Core.Substitute (logicalType)
 import qualified Core.Tree.Type as Core
+import Core.Type.Functor (shiftLogical)
 import Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Context (Context (..))

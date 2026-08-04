@@ -1,11 +1,11 @@
 module Semantic.Check.KindAnnotation where
 
 import Control.Monad.ST (ST)
-import Core.Functor (shiftLogical)
 import Core.Substitute (logicalType)
 import Core.Tree.Type ((-#>))
 import qualified Core.Tree.Type as Core
 import qualified Core.Tree.Type as Simple (Type, simplify)
+import Core.Type.Functor (shiftLogical)
 import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import qualified Data.Vector.Strict as Strict (Vector)
 import Semantic.Check.Context (Context)

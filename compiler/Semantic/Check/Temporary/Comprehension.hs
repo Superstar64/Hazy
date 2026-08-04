@@ -1,9 +1,9 @@
 module Semantic.Check.Temporary.Comprehension where
 
 import Control.Monad.ST (ST)
-import Core.Functor (shiftLogical)
 import Core.Tree.Type ((#))
 import qualified Core.Tree.Type as Core
+import Core.Type.Functor (shiftLogical)
 import Semantic.Check.Context (Context)
 import qualified Semantic.Check.Temporary.Declarations as Declarations
 import {-# SOURCE #-} Semantic.Check.Temporary.Expression (Expression)

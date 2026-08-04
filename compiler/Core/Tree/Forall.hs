@@ -1,12 +1,12 @@
 module Core.Tree.Forall where
 
-import qualified Core.Functor as Core (Functor (..))
-import qualified Core.Show as Core (Show (..))
 import qualified Core.Substitute as Substitute
 import Core.Tree.Constraints (ConstraintsF (None))
 import qualified Core.Tree.Constraints as Constraints
 import Core.Tree.Type (TypeF)
 import qualified Core.Tree.Type as Type
+import qualified Core.Type.Functor as Core (Functor (..))
+import qualified Core.Type.Show as Core (Show (..))
 import qualified Data.Kind as Kind
 import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector

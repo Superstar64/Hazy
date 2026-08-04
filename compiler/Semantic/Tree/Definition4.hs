@@ -1,11 +1,11 @@
 module Semantic.Tree.Definition4 where
 
-import qualified Core.Functor as Core (Functor (..))
-import qualified Core.Show as Core (Show (..))
 import Core.Tree.Forall (ForallOver (..))
 import qualified Core.Tree.Type as Simple (TypeF)
 import Core.Tree.TypeLambda (TypeLambdaOver (..))
 import qualified Core.Tree.TypeLambda as TypeLambda
+import qualified Core.Type.Functor as Core (Functor (..))
+import qualified Core.Type.Show as Core (Show (..))
 import Data.Kind (Type)
 import qualified Data.Set as Set
 import qualified Data.Strict.Maybe as Strict.Maybe

@@ -1,10 +1,10 @@
 module Core.Tree.Evidence (Evidence, EvidenceF (..)) where
 
-import qualified Core.Functor as Core
 import Core.Substitute (Category (Substitute))
 import qualified Core.Substitute as Substitute
 import {-# SOURCE #-} Core.Tree.Instanciation (InstanciationF)
 import {-# SOURCE #-} qualified Core.Tree.Instanciation as Instanciation
+import qualified Core.Type.Functor as Core
 import qualified Data.Vector as Vector
 import Data.Void (Void)
 import qualified Semantic.Index.Evidence as Evidence

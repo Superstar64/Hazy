@@ -1,8 +1,8 @@
 module Semantic.Check.LocalBinding where
 
-import qualified Core.Functor as Core
 import qualified Core.Tree.Evidence as Simple (Evidence)
 import Core.Tree.Type as Simple (Type)
+import qualified Core.Type.Functor as Core
 import qualified Data.Kind (Type)
 import Data.Map (Map)
 import qualified Data.Map as Map

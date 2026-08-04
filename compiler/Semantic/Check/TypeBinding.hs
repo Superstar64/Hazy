@@ -1,14 +1,14 @@
 module Semantic.Check.TypeBinding where
 
 import Control.Monad.ST (ST)
-import Core.Functor (shiftLogical)
-import qualified Core.Functor as Core
 import Core.Tree.Constraints (Constraints)
 import qualified Core.Tree.Type as Simple (Type)
 import qualified Core.Tree.Type as Simple.Type
 import {-# SOURCE #-} qualified Core.Tree.TypeDeclaration as Simple (TypeDeclaration, simplify)
 import {-# SOURCE #-} qualified Core.Tree.TypeDeclarationExtra as Simple (TypeDeclarationExtra)
 import {-# SOURCE #-} qualified Core.Tree.TypeDeclarationExtra as SimpleExtra (simplify)
+import Core.Type.Functor (shiftLogical)
+import qualified Core.Type.Functor as Core
 import qualified Data.Kind
 import Data.Map (Map)
 import qualified Data.Map as Map

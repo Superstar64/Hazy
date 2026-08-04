@@ -2,11 +2,11 @@ module Semantic.Check.Temporary.Expression where
 
 import Control.Monad.ST (ST)
 import {-# SOURCE #-} qualified Core.Builtin as Builtin
-import Core.Functor (shiftLogical)
 import Core.Tree.Type ((#), (-#>))
 import qualified Core.Tree.Type as Core
 import {-# SOURCE #-} Core.Tree.TypeDeclaration (assumeData)
 import qualified Core.Tree.TypeLambda as Simple
+import Core.Type.Functor (shiftLogical)
 import qualified Data.Strict.Vector1 as Strict (Vector1)
 import qualified Data.Strict.Vector2 as Strict (Vector2)
 import qualified Data.Strict.Vector2 as Strict.Vector2

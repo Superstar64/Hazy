@@ -32,9 +32,7 @@ executable hazy
     Builtin.Real
     Builtin.Tuple
     Core.Builtin
-    Core.Functor
     Core.Index.Table.Term
-    Core.Show
     Core.Substitute
     Core.Temporary.Definition
     Core.Temporary.Function
@@ -66,6 +64,8 @@ executable hazy
     Core.Tree.TypeDeclarationExtra
     Core.Tree.TypeDefinition
     Core.Tree.TypeLambda
+    Core.Type.Functor
+    Core.Type.Show
     Data.Functor2
     Data.Heptafoldable
     Data.Heptafunctor

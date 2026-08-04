@@ -3,11 +3,11 @@ module Semantic.Check.Temporary.Pattern where
 import Control.Monad (when)
 import Control.Monad.ST (ST)
 import qualified Core.Builtin as Builtin
-import Core.Functor (shiftLogical)
 import qualified Core.Tree.Forall as Core (mono)
 import Core.Tree.Type ((#))
 import qualified Core.Tree.Type as Core (char, constructor, list, typex)
 import Core.Tree.TypeDeclaration (assumeData)
+import Core.Type.Functor (shiftLogical)
 import Data.Map (Map)
 import Data.Strict.Vector1 (toVector)
 import qualified Data.Strict.Vector1 as Strict (Vector1)

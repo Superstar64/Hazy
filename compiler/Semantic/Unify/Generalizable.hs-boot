@@ -1,8 +1,8 @@
 module Semantic.Unify.Generalizable where
 
 import Control.Monad.ST (ST)
-import qualified Core.Functor as Core
 import Core.Tree.Type (TypeF)
+import qualified Core.Type.Functor as Core
 import Data.STRef (STRef)
 import Semantic.Check.Mask (Mask)
 import Semantic.Scope (Environment (..))

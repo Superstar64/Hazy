@@ -1,10 +1,10 @@
 module Semantic.Check.Go.TypeDeclaration (TypeDeclaration (..), kind', check, lazy) where
 
 import Control.Monad.ST (ST)
-import Core.Functor (shiftLogical)
 import Core.Substitute (logicalType)
 import qualified Core.Tree.Type as Core
 import qualified Core.Tree.Type as Simple
+import Core.Type.Functor (shiftLogical)
 import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import qualified Data.Vector as Vector
 import Data.Vector.Strict (toLazy)

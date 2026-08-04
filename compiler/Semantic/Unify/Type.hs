@@ -3,7 +3,6 @@ module Semantic.Unify.Type where
 import Control.Monad (zipWithM_)
 import Control.Monad.ST (ST)
 import {-# SOURCE #-} qualified Core.Builtin as Builtin (index, kind)
-import Core.Functor (shiftLogical)
 import Core.Substitute (logicalEvidence, logicalType, substituteType)
 import qualified Core.Tree.Constraint as Simple (argument)
 import qualified Core.Tree.Constraint as Simple.Constraint
@@ -14,6 +13,7 @@ import qualified Core.Tree.Instanciation as Instanciation (InstanciationF (..))
 import Core.Tree.Type (TypeF (..), (#))
 import qualified Core.Tree.Type as Simple (Type)
 import {-# SOURCE #-} Core.Tree.TypeDeclaration (assumeData)
+import Core.Type.Functor (shiftLogical)
 import Data.Foldable (for_, toList, traverse_)
 import Data.Map (Map)
 import qualified Data.Map as Map

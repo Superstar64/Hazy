@@ -2,8 +2,8 @@
 
 module Core.Tree.Forall where
 
-import qualified Core.Show as Core
 import {-# SOURCE #-} Core.Tree.Type (TypeF)
+import qualified Core.Type.Show as Core
 import Data.Kind (Type)
 import Data.Void (Void)
 import Semantic.Scope (Environment)

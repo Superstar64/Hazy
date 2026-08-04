@@ -2,7 +2,6 @@ module Semantic.Unify.Solve where
 
 import Control.Monad (ap, liftM)
 import Control.Monad.ST (ST)
-import qualified Core.Functor as Core
 import Core.Tree.Constraint (ConstraintF (..))
 import Core.Tree.Constraints (ConstraintsF (..))
 import Core.Tree.Evidence (EvidenceF)
@@ -11,6 +10,7 @@ import Core.Tree.Forall (ForallOver (..))
 import Core.Tree.Instanciation (InstanciationF (..))
 import Core.Tree.Type (TypeF)
 import qualified Core.Tree.Type as Type (TypeF (..))
+import qualified Core.Type.Functor as Core
 import Data.Kind (Constraint)
 import qualified Data.Kind as Kind
 import Data.STRef (readSTRef)

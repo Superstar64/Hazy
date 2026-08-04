@@ -1,12 +1,12 @@
 module Semantic.Check.Temporary.Declaration where
 
 import Control.Monad.ST (ST)
-import Core.Functor (shiftLogical)
 import Core.Substitute (logicalType)
 import qualified Core.Tree.Constraints as Simple.Constraints (simplify)
 import qualified Core.Tree.Type as Core
 import qualified Core.Tree.Type as Simple (simplify)
 import qualified Core.Tree.TypeLambda as Simple (TypeLambdaOver (..))
+import Core.Type.Functor (shiftLogical)
 import qualified Data.Vector as Vector
 import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Context (Context (..), groupTermBindings)

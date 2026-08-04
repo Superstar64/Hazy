@@ -1,9 +1,9 @@
 module Core.Tree.Type where
 
-import qualified Core.Functor as Core (Functor (..))
-import qualified Core.Show as Core (Show (..))
 import Core.Substitute (Category (..))
 import qualified Core.Substitute as Substitute
+import qualified Core.Type.Functor as Core (Functor (..))
+import qualified Core.Type.Show as Core (Show (..))
 import qualified Data.Vector as Vector
 import Data.Void (Void)
 import qualified Semantic.Index.Constructor as Constructor

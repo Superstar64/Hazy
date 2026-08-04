@@ -1,7 +1,7 @@
 module Semantic.Check.Temporary.Alternative where
 
 import Control.Monad.ST (ST)
-import Core.Functor (shiftLogical)
+import Core.Type.Functor (shiftLogical)
 import Semantic.Check.Context (Context)
 import Semantic.Check.Temporary.Pattern (Pattern)
 import qualified Semantic.Check.Temporary.Pattern as Pattern

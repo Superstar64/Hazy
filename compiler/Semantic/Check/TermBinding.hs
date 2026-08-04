@@ -1,9 +1,9 @@
 module Semantic.Check.TermBinding where
 
 import Control.Monad.ST (ST)
-import qualified Core.Functor as Core (mapLogical, shiftLogical)
 import qualified Core.Tree.Forall as Core (mono)
 import qualified Core.Tree.Forall as Simple (Forall)
+import qualified Core.Type.Functor as Core (mapLogical, shiftLogical)
 import qualified Semantic.Check.Functor.Annotated as Functor (Annotated (..))
 import {-# SOURCE #-} qualified Semantic.Check.Temporary.Declaration as Temporary
 import Semantic.Check.TypeAnnotation (Annotation (..), TypeAnnotation (..))

@@ -1,4 +1,4 @@
-module Core.Functor where
+module Core.Type.Functor where
 
 import Data.Kind (Constraint, Type)
 import Semantic.Scope (Environment (..))

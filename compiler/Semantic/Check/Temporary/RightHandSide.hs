@@ -1,7 +1,7 @@
 module Semantic.Check.Temporary.RightHandSide where
 
 import Control.Monad.ST (ST)
-import Core.Functor (shiftLogical)
+import Core.Type.Functor (shiftLogical)
 import Semantic.Check.Context (Context)
 import Semantic.Check.Temporary.Body (Body)
 import qualified Semantic.Check.Temporary.Body as Body

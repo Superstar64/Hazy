@@ -1,4 +1,4 @@
-module Core.Show where
+module Core.Type.Show where
 
 import Data.Kind (Constraint, Type)
 import Semantic.Scope (Environment)

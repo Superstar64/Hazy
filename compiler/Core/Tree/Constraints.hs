@@ -1,9 +1,9 @@
 module Core.Tree.Constraints where
 
-import qualified Core.Functor as Core
 import qualified Core.Substitute as Substitute
 import Core.Tree.Constraint (ConstraintF)
 import qualified Core.Tree.Constraint as Constraint
+import qualified Core.Type.Functor as Core
 import qualified Data.Vector.Strict as Strict
 import Data.Void (Void)
 import qualified Semantic.Shift as Shift
