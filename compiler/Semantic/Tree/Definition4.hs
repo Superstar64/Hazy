@@ -6,6 +6,8 @@ import Core.Tree.TypeLambda (TypeLambdaOver (..))
 import qualified Core.Tree.TypeLambda as TypeLambda
 import qualified Core.Type.Functor as Core (Functor (..))
 import qualified Core.Type.Show as Core (Show (..))
+import Data.Functor.Classes (Show1 (liftShowsPrec))
+import Data.Functor.Identity (Identity (..))
 import Data.Kind (Type)
 import qualified Data.Set as Set
 import qualified Data.Strict.Maybe as Strict.Maybe
@@ -39,24 +41,24 @@ import Semantic.Tree.Scheme (Scheme)
 import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
 
-type Definition4 :: Locality -> Layout -> Stage -> Environment -> Type
-data Definition4 locality layout stage scope where
+type Definition4 :: (Type -> Type) -> Type -> Locality -> Layout -> Stage -> Environment -> Type
+data Definition4 solve logical locality layout stage scope where
   (:::) ::
     !(Annotation mark layout stage scope) ->
-    !(Implicit (Definition3 mark) layout stage scope) ->
-    Definition4 locality layout stage scope
-  Link :: !(Term.Link locality) -> !Int -> Definition4 locality Group stage scope
+    !(solve (Implicit (Definition3 mark) layout stage scope)) ->
+    Definition4 solve logical locality layout stage scope
+  Link :: !(Term.Link locality) -> !Int -> Definition4 solve logical locality Group stage scope
   (::::) ::
-    !(Inferred (ForallOver Types Void) stage scope) ->
-    !(Implicit (Set locality) Group stage scope) ->
-    Definition4 locality Group stage scope
+    !(Inferred (ForallOver Types logical) stage scope) ->
+    !(solve (Implicit (Set locality) Group stage scope)) ->
+    Definition4 solve logical locality Group stage scope
 
 infix 5 :::, ::::
 
-instance Show (Definition4 locality layout stage scope) where
+instance (Show1 solve, Show logical) => Show (Definition4 solve logical locality layout stage scope) where
   showsPrec d (annotation ::: definition) =
     showParen (d > 5) $
-      showsPrec 6 annotation . showString " ::: " . showsPrec 6 definition
+      showsPrec 6 annotation . showString " ::: " . liftShowsPrec showsPrec showList 6 definition
   showsPrec d (Link link id) =
     showParen (d > 10) $
       showString "Link "
@@ -65,22 +67,22 @@ instance Show (Definition4 locality layout stage scope) where
         . showsPrec 11 id
   showsPrec d (types :::: set) =
     showParen (d > 5) $
-      showsPrec 6 types . showString " :::: " . showsPrec 6 set
+      showsPrec 6 types . showString " :::: " . liftShowsPrec showsPrec showList 6 set
 
-instance Shift0.Functor (Definition4 locality layout stage) where
+instance (Functor solve) => Shift0.Functor (Definition4 solve logical locality layout stage) where
   map = Shift.mapDefault
 
-instance Shift.Functor (Definition4 locality layout stage) where
+instance (Functor solve) => Shift.Functor (Definition4 solve logical locality layout stage) where
   map category = \case
-    annotation ::: definition -> Shift.map category annotation ::: Shift.map category definition
+    annotation ::: definition -> Shift.map category annotation ::: fmap (Shift.map category) definition
     Link link id -> Link link id
-    types :::: set -> Shift.map category types :::: Shift.map category set
+    types :::: set -> Shift.map category types :::: fmap (Shift.map category) set
 
-instance FreeTermVariables (Definition4 locality) where
+instance (Foldable solve) => FreeTermVariables (Definition4 solve logical locality) where
   freeTermVariables target = \case
-    _ ::: definition -> freeTermVariables target definition
+    _ ::: definition -> foldMap (freeTermVariables target) definition
     Link {} -> []
-    _ :::: set -> freeTermVariables target set
+    _ :::: set -> foldMap (freeTermVariables target) set
 
 data Annotation mark layout stage scope where
   Annotated :: !(Scheme Position stage scope) -> Annotation Mark.Annotated layout stage scope
@@ -172,7 +174,9 @@ instance FreeTermVariables (Element locality) where
   freeTermVariables target Element {element} =
     freeTermVariables (FreeVariables.Over target) element
 
-locality :: Definition4 locality Normal stage scope -> Definition4 locality' Normal stage scope
+locality ::
+  Definition4 solve logical locality Normal stage scope ->
+  Definition4 solve logical locality' Normal stage scope
 locality = \case
   annotation ::: declaration -> annotation ::: declaration
 
@@ -180,13 +184,13 @@ group ::
   (Term0.Index scope -> Term.Link locality) ->
   (Term.Link locality -> Groupable scope) ->
   StronglyConnected.Component (Term.Link locality) ->
-  Definition4 locality Normal Resolve scope ->
-  Definition4 locality Group Resolve scope
-group _ _ _ (Annotated annotation ::: Implicit.Resolve definition) =
-  Annotated annotation ::: Implicit.Resolve (connect definition)
+  Definition4 Identity logical locality Normal Resolve scope ->
+  Definition4 Identity logical locality Group Resolve scope
+group _ _ _ (Annotated annotation ::: Identity (Implicit.Resolve definition)) =
+  Annotated annotation ::: Identity (Implicit.Resolve (connect definition))
 group link index group (Inferred ::: _) = case group of
   StronglyConnected.Group {set} ->
-    Inferred.Inferred :::: Implicit.Resolve (Set $ Strict.Vector.fromList $ map go $ Set.toList set)
+    Inferred.Inferred :::: Identity (Implicit.Resolve (Set $ Strict.Vector.fromList $ map go $ Set.toList set))
     where
       go link = case index link of
         Groupable {element} ->
@@ -200,13 +204,13 @@ group link index group (Inferred ::: _) = case group of
 ungroup ::
   (Term.Link locality -> Term0.Index scope) ->
   (Term.Link locality -> Implicit (Set locality) Group Check scope) ->
-  Definition4 locality Group Check scope ->
-  Definition4 locality Normal Check scope
-ungroup _ _ (Annotated annotation ::: Implicit.Check definition) =
-  Annotated annotation ::: Implicit.Check (TypeLambda.map (TypeLambda.Map Connect.seperate) definition)
+  Definition4 Identity logical locality Group Check scope ->
+  Definition4 Identity logical locality Normal Check scope
+ungroup _ _ (Annotated annotation ::: Identity (Implicit.Check definition)) =
+  Annotated annotation ::: Identity (Implicit.Check (TypeLambda.map (TypeLambda.Map Connect.seperate) definition))
 ungroup index lookup definition = case definition of
-  Link index id -> Inferred ::: go id (lookup index)
-  (_ :::: set) -> Inferred ::: go 0 set
+  Link index id -> Inferred ::: Identity (go id (lookup index))
+  (_ :::: Identity set) -> Inferred ::: Identity (go 0 set)
   where
     go id (Implicit.Check TypeLambdaOver {parameters, constraints, result = Set set}) =
       Implicit.Check $
@@ -220,3 +224,17 @@ ungroup index lookup definition = case definition of
           | Element {link} <- set Strict.Vector.! id =
               shift $ Term0.normal $ index link
         Element {element} = set Strict.Vector.! id
+
+solve ::
+  Position ->
+  Definition4 (Unify.Solve s) (Unify.Logical s scope) locality Group Check scope ->
+  Unify.Solve s (Definition4 Identity Void locality Group Check scope)
+solve position = \case
+  (annotation ::: definition) -> do
+    definition <- definition
+    pure $ annotation ::: pure definition
+  Link link id -> pure (Link link id)
+  Inferred.Solved types :::: set -> do
+    types <- Unify.solve position types
+    set <- set
+    pure $ Inferred.Solved types :::: pure set

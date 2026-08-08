@@ -2,6 +2,7 @@ module Semantic.Check.Functor.Declarations where
 
 import Data.Bifunctor (Bifunctor (..))
 import Data.Bitraversable (Bitraversable (bitraverse))
+import Data.Functor.Identity (Identity)
 import Data.Heptafoldable (Heptafoldable (heptafoldMap))
 import Data.Heptafunctor (Heptafunctor (heptamap))
 import Data.Heptatraversable (Heptatraversable (heptatraverse), heptafoldMapDefault, heptamapDefault)
@@ -9,6 +10,7 @@ import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
+import Data.Void (Void)
 import Semantic.Check.Functor.Annotated (Annotated (..), NoLabel (..))
 import Semantic.Check.Functor.Instance.Key (Key (..))
 import qualified Semantic.Index.Type2 as Type2
@@ -107,8 +109,8 @@ fromStage2 ::
   Semantic.Declarations locality Group Resolve scope ->
   Declarations
     scope
-    (Semantic.Declaration locality Group Resolve scope)
-    (Semantic.Declaration locality Group Resolve scope)
+    (Semantic.Declaration Identity Void locality Group Resolve scope)
+    (Semantic.Declaration Identity Void locality Group Resolve scope)
     (Semantic.TypeDeclaration locality Group Resolve scope)
     (Semantic.TypeDeclaration locality Group Resolve scope)
     (Semantic.TypeDeclarationExtra Group Resolve scope)

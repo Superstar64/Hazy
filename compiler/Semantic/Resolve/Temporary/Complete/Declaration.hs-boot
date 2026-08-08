@@ -1,5 +1,7 @@
 module Semantic.Resolve.Temporary.Complete.Declaration where
 
+import Data.Functor.Identity (Identity)
+import Data.Void (Void)
 import Semantic.Layout (Normal)
 import qualified Semantic.Resolve.Temporary.Partial.More.Method as More
 import qualified Semantic.Resolve.Temporary.Partial.More.Selector as More
@@ -12,7 +14,7 @@ import Syntax.Tree.Fixity (Fixity)
 import Prelude hiding (Real)
 
 data Real scope
-  = Real (forall locality. Real.Declaration locality Normal Resolve scope)
+  = Real (forall locality. Real.Declaration Identity Void locality Normal Resolve scope)
   | Select !More.Selector
   | Method !More.Method
 

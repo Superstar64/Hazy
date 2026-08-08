@@ -2,10 +2,12 @@ module Semantic.Check.Context where
 
 import Control.Monad.ST (ST)
 import Core.Tree.Type (Type)
+import Data.Functor.Identity (Identity)
 import qualified Data.Kind
 import qualified Data.Strict.Maybe as Strict
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
+import Data.Void (Void)
 import qualified Semantic.Check.Functor.Annotated as Functor (Annotated (..))
 import qualified Semantic.Check.Functor.Declarations as Functor (Declarations (..))
 import qualified Semantic.Check.Functor.Module as Functor (Module (..))
@@ -15,7 +17,6 @@ import {-# SOURCE #-} Semantic.Check.InstanceAnnotation (InstanceAnnotation)
 import {-# SOURCE #-} Semantic.Check.KindAnnotation (KindAnnotation (..))
 import Semantic.Check.LocalBinding (LocalBinding)
 import qualified Semantic.Check.LocalBinding as LocalBinding
-import {-# SOURCE #-} qualified Semantic.Check.Temporary.Declaration as Temporary (Declaration)
 import {-# SOURCE #-} qualified Semantic.Check.Temporary.TypeDeclarationExtra as Temporary (TypeDeclarationExtra, solve)
 import Semantic.Check.TermBinding (TermBinding)
 import qualified Semantic.Check.TermBinding as TermBinding
@@ -62,7 +63,7 @@ instance Shift.Unshift (Context s) where
 globalBindings ::
   Functor.ModuleSet
     (ST s (TypeAnnotation Global))
-    (ST s (Declaration Locality.Global Group Check Global))
+    (ST s (Declaration Identity Void Locality.Global Group Check Global))
     (ST s (KindAnnotation Global))
     (ST s (TypeDeclaration Locality.Global Group Check Global))
     (ST s (TypeDeclarationExtra Group Check Global))
@@ -96,7 +97,17 @@ localBindings ::
   Functor.Declarations
     (Scope.Declaration ':+ scope)
     (ST s (TypeAnnotation (Scope.Declaration ':+ scope)))
-    (ST s (Temporary.Declaration Locality.Local s (Scope.Declaration ':+ scope)))
+    ( ST
+        s
+        ( Declaration
+            (Unify.Solve s)
+            (Unify.Logical s (Scope.Declaration ':+ scope))
+            Locality.Local
+            Group
+            Check
+            (Scope.Declaration ':+ scope)
+        )
+    )
     (ST s (KindAnnotation (Scope.Declaration ':+ scope)))
     (ST s (TypeDeclaration Locality.Local Group Check (Scope.Declaration ':+ scope)))
     (ST s (Temporary.TypeDeclarationExtra s (Scope.Declaration ':+ scope)))

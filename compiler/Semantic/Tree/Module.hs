@@ -8,6 +8,7 @@ module Semantic.Tree.Module
   )
 where
 
+import Data.Functor.Identity (Identity (..))
 import Data.Maybe (fromJust)
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
@@ -133,7 +134,7 @@ seperate modules = go <$> modules
       Term.Global global local
         | Module {declarations = Declarations {terms}} <- modules Vector.! global,
           Declaration {definition} <- terms Vector.! local,
-          _ Definition4.:::: set <- definition ->
+          _ Definition4.:::: Identity set <- definition ->
             set
       _ -> error "bad term lookup"
     lookupType :: Type.Link Locality.Global -> TypeDefinition2.Set Locality.Global Check Global

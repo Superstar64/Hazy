@@ -2,7 +2,10 @@
 
 module Semantic.Tree.Declaration where
 
-import qualified Core.Tree.Forall as Simple (Forall)
+import qualified Core.Tree.Forall as Simple (ForallOver)
+import qualified Core.Tree.Type as Simple (TypeF)
+import Data.Functor.Identity (Identity (..))
+import Data.Void (Void)
 import qualified Graph.StronglyConnected as StronglyConnected
 import Semantic.FreeVariables (FreeTermVariables (..), Target (Target))
 import qualified Semantic.Index.Link.Term as Term
@@ -19,6 +22,7 @@ import qualified Semantic.Tree.Definition2 as Definition2
 import Semantic.Tree.Definition3 (Definition3)
 import Semantic.Tree.Definition4 (Definition4)
 import qualified Semantic.Tree.Definition4 as Definition4
+import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
 import Syntax.Variable (QualifiedVariable ((:-)), Qualifiers, Variable)
 import Prelude hiding (Either (Left, Right))
@@ -28,19 +32,19 @@ data Key
   | Unnamed !Int
   deriving (Eq, Ord, Show)
 
-data Declaration locality layout stage scope
+data Declaration solve logical locality layout stage scope
   = Declaration
   { position :: !Position,
     name :: !Key,
-    definition :: Definition4 locality layout stage scope,
-    typex :: Inferred Simple.Forall stage scope
+    definition :: Definition4 solve logical locality layout stage scope,
+    typex :: Inferred (Simple.ForallOver Simple.TypeF logical) stage scope
   }
   deriving (Show)
 
 lazy ::
-  Declaration locality' layout' stage' scope' ->
-  Declaration locality layout stage scope ->
-  Declaration locality layout stage scope
+  Declaration solve logical locality' layout' stage' scope' ->
+  Declaration solve logical locality layout stage scope ->
+  Declaration solve logical locality layout stage scope
 lazy Declaration {position, name} ~Declaration {definition, typex} =
   Declaration
     { position,
@@ -49,13 +53,13 @@ lazy Declaration {position, name} ~Declaration {definition, typex} =
       typex
     }
 
-typex' :: Declaration locality layout Check scope -> Simple.Forall scope
+typex' :: Declaration solve logical locality layout Check scope -> Simple.ForallOver Simple.TypeF logical scope
 typex' Declaration {typex = Solved typex} = typex
 
-instance Shift0.Functor (Declaration layout locality stage) where
+instance (Functor solve) => Shift0.Functor (Declaration solve logical layout locality stage) where
   map = Shift.mapDefault
 
-instance Shift.Functor (Declaration layout locality stage) where
+instance (Functor solve) => Shift.Functor (Declaration solve logical layout locality stage) where
   map category Declaration {position, name, definition, typex} =
     Declaration
       { position,
@@ -64,15 +68,17 @@ instance Shift.Functor (Declaration layout locality stage) where
         typex = Shift.map category typex
       }
 
-instance FreeTermVariables (Declaration locality) where
+instance (Foldable solve) => FreeTermVariables (Declaration solve logical locality) where
   freeTermVariables target Declaration {definition} = freeTermVariables target definition
 
-labelBinding :: Qualifiers -> Declaration locality layout stage scope -> Label.TermBinding scope'
+labelBinding :: Qualifiers -> Declaration solve logical locality layout stage scope -> Label.TermBinding scope'
 labelBinding path declaration = case name declaration of
   Named name -> Label.TermBinding {name = path :- name}
   Unnamed _ -> Label.SharedTermBinding
 
-locality :: Declaration locality Normal stage scope -> Declaration locality' Normal stage scope
+locality ::
+  Declaration solve logical locality Normal stage scope ->
+  Declaration solve logical locality' Normal stage scope
 locality = \case
   Declaration {position, name, definition, typex} ->
     Declaration
@@ -86,8 +92,8 @@ group ::
   (Term0.Index scope -> Term.Link locality) ->
   (Term.Link locality -> Groupable scope) ->
   StronglyConnected.Component (Term.Link locality) ->
-  Declaration locality Normal Resolve scope ->
-  Declaration locality Group Resolve scope
+  Declaration Identity logical locality Normal Resolve scope ->
+  Declaration Identity logical locality Group Resolve scope
 group link index' group = \case
   Declaration {position, name, definition} ->
     Declaration
@@ -100,8 +106,8 @@ group link index' group = \case
 ungroup ::
   (Term.Link locality -> Term0.Index scope) ->
   (Term.Link locality -> Implicit (Definition4.Set locality) Group Check scope) ->
-  Declaration locality Group Check scope ->
-  Declaration locality Normal Check scope
+  Declaration Identity logical locality Group Check scope ->
+  Declaration Identity logical locality Normal Check scope
 ungroup index lookup Declaration {position, name, definition, typex} =
   Declaration
     { position,
@@ -115,11 +121,19 @@ newtype Groupable scope
   { element :: Definition3 Definition2.Inferred Normal Resolve scope
   }
 
-groupable :: Declaration locality Normal Resolve scope -> Maybe (Groupable scope)
+groupable :: Declaration Identity logical locality Normal Resolve scope -> Maybe (Groupable scope)
 groupable Declaration {definition} = case definition of
-  Definition4.Inferred Definition4.::: Implicit.Resolve definition ->
+  Definition4.Inferred Definition4.::: Identity (Implicit.Resolve definition) ->
     Just Groupable {element = definition}
   Definition4.Annotated {} Definition4.::: _ -> Nothing
 
 groupFree :: Groupable scope -> [Term0.Index scope]
 groupFree Groupable {element} = freeTermVariables Target element
+
+solve ::
+  Declaration (Unify.Solve s) (Unify.Logical s scope) locality Group Check scope ->
+  Unify.Solve s (Declaration Identity Void locality Group Check scope)
+solve Declaration {position, name, definition, typex = Solved typex} = do
+  definition <- Definition4.solve position definition
+  typex <- Unify.solve position typex
+  pure Declaration {position, name, definition, typex = Solved typex}

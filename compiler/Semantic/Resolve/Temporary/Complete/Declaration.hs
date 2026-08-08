@@ -7,6 +7,7 @@ import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe (catMaybes, mapMaybe)
 import qualified Data.Vector.Strict as Strict (Vector)
+import Data.Void (Void)
 import Error
   ( duplicateAnnotationEntries,
     duplicateFieldEntries,
@@ -52,7 +53,7 @@ import Verbose (Debug (resolving))
 import Prelude hiding (Either (Left, Right), Real)
 
 data Real scope
-  = Real (forall locality. Real.Declaration locality Normal Resolve scope)
+  = Real (forall locality. Real.Declaration Identity Void locality Normal Resolve scope)
   | Select !More.Selector
   | Method !More.Method
 
@@ -65,7 +66,7 @@ data Declaration scope
     declaration :: !(Real scope)
   }
 
-shrink :: Declaration scope -> Maybe (Real.Declaration locality Normal Resolve scope)
+shrink :: Declaration scope -> Maybe (Real.Declaration Identity Void locality Normal Resolve scope)
 shrink Declaration {declaration} = case declaration of
   Real valid -> Just valid
   _ -> Nothing
@@ -101,9 +102,11 @@ merge entries@(entry :| _) =
                             name,
                             definition =
                               Real.Inferred
-                                Real.::: Real.Resolve
-                                  ( Real.Name properName fixity
-                                      `Real.Label` Real.Definition auto
+                                Real.::: Identity
+                                  ( Real.Resolve
+                                      ( Real.Name properName fixity
+                                          `Real.Label` Real.Definition auto
+                                      )
                                   ),
                             typex = Inferred
                           }
@@ -116,11 +119,13 @@ merge entries@(entry :| _) =
                             name,
                             definition =
                               Real.Annotated annotation
-                                Real.::: Real.Resolve
-                                  ( Real.Name properName fixity
-                                      `Real.Label` if Scheme.implicit annotation
-                                        then Real.Definition auto
-                                        else Real.Scoped manual
+                                Real.::: Identity
+                                  ( Real.Resolve
+                                      ( Real.Name properName fixity
+                                          `Real.Label` if Scheme.implicit annotation
+                                            then Real.Definition auto
+                                            else Real.Scoped manual
+                                      )
                                   ),
                             typex = Inferred
                           }
@@ -140,10 +145,12 @@ merge entries@(entry :| _) =
                         name,
                         definition =
                           Real.Inferred
-                            Real.::: Real.Resolve
-                              ( Real.Name properName fixity
-                                  `Real.Label` Real.Piece
-                                    Real.Choice {position, index, instanciation, bound, patternx}
+                            Real.::: Identity
+                              ( Real.Resolve
+                                  ( Real.Name properName fixity
+                                      `Real.Label` Real.Piece
+                                        Real.Choice {position, index, instanciation, bound, patternx}
+                                  )
                               ),
                         typex = Inferred
                       }
@@ -153,10 +160,12 @@ merge entries@(entry :| _) =
                         name,
                         definition =
                           Real.Annotated annotation
-                            Real.::: Real.Resolve
-                              ( Real.Name properName fixity
-                                  `Real.Label` Real.Piece
-                                    Real.Choice {position, index, instanciation, bound, patternx}
+                            Real.::: Identity
+                              ( Real.Resolve
+                                  ( Real.Name properName fixity
+                                      `Real.Label` Real.Piece
+                                        Real.Choice {position, index, instanciation, bound, patternx}
+                                  )
                               ),
                         typex = Inferred
                       }

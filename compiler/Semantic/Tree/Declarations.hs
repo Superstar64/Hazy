@@ -2,10 +2,12 @@
 
 module Semantic.Tree.Declarations where
 
+import Data.Functor.Identity (Identity (..))
 import Data.Map (Map)
 import Data.Maybe (fromJust)
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
+import Data.Void (Void)
 import Graph.StronglyConnected (Index (..), tarjan)
 import qualified Graph.StronglyConnected as StronglyConnected
 import Semantic.Connect (Connect)
@@ -39,7 +41,7 @@ import Syntax.Variable (Qualifiers)
 import qualified Syntax.Variable as Variable
 
 data Declarations locality layout stage scope = Declarations
-  { terms :: !(Vector (Declaration locality layout stage scope)),
+  { terms :: !(Vector (Declaration Identity Void locality layout stage scope)),
     types :: !(Vector (TypeDeclaration locality layout stage scope)),
     typeExtras :: !(Vector (TypeDeclarationExtra layout stage scope)),
     dataInstances :: !(Vector (Map (Type2.Index scope) (Instance layout stage scope))),
@@ -177,7 +179,7 @@ seperate declarations@Declarations {terms, types} =
     lookupTerm = \case
       Term.Declaration index
         | Declaration {definition} <- terms Vector.! index,
-          _ Definition4.:::: set <- definition ->
+          _ Definition4.:::: Identity set <- definition ->
             set
       _ -> error "bad term lookup"
     lookupType ::

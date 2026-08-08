@@ -1,8 +1,10 @@
 module Semantic.Check.Functor.Module where
 
+import Data.Functor.Identity (Identity)
 import Data.Heptafoldable (Heptafoldable (..))
 import Data.Heptafunctor (Heptafunctor (heptamap))
 import Data.Heptatraversable (Heptatraversable (..), heptafoldMapDefault, heptamapDefault)
+import Data.Void (Void)
 import Semantic.Check.Functor.Declarations (Declarations)
 import qualified Semantic.Check.Functor.Declarations as Declarations
 import Semantic.Check.Functor.Instance.Key (Key)
@@ -51,8 +53,8 @@ mapWithKey f1 f2 f3 f4 f5 f6 f7 Module {name, declarations} =
 fromStage2 ::
   Semantic.Module Group Resolve ->
   Module
-    (Semantic.Declaration Locality.Global Group Resolve Global)
-    (Semantic.Declaration Locality.Global Group Resolve Global)
+    (Semantic.Declaration Identity Void Locality.Global Group Resolve Global)
+    (Semantic.Declaration Identity Void Locality.Global Group Resolve Global)
     (Semantic.TypeDeclaration Locality.Global Group Resolve Global)
     (Semantic.TypeDeclaration Locality.Global Group Resolve Global)
     (Semantic.TypeDeclarationExtra Group Resolve Global)

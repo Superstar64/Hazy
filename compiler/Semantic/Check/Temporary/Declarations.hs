@@ -2,12 +2,14 @@ module Semantic.Check.Temporary.Declarations (Declarations (..), Local (..), che
 
 import Control.Monad.ST (ST)
 import qualified Core.Tree.Type as Simple
+import Data.Functor.Identity (Identity)
 import Data.Heptafunctor (heptamap)
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import qualified Data.Vector.Strict as Strict.Vector
+import Data.Void (Void)
 import Error (cyclicalTypeChecking)
 import Graph.Topological (Formula7 (..), loebST7)
 import qualified Graph.Topological7
@@ -16,6 +18,7 @@ import qualified Semantic.Check.Functor.Annotated as Functor (Annotated (..), co
 import Semantic.Check.Functor.Declarations (mapWithKey)
 import qualified Semantic.Check.Functor.Declarations as Functor (Declarations (..), fromStage2)
 import qualified Semantic.Check.Functor.Instance.Key as Instance.Key
+import qualified Semantic.Check.Go.Declaration as Declaration
 import qualified Semantic.Check.Go.Declarations as Solved
 import Semantic.Check.Go.TypeDeclaration (TypeDeclaration (..))
 import qualified Semantic.Check.Go.TypeDeclaration as TypeDeclaration
@@ -23,9 +26,6 @@ import Semantic.Check.InstanceAnnotation (InstanceAnnotation)
 import qualified Semantic.Check.InstanceAnnotation as InstanceAnnotation
 import Semantic.Check.KindAnnotation (KindAnnotation)
 import qualified Semantic.Check.KindAnnotation as KindAnnotation
-import Semantic.Check.Temporary.Declaration (Declaration (..))
-import qualified Semantic.Check.Temporary.Declaration as Declaration
-import qualified Semantic.Check.Temporary.Definition4 as Definition4
 import Semantic.Check.Temporary.Instance (Instance)
 import qualified Semantic.Check.Temporary.Instance as Instance
 import Semantic.Check.Temporary.TypeDeclarationExtra (TypeDeclarationExtra)
@@ -42,9 +42,11 @@ import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope
 import Semantic.Stage (Check, Resolve)
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
+import Semantic.Tree.Declaration (Declaration (..))
 import qualified Semantic.Tree.Declaration as Semantic (Declaration)
 import qualified Semantic.Tree.Declaration as Semantic.Declaration
 import qualified Semantic.Tree.Declarations as Semantic (Local (..))
+import qualified Semantic.Tree.Definition4 as Definition4
 import qualified Semantic.Tree.Definition4 as Proper.Definition4
 import qualified Semantic.Tree.Instance as Semantic (Instance)
 import qualified Semantic.Tree.Instance as Semantic.Instance
@@ -58,7 +60,7 @@ import qualified Syntax.Variable as Variable
 import Prelude hiding (Functor)
 
 data Declarations locality s scope = Declarations
-  { terms :: !(Vector (Declaration locality s scope)),
+  { terms :: !(Vector (Declaration (Unify.Solve s) (Unify.Logical s scope) locality Group Check scope)),
     types :: !(Vector (TypeDeclaration locality Group Check scope)),
     typeExtras :: !(Vector (TypeDeclarationExtra s scope)),
     classInstances :: !(Vector (Map (Type2.Index scope) (Instance s scope))),
@@ -72,7 +74,14 @@ type Formula s scope z =
     (Functor.Declarations (Scope.Declaration ':+ scope))
     s
     (TypeAnnotation (Scope.Declaration ':+ scope))
-    (Declaration Locality.Local s (Scope.Declaration ':+ scope))
+    ( Declaration
+        (Unify.Solve s)
+        (Unify.Logical s (Scope.Declaration ':+ scope))
+        Locality.Local
+        Group
+        Check
+        (Scope.Declaration ':+ scope)
+    )
     (KindAnnotation (Scope.Declaration ':+ scope))
     (TypeDeclaration Locality.Local Group Check (Scope.Declaration ':+ scope))
     (TypeDeclarationExtra s (Scope.Declaration ':+ scope))
@@ -84,7 +93,7 @@ fromFunctor ::
   Functor.Declarations
     scope
     a
-    (Declaration locality s scope)
+    (Declaration (Unify.Solve s) (Unify.Logical s scope) locality Group Check scope)
     b
     (TypeDeclaration locality Group Check scope)
     (TypeDeclarationExtra s scope)
@@ -133,7 +142,7 @@ check context (Semantic.Local declarations) = do
 checkTermAnnotation ::
   Context s scope ->
   p ->
-  Semantic.Declaration locality Group Resolve (Scope.Declaration ':+ scope) ->
+  Semantic.Declaration Identity Void locality Group Resolve (Scope.Declaration ':+ scope) ->
   Formula s scope (TypeAnnotation (Scope.Declaration ':+ scope))
 checkTermAnnotation context _ declaration = Formula7 {cycle, run}
   where
@@ -147,8 +156,18 @@ checkTermDeclaration ::
   forall s scope.
   Context s scope ->
   Int ->
-  Semantic.Declaration Locality.Local Group Resolve (Scope.Declaration ':+ scope) ->
-  Formula s scope (Declaration Locality.Local s (Scope.Declaration ':+ scope))
+  Semantic.Declaration Identity Void Locality.Local Group Resolve (Scope.Declaration ':+ scope) ->
+  Formula
+    s
+    scope
+    ( Declaration
+        (Unify.Solve s)
+        (Unify.Logical s (Scope.Declaration ':+ scope))
+        Locality.Local
+        Group
+        Check
+        (Scope.Declaration ':+ scope)
+    )
 checkTermDeclaration context index declaration = Formula7 {cycle, run}
   where
     cycle :: a
@@ -161,7 +180,7 @@ checkTermDeclaration context index declaration = Formula7 {cycle, run}
             let Functor.Annotated {content} = terms Vector.! local
             Declaration {definition} <- content
             pure $ case definition of
-              types Definition4.:::: _ -> Unify.mapForall go types
+              Solved types Definition4.:::: _ -> Unify.mapForall go types
                 where
                   go = Unify.MapForall $ \case
                     Proper.Definition4.Types types -> types Strict.Vector.! id

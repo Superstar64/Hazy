@@ -4,10 +4,12 @@ import Control.Monad.ST (ST)
 import Core.Substitute (logicalType)
 import qualified Core.Tree.Forall as Forall
 import qualified Core.Tree.Type as Simple
+import Data.Functor.Identity (Identity)
 import qualified Data.Map as Map
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import qualified Data.Vector.Strict as Strict.Vector
+import Data.Void (Void)
 import Error (cyclicalTypeChecking)
 import Graph.Topological (Formula7 (..), Loeb7 (..), loeb7)
 import qualified Graph.Topological7
@@ -19,6 +21,7 @@ import Semantic.Check.Functor.Module (fromStage2)
 import qualified Semantic.Check.Functor.Module as Functor (Module (..))
 import Semantic.Check.Functor.ModuleSet (mapWithKey)
 import qualified Semantic.Check.Functor.ModuleSet as Functor (ModuleSet (..))
+import qualified Semantic.Check.Go.Declaration as Declaration.Unsolved
 import qualified Semantic.Check.Go.Declarations as Declarations
 import Semantic.Check.Go.TypeDeclaration (TypeDeclaration (..))
 import qualified Semantic.Check.Go.TypeDeclaration as TypeDeclaration
@@ -26,7 +29,6 @@ import Semantic.Check.InstanceAnnotation (InstanceAnnotation)
 import qualified Semantic.Check.InstanceAnnotation as InstanceAnnotation
 import Semantic.Check.KindAnnotation (KindAnnotation)
 import qualified Semantic.Check.KindAnnotation as KindAnnotation
-import qualified Semantic.Check.Temporary.Declaration as Declaration.Unsolved
 import qualified Semantic.Check.Temporary.Instance as Instance (Key (..), check, solve)
 import qualified Semantic.Check.Temporary.TypeDeclarationExtra as TypeDeclarationExtra
 import Semantic.Check.TypeAnnotation (TypeAnnotation)
@@ -60,7 +62,7 @@ type Formula s z =
     Functor.ModuleSet
     s
     (TypeAnnotation Global)
-    (Declaration Locality.Global Group Check Global)
+    (Declaration Identity Void Locality.Global Group Check Global)
     (KindAnnotation Global)
     (TypeDeclaration Locality.Global Group Check Global)
     (TypeDeclarationExtra Group Check Global)
@@ -71,7 +73,7 @@ type Formula s z =
 fromFunctor ::
   Functor.Module
     a
-    (Declaration Locality.Global Group Check Global)
+    (Declaration Identity Void Locality.Global Group Check Global)
     b
     (TypeDeclaration Locality.Global Group Check Global)
     (TypeDeclarationExtra Group Check Global)
@@ -87,7 +89,7 @@ fromFunctor (Functor.Module {name, declarations}) =
 fromFunctors ::
   Functor.ModuleSet
     a
-    (Declaration Locality.Global Group Check Global)
+    (Declaration Identity Void Locality.Global Group Check Global)
     b
     (TypeDeclaration Locality.Global Group Check Global)
     (TypeDeclarationExtra Group Check Global)
@@ -139,7 +141,7 @@ check modules =
 checkTermAnnotation ::
   p1 ->
   p2 ->
-  Semantic.Declaration locality Group Resolve Global ->
+  Semantic.Declaration Identity Void locality Group Resolve Global ->
   Formula s (TypeAnnotation Global)
 checkTermAnnotation _ _ declaration = Formula7 {cycle, run}
   where
@@ -151,8 +153,8 @@ checkTermDeclaration ::
   forall s.
   Int ->
   Int ->
-  Semantic.Declaration Locality.Global Group Resolve Global ->
-  Formula s (Declaration Locality.Global Group Check Global)
+  Semantic.Declaration Identity Void Locality.Global Group Resolve Global ->
+  Formula s (Declaration Identity Void Locality.Global Group Check Global)
 checkTermDeclaration global local declaration = Formula7 {cycle, run}
   where
     cycle :: a

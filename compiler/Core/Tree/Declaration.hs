@@ -9,6 +9,8 @@ import qualified Core.Tree.Forall as Forall
 import qualified Core.Tree.Statements as Statements
 import Core.Tree.TypeLambda (TypeLambda, TypeLambdaOver (..))
 import qualified Core.Tree.TypeLambda as TypeLambda
+import Data.Functor.Identity (Identity (..))
+import Data.Void (Void)
 import qualified Semantic.Check.Go.Scheme as Semantic (Scheme)
 import qualified Semantic.Index.Term as Semantic.Term
 import Semantic.Layout (Normal)
@@ -47,7 +49,7 @@ instance Substitute.Functor Declaration where
       }
 
 simplify ::
-  Semantic.Declaration locality Normal Check scope ->
+  Semantic.Declaration Identity Void locality Normal Check scope ->
   Declaration scope
 simplify = \case
   Semantic.Declaration
@@ -59,7 +61,7 @@ simplify = \case
         { name,
           definition =
             case definition of
-              _ Semantic.::: Check definition ->
+              _ Semantic.::: Identity (Check definition) ->
                 TypeLambda.map (TypeLambda.Map definition3) definition,
           typex = case typex of Solved typex -> typex
         }

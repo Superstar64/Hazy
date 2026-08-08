@@ -8,8 +8,10 @@ module Semantic.Resolve.Temporary.Partial.Declaration
 where
 
 import Data.Foldable (toList)
+import Data.Functor.Identity (Identity (..))
 import qualified Data.Map as Map
 import qualified Data.Set as Set
+import Data.Void (Void)
 import Error (missingMethodEntry)
 import qualified Semantic.Index.Term as Term
 import Semantic.Layout (Normal)
@@ -90,7 +92,7 @@ data Declaration scope
   | Shared
       { position :: !Position,
         name :: !Key,
-        shared :: forall locality. Real.Declaration locality Normal Resolve scope
+        shared :: forall locality. Real.Declaration Identity Void locality Normal Resolve scope
       }
 
 resolve ::
@@ -139,10 +141,12 @@ resolve'
                   name = Unnamed temporary,
                   definition =
                     Real.Inferred
-                      Real.::: Real.Resolve
-                        ( Real.Unnamed temporary
-                            `Real.Label` Real.Shared
-                              (RightHandSide.resolve context rightHandSide)
+                      Real.::: Identity
+                        ( Real.Resolve
+                            ( Real.Unnamed temporary
+                                `Real.Label` Real.Shared
+                                  (RightHandSide.resolve context rightHandSide)
+                            )
                         ),
                   typex = Inferred
                 }

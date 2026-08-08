@@ -1,5 +1,7 @@
 module Semantic.Check.Go.Declarations (Declarations (..), fromFunctor) where
 
+import Data.Functor.Identity (Identity)
+import Data.Void (Void)
 import qualified Semantic.Check.Functor.Annotated as Functor (Annotated (..))
 import qualified Semantic.Check.Functor.Declarations as Functor (Declarations (..))
 import Semantic.Check.Go.TypeDeclaration (TypeDeclaration)
@@ -13,7 +15,7 @@ fromFunctor ::
   Functor.Declarations
     scope
     a
-    (Declaration locality layout Check scope)
+    (Declaration Identity Void locality layout Check scope)
     b
     (TypeDeclaration locality layout Check scope)
     (TypeDeclarationExtra layout Check scope)

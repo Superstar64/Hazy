@@ -4,13 +4,15 @@ import Control.Monad.ST (ST)
 import qualified Core.Tree.Forall as Core (mono)
 import qualified Core.Tree.Forall as Simple (Forall)
 import qualified Core.Type.Functor as Core (mapLogical, shiftLogical)
+import Data.Functor.Identity (Identity)
+import Data.Void (Void)
 import qualified Semantic.Check.Functor.Annotated as Functor (Annotated (..))
-import {-# SOURCE #-} qualified Semantic.Check.Temporary.Declaration as Temporary
 import Semantic.Check.TypeAnnotation (Annotation (..), TypeAnnotation (..))
+import Semantic.Layout (Group)
 import Semantic.Scope (Environment (..), GroupTerm)
 import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
-import {-# SOURCE #-} Semantic.Tree.Declaration (Declaration)
+import {-# SOURCE #-} Semantic.Tree.Declaration (Declaration, typex')
 import {-# SOURCE #-} qualified Semantic.Tree.Declaration as Declaration
 import qualified Semantic.Unify as Unify
 
@@ -33,7 +35,7 @@ rigid ::
   Functor.Annotated
     name
     (ST s (TypeAnnotation scope))
-    (ST s (Declaration locality layout Check scope)) ->
+    (ST s (Declaration Identity Void locality layout Check scope)) ->
   TermBinding s scope
 rigid Functor.Annotated {meta, content} = TermBinding $ do
   annotation <- meta
@@ -45,7 +47,7 @@ wobbly ::
   Functor.Annotated
     name
     (ST s (TypeAnnotation scope))
-    (ST s (Temporary.Declaration locality s scope)) ->
+    (ST s (Declaration (Unify.Solve s) (Unify.Logical s scope) locality Group Check scope)) ->
   TermBinding s scope
 wobbly Functor.Annotated {meta, content} = TermBinding $ do
   annotation <- meta
@@ -53,7 +55,7 @@ wobbly Functor.Annotated {meta, content} = TermBinding $ do
     Annotated Annotation {annotation'} -> do
       pure (Rigid annotation')
     Inferred -> do
-      Wobbly . Temporary.typex' <$> content
+      Wobbly . typex' <$> content
 
 group :: Unify.Type s scopes -> TermBinding s (GroupTerm ':+ scopes)
 group = TermBinding . pure . Wobbly . Core.mono . Core.shiftLogical

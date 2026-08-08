@@ -210,6 +210,7 @@ executable hazy
     Semantic.Check.Functor.Instance.Key
     Semantic.Check.Functor.Module
     Semantic.Check.Functor.ModuleSet
+    Semantic.Check.Go.Declaration
     Semantic.Check.Go.Declarations
     Semantic.Check.Go.Module
     Semantic.Check.Go.Scheme
@@ -235,12 +236,10 @@ executable hazy
     Semantic.Check.Temporary.Constraints
     Semantic.Check.Temporary.Constructor
     Semantic.Check.Temporary.ConstructorInfo
-    Semantic.Check.Temporary.Declaration
     Semantic.Check.Temporary.Declarations
     Semantic.Check.Temporary.Definition
     Semantic.Check.Temporary.Definition2
     Semantic.Check.Temporary.Definition3
-    Semantic.Check.Temporary.Definition4
     Semantic.Check.Temporary.Do
     Semantic.Check.Temporary.Entry
     Semantic.Check.Temporary.EntryInfo
