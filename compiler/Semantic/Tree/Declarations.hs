@@ -41,7 +41,7 @@ import Syntax.Variable (Qualifiers)
 import qualified Syntax.Variable as Variable
 
 data Declarations locality layout stage scope = Declarations
-  { terms :: !(Vector (Declaration Identity Void locality layout stage scope)),
+  { terms :: !(Vector (Declaration Identity Void Identity locality layout stage scope)),
     types :: !(Vector (TypeDeclaration locality layout stage scope)),
     typeExtras :: !(Vector (TypeDeclarationExtra layout stage scope)),
     dataInstances :: !(Vector (Map (Type2.Index scope) (Instance layout stage scope))),

@@ -44,8 +44,8 @@ check ::
   Context s scope ->
   (Term.Link locality -> Int -> ST s (Unify.Forall s scope)) ->
   TypeAnnotation scope ->
-  Declaration Identity Void locality Group Resolve scope ->
-  ST s (Declaration (Unify.Solve s) (Unify.Logical s scope) locality Group Check scope)
+  Declaration Identity Void Identity locality Group Resolve scope ->
+  ST s (Declaration (Unify.Solve s) (Unify.Logical s scope) Identity locality Group Check scope)
 check context linked annotation Declaration {position, name, definition} = case definition of
   Semantic.Annotated {} Semantic.::: Identity (Implicit.Resolve definition)
     | Annotated Annotation {annotation, annotation'} <- annotation -> do
@@ -57,7 +57,7 @@ check context linked annotation Declaration {position, name, definition} = case 
             { position,
               name,
               definition = Semantic.Annotated annotation ::: fmap Implicit.Check definition,
-              typex = Inferred.Solved $ logicalType annotation'
+              typex = Identity (Inferred.Solved $ logicalType annotation')
             }
     | otherwise -> error "bad type annotation"
   _ Semantic.:::: Identity (Implicit.Resolve (Semantic.Set set)) -> do
@@ -81,7 +81,7 @@ check context linked annotation Declaration {position, name, definition} = case 
         { position,
           name,
           definition = Inferred.Solved types :::: fmap Implicit.Check set,
-          typex = Inferred.Solved $ Unify.mapForall initial types
+          typex = Identity (Inferred.Solved $ Unify.mapForall initial types)
         }
   Semantic.Link link id -> do
     typex <- linked link id
@@ -90,7 +90,7 @@ check context linked annotation Declaration {position, name, definition} = case 
         { position,
           name,
           definition = Link link id,
-          typex = Inferred.Solved typex
+          typex = Identity (Inferred.Solved typex)
         }
 
 checkAnnotation ::
@@ -125,9 +125,16 @@ checkAnnotation
             }
 
 solve ::
-  Declaration (Unify.Solve s) (Unify.Logical s scope) locality Group Check scope ->
-  Unify.Solve s (Declaration Identity Void locality Group Check scope)
-solve Declaration {position, name, definition, typex = Solved typex} = do
+  Declaration (Unify.Solve s) (Unify.Logical s scope) Identity locality Group Check scope ->
+  Unify.Solve s (Declaration Identity Void Identity locality Group Check scope)
+solve Declaration {position, name, definition, typex = Identity (Solved typex)} = do
   definition <- Definition4.solve position definition
   typex <- Unify.solve position typex
-  pure Declaration {position, name, definition, typex = Solved typex}
+  pure
+    Declaration
+      { position,
+        name,
+        definition,
+        typex =
+          Identity (Solved typex)
+      }

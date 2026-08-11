@@ -14,7 +14,7 @@ import Syntax.Tree.Fixity (Fixity)
 import Prelude hiding (Real)
 
 data Real scope
-  = Real (forall locality. Real.Declaration Identity Void locality Normal Resolve scope)
+  = Real (forall locality. Real.Declaration Identity Void Identity locality Normal Resolve scope)
   | Select !More.Selector
   | Method !More.Method
 

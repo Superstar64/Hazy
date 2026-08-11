@@ -4,7 +4,7 @@ module Semantic.Check.TypeAnnotation where
 
 import Control.Monad.ST (ST)
 import qualified Core.Tree.Forall as Simple
-import Data.Functor.Identity (Identity)
+import Data.Functor.Identity (Identity (..))
 import Data.Void (Void)
 import {-# SOURCE #-} Semantic.Check.Context (Context)
 import {-# SOURCE #-} qualified Semantic.Check.Temporary.Scheme as Scheme (check, solve)
@@ -35,7 +35,7 @@ checkAnnotation context annotation = do
 
 check ::
   Context s scope ->
-  Semantic.Declaration Identity Void locality Group Resolve scope ->
+  Semantic.Declaration Identity Void Identity locality Group Resolve scope ->
   ST s (TypeAnnotation scope)
 check context Semantic.Declaration {definition} = case definition of
   Semantic.Annotated annotation Semantic.::: _ -> Annotated <$> checkAnnotation context annotation

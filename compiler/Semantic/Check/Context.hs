@@ -63,7 +63,7 @@ instance Shift.Unshift (Context s) where
 globalBindings ::
   Functor.ModuleSet
     (ST s (TypeAnnotation Global))
-    (ST s (Declaration Identity Void Locality.Global Group Check Global))
+    (ST s (Declaration Identity Void Identity Locality.Global Group Check Global))
     (ST s (KindAnnotation Global))
     (ST s (TypeDeclaration Locality.Global Group Check Global))
     (ST s (TypeDeclarationExtra Group Check Global))
@@ -102,6 +102,7 @@ localBindings ::
         ( Declaration
             (Unify.Solve s)
             (Unify.Logical s (Scope.Declaration ':+ scope))
+            Identity
             Locality.Local
             Group
             Check

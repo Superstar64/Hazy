@@ -53,7 +53,7 @@ import Verbose (Debug (resolving))
 import Prelude hiding (Either (Left, Right), Real)
 
 data Real scope
-  = Real (forall locality. Real.Declaration Identity Void locality Normal Resolve scope)
+  = Real (forall locality. Real.Declaration Identity Void Identity locality Normal Resolve scope)
   | Select !More.Selector
   | Method !More.Method
 
@@ -66,7 +66,7 @@ data Declaration scope
     declaration :: !(Real scope)
   }
 
-shrink :: Declaration scope -> Maybe (Real.Declaration Identity Void locality Normal Resolve scope)
+shrink :: Declaration scope -> Maybe (Real.Declaration Identity Void Identity locality Normal Resolve scope)
 shrink Declaration {declaration} = case declaration of
   Real valid -> Just valid
   _ -> Nothing
@@ -108,7 +108,7 @@ merge entries@(entry :| _) =
                                           `Real.Label` Real.Definition auto
                                       )
                                   ),
-                            typex = Inferred
+                            typex = Identity Inferred
                           }
                   Just annotation -> cast <$> Verbose.resolving (Variable.printLiteral' properName) real
                     where
@@ -127,7 +127,7 @@ merge entries@(entry :| _) =
                                             else Real.Scoped manual
                                       )
                                   ),
-                            typex = Inferred
+                            typex = Identity Inferred
                           }
         | Just (_, selector) <- selection,
           () <- noAnnotation ->
@@ -152,7 +152,7 @@ merge entries@(entry :| _) =
                                         Real.Choice {position, index, instanciation, bound, patternx}
                                   )
                               ),
-                        typex = Inferred
+                        typex = Identity Inferred
                       }
                   Just annotation ->
                     Real.Declaration
@@ -167,7 +167,7 @@ merge entries@(entry :| _) =
                                         Real.Choice {position, index, instanciation, bound, patternx}
                                   )
                               ),
-                        typex = Inferred
+                        typex = Identity Inferred
                       }
              in cast <$> Verbose.resolving (Variable.printLiteral' properName) real
         | otherwise -> error "no entry"

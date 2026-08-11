@@ -49,7 +49,7 @@ instance Substitute.Functor Declaration where
       }
 
 simplify ::
-  Semantic.Declaration Identity Void locality Normal Check scope ->
+  Semantic.Declaration Identity Void Identity locality Normal Check scope ->
   Declaration scope
 simplify = \case
   Semantic.Declaration
@@ -63,7 +63,7 @@ simplify = \case
             case definition of
               _ Semantic.::: Identity (Check definition) ->
                 TypeLambda.map (TypeLambda.Map definition3) definition,
-          typex = case typex of Solved typex -> typex
+          typex = case typex of Identity (Solved typex) -> typex
         }
   where
     definition3 :: Semantic.Definition3 mark Normal Check scope -> Expression scope

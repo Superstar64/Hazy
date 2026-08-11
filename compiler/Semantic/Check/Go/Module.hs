@@ -4,7 +4,7 @@ import Control.Monad.ST (ST)
 import Core.Substitute (logicalType)
 import qualified Core.Tree.Forall as Forall
 import qualified Core.Tree.Type as Simple
-import Data.Functor.Identity (Identity)
+import Data.Functor.Identity (Identity (..))
 import qualified Data.Map as Map
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
@@ -62,7 +62,7 @@ type Formula s z =
     Functor.ModuleSet
     s
     (TypeAnnotation Global)
-    (Declaration Identity Void Locality.Global Group Check Global)
+    (Declaration Identity Void Identity Locality.Global Group Check Global)
     (KindAnnotation Global)
     (TypeDeclaration Locality.Global Group Check Global)
     (TypeDeclarationExtra Group Check Global)
@@ -73,7 +73,7 @@ type Formula s z =
 fromFunctor ::
   Functor.Module
     a
-    (Declaration Identity Void Locality.Global Group Check Global)
+    (Declaration Identity Void Identity Locality.Global Group Check Global)
     b
     (TypeDeclaration Locality.Global Group Check Global)
     (TypeDeclarationExtra Group Check Global)
@@ -89,7 +89,7 @@ fromFunctor (Functor.Module {name, declarations}) =
 fromFunctors ::
   Functor.ModuleSet
     a
-    (Declaration Identity Void Locality.Global Group Check Global)
+    (Declaration Identity Void Identity Locality.Global Group Check Global)
     b
     (TypeDeclaration Locality.Global Group Check Global)
     (TypeDeclarationExtra Group Check Global)
@@ -141,7 +141,7 @@ check modules =
 checkTermAnnotation ::
   p1 ->
   p2 ->
-  Semantic.Declaration Identity Void locality Group Resolve Global ->
+  Semantic.Declaration Identity Void Identity locality Group Resolve Global ->
   Formula s (TypeAnnotation Global)
 checkTermAnnotation _ _ declaration = Formula7 {cycle, run}
   where
@@ -153,8 +153,8 @@ checkTermDeclaration ::
   forall s.
   Int ->
   Int ->
-  Semantic.Declaration Identity Void Locality.Global Group Resolve Global ->
-  Formula s (Declaration Identity Void Locality.Global Group Check Global)
+  Semantic.Declaration Identity Void Identity Locality.Global Group Resolve Global ->
+  Formula s (Declaration Identity Void Identity Locality.Global Group Check Global)
 checkTermDeclaration global local declaration = Formula7 {cycle, run}
   where
     cycle :: a

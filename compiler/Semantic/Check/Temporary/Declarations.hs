@@ -2,7 +2,7 @@ module Semantic.Check.Temporary.Declarations (Declarations (..), Local (..), che
 
 import Control.Monad.ST (ST)
 import qualified Core.Tree.Type as Simple
-import Data.Functor.Identity (Identity)
+import Data.Functor.Identity (Identity (..))
 import Data.Heptafunctor (heptamap)
 import Data.Map (Map)
 import qualified Data.Map as Map
@@ -60,7 +60,7 @@ import qualified Syntax.Variable as Variable
 import Prelude hiding (Functor)
 
 data Declarations locality s scope = Declarations
-  { terms :: !(Vector (Declaration (Unify.Solve s) (Unify.Logical s scope) locality Group Check scope)),
+  { terms :: !(Vector (Declaration (Unify.Solve s) (Unify.Logical s scope) Identity locality Group Check scope)),
     types :: !(Vector (TypeDeclaration locality Group Check scope)),
     typeExtras :: !(Vector (TypeDeclarationExtra s scope)),
     classInstances :: !(Vector (Map (Type2.Index scope) (Instance s scope))),
@@ -77,6 +77,7 @@ type Formula s scope z =
     ( Declaration
         (Unify.Solve s)
         (Unify.Logical s (Scope.Declaration ':+ scope))
+        Identity
         Locality.Local
         Group
         Check
@@ -93,7 +94,7 @@ fromFunctor ::
   Functor.Declarations
     scope
     a
-    (Declaration (Unify.Solve s) (Unify.Logical s scope) locality Group Check scope)
+    (Declaration (Unify.Solve s) (Unify.Logical s scope) Identity locality Group Check scope)
     b
     (TypeDeclaration locality Group Check scope)
     (TypeDeclarationExtra s scope)
@@ -142,7 +143,7 @@ check context (Semantic.Local declarations) = do
 checkTermAnnotation ::
   Context s scope ->
   p ->
-  Semantic.Declaration Identity Void locality Group Resolve (Scope.Declaration ':+ scope) ->
+  Semantic.Declaration Identity Void Identity locality Group Resolve (Scope.Declaration ':+ scope) ->
   Formula s scope (TypeAnnotation (Scope.Declaration ':+ scope))
 checkTermAnnotation context _ declaration = Formula7 {cycle, run}
   where
@@ -156,13 +157,14 @@ checkTermDeclaration ::
   forall s scope.
   Context s scope ->
   Int ->
-  Semantic.Declaration Identity Void Locality.Local Group Resolve (Scope.Declaration ':+ scope) ->
+  Semantic.Declaration Identity Void Identity Locality.Local Group Resolve (Scope.Declaration ':+ scope) ->
   Formula
     s
     scope
     ( Declaration
         (Unify.Solve s)
         (Unify.Logical s (Scope.Declaration ':+ scope))
+        Identity
         Locality.Local
         Group
         Check
