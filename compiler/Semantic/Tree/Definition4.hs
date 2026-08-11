@@ -6,7 +6,7 @@ import Core.Tree.TypeLambda (TypeLambdaOver (..))
 import qualified Core.Tree.TypeLambda as TypeLambda
 import qualified Core.Type.Functor as Core (Functor (..))
 import qualified Core.Type.Show as Core (Show (..))
-import Data.Functor.Classes (Show1 (liftShowsPrec))
+import Data.Functor.Classes (Show1, showsPrec1)
 import Data.Functor.Identity (Identity (..))
 import Data.Kind (Type)
 import qualified Data.Set as Set
@@ -58,7 +58,7 @@ infix 5 :::, ::::
 instance (Show1 solve, Show logical) => Show (Definition4 solve logical locality layout stage scope) where
   showsPrec d (annotation ::: definition) =
     showParen (d > 5) $
-      showsPrec 6 annotation . showString " ::: " . liftShowsPrec showsPrec showList 6 definition
+      showsPrec 6 annotation . showString " ::: " . Data.Functor.Classes.showsPrec1 6 definition
   showsPrec d (Link link id) =
     showParen (d > 10) $
       showString "Link "
@@ -67,7 +67,7 @@ instance (Show1 solve, Show logical) => Show (Definition4 solve logical locality
         . showsPrec 11 id
   showsPrec d (types :::: set) =
     showParen (d > 5) $
-      showsPrec 6 types . showString " :::: " . liftShowsPrec showsPrec showList 6 set
+      showsPrec 6 types . showString " :::: " . Data.Functor.Classes.showsPrec1 6 set
 
 instance (Functor solve) => Shift0.Functor (Definition4 solve logical locality layout stage) where
   map = Shift.mapDefault

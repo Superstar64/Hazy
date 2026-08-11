@@ -1,6 +1,6 @@
 module Semantic.Resolve.Binding.Term where
 
-import Data.Functor.Classes (Show1 (..))
+import Data.Functor.Classes (Show1 (..), showsPrec1)
 import Data.Functor.Compose (Compose (..))
 import Data.Functor.Identity (Identity)
 import Data.NaturalTransformation (NaturalTransformation (..))
@@ -23,7 +23,7 @@ data BindingF m scope = (:@)
 instance (Show1 m) => Show (BindingF m scope) where
   showsPrec d (position :@ binding) =
     showParen (d > 9) $
-      showsPrec 10 position . showString " :@ " . liftShowsPrec showsPrec showList 10 binding
+      showsPrec 10 position . showString " :@ " . showsPrec1 10 binding
 
 instance (Functor m) => Shift0.Functor (BindingF m) where
   map = Shift.mapDefault
