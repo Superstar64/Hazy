@@ -47,6 +47,7 @@ import qualified Semantic.Tree.Declaration as Semantic (Declaration)
 import qualified Semantic.Tree.Declaration as Semantic.Declaration
 import qualified Semantic.Tree.Declarations as Semantic.Declarations
 import qualified Semantic.Tree.Definition4 as Definition4
+import qualified Semantic.Tree.Group as Group
 import Semantic.Tree.Instance (Instance)
 import qualified Semantic.Tree.Instance as Semantic.Instance
 import Semantic.Tree.Module (Module (..))
@@ -54,6 +55,7 @@ import qualified Semantic.Tree.TypeDeclaration as Semantic.TypeDeclaration
 import Semantic.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 import qualified Semantic.Tree.TypeDeclarationExtra as Semantic.TypeDeclarationExtra
 import qualified Semantic.Tree.TypeDefinition2 as TypeDefinition2
+import qualified Semantic.Tree.TypeGroup as TypeGroup
 import qualified Semantic.Unify as Unify
 import Prelude hiding (Functor)
 
@@ -170,10 +172,10 @@ checkTermDeclaration global local declaration = Formula7 {cycle, run}
                 Functor.Annotated {content} = terms Vector.! local
             Declaration {definition} <- content
             pure $ case definition of
-              Solved types Definition4.:::: _ -> logicalType $ Forall.map go types
+              Definition4.Group (Solved types Group.:::: _) -> logicalType $ Forall.map go types
                 where
                   go = Forall.Map $ \case
-                    Definition4.Types types -> types Strict.Vector.! id
+                    Group.Types types -> types Strict.Vector.! id
               _ -> error "bad link lookup"
       annotation <- meta
       let context = globalBindings moduleSet
@@ -212,7 +214,7 @@ checkTypeDeclaration global local declaration = Formula7 {cycle, run}
                 Functor.Annotated {content} = types Vector.! local
             TypeDeclaration {definition} <- content
             pure $ case definition of
-              (Solved (TypeDefinition2.Types types)) TypeDefinition2.:::: _ -> types Strict.Vector.! id
+              TypeDefinition2.Group (Solved (TypeGroup.Types types) TypeGroup.:::: _) -> types Strict.Vector.! id
               _ -> error "bad link lookup"
       annotation <- meta
       let context = globalBindings moduleSet
@@ -237,14 +239,14 @@ checkTypeDeclarationExtra global local declaration = Formula7 {cycle, run}
       let context = globalBindings moduleSet
           link ::
             Link.Type.Link Locality.Global ->
-            ST s (TypeDefinition2.Set Locality.Global Check Global)
+            ST s (TypeGroup.Set Locality.Global Check Global)
           link (Link.Type.Global global local) = do
             let Functor.Module {declarations} = modules Vector.! global
                 Functor.Declarations {types} = declarations
                 Functor.Annotated {content} = types Vector.! local
             TypeDeclaration {definition} <- content
             case definition of
-              _ TypeDefinition2.:::: set -> pure set
+              TypeDefinition2.Group (_ TypeGroup.:::: set) -> pure set
               _ -> error "bad link"
       proper <- Semantic.TypeDeclaration.ungroupM Link.Type.unglobal link proper
       extra <- TypeDeclarationExtra.check context (Type.Global global local) proper declaration

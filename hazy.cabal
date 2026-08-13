@@ -388,6 +388,7 @@ executable hazy
     Semantic.Tree.Field
     Semantic.Tree.Function
     Semantic.Tree.GADTConstructor
+    Semantic.Tree.Group
     Semantic.Tree.Instance
     Semantic.Tree.Lambda
     Semantic.Tree.Method
@@ -407,6 +408,7 @@ executable hazy
     Semantic.Tree.TypeDeclarationExtra
     Semantic.Tree.TypeDefinition
     Semantic.Tree.TypeDefinition2
+    Semantic.Tree.TypeGroup
     Semantic.Tree.TypePattern
     Semantic.Unify
     Semantic.Unify.Builtin

@@ -33,7 +33,7 @@ import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
 import Semantic.Tree.TypeDeclaration (ungroupM)
 import {-# SOURCE #-} Semantic.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
-import qualified Semantic.Tree.TypeDefinition2 as TypeDefinition2
+import qualified Semantic.Tree.TypeGroup as TypeGroup
 import Semantic.Unify (Solve)
 import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
@@ -77,7 +77,7 @@ instance Shift0.Functor (TypeBinding s) where
 
 binding ::
   (Type.Link locality -> Type0.Index scope) ->
-  (Type.Link locality -> ST s (TypeDefinition2.Set locality Check scope)) ->
+  (Type.Link locality -> ST s (TypeGroup.Set locality Check scope)) ->
   Functor.Annotated
     Label.TypeBinding
     (ST s (KindAnnotation scope))

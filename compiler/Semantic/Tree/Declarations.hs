@@ -32,11 +32,13 @@ import Semantic.Tree.Combinators.Implicit (Implicit)
 import Semantic.Tree.Declaration (Declaration (..))
 import qualified Semantic.Tree.Declaration as Declaration
 import qualified Semantic.Tree.Definition4 as Definition4
+import qualified Semantic.Tree.Group as Group
 import Semantic.Tree.Instance (Instance)
 import Semantic.Tree.TypeDeclaration (TypeDeclaration (..))
 import qualified Semantic.Tree.TypeDeclaration as TypeDeclaration
 import Semantic.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 import qualified Semantic.Tree.TypeDefinition2 as TypeDefinition2
+import qualified Semantic.Tree.TypeGroup as TypeGroup
 import Syntax.Variable (Qualifiers)
 import qualified Syntax.Variable as Variable
 
@@ -113,8 +115,8 @@ group
 ungroup ::
   (Term.Link locality -> Term0.Index scope) ->
   (Type.Link locality -> Type0.Index scope) ->
-  (Term.Link locality -> Implicit (Definition4.Set locality) Group Check scope) ->
-  (Type.Link locality -> TypeDefinition2.Set locality Check scope) ->
+  (Term.Link locality -> Implicit (Group.Set locality) Group Check scope) ->
+  (Type.Link locality -> TypeGroup.Set locality Check scope) ->
   Declarations locality Group Check scope ->
   Declarations locality Normal Check scope
 ungroup
@@ -175,20 +177,20 @@ seperate declarations@Declarations {terms, types} =
   where
     lookupTerm ::
       Term.Link Locality.Local ->
-      Implicit (Definition4.Set Locality.Local) Group Check (Scope.Declaration ':+ scope)
+      Implicit (Group.Set Locality.Local) Group Check (Scope.Declaration ':+ scope)
     lookupTerm = \case
       Term.Declaration index
         | Declaration {definition} <- terms Vector.! index,
-          _ Definition4.:::: Identity set <- definition ->
+          Definition4.Group (_ Group.:::: Identity set) <- definition ->
             set
       _ -> error "bad term lookup"
     lookupType ::
       Type.Link Locality.Local ->
-      TypeDefinition2.Set Locality.Local Check (Scope.Declaration ':+ scope)
+      TypeGroup.Set Locality.Local Check (Scope.Declaration ':+ scope)
     lookupType = \case
       Type.Declaration index
         | TypeDeclaration {definition} <- types Vector.! index,
-          _ TypeDefinition2.:::: set <- definition ->
+          TypeDefinition2.Group (_ TypeGroup.:::: set) <- definition ->
             set
       _ -> error "bad type lookup"
 

@@ -23,6 +23,7 @@ import qualified Semantic.Tree.Definition2 as Definition2
 import Semantic.Tree.Definition3 (Definition3)
 import Semantic.Tree.Definition4 (Definition4)
 import qualified Semantic.Tree.Definition4 as Definition4
+import qualified Semantic.Tree.Group as Group
 import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
 import Syntax.Variable (QualifiedVariable ((:-)), Qualifiers, Variable)
@@ -121,7 +122,7 @@ group link index' group = \case
 
 ungroup ::
   (Term.Link locality -> Term0.Index scope) ->
-  (Term.Link locality -> Implicit (Definition4.Set locality) Group Check scope) ->
+  (Term.Link locality -> Implicit (Group.Set locality) Group Check scope) ->
   Declaration Identity logical Identity locality Group Check scope ->
   Declaration Identity logical Identity locality Normal Check scope
 ungroup index lookup Declaration {position, name, definition, typex} =

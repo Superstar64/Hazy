@@ -21,8 +21,9 @@ import Semantic.Stage (Check, Resolve)
 import Semantic.Tree.Combinators.Inferred (Inferred (Solved))
 import Semantic.Tree.TypeDeclaration (TypeDeclaration (..), kind', lazy)
 import Semantic.Tree.TypeDefinition (Alias (..), Inject (..), TypeDefinition (..), assumeInject)
-import Semantic.Tree.TypeDefinition2 (Annotation (..), Element (..), Set (..), TypeDefinition2 (..), Types (..))
-import qualified Semantic.Tree.TypeDefinition2 as TypeDefinition2
+import Semantic.Tree.TypeDefinition2 (Annotation (..), TypeDefinition2 (..))
+import Semantic.Tree.TypeGroup (Element (..), Set (..), TypeGroup (..), Types (..))
+import qualified Semantic.Tree.TypeGroup as TypeGroup
 import qualified Semantic.Unify as Unify
 
 check ::
@@ -68,12 +69,12 @@ check context linked annotation TypeDeclaration {position, name, constructorName
                 kind = Solved kind
               }
       | otherwise -> error "bad annotation"
-    _ :::: Set set -> do
+    Group (_ :::: Set set) -> do
       fresh <- Vector.replicateM (length set) (Unify.fresh Core.kind)
       let context' =
             groupTypeBindings
-              (TypeDefinition2.position <$> toLazy set)
-              (TypeDefinition2.label <$> toLazy set)
+              (TypeGroup.position <$> toLazy set)
+              (TypeGroup.label <$> toLazy set)
               fresh
               context
       set <-
@@ -91,7 +92,7 @@ check context linked annotation TypeDeclaration {position, name, constructorName
           { position,
             name,
             constructorNames,
-            definition = Solved (Types $ Strict.Vector.fromLazy kinds) :::: Set set,
+            definition = Group $ Solved (Types $ Strict.Vector.fromLazy kinds) :::: Set set,
             kind = Solved kind
           }
     Link link id -> do

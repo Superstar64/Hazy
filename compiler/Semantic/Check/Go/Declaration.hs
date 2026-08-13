@@ -26,15 +26,15 @@ import qualified Semantic.Tree.Combinators.Implicit as Implicit
 import Semantic.Tree.Combinators.Inferred (Inferred (Solved))
 import qualified Semantic.Tree.Combinators.Inferred as Inferred
 import Semantic.Tree.Declaration (Declaration (..))
-import Semantic.Tree.Definition4 (Definition4 (..), Element (..), Types (..))
+import Semantic.Tree.Definition4 (Definition4 (..))
 import qualified Semantic.Tree.Definition4 as Definition4
 import qualified Semantic.Tree.Definition4 as Semantic
   ( Annotation (..),
     Definition4 (..),
-    Element (..),
-    Set (..),
   )
-import qualified Semantic.Tree.Definition4 as Solved (Set (..))
+import Semantic.Tree.Group (Element (..), Set (..), Types (..))
+import qualified Semantic.Tree.Group as Semantic (Group (..))
+import qualified Semantic.Tree.Group as Solved (Set (..))
 import Semantic.Tree.Scheme as Solved (Scheme (..))
 import qualified Semantic.Tree.TypePattern as TypePattern
 import qualified Semantic.Unify as Unify
@@ -60,10 +60,10 @@ check context linked annotation Declaration {position, name, definition} = case 
               typex = Identity (Inferred.Solved $ logicalType annotation')
             }
     | otherwise -> error "bad type annotation"
-  _ Semantic.:::: Identity (Implicit.Resolve (Semantic.Set set)) -> do
+  Semantic.Group (_ Semantic.:::: Identity (Implicit.Resolve (Set set))) -> do
     types Unify.::: set <- Unify.generalizeBody position context $ Unify.Generalize $ \context -> do
       fresh <- Vector.replicateM (length set) $ Unify.fresh Core.typex
-      set <- flip Strict.Vector.imapM set $ \index Semantic.Element {element, link} -> do
+      set <- flip Strict.Vector.imapM set $ \index Element {element, link} -> do
         let element' = Shift.map (Shift.Over Shift) element
             typex = fresh Vector.! index
         element <- Definition3.checkAuto (groupTermBindings fresh context) (shiftLogical typex) element'
@@ -80,7 +80,7 @@ check context linked annotation Declaration {position, name, definition} = case 
       Declaration
         { position,
           name,
-          definition = Inferred.Solved types :::: fmap Implicit.Check set,
+          definition = Semantic.Group $ Inferred.Solved types Semantic.:::: fmap Implicit.Check set,
           typex = Identity (Inferred.Solved $ Unify.mapForall initial types)
         }
   Semantic.Link link id -> do

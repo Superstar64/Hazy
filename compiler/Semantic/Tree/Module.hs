@@ -35,9 +35,11 @@ import qualified Semantic.Tree.Declaration as Declaration
 import Semantic.Tree.Declarations (Declarations (..))
 import qualified Semantic.Tree.Declarations as Declarations
 import qualified Semantic.Tree.Definition4 as Definition4
+import qualified Semantic.Tree.Group as Group
 import Semantic.Tree.TypeDeclaration (TypeDeclaration (..))
 import qualified Semantic.Tree.TypeDeclaration as TypeDeclaration
 import qualified Semantic.Tree.TypeDefinition2 as TypeDefinition2
+import qualified Semantic.Tree.TypeGroup as TypeGroup
 import Syntax.Variable (FullQualifiers, toQualifiers)
 
 data Module layout stage = Module
@@ -129,19 +131,19 @@ seperate modules = go <$> modules
               lookupType
               declarations
         }
-    lookupTerm :: Term.Link Locality.Global -> Implicit (Definition4.Set Locality.Global) Group Check Global
+    lookupTerm :: Term.Link Locality.Global -> Implicit (Group.Set Locality.Global) Group Check Global
     lookupTerm = \case
       Term.Global global local
         | Module {declarations = Declarations {terms}} <- modules Vector.! global,
           Declaration {definition} <- terms Vector.! local,
-          _ Definition4.:::: Identity set <- definition ->
+          Definition4.Group (_ Group.:::: Identity set) <- definition ->
             set
       _ -> error "bad term lookup"
-    lookupType :: Type.Link Locality.Global -> TypeDefinition2.Set Locality.Global Check Global
+    lookupType :: Type.Link Locality.Global -> TypeGroup.Set Locality.Global Check Global
     lookupType = \case
       Type.Global global local
         | Module {declarations = Declarations {types}} <- modules Vector.! global,
           TypeDeclaration {definition} <- types Vector.! local,
-          _ TypeDefinition2.:::: set <- definition ->
+          TypeDefinition2.Group (_ TypeGroup.:::: set) <- definition ->
             set
       _ -> error "bad type lookup"

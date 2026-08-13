@@ -47,7 +47,7 @@ import qualified Semantic.Tree.Declaration as Semantic (Declaration)
 import qualified Semantic.Tree.Declaration as Semantic.Declaration
 import qualified Semantic.Tree.Declarations as Semantic (Local (..))
 import qualified Semantic.Tree.Definition4 as Definition4
-import qualified Semantic.Tree.Definition4 as Proper.Definition4
+import qualified Semantic.Tree.Group as Group
 import qualified Semantic.Tree.Instance as Semantic (Instance)
 import qualified Semantic.Tree.Instance as Semantic.Instance
 import qualified Semantic.Tree.TypeDeclaration as Semantic (TypeDeclaration)
@@ -55,6 +55,7 @@ import qualified Semantic.Tree.TypeDeclaration as Semantic.TypeDeclaration
 import qualified Semantic.Tree.TypeDeclarationExtra as Semantic (TypeDeclarationExtra)
 import qualified Semantic.Tree.TypeDeclarationExtra as Semantic.TypeDeclarationExtra
 import qualified Semantic.Tree.TypeDefinition2 as TypeDefinition2
+import qualified Semantic.Tree.TypeGroup as TypeGroup
 import qualified Semantic.Unify as Unify
 import qualified Syntax.Variable as Variable
 import Prelude hiding (Functor)
@@ -182,10 +183,10 @@ checkTermDeclaration context index declaration = Formula7 {cycle, run}
             let Functor.Annotated {content} = terms Vector.! local
             Declaration {definition} <- content
             pure $ case definition of
-              Solved types Definition4.:::: _ -> Unify.mapForall go types
+              Definition4.Group (Solved types Group.:::: _) -> Unify.mapForall go types
                 where
                   go = Unify.MapForall $ \case
-                    Proper.Definition4.Types types -> types Strict.Vector.! id
+                    Group.Types types -> types Strict.Vector.! id
               _ -> error "bad link lookup"
       annotation <- meta
       Declaration.check context link annotation declaration
@@ -221,7 +222,7 @@ checkTypeDeclaration context index declaration = Formula7 {cycle, run}
             let Functor.Annotated {content} = types Vector.! local
             TypeDeclaration {definition} <- content
             pure $ case definition of
-              Solved (TypeDefinition2.Types types) TypeDefinition2.:::: _ -> types Strict.Vector.! id
+              TypeDefinition2.Group (Solved (TypeGroup.Types types) TypeGroup.:::: _) -> types Strict.Vector.! id
               _ -> error "bad link lookup"
       annotation <- meta
       TypeDeclaration.check context link annotation declaration
@@ -242,12 +243,12 @@ checkTypeDeclarationExtra context index declaration = Formula7 {cycle, run}
       proper <- content
       let link ::
             Link.Type.Link Locality.Local ->
-            ST s (TypeDefinition2.Set Locality.Local Check (Scope.Declaration ':+ scope))
+            ST s (TypeGroup.Set Locality.Local Check (Scope.Declaration ':+ scope))
           link (Link.Type.Declaration local) = do
             let Functor.Annotated {content} = types Vector.! local
             TypeDeclaration {definition} <- content
             case definition of
-              _ TypeDefinition2.:::: set -> pure set
+              TypeDefinition2.Group (_ TypeGroup.:::: set) -> pure set
               _ -> error "bad link"
       proper <- Semantic.TypeDeclaration.ungroupM Link.Type.unlocal link proper
       TypeDeclarationExtra.check context (Type.Declaration index) proper declaration

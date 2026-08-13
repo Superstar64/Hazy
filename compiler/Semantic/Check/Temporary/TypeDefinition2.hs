@@ -8,7 +8,7 @@ import qualified Semantic.Index.Link.Type as Type
 import Semantic.Scope (Environment (..), GroupType)
 import Semantic.Stage (Check)
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
-import qualified Semantic.Tree.TypeDefinition2 as Solved
+import qualified Semantic.Tree.TypeGroup as Solved
 import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
 import Syntax.Variable (QualifiedConstructor, QualifiedConstructorIdentifier)

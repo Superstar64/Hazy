@@ -20,6 +20,7 @@ import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import Semantic.Tree.TypeDefinition (Constructive, TypeDefinition)
 import Semantic.Tree.TypeDefinition2 (TypeDefinition2)
 import qualified Semantic.Tree.TypeDefinition2 as TypeDefinition2
+import qualified Semantic.Tree.TypeGroup as TypeGroup
 import Syntax.Position (Position)
 import Syntax.Variable
   ( Constructor,
@@ -105,7 +106,7 @@ group qualifiers link index group = \case
 
 ungroup ::
   (Type.Link locality -> Type0.Index scope) ->
-  (Type.Link locality -> TypeDefinition2.Set locality Check scope) ->
+  (Type.Link locality -> TypeGroup.Set locality Check scope) ->
   TypeDeclaration locality Group Check scope ->
   TypeDeclaration locality Normal Check scope
 ungroup index lookup TypeDeclaration {position, name, constructorNames, definition, kind} =
@@ -120,7 +121,7 @@ ungroup index lookup TypeDeclaration {position, name, constructorNames, definiti
 ungroupM ::
   (Monad m) =>
   (Type.Link locality -> Type0.Index scope) ->
-  (Type.Link locality -> m (TypeDefinition2.Set locality Check scope)) ->
+  (Type.Link locality -> m (TypeGroup.Set locality Check scope)) ->
   TypeDeclaration locality Group Check scope ->
   m (TypeDeclaration locality Normal Check scope)
 ungroupM index lookup TypeDeclaration {position, name, constructorNames, definition, kind} = do

@@ -40,6 +40,7 @@ import {-# SOURCE #-} Semantic.Tree.Declaration (Declaration)
 import qualified Semantic.Tree.TypeDeclaration as Semantic (TypeDeclaration (..))
 import {-# SOURCE #-} Semantic.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 import qualified Semantic.Tree.TypeDefinition2 as Semantic (TypeDefinition2 (..))
+import qualified Semantic.Tree.TypeGroup as Semantic (TypeGroup (..))
 import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
 
@@ -90,7 +91,7 @@ globalBindings (Functor.ModuleSet modules) =
           Functor.Annotated {content} <- types Vector.! local -> do
             Semantic.TypeDeclaration {definition} <- content
             case definition of
-              _ Semantic.:::: set -> pure set
+              Semantic.Group (_ Semantic.:::: set) -> pure set
               _ -> error "bad definition lookup"
 
 localBindings ::
@@ -132,7 +133,7 @@ localBindings
           | Functor.Annotated {content} <- types Vector.! local -> do
               Semantic.TypeDeclaration {definition} <- content
               case definition of
-                _ Semantic.:::: set -> pure set
+                Semantic.Group (_ Semantic.:::: set) -> pure set
                 _ -> error "bad definition lookup"
 
 groupTermBindings ::

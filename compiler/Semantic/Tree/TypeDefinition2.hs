@@ -1,31 +1,27 @@
 module Semantic.Tree.TypeDefinition2 where
 
-import qualified Core.Tree.Type as Simple
 import Data.Functor.Identity (Identity (..))
 import qualified Data.Kind
 import qualified Data.Set as Set
 import qualified Data.Strict.Maybe as Strict.Maybe
-import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
 import qualified Graph.StronglyConnected as StronglyConnected
 import Semantic.FreeVariables (FreeTypeVariables (..))
-import qualified Semantic.FreeVariables as FreeVariables
 import qualified Semantic.Index.Link.Type as Type
 import qualified Semantic.Index.Type0 as Type0
-import qualified Semantic.Label.Binding.Type as Label
-import Semantic.Layout (Group, Layout, Normal)
+import Semantic.Layout (Layout, Normal)
+import qualified Semantic.Layout as Layout
 import Semantic.Locality (Locality)
 import Semantic.Scope (Environment (..))
-import qualified Semantic.Scope as Scope
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check, Resolve, Stage)
-import Semantic.Tree.Combinators.Inferred (Inferred)
 import qualified Semantic.Tree.Combinators.Inferred as Combinators
 import qualified Semantic.Tree.Combinators.Inferred as Inferred
 import Semantic.Tree.Type (Type)
 import {-# SOURCE #-} Semantic.Tree.TypeDeclaration (Groupable (..))
 import Semantic.Tree.TypeDefinition (Constructive, Substitutive, TypeDefinition)
+import Semantic.Tree.TypeGroup (Element (..), Set (..), TypeGroup (..))
 import Syntax.Position (Position)
 import Syntax.Variable (QualifiedConstructor (..), QualifiedConstructorIdentifier (..), Qualifiers)
 
@@ -35,13 +31,12 @@ data TypeDefinition2 locality layout stage scope where
     !(Annotation equality layout stage scope) ->
     !(TypeDefinition equality stage scope) ->
     TypeDefinition2 locality layout stage scope
-  Link :: !(Type.Link locality) -> !Int -> TypeDefinition2 locality Group stage scope
-  (::::) ::
-    !(Inferred Types stage scope) ->
-    !(Set locality stage scope) ->
-    TypeDefinition2 locality Group stage scope
+  Link :: !(Type.Link locality) -> !Int -> TypeDefinition2 locality Layout.Group stage scope
+  Group ::
+    !(TypeGroup locality Layout.Group stage scope) ->
+    TypeDefinition2 locality Layout.Group stage scope
 
-infix 5 :::, ::::
+infix 5 :::
 
 instance Show (TypeDefinition2 locality layout stage scope) where
   showsPrec d = \case
@@ -54,9 +49,9 @@ instance Show (TypeDefinition2 locality layout stage scope) where
           . showsPrec 11 link
           . showString " "
           . showsPrec 11 id
-    types :::: set ->
-      showParen (d > 5) $
-        showsPrec 6 types . showString " :::: " . showsPrec 6 set
+    Group group ->
+      showParen (d > 10) $
+        showString "Group " . showsPrec 11 group
 
 instance Shift0.Functor (TypeDefinition2 locality layout stage) where
   map = Shift.mapDefault
@@ -65,14 +60,14 @@ instance Shift.Functor (TypeDefinition2 locality layout stage) where
   map category = \case
     annotation ::: definition -> Shift.map category annotation ::: Shift.map category definition
     Link link id -> Link link id
-    types :::: set -> Shift.map category types :::: Shift.map category set
+    Group group -> Group (Shift.map category group)
 
 instance FreeTypeVariables (TypeDefinition2 locality layout) where
   freeTypeVariables target = \case
     annotation ::: definition ->
       freeTypeVariables target annotation ++ freeTypeVariables target definition
     Link {} -> []
-    _ :::: set -> freeTypeVariables target set
+    Group group -> freeTypeVariables target group
 
 data Annotation equality layout stage scope where
   Annotated :: !(Type Position stage scope) -> Annotation equality layout stage scope
@@ -100,69 +95,9 @@ instance FreeTypeVariables (Annotation equality mark) where
     InferredCyclic -> []
     InferredAcyclic -> []
 
-newtype Types scope = Types (Strict.Vector (Simple.Type scope))
-  deriving (Show)
-
-instance Scope.Show Types where
-  showsPrec = showsPrec
-
-instance Shift0.Functor Types where
-  map = Shift.mapDefault
-
-instance Shift.Functor Types where
-  map category (Types types) = Types (Shift.map category <$> types)
-
-newtype Set locality stage scope
-  = Set (Strict.Vector (Element locality stage scope))
-  deriving (Show)
-
-instance Shift0.Functor (Set locality stage) where
-  map = Shift.mapDefault
-
-instance Shift.Functor (Set locality stage) where
-  map category (Set set) = Set (Shift.map category <$> set)
-
-instance FreeTypeVariables (Set locality) where
-  freeTypeVariables target (Set set) = foldMap (freeTypeVariables target) set
-
-data Element locality stage scope = Element
-  { element :: !(TypeDefinition Constructive stage (Scope.GroupType ':+ scope)),
-    typex :: !(Combinators.Inferred Simple.Type stage scope),
-    position :: !Position,
-    name :: !QualifiedConstructorIdentifier,
-    constructorNames :: !(Strict.Vector QualifiedConstructor),
-    link :: !(Type.Link locality)
-  }
-  deriving (Show)
-
-instance Shift0.Functor (Element locality stage) where
-  map = Shift.mapDefault
-
-instance Shift.Functor (Element locality stage) where
-  map category Element {element, typex, position, name, constructorNames, link} =
-    Element
-      { element = Shift.map (Shift.Over category) element,
-        typex = Shift.map category typex,
-        position,
-        name,
-        constructorNames,
-        link
-      }
-
-instance FreeTypeVariables (Element locality) where
-  freeTypeVariables target Element {element} =
-    freeTypeVariables (FreeVariables.Over target) element
-
 locality :: TypeDefinition2 locality Normal stage scope -> TypeDefinition2 locality' Normal stage scope
 locality = \case
   annotation ::: definition -> annotation ::: definition
-
-label :: Element locality stage scope1 -> Label.TypeBinding scope2
-label Element {name, constructorNames} =
-  Label.TypeBinding
-    { name,
-      constructorNames
-    }
 
 group ::
   Qualifiers ->
@@ -170,12 +105,12 @@ group ::
   (Type.Link locality -> Groupable scope) ->
   StronglyConnected.Component (Type.Link locality) ->
   TypeDefinition2 locality Normal Resolve scope ->
-  TypeDefinition2 locality Group Resolve scope
+  TypeDefinition2 locality Layout.Group Resolve scope
 group _ _ _ _ (Annotated typex ::: definition) = Annotated typex ::: definition
 group _ _ _ _ (InferredAcyclic ::: definition) = InferredAcyclic ::: definition
 group qualifiers link index group (InferredCyclic ::: _) = case group of
   StronglyConnected.Group {set} ->
-    Inferred.Inferred :::: Set (Strict.Vector.fromList $ map go $ Set.toList set)
+    Group (Inferred.Inferred :::: Set (Strict.Vector.fromList $ map go $ Set.toList set))
     where
       go link = case index link of
         Groupable {element, position', name', constructorNames'} ->
@@ -193,7 +128,7 @@ group qualifiers link index group (InferredCyclic ::: _) = case group of
 ungroup ::
   (Type.Link locality -> Type0.Index scope) ->
   (Type.Link locality -> Set locality Check scope) ->
-  TypeDefinition2 locality Group Check scope ->
+  TypeDefinition2 locality Layout.Group Check scope ->
   TypeDefinition2 locality Normal Check scope
 ungroup index lookup definition = runIdentity $ ungroupM index (Identity . lookup) definition
 
@@ -201,7 +136,7 @@ ungroupM ::
   (Monad m) =>
   (Type.Link locality -> Type0.Index scope) ->
   (Type.Link locality -> m (Set locality Check scope)) ->
-  TypeDefinition2 locality Group Check scope ->
+  TypeDefinition2 locality Layout.Group Check scope ->
   m (TypeDefinition2 locality Normal Check scope)
 ungroupM _ _ (Annotated annotation ::: definition) = pure $ Annotated annotation ::: definition
 ungroupM _ _ (InferredAcyclic ::: definition) = pure $ InferredAcyclic ::: definition
@@ -209,7 +144,7 @@ ungroupM index lookup definition = case definition of
   Link index id -> do
     set <- lookup index
     pure $ InferredCyclic ::: go id set
-  _ :::: set -> pure $ InferredCyclic ::: go 0 set
+  Group (_ :::: set) -> pure $ InferredCyclic ::: go 0 set
   where
     go id (Set set) = Shift.map (Shift.UngroupType original) element
       where
