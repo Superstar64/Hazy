@@ -263,7 +263,6 @@ executable hazy
     Semantic.Check.Temporary.Type
     Semantic.Check.Temporary.TypeDeclarationExtra
     Semantic.Check.Temporary.TypeDefinition
-    Semantic.Check.Temporary.TypeDefinition2
     Semantic.Check.Temporary.TypePattern
     Semantic.Check.Temporary.UpdateInfo
     Semantic.Check.TermBinding

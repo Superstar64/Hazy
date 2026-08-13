@@ -14,7 +14,6 @@ import qualified Semantic.Check.KindAnnotation as KindAnnotation
 import qualified Semantic.Check.KindAnnotation as Semantic
 import qualified Semantic.Check.Temporary.TypeDefinition as Temporary.TypeDefinition
 import qualified Semantic.Check.Temporary.TypeDefinition as TypeDefinition
-import qualified Semantic.Check.Temporary.TypeDefinition2 as Temporary
 import qualified Semantic.Index.Link.Type as Type
 import Semantic.Layout (Group)
 import Semantic.Stage (Check, Resolve)
@@ -83,8 +82,11 @@ check context linked annotation TypeDeclaration {position, name, constructorName
            Element {element, position, name, constructorNames, link} -> do
               let typex = fresh Vector.! index
               element <- TypeDefinition.check context' (shiftLogical typex) element
-              pure $ Temporary.Element {element, typex, position, name, constructorNames, link}
-      set <- Unify.runSolve $ traverse (Temporary.solveElement context') set
+              pure $ do
+                element <- TypeDefinition.solve context' element
+                typex <- Unify.solve position typex
+                pure Element {element, typex = Solved typex, position, name, constructorNames, link}
+      set <- Unify.runSolve $ sequence set
       kinds <- Unify.runSolve $ traverse (Unify.solve position) fresh
       let kind = Vector.head kinds
       pure
