@@ -10,10 +10,9 @@ import qualified Semantic.Check.Temporary.Constraints as Unsolved.Constraints
 import qualified Semantic.Check.Temporary.Scheme as Unsolved.Scheme
 import qualified Semantic.Check.Temporary.TypePattern as Unsolved
 import qualified Semantic.Check.Temporary.TypePattern as Unsolved.TypePattern
-import Semantic.Layout (Group)
 import Semantic.Stage (Check, Resolve)
 import qualified Semantic.Tree.Constraints as Solved (Constraints)
-import qualified Semantic.Tree.Instance as Semantic (Instance (..))
+import qualified Semantic.Tree.InstanceDefinition2 as Semantic (Annotation (..))
 import qualified Semantic.Tree.TypePattern as Semantic (TypePattern (TypePattern))
 import qualified Semantic.Tree.TypePattern as Semantic.TypePattern
 import qualified Semantic.Tree.TypePattern as Solved (TypePattern)
@@ -30,9 +29,9 @@ prerequisites'_ = prerequisites'
 
 check ::
   Context s scope ->
-  Semantic.Instance Group Resolve scope ->
+  Semantic.Annotation Resolve scope ->
   ST s (InstanceAnnotation scope)
-check context Semantic.Instance {parameters, prerequisites} = do
+check context Semantic.Annotation {parameters, prerequisites} = do
   let fresh Semantic.TypePattern {name, position} = do
         level <- Unify.fresh Core.universe
         typex <- Unify.fresh (Core.typeWith level)

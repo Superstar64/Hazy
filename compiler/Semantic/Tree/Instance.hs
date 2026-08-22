@@ -2,25 +2,15 @@
 
 module Semantic.Tree.Instance where
 
-import qualified Core.Tree.Evidence as Simple (Evidence)
-import qualified Data.Vector.Strict as Strict (Vector)
 import Semantic.Connect (Connect (..))
-import Semantic.Scope (Environment (..), Local)
-import qualified Semantic.Scope as Scope
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
-import Semantic.Tree.Combinators.Inferred (Inferred (..))
-import Semantic.Tree.Constraints (Constraints)
-import Semantic.Tree.MethodConcrete (MethodConcrete (..))
-import Semantic.Tree.TypePattern (TypePattern)
+import Semantic.Tree.InstanceDefinition2 (InstanceDefinition2)
 import Syntax.Position (Position)
 
 data Instance layout stage scope = Instance
   { startPosition :: !Position,
-    parameters :: !(Strict.Vector (TypePattern Position stage scope)),
-    prerequisites :: !(Constraints Position stage scope),
-    evidence :: !(Inferred Evidence stage scope),
-    members :: !(Strict.Vector (MethodConcrete layout stage scope))
+    definition :: !(InstanceDefinition2 layout stage scope)
   }
   deriving (Show)
 
@@ -28,48 +18,20 @@ instance Shift0.Functor (Instance layout stage) where
   map = Shift.mapDefault
 
 instance Shift.Functor (Instance layout stage) where
-  map category Instance {startPosition, prerequisites, parameters, members, evidence} =
+  map category Instance {startPosition, definition} =
     Instance
       { startPosition,
-        prerequisites = Shift.map category prerequisites,
-        parameters = Shift.map category <$> parameters,
-        members = fmap (Shift.map category) members,
-        evidence = Shift.map category evidence
+        definition = Shift.map category definition
       }
 
 instance Connect Instance where
-  connect Instance {startPosition, prerequisites, parameters, members} =
+  connect Instance {startPosition, definition} =
     Instance
       { startPosition,
-        prerequisites,
-        parameters,
-        members = connect <$> members,
-        evidence = Inferred
+        definition = connect definition
       }
-  seperate
+  seperate Instance {startPosition, definition} =
     Instance
       { startPosition,
-        prerequisites,
-        parameters,
-        members,
-        evidence
-      } =
-      Instance
-        { startPosition,
-          prerequisites,
-          parameters,
-          members = seperate <$> members,
-          evidence
-        }
-
-newtype Evidence scope = Evidence (Strict.Vector (Simple.Evidence (Local ':+ scope)))
-  deriving (Show)
-
-instance Scope.Show Evidence where
-  showsPrec = showsPrec
-
-instance Shift0.Functor Evidence where
-  map = Shift.mapDefault
-
-instance Shift.Functor Evidence where
-  map category (Evidence evidence) = Evidence (Shift.map (Shift.Over category) <$> evidence)
+        definition = seperate definition
+      }

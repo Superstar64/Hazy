@@ -48,8 +48,9 @@ import qualified Semantic.Tree.Declaration as Semantic.Declaration
 import qualified Semantic.Tree.Declarations as Semantic (Local (..))
 import qualified Semantic.Tree.Definition4 as Definition4
 import qualified Semantic.Tree.Group as Group
-import qualified Semantic.Tree.Instance as Semantic (Instance)
+import qualified Semantic.Tree.Instance as Semantic (Instance (..))
 import qualified Semantic.Tree.Instance as Semantic.Instance
+import qualified Semantic.Tree.InstanceDefinition2 as InstanceDefinition
 import qualified Semantic.Tree.TypeDeclaration as Semantic (TypeDeclaration)
 import qualified Semantic.Tree.TypeDeclaration as Semantic.TypeDeclaration
 import qualified Semantic.Tree.TypeDeclarationExtra as Semantic (TypeDeclarationExtra)
@@ -262,7 +263,8 @@ checkInstanceAnnotation context _ declaration = Formula7 {cycle, run}
   where
     cycle :: a
     cycle = cyclicalTypeChecking $ Semantic.Instance.startPosition declaration
-    run declarations = InstanceAnnotation.check (localBindings declarations context) declaration
+    run declarations = InstanceAnnotation.check (localBindings declarations context) annotation
+    Semantic.Instance {definition = annotation InstanceDefinition.::: _} = declaration
 
 checkInstanceDeclaration ::
   Context s scope ->

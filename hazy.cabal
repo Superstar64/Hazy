@@ -389,6 +389,8 @@ executable hazy
     Semantic.Tree.GADTConstructor
     Semantic.Tree.Group
     Semantic.Tree.Instance
+    Semantic.Tree.InstanceDefinition
+    Semantic.Tree.InstanceDefinition2
     Semantic.Tree.Lambda
     Semantic.Tree.Method
     Semantic.Tree.MethodAbstract

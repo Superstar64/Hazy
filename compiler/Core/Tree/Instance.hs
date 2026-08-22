@@ -13,7 +13,10 @@ import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
 import Semantic.Tree.Combinators.Inferred (Inferred (Solved))
 import qualified Semantic.Tree.Constraints as Semantic (Constraints (..))
-import qualified Semantic.Tree.Instance as Semantic (Evidence (..), Instance (..))
+import qualified Semantic.Tree.Instance as Semantic (Instance (..))
+import Semantic.Tree.InstanceDefinition (InstanceDefinition (..))
+import qualified Semantic.Tree.InstanceDefinition as Semantic (Evidence (..))
+import Semantic.Tree.InstanceDefinition2 (Annotation (..), InstanceDefinition2 (..))
 
 data Instance scope = Instance
   { evidence :: !(Strict.Vector (Evidence (Local ':+ scope))),
@@ -37,11 +40,16 @@ instance Substitute.Functor Instance where
       }
 
 simplify :: Semantic.Instance Normal Check scope -> Instance scope
-simplify Semantic.Instance {evidence = Solved (Semantic.Evidence evidence), prerequisites, members} =
-  Instance
-    { evidence,
-      prerequisitesCount = case prerequisites of
-        Semantic.None -> Null
-        Semantic.Constraints constraints -> ConstraintCount $ length constraints,
-      members = MethodConcrete.simplify <$> members
-    }
+simplify
+  Semantic.Instance
+    { definition =
+        Annotation {prerequisites}
+          ::: InstanceDefinition {evidence = Solved (Semantic.Evidence evidence), members}
+    } =
+    Instance
+      { evidence,
+        prerequisitesCount = case prerequisites of
+          Semantic.None -> Null
+          Semantic.Constraints constraints -> ConstraintCount $ length constraints,
+        members = MethodConcrete.simplify <$> members
+      }

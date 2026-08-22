@@ -49,7 +49,10 @@ import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import qualified Semantic.Tree.Constraints as Solved (Constraints (Constraints))
 import qualified Semantic.Tree.Constraints as Solved.Constraints
 import qualified Semantic.Tree.Instance as Semantic (Instance (..))
-import qualified Semantic.Tree.Instance as Solved (Evidence (..), Instance (..))
+import qualified Semantic.Tree.Instance as Solved (Instance (..))
+import Semantic.Tree.InstanceDefinition (InstanceDefinition (..))
+import qualified Semantic.Tree.InstanceDefinition as Solved (Evidence (..))
+import Semantic.Tree.InstanceDefinition2 (Annotation (..), InstanceDefinition2 (..))
 import qualified Semantic.Tree.MethodConcrete as Semantic (MethodConcrete (..))
 import qualified Semantic.Tree.TypePattern as Solved (TypePattern)
 import qualified Semantic.Unify as Unify
@@ -99,7 +102,7 @@ check
     }
   Semantic.Instance
     { startPosition,
-      members
+      definition = _ ::: InstanceDefinition {members}
     }
     | index <- index key,
       head <- head key = do
@@ -187,11 +190,9 @@ check
 solve :: Instance s scope -> Unify.Solve s (Solved.Instance Group Check scope)
 solve Instance {startPosition, parameters, prerequisites, evidence, members} = do
   members <- traverse MethodConcrete.solve members
+  evidence <- pure $ Solved $ Solved.Evidence evidence
   pure
     Solved.Instance
       { startPosition,
-        parameters,
-        prerequisites,
-        evidence = Solved $ Solved.Evidence evidence,
-        members
+        definition = Annotation {parameters, prerequisites} ::: InstanceDefinition {evidence, members}
       }
