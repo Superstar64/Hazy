@@ -2,29 +2,30 @@
 
 module Semantic.Tree.Instance where
 
+import Data.Functor.Identity (Identity)
 import Semantic.Connect (Connect (..))
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
 import Semantic.Tree.InstanceDefinition2 (InstanceDefinition2)
 import Syntax.Position (Position)
 
-data Instance layout stage scope = Instance
+data Instance solve layout stage scope = Instance
   { startPosition :: !Position,
-    definition :: !(InstanceDefinition2 layout stage scope)
+    definition :: !(InstanceDefinition2 solve layout stage scope)
   }
   deriving (Show)
 
-instance Shift0.Functor (Instance layout stage) where
+instance (Functor solve) => Shift0.Functor (Instance solve layout stage) where
   map = Shift.mapDefault
 
-instance Shift.Functor (Instance layout stage) where
+instance (Functor solve) => Shift.Functor (Instance solve layout stage) where
   map category Instance {startPosition, definition} =
     Instance
       { startPosition,
         definition = Shift.map category definition
       }
 
-instance Connect Instance where
+instance (solve ~ Identity) => Connect (Instance solve) where
   connect Instance {startPosition, definition} =
     Instance
       { startPosition,

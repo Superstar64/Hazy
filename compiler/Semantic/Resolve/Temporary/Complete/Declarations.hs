@@ -2,6 +2,7 @@ module Semantic.Resolve.Temporary.Complete.Declarations where
 
 import Control.Monad.Fix (mfix)
 import Data.Foldable (toList)
+import Data.Functor.Identity (Identity)
 import Data.List.NonEmpty (NonEmpty ((:|)))
 import Data.Map (Map)
 import qualified Data.Map as Map
@@ -52,8 +53,8 @@ data Declarations scope = Declarations
   { terms :: !(Strict.Vector (Declaration scope)),
     constructors :: !(Strict.Vector ConstructorDeclaration),
     types :: !(Strict.Vector (TypeDeclaration scope)),
-    dataInstances :: !(Vector (Map (Type2.Index scope) (Instance Normal Resolve scope))),
-    classInstances :: !(Vector (Map (Type2.Index scope) (Instance Normal Resolve scope)))
+    dataInstances :: !(Vector (Map (Type2.Index scope) (Instance Identity Normal Resolve scope))),
+    classInstances :: !(Vector (Map (Type2.Index scope) (Instance Identity Normal Resolve scope)))
   }
 
 {-

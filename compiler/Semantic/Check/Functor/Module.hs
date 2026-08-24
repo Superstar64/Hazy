@@ -58,8 +58,8 @@ fromStage2 ::
     (Semantic.TypeDeclaration Locality.Global Group Resolve Global)
     (Semantic.TypeDeclaration Locality.Global Group Resolve Global)
     (Semantic.TypeDeclarationExtra Group Resolve Global)
-    (Semantic.Instance Group Resolve Global)
-    (Semantic.Instance Group Resolve Global)
+    (Semantic.Instance Identity Group Resolve Global)
+    (Semantic.Instance Identity Group Resolve Global)
 fromStage2 Semantic.Module {name = name@(path :.. base), declarations}
   | let root = path :. base =
       Module

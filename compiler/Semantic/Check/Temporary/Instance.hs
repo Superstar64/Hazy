@@ -18,6 +18,7 @@ import qualified Core.Tree.Type as Simple.Type (TypeF (..))
 import Core.Tree.TypeDeclaration (assumeClass)
 import qualified Core.Tree.TypeDeclarationExtra as Extra
 import qualified Core.Tree.TypeLambda as Simple (TypeLambdaOver (..))
+import Data.Functor.Identity (Identity (..))
 import Data.Traversable (for)
 import qualified Data.Vector as Vector
 import Data.Vector.Strict (izipWithM)
@@ -91,7 +92,7 @@ check ::
   Context s scope ->
   Key scope ->
   InstanceAnnotation scope ->
-  Semantic.Instance Group Resolve scope ->
+  Semantic.Instance Identity Group Resolve scope ->
   ST s (Instance s scope)
 check
   context@Context {typeEnvironment}
@@ -102,7 +103,7 @@ check
     }
   Semantic.Instance
     { startPosition,
-      definition = _ ::: InstanceDefinition {members}
+      definition = _ ::: Identity InstanceDefinition {members}
     }
     | index <- index key,
       head <- head key = do
@@ -187,12 +188,12 @@ check
         members <- izipWithM check methods (shift <$> members)
         pure Instance {startPosition, parameters, prerequisites, evidence, members}
 
-solve :: Instance s scope -> Unify.Solve s (Solved.Instance Group Check scope)
+solve :: Instance s scope -> Unify.Solve s (Solved.Instance Identity Group Check scope)
 solve Instance {startPosition, parameters, prerequisites, evidence, members} = do
   members <- traverse MethodConcrete.solve members
   evidence <- pure $ Solved $ Solved.Evidence evidence
   pure
     Solved.Instance
       { startPosition,
-        definition = Annotation {parameters, prerequisites} ::: InstanceDefinition {evidence, members}
+        definition = Annotation {parameters, prerequisites} ::: Identity InstanceDefinition {evidence, members}
       }

@@ -114,8 +114,8 @@ fromStage2 ::
     (Semantic.TypeDeclaration locality Group Resolve scope)
     (Semantic.TypeDeclaration locality Group Resolve scope)
     (Semantic.TypeDeclarationExtra Group Resolve scope)
-    (Semantic.Instance Group Resolve scope)
-    (Semantic.Instance Group Resolve scope)
+    (Semantic.Instance Identity Group Resolve scope)
+    (Semantic.Instance Identity Group Resolve scope)
 fromStage2
   path
   Semantic.Declarations

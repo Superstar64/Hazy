@@ -257,7 +257,7 @@ checkTypeDeclarationExtra context index declaration = Formula7 {cycle, run}
 checkInstanceAnnotation ::
   Context s scope ->
   p ->
-  Semantic.Instance.Instance Group Resolve (Scope.Declaration ':+ scope) ->
+  Semantic.Instance.Instance Identity Group Resolve (Scope.Declaration ':+ scope) ->
   Formula s scope (InstanceAnnotation (Scope.Declaration ':+ scope))
 checkInstanceAnnotation context _ declaration = Formula7 {cycle, run}
   where
@@ -269,7 +269,7 @@ checkInstanceAnnotation context _ declaration = Formula7 {cycle, run}
 checkInstanceDeclaration ::
   Context s scope ->
   Instance.Key.Key (Scope.Declaration ':+ scope) ->
-  Semantic.Instance Group Resolve (Scope.Declaration ':+ scope) ->
+  Semantic.Instance Identity Group Resolve (Scope.Declaration ':+ scope) ->
   Formula s scope (Instance s (Scope.Declaration ':+ scope))
 checkInstanceDeclaration context key declaration = Formula7 {cycle, run}
   where

@@ -46,8 +46,8 @@ data Declarations locality layout stage scope = Declarations
   { terms :: !(Vector (Declaration Identity Void Identity locality layout stage scope)),
     types :: !(Vector (TypeDeclaration locality layout stage scope)),
     typeExtras :: !(Vector (TypeDeclarationExtra layout stage scope)),
-    dataInstances :: !(Vector (Map (Type2.Index scope) (Instance layout stage scope))),
-    classInstances :: !(Vector (Map (Type2.Index scope) (Instance layout stage scope)))
+    dataInstances :: !(Vector (Map (Type2.Index scope) (Instance Identity layout stage scope))),
+    classInstances :: !(Vector (Map (Type2.Index scope) (Instance Identity layout stage scope)))
   }
   deriving (Show)
 

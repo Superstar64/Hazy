@@ -3,6 +3,7 @@
 module Semantic.Resolve.Go.Instance where
 
 import Data.Foldable (toList)
+import Data.Functor.Identity (Identity (..))
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.Map (Map)
 import qualified Data.Map as Map
@@ -37,7 +38,7 @@ resolve ::
   Strict.Vector (Syntax.TypePattern Position) ->
   Map Variable Int ->
   Syntax.InstanceDeclarations Position ->
-  Instance Normal Resolve scope
+  Instance Identity Normal Resolve scope
 resolve
   context
   startPosition
@@ -69,8 +70,9 @@ resolve
                     { parameters,
                       prerequisites
                     }
-                    ::: InstanceDefinition
-                      { evidence = Inferred,
-                        members
-                      }
+                    ::: Identity
+                      InstanceDefinition
+                        { evidence = Inferred,
+                          members
+                        }
               }

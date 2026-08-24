@@ -1,6 +1,7 @@
 module Semantic.Resolve.Temporary.Complete.ClassInstance where
 
 import Data.Foldable (toList)
+import Data.Functor.Identity (Identity)
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.Map (Map)
 import qualified Data.Map as Map
@@ -32,10 +33,10 @@ data ClassInstance scope = ClassInstance
   { classPosition :: !Position,
     classIndex :: !Int,
     dataIndex :: !(Type2.Index scope),
-    instancex :: Real.Instance Normal Resolve scope
+    instancex :: Real.Instance Identity Normal Resolve scope
   }
 
-shrink :: ClassInstance scope -> Real.Instance Normal Resolve scope
+shrink :: ClassInstance scope -> Real.Instance Identity Normal Resolve scope
 shrink = instancex
 
 prepare :: ClassInstance scope -> (Int, Map (Type2.Index scope) (NonEmpty.NonEmpty (ClassInstance scope)))

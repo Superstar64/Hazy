@@ -20,7 +20,7 @@ fromFunctor ::
     (TypeDeclaration locality layout Check scope)
     (TypeDeclarationExtra layout Check scope)
     d
-    (Instance layout Check scope) ->
+    (Instance Identity layout Check scope) ->
   Declarations locality layout Check scope
 fromFunctor (Functor.Declarations {terms, types, typeExtras, dataInstances, classInstances}) =
   Declarations

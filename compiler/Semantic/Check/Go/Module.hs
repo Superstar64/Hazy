@@ -71,7 +71,7 @@ type Formula s z =
     (TypeDeclaration Locality.Global Group Check Global)
     (TypeDeclarationExtra Group Check Global)
     (InstanceAnnotation Global)
-    (Instance Group Check Global)
+    (Instance Identity Group Check Global)
     z
 
 fromFunctor ::
@@ -82,7 +82,7 @@ fromFunctor ::
     (TypeDeclaration Locality.Global Group Check Global)
     (TypeDeclarationExtra Group Check Global)
     c
-    (Instance Group Check Global) ->
+    (Instance Identity Group Check Global) ->
   Module Group Check
 fromFunctor (Functor.Module {name, declarations}) =
   Module
@@ -98,7 +98,7 @@ fromFunctors ::
     (TypeDeclaration Locality.Global Group Check Global)
     (TypeDeclarationExtra Group Check Global)
     c
-    (Instance Group Check Global) ->
+    (Instance Identity Group Check Global) ->
   Vector (Module Group Check)
 fromFunctors (Functor.ModuleSet modules) = fmap fromFunctor modules
 
@@ -257,7 +257,7 @@ checkTypeDeclarationExtra global local declaration = Formula7 {cycle, run}
 checkInstanceAnnotation ::
   p1 ->
   p2 ->
-  Semantic.Instance.Instance Group Resolve Global ->
+  Semantic.Instance.Instance Identity Group Resolve Global ->
   Formula s (InstanceAnnotation Global)
 checkInstanceAnnotation _ _ declaration = Formula7 {cycle, run}
   where
@@ -269,8 +269,8 @@ checkInstanceAnnotation _ _ declaration = Formula7 {cycle, run}
 checkInstanceDeclaration ::
   Int ->
   Instance.Key.Key Global ->
-  Semantic.Instance.Instance Group Resolve Global ->
-  Formula s (Instance Group Check Global)
+  Semantic.Instance.Instance Identity Group Resolve Global ->
+  Formula s (Instance Identity Group Check Global)
 checkInstanceDeclaration global key declaration = Formula7 {cycle, run}
   where
     cycle :: a

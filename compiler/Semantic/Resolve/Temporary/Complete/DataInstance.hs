@@ -24,10 +24,10 @@ data DataInstance scope = DataInstance
   { classPosition :: !Position,
     dataIndex :: !Int,
     classIndex :: !(Type2.Index scope),
-    instancex :: Real.Instance Normal Semantic.Resolve scope
+    instancex :: Real.Instance Identity Normal Semantic.Resolve scope
   }
 
-shrink :: DataInstance scope -> Real.Instance Normal Semantic.Resolve scope
+shrink :: DataInstance scope -> Real.Instance Identity Normal Semantic.Resolve scope
 shrink = instancex
 
 prepare :: DataInstance scope -> (Int, Map (Type2.Index scope) (NonEmpty.NonEmpty (DataInstance scope)))

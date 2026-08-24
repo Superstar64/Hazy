@@ -5,6 +5,7 @@ import Core.Tree.Constraints (ConstraintCount (..))
 import Core.Tree.Evidence (Evidence)
 import Core.Tree.MethodConcrete (MethodConcrete)
 import qualified Core.Tree.MethodConcrete as MethodConcrete
+import Data.Functor.Identity (Identity (..))
 import qualified Data.Vector.Strict as Strict (Vector)
 import Semantic.Layout (Normal)
 import Semantic.Scope (Environment ((:+)), Local)
@@ -39,12 +40,12 @@ instance Substitute.Functor Instance where
         members = Substitute.map category <$> members
       }
 
-simplify :: Semantic.Instance Normal Check scope -> Instance scope
+simplify :: Semantic.Instance Identity Normal Check scope -> Instance scope
 simplify
   Semantic.Instance
     { definition =
         Annotation {prerequisites}
-          ::: InstanceDefinition {evidence = Solved (Semantic.Evidence evidence), members}
+          ::: Identity InstanceDefinition {evidence = Solved (Semantic.Evidence evidence), members}
     } =
     Instance
       { evidence,
