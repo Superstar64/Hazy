@@ -212,6 +212,7 @@ executable hazy
     Semantic.Check.Functor.ModuleSet
     Semantic.Check.Go.Declaration
     Semantic.Check.Go.Declarations
+    Semantic.Check.Go.Instance
     Semantic.Check.Go.Module
     Semantic.Check.Go.Scheme
     Semantic.Check.Go.TypeDeclaration
@@ -247,7 +248,6 @@ executable hazy
     Semantic.Check.Temporary.ExpressionField
     Semantic.Check.Temporary.Field
     Semantic.Check.Temporary.Function
-    Semantic.Check.Temporary.Instance
     Semantic.Check.Temporary.Lambda
     Semantic.Check.Temporary.Method
     Semantic.Check.Temporary.MethodAbstract

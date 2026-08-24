@@ -20,14 +20,13 @@ import qualified Semantic.Check.Functor.Declarations as Functor (Declarations (.
 import qualified Semantic.Check.Functor.Instance.Key as Instance.Key
 import qualified Semantic.Check.Go.Declaration as Declaration
 import qualified Semantic.Check.Go.Declarations as Solved
+import qualified Semantic.Check.Go.Instance as Instance
 import Semantic.Check.Go.TypeDeclaration (TypeDeclaration (..))
 import qualified Semantic.Check.Go.TypeDeclaration as TypeDeclaration
 import Semantic.Check.InstanceAnnotation (InstanceAnnotation)
 import qualified Semantic.Check.InstanceAnnotation as InstanceAnnotation
 import Semantic.Check.KindAnnotation (KindAnnotation)
 import qualified Semantic.Check.KindAnnotation as KindAnnotation
-import Semantic.Check.Temporary.Instance (Instance)
-import qualified Semantic.Check.Temporary.Instance as Instance
 import Semantic.Check.Temporary.TypeDeclarationExtra (TypeDeclarationExtra)
 import qualified Semantic.Check.Temporary.TypeDeclarationExtra as TypeDeclarationExtra
 import Semantic.Check.TypeAnnotation (TypeAnnotation)
@@ -65,8 +64,8 @@ data Declarations locality s scope = Declarations
   { terms :: !(Vector (Declaration (Unify.Solve s) (Unify.Logical s scope) Identity locality Group Check scope)),
     types :: !(Vector (TypeDeclaration locality Group Check scope)),
     typeExtras :: !(Vector (TypeDeclarationExtra s scope)),
-    classInstances :: !(Vector (Map (Type2.Index scope) (Instance s scope))),
-    dataInstances :: !(Vector (Map (Type2.Index scope) (Instance s scope)))
+    classInstances :: !(Vector (Map (Type2.Index scope) (Semantic.Instance (Unify.Solve s) Group Check scope))),
+    dataInstances :: !(Vector (Map (Type2.Index scope) (Semantic.Instance (Unify.Solve s) Group Check scope)))
   }
 
 newtype Local s scope = Local (Declarations Locality.Local s (Scope.Declaration ':+ scope))
@@ -89,7 +88,7 @@ type Formula s scope z =
     (TypeDeclaration Locality.Local Group Check (Scope.Declaration ':+ scope))
     (TypeDeclarationExtra s (Scope.Declaration ':+ scope))
     (InstanceAnnotation (Scope.Declaration ':+ scope))
-    (Instance s (Scope.Declaration ':+ scope))
+    (Semantic.Instance (Unify.Solve s) Group Check (Scope.Declaration ':+ scope))
     z
 
 fromFunctor ::
@@ -101,7 +100,7 @@ fromFunctor ::
     (TypeDeclaration locality Group Check scope)
     (TypeDeclarationExtra s scope)
     c
-    (Instance s scope) ->
+    (Semantic.Instance (Unify.Solve s) Group Check scope) ->
   Declarations locality s scope
 fromFunctor
   Functor.Declarations
@@ -270,7 +269,7 @@ checkInstanceDeclaration ::
   Context s scope ->
   Instance.Key.Key (Scope.Declaration ':+ scope) ->
   Semantic.Instance Identity Group Resolve (Scope.Declaration ':+ scope) ->
-  Formula s scope (Instance s (Scope.Declaration ':+ scope))
+  Formula s scope (Semantic.Instance (Unify.Solve s) Group Check (Scope.Declaration ':+ scope))
 checkInstanceDeclaration context key declaration = Formula7 {cycle, run}
   where
     cycle :: a

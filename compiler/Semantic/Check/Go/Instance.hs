@@ -1,14 +1,13 @@
-module Semantic.Check.Temporary.Instance where
+module Semantic.Check.Go.Instance where
 
 import Control.Monad.ST (ST)
 import {-# SOURCE #-} qualified Core.Builtin as Builtin
-import Core.Substitute (Category (Substitute), logicalType)
+import Core.Substitute (Category (Substitute), logicalEvidence, logicalType)
 import qualified Core.Substitute as Substitute
 import qualified Core.Tree.Class as Simple.Class
 import Core.Tree.ClassExtra (ClassExtra (..))
 import qualified Core.Tree.Constraint as Simple (ConstraintF (Constraint))
 import qualified Core.Tree.Constraint as Simple.Constraint
-import qualified Core.Tree.Evidence as Simple (Evidence)
 import qualified Core.Tree.Evidence as Simple.Evidence
 import qualified Core.Tree.Forall as Simple (ForallOver (..))
 import qualified Core.Tree.Instanciation as Simple (InstanciationF (..))
@@ -22,7 +21,6 @@ import Data.Functor.Identity (Identity (..))
 import Data.Traversable (for)
 import qualified Data.Vector as Vector
 import Data.Vector.Strict (izipWithM)
-import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Context (Context (..))
 import qualified Semantic.Check.Go.Scheme as Scheme
@@ -41,12 +39,11 @@ import qualified Semantic.Index.Table.Type as Table.Type
 import qualified Semantic.Index.Type as Type
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Layout (Group)
-import Semantic.Scope (Environment ((:+)), Local)
 import Semantic.Shift (shift)
 import qualified Semantic.Shift as Shift
 import Semantic.Stage (Check, Resolve)
 import qualified Semantic.Tree.Combinators.Implicit as Semantic (Implicit (..))
-import Semantic.Tree.Combinators.Inferred (Inferred (..))
+import qualified Semantic.Tree.Combinators.Inferred as Inferred
 import qualified Semantic.Tree.Constraints as Solved (Constraints (Constraints))
 import qualified Semantic.Tree.Constraints as Solved.Constraints
 import qualified Semantic.Tree.Instance as Semantic (Instance (..))
@@ -55,9 +52,7 @@ import Semantic.Tree.InstanceDefinition (InstanceDefinition (..))
 import qualified Semantic.Tree.InstanceDefinition as Solved (Evidence (..))
 import Semantic.Tree.InstanceDefinition2 (Annotation (..), InstanceDefinition2 (..))
 import qualified Semantic.Tree.MethodConcrete as Semantic (MethodConcrete (..))
-import qualified Semantic.Tree.TypePattern as Solved (TypePattern)
 import qualified Semantic.Unify as Unify
-import Syntax.Position (Position)
 import Prelude hiding (head)
 
 data Key scope
@@ -80,20 +75,12 @@ head = \case
   Data {head1} -> Type2.Index head1
   Class {head2} -> head2
 
-data Instance s scope = Instance
-  { startPosition :: !Position,
-    parameters :: !(Strict.Vector (Solved.TypePattern Position Check scope)),
-    prerequisites :: !(Solved.Constraints Position Check scope),
-    evidence :: !(Strict.Vector (Simple.Evidence (Local ':+ scope))),
-    members :: !(Strict.Vector (MethodConcrete s scope))
-  }
-
 check ::
   Context s scope ->
   Key scope ->
   InstanceAnnotation scope ->
   Semantic.Instance Identity Group Resolve scope ->
-  ST s (Instance s scope)
+  ST s (Semantic.Instance (Unify.Solve s) Group Check scope)
 check
   context@Context {typeEnvironment}
   key
@@ -186,14 +173,27 @@ check
                         }
               pure Default {self, base, defaultx}
         members <- izipWithM check methods (shift <$> members)
-        pure Instance {startPosition, parameters, prerequisites, evidence, members}
+        pure
+          Semantic.Instance
+            { startPosition,
+              definition =
+                Annotation {parameters, prerequisites} ::: do
+                  evidence <- pure $ logicalEvidence <$> evidence
+                  members <- traverse MethodConcrete.solve members
+                  pure
+                    InstanceDefinition
+                      { evidence = Inferred.Solved $ Solved.Evidence evidence,
+                        members
+                      }
+            }
 
-solve :: Instance s scope -> Unify.Solve s (Solved.Instance Identity Group Check scope)
-solve Instance {startPosition, parameters, prerequisites, evidence, members} = do
-  members <- traverse MethodConcrete.solve members
-  evidence <- pure $ Solved $ Solved.Evidence evidence
+solve ::
+  Semantic.Instance (Unify.Solve s) Group Check scope ->
+  Unify.Solve s (Solved.Instance Identity Group Check scope)
+solve Semantic.Instance {startPosition, definition = annotation ::: definition} = do
+  definition <- definition
   pure
     Solved.Instance
       { startPosition,
-        definition = Annotation {parameters, prerequisites} ::: Identity InstanceDefinition {evidence, members}
+        definition = annotation ::: Identity definition
       }

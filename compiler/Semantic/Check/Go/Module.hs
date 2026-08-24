@@ -23,13 +23,13 @@ import Semantic.Check.Functor.ModuleSet (mapWithKey)
 import qualified Semantic.Check.Functor.ModuleSet as Functor (ModuleSet (..))
 import qualified Semantic.Check.Go.Declaration as Declaration.Unsolved
 import qualified Semantic.Check.Go.Declarations as Declarations
+import qualified Semantic.Check.Go.Instance as Instance (Key (..), check, solve)
 import Semantic.Check.Go.TypeDeclaration (TypeDeclaration (..))
 import qualified Semantic.Check.Go.TypeDeclaration as TypeDeclaration
 import Semantic.Check.InstanceAnnotation (InstanceAnnotation)
 import qualified Semantic.Check.InstanceAnnotation as InstanceAnnotation
 import Semantic.Check.KindAnnotation (KindAnnotation)
 import qualified Semantic.Check.KindAnnotation as KindAnnotation
-import qualified Semantic.Check.Temporary.Instance as Instance (Key (..), check, solve)
 import qualified Semantic.Check.Temporary.TypeDeclarationExtra as TypeDeclarationExtra
 import Semantic.Check.TypeAnnotation (TypeAnnotation)
 import qualified Semantic.Check.TypeAnnotation as TypeAnnotation
