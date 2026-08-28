@@ -22,7 +22,7 @@ import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import qualified Semantic.Tree.TypeDeclarationExtra as Semantic
 import qualified Semantic.Tree.TypeDeclarationExtra as Solved
 import qualified Semantic.Tree.TypeDefinition as TypeDefinition
-import Semantic.Tree.TypeDefinition2 (TypeDefinition2 (..))
+import Semantic.Tree.TypeDefinition2 (TypeDefinition2 ((:::)))
 import Semantic.Tree.TypePattern (TypePattern (..))
 import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)

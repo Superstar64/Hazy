@@ -9,7 +9,7 @@ import Semantic.Layout (Layout)
 import Semantic.Locality (Locality)
 import Semantic.Scope (Environment)
 import Semantic.Stage (Check, Resolve, Stage)
-import {-# SOURCE #-} Semantic.Tree.TypeDefinition (Constructive, TypeDefinition)
+import {-# SOURCE #-} Semantic.Tree.TypeDefinition (TypeDefinition)
 import Syntax.Position (Position)
 import Syntax.Variable (Constructor, ConstructorIdentifier)
 
@@ -21,7 +21,7 @@ data TypeDeclaration locality layout stage scope
 kind' :: TypeDeclaration locality layout Check scope -> Simple.Type scope
 
 data Groupable scope = Groupable
-  { element :: !(TypeDefinition Constructive Resolve scope),
+  { element :: !(TypeDefinition Resolve scope),
     position' :: !Position,
     name' :: !ConstructorIdentifier,
     constructorNames' :: !(Strict.Vector Constructor)

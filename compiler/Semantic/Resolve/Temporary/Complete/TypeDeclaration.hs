@@ -40,9 +40,9 @@ import qualified Semantic.Tree.Constructor as Real.Constructor
 import qualified Semantic.Tree.Entry as Real.Entry
 import qualified Semantic.Tree.Field as Real.Field
 import qualified Semantic.Tree.StrictnessAnnotation as StrictnessAnnotation
+import qualified Semantic.Tree.Synonym as Real.Synonym
 import qualified Semantic.Tree.TypeDeclaration as Real (TypeDeclaration (..), locality)
 import qualified Semantic.Tree.TypeDeclarationExtra as Real.Extra
-import Semantic.Tree.TypeDefinition (Alias (..), Inject (Inject))
 import qualified Semantic.Tree.TypeDefinition as Real (TypeDefinition (..))
 import qualified Semantic.Tree.TypeDefinition2 as Real (Annotation (..), TypeDefinition2 (..))
 import Syntax.Position (Position)
@@ -132,14 +132,13 @@ merge entries@(entry :| _) =
                         name,
                         constructorNames,
                         definition =
-                          Real.InferredCyclic
+                          Real.Inferred
                             Real.::: Real.ADT
                               { position,
                                 brand,
                                 parameters,
                                 constructors,
-                                selectors,
-                                inject = Inject
+                                selectors
                               },
                         kind = Inferred
                       }
@@ -155,8 +154,7 @@ merge entries@(entry :| _) =
                                 brand,
                                 parameters,
                                 constructors,
-                                selectors,
-                                inject = Inject
+                                selectors
                               },
                         kind = Inferred
                       }
@@ -171,14 +169,13 @@ merge entries@(entry :| _) =
                       name,
                       constructorNames,
                       definition =
-                        Real.InferredCyclic
+                        Real.Inferred
                           Real.::: Real.GADT
                             { position,
                               parameters,
                               brand,
                               gadtConstructors,
-                              unsupported = Refl,
-                              inject = Inject
+                              unsupported = Refl
                             },
                       kind = Inferred
                     }
@@ -194,8 +191,7 @@ merge entries@(entry :| _) =
                               parameters,
                               brand,
                               gadtConstructors,
-                              unsupported = Refl,
-                              inject = Inject
+                              unsupported = Refl
                             },
                       kind = Inferred
                     }
@@ -208,13 +204,12 @@ merge entries@(entry :| _) =
                     name,
                     constructorNames = Strict.Vector.empty,
                     definition =
-                      Real.InferredCyclic
+                      Real.Inferred
                         Real.::: Real.Class
                           { position,
                             parameter,
                             constraints,
-                            methods,
-                            inject = Inject
+                            methods
                           },
                     kind = Inferred
                   }
@@ -229,8 +224,7 @@ merge entries@(entry :| _) =
                           { position,
                             parameter,
                             constraints,
-                            methods,
-                            inject = Inject
+                            methods
                           },
                     kind = Inferred
                   }
@@ -248,11 +242,11 @@ merge entries@(entry :| _) =
                   name,
                   constructorNames = Strict.Vector.empty,
                   definition =
-                    Real.InferredAcyclic
-                      Real.::: Real.Synonym
+                    Real.Synonym
+                      Real.Inferred
+                      Real.Synonym.Synonym
                         { parameters,
-                          synonym,
-                          alias = Alias
+                          synonym
                         },
                   kind = Inferred
                 }
@@ -262,11 +256,11 @@ merge entries@(entry :| _) =
                   name,
                   constructorNames = Strict.Vector.empty,
                   definition =
-                    Real.Annotated annotation
-                      Real.::: Real.Synonym
+                    Real.Synonym
+                      (Real.Annotated annotation)
+                      Real.Synonym.Synonym
                         { parameters,
-                          synonym,
-                          alias = Alias
+                          synonym
                         },
                   kind = Inferred
                 }

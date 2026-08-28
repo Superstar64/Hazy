@@ -18,8 +18,8 @@ import qualified Semantic.Index.Link.Type as Type
 import Semantic.Layout (Group)
 import Semantic.Stage (Check, Resolve)
 import Semantic.Tree.Combinators.Inferred (Inferred (Solved))
+import qualified Semantic.Tree.Synonym as Synonym
 import Semantic.Tree.TypeDeclaration (TypeDeclaration (..), kind', lazy)
-import Semantic.Tree.TypeDefinition (Alias (..), Inject (..), TypeDefinition (..), assumeInject)
 import Semantic.Tree.TypeDefinition2 (Annotation (..), TypeDefinition2 (..))
 import Semantic.Tree.TypeGroup (Element (..), Set (..), TypeGroup (..), Types (..))
 import qualified Semantic.Tree.TypeGroup as TypeGroup
@@ -31,7 +31,7 @@ check ::
   Semantic.KindAnnotation scope ->
   TypeDeclaration locality Group Resolve scope ->
   ST s (TypeDeclaration locality Group Check scope)
-check _ _ annotation TypeDeclaration {position, name, constructorNames, definition = _ ::: Synonym {}}
+check _ _ annotation TypeDeclaration {position, name, constructorNames, definition = Synonym {}}
   | KindAnnotation.Synonym {kind, annotation', parameters, synonym} <- annotation = case annotation' of
       Strict.Nothing ->
         pure
@@ -39,7 +39,7 @@ check _ _ annotation TypeDeclaration {position, name, constructorNames, definiti
             { position,
               name,
               constructorNames,
-              definition = InferredAcyclic ::: Synonym {parameters, synonym, alias = Alias},
+              definition = Synonym Inferred Synonym.Synonym {parameters, synonym},
               kind = Solved kind
             }
       Strict.Just annotation ->
@@ -48,15 +48,14 @@ check _ _ annotation TypeDeclaration {position, name, constructorNames, definiti
             { position,
               name,
               constructorNames,
-              definition = Annotated annotation ::: Synonym {parameters, synonym, alias = Alias},
+              definition = Synonym (Annotated annotation) Synonym.Synonym {parameters, synonym},
               kind = Solved kind
             }
   | otherwise = error "bad synonym"
 check context linked annotation TypeDeclaration {position, name, constructorNames, definition} =
   case definition of
     Annotated {} ::: definition
-      | KindAnnotation.Annotation {annotation, kind} <- annotation,
-        Inject <- assumeInject definition -> do
+      | KindAnnotation.Annotation {annotation, kind} <- annotation -> do
           definition <- Temporary.TypeDefinition.check context (logicalType kind) definition
           definition <- Unify.runSolve $ Temporary.TypeDefinition.solve context definition
           pure

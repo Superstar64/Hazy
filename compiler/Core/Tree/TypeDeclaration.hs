@@ -10,7 +10,6 @@ import Semantic.Layout (Normal)
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
-import Semantic.Tree.TypeDefinition2 (TypeDefinition2 (..))
 import Syntax.Lexer (ConstructorIdentifier)
 
 data TypeDeclaration scope
@@ -44,6 +43,5 @@ simplify :: Solved.TypeDeclaration locality Normal Check scope -> TypeDeclaratio
 simplify Solved.TypeDeclaration {name, definition} =
   TypeDeclaration
     { name,
-      definition = case definition of
-        _ ::: definition -> TypeDefinition.simplify definition
+      definition = TypeDefinition.simplify definition
     }

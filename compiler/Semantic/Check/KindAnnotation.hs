@@ -17,9 +17,9 @@ import qualified Semantic.Check.Temporary.TypePattern as Unsolved.TypePattern
 import Semantic.Layout (Group)
 import Semantic.Scope (Environment ((:+)), Local)
 import Semantic.Stage (Check, Resolve)
+import qualified Semantic.Tree.Synonym as Semantic.Synonym
 import qualified Semantic.Tree.Type as Solved (Type)
 import qualified Semantic.Tree.TypeDeclaration as Semantic (TypeDeclaration (..))
-import qualified Semantic.Tree.TypeDefinition as Semantic (TypeDefinition (Synonym, parameters, synonym))
 import qualified Semantic.Tree.TypeDefinition2 as Semantic (Annotation (..), TypeDefinition2 (..))
 import qualified Semantic.Tree.TypePattern
 import qualified Semantic.Tree.TypePattern as Semantic (TypePattern (TypePattern))
@@ -45,7 +45,7 @@ check
   context
   Semantic.TypeDeclaration
     { position,
-      definition = annotation Semantic.::: Semantic.Synonym {synonym, parameters}
+      definition = Semantic.Synonym annotation Semantic.Synonym.Synonym {synonym, parameters}
     } =
     do
       let fresh Semantic.TypePattern {name, position} = do
@@ -61,7 +61,7 @@ check
       target <- Unify.fresh (Core.typeWith Core.large)
       let kind = foldr ((-#>) . Unsolved.TypePattern.typex) target parameters
       annotation' <- case annotation of
-        Semantic.InferredAcyclic -> pure Strict.Nothing
+        Semantic.Inferred -> pure Strict.Nothing
         Semantic.Annotated annotation -> do
           universe <- Unify.fresh Core.universe
           annotation <- Type.check context (Core.typeWith universe) annotation

@@ -10,14 +10,17 @@ import qualified Core.Tree.Data as Data
 import qualified Core.Tree.Forall as Forall
 import Core.Tree.Type (Type)
 import qualified Core.Tree.Type as Type
+import Semantic.Layout (Normal)
 import Semantic.Scope (Environment ((:+)), Local)
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import qualified Semantic.Tree.Method as Solved.Method
+import qualified Semantic.Tree.Synonym as Solved.Synonym
 import qualified Semantic.Tree.TypeDefinition
 import qualified Semantic.Tree.TypeDefinition as Solved (TypeDefinition (..))
+import qualified Semantic.Tree.TypeDefinition2 as Solved (TypeDefinition2 (..))
 import Semantic.Tree.TypePattern (TypePattern (..), typex')
 
 data TypeDefinition scope
@@ -49,8 +52,10 @@ instance Substitute.Functor TypeDefinition where
     Synonym definition ->
       Synonym (Substitute.map (Substitute.Over category) definition)
 
-simplify :: Solved.TypeDefinition equality Check scope -> TypeDefinition scope
-simplify = \case
+simplify :: Solved.TypeDefinition2 locality Normal Check scope -> TypeDefinition scope
+simplify (Solved.Synonym _ synonym) = case synonym of
+  Solved.Synonym.Synonym {synonym} -> Synonym (Type.simplify synonym)
+simplify (_ Solved.::: definition) = case definition of
   Solved.ADT {parameters, constructors, selectors, brand} ->
     Data
       Data.Data
@@ -66,4 +71,3 @@ simplify = \case
           constraints = Constraint.simplify <$> constraints,
           methods = Forall.simplify . Solved.Method.annotation <$> methods
         }
-  Solved.Synonym {synonym} -> Synonym (Type.simplify synonym)

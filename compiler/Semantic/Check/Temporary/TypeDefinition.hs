@@ -20,7 +20,6 @@ import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope
 import Semantic.Stage (Check, Resolve)
 import Semantic.Tree.Selector (Selector)
-import Semantic.Tree.TypeDefinition (Constructive, Inject (..))
 import qualified Semantic.Tree.TypeDefinition as Semantic (TypeDefinition (..))
 import qualified Semantic.Tree.TypeDefinition as Solved
 import qualified Semantic.Tree.TypePattern as Semantic (TypePattern (..))
@@ -46,7 +45,7 @@ data TypeDefinition s scope
 check ::
   Context s scope ->
   Unify.Type s scope ->
-  Semantic.TypeDefinition Constructive Resolve scope ->
+  Semantic.TypeDefinition Resolve scope ->
   ST s (TypeDefinition s scope)
 check context kind = \case
   Semantic.ADT
@@ -101,16 +100,16 @@ check context kind = \case
             position
           }
 
-solve :: Context s scope -> TypeDefinition s scope -> Unify.Solve s (Solved.TypeDefinition Constructive Check scope)
+solve :: Context s scope -> TypeDefinition s scope -> Unify.Solve s (Solved.TypeDefinition Check scope)
 solve context = \case
   ADT {brand, position, parameters, constructors, selectors} -> do
     parameters <- traverse TypePattern.solve parameters
     context <- pure $ Scheme.augmentSolve parameters context
     constructors <- traverse (Constructor.solve context) constructors
-    pure Solved.ADT {position, brand, parameters, constructors, selectors, inject = Inject}
+    pure Solved.ADT {position, brand, parameters, constructors, selectors}
   Class {parameter, position, constraints, methods} -> do
     parameter <- TypePattern.solve parameter
     context <- pure $ Scheme.augmentSolve (Strict.Vector.singleton parameter) context
     constraints <- traverse (Constraint.solve context) constraints
     methods <- traverse (Method.solve context) methods
-    pure Solved.Class {position, parameter, constraints, methods, inject = Inject}
+    pure Solved.Class {position, parameter, constraints, methods}

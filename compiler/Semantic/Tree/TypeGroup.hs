@@ -16,7 +16,7 @@ import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Stage)
 import Semantic.Tree.Combinators.Inferred (Inferred)
 import qualified Semantic.Tree.Combinators.Inferred as Combinators
-import Semantic.Tree.TypeDefinition (Constructive, TypeDefinition)
+import Semantic.Tree.TypeDefinition (TypeDefinition)
 import Syntax.Position (Position)
 import Syntax.Variable (QualifiedConstructor (..), QualifiedConstructorIdentifier (..))
 
@@ -64,7 +64,7 @@ instance FreeTypeVariables (Set locality) where
   freeTypeVariables target (Set set) = foldMap (freeTypeVariables target) set
 
 data Element locality stage scope = Element
-  { element :: !(TypeDefinition Constructive stage (Scope.GroupType ':+ scope)),
+  { element :: !(TypeDefinition stage (Scope.GroupType ':+ scope)),
     typex :: !(Combinators.Inferred Simple.Type stage scope),
     position :: !Position,
     name :: !QualifiedConstructorIdentifier,

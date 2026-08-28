@@ -12,101 +12,63 @@ import Semantic.Tree.Constructor (Constructor)
 import Semantic.Tree.GADTConstructor (GADTConstructor)
 import Semantic.Tree.Method (Method)
 import Semantic.Tree.Selector (Selector)
-import Semantic.Tree.Type (Type)
 import Semantic.Tree.TypePattern (TypePattern)
 import Syntax.Position (Position)
 import Syntax.Tree.Brand (Brand)
 
-data Equality
-  = Constructive
-  | Substitutive
-
-type Constructive = 'Constructive
-
-type Substitutive = 'Substitutive
-
-data Inject equality where
-  Inject :: Inject Constructive
-
-instance Show (Inject equality) where
-  show Inject = "Inject"
-
-data Alias equality where
-  Alias :: Alias Substitutive
-
-instance Show (Alias equality) where
-  show Alias = "Alias"
-
-data TypeDefinition equality stage scope
+data TypeDefinition stage scope
   = ADT
       { position :: !Position,
         brand :: !Brand,
         parameters :: !(Strict.Vector (TypePattern Position stage scope)),
         constructors :: !(Strict.Vector (Constructor stage (Local ':+ scope))),
-        selectors :: !(Strict.Vector Selector),
-        inject :: !(Inject equality)
+        selectors :: !(Strict.Vector Selector)
       }
   | GADT
       { position :: !Position,
         brand :: !Brand,
         parameters :: !(Strict.Vector (TypePattern Position stage scope)),
         gadtConstructors :: !(Strict.Vector (GADTConstructor stage scope)),
-        unsupported :: !(Unsupported stage),
-        inject :: !(Inject equality)
+        unsupported :: !(Unsupported stage)
       }
   | Class
       { position :: !Position,
         parameter :: !(TypePattern Position stage scope),
         constraints :: !(Strict.Vector (Constraint Position stage scope)),
-        methods :: !(Strict.Vector (Method stage (Local ':+ scope))),
-        inject :: !(Inject equality)
-      }
-  | Synonym
-      { parameters :: !(Strict.Vector (TypePattern Position stage scope)),
-        synonym :: !(Type Position stage (Local ':+ scope)),
-        alias :: !(Alias equality)
+        methods :: !(Strict.Vector (Method stage (Local ':+ scope)))
       }
   deriving (Show)
 
-instance Shift0.Functor (TypeDefinition equality stage) where
+instance Shift0.Functor (TypeDefinition stage) where
   map = Shift.mapDefault
 
-instance Shift.Functor (TypeDefinition equality stage) where
+instance Shift.Functor (TypeDefinition stage) where
   map category = \case
-    ADT {position, brand, parameters, constructors, selectors, inject} ->
+    ADT {position, brand, parameters, constructors, selectors} ->
       ADT
         { position,
           brand,
           parameters = Shift.map category <$> parameters,
           constructors = fmap (Shift.map (Shift.Over category)) constructors,
-          selectors,
-          inject
+          selectors
         }
-    GADT {position, brand, parameters, gadtConstructors, unsupported, inject} ->
+    GADT {position, brand, parameters, gadtConstructors, unsupported} ->
       GADT
         { position,
           brand,
           parameters = Shift.map category <$> parameters,
           gadtConstructors = fmap (Shift.map category) gadtConstructors,
-          unsupported,
-          inject
+          unsupported
         }
-    Class {position, parameter, methods, constraints, inject} ->
+    Class {position, parameter, methods, constraints} ->
       Class
         { position,
           parameter = Shift.map category parameter,
           constraints = fmap (Shift.map category) constraints,
-          methods = fmap (Shift.map (Shift.Over category)) methods,
-          inject
-        }
-    Synonym {parameters, synonym, alias} ->
-      Synonym
-        { parameters = Shift.map category <$> parameters,
-          synonym = Shift.map (Shift.Over category) synonym,
-          alias
+          methods = fmap (Shift.map (Shift.Over category)) methods
         }
 
-instance FreeTypeVariables (TypeDefinition equality) where
+instance FreeTypeVariables TypeDefinition where
   freeTypeVariables target = \case
     ADT {constructors} ->
       concat
@@ -121,14 +83,3 @@ instance FreeTypeVariables (TypeDefinition equality) where
         [ foldMap (freeTypeVariables $ FreeVariables.Over target) methods,
           foldMap (freeTypeVariables target) constraints
         ]
-    Synonym {synonym} ->
-      concat
-        [ freeTypeVariables (FreeVariables.Over target) synonym
-        ]
-
-assumeInject :: TypeDefinition equality stage scope -> Inject equality
-assumeInject = \case
-  ADT {inject} -> inject
-  GADT {inject} -> inject
-  Class {inject} -> inject
-  Synonym {} -> error "bad assumeInject"

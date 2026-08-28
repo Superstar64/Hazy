@@ -23,6 +23,7 @@ executable hazy
     Builtin.Functor
     Builtin.Integral
     Builtin.List
+    Semantic.Tree.Synonym
     Builtin.Monad
     Builtin.MonadFail
     Builtin.Num

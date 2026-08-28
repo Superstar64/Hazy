@@ -18,9 +18,10 @@ import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check, Resolve, Stage)
 import qualified Semantic.Tree.Combinators.Inferred as Combinators
 import qualified Semantic.Tree.Combinators.Inferred as Inferred
+import Semantic.Tree.Synonym (Synonym)
 import Semantic.Tree.Type (Type)
 import {-# SOURCE #-} Semantic.Tree.TypeDeclaration (Groupable (..))
-import Semantic.Tree.TypeDefinition (Constructive, Substitutive, TypeDefinition)
+import Semantic.Tree.TypeDefinition (TypeDefinition)
 import Semantic.Tree.TypeGroup (Element (..), Set (..), TypeGroup (..))
 import Syntax.Position (Position)
 import Syntax.Variable (QualifiedConstructor (..), QualifiedConstructorIdentifier (..), Qualifiers)
@@ -28,13 +29,17 @@ import Syntax.Variable (QualifiedConstructor (..), QualifiedConstructorIdentifie
 type TypeDefinition2 :: Locality -> Layout -> Stage -> Environment -> Data.Kind.Type
 data TypeDefinition2 locality layout stage scope where
   (:::) ::
-    !(Annotation equality layout stage scope) ->
-    !(TypeDefinition equality stage scope) ->
+    !(Annotation layout stage scope) ->
+    !(TypeDefinition stage scope) ->
     TypeDefinition2 locality layout stage scope
   Link :: !(Type.Link locality) -> !Int -> TypeDefinition2 locality Layout.Group stage scope
   Group ::
     !(TypeGroup locality Layout.Group stage scope) ->
     TypeDefinition2 locality Layout.Group stage scope
+  Synonym ::
+    !(Annotation Normal stage scope) ->
+    !(Synonym stage scope) ->
+    TypeDefinition2 locality layout stage scope
 
 infix 5 :::
 
@@ -52,6 +57,12 @@ instance Show (TypeDefinition2 locality layout stage scope) where
     Group group ->
       showParen (d > 10) $
         showString "Group " . showsPrec 11 group
+    Synonym annotation synonym ->
+      showParen (d > 10) $
+        showString "Synonym"
+          . showsPrec 11 annotation
+          . showString " "
+          . showsPrec 11 synonym
 
 instance Shift0.Functor (TypeDefinition2 locality layout stage) where
   map = Shift.mapDefault
@@ -61,6 +72,7 @@ instance Shift.Functor (TypeDefinition2 locality layout stage) where
     annotation ::: definition -> Shift.map category annotation ::: Shift.map category definition
     Link link id -> Link link id
     Group group -> Group (Shift.map category group)
+    Synonym annotation synonym -> Synonym (Shift.map category annotation) (Shift.map category synonym)
 
 instance FreeTypeVariables (TypeDefinition2 locality layout) where
   freeTypeVariables target = \case
@@ -68,36 +80,35 @@ instance FreeTypeVariables (TypeDefinition2 locality layout) where
       freeTypeVariables target annotation ++ freeTypeVariables target definition
     Link {} -> []
     Group group -> freeTypeVariables target group
+    Synonym annotation synonym ->
+      freeTypeVariables target annotation ++ freeTypeVariables target synonym
 
-data Annotation equality layout stage scope where
-  Annotated :: !(Type Position stage scope) -> Annotation equality layout stage scope
-  InferredCyclic :: Annotation Constructive Normal stage scope
-  InferredAcyclic :: Annotation Substitutive layout stage scope
+data Annotation layout stage scope where
+  Annotated :: !(Type Position stage scope) -> Annotation layout stage scope
+  Inferred :: Annotation Normal stage scope
 
-instance Show (Annotation equality mark stage scope) where
+instance Show (Annotation mark stage scope) where
   showsPrec d = \case
     Annotated typex -> showParen (d > 10) $ showString "Annotated " . showsPrec 11 typex
-    InferredCyclic -> showString "InferredCyclic"
-    InferredAcyclic -> showString "InferredAcyclic"
+    Inferred -> showString "Inferred"
 
-instance Shift0.Functor (Annotation equality mark stage) where
+instance Shift0.Functor (Annotation mark stage) where
   map = Shift.mapDefault
 
-instance Shift.Functor (Annotation equality mark stage) where
+instance Shift.Functor (Annotation mark stage) where
   map category = \case
     Annotated typex -> Annotated (Shift.map category typex)
-    InferredCyclic -> InferredCyclic
-    InferredAcyclic -> InferredAcyclic
+    Inferred -> Inferred
 
-instance FreeTypeVariables (Annotation equality mark) where
+instance FreeTypeVariables (Annotation mark) where
   freeTypeVariables target = \case
     Annotated typex -> freeTypeVariables target typex
-    InferredCyclic -> []
-    InferredAcyclic -> []
+    Inferred -> []
 
 locality :: TypeDefinition2 locality Normal stage scope -> TypeDefinition2 locality' Normal stage scope
 locality = \case
   annotation ::: definition -> annotation ::: definition
+  Synonym annotation definition -> Synonym annotation definition
 
 group ::
   Qualifiers ->
@@ -107,8 +118,8 @@ group ::
   TypeDefinition2 locality Normal Resolve scope ->
   TypeDefinition2 locality Layout.Group Resolve scope
 group _ _ _ _ (Annotated typex ::: definition) = Annotated typex ::: definition
-group _ _ _ _ (InferredAcyclic ::: definition) = InferredAcyclic ::: definition
-group qualifiers link index group (InferredCyclic ::: _) = case group of
+group _ _ _ _ (Synonym annotation definition) = Synonym annotation definition
+group qualifiers link index group (Inferred ::: _) = case group of
   StronglyConnected.Group {set} ->
     Group (Inferred.Inferred :::: Set (Strict.Vector.fromList $ map go $ Set.toList set))
     where
@@ -139,12 +150,12 @@ ungroupM ::
   TypeDefinition2 locality Layout.Group Check scope ->
   m (TypeDefinition2 locality Normal Check scope)
 ungroupM _ _ (Annotated annotation ::: definition) = pure $ Annotated annotation ::: definition
-ungroupM _ _ (InferredAcyclic ::: definition) = pure $ InferredAcyclic ::: definition
+ungroupM _ _ (Synonym annotation definition) = pure $ Synonym annotation definition
 ungroupM index lookup definition = case definition of
   Link index id -> do
     set <- lookup index
-    pure $ InferredCyclic ::: go id set
-  Group (_ :::: set) -> pure $ InferredCyclic ::: go 0 set
+    pure $ Inferred ::: go id set
+  Group (_ :::: set) -> pure $ Inferred ::: go 0 set
   where
     go id (Set set) = Shift.map (Shift.UngroupType original) element
       where
