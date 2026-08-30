@@ -2,6 +2,7 @@ module Semantic.Check.Temporary.Expression where
 
 import Control.Monad.ST (ST)
 import {-# SOURCE #-} qualified Core.Builtin as Builtin
+import qualified Core.Tree.Forall as Forall
 import Core.Tree.Type ((#), (-#>))
 import qualified Core.Tree.Type as Core
 import {-# SOURCE #-} Core.Tree.TypeDeclaration (assumeData)
@@ -298,7 +299,8 @@ check context typex Semantic.RightSection {left, operatorPosition, right} = do
   Unify.unify context operatorPosition typex (argumentType1 -#> result)
   pure RightSection {operatorPosition, left, right}
 check context typex Semantic.Annotation {expression = Explicit expression, operatorPosition, annotation} = do
-  Annotation.Annotation {annotation, annotation'} <- Annotation.checkAnnotation context annotation
+  annotation <- Annotation.checkAnnotation context annotation
+  let annotation' = Forall.simplify annotation
   expression <- Declaration.checkAnnotation context operatorPosition annotation $
     \context typex -> solve <$> check context typex expression
   (typex', instanciation) <- instanciate context operatorPosition annotation'

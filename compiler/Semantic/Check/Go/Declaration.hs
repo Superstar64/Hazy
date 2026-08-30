@@ -3,6 +3,7 @@ module Semantic.Check.Go.Declaration where
 import Control.Monad.ST (ST)
 import Core.Substitute (logicalType)
 import qualified Core.Tree.Constraints as Simple.Constraints (simplify)
+import qualified Core.Tree.Forall as Forall
 import qualified Core.Tree.Type as Core
 import qualified Core.Tree.Type as Simple (simplify)
 import qualified Core.Tree.TypeLambda as Simple (TypeLambdaOver (..))
@@ -15,7 +16,7 @@ import Semantic.Check.Context (Context (..), groupTermBindings)
 import qualified Semantic.Check.Go.Scheme as Solved.Scheme
 import qualified Semantic.Check.Mask as Mask
 import qualified Semantic.Check.Temporary.Definition3 as Definition3
-import Semantic.Check.TypeAnnotation (Annotation (..), TypeAnnotation (..))
+import Semantic.Check.TypeAnnotation (TypeAnnotation (..))
 import qualified Semantic.Index.Link.Term as Term
 import Semantic.Layout (Group)
 import Semantic.Scope (Environment (..), Local)
@@ -48,7 +49,8 @@ check ::
   ST s (Declaration (Unify.Solve s) (Unify.Logical s scope) Identity locality Group Check scope)
 check context linked annotation Declaration {position, name, definition} = case definition of
   Semantic.Annotated {} Semantic.::: Identity (Implicit.Resolve definition)
-    | Annotated Annotation {annotation, annotation'} <- annotation -> do
+    | Annotated annotation <- annotation -> do
+        let annotation' = Forall.simplify annotation
         definition <- checkAnnotation context position annotation $ \context typex -> do
           definition <- Definition3.checkManual context typex definition
           pure $ Definition3.solve position definition

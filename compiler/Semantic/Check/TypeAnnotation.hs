@@ -3,7 +3,6 @@
 module Semantic.Check.TypeAnnotation where
 
 import Control.Monad.ST (ST)
-import qualified Core.Tree.Forall as Simple
 import Data.Functor.Identity (Identity (..))
 import Data.Void (Void)
 import {-# SOURCE #-} Semantic.Check.Context (Context)
@@ -13,30 +12,25 @@ import Semantic.Stage (Check, Resolve)
 import qualified Semantic.Tree.Declaration as Semantic (Declaration (..))
 import qualified Semantic.Tree.Definition4 as Semantic (Annotation (..), Definition4 (..))
 import Semantic.Tree.Scheme (Scheme)
-import qualified Semantic.Tree.Scheme as Semantic (Scheme (..))
 import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
 
-data Annotation scope = Annotation
-  { annotation :: !(Scheme Position Check scope),
-    annotation' :: !(Simple.Forall scope)
-  }
-
 data TypeAnnotation scope
-  = Annotated !(Annotation scope)
+  = Annotated !(Scheme Position Check scope)
   | Inferred
 
-checkAnnotation :: Context s scope -> Semantic.Scheme Position Resolve scope -> ST s (Annotation scope)
+checkAnnotation :: Context s scope -> Scheme Position Resolve scope -> ST s (Scheme Position Check scope)
 checkAnnotation context annotation = do
   annotation <- Scheme.check context annotation
   annotation <- Unify.runSolve $ Scheme.solve context annotation
-  let annotation' = Simple.simplify annotation
-  pure $ Annotation {annotation, annotation'}
+  pure $ annotation
 
 check ::
   Context s scope ->
   Semantic.Declaration Identity Void Identity locality Group Resolve scope ->
   ST s (TypeAnnotation scope)
 check context Semantic.Declaration {definition} = case definition of
-  Semantic.Annotated annotation Semantic.::: _ -> Annotated <$> checkAnnotation context annotation
-  _ -> pure Inferred
+  Semantic.Annotated annotation Semantic.::: _ -> do
+    annotation <- checkAnnotation context annotation
+    pure $ Annotated annotation
+  _ -> pure $ Inferred

@@ -2,12 +2,13 @@ module Semantic.Check.TermBinding where
 
 import Control.Monad.ST (ST)
 import qualified Core.Tree.Forall as Core (mono)
+import qualified Core.Tree.Forall as Forall
 import qualified Core.Tree.Forall as Simple (Forall)
 import qualified Core.Type.Functor as Core (mapLogical, shiftLogical)
 import Data.Functor.Identity (Identity)
 import Data.Void (Void)
 import qualified Semantic.Check.Functor.Annotated as Functor (Annotated (..))
-import Semantic.Check.TypeAnnotation (Annotation (..), TypeAnnotation (..))
+import Semantic.Check.TypeAnnotation (TypeAnnotation (..))
 import Semantic.Layout (Group)
 import Semantic.Scope (Environment (..), GroupTerm)
 import qualified Semantic.Shift0 as Shift0
@@ -40,7 +41,7 @@ rigid ::
 rigid Functor.Annotated {meta, content} = TermBinding $ do
   annotation <- meta
   Rigid <$> case annotation of
-    Annotated Annotation {annotation'} -> pure annotation'
+    Annotated annotation -> pure (Forall.simplify annotation)
     Inferred -> Declaration.typex' <$> content
 
 wobbly ::
@@ -52,8 +53,8 @@ wobbly ::
 wobbly Functor.Annotated {meta, content} = TermBinding $ do
   annotation <- meta
   case annotation of
-    Annotated Annotation {annotation'} -> do
-      pure (Rigid annotation')
+    Annotated annotation -> do
+      pure (Rigid $ Forall.simplify annotation)
     Inferred -> do
       Wobbly . typex' <$> content
 
