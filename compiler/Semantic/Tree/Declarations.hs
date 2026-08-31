@@ -181,7 +181,7 @@ seperate declarations@Declarations {terms, types} =
     lookupTerm = \case
       Term.Declaration index
         | Declaration {definition} <- terms Vector.! index,
-          Definition4.Group (_ Group.:::: Identity set) <- definition ->
+          Definition4.Group (Identity (_ Group.:::: Identity set)) <- definition ->
             set
       _ -> error "bad term lookup"
     lookupType ::

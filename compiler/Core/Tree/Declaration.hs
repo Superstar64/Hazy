@@ -61,7 +61,7 @@ simplify = \case
         { name,
           definition =
             case definition of
-              _ Semantic.::: Identity (Check definition) ->
+              _ Semantic.::: Identity (Identity (Check definition)) ->
                 TypeLambda.map (TypeLambda.Map definition3) definition,
           typex = case typex of Identity (Solved typex) -> typex
         }

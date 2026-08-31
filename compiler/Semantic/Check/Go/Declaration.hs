@@ -48,21 +48,21 @@ check ::
   Declaration Identity Void Identity locality Group Resolve scope ->
   ST s (Declaration (Unify.Solve s) (Unify.Logical s scope) Identity locality Group Check scope)
 check context linked annotation Declaration {position, name, definition} = case definition of
-  Semantic.Annotated {} Semantic.::: Identity (Implicit.Resolve definition)
+  Semantic.Annotated {} Semantic.::: Identity (Identity (Implicit.Resolve definition))
     | Annotated annotation <- annotation -> do
         let annotation' = Forall.simplify annotation
         definition <- checkAnnotation context position annotation $ \context typex -> do
           definition <- Definition3.checkManual context typex definition
           pure $ Definition3.solve position definition
-        pure
+        pure $
           Declaration
             { position,
               name,
-              definition = Semantic.Annotated annotation ::: fmap Implicit.Check definition,
+              definition = Semantic.Annotated (Identity annotation) ::: Identity (fmap Implicit.Check definition),
               typex = Identity (Inferred.Solved $ logicalType annotation')
             }
     | otherwise -> error "bad type annotation"
-  Semantic.Group (_ Semantic.:::: Identity (Implicit.Resolve (Set set))) -> do
+  Semantic.Group (Identity (_ Semantic.:::: Identity (Implicit.Resolve (Set set)))) -> do
     types Unify.::: set <- Unify.generalizeBody position context $ Unify.Generalize $ \context -> do
       fresh <- Vector.replicateM (length set) $ Unify.fresh Core.typex
       set <- flip Strict.Vector.imapM set $ \index Element {element, link} -> do
@@ -82,7 +82,7 @@ check context linked annotation Declaration {position, name, definition} = case 
       Declaration
         { position,
           name,
-          definition = Semantic.Group $ Inferred.Solved types Semantic.:::: fmap Implicit.Check set,
+          definition = Semantic.Group $ Identity $ Inferred.Solved types Semantic.:::: fmap Implicit.Check set,
           typex = Identity (Inferred.Solved $ Unify.mapForall initial types)
         }
   Semantic.Link link id -> do

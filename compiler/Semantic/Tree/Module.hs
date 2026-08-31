@@ -136,7 +136,7 @@ seperate modules = go <$> modules
       Term.Global global local
         | Module {declarations = Declarations {terms}} <- modules Vector.! global,
           Declaration {definition} <- terms Vector.! local,
-          Definition4.Group (_ Group.:::: Identity set) <- definition ->
+          Definition4.Group (Identity (_ Group.:::: Identity set)) <- definition ->
             set
       _ -> error "bad term lookup"
     lookupType :: Type.Link Locality.Global -> TypeGroup.Set Locality.Global Check Global

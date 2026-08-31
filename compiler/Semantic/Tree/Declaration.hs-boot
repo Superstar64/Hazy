@@ -13,7 +13,7 @@ import Semantic.Stage (Check, Resolve, Stage)
 import {-# SOURCE #-} Semantic.Tree.Definition2 (Mark (Inferred))
 import {-# SOURCE #-} Semantic.Tree.Definition3 (Definition3)
 
-type role Declaration representational nominal representational nominal nominal nominal nominal
+type role Declaration nominal nominal representational nominal nominal nominal nominal
 
 type Declaration :: (Type -> Type) -> Type -> (Type -> Type) -> Locality -> Layout -> Stage -> Environment -> Type
 data Declaration solve logical loeb locality layout stage scope

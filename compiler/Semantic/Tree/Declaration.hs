@@ -38,7 +38,7 @@ data Declaration solve logical loeb locality layout stage scope
   = Declaration
   { position :: !Position,
     name :: !Key,
-    definition :: Definition4 solve logical locality layout stage scope,
+    definition :: Definition4 solve logical loeb locality layout stage scope,
     typex :: loeb (Inferred (Simple.ForallOver Simple.TypeF logical) stage scope)
   }
 
@@ -140,7 +140,7 @@ newtype Groupable scope
 
 groupable :: Declaration Identity logical Identity locality Normal Resolve scope -> Maybe (Groupable scope)
 groupable Declaration {definition} = case definition of
-  Definition4.Inferred Definition4.::: Identity (Implicit.Resolve definition) ->
+  Definition4.Inferred Definition4.::: Identity (Identity (Implicit.Resolve definition)) ->
     Just Groupable {element = definition}
   Definition4.Annotated {} Definition4.::: _ -> Nothing
 

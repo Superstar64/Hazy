@@ -140,14 +140,14 @@ resolve'
                 { position = Syntax.RightHandSide.equalPosition rightHandSide,
                   name = Unnamed temporary,
                   definition =
-                    Real.Inferred
-                      Real.::: Identity
-                        ( Real.Resolve
+                    let body =
+                          Real.Resolve
                             ( Real.Unnamed temporary
                                 `Real.Label` Real.Shared
                                   (RightHandSide.resolve context rightHandSide)
                             )
-                        ),
+                     in Real.Inferred
+                          Real.::: Identity (Identity body),
                   typex = Identity Inferred
                 }
           }

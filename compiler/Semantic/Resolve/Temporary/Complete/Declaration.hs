@@ -101,13 +101,14 @@ merge entries@(entry :| _) =
                           { position,
                             name,
                             definition =
-                              Real.Inferred
-                                Real.::: Identity
-                                  ( Real.Resolve
+                              let body =
+                                    Real.Resolve
                                       ( Real.Name properName fixity
                                           `Real.Label` Real.Definition auto
                                       )
-                                  ),
+                               in Real.Inferred
+                                    Real.::: Identity
+                                      (Identity body),
                             typex = Identity Inferred
                           }
                   Just annotation -> cast <$> Verbose.resolving (Variable.printLiteral' properName) real
@@ -118,15 +119,14 @@ merge entries@(entry :| _) =
                           { position,
                             name,
                             definition =
-                              Real.Annotated annotation
-                                Real.::: Identity
-                                  ( Real.Resolve
+                              let body =
+                                    Real.Resolve
                                       ( Real.Name properName fixity
                                           `Real.Label` if Scheme.implicit annotation
                                             then Real.Definition auto
                                             else Real.Scoped manual
                                       )
-                                  ),
+                               in Real.Annotated (Identity annotation) Real.::: Identity (Identity body),
                             typex = Identity Inferred
                           }
         | Just (_, selector) <- selection,
@@ -144,14 +144,13 @@ merge entries@(entry :| _) =
                       { position,
                         name,
                         definition =
-                          Real.Inferred
-                            Real.::: Identity
-                              ( Real.Resolve
+                          let body =
+                                Real.Resolve
                                   ( Real.Name properName fixity
                                       `Real.Label` Real.Piece
                                         Real.Choice {position, index, instanciation, bound, patternx}
                                   )
-                              ),
+                           in Real.Inferred Real.::: Identity (Identity body),
                         typex = Identity Inferred
                       }
                   Just annotation ->
@@ -159,14 +158,13 @@ merge entries@(entry :| _) =
                       { position,
                         name,
                         definition =
-                          Real.Annotated annotation
-                            Real.::: Identity
-                              ( Real.Resolve
+                          let body =
+                                Real.Resolve
                                   ( Real.Name properName fixity
                                       `Real.Label` Real.Piece
                                         Real.Choice {position, index, instanciation, bound, patternx}
                                   )
-                              ),
+                           in Real.Annotated (Identity annotation) Real.::: Identity (Identity body),
                         typex = Identity Inferred
                       }
              in cast <$> Verbose.resolving (Variable.printLiteral' properName) real

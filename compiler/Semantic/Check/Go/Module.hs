@@ -174,7 +174,7 @@ checkTermDeclaration global local declaration = Formula7 {cycle, run}
                 Functor.Annotated {content} = terms Vector.! local
             Declaration {definition} <- content
             pure $ case definition of
-              Definition4.Group (Solved types Group.:::: _) -> logicalType $ Forall.map go types
+              Definition4.Group (Identity (Solved types Group.:::: _)) -> logicalType $ Forall.map go types
                 where
                   go = Forall.Map $ \case
                     Group.Types types -> types Strict.Vector.! id

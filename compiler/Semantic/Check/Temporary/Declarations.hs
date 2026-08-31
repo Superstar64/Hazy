@@ -183,7 +183,7 @@ checkTermDeclaration context index declaration = Formula7 {cycle, run}
             let Functor.Annotated {content} = terms Vector.! local
             Declaration {definition} <- content
             pure $ case definition of
-              Definition4.Group (Solved types Group.:::: _) -> Unify.mapForall go types
+              Definition4.Group (Identity (Solved types Group.:::: _)) -> Unify.mapForall go types
                 where
                   go = Unify.MapForall $ \case
                     Group.Types types -> types Strict.Vector.! id

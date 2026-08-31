@@ -30,7 +30,7 @@ check ::
   Semantic.Declaration Identity Void Identity locality Group Resolve scope ->
   ST s (TypeAnnotation scope)
 check context Semantic.Declaration {definition} = case definition of
-  Semantic.Annotated annotation Semantic.::: _ -> do
+  Semantic.Annotated (Identity annotation) Semantic.::: _ -> do
     annotation <- checkAnnotation context annotation
     pure $ Annotated annotation
   _ -> pure $ Inferred
