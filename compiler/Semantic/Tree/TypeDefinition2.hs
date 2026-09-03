@@ -37,7 +37,6 @@ data TypeDefinition2 locality layout stage scope where
     !(TypeGroup locality Layout.Group stage scope) ->
     TypeDefinition2 locality Layout.Group stage scope
   Synonym ::
-    !(Annotation Normal stage scope) ->
     !(Synonym stage scope) ->
     TypeDefinition2 locality layout stage scope
 
@@ -57,11 +56,9 @@ instance Show (TypeDefinition2 locality layout stage scope) where
     Group group ->
       showParen (d > 10) $
         showString "Group " . showsPrec 11 group
-    Synonym annotation synonym ->
+    Synonym synonym ->
       showParen (d > 10) $
         showString "Synonym"
-          . showsPrec 11 annotation
-          . showString " "
           . showsPrec 11 synonym
 
 instance Shift0.Functor (TypeDefinition2 locality layout stage) where
@@ -72,7 +69,7 @@ instance Shift.Functor (TypeDefinition2 locality layout stage) where
     annotation ::: definition -> Shift.map category annotation ::: Shift.map category definition
     Link link id -> Link link id
     Group group -> Group (Shift.map category group)
-    Synonym annotation synonym -> Synonym (Shift.map category annotation) (Shift.map category synonym)
+    Synonym synonym -> Synonym (Shift.map category synonym)
 
 instance FreeTypeVariables (TypeDefinition2 locality layout) where
   freeTypeVariables target = \case
@@ -80,8 +77,7 @@ instance FreeTypeVariables (TypeDefinition2 locality layout) where
       freeTypeVariables target annotation ++ freeTypeVariables target definition
     Link {} -> []
     Group group -> freeTypeVariables target group
-    Synonym annotation synonym ->
-      freeTypeVariables target annotation ++ freeTypeVariables target synonym
+    Synonym synonym -> freeTypeVariables target synonym
 
 data Annotation layout stage scope where
   Annotated :: !(Type Position stage scope) -> Annotation layout stage scope
@@ -108,7 +104,7 @@ instance FreeTypeVariables (Annotation mark) where
 locality :: TypeDefinition2 locality Normal stage scope -> TypeDefinition2 locality' Normal stage scope
 locality = \case
   annotation ::: definition -> annotation ::: definition
-  Synonym annotation definition -> Synonym annotation definition
+  Synonym definition -> Synonym definition
 
 group ::
   Qualifiers ->
@@ -118,7 +114,7 @@ group ::
   TypeDefinition2 locality Normal Resolve scope ->
   TypeDefinition2 locality Layout.Group Resolve scope
 group _ _ _ _ (Annotated typex ::: definition) = Annotated typex ::: definition
-group _ _ _ _ (Synonym annotation definition) = Synonym annotation definition
+group _ _ _ _ (Synonym definition) = Synonym definition
 group qualifiers link index group (Inferred ::: _) = case group of
   StronglyConnected.Group {set} ->
     Group (Inferred.Inferred :::: Set (Strict.Vector.fromList $ map go $ Set.toList set))
@@ -150,7 +146,7 @@ ungroupM ::
   TypeDefinition2 locality Layout.Group Check scope ->
   m (TypeDefinition2 locality Normal Check scope)
 ungroupM _ _ (Annotated annotation ::: definition) = pure $ Annotated annotation ::: definition
-ungroupM _ _ (Synonym annotation definition) = pure $ Synonym annotation definition
+ungroupM _ _ (Synonym definition) = pure $ Synonym definition
 ungroupM index lookup definition = case definition of
   Link index id -> do
     set <- lookup index

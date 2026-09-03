@@ -153,7 +153,7 @@ groupable TypeDeclaration {position, name, constructorNames, definition} = case 
           constructorNames' = constructorNames
         }
   TypeDefinition2.Annotated {} TypeDefinition2.::: _ -> Nothing
-  TypeDefinition2.Synonym _ _ -> Nothing
+  TypeDefinition2.Synonym _ -> Nothing
 
 groupFree :: Groupable scope -> [Type0.Index scope]
 groupFree Groupable {element} = freeTypeVariables Target element

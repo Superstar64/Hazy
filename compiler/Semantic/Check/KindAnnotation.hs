@@ -45,7 +45,7 @@ check
   context
   Semantic.TypeDeclaration
     { position,
-      definition = Semantic.Synonym annotation Semantic.Synonym.Synonym {synonym, parameters}
+      definition = Semantic.Synonym (annotation Semantic.Synonym.::: Semantic.Synonym.SynonymBody {synonym, parameters})
     } =
     do
       let fresh Semantic.TypePattern {name, position} = do
@@ -61,8 +61,8 @@ check
       target <- Unify.fresh (Core.typeWith Core.large)
       let kind = foldr ((-#>) . Unsolved.TypePattern.typex) target parameters
       annotation' <- case annotation of
-        Semantic.Inferred -> pure Strict.Nothing
-        Semantic.Annotated annotation -> do
+        Strict.Nothing -> pure Strict.Nothing
+        Strict.Just annotation -> do
           universe <- Unify.fresh Core.universe
           annotation <- Type.check context (Core.typeWith universe) annotation
           annotation <- Unify.runSolve $ Type.solve context annotation

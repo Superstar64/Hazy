@@ -242,12 +242,12 @@ merge entries@(entry :| _) =
                   name,
                   constructorNames = Strict.Vector.empty,
                   definition =
-                    Real.Synonym
-                      Real.Inferred
-                      Real.Synonym.Synonym
-                        { parameters,
-                          synonym
-                        },
+                    Real.Synonym $
+                      Strict.Nothing
+                        Real.Synonym.::: Real.Synonym.SynonymBody
+                          { parameters,
+                            synonym
+                          },
                   kind = Inferred
                 }
             Strict.Just annotation ->
@@ -256,12 +256,12 @@ merge entries@(entry :| _) =
                   name,
                   constructorNames = Strict.Vector.empty,
                   definition =
-                    Real.Synonym
-                      (Real.Annotated annotation)
-                      Real.Synonym.Synonym
-                        { parameters,
-                          synonym
-                        },
+                    Real.Synonym $
+                      Strict.Just annotation
+                        Real.Synonym.::: Real.Synonym.SynonymBody
+                          { parameters,
+                            synonym
+                          },
                   kind = Inferred
                 }
       entries -> duplicateTypeEntries entries

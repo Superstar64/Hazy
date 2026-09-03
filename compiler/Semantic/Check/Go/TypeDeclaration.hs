@@ -39,7 +39,7 @@ check _ _ annotation TypeDeclaration {position, name, constructorNames, definiti
             { position,
               name,
               constructorNames,
-              definition = Synonym Inferred Synonym.Synonym {parameters, synonym},
+              definition = Synonym (Strict.Nothing Synonym.::: Synonym.SynonymBody {parameters, synonym}),
               kind = Solved kind
             }
       Strict.Just annotation ->
@@ -48,7 +48,7 @@ check _ _ annotation TypeDeclaration {position, name, constructorNames, definiti
             { position,
               name,
               constructorNames,
-              definition = Synonym (Annotated annotation) Synonym.Synonym {parameters, synonym},
+              definition = Synonym (Strict.Just annotation Synonym.::: Synonym.SynonymBody {parameters, synonym}),
               kind = Solved kind
             }
   | otherwise = error "bad synonym"
