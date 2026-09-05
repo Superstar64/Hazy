@@ -2,7 +2,7 @@ module Semantic.Check.Context where
 
 import Control.Monad.ST (ST)
 import Core.Tree.Type (Type)
-import Data.Functor.Identity (Identity)
+import Data.Functor.Identity (Identity (..))
 import qualified Data.Kind
 import qualified Data.Strict.Maybe as Strict
 import Data.Vector (Vector)
@@ -66,7 +66,7 @@ globalBindings ::
     (ST s (TypeAnnotation Global))
     (ST s (Declaration Identity Void Identity Locality.Global Group Check Global))
     (ST s (KindAnnotation Global))
-    (ST s (TypeDeclaration Locality.Global Group Check Global))
+    (ST s (TypeDeclaration Identity Locality.Global Group Check Global))
     (ST s (TypeDeclarationExtra Group Check Global))
     (ST s (InstanceAnnotation Global))
     x ->
@@ -91,7 +91,7 @@ globalBindings (Functor.ModuleSet modules) =
           Functor.Annotated {content} <- types Vector.! local -> do
             Semantic.TypeDeclaration {definition} <- content
             case definition of
-              Semantic.Group (_ Semantic.:::: set) -> pure set
+              Semantic.Group (Identity (_ Semantic.:::: set)) -> pure set
               _ -> error "bad definition lookup"
 
 localBindings ::
@@ -111,7 +111,7 @@ localBindings ::
         )
     )
     (ST s (KindAnnotation (Scope.Declaration ':+ scope)))
-    (ST s (TypeDeclaration Locality.Local Group Check (Scope.Declaration ':+ scope)))
+    (ST s (TypeDeclaration Identity Locality.Local Group Check (Scope.Declaration ':+ scope)))
     (ST s (Temporary.TypeDeclarationExtra s (Scope.Declaration ':+ scope)))
     (ST s (InstanceAnnotation (Scope.Declaration ':+ scope)))
     x' ->
@@ -133,7 +133,7 @@ localBindings
           | Functor.Annotated {content} <- types Vector.! local -> do
               Semantic.TypeDeclaration {definition} <- content
               case definition of
-                Semantic.Group (_ Semantic.:::: set) -> pure set
+                Semantic.Group (Identity (_ Semantic.:::: set)) -> pure set
                 _ -> error "bad definition lookup"
 
 groupTermBindings ::

@@ -5,6 +5,7 @@ import Core.Substitute (logicalType)
 import qualified Core.Tree.Type as Core
 import qualified Core.Tree.Type as Simple
 import Core.Type.Functor (shiftLogical)
+import Data.Functor.Identity (Identity (..))
 import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import qualified Data.Vector as Vector
 import Data.Vector.Strict (toLazy)
@@ -29,8 +30,8 @@ check ::
   Context s scope ->
   (Type.Link locality -> Int -> ST s (Simple.Type scope)) ->
   Semantic.KindAnnotation scope ->
-  TypeDeclaration locality Group Resolve scope ->
-  ST s (TypeDeclaration locality Group Check scope)
+  TypeDeclaration Identity locality Group Resolve scope ->
+  ST s (TypeDeclaration Identity locality Group Check scope)
 check _ _ annotation TypeDeclaration {position, name, constructorNames, definition = Synonym {}}
   | KindAnnotation.Synonym {kind, annotation', parameters, synonym} <- annotation = case annotation' of
       Strict.Nothing ->
@@ -39,8 +40,11 @@ check _ _ annotation TypeDeclaration {position, name, constructorNames, definiti
             { position,
               name,
               constructorNames,
-              definition = Synonym (Strict.Nothing Synonym.::: Synonym.SynonymBody {parameters, synonym}),
-              kind = Solved kind
+              definition =
+                Synonym $
+                  Identity $
+                    Strict.Nothing Synonym.::: Synonym.SynonymBody {parameters, synonym},
+              kind = Identity (Solved kind)
             }
       Strict.Just annotation ->
         pure
@@ -48,13 +52,16 @@ check _ _ annotation TypeDeclaration {position, name, constructorNames, definiti
             { position,
               name,
               constructorNames,
-              definition = Synonym (Strict.Just annotation Synonym.::: Synonym.SynonymBody {parameters, synonym}),
-              kind = Solved kind
+              definition =
+                Synonym $
+                  Identity $
+                    Strict.Just annotation Synonym.::: Synonym.SynonymBody {parameters, synonym},
+              kind = Identity $ Solved kind
             }
   | otherwise = error "bad synonym"
 check context linked annotation TypeDeclaration {position, name, constructorNames, definition} =
   case definition of
-    Annotated {} ::: definition
+    Annotated {} ::: Identity definition
       | KindAnnotation.Annotation {annotation, kind} <- annotation -> do
           definition <- Temporary.TypeDefinition.check context (logicalType kind) definition
           definition <- Unify.runSolve $ Temporary.TypeDefinition.solve context definition
@@ -63,11 +70,11 @@ check context linked annotation TypeDeclaration {position, name, constructorName
               { position,
                 name,
                 constructorNames,
-                definition = Annotated annotation ::: definition,
-                kind = Solved kind
+                definition = Annotated (Identity annotation) ::: Identity definition,
+                kind = Identity $ Solved kind
               }
       | otherwise -> error "bad annotation"
-    Group (_ :::: Set set) -> do
+    Group (Identity (_ :::: Set set)) -> do
       fresh <- Vector.replicateM (length set) (Unify.fresh Core.kind)
       let context' =
             groupTypeBindings
@@ -93,8 +100,8 @@ check context linked annotation TypeDeclaration {position, name, constructorName
           { position,
             name,
             constructorNames,
-            definition = Group $ Solved (Types $ Strict.Vector.fromLazy kinds) :::: Set set,
-            kind = Solved kind
+            definition = Group $ Identity $ Solved (Types $ Strict.Vector.fromLazy kinds) :::: Set set,
+            kind = Identity $ Solved kind
           }
     Link link id -> do
       kind <- linked link id
@@ -104,5 +111,5 @@ check context linked annotation TypeDeclaration {position, name, constructorName
             name,
             constructorNames,
             definition = Link link id,
-            kind = Solved kind
+            kind = Identity $ Solved kind
           }

@@ -4,6 +4,7 @@ import Control.Monad.ST (ST)
 import qualified Core.Tree.Constraint as Simple (ConstraintF (..))
 import qualified Core.Tree.Constraint as Simple.Constraint
 import Core.Tree.Constraints as Simple (ConstraintsF (Constraints))
+import Data.Functor.Identity (Identity (..))
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Context (Context)
@@ -39,7 +40,7 @@ data TypeDeclarationExtra s scope
 check ::
   Context s scope ->
   Type.Index scope ->
-  TypeDeclaration locality Normal Check scope ->
+  TypeDeclaration Identity locality Normal Check scope ->
   Semantic.TypeDeclarationExtra Group Resolve scope ->
   ST s (TypeDeclarationExtra s scope)
 check context classx declaration
@@ -48,7 +49,7 @@ check context classx declaration
       Semantic.Synonym {position} -> pure Synonym {position}
       Semantic.GADT {position} -> pure GADT {position}
       Semantic.Class {position, methods} -> case definition of
-        _ ::: TypeDefinition.Class {parameter = TypePattern {typex = Solved parameter}, methods = base} -> do
+        _ ::: Identity TypeDefinition.Class {parameter = TypePattern {typex = Solved parameter}, methods = base} -> do
           context <-
             augment
               position

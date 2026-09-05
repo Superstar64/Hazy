@@ -4,6 +4,7 @@ module Core.Tree.TypeDeclaration where
 
 import {-# SOURCE #-} Core.Tree.Class (Class)
 import {-# SOURCE #-} Core.Tree.Data (Data)
+import Data.Functor.Identity (Identity)
 import qualified Data.Kind
 import {-# SOURCE #-} qualified Semantic.Check.Go.TypeDeclaration as Solved
 import Semantic.Layout (Normal)
@@ -24,4 +25,4 @@ instance Shift0.Functor TypeDeclaration
 
 instance Shift.Functor TypeDeclaration
 
-simplify :: Solved.TypeDeclaration locality Normal Check scope -> TypeDeclaration scope
+simplify :: Solved.TypeDeclaration Identity locality Normal Check scope -> TypeDeclaration scope

@@ -10,6 +10,7 @@ import qualified Core.Tree.Data as Data
 import qualified Core.Tree.Forall as Forall
 import Core.Tree.Type (Type)
 import qualified Core.Tree.Type as Type
+import Data.Functor.Identity (Identity (..))
 import Semantic.Layout (Normal)
 import Semantic.Scope (Environment ((:+)), Local)
 import qualified Semantic.Shift as Shift
@@ -52,10 +53,10 @@ instance Substitute.Functor TypeDefinition where
     Synonym definition ->
       Synonym (Substitute.map (Substitute.Over category) definition)
 
-simplify :: Solved.TypeDefinition2 locality Normal Check scope -> TypeDefinition scope
-simplify (Solved.Synonym (_ Solved.Synonym.::: body)) = case body of
+simplify :: Solved.TypeDefinition2 Identity locality Normal Check scope -> TypeDefinition scope
+simplify (Solved.Synonym (Identity (_ Solved.Synonym.::: body))) = case body of
   Solved.Synonym.SynonymBody {synonym} -> Synonym (Type.simplify synonym)
-simplify (_ Solved.::: definition) = case definition of
+simplify (_ Solved.::: Identity definition) = case definition of
   Solved.ADT {parameters, constructors, selectors, brand} ->
     Data
       Data.Data

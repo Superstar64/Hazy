@@ -44,7 +44,7 @@ import qualified Syntax.Variable as Variable
 
 data Declarations locality layout stage scope = Declarations
   { terms :: !(Vector (Declaration Identity Void Identity locality layout stage scope)),
-    types :: !(Vector (TypeDeclaration locality layout stage scope)),
+    types :: !(Vector (TypeDeclaration Identity locality layout stage scope)),
     typeExtras :: !(Vector (TypeDeclarationExtra layout stage scope)),
     dataInstances :: !(Vector (Map (Type2.Index scope) (Instance Identity layout stage scope))),
     classInstances :: !(Vector (Map (Type2.Index scope) (Instance Identity layout stage scope)))
@@ -190,7 +190,7 @@ seperate declarations@Declarations {terms, types} =
     lookupType = \case
       Type.Declaration index
         | TypeDeclaration {definition} <- types Vector.! index,
-          TypeDefinition2.Group (_ TypeGroup.:::: set) <- definition ->
+          TypeDefinition2.Group (Identity (_ TypeGroup.:::: set)) <- definition ->
             set
       _ -> error "bad type lookup"
 

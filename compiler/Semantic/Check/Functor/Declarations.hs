@@ -111,8 +111,8 @@ fromStage2 ::
     scope
     (Semantic.Declaration Identity Void Identity locality Group Resolve scope)
     (Semantic.Declaration Identity Void Identity locality Group Resolve scope)
-    (Semantic.TypeDeclaration locality Group Resolve scope)
-    (Semantic.TypeDeclaration locality Group Resolve scope)
+    (Semantic.TypeDeclaration Identity locality Group Resolve scope)
+    (Semantic.TypeDeclaration Identity locality Group Resolve scope)
     (Semantic.TypeDeclarationExtra Group Resolve scope)
     (Semantic.Instance Identity Group Resolve scope)
     (Semantic.Instance Identity Group Resolve scope)

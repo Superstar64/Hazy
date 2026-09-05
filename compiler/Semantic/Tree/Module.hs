@@ -144,6 +144,6 @@ seperate modules = go <$> modules
       Type.Global global local
         | Module {declarations = Declarations {types}} <- modules Vector.! global,
           TypeDeclaration {definition} <- types Vector.! local,
-          TypeDefinition2.Group (_ TypeGroup.:::: set) <- definition ->
+          TypeDefinition2.Group (Identity (_ TypeGroup.:::: set)) <- definition ->
             set
       _ -> error "bad type lookup"

@@ -55,8 +55,8 @@ fromStage2 ::
   Module
     (Semantic.Declaration Identity Void Identity Locality.Global Group Resolve Global)
     (Semantic.Declaration Identity Void Identity Locality.Global Group Resolve Global)
-    (Semantic.TypeDeclaration Locality.Global Group Resolve Global)
-    (Semantic.TypeDeclaration Locality.Global Group Resolve Global)
+    (Semantic.TypeDeclaration Identity Locality.Global Group Resolve Global)
+    (Semantic.TypeDeclaration Identity Locality.Global Group Resolve Global)
     (Semantic.TypeDeclarationExtra Group Resolve Global)
     (Semantic.Instance Identity Group Resolve Global)
     (Semantic.Instance Identity Group Resolve Global)

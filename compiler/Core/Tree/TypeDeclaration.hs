@@ -5,6 +5,7 @@ import Core.Tree.Class (Class)
 import Core.Tree.Data (Data)
 import Core.Tree.TypeDefinition (TypeDefinition)
 import qualified Core.Tree.TypeDefinition as TypeDefinition
+import Data.Functor.Identity (Identity)
 import qualified Semantic.Check.Go.TypeDeclaration as Solved (TypeDeclaration (..))
 import Semantic.Layout (Normal)
 import qualified Semantic.Shift as Shift
@@ -39,7 +40,7 @@ instance Substitute.Functor TypeDeclaration where
           definition = Substitute.map category definition
         }
 
-simplify :: Solved.TypeDeclaration locality Normal Check scope -> TypeDeclaration scope
+simplify :: Solved.TypeDeclaration Identity locality Normal Check scope -> TypeDeclaration scope
 simplify Solved.TypeDeclaration {name, definition} =
   TypeDeclaration
     { name,

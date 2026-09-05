@@ -68,7 +68,7 @@ type Formula s z =
     (TypeAnnotation Global)
     (Declaration Identity Void Identity Locality.Global Group Check Global)
     (KindAnnotation Global)
-    (TypeDeclaration Locality.Global Group Check Global)
+    (TypeDeclaration Identity Locality.Global Group Check Global)
     (TypeDeclarationExtra Group Check Global)
     (InstanceAnnotation Global)
     (Instance Identity Group Check Global)
@@ -79,7 +79,7 @@ fromFunctor ::
     a
     (Declaration Identity Void Identity Locality.Global Group Check Global)
     b
-    (TypeDeclaration Locality.Global Group Check Global)
+    (TypeDeclaration Identity Locality.Global Group Check Global)
     (TypeDeclarationExtra Group Check Global)
     c
     (Instance Identity Group Check Global) ->
@@ -95,7 +95,7 @@ fromFunctors ::
     a
     (Declaration Identity Void Identity Locality.Global Group Check Global)
     b
-    (TypeDeclaration Locality.Global Group Check Global)
+    (TypeDeclaration Identity Locality.Global Group Check Global)
     (TypeDeclarationExtra Group Check Global)
     c
     (Instance Identity Group Check Global) ->
@@ -187,7 +187,7 @@ checkTermDeclaration global local declaration = Formula7 {cycle, run}
 checkTypeAnnotation ::
   p1 ->
   p2 ->
-  Semantic.TypeDeclaration.TypeDeclaration locality Group Resolve Global ->
+  Semantic.TypeDeclaration.TypeDeclaration Identity locality Group Resolve Global ->
   Formula s (KindAnnotation Global)
 checkTypeAnnotation _ _ declaration = Formula7 {cycle, run}
   where
@@ -199,8 +199,8 @@ checkTypeDeclaration ::
   forall s.
   Int ->
   Int ->
-  Semantic.TypeDeclaration.TypeDeclaration Locality.Global Group Resolve Global ->
-  Formula s (TypeDeclaration Locality.Global Group Check Global)
+  Semantic.TypeDeclaration.TypeDeclaration Identity Locality.Global Group Resolve Global ->
+  Formula s (TypeDeclaration Identity Locality.Global Group Check Global)
 checkTypeDeclaration global local declaration = Formula7 {cycle, run}
   where
     cycle :: a
@@ -216,7 +216,8 @@ checkTypeDeclaration global local declaration = Formula7 {cycle, run}
                 Functor.Annotated {content} = types Vector.! local
             TypeDeclaration {definition} <- content
             pure $ case definition of
-              TypeDefinition2.Group (Solved (TypeGroup.Types types) TypeGroup.:::: _) -> types Strict.Vector.! id
+              TypeDefinition2.Group (Identity (Solved (TypeGroup.Types types) TypeGroup.:::: _)) ->
+                types Strict.Vector.! id
               _ -> error "bad link lookup"
       annotation <- meta
       let context = globalBindings moduleSet
@@ -248,7 +249,7 @@ checkTypeDeclarationExtra global local declaration = Formula7 {cycle, run}
                 Functor.Annotated {content} = types Vector.! local
             TypeDeclaration {definition} <- content
             case definition of
-              TypeDefinition2.Group (_ TypeGroup.:::: set) -> pure set
+              TypeDefinition2.Group (Identity (_ TypeGroup.:::: set)) -> pure set
               _ -> error "bad link"
       proper <- Semantic.TypeDeclaration.ungroupM Link.Type.unglobal link proper
       extra <- TypeDeclarationExtra.check context (Type.Global global local) proper declaration

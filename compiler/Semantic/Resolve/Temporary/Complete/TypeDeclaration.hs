@@ -66,11 +66,11 @@ data TypeDeclaration scope = TypeDeclaration
     name :: !ConstructorIdentifier,
     fields :: !(Fields scope),
     constructors :: !(Constructors scope),
-    declaration :: forall locality. Real.TypeDeclaration locality Normal Resolve scope,
+    declaration :: forall locality. Real.TypeDeclaration Identity locality Normal Resolve scope,
     extra :: Real.Extra.TypeDeclarationExtra Normal Resolve scope
   }
 
-shrink :: TypeDeclaration scope -> Real.TypeDeclaration locality Normal Resolve scope
+shrink :: TypeDeclaration scope -> Real.TypeDeclaration Identity locality Normal Resolve scope
 shrink = declaration
 
 shrinkExtra :: TypeDeclaration scope -> Real.Extra.TypeDeclarationExtra Normal Resolve scope
@@ -133,14 +133,15 @@ merge entries@(entry :| _) =
                         constructorNames,
                         definition =
                           Real.Inferred
-                            Real.::: Real.ADT
-                              { position,
-                                brand,
-                                parameters,
-                                constructors,
-                                selectors
-                              },
-                        kind = Inferred
+                            Real.::: Identity
+                              Real.ADT
+                                { position,
+                                  brand,
+                                  parameters,
+                                  constructors,
+                                  selectors
+                                },
+                        kind = Identity Inferred
                       }
                   Strict.Just annotation ->
                     Real.TypeDeclaration
@@ -148,15 +149,16 @@ merge entries@(entry :| _) =
                         name,
                         constructorNames,
                         definition =
-                          Real.Annotated annotation
-                            Real.::: Real.ADT
-                              { position,
-                                brand,
-                                parameters,
-                                constructors,
-                                selectors
-                              },
-                        kind = Inferred
+                          Real.Annotated (Identity annotation)
+                            Real.::: Identity
+                              Real.ADT
+                                { position,
+                                  brand,
+                                  parameters,
+                                  constructors,
+                                  selectors
+                                },
+                        kind = Identity Inferred
                       }
         | Just (_, More.GADT {brand, parameters, gadtConstructors}) <- gadt,
           constructorNames <- GADTConstructor.name <$> gadtConstructors,
@@ -170,14 +172,15 @@ merge entries@(entry :| _) =
                       constructorNames,
                       definition =
                         Real.Inferred
-                          Real.::: Real.GADT
-                            { position,
-                              parameters,
-                              brand,
-                              gadtConstructors,
-                              unsupported = Refl
-                            },
-                      kind = Inferred
+                          Real.::: Identity
+                            Real.GADT
+                              { position,
+                                parameters,
+                                brand,
+                                gadtConstructors,
+                                unsupported = Refl
+                              },
+                      kind = Identity Inferred
                     }
                 Strict.Just annotation ->
                   Real.TypeDeclaration
@@ -185,15 +188,16 @@ merge entries@(entry :| _) =
                       name,
                       constructorNames,
                       definition =
-                        Real.Annotated annotation
-                          Real.::: Real.GADT
-                            { position,
-                              parameters,
-                              brand,
-                              gadtConstructors,
-                              unsupported = Refl
-                            },
-                      kind = Inferred
+                        Real.Annotated (Identity annotation)
+                          Real.::: Identity
+                            Real.GADT
+                              { position,
+                                parameters,
+                                brand,
+                                gadtConstructors,
+                                unsupported = Refl
+                              },
+                      kind = Identity Inferred
                     }
         | Just (position, More.Class {parameter, constraints, methods}) <- classx,
           methods <- fmap Method.shrink methods -> Verbose.resolving (Variable.print' name) $
@@ -205,13 +209,14 @@ merge entries@(entry :| _) =
                     constructorNames = Strict.Vector.empty,
                     definition =
                       Real.Inferred
-                        Real.::: Real.Class
-                          { position,
-                            parameter,
-                            constraints,
-                            methods
-                          },
-                    kind = Inferred
+                        Real.::: Identity
+                          Real.Class
+                            { position,
+                              parameter,
+                              constraints,
+                              methods
+                            },
+                    kind = Identity Inferred
                   }
               Strict.Just annotation ->
                 Real.TypeDeclaration
@@ -219,14 +224,15 @@ merge entries@(entry :| _) =
                     name,
                     constructorNames = Strict.Vector.empty,
                     definition =
-                      Real.Annotated annotation
-                        Real.::: Real.Class
-                          { position,
-                            parameter,
-                            constraints,
-                            methods
-                          },
-                    kind = Inferred
+                      Real.Annotated (Identity annotation)
+                        Real.::: Identity
+                          Real.Class
+                            { position,
+                              parameter,
+                              constraints,
+                              methods
+                            },
+                    kind = Identity Inferred
                   }
         | Just
             ( _,
@@ -243,12 +249,13 @@ merge entries@(entry :| _) =
                   constructorNames = Strict.Vector.empty,
                   definition =
                     Real.Synonym $
-                      Strict.Nothing
-                        Real.Synonym.::: Real.Synonym.SynonymBody
-                          { parameters,
-                            synonym
-                          },
-                  kind = Inferred
+                      Identity $
+                        Strict.Nothing
+                          Real.Synonym.::: Real.Synonym.SynonymBody
+                            { parameters,
+                              synonym
+                            },
+                  kind = Identity Inferred
                 }
             Strict.Just annotation ->
               Real.TypeDeclaration
@@ -257,12 +264,13 @@ merge entries@(entry :| _) =
                   constructorNames = Strict.Vector.empty,
                   definition =
                     Real.Synonym $
-                      Strict.Just annotation
-                        Real.Synonym.::: Real.Synonym.SynonymBody
-                          { parameters,
-                            synonym
-                          },
-                  kind = Inferred
+                      Identity $
+                        Strict.Just annotation
+                          Real.Synonym.::: Real.Synonym.SynonymBody
+                            { parameters,
+                              synonym
+                            },
+                  kind = Identity Inferred
                 }
       entries -> duplicateTypeEntries entries
     position = Partial.position entry

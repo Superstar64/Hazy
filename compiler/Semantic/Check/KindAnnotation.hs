@@ -6,6 +6,7 @@ import Core.Tree.Type ((-#>))
 import qualified Core.Tree.Type as Core
 import qualified Core.Tree.Type as Simple (Type, simplify)
 import Core.Type.Functor (shiftLogical)
+import Data.Functor.Identity (Identity (..))
 import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import qualified Data.Vector.Strict as Strict (Vector)
 import Semantic.Check.Context (Context)
@@ -40,12 +41,19 @@ data KindAnnotation scope
         synonym :: !(Solved.Type Position Check (Local ':+ scope))
       }
 
-check :: Context s scope -> Semantic.TypeDeclaration locality Group Resolve scope -> ST s (KindAnnotation scope)
+check ::
+  Context s scope ->
+  Semantic.TypeDeclaration Identity locality Group Resolve scope ->
+  ST s (KindAnnotation scope)
 check
   context
   Semantic.TypeDeclaration
     { position,
-      definition = Semantic.Synonym (annotation Semantic.Synonym.::: Semantic.Synonym.SynonymBody {synonym, parameters})
+      definition =
+        Semantic.Synonym
+          ( Identity
+              (annotation Semantic.Synonym.::: Semantic.Synonym.SynonymBody {synonym, parameters})
+            )
     } =
     do
       let fresh Semantic.TypePattern {name, position} = do
@@ -75,7 +83,7 @@ check
       synonym <- Unify.runSolve $ Unsolved.Type.solve context synonym
       pure Synonym {annotation', kind, parameters, synonym}
 check context Semantic.TypeDeclaration {definition} = case definition of
-  Semantic.Annotated annotation Semantic.::: _ -> do
+  Semantic.Annotated (Identity annotation) Semantic.::: _ -> do
     universe <- Unify.fresh Core.universe
     annotation <- Type.check context (Core.typeWith universe) annotation
     annotation <- Unify.runSolve $ Type.solve context annotation

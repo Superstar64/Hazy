@@ -9,6 +9,7 @@ import {-# SOURCE #-} qualified Core.Tree.TypeDeclarationExtra as Simple (TypeDe
 import {-# SOURCE #-} qualified Core.Tree.TypeDeclarationExtra as SimpleExtra (simplify)
 import Core.Type.Functor (shiftLogical)
 import qualified Core.Type.Functor as Core
+import Data.Functor.Identity (Identity)
 import qualified Data.Kind
 import Data.Map (Map)
 import qualified Data.Map as Map
@@ -81,7 +82,7 @@ binding ::
   Functor.Annotated
     Label.TypeBinding
     (ST s (KindAnnotation scope))
-    (ST s (TypeDeclaration locality Group Check scope)) ->
+    (ST s (TypeDeclaration Identity locality Group Check scope)) ->
   ST s (Solve s (TypeDeclarationExtra Group Check scope)) ->
   Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) b) ->
   Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) d) ->

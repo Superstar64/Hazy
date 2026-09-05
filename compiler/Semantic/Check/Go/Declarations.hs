@@ -17,7 +17,7 @@ fromFunctor ::
     a
     (Declaration Identity Void Identity locality layout Check scope)
     b
-    (TypeDeclaration locality layout Check scope)
+    (TypeDeclaration Identity locality layout Check scope)
     (TypeDeclarationExtra layout Check scope)
     d
     (Instance Identity layout Check scope) ->
