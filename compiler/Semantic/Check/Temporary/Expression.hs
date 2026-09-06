@@ -56,6 +56,7 @@ import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope
 import Semantic.Stage (Check, Resolve)
 import Semantic.Tree.Combinators.Inferred (Inferred (Solved))
+import qualified Semantic.Tree.Declarations as Proper.Declarations
 import Semantic.Tree.Expression (Explicit (..))
 import qualified Semantic.Tree.Expression as Semantic (Expression (..))
 import qualified Semantic.Tree.Expression as Solved
@@ -119,7 +120,7 @@ data Expression s scope
         argument :: !(Expression s scope)
       }
   | Let
-      { declarations :: !(Declarations.Local s scope),
+      { declarations :: !(Unify.Solve s (Proper.Declarations.Local Group Check scope)),
         letBody :: !(Expression s (Scope.Declaration ':+ scope))
       }
   | If
@@ -204,7 +205,7 @@ check context resultType Semantic.Call {function, argument} = do
   argument <- check context argumentType argument
   pure (Call function1 argument)
 check context typex Semantic.Let {declarations, letBody} = do
-  (context, declarations) <- Declarations.check context declarations
+  context Declarations.:& declarations <- Declarations.check context declarations
   letBody <- check context (shiftLogical typex) letBody
   pure (Let declarations letBody)
 check context typex Semantic.If {condition, thenx, elsex} = do
@@ -352,7 +353,7 @@ solve = \case
     argument <- solve argument
     pure $ Solved.Call {function, argument}
   Let declarations body -> do
-    declarations <- Declarations.solveLocal declarations
+    declarations <- declarations
     body <- solve body
     pure $ Solved.Let {declarations, letBody = body}
   If condition true false -> do

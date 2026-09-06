@@ -15,6 +15,7 @@ import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope
 import Semantic.Stage (Check, Resolve)
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
+import qualified Semantic.Tree.Declarations as Proper.Declarations
 import qualified Semantic.Tree.Pattern as Semantic.Pattern
 import qualified Semantic.Tree.Statements as Semantic
 import qualified Semantic.Tree.Statements as Solved
@@ -40,7 +41,7 @@ data Comprehension s scope
       }
   | Let
       { startPosition :: !Position,
-        declarations :: !(Declarations.Local s scope),
+        declarations :: !(Unify.Solve s (Proper.Declarations.Local Group Check scope)),
         body :: !(Comprehension s (Scope.Declaration ':+ scope))
       }
 
@@ -74,7 +75,7 @@ check context typex = \case
     thenx <- check (Pattern.augment patternx context) (shiftLogical $ monad # output) thenx
     pure Bind {startPosition, patternx, effect, thenx, fail = not neverFail}
   Semantic.Let {startPosition, declarations, body} -> do
-    (context, declarations) <- Declarations.check context declarations
+    context Declarations.:& declarations <- Declarations.check context declarations
     body <- check context (shiftLogical typex) body
     pure Let {startPosition, declarations, body}
 
@@ -107,6 +108,6 @@ solve = \case
           fail
         }
   Let {startPosition, declarations, body} -> do
-    declarations <- Declarations.solveLocal declarations
+    declarations <- declarations
     body <- solve body
     pure Solved.Let {startPosition, declarations, body}

@@ -1,4 +1,4 @@
-module Semantic.Check.Temporary.Declarations (Declarations (..), Local (..), check, solve, solveLocal) where
+module Semantic.Check.Temporary.Declarations (Declarations (..), Result (..), check, solve) where
 
 import Control.Monad.ST (ST)
 import qualified Core.Tree.Type as Simple
@@ -68,8 +68,6 @@ data Declarations locality s scope = Declarations
     dataInstances :: !(Vector (Map (Type2.Index scope) (Semantic.Instance (Unify.Solve s) Group Check scope)))
   }
 
-newtype Local s scope = Local (Declarations Locality.Local s (Scope.Declaration ':+ scope))
-
 type Formula s scope z =
   Formula7
     (Functor.Declarations (Scope.Declaration ':+ scope))
@@ -118,14 +116,14 @@ fromFunctor
         classInstances = fmap (fmap Functor.content) classInstances
       }
 
-check ::
-  Context s scope ->
-  Semantic.Local Group Resolve scope ->
-  ST
-    s
-    ( Context s (Scope.Declaration ':+ scope),
-      Local s scope
-    )
+data Result s scope
+  = !(Context s (Scope.Declaration ':+ scope))
+      :&
+      !(Unify.Solve s (Semantic.Local Group Check scope))
+
+infix 5 :&
+
+check :: Context s scope -> Semantic.Local Group Resolve scope -> ST s (Result s scope)
 check context (Semantic.Local declarations) = do
   functor <-
     loebST7
@@ -139,7 +137,7 @@ check context (Semantic.Local declarations) = do
         (checkInstanceDeclaration context)
       $ Functor.fromStage2 Variable.Local declarations
   let lifted = heptamap pure pure pure pure pure pure (const ()) functor
-  pure (localBindings lifted context, Local $ fromFunctor functor)
+  pure $ localBindings lifted context :& (fmap Semantic.Local $ solve $ fromFunctor functor)
 
 checkTermAnnotation ::
   Context s scope ->
@@ -312,6 +310,3 @@ solve
           dataInstances,
           classInstances
         }
-
-solveLocal :: Local s scope -> Unify.Solve s (Semantic.Local Group Check scope)
-solveLocal (Local declarations) = Semantic.Local <$> solve declarations
