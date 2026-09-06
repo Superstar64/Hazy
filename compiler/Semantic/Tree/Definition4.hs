@@ -3,8 +3,10 @@ module Semantic.Tree.Definition4 where
 import Core.Tree.TypeLambda (TypeLambdaOver (..))
 import qualified Core.Tree.TypeLambda as TypeLambda
 import Data.Functor.Classes (Show1, showsPrec1)
+import Data.Functor.Compose (Compose (getCompose))
 import Data.Functor.Identity (Identity (..))
 import Data.Kind (Type)
+import Data.NaturalTransformation (NaturalTransformation (..))
 import qualified Data.Set as Set
 import qualified Data.Strict.Maybe as Strict.Maybe
 import qualified Data.Vector.Strict as Strict.Vector
@@ -13,6 +15,7 @@ import qualified Graph.StronglyConnected as StronglyConnected
 import Semantic.Connect (connect)
 import qualified Semantic.Connect as Connect
 import Semantic.FreeVariables (FreeTermVariables (freeTermVariables))
+import Semantic.Functor2 (Traversable2 (..))
 import qualified Semantic.Index.Link.Term as Term (Link (..))
 import qualified Semantic.Index.Term0 as Term0
 import Semantic.Layout (Layout, Normal)
@@ -87,6 +90,16 @@ instance (Foldable solve, Foldable loeb) => FreeTermVariables (Definition4 solve
     _ ::: definition -> foldMap (foldMap (freeTermVariables target)) definition
     Link {} -> []
     Group group -> foldMap (freeTermVariables target) group
+
+instance Traversable2 (Definition4 solve logical) where
+  traverse2 (Morph f) = \case
+    Inferred ::: definition -> (Inferred :::) <$> getCompose (f definition)
+    Annotated annotated ::: definition ->
+      (:::)
+        <$> (Annotated <$> getCompose (f annotated))
+        <*> getCompose (f definition)
+    Link link id -> pure (Link link id)
+    Group group -> Group <$> getCompose (f group)
 
 data Annotation mark loeb layout stage scope where
   Annotated :: !(loeb (Scheme Position stage scope)) -> Annotation Mark.Annotated loeb layout stage scope

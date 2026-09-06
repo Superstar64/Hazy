@@ -23,7 +23,6 @@ executable hazy
     Builtin.Functor
     Builtin.Integral
     Builtin.List
-    Semantic.Tree.Synonym
     Builtin.Monad
     Builtin.MonadFail
     Builtin.Num
@@ -271,6 +270,7 @@ executable hazy
     Semantic.Check.TypeBinding
     Semantic.Connect
     Semantic.FreeVariables
+    Semantic.Functor2
     Semantic.Group.Functor.Term.Declarations
     Semantic.Group.Functor.Term.ModuleSet
     Semantic.Group.Functor.Type.Declarations
@@ -405,6 +405,7 @@ executable hazy
     Semantic.Tree.Selector
     Semantic.Tree.Statements
     Semantic.Tree.StrictnessAnnotation
+    Semantic.Tree.Synonym
     Semantic.Tree.Type
     Semantic.Tree.TypeDeclaration
     Semantic.Tree.TypeDeclarationExtra

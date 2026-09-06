@@ -1,13 +1,16 @@
 module Semantic.Tree.TypeDefinition2 where
 
 import Data.Functor.Classes (Show1, showsPrec1)
+import Data.Functor.Compose (Compose (..))
 import Data.Functor.Identity (Identity (..))
 import qualified Data.Kind as Kind
+import Data.NaturalTransformation (NaturalTransformation (..))
 import qualified Data.Set as Set
 import qualified Data.Strict.Maybe as Strict.Maybe
 import qualified Data.Vector.Strict as Strict.Vector
 import qualified Graph.StronglyConnected as StronglyConnected
 import Semantic.FreeVariables (FreeTypeVariables (..))
+import Semantic.Functor2 (Traversable2 (..))
 import qualified Semantic.Index.Link.Type as Type
 import qualified Semantic.Index.Type0 as Type0
 import Semantic.Layout (Layout, Normal)
@@ -79,6 +82,17 @@ instance (Foldable loeb) => FreeTypeVariables (TypeDefinition2 loeb locality lay
     Link {} -> []
     Group group -> foldMap (freeTypeVariables target) group
     Synonym synonym -> foldMap (freeTypeVariables target) synonym
+
+instance Traversable2 TypeDefinition2 where
+  traverse2 (Morph f) = \case
+    Inferred ::: definition -> (Inferred :::) <$> getCompose (f definition)
+    Annotated annotation ::: definition ->
+      (:::)
+        <$> (Annotated <$> getCompose (f annotation))
+        <*> getCompose (f definition)
+    Link link id -> pure (Link link id)
+    Group group -> Group <$> getCompose (f group)
+    Synonym synonym -> Synonym <$> getCompose (f synonym)
 
 data Annotation loeb layout stage scope where
   Annotated :: !(loeb (Type Position stage scope)) -> Annotation loeb layout stage scope

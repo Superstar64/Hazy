@@ -3,11 +3,14 @@
 module Semantic.Tree.TypeDeclaration where
 
 import qualified Core.Tree.Type as Simple (Type)
+import Data.Functor.Compose (Compose (..))
 import Data.Functor.Identity (Identity (..))
 import qualified Data.Kind as Kind
+import Data.NaturalTransformation (NaturalTransformation (..))
 import qualified Data.Vector.Strict as Strict
 import qualified Graph.StronglyConnected as StronglyConnected
 import Semantic.FreeVariables (FreeTypeVariables (..), Target (..))
+import Semantic.Functor2 (Traversable2 (..))
 import qualified Semantic.Index.Link.Type as Type
 import qualified Semantic.Index.Type0 as Type0
 import qualified Semantic.Label.Binding.Type as Label
@@ -59,6 +62,12 @@ instance (Functor loeb) => Shift.Functor (TypeDeclaration loeb locality layout s
 instance (Foldable loeb) => FreeTypeVariables (TypeDeclaration loeb locality layout) where
   freeTypeVariables target = \case
     TypeDeclaration {definition} -> freeTypeVariables target definition
+
+instance Traversable2 TypeDeclaration where
+  traverse2 (Morph f) TypeDeclaration {position, name, constructorNames, definition, kind} =
+    declaration <$> traverse2 (Morph f) (definition) <*> getCompose (f kind)
+    where
+      declaration definition kind = TypeDeclaration {position, name, constructorNames, definition, kind}
 
 kind' :: TypeDeclaration Identity locality layout Check scope -> Simple.Type scope
 kind' TypeDeclaration {kind = Identity (Solved kind)} = kind

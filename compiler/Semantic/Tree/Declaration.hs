@@ -5,10 +5,13 @@ module Semantic.Tree.Declaration where
 import qualified Core.Tree.Forall as Simple (ForallOver)
 import qualified Core.Tree.Type as Simple (TypeF)
 import Data.Functor.Classes (Show1, showsPrec1)
+import Data.Functor.Compose (Compose (..))
 import Data.Functor.Identity (Identity (..))
+import Data.NaturalTransformation (NaturalTransformation (..))
 import Data.Void (Void)
 import qualified Graph.StronglyConnected as StronglyConnected
 import Semantic.FreeVariables (FreeTermVariables (..), Target (Target))
+import Semantic.Functor2 (Traversable2 (..))
 import qualified Semantic.Index.Link.Term as Term
 import qualified Semantic.Index.Term0 as Term0
 import qualified Semantic.Label.Binding.Term as Label
@@ -58,21 +61,6 @@ instance
         . showsPrec1 0 typex
         . showString "}"
 
-lazy ::
-  Declaration solve' logical' loeb' locality' layout' stage' scope' ->
-  Declaration solve logical loeb locality layout stage scope ->
-  Declaration solve logical loeb locality layout stage scope
-lazy Declaration {position, name} ~Declaration {definition, typex} =
-  Declaration
-    { position,
-      name,
-      definition,
-      typex
-    }
-
-typex' :: Declaration solve logical Identity locality layout Check scope -> Simple.ForallOver Simple.TypeF logical scope
-typex' Declaration {typex = Identity (Solved typex)} = typex
-
 instance (Functor loeb, Functor solve) => Shift0.Functor (Declaration solve logical loeb layout locality stage) where
   map = Shift.mapDefault
 
@@ -87,6 +75,27 @@ instance (Functor loeb, Functor solve) => Shift.Functor (Declaration solve logic
 
 instance (Foldable loeb, Foldable solve) => FreeTermVariables (Declaration solve logical loeb locality) where
   freeTermVariables target Declaration {definition} = freeTermVariables target definition
+
+instance Traversable2 (Declaration solve logical) where
+  traverse2 (Morph f) Declaration {position, name, definition, typex} =
+    declaration <$> traverse2 (Morph f) definition <*> getCompose (f typex)
+    where
+      declaration definition typex = Declaration {position, name, definition, typex}
+
+lazy ::
+  Declaration solve' logical' loeb' locality' layout' stage' scope' ->
+  Declaration solve logical loeb locality layout stage scope ->
+  Declaration solve logical loeb locality layout stage scope
+lazy Declaration {position, name} ~Declaration {definition, typex} =
+  Declaration
+    { position,
+      name,
+      definition,
+      typex
+    }
+
+typex' :: Declaration solve logical Identity locality layout Check scope -> Simple.ForallOver Simple.TypeF logical scope
+typex' Declaration {typex = Identity (Solved typex)} = typex
 
 labelBinding :: Qualifiers -> Declaration solve logical loeb locality layout stage scope -> Label.TermBinding scope'
 labelBinding path declaration = case name declaration of
