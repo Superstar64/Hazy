@@ -30,23 +30,23 @@ import Semantic.Tree.TypeGroup (Element (..), Set (..), TypeGroup (..))
 import Syntax.Position (Position)
 import Syntax.Variable (QualifiedConstructor (..), QualifiedConstructorIdentifier (..), Qualifiers)
 
-type TypeDefinition2 :: (Kind.Type -> Kind.Type) -> Locality -> Layout -> Stage -> Environment -> Kind.Type
-data TypeDefinition2 loeb locality layout stage scope where
+type TypeDefinition2 :: Locality -> (Kind.Type -> Kind.Type) -> Layout -> Stage -> Environment -> Kind.Type
+data TypeDefinition2 locality loeb layout stage scope where
   (:::) ::
     !(Annotation loeb layout stage scope) ->
     !(loeb (TypeDefinition stage scope)) ->
-    TypeDefinition2 loeb locality layout stage scope
-  Link :: !(Type.Link locality) -> !Int -> TypeDefinition2 loeb locality Layout.Group stage scope
+    TypeDefinition2 locality loeb layout stage scope
+  Link :: !(Type.Link locality) -> !Int -> TypeDefinition2 locality loeb Layout.Group stage scope
   Group ::
     !(loeb (TypeGroup locality Layout.Group stage scope)) ->
-    TypeDefinition2 loeb locality Layout.Group stage scope
+    TypeDefinition2 locality loeb Layout.Group stage scope
   Synonym ::
     !(loeb (Synonym stage scope)) ->
-    TypeDefinition2 loeb locality layout stage scope
+    TypeDefinition2 locality loeb layout stage scope
 
 infix 5 :::
 
-instance (Show1 loeb) => Show (TypeDefinition2 loeb locality layout stage scope) where
+instance (Show1 loeb) => Show (TypeDefinition2 locality loeb layout stage scope) where
   showsPrec d = \case
     annotation ::: definition ->
       showParen (d > 5) $
@@ -65,17 +65,17 @@ instance (Show1 loeb) => Show (TypeDefinition2 loeb locality layout stage scope)
         showString "Synonym"
           . showsPrec1 11 synonym
 
-instance (Functor loeb) => Shift0.Functor (TypeDefinition2 loeb locality layout stage) where
+instance (Functor loeb) => Shift0.Functor (TypeDefinition2 locality loeb layout stage) where
   map = Shift.mapDefault
 
-instance (Functor loeb) => Shift.Functor (TypeDefinition2 loeb locality layout stage) where
+instance (Functor loeb) => Shift.Functor (TypeDefinition2 locality loeb layout stage) where
   map category = \case
     annotation ::: definition -> Shift.map category annotation ::: fmap (Shift.map category) definition
     Link link id -> Link link id
     Group group -> Group (Shift.map category <$> group)
     Synonym synonym -> Synonym (Shift.map category <$> synonym)
 
-instance (Foldable loeb) => FreeTypeVariables (TypeDefinition2 loeb locality layout) where
+instance (Foldable loeb) => FreeTypeVariables (TypeDefinition2 locality loeb layout) where
   freeTypeVariables target = \case
     annotation ::: definition ->
       freeTypeVariables target annotation ++ foldMap (freeTypeVariables target) definition
@@ -83,13 +83,9 @@ instance (Foldable loeb) => FreeTypeVariables (TypeDefinition2 loeb locality lay
     Group group -> foldMap (freeTypeVariables target) group
     Synonym synonym -> foldMap (freeTypeVariables target) synonym
 
-instance Traversable2 TypeDefinition2 where
+instance Traversable2 (TypeDefinition2 locality) where
   traverse2 (Morph f) = \case
-    Inferred ::: definition -> (Inferred :::) <$> getCompose (f definition)
-    Annotated annotation ::: definition ->
-      (:::)
-        <$> (Annotated <$> getCompose (f annotation))
-        <*> getCompose (f definition)
+    annotation ::: definition -> (:::) <$> traverse2 (Morph f) annotation <*> getCompose (f definition)
     Link link id -> pure (Link link id)
     Group group -> Group <$> getCompose (f group)
     Synonym synonym -> Synonym <$> getCompose (f synonym)
@@ -98,15 +94,15 @@ data Annotation loeb layout stage scope where
   Annotated :: !(loeb (Type Position stage scope)) -> Annotation loeb layout stage scope
   Inferred :: Annotation loeb Normal stage scope
 
-instance (Show1 loeb) => Show (Annotation loeb mark stage scope) where
+instance (Show1 loeb) => Show (Annotation loeb layout stage scope) where
   showsPrec d = \case
     Annotated typex -> showParen (d > 10) $ showString "Annotated " . showsPrec1 11 typex
     Inferred -> showString "Inferred"
 
-instance (Functor loeb) => Shift0.Functor (Annotation loeb mark stage) where
+instance (Functor loeb) => Shift0.Functor (Annotation loeb layout stage) where
   map = Shift.mapDefault
 
-instance (Functor loeb) => Shift.Functor (Annotation loeb mark stage) where
+instance (Functor loeb) => Shift.Functor (Annotation loeb layout stage) where
   map category = \case
     Annotated typex -> Annotated (Shift.map category <$> typex)
     Inferred -> Inferred
@@ -116,7 +112,12 @@ instance (Foldable loeb) => FreeTypeVariables (Annotation loeb mark) where
     Annotated typex -> foldMap (freeTypeVariables target) typex
     Inferred -> []
 
-locality :: TypeDefinition2 loeb locality Normal stage scope -> TypeDefinition2 loeb locality' Normal stage scope
+instance Traversable2 Annotation where
+  traverse2 (Morph f) = \case
+    Annotated annotation -> Annotated <$> getCompose (f annotation)
+    Inferred -> pure Inferred
+
+locality :: TypeDefinition2 locality loeb Normal stage scope -> TypeDefinition2 locality' loeb Normal stage scope
 locality = \case
   annotation ::: definition -> annotation ::: definition
   Synonym definition -> Synonym definition
@@ -126,8 +127,8 @@ group ::
   (Type0.Index scope -> Type.Link locality) ->
   (Type.Link locality -> Groupable scope) ->
   StronglyConnected.Component (Type.Link locality) ->
-  TypeDefinition2 Identity locality Normal Resolve scope ->
-  TypeDefinition2 Identity locality Layout.Group Resolve scope
+  TypeDefinition2 locality Identity Normal Resolve scope ->
+  TypeDefinition2 locality Identity Layout.Group Resolve scope
 group _ _ _ _ (Annotated typex ::: definition) = Annotated typex ::: definition
 group _ _ _ _ (Synonym definition) = Synonym definition
 group qualifiers link index group (Inferred ::: _) = case group of
@@ -150,16 +151,16 @@ group qualifiers link index group (Inferred ::: _) = case group of
 ungroup ::
   (Type.Link locality -> Type0.Index scope) ->
   (Type.Link locality -> Set locality Check scope) ->
-  TypeDefinition2 Identity locality Layout.Group Check scope ->
-  TypeDefinition2 Identity locality Normal Check scope
+  TypeDefinition2 locality Identity Layout.Group Check scope ->
+  TypeDefinition2 locality Identity Normal Check scope
 ungroup index lookup definition = runIdentity $ ungroupM index (Identity . lookup) definition
 
 ungroupM ::
   (Monad m) =>
   (Type.Link locality -> Type0.Index scope) ->
   (Type.Link locality -> m (Set locality Check scope)) ->
-  TypeDefinition2 Identity locality Layout.Group Check scope ->
-  m (TypeDefinition2 Identity locality Normal Check scope)
+  TypeDefinition2 locality Identity Layout.Group Check scope ->
+  m (TypeDefinition2 locality Identity Normal Check scope)
 ungroupM _ _ (Annotated annotation ::: definition) = pure $ Annotated annotation ::: definition
 ungroupM _ _ (Synonym definition) = pure $ Synonym definition
 ungroupM index lookup definition = case definition of

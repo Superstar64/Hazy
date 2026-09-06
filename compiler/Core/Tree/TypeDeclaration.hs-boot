@@ -25,4 +25,4 @@ instance Shift0.Functor TypeDeclaration
 
 instance Shift.Functor TypeDeclaration
 
-simplify :: Solved.TypeDeclaration Identity locality Normal Check scope -> TypeDeclaration scope
+simplify :: Solved.TypeDeclaration locality Identity Normal Check scope -> TypeDeclaration scope

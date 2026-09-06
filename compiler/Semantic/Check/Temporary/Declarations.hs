@@ -61,8 +61,8 @@ import qualified Syntax.Variable as Variable
 import Prelude hiding (Functor)
 
 data Declarations locality s scope = Declarations
-  { terms :: !(Vector (Declaration (Unify.Solve s) (Unify.Logical s scope) Identity locality Group Check scope)),
-    types :: !(Vector (TypeDeclaration Identity locality Group Check scope)),
+  { terms :: !(Vector (Declaration (Unify.Solve s) (Unify.Logical s scope) locality Identity Group Check scope)),
+    types :: !(Vector (TypeDeclaration locality Identity Group Check scope)),
     typeExtras :: !(Vector (TypeDeclarationExtra s scope)),
     classInstances :: !(Vector (Map (Type2.Index scope) (Semantic.Instance (Unify.Solve s) Group Check scope))),
     dataInstances :: !(Vector (Map (Type2.Index scope) (Semantic.Instance (Unify.Solve s) Group Check scope)))
@@ -78,14 +78,14 @@ type Formula s scope z =
     ( Declaration
         (Unify.Solve s)
         (Unify.Logical s (Scope.Declaration ':+ scope))
-        Identity
         Locality.Local
+        Identity
         Group
         Check
         (Scope.Declaration ':+ scope)
     )
     (KindAnnotation (Scope.Declaration ':+ scope))
-    (TypeDeclaration Identity Locality.Local Group Check (Scope.Declaration ':+ scope))
+    (TypeDeclaration Locality.Local Identity Group Check (Scope.Declaration ':+ scope))
     (TypeDeclarationExtra s (Scope.Declaration ':+ scope))
     (InstanceAnnotation (Scope.Declaration ':+ scope))
     (Semantic.Instance (Unify.Solve s) Group Check (Scope.Declaration ':+ scope))
@@ -95,9 +95,9 @@ fromFunctor ::
   Functor.Declarations
     scope
     a
-    (Declaration (Unify.Solve s) (Unify.Logical s scope) Identity locality Group Check scope)
+    (Declaration (Unify.Solve s) (Unify.Logical s scope) locality Identity Group Check scope)
     b
-    (TypeDeclaration Identity locality Group Check scope)
+    (TypeDeclaration locality Identity Group Check scope)
     (TypeDeclarationExtra s scope)
     c
     (Semantic.Instance (Unify.Solve s) Group Check scope) ->
@@ -144,7 +144,7 @@ check context (Semantic.Local declarations) = do
 checkTermAnnotation ::
   Context s scope ->
   p ->
-  Semantic.Declaration Identity Void Identity locality Group Resolve (Scope.Declaration ':+ scope) ->
+  Semantic.Declaration Identity Void locality Identity Group Resolve (Scope.Declaration ':+ scope) ->
   Formula s scope (TypeAnnotation (Scope.Declaration ':+ scope))
 checkTermAnnotation context _ declaration = Formula7 {cycle, run}
   where
@@ -158,15 +158,15 @@ checkTermDeclaration ::
   forall s scope.
   Context s scope ->
   Int ->
-  Semantic.Declaration Identity Void Identity Locality.Local Group Resolve (Scope.Declaration ':+ scope) ->
+  Semantic.Declaration Identity Void Locality.Local Identity Group Resolve (Scope.Declaration ':+ scope) ->
   Formula
     s
     scope
     ( Declaration
         (Unify.Solve s)
         (Unify.Logical s (Scope.Declaration ':+ scope))
-        Identity
         Locality.Local
+        Identity
         Group
         Check
         (Scope.Declaration ':+ scope)
@@ -194,7 +194,7 @@ checkTermDeclaration context index declaration = Formula7 {cycle, run}
 checkTypeAnnotation ::
   Context s scope ->
   p ->
-  Semantic.TypeDeclaration Identity locality Group Resolve (Scope.Declaration ':+ scope) ->
+  Semantic.TypeDeclaration locality Identity Group Resolve (Scope.Declaration ':+ scope) ->
   Formula s scope (KindAnnotation (Scope.Declaration ':+ scope))
 checkTypeAnnotation context _ declaration = Formula7 {cycle, run}
   where
@@ -208,8 +208,8 @@ checkTypeDeclaration ::
   forall s scope.
   Context s scope ->
   Int ->
-  Semantic.TypeDeclaration Identity Locality.Local Group Resolve (Scope.Declaration ':+ scope) ->
-  Formula s scope (TypeDeclaration Identity Locality.Local Group Check (Scope.Declaration ':+ scope))
+  Semantic.TypeDeclaration Locality.Local Identity Group Resolve (Scope.Declaration ':+ scope) ->
+  Formula s scope (TypeDeclaration Locality.Local Identity Group Check (Scope.Declaration ':+ scope))
 checkTypeDeclaration context index declaration = Formula7 {cycle, run}
   where
     cycle :: a

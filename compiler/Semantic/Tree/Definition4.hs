@@ -40,8 +40,8 @@ import Syntax.Position (Position)
 type Definition4 ::
   (Type -> Type) ->
   Type ->
-  (Type -> Type) ->
   Locality ->
+  (Type -> Type) ->
   Layout ->
   Stage ->
   Environment ->
@@ -50,17 +50,17 @@ data Definition4 solve logical loeb locality layout stage scope where
   (:::) ::
     !(Annotation mark loeb layout stage scope) ->
     !(loeb (solve (Implicit (Definition3 mark) layout stage scope))) ->
-    Definition4 solve logical loeb locality layout stage scope
-  Link :: !(Term.Link locality) -> !Int -> Definition4 solve logical loeb locality Layout.Group stage scope
+    Definition4 solve logical locality loeb layout stage scope
+  Link :: !(Term.Link locality) -> !Int -> Definition4 solve logical locality loeb Layout.Group stage scope
   Group ::
     !(loeb (Group solve logical locality Layout.Group stage scope)) ->
-    Definition4 solve logical loeb locality Layout.Group stage scope
+    Definition4 solve logical locality loeb Layout.Group stage scope
 
 infix 5 :::
 
 instance
   (Show1 solve, Show1 loeb, Show logical) =>
-  Show (Definition4 solve logical loeb locality layout stage scope)
+  Show (Definition4 solve logical locality loeb layout stage scope)
   where
   showsPrec d (annotation ::: definition) =
     showParen (d > 5) $
@@ -75,29 +75,25 @@ instance
     showParen (d > 10) $
       showString "Group " . showsPrec 11 group
 
-instance (Functor solve, Functor loeb) => Shift0.Functor (Definition4 solve logical loeb locality layout stage) where
+instance (Functor solve, Functor loeb) => Shift0.Functor (Definition4 solve logical locality loeb layout stage) where
   map = Shift.mapDefault
 
-instance (Functor solve, Functor loeb) => Shift.Functor (Definition4 solve logical loeb locality layout stage) where
+instance (Functor solve, Functor loeb) => Shift.Functor (Definition4 solve logical locality loeb layout stage) where
   map category = \case
     annotation ::: definition ->
       Shift.map category annotation ::: fmap (fmap (Shift.map category)) definition
     Link link id -> Link link id
     Group group -> Group (fmap (Shift.map category) group)
 
-instance (Foldable solve, Foldable loeb) => FreeTermVariables (Definition4 solve logical loeb locality) where
+instance (Foldable solve, Foldable loeb) => FreeTermVariables (Definition4 solve logical locality loeb) where
   freeTermVariables target = \case
     _ ::: definition -> foldMap (foldMap (freeTermVariables target)) definition
     Link {} -> []
     Group group -> foldMap (freeTermVariables target) group
 
-instance Traversable2 (Definition4 solve logical) where
+instance Traversable2 (Definition4 solve logical locality) where
   traverse2 (Morph f) = \case
-    Inferred ::: definition -> (Inferred :::) <$> getCompose (f definition)
-    Annotated annotated ::: definition ->
-      (:::)
-        <$> (Annotated <$> getCompose (f annotated))
-        <*> getCompose (f definition)
+    annotation ::: definition -> (:::) <$> (traverse2 (Morph f) annotation) <*> getCompose (f definition)
     Link link id -> pure (Link link id)
     Group group -> Group <$> getCompose (f group)
 
@@ -118,9 +114,14 @@ instance (Show1 loeb) => Show (Annotation mark loeb layout stage scope) where
     Annotated scheme -> showParen (d > 10) $ showString "Annotated " . showsPrec 11 scheme
     Inferred -> showString "Inferred"
 
+instance Traversable2 (Annotation mark) where
+  traverse2 (Morph f) = \case
+    Annotated annotation -> Annotated <$> getCompose (f annotation)
+    Inferred -> pure Inferred
+
 locality ::
-  Definition4 solve logical loeb locality Normal stage scope ->
-  Definition4 solve logical loeb locality' Normal stage scope
+  Definition4 solve logical locality loeb Normal stage scope ->
+  Definition4 solve logical locality' loeb Normal stage scope
 locality = \case
   annotation ::: declaration -> annotation ::: declaration
 
@@ -128,8 +129,8 @@ group ::
   (Term0.Index scope -> Term.Link locality) ->
   (Term.Link locality -> Groupable scope) ->
   StronglyConnected.Component (Term.Link locality) ->
-  Definition4 Identity logical Identity locality Normal Resolve scope ->
-  Definition4 Identity logical Identity locality Layout.Group Resolve scope
+  Definition4 Identity logical locality Identity Normal Resolve scope ->
+  Definition4 Identity logical locality Identity Layout.Group Resolve scope
 group _ _ _ (Annotated annotation ::: Identity (Identity ((Implicit.Resolve definition)))) =
   Annotated annotation ::: Identity (Identity (Implicit.Resolve (connect definition)))
 group link index group (Inferred ::: _) = case group of
@@ -149,8 +150,8 @@ group link index group (Inferred ::: _) = case group of
 ungroup ::
   (Term.Link locality -> Term0.Index scope) ->
   (Term.Link locality -> Implicit (Set locality) Layout.Group Check scope) ->
-  Definition4 Identity logical Identity locality Layout.Group Check scope ->
-  Definition4 Identity logical Identity locality Normal Check scope
+  Definition4 Identity logical locality Identity Layout.Group Check scope ->
+  Definition4 Identity logical locality Identity Normal Check scope
 ungroup _ _ (Annotated annotation ::: Identity (Identity (Implicit.Check definition))) =
   Annotated annotation ::: Identity (Identity body)
   where
@@ -175,8 +176,8 @@ ungroup index lookup definition = case definition of
 
 solve ::
   Position ->
-  Definition4 (Unify.Solve s) (Unify.Logical s scope) Identity locality Layout.Group Check scope ->
-  Unify.Solve s (Definition4 Identity Void Identity locality Layout.Group Check scope)
+  Definition4 (Unify.Solve s) (Unify.Logical s scope) locality Identity Layout.Group Check scope ->
+  Unify.Solve s (Definition4 Identity Void locality Identity Layout.Group Check scope)
 solve position = \case
   (annotation ::: Identity definition) -> do
     definition <- definition

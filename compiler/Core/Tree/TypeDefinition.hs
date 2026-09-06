@@ -53,7 +53,7 @@ instance Substitute.Functor TypeDefinition where
     Synonym definition ->
       Synonym (Substitute.map (Substitute.Over category) definition)
 
-simplify :: Solved.TypeDefinition2 Identity locality Normal Check scope -> TypeDefinition scope
+simplify :: Solved.TypeDefinition2 locality Identity Normal Check scope -> TypeDefinition scope
 simplify (Solved.Synonym (Identity (_ Solved.Synonym.::: body))) = case body of
   Solved.Synonym.SynonymBody {synonym} -> Synonym (Type.simplify synonym)
 simplify (_ Solved.::: Identity definition) = case definition of

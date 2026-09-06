@@ -34,21 +34,21 @@ import Syntax.Variable
     Qualifiers,
   )
 
-type TypeDeclaration :: (Kind.Type -> Kind.Type) -> Locality -> Layout -> Stage -> Environment -> Kind.Type
-data TypeDeclaration loeb locality layout stage scope
+type TypeDeclaration :: Locality -> (Kind.Type -> Kind.Type) -> Layout -> Stage -> Environment -> Kind.Type
+data TypeDeclaration locality loeb layout stage scope
   = TypeDeclaration
   { position :: !Position,
     name :: !ConstructorIdentifier,
     constructorNames :: !(Strict.Vector Constructor),
-    definition :: TypeDefinition2 loeb locality layout stage scope,
+    definition :: TypeDefinition2 locality loeb layout stage scope,
     kind :: loeb (Inferred Simple.Type stage scope)
   }
   deriving (Show)
 
-instance (Functor loeb) => Shift0.Functor (TypeDeclaration loeb locality layout stage) where
+instance (Functor loeb) => Shift0.Functor (TypeDeclaration locality loeb layout stage) where
   map = Shift.mapDefault
 
-instance (Functor loeb) => Shift.Functor (TypeDeclaration loeb locality layout stage) where
+instance (Functor loeb) => Shift.Functor (TypeDeclaration locality loeb layout stage) where
   map category = \case
     TypeDeclaration {position, name, constructorNames, definition, kind} ->
       TypeDeclaration
@@ -59,34 +59,34 @@ instance (Functor loeb) => Shift.Functor (TypeDeclaration loeb locality layout s
           kind = Shift.map category <$> kind
         }
 
-instance (Foldable loeb) => FreeTypeVariables (TypeDeclaration loeb locality layout) where
+instance (Foldable loeb) => FreeTypeVariables (TypeDeclaration locality loeb layout) where
   freeTypeVariables target = \case
     TypeDeclaration {definition} -> freeTypeVariables target definition
 
-instance Traversable2 TypeDeclaration where
+instance Traversable2 (TypeDeclaration locality) where
   traverse2 (Morph f) TypeDeclaration {position, name, constructorNames, definition, kind} =
     declaration <$> traverse2 (Morph f) (definition) <*> getCompose (f kind)
     where
       declaration definition kind = TypeDeclaration {position, name, constructorNames, definition, kind}
 
-kind' :: TypeDeclaration Identity locality layout Check scope -> Simple.Type scope
+kind' :: TypeDeclaration locality Identity layout Check scope -> Simple.Type scope
 kind' TypeDeclaration {kind = Identity (Solved kind)} = kind
 
 lazy ::
-  TypeDeclaration loeb locality' layout' stage' scope' ->
-  TypeDeclaration loeb locality layout stage scope ->
-  TypeDeclaration loeb locality layout stage scope
+  TypeDeclaration locality' loeb layout' stage' scope' ->
+  TypeDeclaration locality loeb layout stage scope ->
+  TypeDeclaration locality loeb layout stage scope
 lazy TypeDeclaration {position, name, constructorNames} ~TypeDeclaration {definition, kind} =
   TypeDeclaration {position, name, constructorNames, definition, kind}
 
-labelBinding :: Qualifiers -> TypeDeclaration loeb locality layout stage scope -> Label.TypeBinding scope'
+labelBinding :: Qualifiers -> TypeDeclaration locality loeb layout stage scope -> Label.TypeBinding scope'
 labelBinding path declaration =
   Label.TypeBinding
     { name = path :=. name declaration,
       constructorNames = (path :=) <$> constructorNames declaration
     }
 
-locality :: TypeDeclaration loeb locality Normal stage scope -> TypeDeclaration loeb locality' Normal stage scope
+locality :: TypeDeclaration locality loeb Normal stage scope -> TypeDeclaration locality' loeb Normal stage scope
 locality = \case
   TypeDeclaration {position, name, constructorNames, definition, kind} ->
     TypeDeclaration
@@ -102,8 +102,8 @@ group ::
   (Type0.Index scope -> Type.Link locality) ->
   (Type.Link locality -> Groupable scope) ->
   StronglyConnected.Component (Type.Link locality) ->
-  TypeDeclaration Identity locality Normal Resolve scope ->
-  TypeDeclaration Identity locality Group Resolve scope
+  TypeDeclaration locality Identity Normal Resolve scope ->
+  TypeDeclaration locality Identity Group Resolve scope
 group qualifiers link index group = \case
   TypeDeclaration {position, name, constructorNames, definition} ->
     TypeDeclaration
@@ -117,8 +117,8 @@ group qualifiers link index group = \case
 ungroup ::
   (Type.Link locality -> Type0.Index scope) ->
   (Type.Link locality -> TypeGroup.Set locality Check scope) ->
-  TypeDeclaration Identity locality Group Check scope ->
-  TypeDeclaration Identity locality Normal Check scope
+  TypeDeclaration locality Identity Group Check scope ->
+  TypeDeclaration locality Identity Normal Check scope
 ungroup index lookup TypeDeclaration {position, name, constructorNames, definition, kind} =
   TypeDeclaration
     { position,
@@ -132,8 +132,8 @@ ungroupM ::
   (Monad m) =>
   (Type.Link locality -> Type0.Index scope) ->
   (Type.Link locality -> m (TypeGroup.Set locality Check scope)) ->
-  TypeDeclaration Identity locality Group Check scope ->
-  m (TypeDeclaration Identity locality Normal Check scope)
+  TypeDeclaration locality Identity Group Check scope ->
+  m (TypeDeclaration locality Identity Normal Check scope)
 ungroupM index lookup TypeDeclaration {position, name, constructorNames, definition, kind} = do
   definition <- TypeDefinition2.ungroupM index lookup definition
   pure
@@ -152,7 +152,7 @@ data Groupable scope = Groupable
     constructorNames' :: !(Strict.Vector Constructor)
   }
 
-groupable :: TypeDeclaration Identity locality Normal Resolve scope -> Maybe (Groupable scope)
+groupable :: TypeDeclaration locality Identity Normal Resolve scope -> Maybe (Groupable scope)
 groupable TypeDeclaration {position, name, constructorNames, definition} = case definition of
   TypeDefinition2.Inferred TypeDefinition2.::: Identity definition ->
     Just

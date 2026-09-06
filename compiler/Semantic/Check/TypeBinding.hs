@@ -82,7 +82,7 @@ binding ::
   Functor.Annotated
     Label.TypeBinding
     (ST s (KindAnnotation scope))
-    (ST s (TypeDeclaration Identity locality Group Check scope)) ->
+    (ST s (TypeDeclaration locality Identity Group Check scope)) ->
   ST s (Solve s (TypeDeclarationExtra Group Check scope)) ->
   Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) b) ->
   Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) d) ->

@@ -15,9 +15,9 @@ fromFunctor ::
   Functor.Declarations
     scope
     a
-    (Declaration Identity Void Identity locality layout Check scope)
+    (Declaration Identity Void locality Identity layout Check scope)
     b
-    (TypeDeclaration Identity locality layout Check scope)
+    (TypeDeclaration locality Identity layout Check scope)
     (TypeDeclarationExtra layout Check scope)
     d
     (Instance Identity layout Check scope) ->

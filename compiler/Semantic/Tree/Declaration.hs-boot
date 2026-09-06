@@ -13,12 +13,12 @@ import Semantic.Stage (Check, Resolve, Stage)
 import {-# SOURCE #-} Semantic.Tree.Definition2 (Mark (Inferred))
 import {-# SOURCE #-} Semantic.Tree.Definition3 (Definition3)
 
-type role Declaration nominal nominal representational nominal nominal nominal nominal
+type role Declaration nominal nominal nominal representational nominal nominal nominal
 
-type Declaration :: (Type -> Type) -> Type -> (Type -> Type) -> Locality -> Layout -> Stage -> Environment -> Type
-data Declaration solve logical loeb locality layout stage scope
+type Declaration :: (Type -> Type) -> Type -> Locality -> (Type -> Type) -> Layout -> Stage -> Environment -> Type
+data Declaration solve logical locality loeb layout stage scope
 
-typex' :: Declaration solve logical Identity locality layout Check scope -> Simple.ForallOver Simple.TypeF logical scope
+typex' :: Declaration solve logical locality Identity layout Check scope -> Simple.ForallOver Simple.TypeF logical scope
 
 newtype Groupable scope
   = Groupable

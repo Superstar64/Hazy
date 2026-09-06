@@ -45,8 +45,8 @@ check ::
   Context s scope ->
   (Term.Link locality -> Int -> ST s (Unify.Forall s scope)) ->
   TypeAnnotation scope ->
-  Declaration Identity Void Identity locality Group Resolve scope ->
-  ST s (Declaration (Unify.Solve s) (Unify.Logical s scope) Identity locality Group Check scope)
+  Declaration Identity Void locality Identity Group Resolve scope ->
+  ST s (Declaration (Unify.Solve s) (Unify.Logical s scope) locality Identity Group Check scope)
 check context linked annotation Declaration {position, name, definition} = case definition of
   Semantic.Annotated {} Semantic.::: Identity (Identity (Implicit.Resolve definition))
     | Annotated annotation <- annotation -> do
@@ -127,8 +127,8 @@ checkAnnotation
             }
 
 solve ::
-  Declaration (Unify.Solve s) (Unify.Logical s scope) Identity locality Group Check scope ->
-  Unify.Solve s (Declaration Identity Void Identity locality Group Check scope)
+  Declaration (Unify.Solve s) (Unify.Logical s scope) locality Identity Group Check scope ->
+  Unify.Solve s (Declaration Identity Void locality Identity Group Check scope)
 solve Declaration {position, name, definition, typex = Identity (Solved typex)} = do
   definition <- Definition4.solve position definition
   typex <- Unify.solve position typex

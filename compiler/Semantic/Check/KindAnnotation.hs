@@ -43,7 +43,7 @@ data KindAnnotation scope
 
 check ::
   Context s scope ->
-  Semantic.TypeDeclaration Identity locality Group Resolve scope ->
+  Semantic.TypeDeclaration locality Identity Group Resolve scope ->
   ST s (KindAnnotation scope)
 check
   context

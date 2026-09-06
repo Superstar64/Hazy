@@ -40,7 +40,7 @@ data TypeDeclarationExtra s scope
 check ::
   Context s scope ->
   Type.Index scope ->
-  TypeDeclaration Identity locality Normal Check scope ->
+  TypeDeclaration locality Identity Normal Check scope ->
   Semantic.TypeDeclarationExtra Group Resolve scope ->
   ST s (TypeDeclarationExtra s scope)
 check context classx declaration

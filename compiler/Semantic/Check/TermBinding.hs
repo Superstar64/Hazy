@@ -36,7 +36,7 @@ rigid ::
   Functor.Annotated
     name
     (ST s (TypeAnnotation scope))
-    (ST s (Declaration Identity Void Identity locality layout Check scope)) ->
+    (ST s (Declaration Identity Void locality Identity layout Check scope)) ->
   TermBinding s scope
 rigid Functor.Annotated {meta, content} = TermBinding $ do
   annotation <- meta
@@ -48,7 +48,7 @@ wobbly ::
   Functor.Annotated
     name
     (ST s (TypeAnnotation scope))
-    (ST s (Declaration (Unify.Solve s) (Unify.Logical s scope) Identity locality Group Check scope)) ->
+    (ST s (Declaration (Unify.Solve s) (Unify.Logical s scope) locality Identity Group Check scope)) ->
   TermBinding s scope
 wobbly Functor.Annotated {meta, content} = TermBinding $ do
   annotation <- meta

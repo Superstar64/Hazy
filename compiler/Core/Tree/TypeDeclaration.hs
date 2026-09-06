@@ -40,7 +40,7 @@ instance Substitute.Functor TypeDeclaration where
           definition = Substitute.map category definition
         }
 
-simplify :: Solved.TypeDeclaration Identity locality Normal Check scope -> TypeDeclaration scope
+simplify :: Solved.TypeDeclaration locality Identity Normal Check scope -> TypeDeclaration scope
 simplify Solved.TypeDeclaration {name, definition} =
   TypeDeclaration
     { name,

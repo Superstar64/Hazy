@@ -49,7 +49,7 @@ instance Substitute.Functor Declaration where
       }
 
 simplify ::
-  Semantic.Declaration Identity Void Identity locality Normal Check scope ->
+  Semantic.Declaration Identity Void locality Identity Normal Check scope ->
   Declaration scope
 simplify = \case
   Semantic.Declaration

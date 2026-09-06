@@ -53,10 +53,10 @@ mapWithKey f1 f2 f3 f4 f5 f6 f7 Module {name, declarations} =
 fromStage2 ::
   Semantic.Module Group Resolve ->
   Module
-    (Semantic.Declaration Identity Void Identity Locality.Global Group Resolve Global)
-    (Semantic.Declaration Identity Void Identity Locality.Global Group Resolve Global)
-    (Semantic.TypeDeclaration Identity Locality.Global Group Resolve Global)
-    (Semantic.TypeDeclaration Identity Locality.Global Group Resolve Global)
+    (Semantic.Declaration Identity Void Locality.Global Identity Group Resolve Global)
+    (Semantic.Declaration Identity Void Locality.Global Identity Group Resolve Global)
+    (Semantic.TypeDeclaration Locality.Global Identity Group Resolve Global)
+    (Semantic.TypeDeclaration Locality.Global Identity Group Resolve Global)
     (Semantic.TypeDeclarationExtra Group Resolve Global)
     (Semantic.Instance Identity Group Resolve Global)
     (Semantic.Instance Identity Group Resolve Global)

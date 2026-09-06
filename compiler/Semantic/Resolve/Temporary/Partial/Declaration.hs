@@ -92,7 +92,7 @@ data Declaration scope
   | Shared
       { position :: !Position,
         name :: !Key,
-        shared :: forall locality. Real.Declaration Identity Void Identity locality Normal Resolve scope
+        shared :: forall locality. Real.Declaration Identity Void locality Identity Normal Resolve scope
       }
 
 resolve ::

@@ -14,12 +14,12 @@ import {-# SOURCE #-} Semantic.Tree.TypeDefinition (TypeDefinition)
 import Syntax.Position (Position)
 import Syntax.Variable (Constructor, ConstructorIdentifier)
 
-type role TypeDeclaration representational nominal nominal nominal nominal
+type role TypeDeclaration nominal representational nominal nominal nominal
 
-type TypeDeclaration :: (Type -> Type) -> Locality -> Layout -> Stage -> Environment -> Type
-data TypeDeclaration loeb locality layout stage scope
+type TypeDeclaration :: Locality -> (Type -> Type) -> Layout -> Stage -> Environment -> Type
+data TypeDeclaration locality loeb layout stage scope
 
-kind' :: TypeDeclaration Identity locality layout Check scope -> Simple.Type scope
+kind' :: TypeDeclaration locality Identity layout Check scope -> Simple.Type scope
 
 data Groupable scope = Groupable
   { element :: !(TypeDefinition Resolve scope),

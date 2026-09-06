@@ -109,10 +109,10 @@ fromStage2 ::
   Semantic.Declarations locality Group Resolve scope ->
   Declarations
     scope
-    (Semantic.Declaration Identity Void Identity locality Group Resolve scope)
-    (Semantic.Declaration Identity Void Identity locality Group Resolve scope)
-    (Semantic.TypeDeclaration Identity locality Group Resolve scope)
-    (Semantic.TypeDeclaration Identity locality Group Resolve scope)
+    (Semantic.Declaration Identity Void locality Identity Group Resolve scope)
+    (Semantic.Declaration Identity Void locality Identity Group Resolve scope)
+    (Semantic.TypeDeclaration locality Identity Group Resolve scope)
+    (Semantic.TypeDeclaration locality Identity Group Resolve scope)
     (Semantic.TypeDeclarationExtra Group Resolve scope)
     (Semantic.Instance Identity Group Resolve scope)
     (Semantic.Instance Identity Group Resolve scope)

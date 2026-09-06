@@ -66,11 +66,11 @@ data TypeDeclaration scope = TypeDeclaration
     name :: !ConstructorIdentifier,
     fields :: !(Fields scope),
     constructors :: !(Constructors scope),
-    declaration :: forall locality. Real.TypeDeclaration Identity locality Normal Resolve scope,
+    declaration :: forall locality. Real.TypeDeclaration locality Identity Normal Resolve scope,
     extra :: Real.Extra.TypeDeclarationExtra Normal Resolve scope
   }
 
-shrink :: TypeDeclaration scope -> Real.TypeDeclaration Identity locality Normal Resolve scope
+shrink :: TypeDeclaration scope -> Real.TypeDeclaration locality Identity Normal Resolve scope
 shrink = declaration
 
 shrinkExtra :: TypeDeclaration scope -> Real.Extra.TypeDeclarationExtra Normal Resolve scope

@@ -30,8 +30,8 @@ check ::
   Context s scope ->
   (Type.Link locality -> Int -> ST s (Simple.Type scope)) ->
   Semantic.KindAnnotation scope ->
-  TypeDeclaration Identity locality Group Resolve scope ->
-  ST s (TypeDeclaration Identity locality Group Check scope)
+  TypeDeclaration locality Identity Group Resolve scope ->
+  ST s (TypeDeclaration locality Identity Group Check scope)
 check _ _ annotation TypeDeclaration {position, name, constructorNames, definition = Synonym {}}
   | KindAnnotation.Synonym {kind, annotation', parameters, synonym} <- annotation = case annotation' of
       Strict.Nothing ->

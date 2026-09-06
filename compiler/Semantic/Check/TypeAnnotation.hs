@@ -27,7 +27,7 @@ checkAnnotation context annotation = do
 
 check ::
   Context s scope ->
-  Semantic.Declaration Identity Void Identity locality Group Resolve scope ->
+  Semantic.Declaration Identity Void locality Identity Group Resolve scope ->
   ST s (TypeAnnotation scope)
 check context Semantic.Declaration {definition} = case definition of
   Semantic.Annotated (Identity annotation) Semantic.::: _ -> do

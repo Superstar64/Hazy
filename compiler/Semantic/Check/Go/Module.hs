@@ -66,9 +66,9 @@ type Formula s z =
     Functor.ModuleSet
     s
     (TypeAnnotation Global)
-    (Declaration Identity Void Identity Locality.Global Group Check Global)
+    (Declaration Identity Void Locality.Global Identity Group Check Global)
     (KindAnnotation Global)
-    (TypeDeclaration Identity Locality.Global Group Check Global)
+    (TypeDeclaration Locality.Global Identity Group Check Global)
     (TypeDeclarationExtra Group Check Global)
     (InstanceAnnotation Global)
     (Instance Identity Group Check Global)
@@ -77,9 +77,9 @@ type Formula s z =
 fromFunctor ::
   Functor.Module
     a
-    (Declaration Identity Void Identity Locality.Global Group Check Global)
+    (Declaration Identity Void Locality.Global Identity Group Check Global)
     b
-    (TypeDeclaration Identity Locality.Global Group Check Global)
+    (TypeDeclaration Locality.Global Identity Group Check Global)
     (TypeDeclarationExtra Group Check Global)
     c
     (Instance Identity Group Check Global) ->
@@ -93,9 +93,9 @@ fromFunctor (Functor.Module {name, declarations}) =
 fromFunctors ::
   Functor.ModuleSet
     a
-    (Declaration Identity Void Identity Locality.Global Group Check Global)
+    (Declaration Identity Void Locality.Global Identity Group Check Global)
     b
-    (TypeDeclaration Identity Locality.Global Group Check Global)
+    (TypeDeclaration Locality.Global Identity Group Check Global)
     (TypeDeclarationExtra Group Check Global)
     c
     (Instance Identity Group Check Global) ->
@@ -145,7 +145,7 @@ check modules =
 checkTermAnnotation ::
   p1 ->
   p2 ->
-  Semantic.Declaration Identity Void Identity locality Group Resolve Global ->
+  Semantic.Declaration Identity Void locality Identity Group Resolve Global ->
   Formula s (TypeAnnotation Global)
 checkTermAnnotation _ _ declaration = Formula7 {cycle, run}
   where
@@ -157,8 +157,8 @@ checkTermDeclaration ::
   forall s.
   Int ->
   Int ->
-  Semantic.Declaration Identity Void Identity Locality.Global Group Resolve Global ->
-  Formula s (Declaration Identity Void Identity Locality.Global Group Check Global)
+  Semantic.Declaration Identity Void Locality.Global Identity Group Resolve Global ->
+  Formula s (Declaration Identity Void Locality.Global Identity Group Check Global)
 checkTermDeclaration global local declaration = Formula7 {cycle, run}
   where
     cycle :: a
@@ -187,7 +187,7 @@ checkTermDeclaration global local declaration = Formula7 {cycle, run}
 checkTypeAnnotation ::
   p1 ->
   p2 ->
-  Semantic.TypeDeclaration.TypeDeclaration Identity locality Group Resolve Global ->
+  Semantic.TypeDeclaration.TypeDeclaration locality Identity Group Resolve Global ->
   Formula s (KindAnnotation Global)
 checkTypeAnnotation _ _ declaration = Formula7 {cycle, run}
   where
@@ -199,8 +199,8 @@ checkTypeDeclaration ::
   forall s.
   Int ->
   Int ->
-  Semantic.TypeDeclaration.TypeDeclaration Identity Locality.Global Group Resolve Global ->
-  Formula s (TypeDeclaration Identity Locality.Global Group Check Global)
+  Semantic.TypeDeclaration.TypeDeclaration Locality.Global Identity Group Resolve Global ->
+  Formula s (TypeDeclaration Locality.Global Identity Group Check Global)
 checkTypeDeclaration global local declaration = Formula7 {cycle, run}
   where
     cycle :: a
