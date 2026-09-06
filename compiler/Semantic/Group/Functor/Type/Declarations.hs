@@ -2,9 +2,11 @@
 
 module Semantic.Group.Functor.Type.Declarations where
 
+import Data.Functor.Identity (Identity)
 import Data.Traversable (fmapDefault, foldMapDefault)
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
+import Data.Void (Void)
 import qualified Semantic.Index.Link.Type as Type
 import Semantic.Layout (Normal)
 import Semantic.Locality (Local)
@@ -28,7 +30,7 @@ instance Traversable Declarations where
 
 indexes ::
   (Int -> Type.Link locality) ->
-  Proper.Declarations locality' Normal Resolve scope ->
+  Proper.Declarations Identity Void locality' Identity Normal Resolve scope ->
   Declarations (Type.Link locality)
 indexes index Proper.Declarations {types} =
   Declarations

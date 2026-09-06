@@ -10,6 +10,7 @@ import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
+import Data.Void (Void)
 import Error (orphanInstance, overlappingInstances)
 import Order (orderNonEmpty, orderNonEmpty', orderWithInt)
 import qualified Semantic.Index.Term as Term (Index)
@@ -157,7 +158,7 @@ bindings
         stability = mempty
       }
 
-shrink :: Declarations scope -> Real.Declarations locality Normal Resolve scope
+shrink :: Declarations scope -> Real.Declarations Identity Void locality Identity Normal Resolve scope
 shrink Declarations {terms, types, dataInstances, classInstances} =
   Real.Declarations
     { terms = Vector.catMaybes $ Term.shrink <$> Strict.Vector.toLazy terms,

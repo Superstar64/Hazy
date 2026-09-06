@@ -1,11 +1,8 @@
 module Semantic.Check.Go.Declarations (Declarations (..), fromFunctor) where
 
-import Data.Functor.Identity (Identity)
-import Data.Void (Void)
 import qualified Semantic.Check.Functor.Annotated as Functor (Annotated (..))
 import qualified Semantic.Check.Functor.Declarations as Functor (Declarations (..))
 import Semantic.Check.Go.TypeDeclaration (TypeDeclaration)
-import Semantic.Stage (Check)
 import Semantic.Tree.Declaration (Declaration)
 import Semantic.Tree.Declarations (Declarations (..))
 import {-# SOURCE #-} Semantic.Tree.Instance (Instance)
@@ -14,14 +11,14 @@ import Semantic.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 fromFunctor ::
   Functor.Declarations
     scope
-    a
-    (Declaration Identity Void locality Identity layout Check scope)
-    b
-    (TypeDeclaration locality Identity layout Check scope)
-    (TypeDeclarationExtra layout Check scope)
-    d
-    (Instance Identity layout Check scope) ->
-  Declarations locality layout Check scope
+    a1
+    (Declaration solve logical locality loeb layout stage scope)
+    a2
+    (TypeDeclaration locality loeb layout stage scope)
+    (TypeDeclarationExtra layout stage scope)
+    a3
+    (Instance solve layout stage scope) ->
+  Declarations solve logical locality loeb layout stage scope
 fromFunctor (Functor.Declarations {terms, types, typeExtras, dataInstances, classInstances}) =
   Declarations
     { terms = Functor.content <$> terms,

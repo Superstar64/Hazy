@@ -106,7 +106,7 @@ mapWithKey
 
 fromStage2 ::
   Qualifiers ->
-  Semantic.Declarations locality Group Resolve scope ->
+  Semantic.Declarations Identity Void locality Identity Group Resolve scope ->
   Declarations
     scope
     (Semantic.Declaration Identity Void locality Identity Group Resolve scope)

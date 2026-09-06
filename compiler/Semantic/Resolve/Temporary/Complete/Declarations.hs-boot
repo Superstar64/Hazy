@@ -2,7 +2,9 @@
 
 module Semantic.Resolve.Temporary.Complete.Declarations where
 
+import Data.Functor.Identity (Identity)
 import Data.Kind (Type)
+import Data.Void (Void)
 import qualified Semantic.Index.Term as Term
 import qualified Semantic.Index.Term0 as Term0
 import qualified Semantic.Index.Type0 as Type0
@@ -36,4 +38,4 @@ bindings ::
   (Int -> Type0.Index scope) ->
   Declarations scope ->
   Bindings stability scope
-shrink :: Declarations scope -> Real.Declarations locality Normal Resolve scope
+shrink :: Declarations scope -> Real.Declarations Identity Void locality Identity Normal Resolve scope

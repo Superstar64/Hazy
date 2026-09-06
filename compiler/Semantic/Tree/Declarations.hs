@@ -14,6 +14,7 @@ import Semantic.Connect (Connect)
 import qualified Semantic.Connect as Connect
 import Semantic.FreeVariables (FreeTermVariables (..))
 import qualified Semantic.FreeVariables as FreeVariables
+import Semantic.Functor2 (Traversable2 (..))
 import {-# SOURCE #-} qualified Semantic.Group.Functor.Term.Declarations as Functor.Term
 import {-# SOURCE #-} qualified Semantic.Group.Functor.Type.Declarations as Functor.Type
 import qualified Semantic.Index.Link.Term as Term
@@ -42,19 +43,19 @@ import qualified Semantic.Tree.TypeGroup as TypeGroup
 import Syntax.Variable (Qualifiers)
 import qualified Syntax.Variable as Variable
 
-data Declarations locality layout stage scope = Declarations
-  { terms :: !(Vector (Declaration Identity Void locality Identity layout stage scope)),
-    types :: !(Vector (TypeDeclaration locality Identity layout stage scope)),
+data Declarations solve logical locality loeb layout stage scope = Declarations
+  { terms :: !(Vector (Declaration solve logical locality loeb layout stage scope)),
+    types :: !(Vector (TypeDeclaration locality loeb layout stage scope)),
     typeExtras :: !(Vector (TypeDeclarationExtra layout stage scope)),
-    dataInstances :: !(Vector (Map (Type2.Index scope) (Instance Identity layout stage scope))),
-    classInstances :: !(Vector (Map (Type2.Index scope) (Instance Identity layout stage scope)))
+    dataInstances :: !(Vector (Map (Type2.Index scope) (Instance solve layout stage scope))),
+    classInstances :: !(Vector (Map (Type2.Index scope) (Instance solve layout stage scope)))
   }
   deriving (Show)
 
-instance Shift0.Functor (Declarations locality layout stage) where
+instance (Functor solve, Functor loeb) => Shift0.Functor (Declarations solve logical locality loeb layout stage) where
   map = Shift.mapDefault
 
-instance Shift.Functor (Declarations locality layout stage) where
+instance (Functor solve, Functor loeb) => Shift.Functor (Declarations solve logical locality loeb layout stage) where
   map
     category
     Declarations
@@ -72,12 +73,25 @@ instance Shift.Functor (Declarations locality layout stage) where
           classInstances = fmap (Shift.mapInstances category . fmap (Shift.map category)) classInstances
         }
 
-instance FreeTermVariables (Declarations locality) where
+instance (Foldable solve, Foldable loeb) => FreeTermVariables (Declarations solve logical locality loeb) where
   freeTermVariables target Declarations {terms, typeExtras} =
     concat
       [ foldMap (freeTermVariables target) terms,
         foldMap (freeTermVariables target) typeExtras
       ]
+
+instance Traversable2 (Declarations solve logical locality) where
+  traverse2
+    f
+    Declarations
+      { terms,
+        types,
+        typeExtras,
+        dataInstances,
+        classInstances
+      } = declarations <$> traverse (traverse2 f) terms <*> traverse (traverse2 f) types
+      where
+        declarations terms types = Declarations {terms, types, typeExtras, dataInstances, classInstances}
 
 group ::
   Qualifiers ->
@@ -87,8 +101,8 @@ group ::
   (Type.Link locality -> TypeDeclaration.Groupable scope) ->
   Functor.Term.Declarations (StronglyConnected.Component (Term.Link locality)) ->
   Functor.Type.Declarations (StronglyConnected.Component (Type.Link locality)) ->
-  Declarations locality Normal Resolve scope ->
-  Declarations locality Group Resolve scope
+  Declarations Identity Void locality Identity Normal Resolve scope ->
+  Declarations Identity Void locality Identity Group Resolve scope
 group
   qualifiers
   linkTerm
@@ -117,8 +131,8 @@ ungroup ::
   (Type.Link locality -> Type0.Index scope) ->
   (Term.Link locality -> Implicit (Group.Set locality) Group Check scope) ->
   (Type.Link locality -> TypeGroup.Set locality Check scope) ->
-  Declarations locality Group Check scope ->
-  Declarations locality Normal Check scope
+  Declarations Identity Void locality Identity Group Check scope ->
+  Declarations Identity Void locality Identity Normal Check scope
 ungroup
   indexTerm
   indexType
@@ -141,8 +155,8 @@ ungroup
 
 connect ::
   forall scope.
-  Declarations Locality.Local Normal Resolve (Scope.Declaration ':+ scope) ->
-  Declarations Locality.Local Group Resolve (Scope.Declaration ':+ scope)
+  Declarations Identity Void Locality.Local Identity Normal Resolve (Scope.Declaration ':+ scope) ->
+  Declarations Identity Void Locality.Local Identity Group Resolve (Scope.Declaration ':+ scope)
 connect declarations@Declarations {terms, types} =
   group Variable.Local Term.local Type.local indexTerm' indexType' termGroups typeGroups declarations
   where
@@ -170,8 +184,8 @@ connect declarations@Declarations {terms, types} =
 
 seperate ::
   forall scope.
-  Declarations Locality.Local Group Check (Scope.Declaration ':+ scope) ->
-  Declarations Locality.Local Normal Check (Scope.Declaration ':+ scope)
+  Declarations Identity Void Locality.Local Identity Group Check (Scope.Declaration ':+ scope) ->
+  Declarations Identity Void Locality.Local Identity Normal Check (Scope.Declaration ':+ scope)
 seperate declarations@Declarations {terms, types} =
   ungroup Term.unlocal Type.unlocal lookupTerm lookupType declarations
   where
@@ -195,7 +209,7 @@ seperate declarations@Declarations {terms, types} =
       _ -> error "bad type lookup"
 
 newtype Local layout stage scope
-  = Local (Declarations Locality.Local layout stage (Scope.Declaration ':+ scope))
+  = Local (Declarations Identity Void Locality.Local Identity layout stage (Scope.Declaration ':+ scope))
   deriving (Show)
 
 instance Shift0.Functor (Local layout stage) where

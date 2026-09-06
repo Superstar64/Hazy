@@ -9,9 +9,11 @@ import Core.Tree.TypeDeclaration (TypeDeclaration)
 import qualified Core.Tree.TypeDeclaration as TypeDeclaration
 import Core.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 import qualified Core.Tree.TypeDeclarationExtra as TypeDeclarationExtra
+import Data.Functor.Identity (Identity)
 import Data.Map (Map)
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
+import Data.Void (Void)
 import qualified Semantic.Check.Go.Declarations as Semantic
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Layout (Normal)
@@ -46,7 +48,7 @@ instance Substitute.Functor Declarations where
           Substitute.mapInstances category . fmap (Substitute.map category) <$> dataInstances
       }
 
-simplify :: Semantic.Declarations locality Normal Check scope -> Declarations scope
+simplify :: Semantic.Declarations Identity Void locality Identity Normal Check scope -> Declarations scope
 simplify
   Semantic.Declarations
     { terms,

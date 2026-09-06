@@ -289,7 +289,9 @@ checkInstanceDeclaration context key declaration = Formula7 {cycle, run}
           annotation <- meta
           Instance.check (localBindings declarations context) key annotation declaration
 
-solve :: Declarations locality s scope -> Unify.Solve s (Solved.Declarations locality Group Check scope)
+solve ::
+  Declarations locality s scope ->
+  Unify.Solve s (Solved.Declarations Identity Void locality Identity Group Check scope)
 solve
   Declarations
     { terms,

@@ -3,7 +3,9 @@
 module Semantic.Check.Temporary.Declarations where
 
 import Control.Monad.ST (ST)
+import Data.Functor.Identity (Identity)
 import Data.Kind (Type)
+import Data.Void (Void)
 import Semantic.Check.Context (Context)
 import Semantic.Layout (Group)
 import Semantic.Locality (Locality)
@@ -30,5 +32,7 @@ check ::
     ( Context s (Scope.Declaration ':+ scope),
       Local s scope
     )
-solve :: Declarations locality s scope -> Unify.Solve s (Solved.Declarations locality Group Check scope)
+solve ::
+  Declarations locality s scope ->
+  Unify.Solve s (Solved.Declarations Identity Void locality Identity Group Check scope)
 solveLocal :: Local s scope -> Unify.Solve s (Solved.Local Group Check scope)

@@ -12,6 +12,7 @@ import Data.Functor.Identity (Identity (..))
 import Data.Maybe (fromJust)
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
+import Data.Void (Void)
 import Graph.StronglyConnected (Index (..), tarjan)
 import qualified Semantic.Group.Functor.Term.Declarations as Functor.Term (indexes)
 import qualified Semantic.Group.Functor.Term.ModuleSet as Functor.Term (ModuleSet (..), (!))
@@ -44,7 +45,7 @@ import Syntax.Variable (FullQualifiers, toQualifiers)
 
 data Module layout stage = Module
   { name :: !FullQualifiers,
-    declarations :: Declarations Locality.Global layout stage Global
+    declarations :: Declarations Identity Void Locality.Global Identity layout stage Global
   }
   deriving (Show)
 
