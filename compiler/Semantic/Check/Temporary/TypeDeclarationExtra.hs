@@ -8,18 +8,18 @@ import Data.Functor.Identity (Identity (..))
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Context (Context)
+import qualified Semantic.Check.Go.MethodAbstract as MethodAbstract
 import Semantic.Check.Go.TypeDeclaration (TypeDeclaration (..))
 import qualified Semantic.Check.Go.TypeDeclaration as TypeDeclaration
 import qualified Semantic.Check.Mask as Mask
 import Semantic.Check.Simple.Scheme (augment)
-import Semantic.Check.Temporary.MethodAbstract (MethodAbstract)
-import qualified Semantic.Check.Temporary.MethodAbstract as MethodAbstract
 import qualified Semantic.Index.Type as Type
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Layout (Group, Normal)
 import Semantic.Scope (Environment (..), Local)
 import Semantic.Stage (Check, Resolve)
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
+import Semantic.Tree.MethodAbstract (MethodAbstract)
 import qualified Semantic.Tree.TypeDeclarationExtra as Semantic
 import qualified Semantic.Tree.TypeDeclarationExtra as Solved
 import qualified Semantic.Tree.TypeDefinition as TypeDefinition
@@ -32,7 +32,7 @@ data TypeDeclarationExtra s scope
   = ADT {position :: !Position}
   | Class
       { position :: !Position,
-        methods :: !(Strict.Vector (MethodAbstract s (Local ':+ scope)))
+        methods :: !(Strict.Vector (Unify.Solve s (MethodAbstract Group Check (Local ':+ scope))))
       }
   | Synonym {position :: !Position}
   | GADT {position :: !Position}
@@ -72,7 +72,7 @@ solve :: TypeDeclarationExtra s scope -> Unify.Solve s (Solved.TypeDeclarationEx
 solve = \case
   ADT {position} -> pure Solved.ADT {position}
   Class {position, methods} -> do
-    methods <- traverse MethodAbstract.solve methods
+    methods <- sequence methods
     pure Solved.Class {position, methods}
   Synonym {position} -> pure Solved.Synonym {position}
   GADT {position} -> pure Solved.GADT {position}
