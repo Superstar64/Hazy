@@ -17,7 +17,6 @@ import {-# SOURCE #-} Semantic.Check.InstanceAnnotation (InstanceAnnotation)
 import {-# SOURCE #-} Semantic.Check.KindAnnotation (KindAnnotation (..))
 import Semantic.Check.LocalBinding (LocalBinding)
 import qualified Semantic.Check.LocalBinding as LocalBinding
-import {-# SOURCE #-} qualified Semantic.Check.Temporary.TypeDeclarationExtra as Temporary (TypeDeclarationExtra, solve)
 import Semantic.Check.TermBinding (TermBinding)
 import qualified Semantic.Check.TermBinding as TermBinding
 import {-# SOURCE #-} Semantic.Check.TypeAnnotation (TypeAnnotation)
@@ -112,7 +111,7 @@ localBindings ::
     )
     (ST s (KindAnnotation (Scope.Declaration ':+ scope)))
     (ST s (TypeDeclaration Locality.Local Identity Group Check (Scope.Declaration ':+ scope)))
-    (ST s (Temporary.TypeDeclarationExtra s (Scope.Declaration ':+ scope)))
+    (ST s (Unify.Solve s (TypeDeclarationExtra Group Check (Scope.Declaration ':+ scope))))
     (ST s (InstanceAnnotation (Scope.Declaration ':+ scope)))
     x' ->
   Context s scope ->
@@ -127,7 +126,7 @@ localBindings
       }
     where
       termBindings = TermBinding.wobbly <$> terms
-      typeBindings = Vector.zipWith4 go types (fmap Temporary.solve <$> typeExtras) dataInstances classInstances
+      typeBindings = Vector.zipWith4 go types typeExtras dataInstances classInstances
       go = TypeBinding.binding Link.Type.unlocal $ \case
         Link.Type.Declaration local
           | Functor.Annotated {content} <- types Vector.! local -> do

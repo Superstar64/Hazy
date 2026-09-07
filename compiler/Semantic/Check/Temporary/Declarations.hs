@@ -23,12 +23,11 @@ import qualified Semantic.Check.Go.Declarations as Solved
 import qualified Semantic.Check.Go.Instance as Instance
 import Semantic.Check.Go.TypeDeclaration (TypeDeclaration (..))
 import qualified Semantic.Check.Go.TypeDeclaration as TypeDeclaration
+import qualified Semantic.Check.Go.TypeDeclarationExtra as TypeDeclarationExtra
 import Semantic.Check.InstanceAnnotation (InstanceAnnotation)
 import qualified Semantic.Check.InstanceAnnotation as InstanceAnnotation
 import Semantic.Check.KindAnnotation (KindAnnotation)
 import qualified Semantic.Check.KindAnnotation as KindAnnotation
-import Semantic.Check.Temporary.TypeDeclarationExtra (TypeDeclarationExtra)
-import qualified Semantic.Check.Temporary.TypeDeclarationExtra as TypeDeclarationExtra
 import Semantic.Check.TypeAnnotation (TypeAnnotation)
 import qualified Semantic.Check.TypeAnnotation as TypeAnnotation
 import qualified Semantic.Index.Link.Term as Term
@@ -52,6 +51,7 @@ import qualified Semantic.Tree.Instance as Semantic.Instance
 import qualified Semantic.Tree.InstanceDefinition2 as InstanceDefinition
 import qualified Semantic.Tree.TypeDeclaration as Semantic (TypeDeclaration)
 import qualified Semantic.Tree.TypeDeclaration as Semantic.TypeDeclaration
+import Semantic.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 import qualified Semantic.Tree.TypeDeclarationExtra as Semantic (TypeDeclarationExtra)
 import qualified Semantic.Tree.TypeDeclarationExtra as Semantic.TypeDeclarationExtra
 import qualified Semantic.Tree.TypeDefinition2 as TypeDefinition2
@@ -63,7 +63,7 @@ import Prelude hiding (Functor)
 data Declarations locality s scope = Declarations
   { terms :: !(Vector (Declaration (Unify.Solve s) (Unify.Logical s scope) locality Identity Group Check scope)),
     types :: !(Vector (TypeDeclaration locality Identity Group Check scope)),
-    typeExtras :: !(Vector (TypeDeclarationExtra s scope)),
+    typeExtras :: !(Vector (Unify.Solve s (TypeDeclarationExtra Group Check scope))),
     classInstances :: !(Vector (Map (Type2.Index scope) (Semantic.Instance (Unify.Solve s) Group Check scope))),
     dataInstances :: !(Vector (Map (Type2.Index scope) (Semantic.Instance (Unify.Solve s) Group Check scope)))
   }
@@ -84,7 +84,7 @@ type Formula s scope z =
     )
     (KindAnnotation (Scope.Declaration ':+ scope))
     (TypeDeclaration Locality.Local Identity Group Check (Scope.Declaration ':+ scope))
-    (TypeDeclarationExtra s (Scope.Declaration ':+ scope))
+    (Unify.Solve s (TypeDeclarationExtra Group Check (Scope.Declaration ':+ scope)))
     (InstanceAnnotation (Scope.Declaration ':+ scope))
     (Semantic.Instance (Unify.Solve s) Group Check (Scope.Declaration ':+ scope))
     z
@@ -96,7 +96,7 @@ fromFunctor ::
     (Declaration (Unify.Solve s) (Unify.Logical s scope) locality Identity Group Check scope)
     b
     (TypeDeclaration locality Identity Group Check scope)
-    (TypeDeclarationExtra s scope)
+    (Unify.Solve s (TypeDeclarationExtra Group Check scope))
     c
     (Semantic.Instance (Unify.Solve s) Group Check scope) ->
   Declarations locality s scope
@@ -231,7 +231,7 @@ checkTypeDeclarationExtra ::
   Context s scope ->
   Int ->
   Semantic.TypeDeclarationExtra Group Resolve (Scope.Declaration ':+ scope) ->
-  Formula s scope (TypeDeclarationExtra s (Scope.Declaration ':+ scope))
+  Formula s scope (Unify.Solve s (TypeDeclarationExtra Group Check (Scope.Declaration ':+ scope)))
 checkTypeDeclarationExtra context index declaration = Formula7 {cycle, run}
   where
     cycle :: a
@@ -299,7 +299,7 @@ solve
       classInstances
     } = do
     terms <- traverse Declaration.solve terms
-    typeExtras <- traverse TypeDeclarationExtra.solve typeExtras
+    typeExtras <- sequence typeExtras
     dataInstances <- traverse (traverse Instance.solve) dataInstances
     classInstances <- traverse (traverse Instance.solve) classInstances
     pure

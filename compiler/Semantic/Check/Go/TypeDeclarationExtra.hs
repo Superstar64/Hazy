@@ -1,11 +1,10 @@
-module Semantic.Check.Temporary.TypeDeclarationExtra where
+module Semantic.Check.Go.TypeDeclarationExtra where
 
 import Control.Monad.ST (ST)
 import qualified Core.Tree.Constraint as Simple (ConstraintF (..))
 import qualified Core.Tree.Constraint as Simple.Constraint
 import Core.Tree.Constraints as Simple (ConstraintsF (Constraints))
 import Data.Functor.Identity (Identity (..))
-import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Context (Context)
 import qualified Semantic.Check.Go.MethodAbstract as MethodAbstract
@@ -16,38 +15,26 @@ import Semantic.Check.Simple.Scheme (augment)
 import qualified Semantic.Index.Type as Type
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Layout (Group, Normal)
-import Semantic.Scope (Environment (..), Local)
 import Semantic.Stage (Check, Resolve)
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
-import Semantic.Tree.MethodAbstract (MethodAbstract)
+import Semantic.Tree.TypeDeclarationExtra (TypeDeclarationExtra (..))
 import qualified Semantic.Tree.TypeDeclarationExtra as Semantic
-import qualified Semantic.Tree.TypeDeclarationExtra as Solved
 import qualified Semantic.Tree.TypeDefinition as TypeDefinition
 import Semantic.Tree.TypeDefinition2 (TypeDefinition2 ((:::)))
 import Semantic.Tree.TypePattern (TypePattern (..))
 import qualified Semantic.Unify as Unify
-import Syntax.Position (Position)
-
-data TypeDeclarationExtra s scope
-  = ADT {position :: !Position}
-  | Class
-      { position :: !Position,
-        methods :: !(Strict.Vector (Unify.Solve s (MethodAbstract Group Check (Local ':+ scope))))
-      }
-  | Synonym {position :: !Position}
-  | GADT {position :: !Position}
 
 check ::
   Context s scope ->
   Type.Index scope ->
   TypeDeclaration locality Identity Normal Check scope ->
-  Semantic.TypeDeclarationExtra Group Resolve scope ->
-  ST s (TypeDeclarationExtra s scope)
+  TypeDeclarationExtra Group Resolve scope ->
+  ST s (Unify.Solve s (TypeDeclarationExtra Group Check scope))
 check context classx declaration
   | definition <- TypeDeclaration.definition declaration = \case
-      Semantic.ADT {position} -> pure ADT {position}
-      Semantic.Synonym {position} -> pure Synonym {position}
-      Semantic.GADT {position} -> pure GADT {position}
+      Semantic.ADT {position} -> pure $ pure ADT {position}
+      Semantic.Synonym {position} -> pure $ pure Synonym {position}
+      Semantic.GADT {position} -> pure $ pure GADT {position}
       Semantic.Class {position, methods} -> case definition of
         _ ::: Identity TypeDefinition.Class {parameter = TypePattern {typex = Solved parameter}, methods = base} -> do
           context <-
@@ -65,14 +52,7 @@ check context classx declaration
               Mask.Inline
               context
           methods <- sequence $ Strict.Vector.zipWith (MethodAbstract.check context position) base methods
-          pure Class {position, methods}
+          pure $ do
+            methods <- sequence methods
+            pure Class {position, methods}
         _ -> error "bad proper"
-
-solve :: TypeDeclarationExtra s scope -> Unify.Solve s (Solved.TypeDeclarationExtra Group Check scope)
-solve = \case
-  ADT {position} -> pure Solved.ADT {position}
-  Class {position, methods} -> do
-    methods <- sequence methods
-    pure Solved.Class {position, methods}
-  Synonym {position} -> pure Solved.Synonym {position}
-  GADT {position} -> pure Solved.GADT {position}

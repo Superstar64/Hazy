@@ -217,6 +217,7 @@ executable hazy
     Semantic.Check.Go.Module
     Semantic.Check.Go.Scheme
     Semantic.Check.Go.TypeDeclaration
+    Semantic.Check.Go.TypeDeclarationExtra
     Semantic.Check.InstanceAnnotation
     Semantic.Check.KindAnnotation
     Semantic.Check.LocalBinding
@@ -261,7 +262,6 @@ executable hazy
     Semantic.Check.Temporary.Statements
     Semantic.Check.Temporary.StrictnessAnnotation
     Semantic.Check.Temporary.Type
-    Semantic.Check.Temporary.TypeDeclarationExtra
     Semantic.Check.Temporary.TypeDefinition
     Semantic.Check.Temporary.TypePattern
     Semantic.Check.Temporary.UpdateInfo

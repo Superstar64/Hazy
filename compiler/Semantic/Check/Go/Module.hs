@@ -26,11 +26,11 @@ import qualified Semantic.Check.Go.Declarations as Declarations
 import qualified Semantic.Check.Go.Instance as Instance (Key (..), check, solve)
 import Semantic.Check.Go.TypeDeclaration (TypeDeclaration (..))
 import qualified Semantic.Check.Go.TypeDeclaration as TypeDeclaration
+import qualified Semantic.Check.Go.TypeDeclarationExtra as TypeDeclarationExtra
 import Semantic.Check.InstanceAnnotation (InstanceAnnotation)
 import qualified Semantic.Check.InstanceAnnotation as InstanceAnnotation
 import Semantic.Check.KindAnnotation (KindAnnotation)
 import qualified Semantic.Check.KindAnnotation as KindAnnotation
-import qualified Semantic.Check.Temporary.TypeDeclarationExtra as TypeDeclarationExtra
 import Semantic.Check.TypeAnnotation (TypeAnnotation)
 import qualified Semantic.Check.TypeAnnotation as TypeAnnotation
 import qualified Semantic.Index.Link.Term as Link.Term
@@ -253,7 +253,7 @@ checkTypeDeclarationExtra global local declaration = Formula7 {cycle, run}
               _ -> error "bad link"
       proper <- Semantic.TypeDeclaration.ungroupM Link.Type.unglobal link proper
       extra <- TypeDeclarationExtra.check context (Type.Global global local) proper declaration
-      Unify.runSolve $ TypeDeclarationExtra.solve extra
+      Unify.runSolve extra
 
 checkInstanceAnnotation ::
   p1 ->
