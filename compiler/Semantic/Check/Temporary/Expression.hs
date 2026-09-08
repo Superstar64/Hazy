@@ -20,6 +20,7 @@ import Semantic.Check.Context (Context (..))
 import Semantic.Check.DataInstance (DataInstance (DataInstance))
 import qualified Semantic.Check.DataInstance as DataInstance
 import qualified Semantic.Check.Go.Declaration as Declaration
+import qualified Semantic.Check.Go.Declarations as Declarations
 import Semantic.Check.Go.Scheme (Scheme)
 import qualified Semantic.Check.Simple.Data as Simple.Data
 import Semantic.Check.Simple.Scheme (instanciate)
@@ -31,7 +32,6 @@ import Semantic.Check.Temporary.Comprehension (Comprehension)
 import qualified Semantic.Check.Temporary.Comprehension as Comprehension
 import Semantic.Check.Temporary.ConstructorInfo (ConstructorInfo)
 import qualified Semantic.Check.Temporary.ConstructorInfo as ConstructorInfo
-import qualified Semantic.Check.Temporary.Declarations as Declarations
 import Semantic.Check.Temporary.Do (Do)
 import qualified Semantic.Check.Temporary.Do as Do
 import Semantic.Check.Temporary.ExpressionField (Field)

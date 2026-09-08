@@ -3,9 +3,9 @@ module Semantic.Check.Temporary.RightHandSide where
 import Control.Monad.ST (ST)
 import Core.Type.Functor (shiftLogical)
 import Semantic.Check.Context (Context)
+import {-# SOURCE #-} qualified Semantic.Check.Go.Declarations as Declarations
 import Semantic.Check.Temporary.Body (Body)
 import qualified Semantic.Check.Temporary.Body as Body
-import {-# SOURCE #-} qualified Semantic.Check.Temporary.Declarations as Declarations
 import Semantic.Layout (Group)
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope (Declaration)

@@ -4,7 +4,7 @@ import Control.Monad.ST (ST)
 import qualified Core.Tree.Type as Core
 import Core.Type.Functor (shiftLogical)
 import Semantic.Check.Context (Context)
-import qualified Semantic.Check.Temporary.Declarations as Declarations
+import qualified Semantic.Check.Go.Declarations as Declarations
 import {-# SOURCE #-} Semantic.Check.Temporary.Expression (Expression)
 import {-# SOURCE #-} qualified Semantic.Check.Temporary.Expression as Expression
 import Semantic.Check.Temporary.Pattern (Pattern)

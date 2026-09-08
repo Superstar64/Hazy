@@ -239,7 +239,6 @@ executable hazy
     Semantic.Check.Temporary.Constraints
     Semantic.Check.Temporary.Constructor
     Semantic.Check.Temporary.ConstructorInfo
-    Semantic.Check.Temporary.Declarations
     Semantic.Check.Temporary.Definition
     Semantic.Check.Temporary.Definition2
     Semantic.Check.Temporary.Definition3

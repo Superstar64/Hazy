@@ -57,7 +57,7 @@ fromStage2 ::
     (Semantic.Declaration Identity Void Locality.Global Identity Group Resolve Global)
     (Semantic.TypeDeclaration Locality.Global Identity Group Resolve Global)
     (Semantic.TypeDeclaration Locality.Global Identity Group Resolve Global)
-    (Semantic.TypeDeclarationExtra Group Resolve Global)
+    (Identity (Semantic.TypeDeclarationExtra Group Resolve Global))
     (Semantic.Instance Identity Group Resolve Global)
     (Semantic.Instance Identity Group Resolve Global)
 fromStage2 Semantic.Module {name = name@(path :.. base), declarations}

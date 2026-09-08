@@ -46,7 +46,7 @@ import qualified Syntax.Variable as Variable
 data Declarations solve logical locality loeb layout stage scope = Declarations
   { terms :: !(Vector (Declaration solve logical locality loeb layout stage scope)),
     types :: !(Vector (TypeDeclaration locality loeb layout stage scope)),
-    typeExtras :: !(Vector (TypeDeclarationExtra layout stage scope)),
+    typeExtras :: !(Vector (solve (TypeDeclarationExtra layout stage scope))),
     dataInstances :: !(Vector (Map (Type2.Index scope) (Instance solve layout stage scope))),
     classInstances :: !(Vector (Map (Type2.Index scope) (Instance solve layout stage scope)))
   }
@@ -68,7 +68,7 @@ instance (Functor solve, Functor loeb) => Shift.Functor (Declarations solve logi
       Declarations
         { terms = fmap (Shift.map category) terms,
           types = fmap (Shift.map category) types,
-          typeExtras = fmap (Shift.map category) typeExtras,
+          typeExtras = fmap (Shift.map category) <$> typeExtras,
           dataInstances = fmap (Shift.mapInstances category . fmap (Shift.map category)) dataInstances,
           classInstances = fmap (Shift.mapInstances category . fmap (Shift.map category)) classInstances
         }
@@ -77,7 +77,7 @@ instance (Foldable solve, Foldable loeb) => FreeTermVariables (Declarations solv
   freeTermVariables target Declarations {terms, typeExtras} =
     concat
       [ foldMap (freeTermVariables target) terms,
-        foldMap (freeTermVariables target) typeExtras
+        foldMap (foldMap (freeTermVariables target)) typeExtras
       ]
 
 instance Traversable2 (Declarations solve logical locality) where
@@ -121,7 +121,7 @@ group
     Declarations
       { terms = Vector.zipWith (Declaration.group linkTerm indexTerm) functorTerms terms,
         types = Vector.zipWith (TypeDeclaration.group qualifiers linkType indexType) functorTypes types,
-        typeExtras = Connect.connect <$> typeExtras,
+        typeExtras = fmap Connect.connect <$> typeExtras,
         dataInstances = fmap Connect.connect <$> dataInstances,
         classInstances = fmap Connect.connect <$> classInstances
       }
@@ -148,7 +148,7 @@ ungroup
     Declarations
       { terms = Declaration.ungroup indexTerm lookupTerm <$> terms,
         types = TypeDeclaration.ungroup indexType lookupType <$> types,
-        typeExtras = Connect.seperate <$> typeExtras,
+        typeExtras = fmap Connect.seperate <$> typeExtras,
         dataInstances = fmap Connect.seperate <$> dataInstances,
         classInstances = fmap Connect.seperate <$> classInstances
       }

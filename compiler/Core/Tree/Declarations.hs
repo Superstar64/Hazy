@@ -9,7 +9,7 @@ import Core.Tree.TypeDeclaration (TypeDeclaration)
 import qualified Core.Tree.TypeDeclaration as TypeDeclaration
 import Core.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
 import qualified Core.Tree.TypeDeclarationExtra as TypeDeclarationExtra
-import Data.Functor.Identity (Identity)
+import Data.Functor.Identity (Identity (..))
 import Data.Map (Map)
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
@@ -60,7 +60,7 @@ simplify
     Declarations
       { terms = Declaration.simplify <$> terms,
         types = TypeDeclaration.simplify <$> types,
-        typeExtras = TypeDeclarationExtra.simplify <$> typeExtras,
+        typeExtras = TypeDeclarationExtra.simplify . runIdentity <$> typeExtras,
         classInstances = fmap Instance.simplify <$> classInstances,
         dataInstances = fmap Instance.simplify <$> dataInstances
       }

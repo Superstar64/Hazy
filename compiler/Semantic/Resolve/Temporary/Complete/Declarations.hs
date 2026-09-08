@@ -2,7 +2,7 @@ module Semantic.Resolve.Temporary.Complete.Declarations where
 
 import Control.Monad.Fix (mfix)
 import Data.Foldable (toList)
-import Data.Functor.Identity (Identity)
+import Data.Functor.Identity (Identity (..))
 import Data.List.NonEmpty (NonEmpty ((:|)))
 import Data.Map (Map)
 import qualified Data.Map as Map
@@ -163,7 +163,7 @@ shrink Declarations {terms, types, dataInstances, classInstances} =
   Real.Declarations
     { terms = Vector.catMaybes $ Term.shrink <$> Strict.Vector.toLazy terms,
       types = Type.shrink <$> Strict.Vector.toLazy types,
-      typeExtras = Type.shrinkExtra <$> Strict.Vector.toLazy types,
+      typeExtras = Identity . Type.shrinkExtra <$> Strict.Vector.toLazy types,
       dataInstances,
       classInstances
     }

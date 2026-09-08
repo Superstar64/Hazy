@@ -69,7 +69,7 @@ type Formula s z =
     (Declaration Identity Void Locality.Global Identity Group Check Global)
     (KindAnnotation Global)
     (TypeDeclaration Locality.Global Identity Group Check Global)
-    (TypeDeclarationExtra Group Check Global)
+    (Identity (TypeDeclarationExtra Group Check Global))
     (InstanceAnnotation Global)
     (Instance Identity Group Check Global)
     z
@@ -80,7 +80,7 @@ fromFunctor ::
     (Declaration Identity Void Locality.Global Identity Group Check Global)
     b
     (TypeDeclaration Locality.Global Identity Group Check Global)
-    (TypeDeclarationExtra Group Check Global)
+    (Identity (TypeDeclarationExtra Group Check Global))
     c
     (Instance Identity Group Check Global) ->
   Module Group Check
@@ -96,7 +96,7 @@ fromFunctors ::
     (Declaration Identity Void Locality.Global Identity Group Check Global)
     b
     (TypeDeclaration Locality.Global Identity Group Check Global)
-    (TypeDeclarationExtra Group Check Global)
+    (Identity (TypeDeclarationExtra Group Check Global))
     c
     (Instance Identity Group Check Global) ->
   Vector (Module Group Check)
@@ -228,9 +228,9 @@ checkTypeDeclarationExtra ::
   forall s.
   Int ->
   Int ->
-  Semantic.TypeDeclarationExtra.TypeDeclarationExtra Group Resolve Global ->
-  Formula s (TypeDeclarationExtra Group Check Global)
-checkTypeDeclarationExtra global local declaration = Formula7 {cycle, run}
+  Identity (Semantic.TypeDeclarationExtra.TypeDeclarationExtra Group Resolve Global) ->
+  Formula s (Identity (TypeDeclarationExtra Group Check Global))
+checkTypeDeclarationExtra global local (Identity declaration) = Formula7 {cycle, run}
   where
     cycle :: a
     cycle = cyclicalTypeChecking $ Semantic.TypeDeclarationExtra.position declaration
@@ -253,7 +253,7 @@ checkTypeDeclarationExtra global local declaration = Formula7 {cycle, run}
               _ -> error "bad link"
       proper <- Semantic.TypeDeclaration.ungroupM Link.Type.unglobal link proper
       extra <- TypeDeclarationExtra.check context (Type.Global global local) proper declaration
-      Unify.runSolve extra
+      Identity <$> Unify.runSolve extra
 
 checkInstanceAnnotation ::
   p1 ->
