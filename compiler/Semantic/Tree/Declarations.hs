@@ -2,9 +2,11 @@
 
 module Semantic.Tree.Declarations where
 
+import Data.Functor.Compose (Compose (..))
 import Data.Functor.Identity (Identity (..))
 import Data.Map (Map)
 import Data.Maybe (fromJust)
+import Data.NaturalTransformation (NaturalTransformation (..))
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Data.Void (Void)
@@ -46,9 +48,9 @@ import qualified Syntax.Variable as Variable
 data Declarations solve logical locality loeb layout stage scope = Declarations
   { terms :: !(Vector (Declaration solve logical locality loeb layout stage scope)),
     types :: !(Vector (TypeDeclaration locality loeb layout stage scope)),
-    typeExtras :: !(Vector (solve (TypeDeclarationExtra layout stage scope))),
-    dataInstances :: !(Vector (Map (Type2.Index scope) (Instance solve layout stage scope))),
-    classInstances :: !(Vector (Map (Type2.Index scope) (Instance solve layout stage scope)))
+    typeExtras :: !(Vector (loeb (solve (TypeDeclarationExtra layout stage scope)))),
+    dataInstances :: !(Vector (Map (Type2.Index scope) (Instance solve loeb layout stage scope))),
+    classInstances :: !(Vector (Map (Type2.Index scope) (Instance solve loeb layout stage scope)))
   }
   deriving (Show)
 
@@ -68,7 +70,7 @@ instance (Functor solve, Functor loeb) => Shift.Functor (Declarations solve logi
       Declarations
         { terms = fmap (Shift.map category) terms,
           types = fmap (Shift.map category) types,
-          typeExtras = fmap (Shift.map category) <$> typeExtras,
+          typeExtras = fmap (fmap $ Shift.map category) <$> typeExtras,
           dataInstances = fmap (Shift.mapInstances category . fmap (Shift.map category)) dataInstances,
           classInstances = fmap (Shift.mapInstances category . fmap (Shift.map category)) classInstances
         }
@@ -77,21 +79,28 @@ instance (Foldable solve, Foldable loeb) => FreeTermVariables (Declarations solv
   freeTermVariables target Declarations {terms, typeExtras} =
     concat
       [ foldMap (freeTermVariables target) terms,
-        foldMap (foldMap (freeTermVariables target)) typeExtras
+        foldMap (foldMap $ foldMap $ freeTermVariables target) typeExtras
       ]
 
 instance Traversable2 (Declarations solve logical locality) where
   traverse2
-    f
+    (Morph f)
     Declarations
       { terms,
         types,
         typeExtras,
         dataInstances,
         classInstances
-      } = declarations <$> traverse (traverse2 f) terms <*> traverse (traverse2 f) types
+      } =
+      declarations
+        <$> traverse (traverse2 (Morph f)) terms
+        <*> traverse (traverse2 (Morph f)) types
+        <*> traverse (getCompose . f) typeExtras
+        <*> traverse (traverse (traverse2 (Morph f))) dataInstances
+        <*> traverse (traverse (traverse2 (Morph f))) classInstances
       where
-        declarations terms types = Declarations {terms, types, typeExtras, dataInstances, classInstances}
+        declarations terms types typeExtras dataInstances classInstances =
+          Declarations {terms, types, typeExtras, dataInstances, classInstances}
 
 group ::
   Qualifiers ->
@@ -121,7 +130,7 @@ group
     Declarations
       { terms = Vector.zipWith (Declaration.group linkTerm indexTerm) functorTerms terms,
         types = Vector.zipWith (TypeDeclaration.group qualifiers linkType indexType) functorTypes types,
-        typeExtras = fmap Connect.connect <$> typeExtras,
+        typeExtras = fmap (fmap Connect.connect) <$> typeExtras,
         dataInstances = fmap Connect.connect <$> dataInstances,
         classInstances = fmap Connect.connect <$> classInstances
       }
@@ -148,7 +157,7 @@ ungroup
     Declarations
       { terms = Declaration.ungroup indexTerm lookupTerm <$> terms,
         types = TypeDeclaration.ungroup indexType lookupType <$> types,
-        typeExtras = fmap Connect.seperate <$> typeExtras,
+        typeExtras = fmap (fmap Connect.seperate) <$> typeExtras,
         dataInstances = fmap Connect.seperate <$> dataInstances,
         classInstances = fmap Connect.seperate <$> classInstances
       }

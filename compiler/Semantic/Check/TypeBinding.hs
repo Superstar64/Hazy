@@ -9,7 +9,7 @@ import {-# SOURCE #-} qualified Core.Tree.TypeDeclarationExtra as Simple (TypeDe
 import {-# SOURCE #-} qualified Core.Tree.TypeDeclarationExtra as SimpleExtra (simplify)
 import Core.Type.Functor (shiftLogical)
 import qualified Core.Type.Functor as Core
-import Data.Functor.Identity (Identity)
+import Data.Functor.Identity (Identity (..))
 import qualified Data.Kind
 import Data.Map (Map)
 import qualified Data.Map as Map
@@ -83,7 +83,7 @@ binding ::
     Label.TypeBinding
     (ST s (KindAnnotation scope))
     (ST s (TypeDeclaration locality Identity Group Check scope)) ->
-  ST s (Solve s (TypeDeclarationExtra Group Check scope)) ->
+  ST s (Identity (Solve s (TypeDeclarationExtra Group Check scope))) ->
   Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) b) ->
   Map (Type2.Index scope) (Functor.Annotated Functor.NoLabel (ST s (InstanceAnnotation scope)) d) ->
   TypeBinding s scope
@@ -106,7 +106,7 @@ binding
           definition <- content
           definition <- ungroupM index lookup definition
           pure $ Simple.simplify definition,
-        extra = fmap (SimpleExtra.simplify . Connect.seperate) <$> extra,
+        extra = fmap (SimpleExtra.simplify . Connect.seperate) <$> fmap runIdentity extra,
         dataInstances = Map.map (fmap (Instance . InstanceAnnotation.prerequisites'_) . Functor.meta) dataInstances,
         classInstances = Map.map (fmap (Instance . InstanceAnnotation.prerequisites'_) . Functor.meta) classInstances
       }

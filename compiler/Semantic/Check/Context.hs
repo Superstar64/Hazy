@@ -66,7 +66,7 @@ globalBindings ::
     (ST s (Declaration Identity Void Locality.Global Identity Group Check Global))
     (ST s (KindAnnotation Global))
     (ST s (TypeDeclaration Locality.Global Identity Group Check Global))
-    (ST s (Identity (TypeDeclarationExtra Group Check Global)))
+    (ST s (Identity (Identity (TypeDeclarationExtra Group Check Global))))
     (ST s (InstanceAnnotation Global))
     x ->
   Context s Global
@@ -82,7 +82,7 @@ globalBindings (Functor.ModuleSet modules) =
     termBindings Functor.Declarations {terms} =
       TermBinding.rigid <$> terms
     typeBindings Functor.Declarations {types, typeExtras, classInstances, dataInstances} =
-      Vector.zipWith4 go types (fmap (pure . runIdentity) <$> typeExtras) dataInstances classInstances
+      Vector.zipWith4 go types (fmap (fmap (pure . runIdentity)) <$> typeExtras) dataInstances classInstances
     go = TypeBinding.binding Link.Type.unglobal $ \case
       Link.Type.Global global local
         | Functor.Module {declarations} <- modules Vector.! global,
@@ -111,7 +111,7 @@ localBindings ::
     )
     (ST s (KindAnnotation (Scope.Declaration ':+ scope)))
     (ST s (TypeDeclaration Locality.Local Identity Group Check (Scope.Declaration ':+ scope)))
-    (ST s (Unify.Solve s (TypeDeclarationExtra Group Check (Scope.Declaration ':+ scope))))
+    (ST s (Identity (Unify.Solve s (TypeDeclarationExtra Group Check (Scope.Declaration ':+ scope)))))
     (ST s (InstanceAnnotation (Scope.Declaration ':+ scope)))
     x' ->
   Context s scope ->

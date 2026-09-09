@@ -33,10 +33,10 @@ data ClassInstance scope = ClassInstance
   { classPosition :: !Position,
     classIndex :: !Int,
     dataIndex :: !(Type2.Index scope),
-    instancex :: Real.Instance Identity Normal Resolve scope
+    instancex :: Real.Instance Identity Identity Normal Resolve scope
   }
 
-shrink :: ClassInstance scope -> Real.Instance Identity Normal Resolve scope
+shrink :: ClassInstance scope -> Real.Instance Identity Identity Normal Resolve scope
 shrink = instancex
 
 prepare :: ClassInstance scope -> (Int, Map (Type2.Index scope) (NonEmpty.NonEmpty (ClassInstance scope)))

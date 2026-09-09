@@ -74,9 +74,9 @@ type Formula s scope z =
     )
     (KindAnnotation (Scope.Declaration ':+ scope))
     (TypeDeclaration Locality.Local Identity Group Check (Scope.Declaration ':+ scope))
-    (Unify.Solve s (TypeDeclarationExtra Group Check (Scope.Declaration ':+ scope)))
+    (Identity (Unify.Solve s (TypeDeclarationExtra Group Check (Scope.Declaration ':+ scope))))
     (InstanceAnnotation (Scope.Declaration ':+ scope))
-    (Semantic.Instance (Unify.Solve s) Group Check (Scope.Declaration ':+ scope))
+    (Semantic.Instance (Unify.Solve s) Identity Group Check (Scope.Declaration ':+ scope))
     z
 
 fromFunctor ::
@@ -86,9 +86,9 @@ fromFunctor ::
     (Declaration solve logical locality loeb layout stage scope)
     a2
     (TypeDeclaration locality loeb layout stage scope)
-    (solve (TypeDeclarationExtra layout stage scope))
+    (loeb (solve (TypeDeclarationExtra layout stage scope)))
     a3
-    (Instance solve layout stage scope) ->
+    (Instance solve loeb layout stage scope) ->
   Declarations solve logical locality loeb layout stage scope
 fromFunctor (Functor.Declarations {terms, types, typeExtras, dataInstances, classInstances}) =
   Declarations
@@ -213,9 +213,9 @@ checkTypeDeclarationExtra ::
   forall s scope.
   Context s scope ->
   Int ->
-  Identity (Semantic.TypeDeclarationExtra Group Resolve (Scope.Declaration ':+ scope)) ->
-  Formula s scope (Unify.Solve s (TypeDeclarationExtra Group Check (Scope.Declaration ':+ scope)))
-checkTypeDeclarationExtra context index (Identity declaration) = Formula7 {cycle, run}
+  Identity (Identity (Semantic.TypeDeclarationExtra Group Resolve (Scope.Declaration ':+ scope))) ->
+  Formula s scope (Identity (Unify.Solve s (TypeDeclarationExtra Group Check (Scope.Declaration ':+ scope))))
+checkTypeDeclarationExtra context index (Identity (Identity declaration)) = Formula7 {cycle, run}
   where
     cycle :: a
     cycle = cyclicalTypeChecking $ Semantic.TypeDeclarationExtra.position declaration
@@ -233,25 +233,25 @@ checkTypeDeclarationExtra context index (Identity declaration) = Formula7 {cycle
               TypeDefinition2.Group (Identity (_ TypeGroup.:::: set)) -> pure set
               _ -> error "bad link"
       proper <- Semantic.TypeDeclaration.ungroupM Link.Type.unlocal link proper
-      TypeDeclarationExtra.check context (Type.Declaration index) proper declaration
+      Identity <$> TypeDeclarationExtra.check context (Type.Declaration index) proper declaration
 
 checkInstanceAnnotation ::
   Context s scope ->
   p ->
-  Semantic.Instance.Instance Identity Group Resolve (Scope.Declaration ':+ scope) ->
+  Semantic.Instance.Instance Identity Identity Group Resolve (Scope.Declaration ':+ scope) ->
   Formula s scope (InstanceAnnotation (Scope.Declaration ':+ scope))
 checkInstanceAnnotation context _ declaration = Formula7 {cycle, run}
   where
     cycle :: a
     cycle = cyclicalTypeChecking $ Semantic.Instance.startPosition declaration
     run declarations = InstanceAnnotation.check (localBindings declarations context) annotation
-    Semantic.Instance {definition = annotation InstanceDefinition.::: _} = declaration
+    Semantic.Instance {definition = Identity annotation InstanceDefinition.::: _} = declaration
 
 checkInstanceDeclaration ::
   Context s scope ->
   Instance.Key.Key (Scope.Declaration ':+ scope) ->
-  Semantic.Instance Identity Group Resolve (Scope.Declaration ':+ scope) ->
-  Formula s scope (Semantic.Instance (Unify.Solve s) Group Check (Scope.Declaration ':+ scope))
+  Semantic.Instance Identity Identity Group Resolve (Scope.Declaration ':+ scope) ->
+  Formula s scope (Semantic.Instance (Unify.Solve s) Identity Group Check (Scope.Declaration ':+ scope))
 checkInstanceDeclaration context key declaration = Formula7 {cycle, run}
   where
     cycle :: a
@@ -282,14 +282,14 @@ solve
       classInstances
     } = do
     terms <- traverse Declaration.solve terms
-    typeExtras <- sequence typeExtras
+    typeExtras <- traverse runIdentity typeExtras
     dataInstances <- traverse (traverse Instance.solve) dataInstances
     classInstances <- traverse (traverse Instance.solve) classInstances
     pure
       Declarations
         { terms,
           types,
-          typeExtras = fmap pure typeExtras,
+          typeExtras = fmap (Identity . Identity) typeExtras,
           dataInstances,
           classInstances
         }

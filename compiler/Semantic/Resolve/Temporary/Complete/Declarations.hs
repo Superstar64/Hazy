@@ -54,8 +54,8 @@ data Declarations scope = Declarations
   { terms :: !(Strict.Vector (Declaration scope)),
     constructors :: !(Strict.Vector ConstructorDeclaration),
     types :: !(Strict.Vector (TypeDeclaration scope)),
-    dataInstances :: !(Vector (Map (Type2.Index scope) (Instance Identity Normal Resolve scope))),
-    classInstances :: !(Vector (Map (Type2.Index scope) (Instance Identity Normal Resolve scope)))
+    dataInstances :: !(Vector (Map (Type2.Index scope) (Instance Identity Identity Normal Resolve scope))),
+    classInstances :: !(Vector (Map (Type2.Index scope) (Instance Identity Identity Normal Resolve scope)))
   }
 
 {-
@@ -163,7 +163,7 @@ shrink Declarations {terms, types, dataInstances, classInstances} =
   Real.Declarations
     { terms = Vector.catMaybes $ Term.shrink <$> Strict.Vector.toLazy terms,
       types = Type.shrink <$> Strict.Vector.toLazy types,
-      typeExtras = Identity . Type.shrinkExtra <$> Strict.Vector.toLazy types,
+      typeExtras = Identity . Identity . Type.shrinkExtra <$> Strict.Vector.toLazy types,
       dataInstances,
       classInstances
     }

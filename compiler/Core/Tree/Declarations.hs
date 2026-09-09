@@ -60,7 +60,7 @@ simplify
     Declarations
       { terms = Declaration.simplify <$> terms,
         types = TypeDeclaration.simplify <$> types,
-        typeExtras = TypeDeclarationExtra.simplify . runIdentity <$> typeExtras,
+        typeExtras = TypeDeclarationExtra.simplify . runIdentity . runIdentity <$> typeExtras,
         classInstances = fmap Instance.simplify <$> classInstances,
         dataInstances = fmap Instance.simplify <$> dataInstances
       }

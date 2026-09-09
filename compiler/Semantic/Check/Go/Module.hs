@@ -69,9 +69,9 @@ type Formula s z =
     (Declaration Identity Void Locality.Global Identity Group Check Global)
     (KindAnnotation Global)
     (TypeDeclaration Locality.Global Identity Group Check Global)
-    (Identity (TypeDeclarationExtra Group Check Global))
+    (Identity (Identity (TypeDeclarationExtra Group Check Global)))
     (InstanceAnnotation Global)
-    (Instance Identity Group Check Global)
+    (Instance Identity Identity Group Check Global)
     z
 
 fromFunctor ::
@@ -80,9 +80,9 @@ fromFunctor ::
     (Declaration Identity Void Locality.Global Identity Group Check Global)
     b
     (TypeDeclaration Locality.Global Identity Group Check Global)
-    (Identity (TypeDeclarationExtra Group Check Global))
+    (Identity (Identity (TypeDeclarationExtra Group Check Global)))
     c
-    (Instance Identity Group Check Global) ->
+    (Instance Identity Identity Group Check Global) ->
   Module Group Check
 fromFunctor (Functor.Module {name, declarations}) =
   Module
@@ -96,9 +96,9 @@ fromFunctors ::
     (Declaration Identity Void Locality.Global Identity Group Check Global)
     b
     (TypeDeclaration Locality.Global Identity Group Check Global)
-    (Identity (TypeDeclarationExtra Group Check Global))
+    (Identity (Identity (TypeDeclarationExtra Group Check Global)))
     c
-    (Instance Identity Group Check Global) ->
+    (Instance Identity Identity Group Check Global) ->
   Vector (Module Group Check)
 fromFunctors (Functor.ModuleSet modules) = fmap fromFunctor modules
 
@@ -228,9 +228,9 @@ checkTypeDeclarationExtra ::
   forall s.
   Int ->
   Int ->
-  Identity (Semantic.TypeDeclarationExtra.TypeDeclarationExtra Group Resolve Global) ->
-  Formula s (Identity (TypeDeclarationExtra Group Check Global))
-checkTypeDeclarationExtra global local (Identity declaration) = Formula7 {cycle, run}
+  Identity (Identity (Semantic.TypeDeclarationExtra.TypeDeclarationExtra Group Resolve Global)) ->
+  Formula s (Identity (Identity (TypeDeclarationExtra Group Check Global)))
+checkTypeDeclarationExtra global local (Identity (Identity declaration)) = Formula7 {cycle, run}
   where
     cycle :: a
     cycle = cyclicalTypeChecking $ Semantic.TypeDeclarationExtra.position declaration
@@ -253,25 +253,25 @@ checkTypeDeclarationExtra global local (Identity declaration) = Formula7 {cycle,
               _ -> error "bad link"
       proper <- Semantic.TypeDeclaration.ungroupM Link.Type.unglobal link proper
       extra <- TypeDeclarationExtra.check context (Type.Global global local) proper declaration
-      Identity <$> Unify.runSolve extra
+      Identity . Identity <$> Unify.runSolve extra
 
 checkInstanceAnnotation ::
   p1 ->
   p2 ->
-  Semantic.Instance.Instance Identity Group Resolve Global ->
+  Semantic.Instance.Instance Identity Identity Group Resolve Global ->
   Formula s (InstanceAnnotation Global)
 checkInstanceAnnotation _ _ declaration = Formula7 {cycle, run}
   where
     cycle :: a
     cycle = cyclicalTypeChecking $ Semantic.Instance.startPosition declaration
     run modules = InstanceAnnotation.check (globalBindings modules) annotation
-    Semantic.Instance {definition = annotation InstanceDefinition.::: _} = declaration
+    Semantic.Instance {definition = Identity annotation InstanceDefinition.::: _} = declaration
 
 checkInstanceDeclaration ::
   Int ->
   Instance.Key.Key Global ->
-  Semantic.Instance.Instance Identity Group Resolve Global ->
-  Formula s (Instance Identity Group Check Global)
+  Semantic.Instance.Instance Identity Identity Group Resolve Global ->
+  Formula s (Instance Identity Identity Group Check Global)
 checkInstanceDeclaration global key declaration = Formula7 {cycle, run}
   where
     cycle :: a

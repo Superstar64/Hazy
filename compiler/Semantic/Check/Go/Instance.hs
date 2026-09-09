@@ -79,8 +79,8 @@ check ::
   Context s scope ->
   Key scope ->
   InstanceAnnotation scope ->
-  Semantic.Instance Identity Group Resolve scope ->
-  ST s (Semantic.Instance (Unify.Solve s) Group Check scope)
+  Semantic.Instance Identity Identity Group Resolve scope ->
+  ST s (Semantic.Instance (Unify.Solve s) Identity Group Check scope)
 check
   context@Context {typeEnvironment}
   key
@@ -90,7 +90,7 @@ check
     }
   Semantic.Instance
     { startPosition,
-      definition = _ ::: Identity InstanceDefinition {members}
+      definition = _ ::: Identity (Identity InstanceDefinition {members})
     }
     | index <- index key,
       head <- head key = do
@@ -177,23 +177,26 @@ check
           Semantic.Instance
             { startPosition,
               definition =
-                Annotation {parameters, prerequisites} ::: do
-                  evidence <- pure $ logicalEvidence <$> evidence
-                  members <- traverse MethodConcrete.solve members
-                  pure
-                    InstanceDefinition
-                      { evidence = Inferred.Solved $ Solved.Evidence evidence,
-                        members
-                      }
+                Identity Annotation {parameters, prerequisites}
+                  ::: Identity
+                    ( do
+                        evidence <- pure $ logicalEvidence <$> evidence
+                        members <- traverse MethodConcrete.solve members
+                        pure
+                          InstanceDefinition
+                            { evidence = Inferred.Solved $ Solved.Evidence evidence,
+                              members
+                            }
+                    )
             }
 
 solve ::
-  Semantic.Instance (Unify.Solve s) Group Check scope ->
-  Unify.Solve s (Solved.Instance Identity Group Check scope)
-solve Semantic.Instance {startPosition, definition = annotation ::: definition} = do
+  Semantic.Instance (Unify.Solve s) Identity Group Check scope ->
+  Unify.Solve s (Solved.Instance Identity Identity Group Check scope)
+solve Semantic.Instance {startPosition, definition = annotation ::: Identity definition} = do
   definition <- definition
   pure
     Solved.Instance
       { startPosition,
-        definition = annotation ::: Identity definition
+        definition = annotation ::: Identity (Identity definition)
       }

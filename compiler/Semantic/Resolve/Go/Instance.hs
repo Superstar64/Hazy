@@ -38,7 +38,7 @@ resolve ::
   Strict.Vector (Syntax.TypePattern Position) ->
   Map Variable Int ->
   Syntax.InstanceDeclarations Position ->
-  Instance Identity Normal Resolve scope
+  Instance Identity Identity Normal Resolve scope
 resolve
   context
   startPosition
@@ -66,13 +66,16 @@ resolve
          in Instance
               { startPosition,
                 definition =
-                  Annotation
-                    { parameters,
-                      prerequisites
-                    }
+                  Identity
+                    Annotation
+                      { parameters,
+                        prerequisites
+                      }
                     ::: Identity
-                      InstanceDefinition
-                        { evidence = Inferred,
-                          members
-                        }
+                      ( Identity
+                          InstanceDefinition
+                            { evidence = Inferred,
+                              members
+                            }
+                      )
               }

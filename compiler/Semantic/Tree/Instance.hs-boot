@@ -7,7 +7,7 @@ import Semantic.Layout (Layout)
 import Semantic.Scope (Environment)
 import Semantic.Stage (Stage)
 
-type role Instance representational nominal nominal nominal
+type role Instance nominal representational nominal nominal nominal
 
-type Instance :: (Type -> Type) -> Layout -> Stage -> Environment -> Type
-data Instance solve layout stage scope
+type Instance :: (Type -> Type) -> (Type -> Type) -> Layout -> Stage -> Environment -> Type
+data Instance solve loeb layout stage scope

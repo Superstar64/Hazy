@@ -40,12 +40,12 @@ instance Substitute.Functor Instance where
         members = Substitute.map category <$> members
       }
 
-simplify :: Semantic.Instance Identity Normal Check scope -> Instance scope
+simplify :: Semantic.Instance Identity Identity Normal Check scope -> Instance scope
 simplify
   Semantic.Instance
     { definition =
-        Annotation {prerequisites}
-          ::: Identity InstanceDefinition {evidence = Solved (Semantic.Evidence evidence), members}
+        Identity Annotation {prerequisites}
+          ::: Identity (Identity InstanceDefinition {evidence = Solved (Semantic.Evidence evidence), members})
     } =
     Instance
       { evidence,
