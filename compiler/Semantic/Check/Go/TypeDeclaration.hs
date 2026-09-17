@@ -1,115 +1,70 @@
-module Semantic.Check.Go.TypeDeclaration (TypeDeclaration (..), kind', check, lazy) where
+module Semantic.Check.Go.TypeDeclaration where
 
 import Control.Monad.ST (ST)
-import Core.Substitute (logicalType)
-import qualified Core.Tree.Type as Core
-import qualified Core.Tree.Type as Simple
-import Core.Type.Functor (shiftLogical)
+import qualified Core.Tree.Type as Type (TypeF, simplify)
 import Data.Functor.Identity (Identity (..))
-import qualified Data.Strict.Maybe as Strict (Maybe (..))
-import qualified Data.Vector as Vector
-import Data.Vector.Strict (toLazy)
 import qualified Data.Vector.Strict as Strict.Vector
-import Semantic.Check.Context (Context (..), groupTypeBindings)
-import qualified Semantic.Check.KindAnnotation as KindAnnotation
-import qualified Semantic.Check.KindAnnotation as Semantic
-import qualified Semantic.Check.Temporary.TypeDefinition as Temporary.TypeDefinition
-import qualified Semantic.Check.Temporary.TypeDefinition as TypeDefinition
-import qualified Semantic.Index.Link.Type as Type
+import Data.Void (Void)
+import Error (cyclicalTypeChecking)
+import qualified Graph.Topological as Topological
+import Semantic.Check.Context (Context)
+import qualified Semantic.Check.Go.TypeDefinition2 as TypeDefinition2
+import qualified Semantic.Index.Link.Type as Type (Link)
 import Semantic.Layout (Group)
+import qualified Semantic.Layout as Layout
 import Semantic.Stage (Check, Resolve)
+import qualified Semantic.Stage as Stage
 import Semantic.Tree.Combinators.Inferred (Inferred (Solved))
+import Semantic.Tree.Synonym (SynonymBody (..))
 import qualified Semantic.Tree.Synonym as Synonym
-import Semantic.Tree.TypeDeclaration (TypeDeclaration (..), kind', lazy)
+import Semantic.Tree.TypeDeclaration (TypeDeclaration (..))
 import Semantic.Tree.TypeDefinition2 (Annotation (..), TypeDefinition2 (..))
-import Semantic.Tree.TypeGroup (Element (..), Set (..), TypeGroup (..), Types (..))
-import qualified Semantic.Tree.TypeGroup as TypeGroup
-import qualified Semantic.Unify as Unify
+import Semantic.Tree.TypeGroup (TypeGroup (..), Types (..))
 
 check ::
-  Context s scope ->
-  (Type.Link locality -> Int -> ST s (Simple.Type scope)) ->
-  Semantic.KindAnnotation scope ->
+  Type.Link locality ->
+  ( declarations (ST s) ->
+    Type.Link locality ->
+    TypeDeclaration locality (ST s) Group Check scope
+  ) ->
+  (declarations (ST s) -> Context s scope) ->
   TypeDeclaration locality Identity Group Resolve scope ->
-  ST s (TypeDeclaration locality Identity Group Check scope)
-check _ _ annotation TypeDeclaration {position, name, constructorNames, definition = Synonym {}}
-  | KindAnnotation.Synonym {kind, annotation', parameters, synonym} <- annotation = case annotation' of
-      Strict.Nothing ->
-        pure
-          TypeDeclaration
-            { position,
-              name,
-              constructorNames,
-              definition =
-                Synonym $
-                  Identity $
-                    Strict.Nothing Synonym.::: Synonym.SynonymBody {parameters, synonym},
-              kind = Identity (Solved kind)
+  TypeDeclaration locality (Topological.Formula declarations s) Group Check scope
+check
+  link
+  reflection
+  information
+  TypeDeclaration {position, name, constructorNames, definition} =
+    TypeDeclaration
+      { position,
+        name,
+        constructorNames,
+        definition =
+          let reflection' declarations = case reflection declarations link of
+                TypeDeclaration {definition} -> definition
+           in TypeDefinition2.check position reflection' information definition,
+        kind =
+          Topological.Formula
+            { cycle = cyclicalTypeChecking position,
+              run = \declarations -> do
+                let TypeDeclaration {definition} = reflection declarations link
+                    inferred ::
+                      Int ->
+                      TypeGroup locality Layout.Group Stage.Check scope ->
+                      Inferred (Type.TypeF Void) Stage.Check scope
+                    inferred index (Solved (Types types) :::: _) = Solved $ types Strict.Vector.! index
+                case definition of
+                  Annotated annotation ::: _ -> do
+                    typex <- annotation
+                    pure $ Solved $ Type.simplify typex
+                  Link link id -> do
+                    let TypeDeclaration {definition} = reflection declarations link
+                    case definition of
+                      Group group -> inferred id <$> group
+                      _ -> error "bad self type declaration"
+                  Group group -> inferred 0 <$> group
+                  Synonym synonym -> do
+                    _ Synonym.::: SynonymBody {kind} <- synonym
+                    pure $ kind
             }
-      Strict.Just annotation ->
-        pure
-          TypeDeclaration
-            { position,
-              name,
-              constructorNames,
-              definition =
-                Synonym $
-                  Identity $
-                    Strict.Just annotation Synonym.::: Synonym.SynonymBody {parameters, synonym},
-              kind = Identity $ Solved kind
-            }
-  | otherwise = error "bad synonym"
-check context linked annotation TypeDeclaration {position, name, constructorNames, definition} =
-  case definition of
-    Annotated {} ::: Identity definition
-      | KindAnnotation.Annotation {annotation, kind} <- annotation -> do
-          definition <- Temporary.TypeDefinition.check context (logicalType kind) definition
-          definition <- Unify.runSolve $ Temporary.TypeDefinition.solve context definition
-          pure
-            TypeDeclaration
-              { position,
-                name,
-                constructorNames,
-                definition = Annotated (Identity annotation) ::: Identity definition,
-                kind = Identity $ Solved kind
-              }
-      | otherwise -> error "bad annotation"
-    Group (Identity (_ :::: Set set)) -> do
-      fresh <- Vector.replicateM (length set) (Unify.fresh Core.kind)
-      let context' =
-            groupTypeBindings
-              (TypeGroup.position <$> toLazy set)
-              (TypeGroup.label <$> toLazy set)
-              fresh
-              context
-      set <-
-        flip Strict.Vector.imapM set $
-          \index
-           Element {element, position, name, constructorNames, link} -> do
-              let typex = fresh Vector.! index
-              element <- TypeDefinition.check context' (shiftLogical typex) element
-              pure $ do
-                element <- TypeDefinition.solve context' element
-                typex <- Unify.solve position typex
-                pure Element {element, typex = Solved typex, position, name, constructorNames, link}
-      set <- Unify.runSolve $ sequence set
-      kinds <- Unify.runSolve $ traverse (Unify.solve position) fresh
-      let kind = Vector.head kinds
-      pure
-        TypeDeclaration
-          { position,
-            name,
-            constructorNames,
-            definition = Group $ Identity $ Solved (Types $ Strict.Vector.fromLazy kinds) :::: Set set,
-            kind = Identity $ Solved kind
-          }
-    Link link id -> do
-      kind <- linked link id
-      pure
-        TypeDeclaration
-          { position,
-            name,
-            constructorNames,
-            definition = Link link id,
-            kind = Identity $ Solved kind
-          }
+      }

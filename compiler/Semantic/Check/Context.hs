@@ -2,44 +2,35 @@ module Semantic.Check.Context where
 
 import Control.Monad.ST (ST)
 import Core.Tree.Type (Type)
-import Data.Functor.Identity (Identity (..))
 import qualified Data.Kind
 import qualified Data.Strict.Maybe as Strict
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
-import Data.Void (Void)
-import qualified Semantic.Check.Functor.Annotated as Functor (Annotated (..))
-import qualified Semantic.Check.Functor.Declarations as Functor (Declarations (..))
-import qualified Semantic.Check.Functor.Module as Functor (Module (..))
-import qualified Semantic.Check.Functor.ModuleSet as Functor (ModuleSet (..))
-import {-# SOURCE #-} Semantic.Check.Go.TypeDeclaration (TypeDeclaration)
-import {-# SOURCE #-} Semantic.Check.InstanceAnnotation (InstanceAnnotation)
-import {-# SOURCE #-} Semantic.Check.KindAnnotation (KindAnnotation (..))
 import Semantic.Check.LocalBinding (LocalBinding)
 import qualified Semantic.Check.LocalBinding as LocalBinding
-import Semantic.Check.TermBinding (TermBinding)
+import Semantic.Check.TermBinding (TermBinding (..))
 import qualified Semantic.Check.TermBinding as TermBinding
-import {-# SOURCE #-} Semantic.Check.TypeAnnotation (TypeAnnotation)
 import Semantic.Check.TypeBinding (TypeBinding (..))
 import qualified Semantic.Check.TypeBinding as TypeBinding
-import qualified Semantic.Index.Link.Type as Link.Type
+import qualified Semantic.Index.Link.Type as Type (Link)
+import qualified Semantic.Index.Link.Type as Type.Link
 import qualified Semantic.Index.Table.Local as Local
 import qualified Semantic.Index.Table.Term as Term
-import qualified Semantic.Index.Table.Type as Type
+import qualified Semantic.Index.Table.Type as Type (Map (..), Table (..), map, (!))
 import qualified Semantic.Index.Type2 as Type2
 import qualified Semantic.Label.Binding.Type as Label (TypeBinding)
 import qualified Semantic.Label.Context as Label (Context (..))
 import Semantic.Layout (Group)
 import qualified Semantic.Locality as Locality
-import Semantic.Scope (Environment (..), Global, Local)
-import qualified Semantic.Scope as Scope (Declaration, GroupTerm, GroupType)
+import Semantic.Scope (Environment (..), Local)
+import qualified Semantic.Scope as Scope (Declaration, Global, GroupTerm, GroupType)
 import qualified Semantic.Shift as Shift
 import Semantic.Stage (Check)
-import {-# SOURCE #-} Semantic.Tree.Declaration (Declaration)
-import qualified Semantic.Tree.TypeDeclaration as Semantic (TypeDeclaration (..))
-import {-# SOURCE #-} Semantic.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
-import qualified Semantic.Tree.TypeDefinition2 as Semantic (TypeDefinition2 (..))
-import qualified Semantic.Tree.TypeGroup as Semantic (TypeGroup (..))
+import Semantic.Tree.Declarations (Declarations (..))
+import Semantic.Tree.Module (Module (..))
+import Semantic.Tree.TypeDeclaration (TypeDeclaration (TypeDeclaration, definition))
+import qualified Semantic.Tree.TypeDefinition2 as TypeDefinition2
+import qualified Semantic.Tree.TypeGroup as TypeGroup
 import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
 
@@ -60,80 +51,61 @@ instance Shift.Unshift (Context s) where
         typeEnvironment = Shift.unshift typeEnvironment
       }
 
-globalBindings ::
-  Functor.ModuleSet
-    (ST s (TypeAnnotation Global))
-    (ST s (Declaration Identity Void Locality.Global Identity Group Check Global))
-    (ST s (KindAnnotation Global))
-    (ST s (TypeDeclaration Locality.Global Identity Group Check Global))
-    (ST s (Identity (Identity (TypeDeclarationExtra Group Check Global))))
-    (ST s (InstanceAnnotation Global))
-    x ->
-  Context s Global
-globalBindings (Functor.ModuleSet modules) =
+globalBindings :: forall s. Vector (Module (ST s) Group Check Scope.Global) -> Context s Scope.Global
+globalBindings modules =
   Context
-    { termEnvironment = Term.Global $ types <$> modules,
+    { termEnvironment = Term.Global $ termBindings <$> modules,
       localEnvironment = Local.Global,
-      typeEnvironment = Type.Global $ kinds <$> modules
+      typeEnvironment = Type.Global $ typeBindings <$> modules
     }
   where
-    types Functor.Module {declarations} = termBindings declarations
-    kinds Functor.Module {declarations} = typeBindings declarations
-    termBindings Functor.Declarations {terms} =
-      TermBinding.rigid <$> terms
-    typeBindings Functor.Declarations {types, typeExtras, classInstances, dataInstances} =
-      Vector.zipWith4 go types (fmap (fmap (pure . runIdentity)) <$> typeExtras) dataInstances classInstances
-    go = TypeBinding.binding Link.Type.unglobal $ \case
-      Link.Type.Global global local
-        | Functor.Module {declarations} <- modules Vector.! global,
-          Functor.Declarations {types} <- declarations,
-          Functor.Annotated {content} <- types Vector.! local -> do
-            Semantic.TypeDeclaration {definition} <- content
-            case definition of
-              Semantic.Group (Identity (_ Semantic.:::: set)) -> pure set
-              _ -> error "bad definition lookup"
+    termBindings Module {declarations = Declarations {terms}} =
+      TermBinding.global <$> terms
+    typeBindings
+      Module {declarations = Declarations {types, typeExtras, dataInstances, classInstances}} =
+        Vector.zipWith4 (TypeBinding.global lookup) types typeExtras dataInstances classInstances
+    lookup ::
+      Type.Link Locality.Global ->
+      ST s (TypeGroup.Set Locality.Global Check Scope.Global)
+    lookup (Type.Link.Global global local)
+      | Module {declarations = Declarations {types}} <- modules Vector.! global,
+        TypeDeclaration {definition = TypeDefinition2.Group group} <- types Vector.! local =
+          do
+            _ TypeGroup.:::: set <- group
+            pure set
+      | otherwise = error "bad lookup"
 
 localBindings ::
-  Functor.Declarations
-    (Scope.Declaration ':+ scope)
-    (ST s (TypeAnnotation (Scope.Declaration ':+ scope)))
-    ( ST
-        s
-        ( Declaration
-            (Unify.Solve s)
-            (Unify.Logical s (Scope.Declaration ':+ scope))
-            Locality.Local
-            Identity
-            Group
-            Check
-            (Scope.Declaration ':+ scope)
-        )
-    )
-    (ST s (KindAnnotation (Scope.Declaration ':+ scope)))
-    (ST s (TypeDeclaration Locality.Local Identity Group Check (Scope.Declaration ':+ scope)))
-    (ST s (Identity (Unify.Solve s (TypeDeclarationExtra Group Check (Scope.Declaration ':+ scope)))))
-    (ST s (InstanceAnnotation (Scope.Declaration ':+ scope)))
-    x' ->
+  forall s scope.
   Context s scope ->
+  Declarations
+    (Unify.Solve s)
+    (Unify.Logical s (Scope.Declaration ':+ scope))
+    Locality.Local
+    (ST s)
+    Group
+    Check
+    (Scope.Declaration ':+ scope) ->
   Context s (Scope.Declaration ':+ scope)
 localBindings
-  Functor.Declarations {terms, types, typeExtras, classInstances, dataInstances}
-  Context {termEnvironment, localEnvironment, typeEnvironment} =
+  Context {termEnvironment, localEnvironment, typeEnvironment}
+  Declarations {terms, types, typeExtras, dataInstances, classInstances} =
     Context
       { termEnvironment = Term.Declaration termBindings termEnvironment,
         localEnvironment = Local.Declaration localEnvironment,
         typeEnvironment = Type.Declaration typeBindings typeEnvironment
       }
     where
-      termBindings = TermBinding.wobbly <$> terms
-      typeBindings = Vector.zipWith4 go types typeExtras dataInstances classInstances
-      go = TypeBinding.binding Link.Type.unlocal $ \case
-        Link.Type.Declaration local
-          | Functor.Annotated {content} <- types Vector.! local -> do
-              Semantic.TypeDeclaration {definition} <- content
-              case definition of
-                Semantic.Group (Identity (_ Semantic.:::: set)) -> pure set
-                _ -> error "bad definition lookup"
+      termBindings = TermBinding.local <$> terms
+      typeBindings = Vector.zipWith4 (TypeBinding.local lookup) types typeExtras dataInstances classInstances
+      lookup ::
+        Type.Link Locality.Local ->
+        ST s (TypeGroup.Set Locality.Local Check (Scope.Declaration ':+ scope))
+      lookup (Type.Link.Declaration index) = case types Vector.! index of
+        TypeDeclaration {definition = TypeDefinition2.Group group} -> do
+          _ TypeGroup.:::: set <- group
+          pure set
+        _ -> error "bad lookup"
 
 groupTermBindings ::
   Vector (Unify.Type s scope) ->

@@ -67,30 +67,12 @@ executable hazy
     Core.Type.Functor
     Core.Type.Show
     Data.Functor2
-    Data.Heptafoldable
-    Data.Heptafunctor
-    Data.Heptatraversable
-    Data.Hexafoldable
-    Data.Hexafunctor
-    Data.Hexatraversable
     Data.List.Reverse
     Data.NaturalTransformation
-    Data.Octafoldable
-    Data.Octafunctor
-    Data.Octatraversable
-    Data.Pentafoldable
-    Data.Pentafunctor
-    Data.Pentatraversable
-    Data.Quadrifoldable
-    Data.Quadrifunctor
-    Data.Quadritraversable
     Data.Strict.Maybe
     Data.Strict.Vector1
     Data.Strict.Vector2
     Data.Traversable2
-    Data.Trifoldable
-    Data.Trifunctor
-    Data.Tritraversable
     Error
     Generate.Binding.Evidence
     Generate.Binding.Term
@@ -116,12 +98,6 @@ executable hazy
     Graph.Topological
     Graph.Topological1
     Graph.Topological2
-    Graph.Topological3
-    Graph.Topological4
-    Graph.Topological5
-    Graph.Topological6
-    Graph.Topological7
-    Graph.Topological8
     Javascript.Keywords
     Javascript.Printer
     Javascript.Printer.Lexer
@@ -205,21 +181,17 @@ executable hazy
     Semantic.Check.Context
     Semantic.Check.DataInstance
     Semantic.Check.EntryInstance
-    Semantic.Check.Functor.Annotated
-    Semantic.Check.Functor.Declarations
-    Semantic.Check.Functor.Instance.Key
-    Semantic.Check.Functor.Module
-    Semantic.Check.Functor.ModuleSet
     Semantic.Check.Go.Declaration
     Semantic.Check.Go.Declarations
+    Semantic.Check.Go.Definition4
     Semantic.Check.Go.Instance
     Semantic.Check.Go.MethodAbstract
     Semantic.Check.Go.Module
     Semantic.Check.Go.Scheme
+    Semantic.Check.Go.Synonym
     Semantic.Check.Go.TypeDeclaration
     Semantic.Check.Go.TypeDeclarationExtra
-    Semantic.Check.InstanceAnnotation
-    Semantic.Check.KindAnnotation
+    Semantic.Check.Go.TypeDefinition2
     Semantic.Check.LocalBinding
     Semantic.Check.Mask
     Semantic.Check.Simple.Class

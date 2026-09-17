@@ -1,11 +1,11 @@
 module Semantic.Check.Temporary.Expression where
 
 import Control.Monad.ST (ST)
-import {-# SOURCE #-} qualified Core.Builtin as Builtin
+import qualified Core.Builtin as Builtin
 import qualified Core.Tree.Forall as Forall
 import Core.Tree.Type ((#), (-#>))
 import qualified Core.Tree.Type as Core
-import {-# SOURCE #-} Core.Tree.TypeDeclaration (assumeData)
+import Core.Tree.TypeDeclaration (assumeData)
 import qualified Core.Tree.TypeLambda as Simple
 import Core.Type.Functor (shiftLogical)
 import qualified Data.Strict.Vector1 as Strict (Vector1)
@@ -19,8 +19,8 @@ import qualified Semantic.Check.ConstructorInstance as ConstructorInstance
 import Semantic.Check.Context (Context (..))
 import Semantic.Check.DataInstance (DataInstance (DataInstance))
 import qualified Semantic.Check.DataInstance as DataInstance
-import qualified Semantic.Check.Go.Declaration as Declaration
 import qualified Semantic.Check.Go.Declarations as Declarations
+import qualified Semantic.Check.Go.Definition4 as Definition4
 import Semantic.Check.Go.Scheme (Scheme)
 import qualified Semantic.Check.Simple.Data as Simple.Data
 import Semantic.Check.Simple.Scheme (instanciate)
@@ -302,7 +302,7 @@ check context typex Semantic.RightSection {left, operatorPosition, right} = do
 check context typex Semantic.Annotation {expression = Explicit expression, operatorPosition, annotation} = do
   annotation <- Annotation.checkAnnotation context annotation
   let annotation' = Forall.simplify annotation
-  expression <- Declaration.checkAnnotation context operatorPosition annotation $
+  expression <- Definition4.checkAnnotation context operatorPosition annotation $
     \context typex -> solve <$> check context typex expression
   (typex', instanciation) <- instanciate context operatorPosition annotation'
   Unify.unify context operatorPosition typex typex'

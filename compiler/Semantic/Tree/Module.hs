@@ -1,12 +1,4 @@
-{-# LANGUAGE_HAZY UnorderedRecords #-}
-
-module Semantic.Tree.Module
-  ( Module (..),
-    labelContext,
-    connect,
-    seperate,
-  )
-where
+module Semantic.Tree.Module where
 
 import Data.Functor.Identity (Identity (..))
 import Data.Maybe (fromJust)
@@ -14,6 +6,7 @@ import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Data.Void (Void)
 import Graph.StronglyConnected (Index (..), tarjan)
+import Semantic.Functor2 (Traversable2 (..))
 import qualified Semantic.Group.Functor.Term.Declarations as Functor.Term (indexes)
 import qualified Semantic.Group.Functor.Term.ModuleSet as Functor.Term (ModuleSet (..), (!))
 import qualified Semantic.Group.Functor.Type.Declarations as Functor.Type (indexes)
@@ -43,13 +36,19 @@ import qualified Semantic.Tree.TypeDefinition2 as TypeDefinition2
 import qualified Semantic.Tree.TypeGroup as TypeGroup
 import Syntax.Variable (FullQualifiers, toQualifiers)
 
-data Module layout stage = Module
+data Module loeb layout stage scope = Module
   { name :: !FullQualifiers,
-    declarations :: Declarations Identity Void Locality.Global Identity layout stage Global
+    declarations :: Declarations Identity Void Locality.Global loeb layout stage scope
   }
   deriving (Show)
 
-labelContext :: Vector (Module Normal Resolve) -> Label.Context Global
+instance Traversable2 Module where
+  traverse2 f Module {name, declarations} =
+    modulex <$> traverse2 f declarations
+    where
+      modulex declarations = Module {name, declarations}
+
+labelContext :: Vector (Module Identity Normal Resolve Global) -> Label.Context Global
 labelContext modules =
   Label.Context
     { terms = Table.Term.Global $ labelTerms modules,
@@ -62,7 +61,7 @@ labelContext modules =
     labelTypes = fmap $ \Module {name, declarations = Declarations {types}} ->
       TypeDeclaration.labelBinding (toQualifiers name) <$> types
 
-connect :: Vector (Module Normal Resolve) -> Vector (Module Group Resolve)
+connect :: Vector (Module Identity Normal Resolve Global) -> Vector (Module Identity Group Resolve Global)
 connect modules = Vector.imap go modules
   where
     go index Module {name, declarations} =
@@ -118,7 +117,7 @@ connect modules = Vector.imap go modules
       | Module {declarations = Declarations {types}} <- modules Vector.! global =
           TypeDeclaration.groupable (types Vector.! local)
 
-seperate :: Vector (Module Group Check) -> Vector (Module Normal Check)
+seperate :: Vector (Module Identity Group Check Global) -> Vector (Module Identity Normal Check Global)
 seperate modules = go <$> modules
   where
     go Module {name, declarations} =
@@ -148,3 +147,8 @@ seperate modules = go <$> modules
           TypeDefinition2.Group (Identity (_ TypeGroup.:::: set)) <- definition ->
             set
       _ -> error "bad type lookup"
+
+newtype ModuleSet loeb layout stage scope = ModuleSet {runModuleSet :: Vector (Module loeb layout stage scope)}
+
+instance Traversable2 ModuleSet where
+  traverse2 f (ModuleSet program) = ModuleSet <$> traverse (traverse2 f) program

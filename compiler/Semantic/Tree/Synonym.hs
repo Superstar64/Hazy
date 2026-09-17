@@ -1,5 +1,6 @@
 module Semantic.Tree.Synonym where
 
+import qualified Core.Tree.Type as Core
 import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import qualified Data.Vector.Strict as Strict (Vector)
 import Semantic.FreeVariables (FreeTypeVariables (..))
@@ -7,6 +8,7 @@ import qualified Semantic.FreeVariables as FreeVariables
 import Semantic.Scope (Environment (..), Local)
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
+import Semantic.Tree.Combinators.Inferred (Inferred)
 import Semantic.Tree.Type (Type)
 import Semantic.Tree.TypePattern (TypePattern)
 import Syntax.Position (Position)
@@ -30,7 +32,8 @@ instance FreeTypeVariables Synonym where
     foldMap (freeTypeVariables target) annotation ++ freeTypeVariables target body
 
 data SynonymBody stage scope = SynonymBody
-  { parameters :: !(Strict.Vector (TypePattern Position stage scope)),
+  { kind :: !(Inferred Core.Type stage scope),
+    parameters :: !(Strict.Vector (TypePattern Position stage scope)),
     synonym :: !(Type Position stage (Local ':+ scope))
   }
   deriving (Show)
@@ -39,9 +42,10 @@ instance Shift0.Functor (SynonymBody stage) where
   map = Shift.mapDefault
 
 instance Shift.Functor (SynonymBody stage) where
-  map category SynonymBody {parameters, synonym} =
+  map category SynonymBody {kind, parameters, synonym} =
     SynonymBody
-      { parameters = Shift.map category <$> parameters,
+      { kind = Shift.map category kind,
+        parameters = Shift.map category <$> parameters,
         synonym = Shift.map (Shift.Over category) synonym
       }
 

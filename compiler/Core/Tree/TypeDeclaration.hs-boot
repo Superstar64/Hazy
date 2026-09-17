@@ -6,12 +6,12 @@ import {-# SOURCE #-} Core.Tree.Class (Class)
 import {-# SOURCE #-} Core.Tree.Data (Data)
 import Data.Functor.Identity (Identity)
 import qualified Data.Kind
-import {-# SOURCE #-} qualified Semantic.Check.Go.TypeDeclaration as Solved
 import Semantic.Layout (Normal)
 import Semantic.Scope (Environment)
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
+import qualified Semantic.Tree.TypeDeclaration as Solved
 
 type role TypeDeclaration nominal
 

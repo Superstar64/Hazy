@@ -2,6 +2,7 @@ module Semantic.Resolve.Temporary.Complete.Module where
 
 import Control.Monad.Fix (mfix)
 import Data.Foldable (toList)
+import Data.Functor.Identity (Identity)
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe (mapMaybe)
@@ -108,7 +109,7 @@ resolve modules = mfix $ \main ->
             Syntax.Module {modulePosition = right} <- modules Vector.! right =
               duplicateModuleEntries [left, right]
 
-shrink :: Module -> Real.Module Normal Resolve
+shrink :: Module -> Real.Module Identity Normal Resolve Global
 shrink Module {name, declarations} =
   Real.Module
     { name,

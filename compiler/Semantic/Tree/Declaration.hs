@@ -8,7 +8,6 @@ import Data.Functor.Classes (Show1, showsPrec1)
 import Data.Functor.Compose (Compose (..))
 import Data.Functor.Identity (Identity (..))
 import Data.NaturalTransformation (NaturalTransformation (..))
-import Data.Void (Void)
 import qualified Graph.StronglyConnected as StronglyConnected
 import Semantic.FreeVariables (FreeTermVariables (..), Target (Target))
 import Semantic.Functor2 (Traversable2 (..))
@@ -27,7 +26,6 @@ import Semantic.Tree.Definition3 (Definition3)
 import Semantic.Tree.Definition4 (Definition4)
 import qualified Semantic.Tree.Definition4 as Definition4
 import qualified Semantic.Tree.Group as Group
-import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
 import Syntax.Variable (QualifiedVariable ((:-)), Qualifiers, Variable)
 import Prelude hiding (Either (Left, Right))
@@ -157,17 +155,3 @@ groupable Declaration {definition} = case definition of
 
 groupFree :: Groupable scope -> [Term0.Index scope]
 groupFree Groupable {element} = freeTermVariables Target element
-
-solve ::
-  Declaration (Unify.Solve s) (Unify.Logical s scope) locality Identity Group Check scope ->
-  Unify.Solve s (Declaration Identity Void locality Identity Group Check scope)
-solve Declaration {position, name, definition, typex = Identity (Solved typex)} = do
-  definition <- Definition4.solve position definition
-  typex <- Unify.solve position typex
-  pure
-    Declaration
-      { position,
-        name,
-        definition,
-        typex = Identity (Solved typex)
-      }

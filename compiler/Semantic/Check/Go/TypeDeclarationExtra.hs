@@ -8,8 +8,6 @@ import Data.Functor.Identity (Identity (..))
 import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Context (Context)
 import qualified Semantic.Check.Go.MethodAbstract as MethodAbstract
-import Semantic.Check.Go.TypeDeclaration (TypeDeclaration (..))
-import qualified Semantic.Check.Go.TypeDeclaration as TypeDeclaration
 import qualified Semantic.Check.Mask as Mask
 import Semantic.Check.Simple.Scheme (augment)
 import qualified Semantic.Index.Type as Type
@@ -17,6 +15,8 @@ import qualified Semantic.Index.Type2 as Type2
 import Semantic.Layout (Group, Normal)
 import Semantic.Stage (Check, Resolve)
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
+import Semantic.Tree.TypeDeclaration (TypeDeclaration (..))
+import qualified Semantic.Tree.TypeDeclaration as TypeDeclaration
 import Semantic.Tree.TypeDeclarationExtra (TypeDeclarationExtra (..))
 import qualified Semantic.Tree.TypeDeclarationExtra as Semantic
 import qualified Semantic.Tree.TypeDefinition as TypeDefinition

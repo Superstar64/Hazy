@@ -11,7 +11,7 @@ import qualified Core.Tree.Evidence as Evidence (EvidenceF (..))
 import Core.Tree.Forall (Forall, ForallOver (..))
 import qualified Core.Tree.Instanciation as Instanciation
 import Core.Tree.Type (Type)
-import {-# SOURCE #-} Core.Tree.TypeDeclaration (assumeClass)
+import Core.Tree.TypeDeclaration (assumeClass)
 import Data.Foldable (toList)
 import qualified Data.Map as Map
 import Data.Text (pack)

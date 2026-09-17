@@ -1,103 +1,133 @@
-module Semantic.Check.Go.Declarations (Declarations (..), Result (..), fromFunctor, check, solve) where
+module Semantic.Check.Go.Declarations where
 
 import Control.Monad.ST (ST)
-import qualified Core.Tree.Type as Simple
+import Data.Functor.Compose (Compose (..))
 import Data.Functor.Identity (Identity (..))
-import Data.Heptafunctor (heptamap)
+import Data.Functor2 (fmap2)
 import qualified Data.Map as Map
+import Data.NaturalTransformation (NaturalTransformation (..))
 import qualified Data.Vector as Vector
-import qualified Data.Vector.Strict as Strict.Vector
 import Data.Void (Void)
 import Error (cyclicalTypeChecking)
-import Graph.Topological (Formula7 (..), loebST7)
-import qualified Graph.Topological7
+import Graph.Topological (loebST)
+import qualified Graph.Topological as Topological
 import Semantic.Check.Context (Context (..), localBindings)
-import qualified Semantic.Check.Functor.Annotated as Functor (Annotated (..), content)
-import Semantic.Check.Functor.Declarations (mapWithKey)
-import qualified Semantic.Check.Functor.Declarations as Functor (Declarations (..), fromStage2)
-import qualified Semantic.Check.Functor.Instance.Key as Instance.Key
 import qualified Semantic.Check.Go.Declaration as Declaration
+import Semantic.Check.Go.Definition4 (Solve (Solve))
+import qualified Semantic.Check.Go.Definition4 as Definition4
 import qualified Semantic.Check.Go.Instance as Instance
-import Semantic.Check.Go.TypeDeclaration (TypeDeclaration (..))
-import qualified Semantic.Check.Go.TypeDeclaration as TypeDeclaration
-import qualified Semantic.Check.Go.TypeDeclarationExtra as TypeDeclarationExtra
-import Semantic.Check.InstanceAnnotation (InstanceAnnotation)
-import qualified Semantic.Check.InstanceAnnotation as InstanceAnnotation
-import Semantic.Check.KindAnnotation (KindAnnotation)
-import qualified Semantic.Check.KindAnnotation as KindAnnotation
-import Semantic.Check.TypeAnnotation (TypeAnnotation)
-import qualified Semantic.Check.TypeAnnotation as TypeAnnotation
+import qualified Semantic.Check.Go.TypeDeclaration as TypeDeclaration (check)
+import qualified Semantic.Check.Go.TypeDeclarationExtra as TypeDeclarationExtra (check)
+import Semantic.Functor2 (Proper (..), traverse2)
 import qualified Semantic.Index.Link.Term as Term
+import qualified Semantic.Index.Link.Term as Term.Link
 import qualified Semantic.Index.Link.Type as Link.Type
-import qualified Semantic.Index.Type as Type
+import qualified Semantic.Index.Link.Type as Type
+import qualified Semantic.Index.Link.Type as Type.Link
+import qualified Semantic.Index.Type0 as Type0
+import qualified Semantic.Index.Type2 as Type2
 import Semantic.Layout (Group)
 import qualified Semantic.Locality as Locality
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope
 import Semantic.Stage (Check, Resolve)
-import Semantic.Tree.Combinators.Inferred (Inferred (..))
-import Semantic.Tree.Declaration (Declaration (..))
-import qualified Semantic.Tree.Declaration as Semantic (Declaration)
-import qualified Semantic.Tree.Declaration as Semantic.Declaration
-import Semantic.Tree.Declarations (Declarations (..))
+import Semantic.Tree.Declaration (Declaration)
+import Semantic.Tree.Declarations (Declarations (..), Local (..))
 import qualified Semantic.Tree.Declarations as Semantic (Local (..))
-import qualified Semantic.Tree.Definition4 as Definition4
-import qualified Semantic.Tree.Group as Group
 import Semantic.Tree.Instance (Instance)
-import qualified Semantic.Tree.Instance as Semantic (Instance (..))
-import qualified Semantic.Tree.Instance as Semantic.Instance
-import qualified Semantic.Tree.InstanceDefinition2 as InstanceDefinition
-import qualified Semantic.Tree.TypeDeclaration as Semantic (TypeDeclaration)
-import qualified Semantic.Tree.TypeDeclaration as Semantic.TypeDeclaration
-import Semantic.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
-import qualified Semantic.Tree.TypeDeclarationExtra as Semantic (TypeDeclarationExtra)
-import qualified Semantic.Tree.TypeDeclarationExtra as Semantic.TypeDeclarationExtra
+import Semantic.Tree.TypeDeclaration (TypeDeclaration (..))
+import qualified Semantic.Tree.TypeDeclaration as TypeDeclaration (ungroupM)
+import qualified Semantic.Tree.TypeDeclarationExtra as TypeDeclarationExtra (TypeDeclarationExtra (..))
 import qualified Semantic.Tree.TypeDefinition2 as TypeDefinition2
 import qualified Semantic.Tree.TypeGroup as TypeGroup
 import qualified Semantic.Unify as Unify
-import qualified Syntax.Variable as Variable
 import Prelude hiding (Functor)
 
-type Formula s scope z =
-  Formula7
-    (Functor.Declarations (Scope.Declaration ':+ scope))
-    s
-    (TypeAnnotation (Scope.Declaration ':+ scope))
-    ( Declaration
-        (Unify.Solve s)
-        (Unify.Logical s (Scope.Declaration ':+ scope))
-        Locality.Local
-        Identity
-        Group
-        Check
-        (Scope.Declaration ':+ scope)
-    )
-    (KindAnnotation (Scope.Declaration ':+ scope))
-    (TypeDeclaration Locality.Local Identity Group Check (Scope.Declaration ':+ scope))
-    (Identity (Unify.Solve s (TypeDeclarationExtra Group Check (Scope.Declaration ':+ scope))))
-    (InstanceAnnotation (Scope.Declaration ':+ scope))
-    (Semantic.Instance (Unify.Solve s) Identity Group Check (Scope.Declaration ':+ scope))
-    z
-
-fromFunctor ::
-  Functor.Declarations
-    scope
-    a1
-    (Declaration solve logical locality loeb layout stage scope)
-    a2
-    (TypeDeclaration locality loeb layout stage scope)
-    (loeb (solve (TypeDeclarationExtra layout stage scope)))
-    a3
-    (Instance solve loeb layout stage scope) ->
-  Declarations solve logical locality loeb layout stage scope
-fromFunctor (Functor.Declarations {terms, types, typeExtras, dataInstances, classInstances}) =
-  Declarations
-    { terms = Functor.content <$> terms,
-      types = Functor.content <$> types,
-      typeExtras,
-      dataInstances = fmap (fmap Functor.content) dataInstances,
-      classInstances = fmap (fmap Functor.content) classInstances
-    }
+checkImpl ::
+  (Monad solve) =>
+  (Type.Link locality -> Type0.Index scope) ->
+  (Int -> Term.Link locality) ->
+  (Int -> Type.Link locality) ->
+  Definition4.Solve solve logical s scope ->
+  ( declarations (ST s) ->
+    Term.Link locality ->
+    Declaration solve' logical locality (ST s) Group Check scope
+  ) ->
+  ( declarations (ST s) ->
+    Type.Link locality ->
+    TypeDeclaration locality (ST s) Group Check scope
+  ) ->
+  ( declarations (ST s) ->
+    Int ->
+    Type2.Index scope ->
+    Instance solve'' (ST s) Group Check scope
+  ) ->
+  ( declarations (ST s) ->
+    Int ->
+    Type2.Index scope ->
+    Instance solve'' (ST s) Group Check scope
+  ) ->
+  (declarations (ST s) -> Context s scope) ->
+  Declarations Identity Void locality Identity Group Resolve scope ->
+  Declarations solve logical locality (Topological.Formula declarations s) Group Check scope
+checkImpl
+  typeIndexLink
+  termLink
+  typeLink
+  solve@Solve {solve = run}
+  reflection1
+  reflection2
+  reflection3
+  reflection4
+  information
+  Declarations {terms, types, typeExtras, dataInstances, classInstances} =
+    Declarations
+      { terms =
+          let check index = Declaration.check (termLink index) solve reflection1 information
+           in Vector.imap check terms,
+        types =
+          let check index = TypeDeclaration.check (typeLink index) reflection2 information
+           in Vector.imap check types,
+        typeExtras =
+          let check index (Identity (Identity typeExtra)) =
+                Topological.Formula
+                  { cycle = cyclicalTypeChecking $ TypeDeclarationExtra.position typeExtra,
+                    run = \declarations -> do
+                      let context = information declarations
+                          typeDeclaration = reflection2 declarations (typeLink index)
+                          lookup index = case reflection2 declarations index of
+                            TypeDeclaration {definition = TypeDefinition2.Group group} -> do
+                              _ TypeGroup.:::: set <- group
+                              pure set
+                            _ -> error "bad lookup"
+                      typeDeclaration <- traverse2 (Morph $ Compose . fmap Identity) typeDeclaration
+                      typeDeclaration <- TypeDeclaration.ungroupM typeIndexLink lookup typeDeclaration
+                      declaration <-
+                        TypeDeclarationExtra.check
+                          context
+                          (typeIndex index)
+                          typeDeclaration
+                          typeExtra
+                      run declaration
+                  }
+           in Vector.imap check typeExtras,
+        dataInstances =
+          let check head index instancex =
+                Instance.check key solve reflection information instancex
+                where
+                  key = Instance.Data {head1 = typeIndex head, index1 = index}
+                  reflection declarations = reflection3 declarations head index
+           in Vector.imap (Map.mapWithKey . check) dataInstances,
+        classInstances =
+          let check index head instancex =
+                Instance.check key solve reflection information instancex
+                where
+                  key = Instance.Class {head2 = head, index2 = typeIndex index}
+                  reflection declarations = reflection4 declarations index head
+           in Vector.imap (Map.mapWithKey . check) classInstances
+      }
+    where
+      typeIndex = Type0.normal . typeIndexLink . typeLink
 
 data Result s scope
   = !(Context s (Scope.Declaration ':+ scope))
@@ -106,190 +136,85 @@ data Result s scope
 
 infix 5 :&
 
+lookupTerm ::
+  Proper (Declarations solve logical Locality.Local) layout stage scope loeb ->
+  Term.Link Locality.Local ->
+  Declaration solve logical Locality.Local loeb layout stage scope
+lookupTerm (Proper Declarations {terms}) (Term.Link.Declaration index) = terms Vector.! index
+
+lookupType ::
+  Proper (Declarations solve logical Locality.Local) layout stage scope loeb ->
+  Type.Link Locality.Local ->
+  TypeDeclaration Locality.Local loeb layout stage scope
+lookupType (Proper Declarations {types}) (Type.Link.Declaration index) = types Vector.! index
+
+lookupDataInstance ::
+  Proper (Declarations solve logical locality) layout stage scope loeb ->
+  Int ->
+  Type2.Index scope ->
+  Instance solve loeb layout stage scope
+lookupDataInstance (Proper Declarations {dataInstances}) local index = dataInstances Vector.! local Map.! index
+
+lookupClassInstance ::
+  Proper (Declarations solve logical locality) layout stage scope loeb ->
+  Int ->
+  Type2.Index scope ->
+  Instance solve loeb layout stage scope
+lookupClassInstance (Proper Declarations {classInstances}) local index = classInstances Vector.! local Map.! index
+
 check :: Context s scope -> Semantic.Local Group Resolve scope -> ST s (Result s scope)
 check context (Semantic.Local declarations) = do
-  functor <-
-    loebST7
-      $ mapWithKey
-        (checkTermAnnotation context)
-        (checkTermDeclaration context)
-        (checkTypeAnnotation context)
-        (checkTypeDeclaration context)
-        (checkTypeDeclarationExtra context)
-        (checkInstanceAnnotation context)
-        (checkInstanceDeclaration context)
-      $ Functor.fromStage2 Variable.Local declarations
-  let lifted = heptamap pure pure pure pure pure pure (const ()) functor
-  pure $ localBindings lifted context :& (fmap Semantic.Local $ solve $ fromFunctor functor)
+  let locals (Proper declarations) = localBindings context declarations
+  Proper declarations <-
+    loebST $
+      Proper $
+        checkImpl
+          Link.Type.unlocal
+          Term.Declaration
+          Link.Type.Declaration
+          Definition4.delay
+          lookupTerm
+          lookupType
+          lookupDataInstance
+          lookupClassInstance
+          locals
+          declarations
+  let context = locals (fmap2 (Morph $ pure . runIdentity) $ Proper declarations)
+  declarations <- pure $ solve declarations
+  pure $ context :& (Local <$> declarations)
 
-checkTermAnnotation ::
-  Context s scope ->
-  p ->
-  Semantic.Declaration Identity Void locality Identity Group Resolve (Scope.Declaration ':+ scope) ->
-  Formula s scope (TypeAnnotation (Scope.Declaration ':+ scope))
-checkTermAnnotation context _ declaration = Formula7 {cycle, run}
-  where
-    cycle :: a
-    cycle = cyclicalTypeChecking $ Semantic.Declaration.position declaration
-    run declarations = do
-      context <- pure $ localBindings declarations context
-      TypeAnnotation.check context declaration
-
-checkTermDeclaration ::
-  forall s scope.
-  Context s scope ->
-  Int ->
-  Semantic.Declaration Identity Void Locality.Local Identity Group Resolve (Scope.Declaration ':+ scope) ->
-  Formula
+solve ::
+  Declarations
+    (Unify.Solve s)
+    (Unify.Logical s (Scope.Declaration ':+ scope))
+    Locality.Local
+    Identity
+    Group
+    Check
+    (Scope.Declaration ':+ scope) ->
+  Unify.Solve
     s
-    scope
-    ( Declaration
-        (Unify.Solve s)
-        (Unify.Logical s (Scope.Declaration ':+ scope))
+    ( Declarations
+        Identity
+        Void
         Locality.Local
         Identity
         Group
         Check
         (Scope.Declaration ':+ scope)
     )
-checkTermDeclaration context index declaration = Formula7 {cycle, run}
+solve Declarations {terms, types, typeExtras, dataInstances, classInstances} =
+  declarations
+    <$> traverse Declaration.solve terms
+    <*> traverse (traverse (fmap Identity)) typeExtras
+    <*> traverse (traverse Instance.solve) dataInstances
+    <*> traverse (traverse Instance.solve) classInstances
   where
-    cycle :: a
-    cycle = cyclicalTypeChecking $ Semantic.Declaration.position declaration
-    run declarations@Functor.Declarations {terms} = do
-      context <- pure $ localBindings declarations context
-      let Functor.Annotated {meta} = terms Vector.! index
-          link :: Term.Link Locality.Local -> Int -> ST s (Unify.Forall s (Scope.Declaration ':+ scope))
-          link (Term.Declaration local) id = do
-            let Functor.Annotated {content} = terms Vector.! local
-            Declaration {definition} <- content
-            pure $ case definition of
-              Definition4.Group (Identity (Solved types Group.:::: _)) -> Unify.mapForall go types
-                where
-                  go = Unify.MapForall $ \case
-                    Group.Types types -> types Strict.Vector.! id
-              _ -> error "bad link lookup"
-      annotation <- meta
-      Declaration.check context link annotation declaration
-
-checkTypeAnnotation ::
-  Context s scope ->
-  p ->
-  Semantic.TypeDeclaration locality Identity Group Resolve (Scope.Declaration ':+ scope) ->
-  Formula s scope (KindAnnotation (Scope.Declaration ':+ scope))
-checkTypeAnnotation context _ declaration = Formula7 {cycle, run}
-  where
-    cycle :: a
-    cycle = cyclicalTypeChecking $ Semantic.TypeDeclaration.position declaration
-    run declarations = do
-      context <- pure $ localBindings declarations context
-      KindAnnotation.check context declaration
-
-checkTypeDeclaration ::
-  forall s scope.
-  Context s scope ->
-  Int ->
-  Semantic.TypeDeclaration Locality.Local Identity Group Resolve (Scope.Declaration ':+ scope) ->
-  Formula s scope (TypeDeclaration Locality.Local Identity Group Check (Scope.Declaration ':+ scope))
-checkTypeDeclaration context index declaration = Formula7 {cycle, run}
-  where
-    cycle :: a
-    cycle = cyclicalTypeChecking $ Semantic.TypeDeclaration.position declaration
-    run declarations@Functor.Declarations {types} = do
-      context <- pure $ localBindings declarations context
-      let Functor.Annotated {meta} = types Vector.! index
-          link :: Link.Type.Link Locality.Local -> Int -> ST s (Simple.Type (Scope.Declaration ':+ scope))
-          link (Link.Type.Declaration local) id = do
-            let Functor.Annotated {content} = types Vector.! local
-            TypeDeclaration {definition} <- content
-            pure $ case definition of
-              TypeDefinition2.Group (Identity (Solved (TypeGroup.Types types) TypeGroup.:::: _)) ->
-                types Strict.Vector.! id
-              _ -> error "bad link lookup"
-      annotation <- meta
-      TypeDeclaration.check context link annotation declaration
-
-checkTypeDeclarationExtra ::
-  forall s scope.
-  Context s scope ->
-  Int ->
-  Identity (Identity (Semantic.TypeDeclarationExtra Group Resolve (Scope.Declaration ':+ scope))) ->
-  Formula s scope (Identity (Unify.Solve s (TypeDeclarationExtra Group Check (Scope.Declaration ':+ scope))))
-checkTypeDeclarationExtra context index (Identity (Identity declaration)) = Formula7 {cycle, run}
-  where
-    cycle :: a
-    cycle = cyclicalTypeChecking $ Semantic.TypeDeclarationExtra.position declaration
-    run declarations@Functor.Declarations {types} = do
-      context <- pure $ localBindings declarations context
-      let Functor.Annotated {content} = types Vector.! index
-      proper <- content
-      let link ::
-            Link.Type.Link Locality.Local ->
-            ST s (TypeGroup.Set Locality.Local Check (Scope.Declaration ':+ scope))
-          link (Link.Type.Declaration local) = do
-            let Functor.Annotated {content} = types Vector.! local
-            TypeDeclaration {definition} <- content
-            case definition of
-              TypeDefinition2.Group (Identity (_ TypeGroup.:::: set)) -> pure set
-              _ -> error "bad link"
-      proper <- Semantic.TypeDeclaration.ungroupM Link.Type.unlocal link proper
-      Identity <$> TypeDeclarationExtra.check context (Type.Declaration index) proper declaration
-
-checkInstanceAnnotation ::
-  Context s scope ->
-  p ->
-  Semantic.Instance.Instance Identity Identity Group Resolve (Scope.Declaration ':+ scope) ->
-  Formula s scope (InstanceAnnotation (Scope.Declaration ':+ scope))
-checkInstanceAnnotation context _ declaration = Formula7 {cycle, run}
-  where
-    cycle :: a
-    cycle = cyclicalTypeChecking $ Semantic.Instance.startPosition declaration
-    run declarations = InstanceAnnotation.check (localBindings declarations context) annotation
-    Semantic.Instance {definition = Identity annotation InstanceDefinition.::: _} = declaration
-
-checkInstanceDeclaration ::
-  Context s scope ->
-  Instance.Key.Key (Scope.Declaration ':+ scope) ->
-  Semantic.Instance Identity Identity Group Resolve (Scope.Declaration ':+ scope) ->
-  Formula s scope (Semantic.Instance (Unify.Solve s) Identity Group Check (Scope.Declaration ':+ scope))
-checkInstanceDeclaration context key declaration = Formula7 {cycle, run}
-  where
-    cycle :: a
-    cycle = cyclicalTypeChecking $ Semantic.Instance.startPosition declaration
-    run declarations = do
-      let Functor.Declarations {dataInstances, classInstances} = declarations
-      case key of
-        Instance.Key.Data {index, classKey} -> do
-          let Functor.Annotated {meta} = dataInstances Vector.! index Map.! classKey
-              key = Instance.Data {index1 = classKey, head1 = Type.Declaration index}
-          annotation <- meta
-          Instance.check (localBindings declarations context) key annotation declaration
-        Instance.Key.Class {index, dataKey} -> do
-          let Functor.Annotated {meta} = classInstances Vector.! index Map.! dataKey
-              key = Instance.Class {index2 = Type.Declaration index, head2 = dataKey}
-          annotation <- meta
-          Instance.check (localBindings declarations context) key annotation declaration
-
-solve ::
-  Declarations (Unify.Solve s) (Unify.Logical s scope) locality Identity Group Check scope ->
-  Unify.Solve s (Declarations Identity Void locality Identity Group Check scope)
-solve
-  Declarations
-    { terms,
-      types,
-      typeExtras,
-      dataInstances,
-      classInstances
-    } = do
-    terms <- traverse Declaration.solve terms
-    typeExtras <- traverse runIdentity typeExtras
-    dataInstances <- traverse (traverse Instance.solve) dataInstances
-    classInstances <- traverse (traverse Instance.solve) classInstances
-    pure
+    declarations terms typeExtras dataInstances classInstances =
       Declarations
         { terms,
           types,
-          typeExtras = fmap (Identity . Identity) typeExtras,
+          typeExtras,
           dataInstances,
           classInstances
         }

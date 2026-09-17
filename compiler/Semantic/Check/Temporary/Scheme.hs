@@ -14,7 +14,7 @@ import Semantic.Check.LocalBinding (LocalBinding (Wobbly, label, wobbly))
 import Semantic.Check.Temporary.Constraints (Constraints)
 import qualified Semantic.Check.Temporary.Constraints as Constraints
 import Semantic.Check.Temporary.Type (Type)
-import {-# SOURCE #-} qualified Semantic.Check.Temporary.Type as Type (check, solve)
+import qualified Semantic.Check.Temporary.Type as Type (check, solve)
 import Semantic.Check.Temporary.TypePattern (TypePattern (TypePattern))
 import qualified Semantic.Check.Temporary.TypePattern as TypePattern
 import qualified Semantic.Index.Table.Local as Local

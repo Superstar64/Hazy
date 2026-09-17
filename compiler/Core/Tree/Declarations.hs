@@ -14,12 +14,12 @@ import Data.Map (Map)
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Data.Void (Void)
-import qualified Semantic.Check.Go.Declarations as Semantic
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Layout (Normal)
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
+import qualified Semantic.Tree.Declarations as Semantic
 
 data Declarations scope = Declarations
   { terms :: !(Vector (Declaration scope)),

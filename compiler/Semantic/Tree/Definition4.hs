@@ -10,7 +10,6 @@ import Data.NaturalTransformation (NaturalTransformation (..))
 import qualified Data.Set as Set
 import qualified Data.Strict.Maybe as Strict.Maybe
 import qualified Data.Vector.Strict as Strict.Vector
-import Data.Void (Void)
 import qualified Graph.StronglyConnected as StronglyConnected
 import Semantic.Connect (connect)
 import qualified Semantic.Connect as Connect
@@ -34,7 +33,6 @@ import qualified Semantic.Tree.Definition2 as Mark
 import Semantic.Tree.Definition3 (Definition3)
 import Semantic.Tree.Group (Element (..), Group (..), Set (..))
 import Semantic.Tree.Scheme (Scheme)
-import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
 
 type Definition4 ::
@@ -46,7 +44,7 @@ type Definition4 ::
   Stage ->
   Environment ->
   Type
-data Definition4 solve logical loeb locality layout stage scope where
+data Definition4 solve logical locality loeb layout stage scope where
   (:::) ::
     !(Annotation mark loeb layout stage scope) ->
     !(loeb (solve (Implicit (Definition3 mark) layout stage scope))) ->
@@ -173,17 +171,3 @@ ungroup index lookup definition = case definition of
           | Element {link} <- set Strict.Vector.! id =
               shift $ Term0.normal $ index link
         Element {element} = set Strict.Vector.! id
-
-solve ::
-  Position ->
-  Definition4 (Unify.Solve s) (Unify.Logical s scope) locality Identity Layout.Group Check scope ->
-  Unify.Solve s (Definition4 Identity Void locality Identity Layout.Group Check scope)
-solve position = \case
-  (annotation ::: Identity definition) -> do
-    definition <- definition
-    pure $ annotation ::: Identity (Identity definition)
-  Link link id -> pure (Link link id)
-  Group (Identity (Inferred.Solved types :::: set)) -> do
-    types <- Unify.solve position types
-    set <- set
-    pure $ Group $ Identity (Inferred.Solved types :::: pure set)

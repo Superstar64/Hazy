@@ -6,11 +6,11 @@ import Core.Tree.Data (Data)
 import Core.Tree.TypeDefinition (TypeDefinition)
 import qualified Core.Tree.TypeDefinition as TypeDefinition
 import Data.Functor.Identity (Identity)
-import qualified Semantic.Check.Go.TypeDeclaration as Solved (TypeDeclaration (..))
 import Semantic.Layout (Normal)
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
+import qualified Semantic.Tree.TypeDeclaration as Solved (TypeDeclaration (..))
 import Syntax.Lexer (ConstructorIdentifier)
 
 data TypeDeclaration scope

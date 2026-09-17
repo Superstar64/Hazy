@@ -27,6 +27,7 @@ import qualified Package
 import qualified Semantic.Check.Go.Module as Module (check)
 import qualified Semantic.Layout as Layout
 import qualified Semantic.Resolve.Go.Module as Module (resolve)
+import qualified Semantic.Scope as Scope
 import qualified Semantic.Stage as Stage
 import qualified Semantic.Tree.Module as Module (connect, seperate)
 import qualified Semantic.Tree.Module as Semantic (Module, name)
@@ -125,26 +126,26 @@ stage1 verbose = case verbose of
 stage2 ::
   Debug ->
   Vector (Syntax.Module Position) ->
-  IO (Vector (Semantic.Module Layout.Normal Stage.Resolve))
+  IO (Vector (Semantic.Module Identity Layout.Normal Stage.Resolve Scope.Global))
 stage2 verbose = case verbose of
   Debug -> runVerbose . Module.resolve
   Normal -> pure . runIdentity . Module.resolve
 
 stage2x ::
   Debug ->
-  Vector (Semantic.Module Layout.Normal Stage.Resolve) ->
-  IO (Vector (Semantic.Module Layout.Group Stage.Resolve))
+  Vector (Semantic.Module Identity Layout.Normal Stage.Resolve Scope.Global) ->
+  IO (Vector (Semantic.Module Identity Layout.Group Stage.Resolve Scope.Global))
 stage2x _ = pure . Module.connect
 
 stage3 ::
   Debug ->
-  Vector (Semantic.Module Layout.Normal Stage.Resolve) ->
-  IO (Vector (Semantic.Module Layout.Normal Stage.Check))
+  Vector (Semantic.Module Identity Layout.Normal Stage.Resolve Scope.Global) ->
+  IO (Vector (Semantic.Module Identity Layout.Normal Stage.Check Scope.Global))
 stage3 _ = pure . Module.seperate . Module.check . Module.connect
 
 stage4 ::
   Debug ->
-  Vector (Semantic.Module Layout.Normal Stage.Check) ->
+  Vector (Semantic.Module Identity Layout.Normal Stage.Check Scope.Global) ->
   IO (Vector Core.Module)
 stage4 _ = pure . Vector.map Module.simplify
 

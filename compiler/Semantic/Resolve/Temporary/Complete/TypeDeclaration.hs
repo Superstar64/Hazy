@@ -253,7 +253,8 @@ merge entries@(entry :| _) =
                         Strict.Nothing
                           Real.Synonym.::: Real.Synonym.SynonymBody
                             { parameters,
-                              synonym
+                              synonym,
+                              kind = Inferred
                             },
                   kind = Identity Inferred
                 }
@@ -268,7 +269,8 @@ merge entries@(entry :| _) =
                         Strict.Just annotation
                           Real.Synonym.::: Real.Synonym.SynonymBody
                             { parameters,
-                              synonym
+                              synonym,
+                              kind = Inferred
                             },
                   kind = Identity Inferred
                 }

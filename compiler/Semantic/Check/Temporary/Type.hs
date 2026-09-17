@@ -3,11 +3,11 @@
 module Semantic.Check.Temporary.Type where
 
 import Control.Monad.ST (ST)
-import {-# SOURCE #-} qualified Core.Builtin as Builtin
+import qualified Core.Builtin as Builtin
 import Core.Substitute (logicalType)
 import Core.Tree.Type ((-#>))
 import qualified Core.Tree.Type as Core
-import {-# SOURCE #-} Core.Tree.TypeDeclaration as Simple (assumeData)
+import Core.Tree.TypeDeclaration as Simple (assumeData)
 import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import qualified Data.Strict.Vector1 as Strict (Vector1)
 import qualified Data.Strict.Vector2 as Strict (Vector2)

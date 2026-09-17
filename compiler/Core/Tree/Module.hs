@@ -2,6 +2,7 @@ module Core.Tree.Module where
 
 import Core.Tree.Declarations (Declarations)
 import qualified Core.Tree.Declarations as Declarations (simplify)
+import Data.Functor.Identity (Identity)
 import qualified Semantic.Check.Go.Module as Semantic
 import Semantic.Layout (Normal)
 import Semantic.Scope (Global)
@@ -14,7 +15,7 @@ data Module = Module
   }
   deriving (Show)
 
-simplify :: Semantic.Module Normal Check -> Module
+simplify :: Semantic.Module Identity Normal Check Global -> Module
 simplify Semantic.Module {name, declarations} =
   Module
     { name,

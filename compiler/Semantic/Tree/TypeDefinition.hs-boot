@@ -8,6 +8,5 @@ import Semantic.Stage (Stage)
 
 type role TypeDefinition nominal nominal
 
-
 type TypeDefinition :: Stage -> Environment -> Type
 data TypeDefinition stage scope
