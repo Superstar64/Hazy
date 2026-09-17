@@ -17,10 +17,10 @@ import Syntax.Variable (Constructor, Variable)
 
 type Bindings stability = BindingsF stability Identity
 
-data BindingsF stability m scope = Bindings
-  { terms :: !(Map Variable (Term.BindingF m scope)),
-    constructors :: !(Map Constructor (Constructor.BindingF m scope)),
-    types :: !(Map ConstructorIdentifier (Type.BindingF m scope)),
+data BindingsF stability loeb scope = Bindings
+  { terms :: !(Map Variable (Term.BindingF loeb scope)),
+    constructors :: !(Map Constructor (Constructor.BindingF loeb scope)),
+    types :: !(Map ConstructorIdentifier (Type.BindingF loeb scope)),
     stability :: !stability
   }
   deriving (Show)
@@ -34,10 +34,10 @@ instance Traversable2 (BindingsF stability) where
     where
       bindings terms constructors types = Bindings {terms, constructors, types, stability}
 
-instance (Functor m) => Shift0.Functor (BindingsF stability m) where
+instance (Functor loeb) => Shift0.Functor (BindingsF stability loeb) where
   map = Shift.mapDefault
 
-instance (Functor m) => Shift.Functor (BindingsF stability m) where
+instance (Functor loeb) => Shift.Functor (BindingsF stability loeb) where
   map category Bindings {terms, constructors, types, stability} =
     Bindings
       { terms = fmap (Shift.map category) terms,
@@ -46,7 +46,7 @@ instance (Functor m) => Shift.Functor (BindingsF stability m) where
         stability
       }
 
-instance (Semigroup stability, Applicative m) => Semigroup (BindingsF stability m scope) where
+instance (Semigroup stability, Applicative loeb) => Semigroup (BindingsF stability loeb scope) where
   (<>)
     Bindings {terms = terms1, constructors = constructors1, types = types1, stability = stability1}
     Bindings {terms = terms2, constructors = constructors2, types = types2, stability = stability2} =
@@ -57,7 +57,7 @@ instance (Semigroup stability, Applicative m) => Semigroup (BindingsF stability 
           stability = stability1 <> stability2
         }
 
-instance (Monoid stability, Applicative m) => Monoid (BindingsF stability m scope) where
+instance (Monoid stability, Applicative loeb) => Monoid (BindingsF stability loeb scope) where
   mempty =
     Bindings
       { terms = Map.empty,
@@ -108,7 +108,7 @@ infixr 6 </>
       constructors = Map.union constructors1 constructors2
       types = Map.union types1 types2
 
-prefer :: BindingsF stable1 m scope -> BindingsF stable2 m scope -> BindingsF stable1 m scope
+prefer :: BindingsF stable1 loeb scope -> BindingsF stable2 loeb scope -> BindingsF stable1 loeb scope
 prefer
   Bindings {terms, constructors, types, stability}
   Bindings {terms = terms', constructors = constructors', types = types'} =

@@ -18,24 +18,24 @@ import Syntax.Variable (Variable)
 
 type Binding = BindingF Identity
 
-data BindingF m scope
+data BindingF loeb scope
   = (:@)
   { position :: !Position,
-    value :: m (Detail scope)
+    value :: loeb (Detail scope)
   }
 
-instance (Show1 m) => Show (BindingF m scope) where
+instance (Show1 loeb) => Show (BindingF loeb scope) where
   showsPrec d (position :@ binding) =
     showParen (d > 9) $
       showsPrec 10 position . showString " :@ " . showsPrec1 10 binding
 
-instance (Functor m) => Shift0.Functor (BindingF m) where
+instance (Functor loeb) => Shift0.Functor (BindingF loeb) where
   map = Shift.mapDefault
 
-instance (Functor m) => Shift.Functor (BindingF m) where
+instance (Functor loeb) => Shift.Functor (BindingF loeb) where
   map category (position :@ binding) = position :@ fmap (Shift.map category) binding
 
-instance (Applicative m) => Semigroup (BindingF m scope) where
+instance (Applicative loeb) => Semigroup (BindingF loeb scope) where
   position :@ binding <> position2 :@ binding' =
     position :@ (liftA2 (combine position position2) binding binding')
 

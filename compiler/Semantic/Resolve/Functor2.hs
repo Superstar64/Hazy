@@ -17,7 +17,7 @@ class Traversable2 binding where
   traverse2 :: (Applicative f) => NaturalTransformation a (Compose f b) -> binding a scope -> f (binding b scope)
 
 type Proper :: ((Type -> Type) -> Environment -> Type) -> Environment -> (Type -> Type) -> Type
-newtype Proper binding scope m = Proper {runProper :: binding m scope}
+newtype Proper binding scope loeb = Proper {runProper :: binding loeb scope}
 
 instance (Traversable2 binding) => Proper.Functor2 (Proper binding scope) where
   fmap2 = fmap2Default

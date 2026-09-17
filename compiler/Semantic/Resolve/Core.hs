@@ -18,13 +18,13 @@ import Syntax.Variable
 
 type Core = CoreF Identity
 
-data CoreF m scope = Core
-  { globals :: !(Map FullQualifiers (BindingsF Stability m scope)),
-    locals :: !(BindingsF Stability m scope)
+data CoreF loeb scope = Core
+  { globals :: !(Map FullQualifiers (BindingsF Stability loeb scope)),
+    locals :: !(BindingsF Stability loeb scope)
   }
   deriving (Show)
 
-instance (Applicative m) => Semigroup (CoreF m scope) where
+instance (Applicative loeb) => Semigroup (CoreF loeb scope) where
   Core {globals = globals1, locals = locals1}
     <> Core {globals = globals2, locals = locals2} =
       Core

@@ -13,16 +13,16 @@ import Syntax.Variable (FullQualifiers)
 
 type Canonical = CanonicalF Identity
 
-newtype CanonicalF m scope = Canonical {runCanonical :: Map FullQualifiers (BindingsF () m scope)}
+newtype CanonicalF loeb scope = Canonical {runCanonical :: Map FullQualifiers (BindingsF () loeb scope)}
   deriving (Show)
 
 instance Traversable2 CanonicalF where
   traverse2 f (Canonical canonical) = Canonical <$> traverse (traverse2 f) canonical
 
-instance (Functor m) => Shift0.Functor (CanonicalF m) where
+instance (Functor loeb) => Shift0.Functor (CanonicalF loeb) where
   map = Shift.mapDefault
 
-instance (Functor m) => Shift.Functor (CanonicalF m) where
+instance (Functor loeb) => Shift.Functor (CanonicalF loeb) where
   map category (Canonical canonical) = Canonical (fmap (Shift.map category) canonical)
 
 infixl 3 !

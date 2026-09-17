@@ -67,15 +67,15 @@ import Syntax.Variable
   )
 
 type Formula :: ((Type -> Type) -> Environment -> Type) -> Environment -> Type -> Type
-data Formula f scope a = Formula
+data Formula bindings scope a = Formula
   { position :: [Position],
-    run :: forall m. (Monad m) => f m scope -> m a
+    run :: forall loeb. (Monad loeb) => bindings loeb scope -> loeb a
   }
 
-instance Functor (Formula f scope) where
+instance Functor (Formula bindings scope) where
   fmap = liftA
 
-instance Applicative (Formula f scope) where
+instance Applicative (Formula bindings scope) where
   pure a = Formula {position = [], run = const $ pure a}
   Formula {position = position1, run = function} <*> Formula {position = position2, run = argument} =
     Formula
@@ -83,7 +83,7 @@ instance Applicative (Formula f scope) where
         run = \complete -> function complete <*> (argument complete)
       }
 
-proper :: Formula f scope a -> Graph.Formula (Proper f scope) s a
+proper :: Formula bindings scope a -> Graph.Formula (Proper bindings scope) s a
 proper Formula {position, run} =
   Graph.Formula
     { -- todo merge error messages for cycles
@@ -107,12 +107,12 @@ contramap :: (Traversable2 f) => Morph2 f1 f2 scope -> f (Formula f2 scope) scop
 contramap = fmap2 . contra
 
 strict ::
-  (Monad m) =>
-  ( Map FullQualifiers (Identity (BindingsF () m scope)) ->
+  (Monad loeb) =>
+  ( Map FullQualifiers (Identity (BindingsF () loeb scope)) ->
     Map Qualifiers (Identity (BindingsF Stability (Formula CanonicalF scope) scope))
   ) ->
-  CanonicalF m scope ->
-  CoreF m scope
+  CanonicalF loeb scope ->
+  CoreF loeb scope
 strict pick' canonical =
   Core.fromMap
     $ fmap (fmap2 $ Morph $ \Formula {run} -> run canonical)
@@ -123,7 +123,7 @@ strict pick' canonical =
 
 selectTerm ::
   Variable ->
-  Term.BindingF m' scope' ->
+  Term.BindingF loeb' scope' ->
   Term.BindingF (Formula (BindingsF ()) scope) scope
 selectTerm name (position Term.:@ _) =
   position
@@ -134,7 +134,7 @@ selectTerm name (position Term.:@ _) =
 
 selectConstructor ::
   Constructor ->
-  Constructor.BindingF m' scope' ->
+  Constructor.BindingF loeb' scope' ->
   Constructor.BindingF (Formula (BindingsF ()) scope) scope
 selectConstructor name (position Constructor.:@ _) =
   position
@@ -145,7 +145,7 @@ selectConstructor name (position Constructor.:@ _) =
 
 selectType ::
   ConstructorIdentifier ->
-  Type.BindingF m' scope' ->
+  Type.BindingF loeb' scope' ->
   Type.BindingF (Formula (BindingsF ()) scope) scope
 selectType name (header@Type.Header {position} Type.:@ _) =
   header
@@ -155,10 +155,10 @@ selectType name (header@Type.Header {position} Type.:@ _) =
       }
 
 pickTerm ::
-  (Monad m) =>
+  (Monad loeb) =>
   Position ->
   Variable ->
-  m (BindingsF () (Formula (BindingsF ()) scope) scope)
+  loeb (BindingsF () (Formula (BindingsF ()) scope) scope)
 pickTerm position name =
   pure
     Bindings
@@ -171,12 +171,12 @@ pickTerm position name =
     value = position Term.:@ Const ()
 
 pickData ::
-  (Monad m) =>
+  (Monad loeb) =>
   Position ->
   ConstructorIdentifier ->
   Fields ->
-  m (BindingsF stability m' scope') ->
-  m (BindingsF () (Formula (BindingsF ()) scope) scope)
+  loeb (BindingsF stability loeb' scope') ->
+  loeb (BindingsF () (Formula (BindingsF ()) scope) scope)
 pickData position name AllFields request = do
   Bindings {terms, constructors, types} <- request
   let term name =
@@ -265,10 +265,10 @@ pickData position name Fields {picks} _ =
               }
 
 pickSymbol ::
-  (Monad m) =>
+  (Monad loeb) =>
   Syntax.Import.Symbol ->
-  m (BindingsF stability m' scope') ->
-  m (BindingsF () (Formula (BindingsF ()) scope) scope)
+  loeb (BindingsF stability loeb' scope') ->
+  loeb (BindingsF () (Formula (BindingsF ()) scope) scope)
 pickSymbol Syntax.Import.Definition {variable = startPosition :@ variable} _ =
   pickTerm startPosition variable
 pickSymbol
@@ -280,11 +280,11 @@ pickSymbol
     pickData startPosition typeVariable fields request
 
 pickPrelude' ::
-  (Monad m) =>
+  (Monad loeb) =>
   Position ->
   [Syntax.Import Position] ->
-  Map FullQualifiers (m (BindingsF stable' m' scope')) ->
-  Map Qualifiers (m (BindingsF Stability (Formula (CanonicalF) scope) scope))
+  Map FullQualifiers (loeb (BindingsF stable' loeb' scope')) ->
+  Map Qualifiers (loeb (BindingsF Stability (Formula (CanonicalF) scope) scope))
 pickPrelude' position declarations request = case not $ any isPrelude declarations of
   True
     | Just request <- Map.lookup prelude request ->
@@ -308,11 +308,11 @@ pickPrelude' position declarations request = case not $ any isPrelude declaratio
     isPrelude _ = False
 
 pickImports' ::
-  (Monad m) =>
+  (Monad loeb) =>
   Extensions ->
   [Syntax.Import Position] ->
-  Map FullQualifiers (m (BindingsF stable' m' scope')) ->
-  Map Qualifiers (m (BindingsF Stability (Formula CanonicalF scope) scope))
+  Map FullQualifiers (loeb (BindingsF stable' loeb' scope')) ->
+  Map Qualifiers (loeb (BindingsF Stability (Formula CanonicalF scope) scope))
 pickImports' Extensions {stableImports, hygienicHiding} declarations request =
   Map.fromListWith (liftM2 (<>)) $ foldMap selections declarations
   where
@@ -397,11 +397,11 @@ pickImports' Extensions {stableImports, hygienicHiding} declarations request =
             pure $ contramap (Morph2 (! position :@ name)) $ bindings
 
 pickExports ::
-  (Monad m) =>
+  (Monad loeb) =>
   BindingsF () Identity scope ->
   Syntax.Exports ->
-  Map Qualifiers (m (BindingsF Stability scope' m')) ->
-  m (BindingsF () (Formula CoreF scope) scope)
+  Map Qualifiers (loeb (BindingsF Stability scope' loeb')) ->
+  loeb (BindingsF () (Formula CoreF scope) scope)
 pickExports _ Syntax.Exports {exports} request = do
   let pick export = case export of
         Syntax.Export.Module {modulex = position :@ root :.. name} ->
