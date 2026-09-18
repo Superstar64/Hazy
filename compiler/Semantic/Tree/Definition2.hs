@@ -37,8 +37,8 @@ type Share = 'Share
 
 type Definition2 :: Source -> Mark -> Layout -> Stage -> Environment -> Type
 data Definition2 source mark layout stage scope where
-  Scoped :: Definition layout Resolve (Local ':+ scope) -> Definition2 Single Annotated layout Resolve scope
-  Definition :: Definition layout stage scope -> Definition2 Single mark layout stage scope
+  Scoped :: !(Definition layout Resolve (Local ':+ scope)) -> Definition2 Single Annotated layout Resolve scope
+  Definition :: !(Definition layout stage scope) -> Definition2 Single mark layout stage scope
   Piece :: !(Choice stage scope) -> Definition2 Single mark layout stage scope
   Shared :: !(RightHandSide layout stage scope) -> Definition2 Share Inferred layout stage scope
 

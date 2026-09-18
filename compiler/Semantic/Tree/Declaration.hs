@@ -39,7 +39,7 @@ data Declaration solve logical locality loeb layout stage scope
   = Declaration
   { position :: !Position,
     name :: !Key,
-    definition :: Definition4 solve logical locality loeb layout stage scope,
+    definition :: !(Definition4 solve logical locality loeb layout stage scope),
     typex :: loeb (Inferred (Simple.ForallOver Simple.TypeF logical) stage scope)
   }
 

@@ -34,14 +34,14 @@ type TypeDefinition2 :: Locality -> (Kind.Type -> Kind.Type) -> Layout -> Stage 
 data TypeDefinition2 locality loeb layout stage scope where
   (:::) ::
     !(Annotation loeb layout stage scope) ->
-    !(loeb (TypeDefinition stage scope)) ->
+    loeb (TypeDefinition stage scope) ->
     TypeDefinition2 locality loeb layout stage scope
   Link :: !(Type.Link locality) -> !Int -> TypeDefinition2 locality loeb Layout.Group stage scope
   Group ::
-    !(loeb (TypeGroup locality Layout.Group stage scope)) ->
+    loeb (TypeGroup locality Layout.Group stage scope) ->
     TypeDefinition2 locality loeb Layout.Group stage scope
   Synonym ::
-    !(loeb (Synonym stage scope)) ->
+    loeb (Synonym stage scope) ->
     TypeDefinition2 locality loeb layout stage scope
 
 infix 5 :::
@@ -91,7 +91,7 @@ instance Traversable2 (TypeDefinition2 locality) where
     Synonym synonym -> Synonym <$> getCompose (f synonym)
 
 data Annotation loeb layout stage scope where
-  Annotated :: !(loeb (Type Position stage scope)) -> Annotation loeb layout stage scope
+  Annotated :: loeb (Type Position stage scope) -> Annotation loeb layout stage scope
   Inferred :: Annotation loeb Normal stage scope
 
 instance (Show1 loeb) => Show (Annotation loeb layout stage scope) where

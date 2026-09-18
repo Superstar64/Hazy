@@ -16,8 +16,8 @@ import Syntax.Position (Position)
 
 data InstanceDefinition2 solve loeb layout stage scope
   = (:::)
-      !(loeb (Annotation stage scope))
-      !(loeb (solve (InstanceDefinition layout stage scope)))
+      (loeb (Annotation stage scope))
+      (loeb (solve (InstanceDefinition layout stage scope)))
 
 infix 5 :::
 

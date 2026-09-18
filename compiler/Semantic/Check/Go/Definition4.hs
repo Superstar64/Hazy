@@ -97,7 +97,7 @@ check ::
   Definition4 Identity Void locality Identity Layout.Group Resolve scope ->
   Definition4 solve logical locality (Topological.Formula declarations s) Layout.Group Check scope
 check position Solve {solve, logical} reflection information = \case
-  Annotated (Identity scheme) ::: Identity (Identity (Implicit.Resolve definition)) ->
+  Annotated (Identity scheme) ::: body ->
     Annotated
       Topological.Formula
         { cycle = cyclicalTypeChecking position,
@@ -123,8 +123,10 @@ check position Solve {solve, logical} reflection information = \case
                 pure $ Implicit.Check <$> definition
               _ -> error "bad self annotation"
         }
+    where
+      Identity (Identity (Implicit.Resolve definition)) = body
   Link link id -> Link link id
-  Group (Identity (_ :::: Identity (Implicit.Resolve (Set set)))) ->
+  Group group ->
     Group
       Topological.Formula
         { cycle = cyclicalTypeChecking position,
@@ -148,6 +150,8 @@ check position Solve {solve, logical} reflection information = \case
             types <- logical position types
             pure $ Solved types :::: (Implicit.Check <$> set)
         }
+    where
+      Identity (_ :::: Identity (Implicit.Resolve (Set set))) = group
 
 solveDefinition ::
   Position ->

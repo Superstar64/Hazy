@@ -1,7 +1,6 @@
 module Semantic.Tree.Definition4 where
 
 import Core.Tree.TypeLambda (TypeLambdaOver (..))
-import qualified Core.Tree.TypeLambda as TypeLambda
 import Data.Functor.Classes (Show1, showsPrec1)
 import Data.Functor.Compose (Compose (getCompose))
 import Data.Functor.Identity (Identity (..))
@@ -11,7 +10,7 @@ import qualified Data.Set as Set
 import qualified Data.Strict.Maybe as Strict.Maybe
 import qualified Data.Vector.Strict as Strict.Vector
 import qualified Graph.StronglyConnected as StronglyConnected
-import Semantic.Connect (connect)
+import Semantic.Connect (connect, seperate)
 import qualified Semantic.Connect as Connect
 import Semantic.FreeVariables (FreeTermVariables (freeTermVariables))
 import Semantic.Functor2 (Traversable2 (..))
@@ -47,11 +46,11 @@ type Definition4 ::
 data Definition4 solve logical locality loeb layout stage scope where
   (:::) ::
     !(Annotation mark loeb layout stage scope) ->
-    !(loeb (solve (Implicit (Definition3 mark) layout stage scope))) ->
+    loeb (solve (Implicit (Definition3 mark) layout stage scope)) ->
     Definition4 solve logical locality loeb layout stage scope
   Link :: !(Term.Link locality) -> !Int -> Definition4 solve logical locality loeb Layout.Group stage scope
   Group ::
-    !(loeb (Group solve logical locality Layout.Group stage scope)) ->
+    loeb (Group solve logical locality Layout.Group stage scope) ->
     Definition4 solve logical locality loeb Layout.Group stage scope
 
 infix 5 :::
@@ -96,7 +95,7 @@ instance Traversable2 (Definition4 solve logical locality) where
     Group group -> Group <$> getCompose (f group)
 
 data Annotation mark loeb layout stage scope where
-  Annotated :: !(loeb (Scheme Position stage scope)) -> Annotation Mark.Annotated loeb layout stage scope
+  Annotated :: loeb (Scheme Position stage scope) -> Annotation Mark.Annotated loeb layout stage scope
   Inferred :: Annotation Mark.Inferred loeb Normal stage scope
 
 instance (Functor loeb) => Shift0.Functor (Annotation mark loeb layout stage) where
@@ -129,8 +128,8 @@ group ::
   StronglyConnected.Component (Term.Link locality) ->
   Definition4 Identity logical locality Identity Normal Resolve scope ->
   Definition4 Identity logical locality Identity Layout.Group Resolve scope
-group _ _ _ (Annotated annotation ::: Identity (Identity ((Implicit.Resolve definition)))) =
-  Annotated annotation ::: Identity (Identity (Implicit.Resolve (connect definition)))
+group _ _ _ (Annotated annotation ::: definition) =
+  Annotated annotation ::: fmap (fmap connect) definition
 group link index group (Inferred ::: _) = case group of
   StronglyConnected.Group {set} ->
     Group $ Identity $ Inferred.Inferred :::: Identity body
@@ -150,10 +149,8 @@ ungroup ::
   (Term.Link locality -> Implicit (Set locality) Layout.Group Check scope) ->
   Definition4 Identity logical locality Identity Layout.Group Check scope ->
   Definition4 Identity logical locality Identity Normal Check scope
-ungroup _ _ (Annotated annotation ::: Identity (Identity (Implicit.Check definition))) =
-  Annotated annotation ::: Identity (Identity body)
-  where
-    body = Implicit.Check (TypeLambda.map (TypeLambda.Map Connect.seperate) definition)
+ungroup _ _ (Annotated annotation ::: definition) =
+  Annotated annotation ::: fmap (fmap seperate) definition
 ungroup index lookup definition = case definition of
   Link index id -> Inferred ::: Identity (go id (lookup index))
   Group (Identity (_ :::: Identity set)) -> Inferred ::: Identity (go 0 set)

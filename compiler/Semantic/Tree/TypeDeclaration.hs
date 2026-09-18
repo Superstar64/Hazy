@@ -40,7 +40,7 @@ data TypeDeclaration locality loeb layout stage scope
   { position :: !Position,
     name :: !ConstructorIdentifier,
     constructorNames :: !(Strict.Vector Constructor),
-    definition :: TypeDefinition2 locality loeb layout stage scope,
+    definition :: !(TypeDefinition2 locality loeb layout stage scope),
     kind :: loeb (Inferred Simple.Type stage scope)
   }
   deriving (Show)
