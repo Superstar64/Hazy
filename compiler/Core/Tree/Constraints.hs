@@ -6,6 +6,7 @@ import qualified Core.Tree.Constraint as Constraint
 import qualified Core.Type.Functor as Core
 import qualified Data.Vector.Strict as Strict
 import Data.Void (Void)
+import qualified Semantic.Scope as Scope
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
@@ -17,6 +18,9 @@ data ConstraintsF logical scope
   = Constraints !(Strict.Vector (ConstraintF logical scope))
   | None
   deriving (Show)
+
+instance (Show logical) => Scope.Show (ConstraintsF logical) where
+  showsPrec = showsPrec
 
 instance Shift0.Functor (ConstraintsF logical) where
   map = Shift.mapDefault

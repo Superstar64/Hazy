@@ -2,7 +2,6 @@ module Semantic.Check.TypeBinding where
 
 import Control.Monad.ST (ST)
 import Core.Tree.Constraints (Constraints)
-import qualified Core.Tree.Constraints as Core.Constraints
 import qualified Core.Tree.Type as Core.Type
 import qualified Core.Tree.Type as Simple (Type)
 import qualified Core.Tree.TypeDeclaration as Core.TypeDeclaration
@@ -34,7 +33,6 @@ import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
 import Semantic.Tree.Combinators.Inferred (Inferred (Solved))
 import qualified Semantic.Tree.Instance as Semantic
-import qualified Semantic.Tree.InstanceDefinition2 as Instance
 import qualified Semantic.Tree.Synonym as Synonym
 import Semantic.Tree.TypeDeclaration (TypeDeclaration (..))
 import qualified Semantic.Tree.TypeDeclaration as TypeDeclaration
@@ -132,9 +130,11 @@ global
         classInstances = bindInstance <$> classInstances
       }
     where
-      bindInstance Semantic.Instance {definition = annotation Instance.::: _} = do
-        Instance.Annotation {prerequisites} <- annotation
-        pure $ Instance $ Core.Constraints.simplify prerequisites
+      bindInstance :: (Monad m) => Semantic.Instance solve m layout Check scope -> m (Instance scope)
+      bindInstance Semantic.Instance {prerequisites} =
+        prerequisites >>= \case
+          Solved prerequisites ->
+            pure $ Instance $ prerequisites
 
 local ::
   ( Type.Link Locality.Local ->
@@ -182,9 +182,11 @@ local
         classInstances = bindInstance <$> classInstances
       }
     where
-      bindInstance Semantic.Instance {definition = annotation Instance.::: _} = do
-        Instance.Annotation {prerequisites} <- annotation
-        pure $ Instance $ Core.Constraints.simplify prerequisites
+      bindInstance :: (Monad m) => Semantic.Instance solve m layout Check scope -> m (Instance scope)
+      bindInstance Semantic.Instance {prerequisites} =
+        prerequisites >>= \case
+          Solved prerequisites ->
+            pure $ Instance $ prerequisites
 
 group :: Position -> Label.TypeBinding scope -> Unify.Type s scopes -> TypeBinding s (GroupType ':+ scopes)
 group position Label.TypeBinding {name, constructorNames} binding =

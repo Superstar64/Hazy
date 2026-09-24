@@ -77,5 +77,6 @@ resolve
                             { evidence = Inferred,
                               members
                             }
-                      )
+                      ),
+                prerequisites = Identity Inferred
               }
