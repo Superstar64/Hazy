@@ -1,11 +1,9 @@
 module Core.Tree.MethodConcrete where
 
-import Core.Substitute (Category (Substitute))
 import qualified Core.Substitute as Substitute
 import qualified Core.Tree.Expression as Expression
 import Core.Tree.TypeLambda (TypeLambda)
 import qualified Core.Tree.TypeLambda as TypeLambda
-import qualified Data.Vector as Vector
 import Semantic.Layout (Normal)
 import Semantic.Scope (Environment (..), Local)
 import qualified Semantic.Shift as Shift
@@ -34,15 +32,8 @@ instance Substitute.Functor MethodConcrete where
 
 simplify :: Semantic.MethodConcrete Normal Check scope -> MethodConcrete scope
 simplify = \case
-  Semantic.Definition {definition = Check definition} ->
+  Semantic.Definition (Check definition) ->
     Definition
       { definition = TypeLambda.map (TypeLambda.Map Expression.simplify) definition
       }
-  Semantic.Default {base = Solved base, self = Solved self, defaultx = Solved defaultx} ->
-    Definition
-      { definition =
-          let typeReplacements = Vector.singleton base
-              evidenceReplacements = Vector.singleton self
-              category = Substitute Shift.Shift typeReplacements evidenceReplacements
-           in Substitute.map category defaultx
-      }
+  Semantic.Generated (Solved automatic) -> Definition {definition = automatic}

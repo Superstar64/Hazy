@@ -51,7 +51,7 @@ resolve
         let members = orderListInt' combine (length memberMethods) members
               where
                 combine (member : members) = Definition $ Resolve $ Definition.merge (member :| members)
-                combine [] = Default {base = Inferred, self = Inferred, defaultx = Inferred}
+                combine [] = Generated Inferred
                 members = map member (toList declarations)
                 member = \case
                   Syntax.Definition {startPosition, leftHandSide, rightHandSide} ->

@@ -164,24 +164,22 @@ check position key Solve {solve} reflection information = \case
                   let parameter = foldl (#) base arguments
                   evidence <- Unify.constrain context position (shift classx) (logicalType parameter)
                   Unify.runSolve $ Unify.solveEvidence position evidence
-              let check _ scheme Definition {definition = Resolve member} = do
+              let check _ scheme (Definition (Resolve member)) = do
                     let Core.ForallOver {parameters, constraints, result} = scheme
                     result <- pure $ logicalType result
                     context <- Core.Scheme.augmentForall position scheme Mask.Runtime context
                     definition <- Definition.check context result member
                     pure $ do
                       result <- Definition.solve definition
-                      pure
-                        Definition
-                          { definition =
-                              Implicit.Check
-                                Core.TypeLambdaOver
-                                  { parameters,
-                                    constraints,
-                                    result
-                                  }
-                          }
-                  check index scheme Default {} =
+                      pure $
+                        Definition $
+                          Implicit.Check
+                            Core.TypeLambdaOver
+                              { parameters,
+                                constraints,
+                                result
+                              }
+                  check index scheme Generated {} =
                     pure $ do
                       let Core.ForallOver {parameters, constraints} = scheme
                       defaultx <- do
@@ -192,7 +190,10 @@ check position key Solve {solve} reflection information = \case
                               constraints,
                               result = defaults Strict.Vector.! index
                             }
-                      pure Default {self = Solved self, base = Solved base, defaultx = Solved defaultx}
+                      let typeReplacements = Vector.singleton base
+                          evidenceReplacements = Vector.singleton self
+                          category = Substitute Shift.Shift typeReplacements evidenceReplacements
+                      pure $ Generated $ Solved $ Substitute.map category defaultx
               members <- Strict.Vector.izipWithM check methods (shift <$> members)
               members <- solve $ sequence members
               pure $ do

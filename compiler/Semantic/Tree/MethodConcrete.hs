@@ -1,7 +1,5 @@
 module Semantic.Tree.MethodConcrete where
 
-import qualified Core.Tree.Evidence as Simple (Evidence)
-import qualified Core.Tree.Type as Simple (Type)
 import qualified Core.Tree.TypeLambda as Simple (TypeLambda)
 import Semantic.Connect (Connect (..))
 import Semantic.Scope (Environment (..), Local)
@@ -12,14 +10,8 @@ import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import Semantic.Tree.Definition (Definition)
 
 data MethodConcrete layout stage scope
-  = Definition
-      { definition :: !(Implicit Definition layout stage (Local ':+ scope))
-      }
-  | Default
-      { base :: !(Inferred Simple.Type stage (Local ':+ scope)),
-        self :: !(Inferred Simple.Evidence stage (Local ':+ scope)),
-        defaultx :: !(Inferred (Simple.TypeLambda) stage (Local ':+ scope))
-      }
+  = Definition !(Implicit Definition layout stage (Local ':+ scope))
+  | Generated !(Inferred (Simple.TypeLambda) stage (Local ':+ scope))
   deriving (Show)
 
 instance Shift0.Functor (MethodConcrete layout stage) where
@@ -27,37 +19,14 @@ instance Shift0.Functor (MethodConcrete layout stage) where
 
 instance Shift.Functor (MethodConcrete layout stage) where
   map category = \case
-    Definition {definition} ->
-      Definition
-        { definition = Shift.map (Shift.Over category) definition
-        }
-    Default {base, self, defaultx} ->
-      Default
-        { base = Shift.map (Shift.Over category) base,
-          self = Shift.map (Shift.Over category) self,
-          defaultx = Shift.map (Shift.Over category) defaultx
-        }
+    Definition definition -> Definition $ Shift.map (Shift.Over category) definition
+    Generated automatic -> Generated $ Shift.map (Shift.Over category) automatic
 
 instance Connect MethodConcrete where
   connect = \case
-    Definition {definition} ->
-      Definition
-        { definition = connect definition
-        }
-    Default {} ->
-      Default
-        { base = Inferred,
-          self = Inferred,
-          defaultx = Inferred
-        }
+    Definition definition -> Definition $ connect definition
+    Generated {} -> Generated Inferred
+
   seperate = \case
-    Definition {definition} ->
-      Definition
-        { definition = seperate definition
-        }
-    Default {base, self, defaultx} ->
-      Default
-        { base,
-          self,
-          defaultx
-        }
+    Definition definition -> Definition $ seperate definition
+    Generated automatic -> Generated automatic
