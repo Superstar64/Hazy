@@ -14,7 +14,7 @@ import Semantic.Stage (Check, Resolve)
 import Semantic.Tree.Combinators.Inferred (Inferred (Solved))
 import Semantic.Tree.Instance (Instance (..))
 import qualified Semantic.Tree.Instance as Semantic (Instance (..))
-import Semantic.Tree.InstanceDefinition2 (Annotation (..), InstanceDefinition2 (..))
+import Semantic.Tree.InstanceDefinition2 (Header (..), InstanceDefinition2 (..))
 import qualified Semantic.Unify as Unify
 import Prelude hiding (head)
 
@@ -40,7 +40,7 @@ check key solve reflection information Instance {startPosition, definition} =
               let Instance {definition} = reflection declarations
               case definition of
                 annotation ::: _ -> do
-                  Annotation {prerequisites} <- annotation
+                  Header {prerequisites} <- annotation
                   pure $ Solved $ Core.Constraints.simplify prerequisites
           }
     }

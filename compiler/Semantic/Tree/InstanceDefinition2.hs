@@ -16,7 +16,7 @@ import Syntax.Position (Position)
 
 data InstanceDefinition2 solve loeb layout stage scope where
   (:::) ::
-    loeb (Annotation stage scope) ->
+    loeb (Header stage scope) ->
     loeb (solve (InstanceDefinition origin layout stage scope)) ->
     InstanceDefinition2 solve loeb layout stage scope
 
@@ -44,18 +44,18 @@ instance (solve ~ Identity, loeb ~ Identity) => Connect (InstanceDefinition2 sol
   seperate (Identity annotation ::: Identity (Identity definition)) =
     Identity annotation ::: Identity (Identity (seperate definition))
 
-data Annotation stage scope = Annotation
+data Header stage scope = Header
   { parameters :: !(Strict.Vector (TypePattern Position stage scope)),
     prerequisites :: !(Constraints Position stage scope)
   }
   deriving (Show)
 
-instance Shift0.Functor (Annotation stage) where
+instance Shift0.Functor (Header stage) where
   map = Shift.mapDefault
 
-instance Shift.Functor (Annotation stage) where
-  map category Annotation {parameters, prerequisites} =
-    Annotation
+instance Shift.Functor (Header stage) where
+  map category Header {parameters, prerequisites} =
+    Header
       { parameters = Shift.map category <$> parameters,
         prerequisites = Shift.map category prerequisites
       }

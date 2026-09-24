@@ -49,7 +49,7 @@ import qualified Semantic.Tree.Combinators.Implicit as Implicit
 import Semantic.Tree.Combinators.Inferred (Inferred (Solved))
 import Semantic.Tree.Constraints (Constraints (Constraints, None))
 import Semantic.Tree.InstanceDefinition (InstanceDefinition (..))
-import Semantic.Tree.InstanceDefinition2 (Annotation (..), InstanceDefinition2 (..))
+import Semantic.Tree.InstanceDefinition2 (Header (..), InstanceDefinition2 (..))
 import Semantic.Tree.MethodConcrete (MethodConcrete (..))
 import Semantic.Tree.TypePattern (TypePattern (..))
 import qualified Semantic.Unify as Unify
@@ -86,7 +86,7 @@ check ::
   InstanceDefinition2 Identity Identity Group Resolve scope ->
   InstanceDefinition2 solve (Topological.Formula declarations s) Group Check scope
 check position key Solve {solve} reflection information = \case
-  Identity Annotation {parameters, prerequisites}
+  Identity Header {parameters, prerequisites}
     ::: Identity (Identity InstanceDefinition {members}) ->
       Topological.Formula
         { cycle = cyclicalTypeChecking position,
@@ -107,7 +107,7 @@ check position key Solve {solve} reflection information = \case
 
             parameters <- Unify.runSolve $ traverse Unsolved.solve parameters
             prerequisites <- Unify.runSolve $ Unsolved.Constraints.solve context prerequisites
-            pure Annotation {parameters, prerequisites}
+            pure Header {parameters, prerequisites}
         }
         ::: Topological.Formula
           { cycle = cyclicalTypeChecking position,
@@ -116,7 +116,7 @@ check position key Solve {solve} reflection information = \case
                   annotation ::: _ = reflection declarations
                   index = keyIndex key
                   head = keyHead key
-              Annotation {parameters, prerequisites} <- annotation
+              Header {parameters, prerequisites} <- annotation
               Core.Class.Class {constraints, methods} <- do
                 let get index = assumeClass <$> TypeBinding.content (typeEnvironment Table.Type.! index)
                 Builtin.index pure get index

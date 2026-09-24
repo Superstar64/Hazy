@@ -22,7 +22,7 @@ import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import qualified Semantic.Tree.Definition as Definition (merge)
 import Semantic.Tree.Instance (Instance (..))
 import Semantic.Tree.InstanceDefinition (InstanceDefinition (..))
-import Semantic.Tree.InstanceDefinition2 (Annotation (..), InstanceDefinition2 (..))
+import Semantic.Tree.InstanceDefinition2 (Header (..), InstanceDefinition2 (..))
 import Semantic.Tree.MethodConcrete (MethodConcrete (..))
 import Syntax.Position (Position)
 import qualified Syntax.Tree.Constraints as Syntax (Constraints)
@@ -67,7 +67,7 @@ resolve
               { startPosition,
                 definition =
                   Identity
-                    Annotation
+                    Header
                       { parameters,
                         prerequisites
                       }
