@@ -59,8 +59,8 @@ data TypeBinding s scope = TypeBinding
     content :: ST s (Simple.TypeDeclaration scope),
     extra :: ST s (Unify.Solve s (Simple.TypeDeclarationExtra scope)),
     synonym :: ST s (Strict.Maybe (Simple.Type (Local ':+ scope))),
-    dataInstances :: Map (Type2.Index scope) (ST s (Instance scope)),
-    classInstances :: Map (Type2.Index scope) (ST s (Instance scope))
+    dataInstances :: Map (Type2.Index scope) (ST s (Constraints scope)),
+    classInstances :: Map (Type2.Index scope) (ST s (Constraints scope))
   }
 
 synonym_ :: TypeBinding s scope -> ST s (Strict.Maybe (Simple.Type (Local ':+ scope)))
@@ -130,11 +130,9 @@ global
         classInstances = bindInstance <$> classInstances
       }
     where
-      bindInstance :: (Monad m) => Semantic.Instance solve m layout Check scope -> m (Instance scope)
+      bindInstance :: (Monad m) => Semantic.Instance solve m layout Check scope -> m (Constraints scope)
       bindInstance Semantic.Instance {prerequisites} =
-        prerequisites >>= \case
-          Solved prerequisites ->
-            pure $ Instance $ prerequisites
+        prerequisites >>= \case Solved prerequisites -> pure prerequisites
 
 local ::
   ( Type.Link Locality.Local ->
@@ -182,11 +180,9 @@ local
         classInstances = bindInstance <$> classInstances
       }
     where
-      bindInstance :: (Monad m) => Semantic.Instance solve m layout Check scope -> m (Instance scope)
+      bindInstance :: (Monad m) => Semantic.Instance solve m layout Check scope -> m (Constraints scope)
       bindInstance Semantic.Instance {prerequisites} =
-        prerequisites >>= \case
-          Solved prerequisites ->
-            pure $ Instance $ prerequisites
+        prerequisites >>= \case Solved prerequisites -> pure prerequisites
 
 group :: Position -> Label.TypeBinding scope -> Unify.Type s scopes -> TypeBinding s (GroupType ':+ scopes)
 group position Label.TypeBinding {name, constructorNames} binding =
@@ -202,11 +198,3 @@ group position Label.TypeBinding {name, constructorNames} binding =
   where
     abort :: a
     abort = improperBindingGroup position
-
-newtype Instance scope = Instance (Constraints scope)
-
-instance Shift0.Functor Instance where
-  map = Shift.mapDefault
-
-instance Shift.Functor Instance where
-  map category (Instance constraints) = Instance (Shift.map category constraints)

@@ -402,7 +402,7 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
     constrainWith context@Context {typeEnvironment} (Type2.Index classx) (Constructor index) arguments
       | TypeBinding {classInstances} <- typeEnvironment Type.Table.! classx,
         Just instancex <- Map.lookup index classInstances = do
-          TypeBinding.Instance dependencies <- instancex
+          dependencies <- instancex
           case dependencies of
             Constraints dependencies -> do
               arguments <- for dependencies $ \constraint@Simple.Constraint.Constraint {classx} ->
@@ -413,7 +413,7 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
     constrainWith context@Context {typeEnvironment} classx (Constructor (Type2.Index index)) arguments
       | TypeBinding {dataInstances} <- typeEnvironment Type.Table.! index,
         Just instancex <- Map.lookup classx dataInstances = do
-          TypeBinding.Instance dependencies <- instancex
+          dependencies <- instancex
           case dependencies of
             Constraints dependencies -> do
               arguments <- for dependencies $ \constraint@Simple.Constraint.Constraint {classx} ->
