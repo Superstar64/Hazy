@@ -1,17 +1,15 @@
 module Semantic.Tree.InstanceDefinition where
 
-import qualified Core.Tree.Evidence as Simple (Evidence)
+import qualified Core.Tree.EvidenceSet as Core
 import qualified Data.Vector.Strict as Strict (Vector)
 import Semantic.Connect (Connect (..))
-import Semantic.Scope (Environment (..), Local)
-import qualified Semantic.Scope as Scope
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import Semantic.Tree.MethodConcrete (MethodConcrete (..))
 
 data InstanceDefinition origin layout stage scope = InstanceDefinition
-  { evidence :: !(Inferred Evidence stage scope),
+  { evidence :: !(Inferred Core.EvidenceSet stage scope),
     members :: !(Strict.Vector (MethodConcrete origin layout stage scope))
   }
   deriving (Show)
@@ -37,15 +35,3 @@ instance Connect (InstanceDefinition origin) where
       { evidence,
         members = seperate <$> members
       }
-
-newtype Evidence scope = Evidence (Strict.Vector (Simple.Evidence (Local ':+ scope)))
-  deriving (Show)
-
-instance Scope.Show Evidence where
-  showsPrec = showsPrec
-
-instance Shift0.Functor Evidence where
-  map = Shift.mapDefault
-
-instance Shift.Functor Evidence where
-  map category (Evidence evidence) = Evidence (Shift.map (Shift.Over category) <$> evidence)

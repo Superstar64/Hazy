@@ -50,6 +50,7 @@ executable hazy
     Core.Tree.Entry
     Core.Tree.EntryInfo
     Core.Tree.Evidence
+    Core.Tree.EvidenceSet
     Core.Tree.Expression
     Core.Tree.Forall
     Core.Tree.Hook

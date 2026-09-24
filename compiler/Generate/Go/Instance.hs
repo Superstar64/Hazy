@@ -2,6 +2,7 @@ module Generate.Go.Instance where
 
 import Control.Monad.ST (ST)
 import Core.Tree.Constraints (ConstraintCount (..))
+import Core.Tree.EvidenceSet (EvidenceSet (..))
 import Core.Tree.Instance (Instance (..))
 import Core.Tree.MethodConcrete (MethodConcrete (..))
 import Data.Foldable (toList)
@@ -17,7 +18,7 @@ import qualified Javascript.Tree.Field as Javascript (Field (..))
 import qualified Javascript.Tree.Statement as Javascript (Statement (..))
 
 generate :: Context s scope -> Instance scope -> ST s Javascript.Expression
-generate context Instance {evidence, prerequisitesCount, members} = do
+generate context Instance {evidence = EvidenceSet evidence, prerequisitesCount, members} = do
   let actualCount = case prerequisitesCount of
         ConstraintCount count -> count
         Null -> 0

@@ -8,6 +8,7 @@ import qualified Core.Tree.Class as Core.Class
 import Core.Tree.ClassExtra (ClassExtra (..))
 import qualified Core.Tree.Constraint as Core (ConstraintF (..))
 import qualified Core.Tree.Evidence as Core.Evidence
+import Core.Tree.EvidenceSet (EvidenceSet (..))
 import qualified Core.Tree.Forall as Core (ForallOver (..))
 import qualified Core.Tree.Instanciation as Core (InstanciationF (Instanciation, Mono))
 import qualified Core.Tree.Instanciation as Core.Instanciation
@@ -47,7 +48,7 @@ import Semantic.Tree.Combinators.Implicit (Implicit (Resolve))
 import qualified Semantic.Tree.Combinators.Implicit as Implicit
 import Semantic.Tree.Combinators.Inferred (Inferred (Solved))
 import Semantic.Tree.Constraints (Constraints (Constraints, None))
-import Semantic.Tree.InstanceDefinition (Evidence (..), InstanceDefinition (..))
+import Semantic.Tree.InstanceDefinition (InstanceDefinition (..))
 import Semantic.Tree.InstanceDefinition2 (Annotation (..), InstanceDefinition2 (..))
 import Semantic.Tree.MethodConcrete (MethodConcrete (..))
 import Semantic.Tree.TypePattern (TypePattern (..))
@@ -200,7 +201,7 @@ check position key Solve {solve} reflection information = \case
                 members <- members
                 pure
                   InstanceDefinition
-                    { evidence = Solved $ Evidence $ evidence,
+                    { evidence = Solved $ EvidenceSet $ evidence,
                       members
                     }
           }
