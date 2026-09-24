@@ -185,6 +185,7 @@ executable hazy
     Semantic.Check.Go.Declarations
     Semantic.Check.Go.Definition4
     Semantic.Check.Go.Instance
+    Semantic.Check.Go.InstanceDefinition2
     Semantic.Check.Go.MethodAbstract
     Semantic.Check.Go.Module
     Semantic.Check.Go.Scheme
