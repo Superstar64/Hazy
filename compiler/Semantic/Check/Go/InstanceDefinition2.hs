@@ -30,8 +30,6 @@ import qualified Semantic.Check.Mask as Mask
 import qualified Semantic.Check.Simple.Scheme as Core.Scheme
 import qualified Semantic.Check.Temporary.Constraints as Unsolved.Constraints (check, solve)
 import qualified Semantic.Check.Temporary.Definition as Definition
-import Semantic.Check.Temporary.MethodConcrete (MethodConcrete (..))
-import qualified Semantic.Check.Temporary.MethodConcrete as MethodConcrete
 import qualified Semantic.Check.Temporary.Scheme as Unsolved (augment)
 import qualified Semantic.Check.Temporary.TypePattern as Unsolved (TypePattern (..), solve)
 import qualified Semantic.Check.TypeBinding as TypeBinding
@@ -46,11 +44,12 @@ import Semantic.Shift (shift)
 import qualified Semantic.Shift as Shift
 import Semantic.Stage (Check, Resolve)
 import Semantic.Tree.Combinators.Implicit (Implicit (Resolve))
+import qualified Semantic.Tree.Combinators.Implicit as Implicit
 import Semantic.Tree.Combinators.Inferred (Inferred (Solved))
 import Semantic.Tree.Constraints (Constraints (Constraints, None))
 import Semantic.Tree.InstanceDefinition (Evidence (..), InstanceDefinition (..))
 import Semantic.Tree.InstanceDefinition2 (Annotation (..), InstanceDefinition2 (..))
-import qualified Semantic.Tree.MethodConcrete as Semantic (MethodConcrete (..))
+import Semantic.Tree.MethodConcrete (MethodConcrete (..))
 import Semantic.Tree.TypePattern (TypePattern (..))
 import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
@@ -165,36 +164,37 @@ check position key Solve {solve} reflection information = \case
                   let parameter = foldl (#) base arguments
                   evidence <- Unify.constrain context position (shift classx) (logicalType parameter)
                   Unify.runSolve $ Unify.solveEvidence position evidence
-              let check _ scheme Semantic.Definition {definition = Resolve member} = do
+              let check _ scheme Definition {definition = Resolve member} = do
                     let Core.ForallOver {parameters, constraints, result} = scheme
                     result <- pure $ logicalType result
                     context <- Core.Scheme.augmentForall position scheme Mask.Runtime context
                     definition <- Definition.check context result member
-                    pure
-                      Definition
-                        { position = position,
-                          definition = do
-                            result <- Definition.solve definition
-                            pure
-                              Core.TypeLambdaOver
-                                { parameters,
-                                  constraints,
-                                  result
-                                }
-                        }
-                  check index scheme Semantic.Default {} = do
-                    let Core.ForallOver {parameters, constraints} = scheme
-                        defaultx = do
-                          ClassExtra {defaults} <- extra
-                          pure $
-                            Core.TypeLambdaOver
-                              { parameters,
-                                constraints,
-                                result = defaults Strict.Vector.! index
-                              }
-                    pure Default {self, base, defaultx}
+                    pure $ do
+                      result <- Definition.solve definition
+                      pure
+                        Definition
+                          { definition =
+                              Implicit.Check
+                                Core.TypeLambdaOver
+                                  { parameters,
+                                    constraints,
+                                    result
+                                  }
+                          }
+                  check index scheme Default {} =
+                    pure $ do
+                      let Core.ForallOver {parameters, constraints} = scheme
+                      defaultx <- do
+                        ClassExtra {defaults} <- extra
+                        pure $
+                          Core.TypeLambdaOver
+                            { parameters,
+                              constraints,
+                              result = defaults Strict.Vector.! index
+                            }
+                      pure Default {self = Solved self, base = Solved base, defaultx = Solved defaultx}
               members <- Strict.Vector.izipWithM check methods (shift <$> members)
-              members <- solve $ traverse MethodConcrete.solve members
+              members <- solve $ sequence members
               pure $ do
                 members <- members
                 pure

@@ -224,7 +224,6 @@ executable hazy
     Semantic.Check.Temporary.Function
     Semantic.Check.Temporary.Lambda
     Semantic.Check.Temporary.Method
-    Semantic.Check.Temporary.MethodConcrete
     Semantic.Check.Temporary.Pattern
     Semantic.Check.Temporary.PatternField
     Semantic.Check.Temporary.RightHandSide
