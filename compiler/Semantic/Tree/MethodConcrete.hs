@@ -9,20 +9,36 @@ import Semantic.Tree.Combinators.Implicit (Implicit (..))
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import Semantic.Tree.Definition (Definition)
 
-data MethodConcrete layout stage scope
-  = Definition !(Implicit Definition layout stage (Local ':+ scope))
-  | Generated !(Inferred (Simple.TypeLambda) stage (Local ':+ scope))
-  deriving (Show)
+data Origin
+  = Manual
+  | Auto
 
-instance Shift0.Functor (MethodConcrete layout stage) where
+type Manual = 'Manual
+
+type Auto = 'Auto
+
+data MethodConcrete origin layout stage scope where
+  Definition ::
+    !(Implicit Definition layout stage (Local ':+ scope)) ->
+    MethodConcrete Manual layout stage scope
+  Generated ::
+    !(Inferred (Simple.TypeLambda) stage (Local ':+ scope)) ->
+    MethodConcrete origin layout stage scope
+
+instance Show (MethodConcrete origin layout stage scope) where
+  showsPrec d = \case
+    Definition definition -> showParen (d > 10) $ showString "Definition " . showsPrec 11 definition
+    Generated automatic -> showParen (d > 10) $ showString "Generated " . showsPrec 11 automatic
+
+instance Shift0.Functor (MethodConcrete origin layout stage) where
   map = Shift.mapDefault
 
-instance Shift.Functor (MethodConcrete layout stage) where
+instance Shift.Functor (MethodConcrete origin layout stage) where
   map category = \case
     Definition definition -> Definition $ Shift.map (Shift.Over category) definition
     Generated automatic -> Generated $ Shift.map (Shift.Over category) automatic
 
-instance Connect MethodConcrete where
+instance Connect (MethodConcrete origin) where
   connect = \case
     Definition definition -> Definition $ connect definition
     Generated {} -> Generated Inferred

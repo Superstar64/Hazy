@@ -14,10 +14,11 @@ import Semantic.Tree.InstanceDefinition (InstanceDefinition)
 import Semantic.Tree.TypePattern (TypePattern)
 import Syntax.Position (Position)
 
-data InstanceDefinition2 solve loeb layout stage scope
-  = (:::)
-      (loeb (Annotation stage scope))
-      (loeb (solve (InstanceDefinition layout stage scope)))
+data InstanceDefinition2 solve loeb layout stage scope where
+  (:::) ::
+    loeb (Annotation stage scope) ->
+    loeb (solve (InstanceDefinition origin layout stage scope)) ->
+    InstanceDefinition2 solve loeb layout stage scope
 
 infix 5 :::
 

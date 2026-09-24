@@ -30,7 +30,7 @@ instance Substitute.Functor MethodConcrete where
       { definition = Substitute.map (Substitute.Over category) definition
       }
 
-simplify :: Semantic.MethodConcrete Normal Check scope -> MethodConcrete scope
+simplify :: Semantic.MethodConcrete origin Normal Check scope -> MethodConcrete scope
 simplify = \case
   Semantic.Definition (Check definition) ->
     Definition

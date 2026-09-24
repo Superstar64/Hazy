@@ -10,23 +10,23 @@ import qualified Semantic.Shift0 as Shift0
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import Semantic.Tree.MethodConcrete (MethodConcrete (..))
 
-data InstanceDefinition layout stage scope = InstanceDefinition
+data InstanceDefinition origin layout stage scope = InstanceDefinition
   { evidence :: !(Inferred Evidence stage scope),
-    members :: !(Strict.Vector (MethodConcrete layout stage scope))
+    members :: !(Strict.Vector (MethodConcrete origin layout stage scope))
   }
   deriving (Show)
 
-instance Shift0.Functor (InstanceDefinition layout stage) where
+instance Shift0.Functor (InstanceDefinition origin layout stage) where
   map = Shift.mapDefault
 
-instance Shift.Functor (InstanceDefinition layout stage) where
+instance Shift.Functor (InstanceDefinition origin layout stage) where
   map category InstanceDefinition {evidence, members} =
     InstanceDefinition
       { evidence = Shift.map category evidence,
         members = Shift.map category <$> members
       }
 
-instance Connect InstanceDefinition where
+instance Connect (InstanceDefinition origin) where
   connect InstanceDefinition {evidence, members} =
     InstanceDefinition
       { evidence,
