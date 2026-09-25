@@ -246,7 +246,8 @@ parse =
         <*> (Strict.Vector.fromList <$> many TypePattern.parse)
         <*> (token "=" *> Type.parse),
       position <**> (token "class" *> parseClass),
-      token "instance" *> parseInstance,
+      token "instance" *> parseInstance True,
+      token "deriving" *> token "instance" *> parseInstance False,
       fromClass <$> ClassDeclaration.parse,
       fromImport <$> Import.parse,
       unordered <$> betweenUnorderedPragma (Strict.fromNonEmpty <$> sepBy1Comma Marked.parseLiteral),
@@ -316,15 +317,17 @@ parse =
               classDefinition
             }
 
-    parseInstance :: Parser (Declaration Position)
-    parseInstance =
+    parseInstance :: Bool -> Parser (Declaration Position)
+    parseInstance manual =
       instancex
         <$> position
         <*> Constraints.parse
         <*> position
         <*> Variable.parse
         <*> InstanceHead.parse
-        <*> InstanceDeclarations.parse
+        <*> if manual
+          then InstanceDeclarations.parse
+          else pure InstanceDeclarations._derivingInstance
       where
         instancex startPosition prerequisites classPosition className instanceHead instanceDefinition =
           Instance

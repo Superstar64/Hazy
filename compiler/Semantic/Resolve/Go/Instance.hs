@@ -8,6 +8,7 @@ import Data.List.NonEmpty (NonEmpty (..))
 import Data.Map (Map)
 import qualified Data.Map as Map
 import qualified Data.Vector.Strict as Strict (Vector)
+import qualified Data.Vector.Strict as Strict.Vector
 import Error (notClassMethod, patternInMethod)
 import Order (orderListInt')
 import Semantic.Layout (Normal)
@@ -45,14 +46,14 @@ resolve
   prerequisites
   parameters
   memberMethods
-  Syntax.InstanceDeclarations {declarations}
+  declarations
     | parameters <- TypePattern.resolve <$> parameters,
       prerequisites <- Constraints.resolve (Scheme.augmentWith parameters context) prerequisites =
-        let members = orderListInt' combine (length memberMethods) members
+        let members declarations = orderListInt' combine (length memberMethods) members
               where
                 combine (member : members) = Definition $ Resolve $ Definition.merge (member :| members)
                 combine [] = Generated Inferred
-                members = map member (toList declarations)
+                members = map member $ toList declarations
                 member = \case
                   Syntax.Definition {startPosition, leftHandSide, rightHandSide} ->
                     case Complete.resolve
@@ -75,7 +76,12 @@ resolve
                       ( Identity
                           InstanceDefinition
                             { evidence = Inferred,
-                              members
+                              members = case declarations of
+                                Syntax.InstanceDeclarations {declarations} ->
+                                  members (toList declarations)
+                                Syntax.DerivingInstance ->
+                                  Strict.Vector.replicate (length memberMethods) $
+                                    Generated Inferred
                             }
                       ),
                 prerequisites = Identity Inferred

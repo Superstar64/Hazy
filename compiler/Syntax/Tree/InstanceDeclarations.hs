@@ -8,13 +8,17 @@ import Syntax.Position (Position)
 import Syntax.Tree.InstanceDeclaration (InstanceDeclaration)
 import qualified Syntax.Tree.InstanceDeclaration as InstanceDeclaration
 
-newtype InstanceDeclarations position
+data InstanceDeclarations position
   = -- |
-    -- > Instance C A where { x = A }
+    -- > instance C A where { x = A }
     -- >              ^^^^^^^^^^^^^^^
     InstanceDeclarations
-    { declarations :: Strict.Vector (InstanceDeclaration position)
-    }
+      { declarations :: !(Strict.Vector (InstanceDeclaration position))
+      }
+  | -- |
+    -- > deriving instance C A
+    --                         ^
+    DerivingInstance
   deriving (Show)
 
 parse :: Parser (InstanceDeclarations Position)
@@ -29,3 +33,6 @@ parse =
     parse =
       instanceDeclarations . Strict.Vector.fromList
         <$> betweenBraces (sepEndBySemicolon InstanceDeclaration.parse)
+
+_derivingInstance :: InstanceDeclarations position
+_derivingInstance = DerivingInstance

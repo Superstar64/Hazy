@@ -8,3 +8,4 @@ data InstanceDeclarations position
 instance (Show position) => Show (InstanceDeclarations position)
 
 parse :: Parser (InstanceDeclarations Position)
+_derivingInstance :: InstanceDeclarations position
