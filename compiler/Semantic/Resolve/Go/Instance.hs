@@ -23,7 +23,7 @@ import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import qualified Semantic.Tree.Definition as Definition (merge)
 import Semantic.Tree.Instance (Instance (..))
 import Semantic.Tree.InstanceDefinition (InstanceDefinition (..))
-import Semantic.Tree.InstanceDefinition2 (Header (..), InstanceDefinition2 (..))
+import Semantic.Tree.InstanceDefinition2 (Annotation (..), Header (..), InstanceDefinition2 (..))
 import Semantic.Tree.MethodConcrete (MethodConcrete (..))
 import Syntax.Position (Position)
 import qualified Syntax.Tree.Constraints as Syntax (Constraints)
@@ -64,25 +64,29 @@ resolve
                       Complete.Definition _ name function
                         | Just index <- Map.lookup name memberMethods -> (index, function)
                         | otherwise -> notClassMethod startPosition
+            header =
+              Identity
+                Header
+                  { parameters,
+                    prerequisites
+                  }
+            definition = case declarations of
+              Syntax.InstanceDeclarations {declarations} ->
+                Standard header
+                  ::: (Identity . Identity)
+                    InstanceDefinition
+                      { evidence = Inferred,
+                        members = members (toList declarations)
+                      }
+              Syntax.DerivingInstance ->
+                DerivedInstance header
+                  ::: (Identity . Identity)
+                    InstanceDefinition
+                      { evidence = Inferred,
+                        members = Strict.Vector.replicate (length memberMethods) $ Generated Inferred
+                      }
          in Instance
               { startPosition,
-                definition =
-                  Identity
-                    Header
-                      { parameters,
-                        prerequisites
-                      }
-                    ::: Identity
-                      ( Identity
-                          InstanceDefinition
-                            { evidence = Inferred,
-                              members = case declarations of
-                                Syntax.InstanceDeclarations {declarations} ->
-                                  members (toList declarations)
-                                Syntax.DerivingInstance ->
-                                  Strict.Vector.replicate (length memberMethods) $
-                                    Generated Inferred
-                            }
-                      ),
+                definition,
                 prerequisites = Identity Inferred
               }
