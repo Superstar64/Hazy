@@ -65,4 +65,3 @@ instance SolveEvidence EvidenceF
 instance SolveEvidence InstanciationF
 
 runSolve :: Solve s a -> ST s a
-liftST :: ST s a -> Solve s a

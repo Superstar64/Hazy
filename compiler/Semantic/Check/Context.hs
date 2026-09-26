@@ -3,11 +3,9 @@ module Semantic.Check.Context where
 import Control.Monad.ST (ST)
 import qualified Core.Builtin as Builtin
 import Core.Substitute (logicalType)
-import Core.Tree.Type (Type)
 import qualified Core.Tree.Type as Core
 import Core.Tree.TypeDeclaration (assumeData)
 import qualified Data.Kind
-import qualified Data.Strict.Maybe as Strict
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import qualified Semantic.Check.DataInstance as DataInstance
@@ -30,12 +28,13 @@ import qualified Semantic.Label.Binding.Type as Label (TypeBinding)
 import qualified Semantic.Label.Context as Label (Context (..))
 import Semantic.Layout (Group)
 import qualified Semantic.Locality as Locality
-import Semantic.Scope (Environment (..), Local)
+import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope (Declaration, Global, GroupTerm, GroupType)
 import qualified Semantic.Shift as Shift
 import Semantic.Stage (Check)
 import Semantic.Tree.Declarations (Declarations (..))
 import Semantic.Tree.Module (Module (..))
+import qualified Semantic.Tree.Type as Type (Synonym (..))
 import Semantic.Tree.TypeDeclaration (TypeDeclaration (TypeDeclaration, definition))
 import qualified Semantic.Tree.TypeDefinition2 as TypeDefinition2
 import qualified Semantic.Tree.TypeGroup as TypeGroup
@@ -151,11 +150,11 @@ label Context {termEnvironment, localEnvironment, typeEnvironment} =
       types = Type.map (Type.Map TypeBinding.label) typeEnvironment
     }
 
-lookupSynonym :: Context s scope -> Type2.Index scope -> ST s (Strict.Maybe (Type (Local ':+ scope)))
+lookupSynonym :: Context s scope -> Type2.Index scope -> ST s (Type.Synonym Check scope)
 lookupSynonym Context {typeEnvironment} (Type2.Index index) = do
   let TypeBinding {synonym} = typeEnvironment Type.! index
   synonym
-lookupSynonym _ _ = pure Strict.Nothing
+lookupSynonym _ _ = pure Type.NoSynonym
 
 lookupKind ::
   Position ->

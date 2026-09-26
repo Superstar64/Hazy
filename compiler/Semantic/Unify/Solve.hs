@@ -138,7 +138,3 @@ instance SolveEvidence InstanciationF where
 -- rigid context
 runSolve :: Solve s a -> ST s a
 runSolve (Solve a) = a
-
--- todo, figure out how to make sure no unification occurs during solving
-liftST :: ST s a -> Solve s a
-liftST = Solve

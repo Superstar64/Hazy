@@ -16,7 +16,6 @@ import qualified Data.Kind
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.NaturalTransformation (NaturalTransformation (..))
-import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import Error (improperBindingGroup)
 import Semantic.Connect (seperate)
 import Semantic.Functor2 (traverse2)
@@ -26,7 +25,7 @@ import qualified Semantic.Index.Type2 as Type2
 import qualified Semantic.Label.Binding.Type as Label
 import Semantic.Layout (Group)
 import qualified Semantic.Locality as Locality
-import Semantic.Scope (Environment (..), GroupType, Local)
+import Semantic.Scope (Environment (..), GroupType)
 import qualified Semantic.Scope as Scope
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
@@ -34,6 +33,7 @@ import Semantic.Stage (Check)
 import Semantic.Tree.Combinators.Inferred (Inferred (Solved))
 import qualified Semantic.Tree.Instance as Semantic
 import qualified Semantic.Tree.Synonym as Synonym
+import qualified Semantic.Tree.Type as Type (Synonym (..))
 import Semantic.Tree.TypeDeclaration (TypeDeclaration (..))
 import qualified Semantic.Tree.TypeDeclaration as TypeDeclaration
 import Semantic.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
@@ -58,20 +58,17 @@ data TypeBinding s scope = TypeBinding
     kind :: ST s (Kind s scope),
     content :: ST s (Simple.TypeDeclaration scope),
     extra :: ST s (Unify.Solve s (Simple.TypeDeclarationExtra scope)),
-    synonym :: ST s (Strict.Maybe (Simple.Type (Local ':+ scope))),
+    synonym :: ST s (Type.Synonym Check scope),
     dataInstances :: Map (Type2.Index scope) (ST s (Constraints scope)),
     classInstances :: Map (Type2.Index scope) (ST s (Constraints scope))
   }
-
-synonym_ :: TypeBinding s scope -> ST s (Strict.Maybe (Simple.Type (Local ':+ scope)))
-synonym_ = synonym
 
 instance Shift0.Functor (TypeBinding s) where
   map category0 TypeBinding {label, kind, synonym, extra, content, dataInstances, classInstances} =
     TypeBinding
       { label,
         kind = fmap (Shift0.map category0) kind,
-        synonym = fmap (fmap (Shift.map (Shift.Over category))) synonym,
+        synonym = fmap (Shift.map category) synonym,
         content = fmap (Shift.map category) content,
         extra = fmap (Shift.map category) <$> extra,
         dataInstances = Map.map (fmap $ Shift.map category) $ Shift.mapInstances category dataInstances,
@@ -123,9 +120,9 @@ global
                   runIdentity typeExtra,
         synonym = case typex of
           TypeDeclaration {definition = Synonym synonym} -> do
-            _ Synonym.::: Synonym.SynonymBody {synonym} <- synonym
-            pure $ Strict.Just $ Core.Type.simplify synonym
-          _ -> pure Strict.Nothing,
+            _ Synonym.::: Synonym.SynonymBody {parameters, synonym} <- synonym
+            pure $ Type.Synonym (length parameters) $ Core.Type.simplify synonym
+          _ -> pure Type.NoSynonym,
         dataInstances = bindInstance <$> dataInstances,
         classInstances = bindInstance <$> classInstances
       }
@@ -173,9 +170,9 @@ local
           pure $ Core.TypeDeclarationExtra.simplify . seperate <$> typeExtra,
         synonym = case typex of
           TypeDeclaration {definition = Synonym synonym} -> do
-            _ Synonym.::: Synonym.SynonymBody {synonym} <- synonym
-            pure $ Strict.Just $ Core.Type.simplify synonym
-          _ -> pure Strict.Nothing,
+            _ Synonym.::: Synonym.SynonymBody {parameters, synonym} <- synonym
+            pure $ Type.Synonym (length parameters) $ Core.Type.simplify synonym
+          _ -> pure Type.NoSynonym,
         dataInstances = bindInstance <$> dataInstances,
         classInstances = bindInstance <$> classInstances
       }
@@ -191,7 +188,7 @@ group position Label.TypeBinding {name, constructorNames} binding =
       kind = pure $ Wobbly $ shiftLogical binding,
       content = abort,
       extra = abort,
-      synonym = pure Strict.Nothing,
+      synonym = pure Type.NoSynonym,
       dataInstances = abort,
       classInstances = abort
     }

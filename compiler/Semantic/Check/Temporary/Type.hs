@@ -6,10 +6,9 @@ import Control.Monad.ST (ST)
 import Core.Substitute (logicalType)
 import Core.Tree.Type ((-#>))
 import qualified Core.Tree.Type as Core
-import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import qualified Data.Strict.Vector1 as Strict (Vector1)
 import qualified Data.Strict.Vector2 as Strict (Vector2)
-import Error (uncheckable, universeMustBeSmall, unsupportedFeatureStrictFunctions)
+import Error (partialSynonym, uncheckable, universeMustBeSmall, unsupportedFeatureStrictFunctions)
 import Semantic.Check.Context (Context (..))
 import qualified Semantic.Check.Context as Context
 import qualified Semantic.Check.LocalBinding as LocalBinding (LocalBinding (..))
@@ -17,7 +16,7 @@ import qualified Semantic.Index.Local as Local
 import qualified Semantic.Index.Table.Local as Local.Table
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Stage (Check, Resolve)
-import qualified Semantic.Tree.Type as Semantic (Synonym (..), Type (..))
+import qualified Semantic.Tree.Type as Semantic (Type (..))
 import qualified Semantic.Tree.Type as Solved
 import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
@@ -29,7 +28,8 @@ data Type s scope
       }
   | Constructor
       { startPosition, constructorPosition :: !Position,
-        constructor :: !(Type2.Index scope)
+        constructor :: !(Type2.Index scope),
+        synonym :: !(Solved.Synonym Check scope)
       }
   | Tuple
       { startPosition :: !Position,
@@ -57,7 +57,37 @@ data Type s scope
   | Constraint {startPosition :: !Position}
   | Levity {startPosition :: !Position}
 
-check :: Context s scope -> Unify.Type s scope -> Semantic.Type Position Resolve scope -> ST s (Type s scope)
+checkCount ::
+  Context s scope ->
+  Int ->
+  Unify.Type s scope ->
+  Semantic.Type Position Resolve scope ->
+  ST s (Type s scope)
+checkCount context count kind = \case
+  Semantic.Call {startPosition, function, argument} -> do
+    level <- Unify.fresh Core.universe
+    parameterType <- Unify.fresh (Core.typeWith level)
+    function <- checkCount context (count + 1) (parameterType -#> kind) function
+    argument <- check context parameterType argument
+    pure Call {startPosition, function, argument}
+  Semantic.Constructor {startPosition, constructorPosition, constructor} -> do
+    kind' <- Context.lookupKind constructorPosition context constructor
+    Unify.unify context constructorPosition kind kind'
+    synonym <- Context.lookupSynonym context constructor
+    if
+      | Solved.Synonym expected _ <- synonym,
+        expected > count ->
+          partialSynonym startPosition
+      | otherwise -> pure ()
+
+    pure Constructor {startPosition, constructorPosition, constructor, synonym}
+  typex -> check context kind typex
+
+check ::
+  Context s scope ->
+  Unify.Type s scope ->
+  Semantic.Type Position Resolve scope ->
+  ST s (Type s scope)
 check context@Context {localEnvironment} kind = \case
   Semantic.Variable {startPosition, variable} -> case localEnvironment Local.Table.! variable of
     LocalBinding.Rigid {rigid}
@@ -67,20 +97,14 @@ check context@Context {localEnvironment} kind = \case
     LocalBinding.Wobbly {wobbly} -> do
       Unify.unify context startPosition kind wobbly
       pure Variable {startPosition, variable}
-  Semantic.Constructor {startPosition, constructorPosition, constructor} -> do
-    kind' <- Context.lookupKind constructorPosition context constructor
-    Unify.unify context constructorPosition kind kind'
-    pure Constructor {startPosition, constructorPosition, constructor}
+  typex@Semantic.Constructor {} ->
+    checkCount context 0 kind typex
   Semantic.Tuple {startPosition, elements} -> do
     elements <- traverse (check context Core.typex) elements
     Unify.unify context startPosition kind Core.typex
     pure Tuple {startPosition, elements}
-  Semantic.Call {startPosition, function, argument} -> do
-    level <- Unify.fresh Core.universe
-    parameterType <- Unify.fresh (Core.typeWith level)
-    function <- check context (parameterType -#> kind) function
-    argument <- check context parameterType argument
-    pure Call {startPosition, function, argument}
+  typex@Semantic.Call {} ->
+    checkCount context 0 kind typex
   Semantic.Function {startPosition, parameter, operatorPosition, result} -> do
     level <- Unify.fresh Core.universe
     level' <- Unify.fresh Core.universe
@@ -125,16 +149,13 @@ solve context = \case
         { startPosition,
           variable
         }
-  Constructor {startPosition, constructorPosition, constructor} -> do
-    synonym <- Unify.liftST $ Context.lookupSynonym context constructor
+  Constructor {startPosition, constructorPosition, constructor, synonym} -> do
     pure
       Solved.Constructor
         { startPosition,
           constructorPosition,
           constructor,
-          synonym = case synonym of
-            Strict.Nothing -> Semantic.NoSynonym
-            Strict.Just synonym -> Semantic.Synonym synonym
+          synonym
         }
   Tuple {startPosition, elements} -> do
     elements <- traverse (solve context) elements

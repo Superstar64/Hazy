@@ -87,6 +87,7 @@ module Error
     orphanInstance,
     improperBindingGroup,
     cannotDerive,
+    partialSynonym,
     unsupportedFeatureRunST,
     unsupportedFeatureConstraintedTypeDefaulting,
     unsupportedFeatureStrictFunctions,
@@ -280,6 +281,7 @@ data Type
   | ImproperBindingGroup
   | UnsupportedFeature
   | CannotDerive
+  | PartialSynonym
   deriving (Show, Eq, Enum, Bounded)
 
 types :: Map String Type
@@ -549,6 +551,9 @@ cannotDerive position instancex = errorAt CannotDerive position $ mconcat builde
       [ fromString "cannot derive: ",
         instancex
       ]
+
+partialSynonym :: Position -> a
+partialSynonym position = errorAt PartialSynonym position $ fromString "not enough type synonym arguments"
 
 strictFunctions = fromString "strict functions"
 

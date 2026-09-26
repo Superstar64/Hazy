@@ -197,12 +197,17 @@ instance FreeTypeVariables (Type position) where
 
 data Synonym stage scope where
   NoSynonym :: Synonym stage scope
-  Synonym :: !(Simple.Type (Scope.Local ':+ scope)) -> Synonym Check scope
+  Synonym :: !Int -> !(Simple.Type (Scope.Local ':+ scope)) -> Synonym Check scope
 
 instance Show (Synonym stage scope) where
   showsPrec d = \case
     NoSynonym -> showString "NoSynonym"
-    Synonym synonym -> showParen (d > 10) $ showsPrec 11 "Synonym " . showsPrec 11 synonym
+    Synonym length synonym ->
+      showParen (d > 10) $
+        showsPrec 11 "Synonym "
+          . showsPrec 11 length
+          . showString " "
+          . showsPrec 11 synonym
 
 instance (IsResolve stage) => Eq (Synonym stage scope) where
   synonym == synonym'
@@ -217,7 +222,7 @@ instance Shift0.Functor (Synonym stage) where
 instance Shift.Functor (Synonym stage) where
   map category = \case
     NoSynonym -> NoSynonym
-    Synonym synonym -> Synonym (Shift.map (Shift.Over category) synonym)
+    Synonym length synonym -> Synonym length (Shift.map (Shift.Over category) synonym)
 
 anonymize :: Type position stage scope -> Type () stage scope
 anonymize = \case

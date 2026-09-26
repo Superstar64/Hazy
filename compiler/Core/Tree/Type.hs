@@ -200,9 +200,11 @@ simplify typex = simplifyWith typex []
 
 simplifyWith :: Solved.Type position Check scope -> [Type scope] -> Type scope
 simplifyWith Solved.Constructor {constructor, synonym} arguments = case synonym of
-  Solved.Synonym synonym -> Substitute.map category synonym
+  Solved.Synonym length synonym -> foldl Call (Substitute.map category synonym) kept
     where
-      category = Substitute Shift.Id (Vector.fromList arguments) (error "no evidence")
+      erased = take length arguments
+      kept = drop length arguments
+      category = Substitute Shift.Id (Vector.fromList erased) (error "no evidence")
   Solved.NoSynonym -> foldl Call (Constructor constructor) arguments
 simplifyWith Solved.Call {function, argument} arguments =
   simplifyWith function (simplify argument : arguments)
