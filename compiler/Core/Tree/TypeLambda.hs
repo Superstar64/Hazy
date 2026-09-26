@@ -2,7 +2,6 @@ module Core.Tree.TypeLambda where
 
 import qualified Core.Substitute as Substitute
 import Core.Tree.Constraints (Constraints, ConstraintsF (..))
-import qualified Core.Tree.Constraints as Constraints
 import {-# SOURCE #-} Core.Tree.Expression (Expression)
 import Core.Tree.Type (Type)
 import qualified Data.Kind as Kind
@@ -65,9 +64,6 @@ mono result =
       constraints = None,
       result = shift result
     }
-
-constraintCount :: TypeLambdaOver typef scope -> Constraints.ConstraintCount
-constraintCount TypeLambdaOver {constraints} = Constraints.constraintCount constraints
 
 type Map :: (Environment -> Kind.Type) -> (Environment -> Kind.Type) -> Kind.Type
 newtype Map typex typex' = Map (forall scope. typex scope -> typex' scope)

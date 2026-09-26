@@ -43,16 +43,6 @@ instance Core.Functor ConstraintsF where
     Constraints constraints -> Constraints $ Core.map f <$> constraints
     None -> None
 
-data ConstraintCount
-  = ConstraintCount !Int
-  | Null
-  deriving (Show)
-
-constraintCount :: Constraints scope -> ConstraintCount
-constraintCount = \case
-  Constraints constraints -> ConstraintCount (length constraints)
-  None -> Null
-
 simplify :: Semantic.Constraints position Check scope -> Constraints scope
 simplify = \case
   Semantic.Constraints constraints -> Constraints $ Constraint.simplify <$> constraints

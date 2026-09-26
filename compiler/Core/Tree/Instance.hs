@@ -1,8 +1,7 @@
 module Core.Tree.Instance where
 
 import qualified Core.Substitute as Substitute
-import Core.Tree.Constraints (ConstraintCount (..), ConstraintsF (Constraints))
-import qualified Core.Tree.Constraints as Constraints
+import Core.Tree.Constraints (Constraints)
 import Core.Tree.EvidenceSet (EvidenceSet)
 import Core.Tree.MethodConcrete (MethodConcrete)
 import qualified Core.Tree.MethodConcrete as MethodConcrete
@@ -19,7 +18,7 @@ import Semantic.Tree.InstanceDefinition2 (InstanceDefinition2 (..))
 
 data Instance scope = Instance
   { evidence :: !(EvidenceSet scope),
-    prerequisitesCount :: !ConstraintCount,
+    prerequisites :: !(Constraints scope),
     members :: !(Strict.Vector (MethodConcrete scope))
   }
   deriving (Show)
@@ -31,10 +30,10 @@ instance Shift.Functor Instance where
   map = Substitute.mapDefault
 
 instance Substitute.Functor Instance where
-  map category Instance {evidence, prerequisitesCount, members} =
+  map category Instance {evidence, prerequisites, members} =
     Instance
       { evidence = Substitute.map category evidence,
-        prerequisitesCount,
+        prerequisites = Substitute.map category prerequisites,
         members = Substitute.map category <$> members
       }
 
@@ -47,8 +46,6 @@ simplify
     Identity InstanceDefinition {evidence = Solved evidence, members} ->
       Instance
         { evidence,
-          prerequisitesCount = case prerequisites of
-            Constraints.None -> Null
-            Constraints constraints -> ConstraintCount $ length constraints,
+          prerequisites,
           members = MethodConcrete.simplify <$> members
         }

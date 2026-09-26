@@ -86,9 +86,6 @@ mono result =
       result = shift result
     }
 
-constraintCount :: ForallOver typef Void scope -> Constraints.ConstraintCount
-constraintCount ForallOver {constraints} = Constraints.constraintCount constraints
-
 simplify :: Solved.Scheme position Check scope -> Forall scope
 simplify Solved.Scheme {parameters, constraints, result}
   | parameters <- fmap Solved.TypePattern.typex' parameters,

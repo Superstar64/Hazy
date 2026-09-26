@@ -1,7 +1,7 @@
 module Generate.Go.Instance where
 
 import Control.Monad.ST (ST)
-import Core.Tree.Constraints (ConstraintCount (..))
+import Core.Tree.Constraints (ConstraintsF (..))
 import Core.Tree.EvidenceSet (EvidenceSet (..))
 import Core.Tree.Instance (Instance (..))
 import Core.Tree.MethodConcrete (MethodConcrete (..))
@@ -18,11 +18,11 @@ import qualified Javascript.Tree.Field as Javascript (Field (..))
 import qualified Javascript.Tree.Statement as Javascript (Statement (..))
 
 generate :: Context s scope -> Instance scope -> ST s Javascript.Expression
-generate context Instance {evidence = EvidenceSet evidence, prerequisitesCount, members} = do
-  let actualCount = case prerequisitesCount of
-        ConstraintCount count -> count
-        Null -> 0
-  fresh <- Vector.replicateM actualCount (Context.fresh context)
+generate context Instance {evidence = EvidenceSet evidence, prerequisites, members} = do
+  let count = case prerequisites of
+        Constraints count -> length count
+        None -> 0
+  fresh <- Vector.replicateM count (Context.fresh context)
   context <- pure $ Context.evidenceBindings fresh context
   evidence <- traverse (Evidence.generate context) (toList evidence)
   let supers = Javascript.Literal <$> evidence
@@ -33,8 +33,8 @@ generate context Instance {evidence = EvidenceSet evidence, prerequisitesCount, 
         Javascript.Object
           { fields = zip Mangle.fields (supers ++ fields)
           }
-  case prerequisitesCount of
-    Null ->
+  case prerequisites of
+    None ->
       pure $
         Expression.delay
           [ Javascript.Expression $
@@ -43,7 +43,7 @@ generate context Instance {evidence = EvidenceSet evidence, prerequisitesCount, 
                   value = object
                 }
           ]
-    ConstraintCount {} ->
+    Constraints {} ->
       pure
         Javascript.Arrow
           { parameters = toList fresh,

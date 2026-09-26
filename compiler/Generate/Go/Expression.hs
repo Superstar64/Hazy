@@ -2,7 +2,7 @@ module Generate.Go.Expression where
 
 import Control.Monad (zipWithM)
 import Control.Monad.ST (ST)
-import Core.Tree.Constraints (ConstraintCount (..))
+import Core.Tree.Constraints (ConstraintsF (..))
 import Core.Tree.ConstructorInfo (ConstructorInfo (..))
 import Core.Tree.EntryInfo (EntryInfo (EntryInfo))
 import qualified Core.Tree.EntryInfo
@@ -11,7 +11,6 @@ import Core.Tree.Instanciation (Instanciation, InstanciationF (Instanciation))
 import qualified Core.Tree.Instanciation as Instanciation
 import Core.Tree.MethodInfo (MethodInfo (..))
 import Core.Tree.TypeLambda (TypeLambda, TypeLambdaOver (..))
-import qualified Core.Tree.TypeLambda as TypeLambda
 import Data.Char (ord)
 import Data.Foldable (toList)
 import qualified Data.Vector as Vector
@@ -283,16 +282,15 @@ generateInto context target = \case
     pure $ extra ++ [finish target value]
 
 declaration :: Context s scope -> TypeLambda scope -> ST s Javascript.Expression
-declaration context scheme@TypeLambdaOver {result = expression} = do
-  let constraintCount = TypeLambda.constraintCount scheme
-      actualCount = case constraintCount of
-        ConstraintCount count -> count
-        Null -> 0
-  fresh <- Vector.replicateM actualCount (Context.fresh context)
+declaration context TypeLambdaOver {constraints, result = expression} = do
+  let count = case constraints of
+        Constraints constraints -> length constraints
+        None -> 0
+  fresh <- Vector.replicateM count (Context.fresh context)
   context <- pure $ Context.evidenceBindings fresh context
-  case constraintCount of
-    Null -> thunk context Group expression
-    ConstraintCount {} -> do
+  case constraints of
+    None -> thunk context Group expression
+    Constraints {} -> do
       statements <- generateInto context Return expression
       pure
         Javascript.Arrow
