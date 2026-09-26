@@ -17,7 +17,7 @@ import Semantic.Resolve.Bindings (Bindings)
 
 bindings :: Bindings () scope
 definition :: Class scope
-(bindings, definition) =
+(bindings, definition, _) =
   Type2.Enum
     `builtinClass` pack
       """

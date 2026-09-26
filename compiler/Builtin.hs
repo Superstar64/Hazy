@@ -1,11 +1,14 @@
 module Builtin (builtinData, builtinClass) where
 
 import Core.Tree.Class (Class)
+import Core.Tree.ClassExtra (ClassExtra)
 import Core.Tree.Data (Data)
-import qualified Core.Tree.Declarations as Declarations (types)
+import qualified Core.Tree.Declarations as Declarations (typeExtras, types)
 import qualified Core.Tree.Module as Module (simplify)
 import qualified Core.Tree.Module as Module.Core
 import Core.Tree.TypeDeclaration (TypeDeclaration (..))
+import Core.Tree.TypeDeclarationExtra (TypeDeclarationExtra)
+import qualified Core.Tree.TypeDeclarationExtra as TypeDeclarationExtra
 import Core.Tree.TypeDefinition (TypeDefinition (..))
 import Data.Functor.Identity (Identity (..))
 import Data.Text (Text)
@@ -125,9 +128,15 @@ overrideBinding typeIndex Bindings {terms, constructors, types, stability} =
       stability
     }
 
-builtin :: Type2.Index scope -> Text -> (Bindings () scope, TypeDeclaration scope)
+builtin ::
+  Type2.Index scope ->
+  Text ->
+  ( Bindings () scope,
+    TypeDeclaration scope,
+    TypeDeclarationExtra scope
+  )
 builtin typeIndex string =
-  (overrideBinding typeIndex bindings, Shift.map abort typex)
+  (overrideBinding typeIndex bindings, Shift.map abort typex, Shift.map abort extra)
   where
     parsed = runIdentity $ Parser.parse extensions Module.parse internal string
     complete = runIdentity $ Module.resolve $ Vector.singleton parsed
@@ -138,13 +147,25 @@ builtin typeIndex string =
     core = Module.simplify <$> check
     coreDeclarations = Module.Core.declarations $ Vector.head core
     typex = Vector.head $ Declarations.types $ coreDeclarations
+    extra = Vector.head $ Declarations.typeExtras $ coreDeclarations
 
 builtinData :: Type2.Index scope -> Text -> (Bindings () scope, Data scope)
 builtinData typex string = case builtin typex string of
-  (bindings, declaration) ->
-    (bindings, case declaration of TypeDeclaration {definition = Data datax} -> datax; _ -> abort)
+  (bindings, declaration, _) ->
+    ( bindings,
+      case declaration of
+        TypeDeclaration {definition = Data datax} -> datax
+        _ -> abort
+    )
 
-builtinClass :: Type2.Index scope -> Text -> (Bindings () scope, Class scope)
+builtinClass :: Type2.Index scope -> Text -> (Bindings () scope, Class scope, ClassExtra scope)
 builtinClass typex string = case builtin typex string of
-  (bindings, declaration) ->
-    (bindings, case declaration of TypeDeclaration {definition = Class classx} -> classx; _ -> abort)
+  (bindings, declaration, extra) ->
+    ( bindings,
+      case declaration of
+        TypeDeclaration {definition = Class classx} -> classx
+        _ -> abort,
+      case extra of
+        TypeDeclarationExtra.Class extra -> extra
+        _ -> abort
+    )
