@@ -452,4 +452,6 @@ main'' args = case getOpt order options args of
       Expect error
         | Just typex <- Map.lookup error Error.types ->
             catch (run >> noFail) (Error.allow typex)
-        | otherwise -> putStrLn "Unknown error type" >> exitFailure
+        | otherwise -> do
+            putStrLn $ "Unknown error type: " ++ error
+            exitFailure

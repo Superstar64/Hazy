@@ -15,12 +15,14 @@ import Core.Tree.Forall (ForallOver)
 import qualified Core.Tree.Forall as Core (ForallOver (..))
 import qualified Core.Tree.Instanciation as Core (InstanciationF (Instanciation, Mono))
 import qualified Core.Tree.Instanciation as Core.Instanciation
-import Core.Tree.Type ((#))
+import Core.Tree.Type ((#), (-#>))
 import qualified Core.Tree.Type as Core (Type, TypeF, typeWith, universe)
 import qualified Core.Tree.Type as Core.Type
 import Core.Tree.TypeDeclaration (assumeClass, assumeData)
 import qualified Core.Tree.TypeDeclarationExtra as Extra
 import qualified Core.Tree.TypeLambda as Core (TypeLambdaOver (..))
+import Core.Type.Functor (shiftLogical)
+import Data.Foldable (toList)
 import Data.Functor.Identity (Identity (..))
 import Data.Traversable (for)
 import qualified Data.Vector as Vector
@@ -90,10 +92,11 @@ keyHead = \case
 
 checkHeader ::
   Position ->
+  Key scope ->
   (f (ST s) -> Context s scope) ->
   Header Resolve scope ->
   Topological.Formula f s (Header Check scope)
-checkHeader position information Header {parameters, prerequisites} =
+checkHeader position key information Header {parameters, prerequisites} =
   Topological.Formula
     { cycle = cyclicalTypeChecking position,
       run = \declarations -> do
@@ -109,8 +112,16 @@ checkHeader position information Header {parameters, prerequisites} =
                   }
         parameters <- traverse fresh parameters
         context <- pure $ Unsolved.augment parameters context
-        prerequisites <- Unsolved.Constraints.check context prerequisites
+        indexKind <- Context.lookupKind position context (shift $ keyIndex key)
+        headKind <- Context.lookupKind position context (shift $ keyHead key)
+        universe <- Unify.fresh Core.universe
+        target <- Unify.fresh (Core.typeWith universe)
+        let types = [shiftLogical typex | Unsolved.TypePattern {typex} <- toList parameters]
+            headKind' = foldr (-#>) target types
+        Unify.unify context position headKind' headKind
+        Unify.unify context position (target -#> Core.Type.Constraint) indexKind
 
+        prerequisites <- Unsolved.Constraints.check context prerequisites
         parameters <- Unify.runSolve $ traverse Unsolved.solve parameters
         prerequisites <- Unify.runSolve $ Unsolved.Constraints.solve context prerequisites
         pure Header {parameters, prerequisites}
@@ -300,12 +311,12 @@ check ::
   InstanceDefinition2 solve (Topological.Formula declarations s) Group Check scope
 check position key solve reflection information = \case
   Standard (Identity header) ::: Identity (Identity InstanceDefinition {members}) ->
-    Standard (checkHeader position information header)
+    Standard (checkHeader position key information header)
       ::: checkBody position key solve reflection information lookup members
     where
       lookup _ _ _ = pure Manual
   DerivedInstance (Identity header) ::: Identity (Identity InstanceDefinition {members}) ->
-    DerivedInstance (checkHeader position information header)
+    DerivedInstance (checkHeader position key information header)
       ::: checkBody position key solve reflection information lookup members
     where
       lookup Context {typeEnvironment} index (Type2.Index head) = do
