@@ -7,7 +7,7 @@ import qualified Core.Type.Show as Core (Show (..))
 import qualified Data.Vector as Vector
 import Data.Void (Void)
 import qualified Semantic.Index.Constructor as Constructor
-import Semantic.Index.Local (Index (Local, Shift))
+import Semantic.Index.Local (Index (Local))
 import qualified Semantic.Index.Local as Local
 import qualified Semantic.Index.Type2 as Type2
 import qualified Semantic.Scope as Scope
@@ -104,14 +104,11 @@ instance (logical ~ Void) => Substitute.Functor (TypeF logical) where
   map = Substitute.mapType
 
 instance Substitute.TypeFunctor TypeF where
-  mapType (Substitute lift replacements _) (Variable index) = case index of
-    Local index -> replacements Vector.! index
-    Shift index -> Variable (Shift.map lift index)
-  mapType (Substitute.Lift category) (Variable index) = Variable $ Shift.map category index
-  mapType Substitute.Over {} (Variable (Local.Local index)) = Variable (Local.Local index)
+  mapType (Substitute _ replacements _) (Variable (Local index)) = replacements Vector.! index
   mapType (Substitute.Over category) (Variable (Local.Shift index)) =
     shift $ Substitute.mapType category (Variable index)
   mapType category typex = case typex of
+    Variable index -> Variable $ Shift.map (Substitute.general category) index
     Constructor index -> Constructor (Shift.map (Substitute.general category) index)
     Call function argument -> Call (Substitute.mapType category function) (Substitute.mapType category argument)
     Function parameter result ->

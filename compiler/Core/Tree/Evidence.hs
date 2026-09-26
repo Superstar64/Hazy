@@ -1,6 +1,6 @@
 module Core.Tree.Evidence (Evidence, EvidenceF (..)) where
 
-import Core.Substitute (Category (Substitute))
+import Core.Substitute (Category (..))
 import qualified Core.Substitute as Substitute
 import {-# SOURCE #-} Core.Tree.Instanciation (InstanciationF)
 import {-# SOURCE #-} qualified Core.Tree.Instanciation as Instanciation
@@ -89,31 +89,11 @@ instance Substitute.EvidenceFunctor EvidenceF where
   mapEvidence category evidence = case evidence of
     Variable {variable, instanciation} ->
       Variable
-        { variable = case variable of
-            Evidence.Builtin builtin -> Evidence.Builtin builtin
-            Evidence.Class index1 index2 ->
-              Evidence.Class
-                (Shift.map (Substitute.general category) index1)
-                (Shift.map (Substitute.general category) index2)
-            Evidence.Data index1 index2 ->
-              Evidence.Data
-                (Shift.map (Substitute.general category) index1)
-                (Shift.map (Substitute.general category) index2)
-            Evidence.Index index -> Evidence.Index $ map category index,
-          instanciation = Substitute.mapEvidence category instanciation
+        { variable = Shift.map general variable,
+          instanciation = Substitute.mapEvidence (Lift general) instanciation
         }
       where
-        map ::
-          Category logicalType logcialEvidence scope1 scope2 ->
-          Evidence0.Index scope1 ->
-          Evidence0.Index scope2
-        map (Substitute.Lift category) index = Shift.map category index
-        map Substitute {} Evidence0.Assumed {} =
-          error "can't substitute evidence into instanciated evidence variable"
-        map Substitute.Over {} (Evidence0.Assumed index) = Evidence0.Assumed index
-        map (Substitute.Over category) (Evidence0.Shift index) =
-          Evidence0.Shift $ map category index
-        map (Substitute category _ _) (Evidence0.Shift index) = Shift.map category index
+        general = Substitute.general category
     Super {base, index} ->
       Super
         { base = Substitute.mapEvidence category base,
