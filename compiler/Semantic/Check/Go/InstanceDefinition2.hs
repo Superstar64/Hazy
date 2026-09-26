@@ -7,6 +7,7 @@ import qualified Core.Substitute as Substitute
 import qualified Core.Tree.Class as Core.Class
 import Core.Tree.ClassExtra (ClassExtra (..))
 import qualified Core.Tree.Constraint as Core (ConstraintF (..))
+import qualified Core.Tree.Data as Core (Data)
 import qualified Core.Tree.Evidence as Core (Evidence)
 import qualified Core.Tree.Evidence as Core.Evidence
 import Core.Tree.EvidenceSet (EvidenceSet (..))
@@ -17,7 +18,7 @@ import qualified Core.Tree.Instanciation as Core.Instanciation
 import Core.Tree.Type ((#))
 import qualified Core.Tree.Type as Core (Type, TypeF, typeWith, universe)
 import qualified Core.Tree.Type as Core.Type
-import Core.Tree.TypeDeclaration (assumeClass)
+import Core.Tree.TypeDeclaration (assumeClass, assumeData)
 import qualified Core.Tree.TypeDeclarationExtra as Extra
 import qualified Core.Tree.TypeLambda as Core (TypeLambdaOver (..))
 import Data.Functor.Identity (Identity (..))
@@ -29,6 +30,7 @@ import Data.Void (Void)
 import Error (cyclicalTypeChecking)
 import qualified Graph.Topological as Topological
 import Semantic.Check.Context (Context (..))
+import qualified Semantic.Check.Derive.Eq as Eq
 import Semantic.Check.Go.Definition4 (Solve (..))
 import qualified Semantic.Check.Go.Scheme as Scheme
 import qualified Semantic.Check.Mask as Mask
@@ -41,6 +43,7 @@ import qualified Semantic.Check.TypeBinding as TypeBinding
 import qualified Semantic.Index.Evidence as Evidence
 import qualified Semantic.Index.Evidence0 as Evidence0
 import qualified Semantic.Index.Local as Local
+import qualified Semantic.Index.Method as Method
 import qualified Semantic.Index.Table.Type as Table.Type
 import qualified Semantic.Index.Type as Type
 import qualified Semantic.Index.Type2 as Type2
@@ -55,7 +58,7 @@ import Semantic.Tree.Combinators.Inferred (Inferred (Solved))
 import Semantic.Tree.Constraints (Constraints (Constraints, None))
 import Semantic.Tree.InstanceDefinition (InstanceDefinition (..))
 import Semantic.Tree.InstanceDefinition2 (Annotation (..), Header (..), InstanceDefinition2 (..))
-import Semantic.Tree.MethodConcrete (MethodConcrete (..))
+import Semantic.Tree.MethodConcrete (Auto, MethodConcrete (..))
 import Semantic.Tree.TypePattern (TypePattern (..))
 import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
@@ -109,6 +112,10 @@ checkHeader position information Header {parameters, prerequisites} =
         pure Header {parameters, prerequisites}
     }
 
+data Source origin scope where
+  Manual :: Source origin scope
+  Derive :: !(Type2.Index scope) -> !(Type2.Index scope) -> !(Core.Data scope) -> Source Auto scope
+
 data Method s scope = Method
   { position :: Position,
     context :: Context s (Local ':+ scope),
@@ -119,11 +126,12 @@ data Method s scope = Method
 
 checkMethod ::
   Method s scope ->
+  Source origin scope ->
   Int ->
   ForallOver Core.TypeF Void (Local ':+ scope) ->
   MethodConcrete origin Group Resolve (Local ':+ scope) ->
   ST s (Unify.Solve s (MethodConcrete origin Group Check scope))
-checkMethod Method {position, context} _ scheme (Definition (Resolve member)) = do
+checkMethod Method {position, context} Manual _ scheme (Definition (Resolve member)) = do
   let Core.ForallOver {parameters, constraints, result} = scheme
   result <- pure $ logicalType result
   context <- Core.Scheme.augmentForall position scheme Mask.Runtime context
@@ -138,7 +146,9 @@ checkMethod Method {position, context} _ scheme (Definition (Resolve member)) = 
               constraints,
               result
             }
-checkMethod Method {base, self, extra} index scheme Generated {} =
+checkMethod Method {context, position} (Derive Type2.Eq typeIndex datax) index _ _
+  | Method.Equal <- toEnum index = Eq.equal context position typeIndex datax
+checkMethod Method {base, self, extra} _ index scheme Generated {} =
   pure $ do
     let Core.ForallOver {parameters, constraints} = scheme
     defaultx <- do
@@ -161,9 +171,10 @@ checkBody ::
   Solve solve logical s scope ->
   (declarations (ST s) -> InstanceDefinition2 solve' (ST s) Group Check scope) ->
   (declarations (ST s) -> Context s scope) ->
+  (Context s scope -> Type2.Index scope -> Type2.Index scope -> ST s (Source origin scope)) ->
   Strict.Vector (MethodConcrete origin Group Resolve scope) ->
   Topological.Formula declarations s (solve (InstanceDefinition origin Group Check scope))
-checkBody position key Solve {solve} reflection information members =
+checkBody position key Solve {solve} reflection information lookup members =
   Topological.Formula
     { cycle = cyclicalTypeChecking position,
       run = \declarations -> do
@@ -181,6 +192,7 @@ checkBody position key Solve {solve} reflection information members =
                 extra <- TypeBinding.extra (typeEnvironment Table.Type.! index)
                 pure (Extra.assumeClass <$> extra)
           Builtin.index (pure . pure) get index
+        source <- lookup context index head
         let base = foldl (#) (shift $ Core.Type.Constructor head) variables
               where
                 variables = [Core.Type.Variable $ Local.Local i | i <- [0 .. length parameters - 1]]
@@ -229,7 +241,7 @@ checkBody position key Solve {solve} reflection information members =
                   self,
                   extra
                 }
-        members <- Strict.Vector.izipWithM (checkMethod arguments) methods (shift <$> members)
+        members <- Strict.Vector.izipWithM (checkMethod arguments source) methods (shift <$> members)
         members <- solve $ sequence members
         pure $ do
           members <- members
@@ -252,10 +264,17 @@ check ::
 check position key solve reflection information = \case
   Standard (Identity header) ::: Identity (Identity InstanceDefinition {members}) ->
     Standard (checkHeader position information header)
-      ::: checkBody position key solve reflection information members
+      ::: checkBody position key solve reflection information lookup members
+    where
+      lookup _ _ _ = pure Manual
   DerivedInstance (Identity header) ::: Identity (Identity InstanceDefinition {members}) ->
     DerivedInstance (checkHeader position information header)
-      ::: checkBody position key solve reflection information members
+      ::: checkBody position key solve reflection information lookup members
+    where
+      lookup Context {typeEnvironment} index head = do
+        let get index = assumeData <$> TypeBinding.content (typeEnvironment Table.Type.! index)
+        datax <- Builtin.index pure get head
+        pure $ Derive index head datax
 
 solve ::
   InstanceDefinition2 (Unify.Solve s) Identity Group Check scope ->

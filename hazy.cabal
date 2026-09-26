@@ -181,6 +181,7 @@ executable hazy
     Semantic.Check.ConstructorInstance
     Semantic.Check.Context
     Semantic.Check.DataInstance
+    Semantic.Check.Derive.Eq
     Semantic.Check.EntryInstance
     Semantic.Check.Go.Declaration
     Semantic.Check.Go.Declarations

@@ -1,14 +1,16 @@
 module Core.Tree.TypeLambda where
 
 import qualified Core.Substitute as Substitute
-import Core.Tree.Constraints (Constraints)
+import Core.Tree.Constraints (Constraints, ConstraintsF (..))
 import qualified Core.Tree.Constraints as Constraints
 import {-# SOURCE #-} Core.Tree.Expression (Expression)
 import Core.Tree.Type (Type)
 import qualified Data.Kind as Kind
 import qualified Data.Vector.Strict as Strict
+import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Scope (Environment ((:+)), Local)
 import qualified Semantic.Scope as Scope
+import Semantic.Shift (shift)
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
 
@@ -55,6 +57,14 @@ instance (Scope.Show term) => Show (TypeLambdaOver term scope) where
         Scope.shows result,
         showString " }"
       ]
+
+mono :: (Shift0.Functor term) => term scope -> TypeLambdaOver term scope
+mono result =
+  TypeLambdaOver
+    { parameters = Strict.Vector.empty,
+      constraints = None,
+      result = shift result
+    }
 
 constraintCount :: TypeLambdaOver typef scope -> Constraints.ConstraintCount
 constraintCount TypeLambdaOver {constraints} = Constraints.constraintCount constraints

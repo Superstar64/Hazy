@@ -212,6 +212,9 @@ patternVariable = monoVariable $ Term.Pattern Term.At
 patternVariableAt :: Int -> Expression (Scope.SimplePattern ':+ scope)
 patternVariableAt index = monoVariable $ Term.SimplePattern index
 
+patternVariableAt' :: Int -> Expression (Scope.Pattern ':+ scope)
+patternVariableAt' index = monoVariable $ Term.Pattern $ Term.Select index Term.At
+
 character_ :: Char -> Expression scope
 character_ character = Character {character}
 
@@ -335,10 +338,29 @@ float_ float evidence =
           }
     }
 
-infixl 9 `call`
+bool :: Bool -> Expression scope
+bool value =
+  Constructor
+    { constructor = if value then Constructor.true else Constructor.false,
+      arguments = Strict.Vector.empty,
+      constructorInfo = ConstructorInfo {entries = Strict.Vector.empty}
+    }
 
-call :: Expression scope -> Expression scope -> Expression scope
-call function argument = Call {function, argument}
+true :: Expression scope
+true = bool True
+
+false :: Expression scope
+false = bool False
+
+infixr 3 &&
+
+(&&) :: Expression scope -> Expression scope -> Expression scope
+left && right = ifx left right false
+
+infixr 2 ||
+
+(||) :: Expression scope -> Expression scope -> Expression scope
+left || right = ifx left true right
 
 guard :: Statements scope -> Expression scope -> Expression scope
 guard left done =
@@ -368,6 +390,11 @@ ifx condition thenx =
             }
         )
     )
+
+infixl 9 `call`
+
+call :: Expression scope -> Expression scope -> Expression scope
+call function argument = Call {function, argument}
 
 class Simplify source where
   simplify :: source Normal Check scope -> Expression scope
