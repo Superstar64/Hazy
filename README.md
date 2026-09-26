@@ -15,7 +15,7 @@ Haskell features are missing, only a test Javascript backend is implemented.
 # Missing
 
 - Constrained Type Defaulting
-- Deriving
+- Deriving (Partial)
 - GADTs
 - Polymorphic Components
 - Strict Functions
@@ -443,6 +443,13 @@ Named field pun syntax is supported.
 
 Multiline strings are supported.
 
+### StandaloneDeriving
+* Pragma: `StandaloneDeriving`
+* Toggleable: False
+
+Standard alone deriving is supported. As of now it's the only supported
+`deriving` mechanism.
+
 # Deviations:
 ## Bugs
 These are deviations that will are planned to get fixed at some point.
@@ -475,6 +482,15 @@ data Usage = Usage
 instance Hidden Usage where
   private = Usage
 ```
+
+### Deriving instance is required
+
+Only `deriving instance` is support right now. Normal `deriving` declarations
+are completely ignored at the moment. Additionally, the only classes with
+deriving support are:
+* `Eq`
+
+
 
 ## Planned Toggles
 These are devitations that will eventually toggleable with a language pragma.

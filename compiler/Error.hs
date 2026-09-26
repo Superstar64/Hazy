@@ -86,6 +86,7 @@ module Error
     maskError,
     orphanInstance,
     improperBindingGroup,
+    cannotDerive,
     unsupportedFeatureRunST,
     unsupportedFeatureConstraintedTypeDefaulting,
     unsupportedFeatureStrictFunctions,
@@ -278,6 +279,7 @@ data Type
   | OrphanInstance
   | ImproperBindingGroup
   | UnsupportedFeature
+  | CannotDerive
   deriving (Show, Eq, Enum, Bounded)
 
 types :: Map String Type
@@ -539,6 +541,14 @@ orphanInstance position = errorAt OrphanInstance position $ fromString "Orphan i
 
 improperBindingGroup :: Position -> a
 improperBindingGroup position = errorAt ImproperBindingGroup position $ fromString "improper binding group"
+
+cannotDerive :: Position -> Builder -> a
+cannotDerive position instancex = errorAt CannotDerive position $ mconcat builders
+  where
+    builders =
+      [ fromString "cannot derive: ",
+        instancex
+      ]
 
 strictFunctions = fromString "strict functions"
 

@@ -27,9 +27,10 @@ import qualified Data.Vector as Vector
 import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
 import Data.Void (Void)
-import Error (cyclicalTypeChecking)
+import Error (cannotDerive, cyclicalTypeChecking)
 import qualified Graph.Topological as Topological
 import Semantic.Check.Context (Context (..))
+import qualified Semantic.Check.Context as Context
 import qualified Semantic.Check.Derive.Eq as Eq
 import Semantic.Check.Go.Definition4 (Solve (..))
 import qualified Semantic.Check.Go.Scheme as Scheme
@@ -45,7 +46,7 @@ import qualified Semantic.Index.Evidence0 as Evidence0
 import qualified Semantic.Index.Local as Local
 import qualified Semantic.Index.Method as Method
 import qualified Semantic.Index.Table.Type as Table.Type
-import qualified Semantic.Index.Type as Type
+import qualified Semantic.Index.Type as Type (Index)
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Layout (Group)
 import Semantic.Scope (Environment (..), Local)
@@ -59,9 +60,12 @@ import Semantic.Tree.Constraints (Constraints (Constraints, None))
 import Semantic.Tree.InstanceDefinition (InstanceDefinition (..))
 import Semantic.Tree.InstanceDefinition2 (Annotation (..), Header (..), InstanceDefinition2 (..))
 import Semantic.Tree.MethodConcrete (Auto, MethodConcrete (..))
+import qualified Semantic.Tree.Type as Type (Synonym (..), Type (..), label)
 import Semantic.Tree.TypePattern (TypePattern (..))
 import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
+import qualified Syntax.Printer as Printer
+import qualified Syntax.Tree.Type as Syntax.Type
 import Prelude hiding (head)
 
 data Key scope
@@ -114,7 +118,13 @@ checkHeader position information Header {parameters, prerequisites} =
 
 data Source origin scope where
   Manual :: Source origin scope
-  Derive :: !(Type2.Index scope) -> !(Type2.Index scope) -> !(Core.Data scope) -> Source Auto scope
+  -- `Core.Data` may be undefined. This, however, should never happen for
+  -- `deriving` clauses that are not orphans.
+  Derive ::
+    !(Type2.Index scope) ->
+    !(Type2.Index scope) ->
+    Core.Data scope ->
+    Source Auto scope
 
 data Method s scope = Method
   { position :: Position,
@@ -148,7 +158,34 @@ checkMethod Method {position, context} Manual _ scheme (Definition (Resolve memb
             }
 checkMethod Method {context, position} (Derive Type2.Eq typeIndex datax) index _ _
   | Method.Equal <- toEnum index = Eq.equal context position typeIndex datax
-checkMethod Method {base, self, extra} _ index scheme Generated {} =
+checkMethod Method {context, position, base, self, extra} source index scheme Generated {} = do
+  case source of
+    Manual -> pure ()
+    Derive classx datax _ -> case classx of
+      Type2.Eq -> pure ()
+      _ ->
+        let labelContext = Context.label context
+            resolve =
+              Type.Call
+                { startPosition = (),
+                  function =
+                    Type.Constructor
+                      { startPosition = (),
+                        constructorPosition = (),
+                        constructor = shift classx,
+                        synonym = Type.NoSynonym
+                      },
+                  argument =
+                    Type.Constructor
+                      { startPosition = (),
+                        constructorPosition = (),
+                        constructor = shift datax,
+                        synonym = Type.NoSynonym
+                      }
+                }
+            syntax = Type.label labelContext resolve
+            text = Printer.build $ Syntax.Type.print syntax
+         in cannotDerive position text
   pure $ do
     let Core.ForallOver {parameters, constraints} = scheme
     defaultx <- do
@@ -271,10 +308,10 @@ check position key solve reflection information = \case
     DerivedInstance (checkHeader position information header)
       ::: checkBody position key solve reflection information lookup members
     where
-      lookup Context {typeEnvironment} index head = do
-        let get index = assumeData <$> TypeBinding.content (typeEnvironment Table.Type.! index)
-        datax <- Builtin.index pure get head
-        pure $ Derive index head datax
+      lookup Context {typeEnvironment} index (Type2.Index head) = do
+        datax <- assumeData <$> TypeBinding.content (typeEnvironment Table.Type.! head)
+        pure $ Derive index (Type2.Index head) datax
+      lookup _ index head = pure $ Derive index head $ error "not user defined data"
 
 solve ::
   InstanceDefinition2 (Unify.Solve s) Identity Group Check scope ->
