@@ -482,7 +482,6 @@ executable hazy
 
   hs-source-dirs:
     compiler
-    utility
 
   default-language: Haskell2010
   ghc-options:
