@@ -9,9 +9,7 @@ import qualified Core.Tree.Type as Core (char, constructor, list, typex)
 import Core.Tree.TypeDeclaration (assumeData)
 import Core.Type.Functor (shiftLogical)
 import Data.Map (Map)
-import Data.Strict.Vector1 (toVector)
 import qualified Data.Strict.Vector1 as Strict (Vector1)
-import qualified Data.Strict.Vector1 as Strict.Vector1
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
 import Error
@@ -118,7 +116,7 @@ patternx ! Bound.At = typex patternx
 patternx ! Bound.Select index bound = case patternx of
   Constructor {patterns} -> patterns Strict.Vector.! index ! bound
   Record {fields} -> fields Strict.Vector.! index Field.! bound
-  List {items} -> toVector items Strict.Vector.! index ! bound
+  List {items} -> items Strict.Vector.! index ! bound
   Integer {} -> error "bad index"
   Float {} -> error "bad index"
   Character {} -> error "bad index"
@@ -139,7 +137,7 @@ augmentPattern patternx = Term.Bound {at, select}
     at = TermBinding $ pure $ Wobbly (shiftLogical (Core.mono $ typex patternx))
     select = case patternx of
       Wildcard {} -> Strict.Vector.empty
-      List {items} -> Strict.Vector.map augmentPattern $ Strict.Vector1.toVector items
+      List {items} -> Strict.Vector.map augmentPattern items
       Constructor {patterns} -> fmap augmentPattern patterns
       Record {fields} -> fmap Field.augmentField fields
       Integer {} -> Strict.Vector.empty

@@ -34,7 +34,6 @@ import Data.List.Reverse (List (..))
 import qualified Data.List.Reverse as Reverse
 import Data.Ratio (denominator, numerator)
 import qualified Data.Strict.Maybe as Strict (Maybe (..))
-import qualified Data.Strict.Vector2 as Strict.Vector2
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
 import qualified Semantic.Check.Simple.ConstructorInfo as Semantic (ConstructorInfo (ConstructorInfo))
@@ -678,7 +677,7 @@ simplifyWith expression [] = case expression of
   Semantic.Tuple {elements} ->
     Constructor
       { constructor = Constructor.tuple (length elements),
-        arguments = simplify <$> Strict.Vector2.toVector elements,
+        arguments = simplify <$> elements,
         constructorInfo =
           ConstructorInfo
             { entries =

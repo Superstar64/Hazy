@@ -4,7 +4,6 @@ module Semantic.Tree.Type where
 
 import {-# SOURCE #-} qualified Core.Tree.Type as Simple
 import qualified Data.Strict.Vector1 as Strict (Vector1)
-import qualified Data.Strict.Vector1 as Strict.Vector1
 import qualified Data.Strict.Vector2 as Strict (Vector2)
 import Data.Text (pack)
 import qualified Data.Vector.Strict as Strict.Vector
@@ -414,7 +413,7 @@ label context = \case
   LiftedList {items} ->
     Syntax.LiftedList
       { startPosition = (),
-        items = Strict.Vector1.toVector $ label context <$> items
+        items = label context <$> items
       }
   Type {universe} ->
     Syntax.Type

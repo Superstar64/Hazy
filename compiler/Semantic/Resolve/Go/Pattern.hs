@@ -6,8 +6,6 @@ import Data.Foldable (toList)
 import Data.Functor.Identity (Identity (..))
 import Data.Map (Map)
 import qualified Data.Map as Map
-import qualified Data.Strict.Vector1 as Strict.Vector1
-import qualified Data.Strict.Vector2 as Strict.Vector2
 import qualified Data.Vector.Strict as Strict.Vector
 import Error (duplicateVariableEntries)
 import qualified Semantic.Index.Constructor as Constructor (cons, nil, tuple)
@@ -221,7 +219,7 @@ resolve context = \case
         irrefutable = Prelude.False,
         constructorPosition = startPosition,
         constructor = Constructor.tuple (length elements),
-        patterns = resolve context <$> Strict.Vector2.toVector elements,
+        patterns = resolve context <$> elements,
         single = Prelude.True,
         constructorInfo = Inferred
       }
@@ -241,7 +239,7 @@ resolve context = \case
           { names = Map.empty,
             irrefutable = Prelude.False,
             startPosition,
-            items = fmap (resolve context) (Strict.Vector1.fromVector items)
+            items = fmap (resolve context) items
           }
   Syntax.Cons {startPosition, head, tail} ->
     Constructor

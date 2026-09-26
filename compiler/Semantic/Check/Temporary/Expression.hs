@@ -10,7 +10,6 @@ import qualified Core.Tree.TypeLambda as Simple
 import Core.Type.Functor (shiftLogical)
 import qualified Data.Strict.Vector1 as Strict (Vector1)
 import qualified Data.Strict.Vector2 as Strict (Vector2)
-import qualified Data.Strict.Vector2 as Strict.Vector2
 import Data.Traversable (for)
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
@@ -233,7 +232,7 @@ check context typex Semantic.Tuple {startPosition, elements} = do
     typex <- Unify.fresh Core.typex
     element <- check context typex element
     pure (typex, element)
-  let (types, elements) = Strict.Vector2.unzip items
+  let (types, elements) = Strict.Vector.unzip items
   let target = foldl (#) (Core.tupling $ length elements) types
   Unify.unify context startPosition typex target
   pure $ Tuple {startPosition, elements}

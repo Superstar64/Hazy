@@ -2,7 +2,6 @@
 
 module Semantic.Resolve.Go.Type where
 
-import qualified Data.Strict.Vector1 as Strict.Vector1
 import Data.Text (pack)
 import qualified Data.Vector.Strict as Strict.Vector
 import qualified Semantic.Index.Constructor as Constructor
@@ -134,7 +133,7 @@ resolve context = \case
     | otherwise ->
         LiftedList
           { startPosition,
-            items = resolve context <$> Strict.Vector1.fromVector items
+            items = resolve context <$> items
           }
   Syntax.Infix {startPosition, left, operator, right} ->
     Infix.fix operators
@@ -293,7 +292,7 @@ label context = \case
   LiftedList {items} ->
     Syntax.LiftedList
       { startPosition = (),
-        items = Strict.Vector1.toVector $ label context <$> items
+        items = label context <$> items
       }
   Type {universe} ->
     Syntax.Type
