@@ -341,7 +341,8 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
         Unsolved {kind, constraints, erasure} -> do
           case Map.lookup classx constraints of
             Nothing -> do
-              target <- fresh (Type Large)
+              universe <- fresh Universe
+              target <- fresh (Type universe)
               real <- Context.lookupKind position context classx
               unify context position (Function target Constraint) real
 

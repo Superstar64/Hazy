@@ -46,13 +46,15 @@ check
       head,
       arguments
     } = do
-    target <- Unify.fresh Core.kind
+    universe <- Unify.fresh Core.universe
+    target <- Unify.fresh (Core.typeWith universe)
     real <- Context.lookupKind startPosition context (shift classx)
 
     Unify.unify context startPosition (target -#> Core.constraint) real
 
     let check context kind (arguments :> argument) = do
-          parameterType <- Unify.fresh Core.kind
+          universe <- Unify.fresh Core.universe
+          parameterType <- Unify.fresh (Core.typeWith universe)
           arguments <- check context (parameterType -#> kind) arguments
           argument <- Type.check context parameterType argument
           pure (arguments :> argument)

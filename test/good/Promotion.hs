@@ -20,3 +20,9 @@ class Generate a where
 
 instance Generate 'True where
   generate = sample
+
+usage1 :: (Generate a) => Promoted a
+usage1 = generate
+
+usage2 :: Promoted 'True
+usage2 = generate
