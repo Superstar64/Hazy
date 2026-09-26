@@ -5,7 +5,7 @@ import Core.Substitute (substituteType)
 import Core.Tree.Entry (Entry (..))
 import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
-import Semantic.Check.Context (Context)
+import {-# SOURCE #-} Semantic.Check.Context (Context)
 import qualified Semantic.Check.Mask as Mask
 import Semantic.Check.Temporary.EntryInfo (EntryInfo (..))
 import Semantic.Scope (Environment (..), Local)

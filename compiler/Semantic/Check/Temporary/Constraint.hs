@@ -1,11 +1,9 @@
 module Semantic.Check.Temporary.Constraint where
 
 import Control.Monad.ST (ST)
-import qualified Core.Builtin as Builtin
 import Core.Substitute (logicalType)
 import Core.Tree.Type ((-#>))
 import qualified Core.Tree.Type as Core
-import Core.Tree.TypeDeclaration (assumeData)
 import Data.Foldable (toList)
 import Data.List.Reverse (List (Nil, (:>)))
 import qualified Data.List.Reverse as Reverse
@@ -13,17 +11,12 @@ import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
 import Error (unsupportedFeatureEqualityConstraints)
 import Semantic.Check.Context (Context (..))
-import qualified Semantic.Check.DataInstance as DataInstance
+import qualified Semantic.Check.Context as Context
 import qualified Semantic.Check.LocalBinding as LocalBinding
-import qualified Semantic.Check.Simple.Data as Simple.Data
 import Semantic.Check.Temporary.Type (Type)
 import qualified Semantic.Check.Temporary.Type as Type (check, solve)
-import Semantic.Check.TypeBinding (TypeBinding (TypeBinding))
-import qualified Semantic.Check.TypeBinding as TypeBinding
-import qualified Semantic.Index.Constructor as Constructor
 import Semantic.Index.Local (Index (Local))
 import qualified Semantic.Index.Table.Local as Table.Local
-import qualified Semantic.Index.Table.Type as Type.Table
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Scope (Environment (..), Local)
 import Semantic.Shift (shift)
@@ -46,7 +39,7 @@ check ::
   Semantic.Constraint Position Resolve scope ->
   ST s (Constraint s scope)
 check
-  context@Context {localEnvironment, typeEnvironment}
+  context@Context {localEnvironment}
   Semantic.Constraint
     { startPosition,
       classx,
@@ -54,20 +47,7 @@ check
       arguments
     } = do
     target <- Unify.fresh Core.kind
-    let indexType constructor
-          | TypeBinding {kind} <- typeEnvironment Type.Table.! constructor =
-              do
-                kind <- kind
-                case kind of
-                  TypeBinding.Rigid kind -> pure $ logicalType kind
-                  TypeBinding.Wobbly kind -> pure kind
-        indexLift constructor@Constructor.Index {typeIndex} = do
-          datax <- do
-            let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.Table.! index)
-            datax <- Builtin.index pure get typeIndex
-            Simple.Data.instanciate context startPosition datax
-          pure $ DataInstance.constructorFunction datax constructor
-    real <- Builtin.kind (pure . logicalType) indexType indexLift (shift classx)
+    real <- Context.lookupKind startPosition context (shift classx)
 
     Unify.unify context startPosition (target -#> Core.constraint) real
 

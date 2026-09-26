@@ -2,7 +2,6 @@ module Semantic.Unify.Type where
 
 import Control.Monad (zipWithM_)
 import Control.Monad.ST (ST)
-import {-# SOURCE #-} qualified Core.Builtin as Builtin (index, kind)
 import Core.Substitute (logicalEvidence, logicalType, substituteType)
 import qualified Core.Tree.Constraint as Simple (argument)
 import qualified Core.Tree.Constraint as Simple.Constraint
@@ -12,7 +11,6 @@ import Core.Tree.Instanciation (InstanciationF (Instanciation))
 import qualified Core.Tree.Instanciation as Instanciation (InstanciationF (..))
 import Core.Tree.Type (TypeF (..), (#))
 import qualified Core.Tree.Type as Simple (Type)
-import Core.Tree.TypeDeclaration (assumeData)
 import Core.Type.Functor (shiftLogical)
 import Data.Foldable (for_, toList, traverse_)
 import Data.Map (Map)
@@ -22,16 +20,13 @@ import Data.Traversable (for)
 import qualified Data.Vector as Vector
 import Error (unsupportedFeatureConstraintedTypeDefaulting)
 import Semantic.Check.Context (Context (..))
-import qualified Semantic.Check.DataInstance as DataInstance
+import qualified Semantic.Check.Context as Context
 import qualified Semantic.Check.LocalBinding as Local (Constraint (..), LocalBinding (..))
 import qualified Semantic.Check.Mask as Mask
-import qualified Semantic.Check.Simple.Data as Simple.Data
 import Semantic.Check.TypeBinding (TypeBinding (TypeBinding))
 import qualified Semantic.Check.TypeBinding as TypeBinding
-import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Evidence as Evidence (Index (..))
 import qualified Semantic.Index.Table.Local as Local.Table
-import qualified Semantic.Index.Table.Type as Type ((!))
 import qualified Semantic.Index.Table.Type as Type.Table
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Scope (Environment (..))
@@ -201,7 +196,7 @@ typeCheck :: Context s scope -> Position -> Type s scope -> Type s scope -> ST s
 typeCheck context_ position = typeCheckWith context_
   where
     typeCheckWith :: Context s scope -> Type s scope -> Type s scope -> ST s ()
-    typeCheckWith context@Context {localEnvironment, typeEnvironment} = typeCheck
+    typeCheckWith context@Context {localEnvironment} = typeCheck
       where
         typeCheck kind = \case
           Logical (Box reference) ->
@@ -218,22 +213,8 @@ typeCheck context_ position = typeCheckWith context_
             Local.Wobbly {wobbly} -> do
               unify context position kind wobbly
           Constructor constructor -> do
-            kind' <- Builtin.kind (pure . logicalType) indexType indexLift constructor
+            kind' <- Context.lookupKind position context constructor
             unify context position kind' kind
-            where
-              indexType index =
-                case typeEnvironment Type.Table.! index of
-                  TypeBinding {kind} -> do
-                    kind <- kind
-                    case kind of
-                      TypeBinding.Rigid kind -> pure $ logicalType kind
-                      TypeBinding.Wobbly kind -> pure kind
-              indexLift constructor@Constructor.Index {typeIndex} = do
-                datax <- do
-                  let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
-                  datax <- Builtin.index pure get typeIndex
-                  Simple.Data.instanciate context position datax
-                pure $ DataInstance.constructorFunction datax constructor
           Constraint -> unify context position (Type Large) kind
           Levity -> unify context position (Type Large) kind
           Small -> unify context position Universe kind
@@ -354,27 +335,14 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
       Type s scope ->
       [Type s scope] ->
       ST s (Evidence s scope)
-    constrainWith context@Context {typeEnvironment} classx term@(Logical (Box reference)) arguments =
+    constrainWith context classx term@(Logical (Box reference)) arguments =
       readSTRef reference >>= \case
         Solved term -> constrainWith context classx term arguments
         Unsolved {kind, constraints, erasure} -> do
           case Map.lookup classx constraints of
             Nothing -> do
               target <- fresh (Type Large)
-              let indexType index =
-                    case typeEnvironment Type.Table.! index of
-                      TypeBinding {kind} -> do
-                        kind <- kind
-                        case kind of
-                          TypeBinding.Rigid kind -> pure $ logicalType kind
-                          TypeBinding.Wobbly wobbly -> pure wobbly
-                  indexLift constructor@Constructor.Index {typeIndex} = do
-                    datax <- do
-                      let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
-                      datax <- Builtin.index pure get typeIndex
-                      Simple.Data.instanciate context position datax
-                    pure $ DataInstance.constructorFunction datax constructor
-              real <- Builtin.kind (pure . logicalType) indexType indexLift classx
+              real <- Context.lookupKind position context classx
               unify context position (Function target Constraint) real
 
               typeCheck context position target (foldl (#) term arguments)

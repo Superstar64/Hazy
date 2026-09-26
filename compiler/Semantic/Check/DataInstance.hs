@@ -11,7 +11,7 @@ import Order (orderListInt')
 import Semantic.Check.ConstructorInstance (ConstructorInstance (..))
 import qualified Semantic.Check.ConstructorInstance as Constructor (info)
 import qualified Semantic.Check.ConstructorInstance as ConstructorInstance
-import Semantic.Check.Context (Context)
+import {-# SOURCE #-} Semantic.Check.Context (Context)
 import Semantic.Check.EntryInstance (EntryInstance (..))
 import Semantic.Check.Temporary.SelectorInfo (Select (..), SelectorInfo (..))
 import Semantic.Check.Temporary.UpdateInfo (UpdateInfo (..))

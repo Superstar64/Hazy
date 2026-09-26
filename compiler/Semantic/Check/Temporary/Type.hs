@@ -3,27 +3,18 @@
 module Semantic.Check.Temporary.Type where
 
 import Control.Monad.ST (ST)
-import qualified Core.Builtin as Builtin
 import Core.Substitute (logicalType)
 import Core.Tree.Type ((-#>))
 import qualified Core.Tree.Type as Core
-import Core.Tree.TypeDeclaration as Simple (assumeData)
 import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import qualified Data.Strict.Vector1 as Strict (Vector1)
 import qualified Data.Strict.Vector2 as Strict (Vector2)
 import Error (uncheckable, universeMustBeSmall, unsupportedFeatureStrictFunctions)
 import Semantic.Check.Context (Context (..))
 import qualified Semantic.Check.Context as Context
-import qualified Semantic.Check.DataInstance as DataInstance
 import qualified Semantic.Check.LocalBinding as LocalBinding (LocalBinding (..))
-import qualified Semantic.Check.Simple.Data as Simple.Data
-import Semantic.Check.TypeBinding (TypeBinding (TypeBinding))
-import qualified Semantic.Check.TypeBinding as TypeBinding
-import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Local as Local
 import qualified Semantic.Index.Table.Local as Local.Table
-import qualified Semantic.Index.Table.Type as Type
-import qualified Semantic.Index.Table.Type as Type.Table
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Stage (Check, Resolve)
 import qualified Semantic.Tree.Type as Semantic (Synonym (..), Type (..))
@@ -67,7 +58,7 @@ data Type s scope
   | Levity {startPosition :: !Position}
 
 check :: Context s scope -> Unify.Type s scope -> Semantic.Type Position Resolve scope -> ST s (Type s scope)
-check context@Context {localEnvironment, typeEnvironment} kind = \case
+check context@Context {localEnvironment} kind = \case
   Semantic.Variable {startPosition, variable} -> case localEnvironment Local.Table.! variable of
     LocalBinding.Rigid {rigid}
       | rigid <- logicalType rigid -> do
@@ -77,23 +68,9 @@ check context@Context {localEnvironment, typeEnvironment} kind = \case
       Unify.unify context startPosition kind wobbly
       pure Variable {startPosition, variable}
   Semantic.Constructor {startPosition, constructorPosition, constructor} -> do
-    kind' <- Builtin.kind (pure . logicalType) indexType indexLift constructor
+    kind' <- Context.lookupKind constructorPosition context constructor
     Unify.unify context constructorPosition kind kind'
     pure Constructor {startPosition, constructorPosition, constructor}
-    where
-      indexType constructor
-        | TypeBinding {kind} <- typeEnvironment Type.Table.! constructor =
-            do
-              kind <- kind
-              case kind of
-                TypeBinding.Rigid kind -> pure $ logicalType kind
-                TypeBinding.Wobbly kind -> pure kind
-      indexLift constructor@Constructor.Index {typeIndex} = do
-        datax <- do
-          let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
-          datax <- Builtin.index pure get typeIndex
-          Simple.Data.instanciate context constructorPosition datax
-        pure $ DataInstance.constructorFunction datax constructor
   Semantic.Tuple {startPosition, elements} -> do
     elements <- traverse (check context Core.typex) elements
     Unify.unify context startPosition kind Core.typex

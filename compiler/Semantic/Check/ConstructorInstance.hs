@@ -4,7 +4,7 @@ import Control.Monad.ST (ST)
 import Core.Tree.Type ((-#>))
 import Data.Foldable (traverse_)
 import qualified Data.Vector.Strict as Strict
-import Semantic.Check.Context (Context)
+import {-# SOURCE #-} Semantic.Check.Context (Context)
 import Semantic.Check.EntryInstance (EntryInstance, entry)
 import qualified Semantic.Check.EntryInstance as EntryInstance
 import Semantic.Check.Temporary.ConstructorInfo (ConstructorInfo (..))

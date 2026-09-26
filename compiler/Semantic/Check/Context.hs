@@ -1,22 +1,30 @@
 module Semantic.Check.Context where
 
 import Control.Monad.ST (ST)
+import qualified Core.Builtin as Builtin
+import Core.Substitute (logicalType)
 import Core.Tree.Type (Type)
+import qualified Core.Tree.Type as Core
+import Core.Tree.TypeDeclaration (assumeData)
 import qualified Data.Kind
 import qualified Data.Strict.Maybe as Strict
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
+import qualified Semantic.Check.DataInstance as DataInstance
 import Semantic.Check.LocalBinding (LocalBinding)
 import qualified Semantic.Check.LocalBinding as LocalBinding
+import Semantic.Check.Simple.Data as Simple.Data (instanciate)
 import Semantic.Check.TermBinding (TermBinding (..))
 import qualified Semantic.Check.TermBinding as TermBinding
 import Semantic.Check.TypeBinding (TypeBinding (..))
 import qualified Semantic.Check.TypeBinding as TypeBinding
+import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Link.Type as Type (Link)
 import qualified Semantic.Index.Link.Type as Type.Link
 import qualified Semantic.Index.Table.Local as Local
 import qualified Semantic.Index.Table.Term as Term
 import qualified Semantic.Index.Table.Type as Type (Map (..), Table (..), map, (!))
+import qualified Semantic.Index.Table.Type as Type.Table
 import qualified Semantic.Index.Type2 as Type2
 import qualified Semantic.Label.Binding.Type as Label (TypeBinding)
 import qualified Semantic.Label.Context as Label (Context (..))
@@ -148,3 +156,24 @@ lookupSynonym Context {typeEnvironment} (Type2.Index index) = do
   let TypeBinding {synonym} = typeEnvironment Type.! index
   synonym
 lookupSynonym _ _ = pure Strict.Nothing
+
+lookupKind ::
+  Position ->
+  Context s scope ->
+  Type2.Index scope ->
+  ST s (Core.TypeF (Unify.Logical s scope) scope)
+lookupKind position context@Context {typeEnvironment} index = do
+  let indexType index =
+        case typeEnvironment Type.Table.! index of
+          TypeBinding {kind} -> do
+            kind <- kind
+            case kind of
+              TypeBinding.Rigid kind -> pure $ logicalType kind
+              TypeBinding.Wobbly wobbly -> pure wobbly
+      indexLift constructor@Constructor.Index {typeIndex} = do
+        datax <- do
+          let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
+          datax <- Builtin.index pure get typeIndex
+          Simple.Data.instanciate context position datax
+        pure $ DataInstance.constructorFunction datax constructor
+  Builtin.kind (pure . logicalType) indexType indexLift index
