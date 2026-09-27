@@ -10,7 +10,7 @@ import qualified Semantic.Index.Term as Term
 import qualified Semantic.Index.Term0 as Term0
 import qualified Semantic.Index.Type as Type
 import qualified Semantic.Index.Type0 as Type0
-import {-# SOURCE #-} Semantic.Index.Type2 as Type2 (Index)
+import qualified Semantic.Index.Type2 as Type2
 import Semantic.Layout (Layout)
 import Semantic.Scope (Environment ((:+)), Vacuous)
 import qualified Semantic.Scope as Scope
@@ -187,6 +187,12 @@ instance Functor Type.Index where
         FinishPattern {} -> generalFinishPattern
         FinishNewtype {} -> generalFinishNewtype
         ReplaceIrrefutable {} -> generalReplaceIrrefutable
+
+instance Functor Type2.Index where
+  map category = Type2.map (map category)
+
+instance PartialUnshift Type2.Index where
+  partialUnshift abort = Type2.traverse (partialUnshift abort)
 
 instance PartialUnshift Type.Index where
   partialUnshift _ (Type.Shift index) = pure index
