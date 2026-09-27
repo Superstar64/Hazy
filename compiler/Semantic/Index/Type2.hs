@@ -1,6 +1,5 @@
 module Semantic.Index.Type2 where
 
-import Data.Functor.Identity (Identity (..))
 import {-# SOURCE #-} qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Type as Type1
 import Semantic.Scope (Environment ((:+)), Local)
@@ -34,37 +33,41 @@ data Index scope
   | Strict
   deriving (Show, Eq, Ord)
 
-map :: (Type1.Index scope -> Type1.Index scope') -> Index scope -> Index scope'
-map run = runIdentity . traverse (Identity . run)
+data Split scope
+  = Normal !(Type1.Index scope)
+  | Constructor !(Constructor.Index scope)
+  | Builtin !(forall scope. Index scope)
 
-traverse :: (Applicative m) => (Type1.Index scope -> m (Type1.Index scope')) -> Index scope -> m (Index scope')
-traverse run = \case
-  Index index -> Index <$> run index
-  Lifted index -> Lifted <$> Constructor.traverse run index
-  typex -> pure $ case typex of
-    Bool -> Bool
-    Char -> Char
-    ST -> ST
-    Arrow -> Arrow
-    List -> List
-    Tuple count -> Tuple count
-    Integer -> Integer
-    Int -> Int
-    Ordering -> Ordering
-    Ratio -> Ratio
-    Num -> Num
-    Enum -> Enum
-    Eq -> Eq
-    Ord -> Ord
-    Integral -> Integral
-    Fractional -> Fractional
-    Real -> Real
-    Functor -> Functor
-    Applicative -> Applicative
-    Monad -> Monad
-    MonadFail -> MonadFail
-    Lazy -> Lazy
-    Strict -> Strict
+split :: Index scope -> Split scope
+split = \case
+  Index index -> Normal index
+  Lifted constructor -> Constructor constructor
+  Bool -> Builtin Bool
+  Char -> Builtin Char
+  ST -> Builtin ST
+  Arrow -> Builtin Arrow
+  List -> Builtin List
+  Tuple count -> Builtin (Tuple count)
+  Integer -> Builtin Integer
+  Int -> Builtin Int
+  Ordering -> Builtin Ordering
+  Ratio -> Builtin Ratio
+  Num -> Builtin Num
+  Enum -> Builtin Enum
+  Eq -> Builtin Eq
+  Ord -> Builtin Ord
+  Real -> Builtin Real
+  Integral -> Builtin Integral
+  Fractional -> Builtin Fractional
+  Functor -> Builtin Functor
+  Applicative -> Builtin Applicative
+  Monad -> Builtin Monad
+  MonadFail -> Builtin MonadFail
+  Lazy -> Builtin Lazy
+  Strict -> Builtin Strict
 
 unlocal :: Index (Local ':+ scope) -> Index scope
-unlocal = map Type1.unlocal
+unlocal index = case split index of
+  Normal normal -> Index $ Type1.unlocal normal
+  Constructor lifted -> Lifted $ Constructor.unlocal lifted
+  Builtin builtin -> builtin

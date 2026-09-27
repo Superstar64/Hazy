@@ -3,8 +3,9 @@
 module Semantic.Index.Constructor where
 
 import Data.Kind (Type)
-import qualified Semantic.Index.Type as Type1
-import Semantic.Scope (Environment)
+import Semantic.Scope (Environment (..), Local)
+import {-# SOURCE #-} qualified Semantic.Shift as Shift
+import {-# SOURCE #-} qualified Semantic.Shift0 as Shift0
 
 type role Index nominal
 
@@ -17,4 +18,10 @@ instance Eq (Index scope)
 
 instance Ord (Index scope)
 
-traverse :: (Applicative m) => (Type1.Index scope -> m (Type1.Index scope')) -> Index scope -> m (Index scope')
+instance Shift0.Functor Index
+
+instance Shift.Functor Index
+
+instance Shift.PartialUnshift Index
+
+unlocal :: Index (Local ':+ scope) -> Index scope

@@ -189,10 +189,16 @@ instance Functor Type.Index where
         ReplaceIrrefutable {} -> generalReplaceIrrefutable
 
 instance Functor Type2.Index where
-  map category = Type2.map (map category)
+  map category index = case Type2.split index of
+    Type2.Normal index -> Type2.Index $ map category index
+    Type2.Constructor index -> Type2.Lifted $ map category index
+    Type2.Builtin index -> index
 
 instance PartialUnshift Type2.Index where
-  partialUnshift abort = Type2.traverse (partialUnshift abort)
+  partialUnshift abort index = case Type2.split index of
+    Type2.Normal index -> Type2.Index <$> partialUnshift abort index
+    Type2.Constructor index -> Type2.Lifted <$> partialUnshift abort index
+    Type2.Builtin index -> pure index
 
 instance PartialUnshift Type.Index where
   partialUnshift _ (Type.Shift index) = pure index

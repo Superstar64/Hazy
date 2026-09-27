@@ -1,8 +1,8 @@
 module Semantic.Index.Constructor where
 
-import Data.Functor.Identity (Identity (..))
 import qualified Semantic.Index.Type as Type
 import qualified Semantic.Index.Type2 as Type2
+import Semantic.Scope (Environment (..), Local)
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
 import Prelude hiding (Bool (..), Ordering (..), map, traverse)
@@ -101,18 +101,25 @@ run normal All {bool, list, tuplex, ordering, ratio} Index {typeIndex, construct
     Type2.Ratio -> ratio (toEnum constructorIndex)
     _ -> error "bad run constructor"
 
-map :: (Type.Index scope -> Type.Index scope') -> Index scope -> Index scope'
-map run = runIdentity . traverse (Identity . run)
-
-traverse :: (Applicative m) => (Type.Index scope -> m (Type.Index scope')) -> Index scope -> m (Index scope')
-traverse run Index {typeIndex, constructorIndex} =
-  Index <$> Type2.traverse run typeIndex <*> pure constructorIndex
-
 instance Shift0.Functor Index where
   map = Shift.mapDefault
 
 instance Shift.Functor Index where
-  map category = map (Shift.map category)
+  map category Index {typeIndex, constructorIndex} =
+    Index
+      { typeIndex = Shift.map category typeIndex,
+        constructorIndex
+      }
 
 instance Shift.PartialUnshift Index where
-  partialUnshift abort = traverse (Shift.partialUnshift abort)
+  partialUnshift abort Index {typeIndex, constructorIndex} =
+    index <$> Shift.partialUnshift abort typeIndex
+    where
+      index typeIndex = Index {typeIndex, constructorIndex}
+
+unlocal :: Index (Local ':+ scope) -> Index scope
+unlocal Index {typeIndex, constructorIndex} =
+  Index
+    { typeIndex = Type2.unlocal typeIndex,
+      constructorIndex
+    }

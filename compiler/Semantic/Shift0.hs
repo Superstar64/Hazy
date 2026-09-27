@@ -5,6 +5,7 @@ import qualified Semantic.Index.Evidence0 as Evidence0
 import qualified Semantic.Index.Local as Local
 import qualified Semantic.Index.Term as Term
 import qualified Semantic.Index.Type as Type
+import Semantic.Index.Type2 (Split (..))
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Layout (Layout)
 import Semantic.Scope (Environment (..), Vacuous)
@@ -32,7 +33,10 @@ instance Functor Type.Index where
   map (after :. before) index = map after (map before index)
 
 instance Functor Type2.Index where
-  map category = Type2.map (map category)
+  map category index = case Type2.split index of
+    Normal index -> Type2.Index $ map category index
+    Constructor index -> Type2.Lifted $ map category index
+    Builtin index -> index
 
 instance Functor Evidence0.Index where
   map Id index = index

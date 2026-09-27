@@ -1,7 +1,7 @@
 module Semantic.FreeVariables where
 
-import Control.Applicative (Const (..))
 import Data.Kind (Constraint, Type)
+import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Term as Term
 import qualified Semantic.Index.Term0 as Term0
 import qualified Semantic.Index.Type as Type
@@ -35,4 +35,7 @@ typex (Over free) (Type.Shift index) = typex free index
 typex _ _ = []
 
 type2 :: Target scope scope' -> Type2.Index scope -> [Type0.Index scope']
-type2 target index = getConst $ Type2.traverse (Const . typex target) index
+type2 target = \case
+  Type2.Index index -> typex target index
+  Type2.Lifted Constructor.Index {typeIndex} -> type2 target typeIndex
+  _ -> []
