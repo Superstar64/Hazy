@@ -20,7 +20,6 @@ import Generate.Context (Context (..), fresh, singleBinding, symbol, (!-))
 import qualified Generate.Context as Context
 import {-# SOURCE #-} qualified Generate.Go.Declarations as Declarations
 import qualified Generate.Go.Evidence as Evidence
-import qualified Generate.Go.Hook as Hook
 import qualified Generate.Go.Statements as Statements
 import qualified Generate.Info as Info
 import qualified Generate.Mangle as Mangle
@@ -246,9 +245,6 @@ generateImpure context expression = case expression of
     (context, declarations) <- Declarations.generate context declarations
     (extra, result) <- generateImpure context letBody
     pure (declarations ++ extra, result)
-  Hook {hook} -> do
-    value <- Hook.generate context hook
-    pure ([], value)
   _ -> generatePure context expression
 generatePure context expression = case expression of
   Constructor {constructor, arguments, constructorInfo} -> do

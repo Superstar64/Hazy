@@ -1,22 +1,16 @@
 module Builtin.Applicative where
 
 import Builtin (builtinClass)
-import Core.Tree.Class (Class (..))
+import Core.Tree.Class (Class)
 import Core.Tree.ClassExtra (ClassExtra (..))
-import Core.Tree.Evidence (EvidenceF (Variable, instanciation, variable))
-import Core.Tree.Expression (Expression (Hook, hook))
-import Core.Tree.Hook (Hook (..))
-import qualified Core.Tree.Instanciation as Instanciation
 import Data.Text (pack)
-import qualified Data.Vector.Strict as Strict.Vector
-import qualified Semantic.Index.Evidence as Evidence
-import qualified Semantic.Index.Evidence0 as Evidence0
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Resolve.Bindings (Bindings)
 
 bindings :: Bindings () scope
 definition :: Class scope
-(bindings, definition, _) =
+extra :: ClassExtra scope
+(bindings, definition, extra) =
   Type2.Applicative
     `builtinClass` pack
       """
@@ -28,20 +22,11 @@ definition :: Class scope
         (<*>) :: f (a -> b) -> f a -> f b
         liftA2 :: (a -> b -> c) -> f a -> f b -> f c
         (*>) :: f a -> f b -> f b
-        (<*) :: fa -> f b -> f a
+        (<*) :: f a -> f b -> f a
+
+        (<*>) = liftA2 (\\x -> x)
+        liftA2 f a b = fmap f a <*> b
+        (*>) = liftA2 (\\_ y -> y)
+        (<*) = liftA2 (\\x _ -> x)
       infixl 4 <*>, *>, <*
       """
-
-extra :: ClassExtra scope
-extra =
-  ClassExtra
-    { defaults = Strict.Vector.fromList set
-    }
-  where
-    set = map go [minBound .. maxBound]
-      where
-        go applicative =
-          Hook {hook = DefaultApplicative {applicative, evidence = Variable {variable, instanciation}}}
-          where
-            variable = Evidence.Index $ Evidence0.Shift $ Evidence0.Assumed 0
-            instanciation = Instanciation.Mono

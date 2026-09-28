@@ -358,7 +358,7 @@ export function eqTuple(unpack, ...evidences) {
   };
   result.b = {
     a: 0,
-    b: helper.defaultNotEqual(result),
+    b: helper.notEqual(result),
   };
   return result;
 }
@@ -389,78 +389,32 @@ export function ordTuple(unpack, ...evidences) {
   };
   result.c = {
     a: 0,
-    b: helper.defaultLessThen(result),
+    b: helper.lessThen(result),
   };
   result.d = {
     a: 0,
-    b: helper.defaultLessThenEqual(result),
+    b: helper.lessThenEqual(result),
   };
   result.e = {
     a: 0,
-    b: helper.defaultGreaterThen(result),
+    b: helper.greaterThen(result),
   };
   result.f = {
     a: 0,
-    b: helper.defaultGreaterThenEqual(result),
+    b: helper.greaterThenEqual(result),
   };
   result.g = {
     a: 0,
-    b: helper.defaultMax(result),
+    b: helper.larger(result),
   };
   result.h = {
     a: 0,
-    b: helper.defaultMin(result),
+    b: helper.smaller(result),
   };
   return result;
 }
 
 export {
-  defaultPlus,
-  defaultMinus,
-  defaultMultiply,
-  defaultNegate,
-  defaultAbs,
-  defaultSignum,
-  defaultFromInteger,
-  defaultSucc,
-  defaultPred,
-  defaultToEnum,
-  defaultFromEnum,
-  defaultEnumFrom,
-  defaultEnumFromThen,
-  defaultEnumFromTo,
-  defaultEnumFromThenTo,
-  defaultEqual,
-  defaultNotEqual,
-  defaultCompare,
-  defaultLessThen,
-  defaultLessThenEqual,
-  defaultGreaterThen,
-  defaultGreaterThenEqual,
-  defaultMax,
-  defaultMin,
-  defaultToRational,
-  defaultQuot,
-  defaultRem,
-  defaultDiv,
-  defaultMod,
-  defaultQuotRem,
-  defaultDivMod,
-  defaultToInteger,
-  defaultDivide,
-  defaultRecip,
-  defaultFromRational,
-  defaultFmap,
-  defaultFconst,
-  defaultPure,
-  defaultAp,
-  defaultLiftA2,
-  defaultDiscardLeft,
-  defaultDiscardRight,
-  defaultBind,
-  defaultThen,
-  defaultReturn,
-  defaultFail,
   "instance Hazy.Num HelperInt" as numInt,
   "instance Hazy.Num HelperInteger" as numInteger,
   "instance Hazy.Num HelperRatio" as numRatio,

@@ -2,21 +2,13 @@ module Builtin.Ord where
 
 import Builtin (builtinClass)
 import Core.Tree.Class (Class)
-import Core.Tree.ClassExtra (ClassExtra (..))
-import Core.Tree.Evidence (EvidenceF (Variable, instanciation, variable))
-import Core.Tree.Expression (Expression (Hook, hook))
-import Core.Tree.Hook (Hook (..))
-import qualified Core.Tree.Instanciation as Instanciation
 import Data.Text (pack)
-import qualified Data.Vector.Strict as Strict.Vector
-import qualified Semantic.Index.Evidence as Evidence
-import qualified Semantic.Index.Evidence0 as Evidence0
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Resolve.Bindings (Bindings)
 
 bindings :: Bindings () scope
 definition :: Class scope
-(bindings, definition, _) =
+(bindings, definition, extra) =
   Type2.Ord
     `builtinClass` pack
       """
@@ -27,19 +19,22 @@ definition :: Class scope
         compare :: a -> a -> Ordering
         (<), (<=), (>), (>=) :: a -> a -> Bool
         max, min :: a -> a -> a
+
+        compare x y
+          | x == y = EQ
+          | x <= y = LT
+          | True = GT
+
+        x <= y = compare x y /= GT
+        x < y = compare x y == LT
+        x >= y = compare x y /= LT
+        x > y = compare x y == GT
+
+        max x y
+          | x <= y = y
+          | True = x
+        min x y
+          | x <= y = x
+          | True = y
       infix 4 <, <=, >, >=
       """
-
-extra :: ClassExtra scope
-extra =
-  ClassExtra
-    { defaults = Strict.Vector.fromList set
-    }
-  where
-    set = map go [minBound .. maxBound]
-      where
-        go ord =
-          Hook {hook = DefaultOrd {ord, evidence = Variable {variable, instanciation}}}
-          where
-            variable = Evidence.Index $ Evidence0.Shift $ Evidence0.Assumed 0
-            instanciation = Instanciation.Mono

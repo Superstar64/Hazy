@@ -21,7 +21,6 @@ import {-# SOURCE #-} qualified Core.Tree.Declarations as Declarations
 import Core.Tree.EntryInfo (EntryInfo (..))
 import Core.Tree.Evidence (Evidence)
 import qualified Core.Tree.Evidence as Evidence
-import Core.Tree.Hook (Hook)
 import Core.Tree.Instanciation (Instanciation (..))
 import qualified Core.Tree.Instanciation as Instanciation
 import Core.Tree.MethodInfo (MethodInfo)
@@ -110,9 +109,6 @@ data Expression scope
   | Join
       { statements :: !(Statements scope)
       }
-  | Hook
-      { hook :: !(Hook scope)
-      }
   | Newtype
       { constructor :: !(Constructor.Index scope),
         argument :: !(Expression scope),
@@ -183,10 +179,6 @@ instance Substitute.Functor Expression where
     Join {statements} ->
       Join
         { statements = Substitute.map category statements
-        }
-    Hook {hook} ->
-      Hook
-        { hook = Substitute.map category hook
         }
     Newtype {constructor, argument, direction} ->
       Newtype
