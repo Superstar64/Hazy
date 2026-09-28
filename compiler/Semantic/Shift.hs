@@ -1,4 +1,15 @@
-module Semantic.Shift (module Semantic.Shift, shift) where
+module Semantic.Shift
+  ( Category (..),
+    Functor (..),
+    mapInstances,
+    PartialUnshift (..),
+    Unshift (..),
+    TermFunctor (..),
+    mapDefault,
+    lift,
+    shift,
+  )
+where
 
 import Data.Kind (Constraint, Type)
 import qualified Data.Map as Map
@@ -75,6 +86,7 @@ data Category scope scope' where
     Category
       (Scope.SimplePattern ':+ scope)
       (Scope.SimplePattern ':+ (Scope.SimpleDeclaration ':+ scope))
+  Builtin :: Type2.Index scope -> Category Scope.Global scope
 
 infixr 9 :.
 
@@ -157,6 +169,7 @@ instance Functor Term.Index where
       | index == target -> Term.Shift Term.SimpleDeclaration
       | otherwise -> Term.SimplePattern index
     Term.Shift index -> Term.Shift (Term.Shift index)
+  map Builtin {} _ = error "builtin free variable"
 
 shiftTypeIndex :: Category scope scope' -> Type.Index scope -> Type.Index scope'
 shiftTypeIndex = map
@@ -179,6 +192,7 @@ shiftTypeIndex = map
     map (UngroupType typex) (Type.Group index) = typex index
     map UngroupType {} (Type.Shift index) = index
     map UngroupTerm {} (Type.Shift index) = index
+    map Builtin {} _ = error "builtin free variable"
     map category index = map general index
       where
         general = case category of
@@ -192,6 +206,9 @@ shiftTypeIndex = map
           ReplaceIrrefutable {} -> generalReplaceIrrefutable
 
 instance Functor Type2.Index where
+  map (Builtin index) (Type2.Index (Type.Global 0 0)) = index
+  map (Over category) (Type2.Index (Type.Shift index)) = shift $ map category $ Type2.Index index
+  map (after :. before) index = map after (map before index)
   map category index = case Type2.split index of
     Type2.Normal index -> Type2.Index $ shiftTypeIndex category index
     Type2.Constructor index -> Type2.Lifted $ map category index
@@ -230,6 +247,7 @@ instance Functor Evidence0.Index where
         FinishPattern {} -> generalFinishPattern
         FinishNewtype {} -> generalFinishNewtype
         ReplaceIrrefutable {} -> generalReplaceIrrefutable
+        Builtin {} -> error "unreachable"
 
 instance PartialUnshift Evidence0.Index where
   partialUnshift abort (Evidence0.Assumed _) = vacuous abort
@@ -258,6 +276,7 @@ instance Functor Local.Index where
         FinishPattern {} -> generalFinishPattern
         FinishNewtype {} -> generalFinishNewtype
         ReplaceIrrefutable {} -> generalReplaceIrrefutable
+        Builtin {} -> error "unreachable"
 
 instance PartialUnshift Local.Index where
   partialUnshift _ (Local.Shift index) = pure index

@@ -136,8 +136,9 @@ builtin ::
     TypeDeclarationExtra scope
   )
 builtin typeIndex string =
-  (overrideBinding typeIndex bindings, Shift.map abort typex, Shift.map abort extra)
+  (overrideBinding typeIndex bindings, Shift.map category typex, Shift.map category extra)
   where
+    category = Shift.Builtin typeIndex
     parsed = runIdentity $ Parser.parse extensions Module.parse internal string
     complete = runIdentity $ Module.resolve $ Vector.singleton parsed
     resolveDeclarations = Module.Resolve.declarations $ Vector.head complete
