@@ -12,6 +12,7 @@ data Index scope
   | Char
   | ST
   | Arrow
+  | NonEmpty
   | List
   | Tuple !Int
   | Integer
@@ -47,6 +48,7 @@ split = \case
   ST -> Builtin ST
   Arrow -> Builtin Arrow
   List -> Builtin List
+  NonEmpty -> Builtin NonEmpty
   Tuple count -> Builtin (Tuple count)
   Integer -> Builtin Integer
   Int -> Builtin Int

@@ -12,12 +12,9 @@ class Semigroup a where
   sconcat = foldr1 (<>)
 
   stimes :: (Integral b) => b -> a -> a
-  stimes = stimesInteger . toInteger
-
-  stimesInteger :: Integer -> a -> a
-  stimesInteger n _
+  stimes n _
     | n <= 0 = error "Prelude.stimes: negative number"
-  stimesInteger n a = go n a
+  stimes n a = go n a
     where
       go 1 a = a
       go n a = a <> go (n - 1) a

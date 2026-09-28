@@ -284,8 +284,14 @@ instance Read Char where
 instance (Show a) => Show [a] where
   showsPrec p = showList
 
+instance (Show a) => Show (NonEmpty a) where
+  showsPrec = placeholder
+
 instance (Read a) => Read [a] where
   readsPrec p = readList
+
+instance (Read a) => Read (NonEmpty a) where
+  readsPrec = placeholder
 
 instance (Show a, Show b) => Show (a, b) where
   showsPrec p (x, y) =

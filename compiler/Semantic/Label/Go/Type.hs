@@ -45,6 +45,7 @@ label context = \case
           Constructor.All
             { bool,
               list,
+              nonEmpty,
               tuplex,
               ordering,
               ratio
@@ -60,6 +61,7 @@ label context = \case
           Syntax.LiftedCons
             { startPosition = ()
             }
+        nonEmpty Constructor.Cons1 = builtin ":|"
         tuplex count _ =
           Syntax.Tupling
             { startPosition = (),
@@ -87,6 +89,7 @@ label context = \case
         { startPosition = (),
           count
         }
+    Type2.NonEmpty -> builtin "NonEmpty"
     Type2.Bool -> builtin "Bool"
     Type2.Char -> builtin "Char"
     Type2.ST -> builtin "ST"

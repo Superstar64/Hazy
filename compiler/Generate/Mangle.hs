@@ -87,6 +87,7 @@ mangleInstance run brand name target = Text.Lazy.toStrict $ Builder.toLazyText b
       Type2.ST -> fromString "Hazy.ST"
       Type2.Arrow -> fromString "(->)"
       Type2.List -> fromString "[]"
+      Type2.NonEmpty -> fromString "NonEmpty"
       Type2.Tuple n -> mconcat [fromString "(", mconcat $ replicate n $ fromString ",", fromString ")"]
       Type2.Integer -> fromString "Hazy.Integer"
       Type2.Int -> fromString "Hazy.Int"

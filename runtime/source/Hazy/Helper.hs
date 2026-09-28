@@ -194,6 +194,30 @@ instance Monad HelperList where
 instance MonadFail HelperList where
   fail _ = List []
 
+newtype HelperNonEmpty a = NonEmpty {nonEmpty :: NonEmpty a}
+
+instance (Eq a) => Eq (HelperNonEmpty a) where
+  NonEmpty (x :| xs) == NonEmpty (x' :| xs') = x == x' && xs == xs'
+
+instance (Ord a) => Ord (HelperNonEmpty a) where
+  NonEmpty (x :| xs) `compare` NonEmpty (x' :| xs') = case compare x x' of
+    LT -> LT
+    EQ -> compare xs xs'
+    GT -> GT
+
+instance Functor HelperNonEmpty where
+  fmap f (NonEmpty (x :| xs)) = NonEmpty (f x :| fmap f xs)
+
+instance Applicative HelperNonEmpty where
+  pure x = NonEmpty (x :| [])
+  (<*>) = ap
+
+instance Monad HelperNonEmpty where
+  NonEmpty (x :| xs) >>= k = NonEmpty $ case k x of
+    NonEmpty (y :| ys) -> y :| ys ++ (xs >>= toList . k)
+      where
+        toList (NonEmpty (x :| xs)) = x : xs
+
 newtype HelperST s a = STx {st :: ST s a}
 
 instance Functor (HelperST s) where

@@ -13,7 +13,6 @@ module Hazy.Prelude
     module Hazy.PreludeMonad,
     module Hazy.PreludeString,
     module Hazy.PreludeMonoid,
-    module Hazy.PreludeNonEmpty,
     module Hazy.Builtin,
     errorText,
     pack,
@@ -32,7 +31,6 @@ import Hazy.PreludeIO
 import Hazy.PreludeList
 import Hazy.PreludeMonad
 import Hazy.PreludeMonoid
-import Hazy.PreludeNonEmpty
 import Hazy.PreludeNumeric
 import Hazy.PreludeRatio
 import Hazy.PreludeString

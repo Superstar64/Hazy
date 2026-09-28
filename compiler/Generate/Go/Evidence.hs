@@ -76,6 +76,7 @@ generate context = \case
             Direct Eq Int -> eqInt
             Direct Eq Integer -> eqInteger
             Direct Eq List -> eqList
+            Direct Eq NonEmpty -> eqNonEmpty
             Direct Eq Ordering -> eqOrdering
             Direct Eq Ratio -> eqRatio
             Direct Ord Char -> ordChar
@@ -83,6 +84,7 @@ generate context = \case
             Direct Ord Integer -> ordInteger
             Direct Ord Bool -> ordBool
             Direct Ord List -> ordList
+            Direct Ord NonEmpty -> ordNonEmpty
             Direct Ord Ordering -> ordOrdering
             Direct Ord Ratio -> ordRatio
             Direct Real Int -> realInt
@@ -92,8 +94,11 @@ generate context = \case
             Direct Integral Integer -> integralInteger
             Direct Fractional Ratio -> fractionalRatio
             Direct Functor List -> functorList
+            Direct Functor NonEmpty -> functorNonEmpty
             Direct Applicative List -> applicativeList
+            Direct Applicative NonEmpty -> applicativeNonEmpty
             Direct Monad List -> monadList
+            Direct Monad NonEmpty -> monadNonEmpty
             Direct MonadFail List -> monadFailList
             Direct Functor ST -> functorST
             Direct Applicative ST -> applicativeST
@@ -115,6 +120,7 @@ generate context = \case
               eqInteger,
               eqInt,
               eqList,
+              eqNonEmpty,
               eqOrdering,
               eqRatio,
               ordInt,
@@ -122,6 +128,7 @@ generate context = \case
               ordBool,
               ordChar,
               ordList,
+              ordNonEmpty,
               ordOrdering,
               ordRatio,
               realInt,
@@ -131,8 +138,11 @@ generate context = \case
               integralInteger,
               fractionalRatio,
               functorList,
+              functorNonEmpty,
               applicativeList,
+              applicativeNonEmpty,
               monadList,
+              monadNonEmpty,
               monadFailList,
               functorST,
               applicativeST,

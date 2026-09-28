@@ -56,6 +56,9 @@ constrain fallthough constrain classx head = table classx head
     table Type2.Eq Type2.List [element] = do
       element <- constrain Type2.Eq element
       pure $ call [element]
+    table Type2.Eq Type2.NonEmpty [element] = do
+      element <- constrain Type2.Eq element
+      pure $ call [element]
     table Type2.Eq Type2.Ratio [integer] = do
       integer <- constrain Type2.Eq integer
       pure $ call [integer]
@@ -72,6 +75,9 @@ constrain fallthough constrain classx head = table classx head
     table Type2.Ord Type2.Bool [] =
       pure $ single
     table Type2.Ord Type2.List [element] = do
+      element <- constrain Type2.Ord element
+      pure $ call [element]
+    table Type2.Ord Type2.NonEmpty [element] = do
       element <- constrain Type2.Ord element
       pure $ call [element]
     table Type2.Ord Type2.Ordering [] =
@@ -95,9 +101,15 @@ constrain fallthough constrain classx head = table classx head
       pure $ call [integer]
     table Type2.Functor Type2.List [] =
       pure $ single
+    table Type2.Functor Type2.NonEmpty [] =
+      pure $ single
     table Type2.Applicative Type2.List [] =
       pure $ single
+    table Type2.Applicative Type2.NonEmpty [] =
+      pure $ single
     table Type2.Monad Type2.List [] =
+      pure $ single
+    table Type2.Monad Type2.NonEmpty [] =
       pure $ single
     table Type2.MonadFail Type2.List [] =
       pure $ single

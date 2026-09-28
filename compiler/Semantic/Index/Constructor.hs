@@ -43,6 +43,15 @@ cons =
       constructorIndex = fromEnum Cons
     }
 
+data NonEmpty = Cons1
+  deriving (Enum, Bounded)
+
+cons1 =
+  Index
+    { typeIndex = Type2.NonEmpty,
+      constructorIndex = fromEnum Cons1
+    }
+
 data Tuple = Tuple
   deriving (Enum, Bounded)
 
@@ -85,17 +94,19 @@ makeRatio =
 data All a = All
   { bool :: Bool -> a,
     list :: List -> a,
+    nonEmpty :: NonEmpty -> a,
     tuplex :: Int -> Tuple -> a,
     ordering :: Ordering -> a,
     ratio :: Ratio -> a
   }
 
 run :: (Type.Index scope -> Int -> a) -> All a -> Index scope -> a
-run normal All {bool, list, tuplex, ordering, ratio} Index {typeIndex, constructorIndex} =
+run normal All {bool, list, nonEmpty, tuplex, ordering, ratio} Index {typeIndex, constructorIndex} =
   case typeIndex of
     Type2.Index typeIndex -> normal typeIndex constructorIndex
     Type2.Bool -> bool (toEnum constructorIndex)
     Type2.List -> list (toEnum constructorIndex)
+    Type2.NonEmpty -> nonEmpty (toEnum constructorIndex)
     Type2.Tuple n -> tuplex n (toEnum constructorIndex)
     Type2.Ordering -> ordering (toEnum constructorIndex)
     Type2.Ratio -> ratio (toEnum constructorIndex)

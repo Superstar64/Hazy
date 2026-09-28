@@ -10,6 +10,7 @@ import {-# SOURCE #-} qualified Builtin.Integral as Integral
 import {-# SOURCE #-} qualified Builtin.List as List
 import {-# SOURCE #-} qualified Builtin.Monad as Monad
 import {-# SOURCE #-} qualified Builtin.MonadFail as MonadFail
+import {-# SOURCE #-} qualified Builtin.NonEmpty as NonEmpty
 import {-# SOURCE #-} qualified Builtin.Num as Num
 import {-# SOURCE #-} qualified Builtin.Ord as Ord
 import {-# SOURCE #-} qualified Builtin.Ordering as Ordering
@@ -38,6 +39,7 @@ kind pure typex constructor = \case
   Type2.Lifted normal -> constructor normal
   real -> pure $ case real of
     Type2.Bool -> dataKind
+    Type2.NonEmpty -> dataKind
     Type2.List -> dataKind
     Type2.Tuple {} -> dataKind
     Type2.Ordering -> dataKind
@@ -76,6 +78,7 @@ instance Builtin Data where
     Type2.Index index -> normal index
     Type2.Bool -> pure Bool.definition
     Type2.List -> pure List.definition
+    Type2.NonEmpty -> pure NonEmpty.definition
     Type2.Tuple n -> pure (Tuple.definition n)
     Type2.Ordering -> pure Ordering.definition
     Type2.Ratio -> pure Ratio.definition

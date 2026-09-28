@@ -10,6 +10,7 @@ import {-# SOURCE #-} qualified Builtin.Integral as Integral
 import {-# SOURCE #-} qualified Builtin.List as List
 import {-# SOURCE #-} qualified Builtin.Monad as Monad
 import {-# SOURCE #-} qualified Builtin.MonadFail as MonadFail
+import {-# SOURCE #-} qualified Builtin.NonEmpty as NonEmpty
 import {-# SOURCE #-} qualified Builtin.Num as Num
 import {-# SOURCE #-} qualified Builtin.Ord as Ord
 import {-# SOURCE #-} qualified Builtin.Ordering as Ordering
@@ -74,6 +75,7 @@ builtin =
       List.bindings,
       Monad.bindings,
       MonadFail.bindings,
+      NonEmpty.bindings,
       Num.bindings,
       Ord.bindings,
       Ordering.bindings,
