@@ -50,6 +50,7 @@ import qualified Semantic.Index.Method as Method
 import qualified Semantic.Index.Table.Type as Table.Type
 import qualified Semantic.Index.Type as Type (Index)
 import qualified Semantic.Index.Type2 as Type2
+import qualified Semantic.Label.Go.Type as Type (label)
 import Semantic.Layout (Group)
 import Semantic.Scope (Environment (..), Local)
 import Semantic.Shift (shift)
@@ -62,7 +63,7 @@ import Semantic.Tree.Constraints (Constraints (Constraints, None))
 import Semantic.Tree.InstanceDefinition (InstanceDefinition (..))
 import Semantic.Tree.InstanceDefinition2 (Annotation (..), Header (..), InstanceDefinition2 (..))
 import Semantic.Tree.MethodConcrete (Auto, MethodConcrete (..))
-import qualified Semantic.Tree.Type as Type (Synonym (..), Type (..), label)
+import qualified Semantic.Tree.Type as Type (Synonym (..), Type (..))
 import Semantic.Tree.TypePattern (TypePattern (..))
 import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)

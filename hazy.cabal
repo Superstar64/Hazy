@@ -269,6 +269,7 @@ executable hazy
     Semantic.Label.Binding.Term
     Semantic.Label.Binding.Type
     Semantic.Label.Context
+    Semantic.Label.Go.Type
     Semantic.Layout
     Semantic.Locality
     Semantic.Resolve.Binding.Constructor

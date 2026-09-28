@@ -24,12 +24,13 @@ import qualified Semantic.Index.Table.Type as Table.Type
 import qualified Semantic.Index.Type2 as Type2
 import qualified Semantic.Label.Binding.Local as Label (LocalBinding (..))
 import qualified Semantic.Label.Context as Label (Context (..))
+import qualified Semantic.Label.Go.Type as Semantic (label)
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope
 import qualified Semantic.Shift as Shift
 import Semantic.Stage (Equal (..), Resolve)
 import Semantic.Tree.Type (Synonym (NoSynonym))
-import qualified Semantic.Tree.Type as Semantic
+import qualified Semantic.Tree.Type as Semantic (Type (..))
 import Semantic.Unify.Generalizable (Collected (..), Collector (..))
 import qualified Semantic.Unify.Generalizable as Generalizable
 import Semantic.Unify.Type (Box (..), Logical (..), Type)
