@@ -158,39 +158,42 @@ instance Functor Term.Index where
       | otherwise -> Term.SimplePattern index
     Term.Shift index -> Term.Shift (Term.Shift index)
 
-instance Functor Type.Index where
-  map Id index = index
-  map Shift index = Type.Shift index
-  map (Over category) (Type.Shift index) = Type.Shift (map category index)
-  map (Over _) (Type.Declaration index) = Type.Declaration index
-  map (Over _) (Type.Group index) = Type.Group index
-  map (after :. before) index = map after (map before index)
-  map (Unshift _) (Type.Shift index) = index
-  map (Unshift abort) _ = absurd abort
-  map (GroupType typex) (Type.Declaration index)
-    | Strict.Just index <- typex (Type0.Declaration index) = Type.Group index
-  map (GroupType typex) (Type.Global global local)
-    | Strict.Just index <- typex (Type0.Global global local) = Type.Group index
-  map GroupTerm {} index = Type.Shift index
-  map GroupType {} index = Type.Shift index
-  map (UngroupType typex) (Type.Group index) = typex index
-  map UngroupType {} (Type.Shift index) = index
-  map UngroupTerm {} (Type.Shift index) = index
-  map category index = map general index
-    where
-      general = case category of
-        ReplaceWildcard {} -> generalReplaceWildcard
-        SimplifyPattern {} -> generalSimplifyPattern
-        RenamePattern {} -> generalRenamePattern
-        SimplifyList {} -> generalSimplifyList
-        LetPattern {} -> generalLetPattern
-        FinishPattern {} -> generalFinishPattern
-        FinishNewtype {} -> generalFinishNewtype
-        ReplaceIrrefutable {} -> generalReplaceIrrefutable
+shiftTypeIndex :: Category scope scope' -> Type.Index scope -> Type.Index scope'
+shiftTypeIndex = map
+  where
+    map :: Category scope scope' -> Type.Index scope -> Type.Index scope'
+    map Id index = index
+    map Shift index = Type.Shift index
+    map (Over category) (Type.Shift index) = Type.Shift (map category index)
+    map (Over _) (Type.Declaration index) = Type.Declaration index
+    map (Over _) (Type.Group index) = Type.Group index
+    map (after :. before) index = map after (map before index)
+    map (Unshift _) (Type.Shift index) = index
+    map (Unshift abort) _ = absurd abort
+    map (GroupType typex) (Type.Declaration index)
+      | Strict.Just index <- typex (Type0.Declaration index) = Type.Group index
+    map (GroupType typex) (Type.Global global local)
+      | Strict.Just index <- typex (Type0.Global global local) = Type.Group index
+    map GroupTerm {} index = Type.Shift index
+    map GroupType {} index = Type.Shift index
+    map (UngroupType typex) (Type.Group index) = typex index
+    map UngroupType {} (Type.Shift index) = index
+    map UngroupTerm {} (Type.Shift index) = index
+    map category index = map general index
+      where
+        general = case category of
+          ReplaceWildcard {} -> generalReplaceWildcard
+          SimplifyPattern {} -> generalSimplifyPattern
+          RenamePattern {} -> generalRenamePattern
+          SimplifyList {} -> generalSimplifyList
+          LetPattern {} -> generalLetPattern
+          FinishPattern {} -> generalFinishPattern
+          FinishNewtype {} -> generalFinishNewtype
+          ReplaceIrrefutable {} -> generalReplaceIrrefutable
 
 instance Functor Type2.Index where
   map category index = case Type2.split index of
-    Type2.Normal index -> Type2.Index $ map category index
+    Type2.Normal index -> Type2.Index $ shiftTypeIndex category index
     Type2.Constructor index -> Type2.Lifted $ map category index
     Type2.Builtin index -> index
 

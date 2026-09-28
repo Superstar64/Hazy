@@ -10,7 +10,6 @@ import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Method as Method
 import qualified Semantic.Index.Selector as Selector
 import qualified Semantic.Index.Term as Term
-import qualified Semantic.Index.Type as Type
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Scope (Environment (..), Local)
 import Semantic.Shift (shift)
@@ -40,9 +39,6 @@ general = \case
 
 class (Shift.Functor typex) => Functor typex where
   map :: Category Type Evidence scope1 scope2 -> typex scope1 -> typex scope2
-
-instance Functor Type.Index where
-  map = Shift.map . general
 
 instance Functor Type2.Index where
   map = Shift.map . general
