@@ -14,12 +14,13 @@ import {-# SOURCE #-} Generate.Go.Expression (force)
 import qualified Generate.Mangle as Mangle
 import qualified Javascript.Tree.Expression as Javascript (Expression (..))
 import qualified Javascript.Tree.Statement as Javascript (Statement (..))
-import Semantic.Index.Evidence (Builtin (EqTuple, OrdTuple))
-import qualified Semantic.Index.Evidence as Evidence (Builtin (..), Index (..))
+import Semantic.Index.Evidence (Index (Direct))
+import qualified Semantic.Index.Evidence as Evidence (Index (..))
+import Semantic.Index.Type2 (Index (..))
 
 generate :: Context s scope -> Evidence scope -> ST s Javascript.Expression
 generate context = \case
-  Variable {variable = Evidence.Builtin (EqTuple number), instanciation}
+  Variable {variable = Direct Eq (Tuple number), instanciation}
     | Instanciation arguments <- instanciation -> do
         let Mangle.Builtin {eqTuple} = Context.builtin context
         arguments <- traverse (generate context) (toList arguments)
@@ -29,7 +30,7 @@ generate context = \case
               arguments = unpackTuple number : arguments
             }
     | otherwise -> error "bad tuple instance"
-  Variable {variable = Evidence.Builtin (OrdTuple number), instanciation}
+  Variable {variable = Direct Ord (Tuple number), instanciation}
     | Instanciation arguments <- instanciation -> do
         let Mangle.Builtin {ordTuple} = Context.builtin context
         arguments <- traverse (generate context) (toList arguments)
@@ -42,65 +43,62 @@ generate context = \case
   Variable {variable, instanciation} -> do
     let strict = case variable of
           Evidence.Index {} -> True
-          Evidence.Class {} -> False
-          Evidence.Data {} -> False
-          Evidence.Builtin {} -> False
+          Direct {} -> False
     literal@function <- case variable of
-      Evidence.Class index target
-        | Type.Binding {classInstances} <- context !=. index,
-          Just binding <- Map.lookup target classInstances -> do
-            name <- Context.symbol context binding
-            pure Javascript.Variable {name}
-        | otherwise -> error "bad evidence"
-      Evidence.Data target index
+      Evidence.Direct target (Index index)
         | Type.Binding {dataInstances} <- context !=. index,
           Just binding <- Map.lookup target dataInstances -> do
             name <- Context.symbol context binding
             pure Javascript.Variable {name}
-        | otherwise -> error "bad evidence"
+      Evidence.Direct (Index index) target
+        | Type.Binding {classInstances} <- context !=. index,
+          Just binding <- Map.lookup target classInstances -> do
+            name <- Context.symbol context binding
+            pure Javascript.Variable {name}
       Evidence.Index index
         | Evidence.Binding name <- context Context.!~ index ->
             pure Javascript.Variable {name}
-      Evidence.Builtin evidence -> pure Javascript.Variable {name}
+      index -> pure Javascript.Variable {name}
         where
-          name = case evidence of
-            Evidence.NumInt -> numInt
-            Evidence.NumInteger -> numInteger
-            Evidence.NumRatio -> numRatio
-            Evidence.EnumBool -> enumBool
-            Evidence.EnumChar -> enumChar
-            Evidence.EnumInt -> enumInt
-            Evidence.EnumInteger -> enumInteger
-            Evidence.EnumOrdering -> enumOrdering
-            Evidence.EnumUnit -> enumUnit
-            Evidence.EnumRatio -> enumRatio
-            Evidence.EqBool -> eqBool
-            Evidence.EqChar -> eqChar
-            Evidence.EqInt -> eqInt
-            Evidence.EqInteger -> eqInteger
-            Evidence.EqList -> eqList
-            Evidence.EqOrdering -> eqOrdering
-            Evidence.EqRatio -> eqRatio
-            Evidence.OrdChar -> ordChar
-            Evidence.OrdInt -> ordInt
-            Evidence.OrdInteger -> ordInteger
-            Evidence.OrdBool -> ordBool
-            Evidence.OrdList -> ordList
-            Evidence.OrdOrdering -> ordOrdering
-            Evidence.OrdRatio -> ordRatio
-            Evidence.RealInt -> realInt
-            Evidence.RealInteger -> realInteger
-            Evidence.RealRatio -> realRatio
-            Evidence.IntegralInt -> integralInt
-            Evidence.IntegralInteger -> integralInteger
-            Evidence.FractionalRatio -> fractionalRatio
-            Evidence.FunctorList -> functorList
-            Evidence.ApplicativeList -> applicativeList
-            Evidence.MonadList -> monadList
-            Evidence.MonadFailList -> monadFailList
-            Evidence.FunctorST -> functorST
-            Evidence.ApplicativeST -> applicativeST
-            Evidence.MonadST -> monadST
+          name = case index of
+            Direct Num Int -> numInt
+            Direct Num Integer -> numInteger
+            Direct Num Ratio -> numRatio
+            Direct Enum Bool -> enumBool
+            Direct Enum Char -> enumChar
+            Direct Enum Int -> enumInt
+            Direct Enum Integer -> enumInteger
+            Direct Enum Ordering -> enumOrdering
+            Direct Enum (Tuple 0) -> enumUnit
+            Direct Enum Ratio -> enumRatio
+            Direct Eq Bool -> eqBool
+            Direct Eq Char -> eqChar
+            Direct Eq Int -> eqInt
+            Direct Eq Integer -> eqInteger
+            Direct Eq List -> eqList
+            Direct Eq Ordering -> eqOrdering
+            Direct Eq Ratio -> eqRatio
+            Direct Ord Char -> ordChar
+            Direct Ord Int -> ordInt
+            Direct Ord Integer -> ordInteger
+            Direct Ord Bool -> ordBool
+            Direct Ord List -> ordList
+            Direct Ord Ordering -> ordOrdering
+            Direct Ord Ratio -> ordRatio
+            Direct Real Int -> realInt
+            Direct Real Integer -> realInteger
+            Direct Real Ratio -> realRatio
+            Direct Integral Int -> integralInt
+            Direct Integral Integer -> integralInteger
+            Direct Fractional Ratio -> fractionalRatio
+            Direct Functor List -> functorList
+            Direct Applicative List -> applicativeList
+            Direct Monad List -> monadList
+            Direct MonadFail List -> monadFailList
+            Direct Functor ST -> functorST
+            Direct Applicative ST -> applicativeST
+            Direct Monad ST -> monadST
+            Direct _ _ -> error "bad evidence"
           Mangle.Builtin
             { numInt,
               numInteger,

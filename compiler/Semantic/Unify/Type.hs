@@ -377,8 +377,10 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
               arguments <- for dependencies $ \constraint@Simple.Constraint.Constraint {classx} ->
                 let argument = substituteType (Vector.fromList arguments) (Simple.argument constraint)
                  in constrain context position classx argument
-              pure $ Evidence.Variable (Evidence.Class classx index) (Instanciation arguments)
-            None -> pure $ Evidence.Variable (Evidence.Class classx index) Instanciation.Mono
+              pure $ Evidence.Variable variable (Instanciation arguments)
+            None -> pure $ Evidence.Variable variable Instanciation.Mono
+      where
+        variable = Evidence.Direct (Type2.Index classx) index
     constrainWith context@Context {typeEnvironment} classx (Constructor (Type2.Index index)) arguments
       | TypeBinding {dataInstances} <- typeEnvironment Type.Table.! index,
         Just instancex <- Map.lookup classx dataInstances = do
@@ -388,8 +390,10 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
               arguments <- for dependencies $ \constraint@Simple.Constraint.Constraint {classx} ->
                 let argument = substituteType (Vector.fromList arguments) (Simple.argument constraint)
                  in constrain context position classx argument
-              pure $ Evidence.Variable (Evidence.Data classx index) (Instanciation arguments)
-            None -> pure $ Evidence.Variable (Evidence.Data classx index) Instanciation.Mono
+              pure $ Evidence.Variable variable (Instanciation arguments)
+            None -> pure $ Evidence.Variable variable Instanciation.Mono
+      where
+        variable = Evidence.Direct classx (Type2.Index index)
     constrainWith context classx (Call function argument) arguments =
       constrainWith context classx function (argument : arguments)
     constrainWith context classx (Function argument result) arguments = do

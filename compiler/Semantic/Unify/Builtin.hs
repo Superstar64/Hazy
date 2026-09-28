@@ -3,7 +3,7 @@ module Semantic.Unify.Builtin where
 import Core.Tree.Evidence (EvidenceF (..))
 import Core.Tree.Instanciation (InstanciationF (..))
 import Data.Vector.Strict (fromList)
-import qualified Semantic.Index.Evidence as Evidence (Builtin (..), Index (..))
+import qualified Semantic.Index.Evidence as Evidence (Index (..))
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Unify.Evidence (Evidence)
 
@@ -15,99 +15,99 @@ constrain ::
   Type2.Index scope ->
   [t] ->
   m (Evidence s scope)
-constrain fallthough constrain = table
+constrain fallthough constrain classx head = table classx head
   where
     table Type2.Num Type2.Integer [] =
-      pure $ single Evidence.NumInteger
+      pure $ single
     table Type2.Num Type2.Int [] =
-      pure $ single Evidence.NumInt
+      pure $ single
     table Type2.Num Type2.Ratio [integer] = do
       integer <- constrain Type2.Integral integer
-      pure $ call Evidence.NumRatio [integer]
+      pure $ call [integer]
     table Type2.Enum Type2.Bool [] =
-      pure $ single Evidence.EnumBool
+      pure $ single
     table Type2.Enum Type2.Char [] =
-      pure $ single Evidence.EnumChar
+      pure $ single
     table Type2.Enum Type2.Integer [] =
-      pure $ single Evidence.EnumInteger
+      pure $ single
     table Type2.Enum Type2.Int [] =
-      pure $ single Evidence.EnumInt
+      pure $ single
     table Type2.Enum (Type2.Tuple 0) [] =
-      pure $ single Evidence.EnumUnit
+      pure $ single
     table Type2.Enum Type2.Ordering [] =
-      pure $ single Evidence.EnumOrdering
+      pure $ single
     table Type2.Enum Type2.Ratio [integer] = do
       integer <- constrain Type2.Integral integer
-      pure $ call Evidence.EnumRatio [integer]
+      pure $ call [integer]
     table Type2.Eq Type2.Bool [] =
-      pure $ single Evidence.EqBool
+      pure $ single
     table Type2.Eq Type2.Char [] =
-      pure $ single Evidence.EqChar
+      pure $ single
     table Type2.Eq (Type2.Tuple n) types
       | n == length types = do
           types <- traverse (constrain Type2.Eq) types
-          pure $ call (Evidence.EqTuple n) types
+          pure $ call types
     table Type2.Eq Type2.Ordering [] =
-      pure $ single Evidence.EqOrdering
+      pure $ single
     table Type2.Eq Type2.Integer [] =
-      pure $ single Evidence.EqInteger
+      pure $ single
     table Type2.Eq Type2.Int [] =
-      pure $ single Evidence.EqInt
+      pure $ single
     table Type2.Eq Type2.List [element] = do
       element <- constrain Type2.Eq element
-      pure $ call Evidence.EqList [element]
+      pure $ call [element]
     table Type2.Eq Type2.Ratio [integer] = do
       integer <- constrain Type2.Eq integer
-      pure $ call Evidence.EqRatio [integer]
+      pure $ call [integer]
     table Type2.Ord Type2.Char [] =
-      pure $ single Evidence.OrdChar
+      pure $ single
     table Type2.Ord (Type2.Tuple n) types
       | n == length types = do
           types <- traverse (constrain Type2.Ord) types
-          pure $ call (Evidence.OrdTuple n) types
+          pure $ call types
     table Type2.Ord Type2.Int [] =
-      pure $ single Evidence.OrdInt
+      pure $ single
     table Type2.Ord Type2.Integer [] =
-      pure $ single Evidence.OrdInteger
+      pure $ single
     table Type2.Ord Type2.Bool [] =
-      pure $ single Evidence.OrdBool
+      pure $ single
     table Type2.Ord Type2.List [element] = do
       element <- constrain Type2.Ord element
-      pure $ call Evidence.OrdList [element]
+      pure $ call [element]
     table Type2.Ord Type2.Ordering [] =
-      pure $ single Evidence.OrdOrdering
+      pure $ single
     table Type2.Ord Type2.Ratio [integer] = do
       integer <- constrain Type2.Integral integer
-      pure $ call Evidence.OrdRatio [integer]
+      pure $ call [integer]
     table Type2.Real Type2.Int [] =
-      pure $ single Evidence.RealInt
+      pure $ single
     table Type2.Real Type2.Integer [] =
-      pure $ single Evidence.RealInteger
+      pure $ single
     table Type2.Real Type2.Ratio [integer] = do
       integer <- constrain Type2.Integral integer
-      pure $ call Evidence.RealRatio [integer]
+      pure $ call [integer]
     table Type2.Integral Type2.Int [] =
-      pure $ single Evidence.IntegralInt
+      pure $ single
     table Type2.Integral Type2.Integer [] =
-      pure $ single Evidence.IntegralInteger
+      pure $ single
     table Type2.Fractional Type2.Ratio [integer] = do
       integer <- constrain Type2.Integral integer
-      pure $ call Evidence.FractionalRatio [integer]
+      pure $ call [integer]
     table Type2.Functor Type2.List [] =
-      pure $ single Evidence.FunctorList
+      pure $ single
     table Type2.Applicative Type2.List [] =
-      pure $ single Evidence.ApplicativeList
+      pure $ single
     table Type2.Monad Type2.List [] =
-      pure $ single Evidence.MonadList
+      pure $ single
     table Type2.MonadFail Type2.List [] =
-      pure $ single Evidence.MonadFailList
+      pure $ single
     table Type2.Functor Type2.ST [_] =
-      pure $ single Evidence.FunctorST
+      pure $ single
     table Type2.Applicative Type2.ST [_] =
-      pure $ single Evidence.ApplicativeST
+      pure $ single
     table Type2.Monad Type2.ST [_] =
-      pure $ single Evidence.MonadST
+      pure $ single
     table _ _ _ = fallthough
 
-    single builtin = Variable (Evidence.Builtin builtin) Mono
-    call builtin list = Variable (Evidence.Builtin builtin) $ Instanciation $ fromList list
+    single = Variable (Evidence.Direct classx head) Mono
+    call list = Variable (Evidence.Direct classx head) $ Instanciation $ fromList list

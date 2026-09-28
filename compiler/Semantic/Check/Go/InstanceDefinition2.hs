@@ -247,8 +247,8 @@ checkBody position key Solve {solve} reflection information lookup members =
             self = Core.Evidence.Variable {variable = shift variable, instanciation}
               where
                 variable = case key of
-                  Data {index1, head1} -> Evidence.Data index1 head1
-                  Class {index2, head2} -> Evidence.Class index2 head2
+                  Data {index1, head1} -> Evidence.Direct index1 (Type2.Index head1)
+                  Class {index2, head2} -> Evidence.Direct (Type2.Index index2) head2
                 instanciation = case prerequisites of
                   Semantic.Tree.Constraints.None -> Core.Mono
                   Constraints prerequisites -> Core.Instanciation $ Strict.Vector.fromList $ do

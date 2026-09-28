@@ -235,7 +235,7 @@ eqChar :: Expression scope -> Expression scope -> Expression scope
 eqChar =
   eq
     Evidence.Variable
-      { variable = Index.Evidence.Builtin Index.Evidence.EqChar,
+      { variable = Index.Evidence.Direct Type2.Eq Type2.Char,
         instanciation = Instanciation.Mono
       }
 
@@ -456,18 +456,18 @@ instance Monadic 'Semantic.Statements.Comprehension where
     if fail
       then
         Evidence.Variable
-          { variable = Index.Evidence.Builtin Index.Evidence.MonadFailList,
+          { variable = Index.Evidence.Direct Type2.MonadFail Type2.List,
             instanciation = Instanciation.Mono
           }
       else
         Evidence.Variable
-          { variable = Index.Evidence.Builtin Index.Evidence.MonadList,
+          { variable = Index.Evidence.Direct Type2.Monad Type2.List,
             instanciation = Instanciation.Mono
           }
   lift _ =
     purex
       Evidence.Variable
-        { variable = Index.Evidence.Builtin Index.Evidence.ApplicativeList,
+        { variable = Index.Evidence.Direct Type2.Applicative Type2.List,
           instanciation = Instanciation.Mono
         }
 
