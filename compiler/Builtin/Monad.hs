@@ -23,5 +23,6 @@ extra :: ClassExtra scope
         return :: a -> m a
 
         x >> y = x >>= \\_ -> y
+        return = pure
       infixl 1 >>=, >>
       """
