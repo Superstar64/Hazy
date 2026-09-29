@@ -10,12 +10,14 @@ import {-# SOURCE #-} qualified Builtin.Integral as Integral
 import {-# SOURCE #-} qualified Builtin.List as List
 import {-# SOURCE #-} qualified Builtin.Monad as Monad
 import {-# SOURCE #-} qualified Builtin.MonadFail as MonadFail
+import {-# SOURCE #-} qualified Builtin.Monoid as Monoid
 import {-# SOURCE #-} qualified Builtin.NonEmpty as NonEmpty
 import {-# SOURCE #-} qualified Builtin.Num as Num
 import {-# SOURCE #-} qualified Builtin.Ord as Ord
 import {-# SOURCE #-} qualified Builtin.Ordering as Ordering
 import {-# SOURCE #-} qualified Builtin.Ratio as Ratio
 import {-# SOURCE #-} qualified Builtin.Real as Real
+import {-# SOURCE #-} qualified Builtin.Semigroup as Semigroup
 import qualified Builtin.Tuple as Tuple
 import Core.Tree.Class (Class)
 import qualified Core.Tree.Class as Class
@@ -60,6 +62,8 @@ kind pure typex constructor = \case
     Type2.Applicative -> classKind
     Type2.Monad -> classKind
     Type2.MonadFail -> classKind
+    Type2.Semigroup -> classKind
+    Type2.Monoid -> classKind
     Type2.Lazy -> Type.Levity
     Type2.Strict -> Type.Levity
     where
@@ -98,6 +102,8 @@ instance Builtin Class where
     Type2.Applicative -> pure Applicative.definition
     Type2.Monad -> pure Monad.definition
     Type2.MonadFail -> pure MonadFail.definition
+    Type2.Semigroup -> pure Semigroup.definition
+    Type2.Monoid -> pure Monoid.definition
     _ -> error "bad class index"
 
 instance Builtin ClassExtra where
@@ -114,4 +120,6 @@ instance Builtin ClassExtra where
     Type2.Applicative -> pure Applicative.extra
     Type2.Monad -> pure Monad.extra
     Type2.MonadFail -> pure MonadFail.extra
+    Type2.Semigroup -> pure Semigroup.extra
+    Type2.Monoid -> pure Monoid.extra
     _ -> error "bad class index"

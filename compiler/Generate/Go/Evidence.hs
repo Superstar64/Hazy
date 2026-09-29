@@ -103,6 +103,9 @@ generate context = \case
             Direct Functor ST -> functorST
             Direct Applicative ST -> applicativeST
             Direct Monad ST -> monadST
+            Direct Semigroup List -> semigroupList
+            Direct Semigroup NonEmpty -> semigroupNonEmpty
+            Direct Monoid List -> monoidList
             Direct _ _ -> error "bad evidence"
           Mangle.Builtin
             { numInt,
@@ -146,7 +149,10 @@ generate context = \case
               monadFailList,
               functorST,
               applicativeST,
-              monadST
+              monadST,
+              semigroupList,
+              semigroupNonEmpty,
+              monoidList
             } = Context.builtin context
     case instanciation of
       Instanciation.Mono ->

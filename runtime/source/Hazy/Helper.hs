@@ -194,6 +194,12 @@ instance Monad HelperList where
 instance MonadFail HelperList where
   fail _ = List []
 
+instance Semigroup (HelperList a) where
+  List xs <> List ys = List (xs ++ ys)
+
+instance Monoid (HelperList a) where
+  mempty = List []
+
 newtype HelperNonEmpty a = NonEmpty {nonEmpty :: NonEmpty a}
 
 instance (Eq a) => Eq (HelperNonEmpty a) where
@@ -217,6 +223,9 @@ instance Monad HelperNonEmpty where
     NonEmpty (y :| ys) -> y :| ys ++ (xs >>= toList . k)
       where
         toList (NonEmpty (x :| xs)) = x : xs
+
+instance Semigroup (HelperNonEmpty a) where
+  NonEmpty (x :| xs) <> NonEmpty (y :| ys) = NonEmpty (x :| xs ++ y : ys)
 
 newtype HelperST s a = STx {st :: ST s a}
 

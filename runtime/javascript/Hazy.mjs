@@ -457,4 +457,7 @@ export {
   "instance Hazy.Functor HelperST" as functorST,
   "instance Hazy.Applicative HelperST" as applicativeST,
   "instance Hazy.Monad HelperST" as monadST,
+  "instance Hazy.Semigroup HelperList" as semigroupList,
+  "instance Hazy.Semigroup HelperNonEmpty" as semigroupNonEmpty,
+  "instance Hazy.Monoid HelperList" as monoidList,
 } from "./Hazy/Helper.mjs";

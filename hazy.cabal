@@ -25,12 +25,14 @@ executable hazy
     Builtin.List
     Builtin.Monad
     Builtin.MonadFail
+    Builtin.Monoid
     Builtin.NonEmpty
     Builtin.Num
     Builtin.Ord
     Builtin.Ordering
     Builtin.Ratio
     Builtin.Real
+    Builtin.Semigroup
     Builtin.Tuple
     Core.Builtin
     Core.Index.Table.Term

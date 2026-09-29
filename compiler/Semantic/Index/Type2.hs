@@ -30,6 +30,8 @@ data Index scope
   | Applicative
   | Monad
   | MonadFail
+  | Semigroup
+  | Monoid
   | Lazy
   | Strict
   deriving (Show, Eq, Ord)
@@ -65,6 +67,8 @@ split = \case
   Applicative -> Builtin Applicative
   Monad -> Builtin Monad
   MonadFail -> Builtin MonadFail
+  Semigroup -> Builtin Semigroup
+  Monoid -> Builtin Monoid
   Lazy -> Builtin Lazy
   Strict -> Builtin Strict
 

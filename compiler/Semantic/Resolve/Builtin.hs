@@ -10,12 +10,14 @@ import {-# SOURCE #-} qualified Builtin.Integral as Integral
 import {-# SOURCE #-} qualified Builtin.List as List
 import {-# SOURCE #-} qualified Builtin.Monad as Monad
 import {-# SOURCE #-} qualified Builtin.MonadFail as MonadFail
+import {-# SOURCE #-} qualified Builtin.Monoid as Monoid
 import {-# SOURCE #-} qualified Builtin.NonEmpty as NonEmpty
 import {-# SOURCE #-} qualified Builtin.Num as Num
 import {-# SOURCE #-} qualified Builtin.Ord as Ord
 import {-# SOURCE #-} qualified Builtin.Ordering as Ordering
 import {-# SOURCE #-} qualified Builtin.Ratio as Ratio
 import {-# SOURCE #-} qualified Builtin.Real as Real
+import {-# SOURCE #-} qualified Builtin.Semigroup as Semigroup
 import Data.Functor.Identity (Identity (..))
 import qualified Data.Map as Map
 import qualified Data.Set as Set
@@ -74,13 +76,15 @@ builtin =
       Integral.bindings,
       List.bindings,
       Monad.bindings,
+      Monoid.bindings,
       MonadFail.bindings,
       NonEmpty.bindings,
       Num.bindings,
       Ord.bindings,
       Ordering.bindings,
       Ratio.bindings,
-      Real.bindings
+      Real.bindings,
+      Semigroup.bindings
     ]
   where
     baseline =

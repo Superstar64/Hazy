@@ -51,7 +51,10 @@ data Builtin a = Builtin
     monadFailList,
     functorST,
     applicativeST,
-    monadST ::
+    monadST,
+    semigroupList,
+    semigroupNonEmpty,
+    monoidList ::
       a
   }
   deriving (Functor, Foldable, Traversable)
@@ -128,5 +131,8 @@ canonical =
       monadFailList = pack "monadFailList",
       functorST = pack "functorST",
       applicativeST = pack "applicativeST",
-      monadST = pack "monadST"
+      monadST = pack "monadST",
+      semigroupList = pack "semigroupList",
+      semigroupNonEmpty = pack "semigroupNonEmpty",
+      monoidList = pack "monoidList"
     }
