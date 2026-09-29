@@ -358,7 +358,7 @@ export function eqTuple(unpack, ...evidences) {
   };
   result.b = {
     a: 0,
-    b: helper.notEqual(result),
+    b: helper.defaultNotEqual(result),
   };
   return result;
 }
@@ -389,27 +389,27 @@ export function ordTuple(unpack, ...evidences) {
   };
   result.c = {
     a: 0,
-    b: helper.lessThen(result),
+    b: helper.defaultLessThen(result),
   };
   result.d = {
     a: 0,
-    b: helper.lessThenEqual(result),
+    b: helper.defaultLessThenEqual(result),
   };
   result.e = {
     a: 0,
-    b: helper.greaterThen(result),
+    b: helper.defaultGreaterThen(result),
   };
   result.f = {
     a: 0,
-    b: helper.greaterThenEqual(result),
+    b: helper.defaultGreaterThenEqual(result),
   };
   result.g = {
     a: 0,
-    b: helper.larger(result),
+    b: helper.defaultMax(result),
   };
   result.h = {
     a: 0,
-    b: helper.smaller(result),
+    b: helper.defaultMin(result),
   };
   return result;
 }

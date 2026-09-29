@@ -25,24 +25,24 @@ reduce x y = Ratio $ (x `quot` d) :% (y `quot` d)
   where
     d = gcd x y
 
-notEqual :: (Eq a) => a -> a -> Bool
-notEqual x y = not (x == y)
+defaultNotEqual :: (Eq a) => a -> a -> Bool
+defaultNotEqual x y = not (x == y)
 
-lessThen,
-  lessThenEqual,
-  greaterThen,
-  greaterThenEqual ::
+defaultLessThen,
+  defaultLessThenEqual,
+  defaultGreaterThen,
+  defaultGreaterThenEqual ::
     (Ord a) => a -> a -> Bool
-lessThen x y = compare x y == LT
-lessThenEqual x y = compare x y /= GT
-greaterThen x y = compare x y == GT
-greaterThenEqual x y = compare x y /= LT
+defaultLessThen x y = compare x y == LT
+defaultLessThenEqual x y = compare x y /= GT
+defaultGreaterThen x y = compare x y == GT
+defaultGreaterThenEqual x y = compare x y /= LT
 
-larger, smaller :: (Ord a) => a -> a -> a
-larger x y
+defaultMax, defaultMin :: (Ord a) => a -> a -> a
+defaultMax x y
   | x <= y = y
   | otherwise = x
-smaller x y
+defaultMin x y
   | x <= y = x
   | otherwise = y
 
