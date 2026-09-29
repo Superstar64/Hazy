@@ -5,6 +5,7 @@ import Core.Temporary.Definition (Definition (..))
 import qualified Core.Temporary.Definition as Definition
 import Core.Temporary.Function (Function (..))
 import Core.Temporary.Pattern (Bindings (..), Pattern (..))
+import qualified Core.Temporary.Pattern as Pattern
 import Core.Temporary.RightHandSide (RightHandSide (..))
 import Core.Tree.Data (Data)
 import qualified Core.Tree.Expression as Expression
@@ -87,6 +88,25 @@ equal context position typeIndex datax = do
                     }
               }
   definitions <- sequence $ zipWith generate [0 ..] (toList constructors)
+  let otherwise =
+        Definition
+          { definition =
+              Bound
+                { patternx = Pattern.Wildcard,
+                  body =
+                    Bound
+                      { patternx = Pattern.Wildcard,
+                        body =
+                          Plain
+                            { plain =
+                                Done
+                                  { done =
+                                      Expression.false
+                                  }
+                            }
+                      }
+                }
+          }
   pure $ do
     definitions <- sequence definitions
     pure $
@@ -95,4 +115,4 @@ equal context position typeIndex datax = do
           TypeLambda.mono $
             if null definitions
               then Expression.true
-              else Definition.desugar $ foldr1 (<>) definitions
+              else Definition.desugar $ foldr (<>) otherwise definitions
