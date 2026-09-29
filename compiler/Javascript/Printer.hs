@@ -286,6 +286,7 @@ import Javascript.Printer.Tree.LogicalORExpression
 import Javascript.Printer.Tree.MemberExpression
   ( MemberExpression,
     memberExpression1,
+    memberExpression2,
     memberExpression3,
   )
 import Javascript.Printer.Tree.MethodDefinition

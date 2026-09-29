@@ -347,6 +347,12 @@ instance Monad IO where
 instance MonadFail IO where
   fail s = ioError (userError s)
 
+instance (Semigroup a) => Semigroup (IO a) where
+  IO a <> IO b = IO (a <> b)
+
+instance (Monoid a) => Monoid (IO a) where
+  mempty = IO mempty
+
 instance Bounded Ordering where
   minBound = LT
   maxBound = GT

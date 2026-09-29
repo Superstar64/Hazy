@@ -13,6 +13,7 @@ import qualified Generate.Context as Context
 import {-# SOURCE #-} Generate.Go.Expression (force)
 import qualified Generate.Mangle as Mangle
 import qualified Javascript.Tree.Expression as Javascript (Expression (..))
+import qualified Javascript.Tree.Field as Javascript (Field (..))
 import qualified Javascript.Tree.Statement as Javascript (Statement (..))
 import Semantic.Index.Evidence (Index (Direct))
 import qualified Semantic.Index.Evidence as Evidence (Index (..))
@@ -40,6 +41,24 @@ generate context = \case
               arguments = unpackTuple number : arguments
             }
     | otherwise -> error "bad tuple instance"
+  Variable {variable = Direct Semigroup (Tuple number), instanciation}
+    | Instanciation arguments <- instanciation -> do
+        let Mangle.Builtin {semigroupTuple} = Context.builtin context
+        arguments <- traverse (generate context) (toList arguments)
+        pure
+          Javascript.Call
+            { function = Javascript.Variable {name = semigroupTuple},
+              arguments = packTuple number : unpackTuple number : arguments
+            }
+  Variable {variable = Direct Monoid (Tuple number), instanciation}
+    | Instanciation arguments <- instanciation -> do
+        let Mangle.Builtin {monoidTuple} = Context.builtin context
+        arguments <- traverse (generate context) (toList arguments)
+        pure
+          Javascript.Call
+            { function = Javascript.Variable {name = monoidTuple},
+              arguments = packTuple number : unpackTuple number : arguments
+            }
   Variable {variable, instanciation} -> do
     let strict = case variable of
           Evidence.Index {} -> True
@@ -103,9 +122,15 @@ generate context = \case
             Direct Functor ST -> functorST
             Direct Applicative ST -> applicativeST
             Direct Monad ST -> monadST
+            Direct Semigroup Arrow -> semigroupArrow
             Direct Semigroup List -> semigroupList
             Direct Semigroup NonEmpty -> semigroupNonEmpty
+            Direct Semigroup Ordering -> semigroupOrdering
+            Direct Semigroup ST -> semigroupST
+            Direct Monoid Arrow -> monoidArrow
             Direct Monoid List -> monoidList
+            Direct Monoid Ordering -> monoidOrdering
+            Direct Monoid ST -> monoidST
             Direct _ _ -> error "bad evidence"
           Mangle.Builtin
             { numInt,
@@ -150,9 +175,15 @@ generate context = \case
               functorST,
               applicativeST,
               monadST,
+              semigroupArrow,
               semigroupList,
               semigroupNonEmpty,
-              monoidList
+              semigroupOrdering,
+              semigroupST,
+              monoidArrow,
+              monoidList,
+              monoidOrdering,
+              monoidST
             } = Context.builtin context
     case instanciation of
       Instanciation.Mono ->
@@ -174,6 +205,42 @@ generate context = \case
         { object = base,
           field = Mangle.fields !! index
         }
+
+packTuple :: Int -> Javascript.Expression
+packTuple number =
+  Javascript.Arrow
+    { parameters = [Mangle.local],
+      body =
+        [ Javascript.Return $
+            Javascript.Object $
+              let tag =
+                    ( head Mangle.names,
+                      Javascript.Literal
+                        { literal =
+                            Javascript.Number {number = 0}
+                        }
+                    )
+                  elements = do
+                    (name, number) <- take number $ zip (tail Mangle.names) [0 ..]
+                    pure $
+                      ( name,
+                        Javascript.Literal
+                          { literal =
+                              Javascript.Index
+                                { array =
+                                    Javascript.Variable
+                                      { name = Mangle.local
+                                      },
+                                  index =
+                                    Javascript.Number
+                                      { number
+                                      }
+                                }
+                          }
+                      )
+               in tag : elements
+        ]
+    }
 
 unpackTuple :: Int -> Javascript.Expression
 unpackTuple number =

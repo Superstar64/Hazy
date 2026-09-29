@@ -52,9 +52,17 @@ data Builtin a = Builtin
     functorST,
     applicativeST,
     monadST,
+    semigroupArrow,
     semigroupList,
     semigroupNonEmpty,
-    monoidList ::
+    semigroupOrdering,
+    semigroupST,
+    semigroupTuple,
+    monoidArrow,
+    monoidList,
+    monoidOrdering,
+    monoidST,
+    monoidTuple ::
       a
   }
   deriving (Functor, Foldable, Traversable)
@@ -132,7 +140,15 @@ canonical =
       functorST = pack "functorST",
       applicativeST = pack "applicativeST",
       monadST = pack "monadST",
+      semigroupArrow = pack "semigroupArrow",
       semigroupList = pack "semigroupList",
       semigroupNonEmpty = pack "semigroupNonEmpty",
-      monoidList = pack "monoidList"
+      semigroupOrdering = pack "semigroupOrdering",
+      semigroupST = pack "semigroupST",
+      semigroupTuple = pack "semigroupTuple",
+      monoidArrow = pack "monoidArrow",
+      monoidList = pack "monoidList",
+      monoidOrdering = pack "monoidOrdering",
+      monoidST = pack "monoidST",
+      monoidTuple = pack "monoidTuple"
     }

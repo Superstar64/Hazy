@@ -46,6 +46,33 @@ defaultMin x y
   | x <= y = x
   | otherwise = y
 
+defaultSconcat :: (Semigroup a) => NonEmpty a -> a
+defaultSconcat = \case
+  x :| [] -> x
+  x :| x' : xs -> x <> sconcat (x' :| xs)
+
+defaultStimes :: (Semigroup a, Integral b) => b -> a -> a
+defaultStimes n a | n >= 1 = go n a
+  where
+    go 1 a = a
+    go n a = a <> go (n - 1) a
+
+defaultMappend :: (Monoid a) => a -> a -> a
+defaultMappend = (<>)
+
+defaultMconcat :: (Monoid a) => [a] -> a
+defaultMconcat = \case
+  [] -> mempty
+  (x : xs) -> x <> mconcat xs
+
+newtype HelperArrow a b = Arrow (a -> b)
+
+instance (Semigroup b) => Semigroup (HelperArrow a b) where
+  Arrow a <> Arrow b = Arrow (\x -> a x <> b x)
+
+instance (Monoid b) => Monoid (HelperArrow a b) where
+  mempty = Arrow (\_ -> mempty)
+
 newtype HelperBool = Bool Bool
 
 instance Eq HelperBool where
@@ -165,6 +192,13 @@ instance Enum HelperOrdering where
   toEnum x | x >= 0 && x < 3 = primFromConstructorTag x
   fromEnum = primToConstructorTag
 
+instance Semigroup HelperOrdering where
+  Ordering EQ <> y = y
+  x <> _ = x
+
+instance Monoid HelperOrdering where
+  mempty = Ordering EQ
+
 newtype HelperList a = List {list :: [a]}
 
 instance (Eq a) => Eq (HelperList a) where
@@ -176,10 +210,7 @@ instance (Ord a) => Ord (HelperList a) where
   List [] `compare` List [] = EQ
   List [] `compare` List (_ : _) = LT
   List (_ : _) `compare` List [] = GT
-  List (x : xs) `compare` List (x' : xs') = case compare x x' of
-    LT -> LT
-    EQ -> compare xs xs'
-    GT -> GT
+  List (x : xs) `compare` List (x' : xs') = compare x x' <> compare xs xs'
 
 instance Functor HelperList where
   fmap f (List xs) = List (map f xs)
@@ -206,10 +237,7 @@ instance (Eq a) => Eq (HelperNonEmpty a) where
   NonEmpty (x :| xs) == NonEmpty (x' :| xs') = x == x' && xs == xs'
 
 instance (Ord a) => Ord (HelperNonEmpty a) where
-  NonEmpty (x :| xs) `compare` NonEmpty (x' :| xs') = case compare x x' of
-    LT -> LT
-    EQ -> compare xs xs'
-    GT -> GT
+  NonEmpty (x :| xs) `compare` NonEmpty (x' :| xs') = compare x x' <> compare xs xs'
 
 instance Functor HelperNonEmpty where
   fmap f (NonEmpty (x :| xs)) = NonEmpty (f x :| fmap f xs)
@@ -238,6 +266,12 @@ instance Applicative (HelperST s) where
 
 instance Monad (HelperST s) where
   STx m >>= f = STx (primSTBind m (st . f))
+
+instance (Semigroup a) => Semigroup (HelperST s a) where
+  STx a <> STx b = STx (liftA2 (<>) a b)
+
+instance (Monoid a) => Monoid (HelperST s a) where
+  mempty = pure mempty
 
 newtype HelperUnit = HelperUnit ()
 

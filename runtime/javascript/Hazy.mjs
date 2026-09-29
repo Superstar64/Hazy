@@ -414,6 +414,63 @@ export function ordTuple(unpack, ...evidences) {
   return result;
 }
 
+function combine(evidence, x, y) {
+  return {
+    a: 1,
+    b() {
+      let value = force(evidence)(x)(y);
+      this.a = 0;
+      this.b = value;
+      return value;
+    },
+  };
+}
+
+export function semigroupTuple(pack, unpack, ...evidences) {
+  const result = {
+    a: {
+      a: 0,
+      b: (x_) => (y_) => {
+        const x = unpack(force(x_));
+        const y = unpack(force(y_));
+        const z = [];
+        for (let i = 0; i < evidences.length; i++) {
+          z[i] = combine(evidences[i].a, x[i], y[i]);
+        }
+        return pack(z);
+      },
+    },
+    b: undefined,
+    c: (integral) => helper.defaultStimes(result, integral),
+  };
+  result.b = {
+    a: 0,
+    b: helper.defaultSconcat(result),
+  };
+  return result;
+}
+
+export function monoidTuple(pack, unpack, ...evidences) {
+  const result = {
+    a: semigroupTuple(pack, unpack, ...evidences.map((x) => x.a)),
+    b: {
+      a: 0,
+      b: pack(evidences.map((x) => x.b)),
+    },
+    c: undefined,
+    d: undefined,
+  };
+  result.c = {
+    a: 0,
+    b: helper.defaultMappend(result),
+  };
+  result.d = {
+    a: 0,
+    b: helper.defaultMconcat(result),
+  };
+  return result;
+}
+
 export {
   "instance Hazy.Num HelperInt" as numInt,
   "instance Hazy.Num HelperInteger" as numInteger,
@@ -457,7 +514,13 @@ export {
   "instance Hazy.Functor HelperST" as functorST,
   "instance Hazy.Applicative HelperST" as applicativeST,
   "instance Hazy.Monad HelperST" as monadST,
+  "instance Hazy.Semigroup HelperArrow" as semigroupArrow,
   "instance Hazy.Semigroup HelperList" as semigroupList,
   "instance Hazy.Semigroup HelperNonEmpty" as semigroupNonEmpty,
+  "instance Hazy.Semigroup HelperOrdering" as semigroupOrdering,
+  "instance Hazy.Semigroup HelperST" as semigroupST,
+  "instance Hazy.Monoid HelperArrow" as monoidArrow,
   "instance Hazy.Monoid HelperList" as monoidList,
+  "instance Hazy.Monoid HelperOrdering" as monoidOrdering,
+  "instance Hazy.Monoid HelperST" as monoidST,
 } from "./Hazy/Helper.mjs";

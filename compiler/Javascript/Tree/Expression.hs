@@ -25,6 +25,10 @@ data Expression
       { object :: Expression,
         field :: !Text
       }
+  | Index
+      { array :: Expression,
+        index :: Expression
+      }
   | Call
       { function :: Expression,
         arguments :: [Expression]
@@ -164,6 +168,10 @@ instance Print (Printer.MemberExpression yield await) where
   run Member {object, field}
     | field <- Printer.identifier field =
         Printer.memberExpression3 (run object) field
+  run Index {array, index}
+    | array <- run array,
+      index <- run index =
+        Printer.memberExpression2 array index
   run expression = Printer.memberExpression1 (run expression)
 
 instance Print (Printer.PrimaryExpression yield await) where

@@ -87,9 +87,31 @@ constrain fallthough constrain classx head = table classx head
     table Type2.Functor Type2.ST [_] = single
     table Type2.Applicative Type2.ST [_] = single
     table Type2.Monad Type2.ST [_] = single
+    table Type2.Semigroup Type2.Arrow [_, result] = do
+      result <- constrain Type2.Semigroup result
+      call [result]
     table Type2.Semigroup Type2.List [_] = single
     table Type2.Semigroup Type2.NonEmpty [_] = single
+    table Type2.Semigroup Type2.Ordering [] = single
+    table Type2.Semigroup Type2.ST [_, result] = do
+      result <- constrain Type2.Semigroup result
+      call [result]
+    table Type2.Semigroup (Type2.Tuple n) elements
+      | n == length elements = do
+          elements <- traverse (constrain Type2.Semigroup) elements
+          call elements
+    table Type2.Monoid Type2.Arrow [_, result] = do
+      result <- constrain Type2.Monoid result
+      call [result]
     table Type2.Monoid Type2.List [_] = single
+    table Type2.Monoid Type2.Ordering [] = single
+    table Type2.Monoid Type2.ST [_, result] = do
+      result <- constrain Type2.Monoid result
+      call [result]
+    table Type2.Monoid (Type2.Tuple n) elements
+      | n == length elements = do
+          elements <- traverse (constrain Type2.Monoid) elements
+          call elements
     table _ _ _ = fallthough
 
     single = pure $ Variable (Evidence.Direct classx head) Mono
