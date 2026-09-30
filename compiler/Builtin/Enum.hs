@@ -28,7 +28,7 @@ extra :: ClassExtra scope
 
         succ x = toEnum (fromEnum x + 1)
         pred x = toEnum (fromEnum x - 1)
-        enumFrom x = enumFromTo x (succ x)
+        enumFrom x = enumFromThen x (succ x)
         enumFromTo x y = fmap toEnum [fromEnum x .. fromEnum y]
         enumFromThen x y = fmap toEnum [fromEnum x, fromEnum y ..]
         enumFromThenTo x y z = fmap toEnum [fromEnum x, fromEnum y .. fromEnum z]

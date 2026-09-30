@@ -490,7 +490,7 @@ are completely ignored at the moment. Additionally, the only classes with
 deriving support are:
 * `Eq`
 * `Ord`
-* `Enum` (partial)
+* `Enum`
 
 ## Planned Toggles
 These are devitations that will eventually toggleable with a language pragma.

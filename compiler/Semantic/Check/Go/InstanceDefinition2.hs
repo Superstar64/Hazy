@@ -178,8 +178,8 @@ checkMethod Method {context, position} (Derive Type2.Enum typeIndex datax) index
   | Method.FromEnum <- toEnum index = Enum.fromEnum context position typeIndex datax
 checkMethod Method {context, position} (Derive Type2.Enum typeIndex datax) index _ _
   | Method.ToEnum <- toEnum index = Enum.toEnum context position typeIndex datax
-checkMethod Method {context, position} (Derive Type2.Enum typeIndex datax) index _ _
-  | Method.EnumFromThen <- toEnum index = Enum.enumFromThen context position typeIndex datax
+checkMethod Method {context, position, self} (Derive Type2.Enum typeIndex datax) index _ _
+  | Method.EnumFromThen <- toEnum index = Enum.enumFromThen context position self typeIndex datax
 checkMethod Method {context, position, base, self, extra} source index scheme Generated {} = do
   case source of
     Manual -> pure ()

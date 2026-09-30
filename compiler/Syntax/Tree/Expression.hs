@@ -423,11 +423,11 @@ parse6 =
 parse7 :: Parser (Expression Position -> Expression Position -> Position -> Expression Position)
 parse7 =
   asum
-    [ token ".." *> asum [sequenceFromThenTo <$> parse, pure sequenceFromTo],
+    [ token ".." *> asum [sequenceFromThenTo <$> parse, pure sequenceFromThen],
       list <$> many (token "," *> parse)
     ]
   where
-    sequenceFromTo to from startPosition = SequenceFromTo {startPosition, from, to}
+    sequenceFromThen thenx from startPosition = SequenceFromThen {startPosition, from, thenx}
     sequenceFromThenTo to thenx from startPosition = SequenceFromThenTo {startPosition, from, thenx, to}
     list es e2 e1 startPosition =
       List

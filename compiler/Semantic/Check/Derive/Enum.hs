@@ -1,5 +1,6 @@
 module Semantic.Check.Derive.Enum where
 
+import {-# SOURCE #-} qualified Builtin.Enum as Enum
 import Control.Monad.ST (ST)
 import Core.Temporary.Definition (Definition (..))
 import qualified Core.Temporary.Definition as Definition
@@ -7,12 +8,13 @@ import Core.Temporary.Function (Function (..))
 import Core.Temporary.Pattern (Bindings (..), Pattern (..))
 import qualified Core.Temporary.Pattern as Pattern
 import Core.Temporary.RightHandSide (RightHandSide (..))
+import qualified Core.Tree.Class as Class
 import Core.Tree.Data (Data)
+import Core.Tree.Evidence (Evidence)
 import qualified Core.Tree.Evidence as Evidence
 import Core.Tree.Expression (Expression)
 import qualified Core.Tree.Expression as Expression
 import qualified Core.Tree.Instanciation as Instanciation
-import qualified Core.Tree.Statements as Statements
 import qualified Core.Tree.Type as Core
 import qualified Core.Tree.TypeLambda as TypeLambda
 import Data.Foldable (toList)
@@ -28,6 +30,7 @@ import qualified Semantic.Check.Temporary.ConstructorInfo as ConstructorInfo
 import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Evidence as Index.Evidence
 import qualified Semantic.Index.Local as Local
+import qualified Semantic.Index.Method as Method
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Scope (Environment (..), Local)
 import Semantic.Shift (shift)
@@ -126,8 +129,7 @@ toEnum' _ typeIndex constructors
 toEnum' position _ _ = derivingNonEnum position
 
 fromEnum,
-  toEnum,
-  enumFromThen ::
+  toEnum ::
     Context s (Local ':+ scope) ->
     Position ->
     Type2.Index scope ->
@@ -150,11 +152,60 @@ toEnum context position typeIndex datax = do
   pure $ do
     body <- body
     pure $ Generated $ Solved $ TypeLambda.mono $ body
-enumFromThen context position _ datax = do
-  DataInstance {types} <- instanciate context position (shift datax)
+
+enumFromThen ::
+  Context s (Local ':+ scope) ->
+  Position ->
+  Evidence (Local ':+ scope) ->
+  Type2.Index scope ->
+  Data scope ->
+  ST s (Unify.Solve s (MethodConcrete Auto layout Check scope))
+enumFromThen context position evidence typeIndex datax = do
+  DataInstance {types, constructors} <- instanciate context position (shift datax)
   let unify index typex = Unify.unify context position typex (Core.Variable $ Local.Local index)
   sequence $ zipWith unify [0 ..] (toList types)
   pure $ do
-    let body =
-          Expression.Join {statements = Statements.Bottom}
+    minInfo <- ConstructorInfo.solve $ ConstructorInstance.info (Strict.Vector.head constructors)
+    maxInfo <- ConstructorInfo.solve $ ConstructorInstance.info (Strict.Vector.last constructors)
+    fromEnum <- fromEnum' (shift typeIndex) constructors
+    let max =
+          shift $
+            shift $
+              Expression.simplifyConstructorExact
+                Constructor.Index
+                  { typeIndex = shift typeIndex,
+                    constructorIndex = length constructors - 1
+                  }
+                maxInfo
+                Strict.Vector.empty
+        min =
+          shift $
+            shift $
+              Expression.simplifyConstructorExact
+                Constructor.Index
+                  { typeIndex = shift typeIndex,
+                    constructorIndex = 0
+                  }
+                minInfo
+                Strict.Vector.empty
+        condition =
+          Expression.lessThenEqualInt
+            (shift (shift fromEnum) `Expression.call` shift Expression.lambdaVariable)
+            (shift (shift fromEnum) `Expression.call` Expression.lambdaVariable)
+        body =
+          Expression.Lambda
+            { body =
+                Expression.Lambda
+                  { body =
+                      Expression.Method
+                        { method = Method.enumFromThenTo,
+                          evidence = shift $ shift evidence,
+                          instanciation = Instanciation.Mono,
+                          methodInfo = Class.info $ Enum.definition
+                        }
+                        `Expression.call` shift Expression.lambdaVariable
+                        `Expression.call` Expression.lambdaVariable
+                        `Expression.call` Expression.ifx condition max min
+                  }
+            }
     pure $ Generated $ Solved $ TypeLambda.mono body

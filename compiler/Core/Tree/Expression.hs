@@ -244,6 +244,25 @@ eq evidence left right =
     `call` left
     `call` right
 
+lessThenEqual :: Evidence scope -> Expression scope -> Expression scope -> Expression scope
+lessThenEqual evidence left right =
+  Method
+    { method = Method.lessThenEqual,
+      evidence,
+      instanciation = Instanciation.Mono,
+      methodInfo = Class.info Ord.definition
+    }
+    `call` left
+    `call` right
+
+lessThenEqualInt :: Expression scope -> Expression scope -> Expression scope
+lessThenEqualInt =
+  lessThenEqual
+    Evidence.Variable
+      { variable = Index.Evidence.Direct Type2.Ord Type2.Int,
+        instanciation = Instanciation.Mono
+      }
+
 compare :: Evidence scope -> Expression scope -> Expression scope -> Expression scope
 compare evidence left right =
   Method

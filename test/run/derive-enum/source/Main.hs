@@ -19,8 +19,7 @@ main = do
   print $ succ A
   print $ succ B
   print $ pred G
-  -- print [ B ..]
+  print [B ..]
   print [B, D .. G]
   print [D .. C]
-
--- print [ A, D ..]
+  print [A, D ..]
