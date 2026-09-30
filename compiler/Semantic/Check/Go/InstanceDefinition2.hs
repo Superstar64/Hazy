@@ -33,6 +33,7 @@ import Error (cannotDerive, cyclicalTypeChecking)
 import qualified Graph.Topological as Topological
 import Semantic.Check.Context (Context (..))
 import qualified Semantic.Check.Context as Context
+import qualified Semantic.Check.Derive.Enum as Enum
 import qualified Semantic.Check.Derive.Eq as Eq
 import qualified Semantic.Check.Derive.Ord as Ord
 import Semantic.Check.Go.Definition4 (Solve (..))
@@ -173,12 +174,19 @@ checkMethod Method {context, position} (Derive Type2.Eq typeIndex datax) index _
   | Method.Equal <- toEnum index = Eq.equal context position typeIndex datax
 checkMethod Method {context, position} (Derive Type2.Ord typeIndex datax) index _ _
   | Method.Compare <- toEnum index = Ord.compare context position typeIndex datax
+checkMethod Method {context, position} (Derive Type2.Enum typeIndex datax) index _ _
+  | Method.FromEnum <- toEnum index = Enum.fromEnum context position typeIndex datax
+checkMethod Method {context, position} (Derive Type2.Enum typeIndex datax) index _ _
+  | Method.ToEnum <- toEnum index = Enum.toEnum context position typeIndex datax
+checkMethod Method {context, position} (Derive Type2.Enum typeIndex datax) index _ _
+  | Method.EnumFromThen <- toEnum index = Enum.enumFromThen context position typeIndex datax
 checkMethod Method {context, position, base, self, extra} source index scheme Generated {} = do
   case source of
     Manual -> pure ()
     Derive classx datax _ -> case classx of
       Type2.Eq -> pure ()
       Type2.Ord -> pure ()
+      Type2.Enum -> pure ()
       _ ->
         let labelContext = Context.label context
             resolve =

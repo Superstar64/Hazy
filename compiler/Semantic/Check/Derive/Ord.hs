@@ -8,7 +8,6 @@ import Core.Temporary.Pattern (Bindings (..), Pattern (..))
 import qualified Core.Temporary.Pattern as Pattern
 import Core.Temporary.RightHandSide (RightHandSide (..))
 import Core.Tree.Data (Data)
-import Core.Tree.Expression (Expression)
 import qualified Core.Tree.Expression as Expression
 import qualified Core.Tree.Type as Core
 import qualified Core.Tree.TypeLambda as TypeLambda
@@ -19,6 +18,7 @@ import Semantic.Check.ConstructorInstance (ConstructorInstance (..))
 import qualified Semantic.Check.ConstructorInstance as ConstructorInstance
 import Semantic.Check.Context (Context)
 import Semantic.Check.DataInstance (DataInstance (..))
+import Semantic.Check.Derive.Enum (fromEnum')
 import Semantic.Check.EntryInstance (entry)
 import Semantic.Check.Simple.Data (instanciate)
 import qualified Semantic.Check.Temporary.ConstructorInfo as ConstructorInfo
@@ -33,43 +33,6 @@ import Semantic.Tree.MethodConcrete (Auto, MethodConcrete (Generated))
 import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
 import Prelude hiding (Eq)
-
-fromEnum' ::
-  (Foldable t) =>
-  Type2.Index scope ->
-  t (ConstructorInstance s scope) ->
-  Unify.Solve s (Expression scope)
-fromEnum' typeIndex constructors = do
-  let toIntN index constructor@ConstructorInstance {entries} =
-        do
-          info <- ConstructorInfo.solve $ ConstructorInstance.info constructor
-          let patterns :: Strict.Vector (Pattern scope)
-              patterns = Strict.Vector.replicate (length entries) Wildcard
-              patternx =
-                Match
-                  { irrefutable = False,
-                    match =
-                      Constructor
-                        { constructor =
-                            Constructor.Index
-                              { typeIndex,
-                                constructorIndex = index
-                              },
-                          patterns,
-                          constructorInfo = info
-                        }
-                  }
-              done = Expression.int index
-          pure
-            Definition
-              { definition =
-                  Bound
-                    { patternx,
-                      body = Plain {plain = Done {done}}
-                    }
-              }
-  declarations <- sequence $ zipWith toIntN [0 ..] (toList constructors)
-  pure $ Definition.desugar $ foldr1 (<>) declarations
 
 compare ::
   Context s (Local ':+ scope) ->

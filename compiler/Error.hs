@@ -88,6 +88,7 @@ module Error
     improperBindingGroup,
     cannotDerive,
     partialSynonym,
+    derivingNonEnum,
     unsupportedFeatureRunST,
     unsupportedFeatureConstraintedTypeDefaulting,
     unsupportedFeatureStrictFunctions,
@@ -282,6 +283,7 @@ data Type
   | UnsupportedFeature
   | CannotDerive
   | PartialSynonym
+  | DerivingNonEnum
   deriving (Show, Eq, Enum, Bounded)
 
 types :: Map String Type
@@ -554,6 +556,9 @@ cannotDerive position instancex = errorAt CannotDerive position $ mconcat builde
 
 partialSynonym :: Position -> a
 partialSynonym position = errorAt PartialSynonym position $ fromString "not enough type synonym arguments"
+
+derivingNonEnum :: Position -> a
+derivingNonEnum position = errorAt DerivingNonEnum position $ fromString "data type is not an enum"
 
 strictFunctions = fromString "strict functions"
 
