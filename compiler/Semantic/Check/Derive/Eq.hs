@@ -88,31 +88,25 @@ equal context position typeIndex datax = do
                     }
               }
   definitions <- sequence $ zipWith generate [0 ..] (toList constructors)
-  let otherwise =
-        Definition
-          { definition =
-              Bound
-                { patternx = Pattern.Wildcard,
-                  body =
-                    Bound
-                      { patternx = Pattern.Wildcard,
-                        body =
-                          Plain
-                            { plain =
-                                Done
-                                  { done =
-                                      Expression.false
-                                  }
-                            }
-                      }
-                }
-          }
   pure $ do
     definitions <- sequence definitions
-    pure $
-      Generated $
-        Solved $
-          TypeLambda.mono $
-            if null definitions
-              then Expression.true
-              else Definition.desugar $ foldr (<>) otherwise definitions
+    body <-
+      if null definitions
+        then
+          pure $ Expression.Lambda $ Expression.Lambda $ Expression.true
+        else do
+          let done = Expression.false
+              otherwise =
+                Definition
+                  { definition =
+                      Bound
+                        { patternx = Pattern.Wildcard,
+                          body =
+                            Bound
+                              { patternx = Pattern.Wildcard,
+                                body = Plain {plain = Done {done}}
+                              }
+                        }
+                  }
+          pure $ Definition.desugar $ foldr (<>) otherwise definitions
+    pure $ Generated $ Solved $ TypeLambda.mono body

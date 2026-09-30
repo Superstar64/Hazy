@@ -8,8 +8,8 @@ import Core.Temporary.Pattern (Bindings (..), Pattern (..))
 import qualified Core.Temporary.Pattern as Pattern
 import Core.Temporary.RightHandSide (RightHandSide (..))
 import Core.Tree.Data (Data)
+import Core.Tree.Expression (Expression)
 import qualified Core.Tree.Expression as Expression
-import qualified Core.Tree.Statements as Statements
 import qualified Core.Tree.Type as Core
 import qualified Core.Tree.TypeLambda as TypeLambda
 import Data.Foldable (toList)
@@ -33,6 +33,43 @@ import Semantic.Tree.MethodConcrete (Auto, MethodConcrete (Generated))
 import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
 import Prelude hiding (Eq)
+
+fromEnum' ::
+  (Foldable t) =>
+  Type2.Index scope ->
+  t (ConstructorInstance s scope) ->
+  Unify.Solve s (Expression scope)
+fromEnum' typeIndex constructors = do
+  let toIntN index constructor@ConstructorInstance {entries} =
+        do
+          info <- ConstructorInfo.solve $ ConstructorInstance.info constructor
+          let patterns :: Strict.Vector (Pattern scope)
+              patterns = Strict.Vector.replicate (length entries) Wildcard
+              patternx =
+                Match
+                  { irrefutable = False,
+                    match =
+                      Constructor
+                        { constructor =
+                            Constructor.Index
+                              { typeIndex,
+                                constructorIndex = index
+                              },
+                          patterns,
+                          constructorInfo = info
+                        }
+                  }
+              done = Expression.int index
+          pure
+            Definition
+              { definition =
+                  Bound
+                    { patternx,
+                      body = Plain {plain = Done {done}}
+                    }
+              }
+  declarations <- sequence $ zipWith toIntN [0 ..] (toList constructors)
+  pure $ Definition.desugar $ foldr1 (<>) declarations
 
 compare ::
   Context s (Local ':+ scope) ->
@@ -88,63 +125,30 @@ compare context position typeIndex datax = do
                           }
                     }
               }
-      toIntN index constructor@ConstructorInstance {entries} =
-        do
-          info <- ConstructorInfo.solve $ ConstructorInstance.info constructor
-          let patterns :: Strict.Vector (Pattern scope)
-              patterns = Strict.Vector.replicate (length entries) Wildcard
-              patternx =
-                Match
-                  { irrefutable = False,
-                    match =
-                      Constructor
-                        { constructor =
-                            Constructor.Index
-                              { typeIndex = shift typeIndex,
-                                constructorIndex = index
-                              },
-                          patterns,
-                          constructorInfo = info
-                        }
-                  }
-              done = Expression.int index
-          pure
-            Definition
-              { definition =
-                  Bound
-                    { patternx,
-                      body = Plain {plain = Done {done}}
-                    }
-              }
   definitions <- sequence $ zipWith generate [0 ..] (toList constructors)
-  let otherwise = do
-        toInts <- sequence $ zipWith toIntN [0 ..] (toList constructors)
-        let toInt = shift $ shift $ Definition.desugar $ foldr1 (<>) toInts
-            done
-              | null toInts = Expression.Join {statements = Statements.Bottom}
-              | True =
-                  Expression.compareInt
-                    (Expression.call toInt $ shift Expression.patternVariable)
-                    (Expression.call toInt Expression.patternVariable)
-        pure
-          Definition
-            { definition =
-                Bound
-                  { patternx = Pattern.Wildcard,
-                    body =
-                      Bound
-                        { patternx = Pattern.Wildcard,
-                          body = Plain {plain = Done {done}}
-                        }
-                  }
-            }
   pure $ do
     definitions <- sequence definitions
-    otherwise <- otherwise
-    pure $
-      Generated $
-        Solved $
-          TypeLambda.mono $
-            if null definitions
-              then Expression.orderingEqual
-              else Definition.desugar $ foldr (<>) otherwise definitions
+    body <-
+      if null definitions
+        then
+          pure $ Expression.Lambda $ Expression.Lambda $ Expression.orderingEqual
+        else do
+          fromEnum <- shift . shift <$> fromEnum' (shift typeIndex) constructors
+          let done =
+                Expression.compareInt
+                  (Expression.call fromEnum $ shift Expression.patternVariable)
+                  (Expression.call fromEnum Expression.patternVariable)
+              otherwise =
+                Definition
+                  { definition =
+                      Bound
+                        { patternx = Pattern.Wildcard,
+                          body =
+                            Bound
+                              { patternx = Pattern.Wildcard,
+                                body = Plain {plain = Done {done}}
+                              }
+                        }
+                  }
+          pure $ Definition.desugar $ foldr (<>) otherwise definitions
+    pure $ Generated $ Solved $ TypeLambda.mono body
