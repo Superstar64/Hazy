@@ -6,6 +6,8 @@ import {-# SOURCE #-} qualified Builtin.Fractional as Fractional
 import {-# SOURCE #-} qualified Builtin.Monad as Monad
 import {-# SOURCE #-} qualified Builtin.MonadFail as MonadFail
 import {-# SOURCE #-} qualified Builtin.Num as Num
+import {-# SOURCE #-} qualified Builtin.Ord as Ord
+import {-# SOURCE #-} qualified Builtin.Semigroup as Semigroup
 import qualified Core.Substitute as Substitute
 import {-# SOURCE #-} Core.Temporary.Definition (Definition (Definition))
 import {-# SOURCE #-} qualified Core.Temporary.Definition as Definition
@@ -66,7 +68,7 @@ import qualified Semantic.Tree.Select as Semantic (Select (..))
 import qualified Semantic.Tree.Statements as Semantic (Evidence, Statements, Syntax)
 import qualified Semantic.Tree.Statements as Semantic.Statements
 import qualified Syntax.StringLiteral as StringLiteral
-import Prelude hiding (fail)
+import Prelude hiding (compare, fail)
 
 data Expression scope
   = Variable
@@ -242,6 +244,48 @@ eq evidence left right =
     `call` left
     `call` right
 
+compare :: Evidence scope -> Expression scope -> Expression scope -> Expression scope
+compare evidence left right =
+  Method
+    { method = Method.compare,
+      evidence,
+      instanciation = Instanciation.Mono,
+      methodInfo = Class.info Ord.definition
+    }
+    `call` left
+    `call` right
+
+compareInt :: Expression scope -> Expression scope -> Expression scope
+compareInt =
+  compare
+    Evidence.Variable
+      { variable = Index.Evidence.Direct Type2.Ord Type2.Int,
+        instanciation = Instanciation.Mono
+      }
+
+orderingEqual :: Expression scope
+orderingEqual =
+  Constructor
+    { constructor = Constructor.eq,
+      arguments = Strict.Vector.empty,
+      constructorInfo = ConstructorInfo {entries = Strict.Vector.empty}
+    }
+
+orderingCombine :: Expression scope -> Expression scope -> Expression scope
+orderingCombine left right =
+  Method
+    { method = Method.combine,
+      evidence =
+        Evidence.Variable
+          { variable = Index.Evidence.Direct Type2.Semigroup Type2.Ordering,
+            instanciation = Instanciation.Mono
+          },
+      instanciation = Instanciation.Mono,
+      methodInfo = Class.info Semigroup.definition
+    }
+    `call` left
+    `call` right
+
 purex :: Evidence scope -> Expression scope -> Expression scope
 purex evidence value =
   Method
@@ -286,6 +330,15 @@ failx evidence =
       methodInfo = Class.info MonadFail.definition
     }
     `call` nil
+
+int :: Int -> Expression scope
+int int =
+  integer_
+    (toInteger int)
+    Evidence.Variable
+      { variable = Index.Evidence.Direct Type2.Num Type2.Int,
+        instanciation = Instanciation.Mono
+      }
 
 integer_ :: Integer -> Evidence scope -> Expression scope
 integer_ integer evidence =

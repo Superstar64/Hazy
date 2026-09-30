@@ -177,3 +177,27 @@ data MonadFail
   deriving (Prelude.Enum, Bounded, Show)
 
 fail = Index Type2.MonadFail $ Prelude.fromEnum Fail
+
+data Semigroup
+  = Combine
+  | Sconcat
+  | Stimes
+  deriving (Prelude.Enum, Bounded, Show)
+
+combine = Index Type2.Semigroup $ Prelude.fromEnum Combine
+
+sconcat = Index Type2.Semigroup $ Prelude.fromEnum Sconcat
+
+stimes = Index Type2.Semigroup $ Prelude.fromEnum Stimes
+
+data Monoid
+  = Mempty
+  | Mappend
+  | Mconcat
+  deriving (Prelude.Enum, Bounded, Show)
+
+mempty = Index Type2.Monoid $ Prelude.fromEnum Mempty
+
+mappend = Index Type2.Monoid $ Prelude.fromEnum Mappend
+
+mconcat = Index Type2.Monoid $ Prelude.fromEnum Mconcat

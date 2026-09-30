@@ -489,7 +489,7 @@ Only `deriving instance` is support right now. Normal `deriving` declarations
 are completely ignored at the moment. Additionally, the only classes with
 deriving support are:
 * `Eq`
-
+* `Ord`
 
 
 ## Planned Toggles
