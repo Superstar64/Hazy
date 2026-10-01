@@ -33,6 +33,7 @@ import Error (cannotDerive, cyclicalTypeChecking)
 import qualified Graph.Topological as Topological
 import Semantic.Check.Context (Context (..))
 import qualified Semantic.Check.Context as Context
+import qualified Semantic.Check.Derive.Bounded as Bounded
 import qualified Semantic.Check.Derive.Enum as Enum
 import qualified Semantic.Check.Derive.Eq as Eq
 import qualified Semantic.Check.Derive.Ord as Ord
@@ -180,6 +181,10 @@ checkMethod Method {context, position} (Derive Type2.Enum typeIndex datax) index
   | Method.ToEnum <- toEnum index = Enum.toEnum context position typeIndex datax
 checkMethod Method {context, position, self} (Derive Type2.Enum typeIndex datax) index _ _
   | Method.EnumFromThen <- toEnum index = Enum.enumFromThen context position self typeIndex datax
+checkMethod Method {context, position} (Derive Type2.Bounded typeIndex datax) index _ _ =
+  case toEnum index of
+    Method.MinBound -> Bounded.minBound context position typeIndex datax
+    Method.MaxBound -> Bounded.maxBound context position typeIndex datax
 checkMethod Method {context, position, base, self, extra} source index scheme Generated {} = do
   case source of
     Manual -> pure ()

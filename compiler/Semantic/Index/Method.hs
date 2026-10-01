@@ -3,7 +3,7 @@ module Semantic.Index.Method where
 import qualified Semantic.Index.Type2 as Type2
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
-import Prelude hiding (Enum, Eq, Ord)
+import Prelude hiding (Bounded, Enum, Eq, Ord)
 import qualified Prelude
 
 data Index scope = Index
@@ -26,7 +26,7 @@ data Num
   | Abs
   | Signum
   | FromInteger
-  deriving (Prelude.Enum, Bounded, Show)
+  deriving (Prelude.Enum, Prelude.Bounded, Show)
 
 plus = Index Type2.Num $ Prelude.fromEnum Plus
 
@@ -51,7 +51,7 @@ data Enum
   | EnumFromThen
   | EnumFromTo
   | EnumFromThenTo
-  deriving (Prelude.Enum, Bounded, Show)
+  deriving (Prelude.Enum, Prelude.Bounded, Show)
 
 succ = Index Type2.Enum $ Prelude.fromEnum Succ
 
@@ -69,10 +69,19 @@ enumFromTo = Index Type2.Enum $ Prelude.fromEnum EnumFromTo
 
 enumFromThenTo = Index Type2.Enum $ Prelude.fromEnum EnumFromThenTo
 
+data Bounded
+  = MinBound
+  | MaxBound
+  deriving (Prelude.Enum, Prelude.Bounded, Show)
+
+minBound = Index Type2.Bounded $ Prelude.fromEnum MinBound
+
+maxBound = Index Type2.Bounded $ Prelude.fromEnum MaxBound
+
 data Eq
   = Equal
   | NotEqual
-  deriving (Prelude.Enum, Bounded, Show)
+  deriving (Prelude.Enum, Prelude.Bounded, Show)
 
 equal = Index Type2.Eq $ Prelude.fromEnum Equal
 
@@ -86,7 +95,7 @@ data Ord
   | GreaterThenEqual
   | Max
   | Min
-  deriving (Prelude.Enum, Bounded, Show)
+  deriving (Prelude.Enum, Prelude.Bounded, Show)
 
 compare = Index Type2.Ord $ Prelude.fromEnum Compare
 
@@ -103,12 +112,12 @@ max = Index Type2.Ord $ Prelude.fromEnum Max
 min = Index Type2.Ord $ Prelude.fromEnum Min
 
 data Real = ToRational
-  deriving (Prelude.Enum, Bounded, Show)
+  deriving (Prelude.Enum, Prelude.Bounded, Show)
 
 toRational = Index Type2.Real $ Prelude.fromEnum ToRational
 
 data Integral = Quot | Rem | Div | Mod | QuotRem | DivMod | ToInteger
-  deriving (Prelude.Enum, Bounded, Show)
+  deriving (Prelude.Enum, Prelude.Bounded, Show)
 
 quot = Index Type2.Integral $ Prelude.fromEnum Quot
 
@@ -125,7 +134,7 @@ divMod = Index Type2.Integral $ Prelude.fromEnum DivMod
 toInteger = Index Type2.Integral $ Prelude.fromEnum ToInteger
 
 data Fractional = Divide | Recip | FromRational
-  deriving (Prelude.Enum, Bounded, Show)
+  deriving (Prelude.Enum, Prelude.Bounded, Show)
 
 divide = Index Type2.Fractional $ Prelude.fromEnum Divide
 
@@ -136,7 +145,7 @@ fromRational = Index Type2.Fractional $ Prelude.fromEnum FromRational
 data Functor
   = Fmap
   | Fconst
-  deriving (Prelude.Enum, Bounded, Show)
+  deriving (Prelude.Enum, Prelude.Bounded, Show)
 
 fmap = Index Type2.Functor $ Prelude.fromEnum Fmap
 
@@ -148,7 +157,7 @@ data Applicative
   | LiftA2
   | DiscardLeft
   | DiscardRight
-  deriving (Prelude.Enum, Bounded, Show)
+  deriving (Prelude.Enum, Prelude.Bounded, Show)
 
 pure = Index Type2.Applicative $ Prelude.fromEnum Pure
 
@@ -164,7 +173,7 @@ data Monad
   = Bind
   | Then
   | Return
-  deriving (Prelude.Enum, Bounded, Show)
+  deriving (Prelude.Enum, Prelude.Bounded, Show)
 
 bind = Index Type2.Monad $ Prelude.fromEnum Bind
 
@@ -174,7 +183,7 @@ return = Index Type2.Monad $ Prelude.fromEnum Return
 
 data MonadFail
   = Fail
-  deriving (Prelude.Enum, Bounded, Show)
+  deriving (Prelude.Enum, Prelude.Bounded, Show)
 
 fail = Index Type2.MonadFail $ Prelude.fromEnum Fail
 
@@ -182,7 +191,7 @@ data Semigroup
   = Combine
   | Sconcat
   | Stimes
-  deriving (Prelude.Enum, Bounded, Show)
+  deriving (Prelude.Enum, Prelude.Bounded, Show)
 
 combine = Index Type2.Semigroup $ Prelude.fromEnum Combine
 
@@ -194,7 +203,7 @@ data Monoid
   = Mempty
   | Mappend
   | Mconcat
-  deriving (Prelude.Enum, Bounded, Show)
+  deriving (Prelude.Enum, Prelude.Bounded, Show)
 
 mempty = Index Type2.Monoid $ Prelude.fromEnum Mempty
 

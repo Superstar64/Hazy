@@ -491,6 +491,7 @@ deriving support are:
 * `Eq`
 * `Ord`
 * `Enum`
+* `Bounded`
 
 ## Planned Toggles
 These are devitations that will eventually toggleable with a language pragma.

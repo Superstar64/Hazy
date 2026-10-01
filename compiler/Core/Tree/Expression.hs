@@ -305,6 +305,22 @@ orderingCombine left right =
     `call` left
     `call` right
 
+minBound, maxBound :: Evidence scope -> Expression scope
+minBound evidence =
+  Method
+    { method = Method.minBound,
+      evidence,
+      instanciation = Instanciation.Mono,
+      methodInfo = Class.info Eq.definition
+    }
+maxBound evidence =
+  Method
+    { method = Method.maxBound,
+      evidence,
+      instanciation = Instanciation.Mono,
+      methodInfo = Class.info Eq.definition
+    }
+
 purex :: Evidence scope -> Expression scope -> Expression scope
 purex evidence value =
   Method
