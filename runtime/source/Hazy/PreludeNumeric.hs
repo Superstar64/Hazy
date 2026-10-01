@@ -5,7 +5,7 @@ import Hazy.Prelude
 showSigned :: (Real a) => (a -> ShowS) -> Int -> a -> ShowS
 showSigned f d x
   | x >= 0 = f x
-  | otherwise = showParen (d > 6) $ showString "-" . f x
+  | otherwise = showParen (d > 6) $ showString "-" . f (-x)
 
 showInt :: (Integral a) => a -> ShowS
 showInt 0 = showString "0"
@@ -31,7 +31,7 @@ showInt x
 
 readSigned :: (Real a) => ReadS a -> ReadS a
 readSigned f = readParen False $ \string -> case lex string of
-  [("-", string)] -> f string
+  [("-", string)] -> [(-n, str) | (n, str) <- f string]
   _ -> f string
 
 readDec :: (Eq a, Num a) => ReadS a
