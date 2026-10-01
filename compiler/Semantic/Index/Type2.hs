@@ -12,8 +12,8 @@ data Index scope
   | Char
   | ST
   | Arrow
-  | NonEmpty
   | List
+  | NonEmpty
   | Tuple !Int
   | Integer
   | Int
@@ -21,6 +21,7 @@ data Index scope
   | Ratio
   | Num
   | Enum
+  | Bounded
   | Eq
   | Ord
   | Real
@@ -58,6 +59,7 @@ split = \case
   Ratio -> Builtin Ratio
   Num -> Builtin Num
   Enum -> Builtin Enum
+  Bounded -> Builtin Bounded
   Eq -> Builtin Eq
   Ord -> Builtin Ord
   Real -> Builtin Real

@@ -31,6 +31,14 @@ constrain fallthough constrain classx head = table classx head
     table Type2.Enum Type2.Ratio [integer] = do
       integer <- constrain Type2.Integral integer
       call [integer]
+    table Type2.Bounded Type2.Bool [] = single
+    table Type2.Bounded Type2.Char [] = single
+    table Type2.Bounded Type2.Int [] = single
+    table Type2.Bounded Type2.Ordering [] = single
+    table Type2.Bounded (Type2.Tuple n) types
+      | n == length types = do
+          types <- traverse (constrain Type2.Bounded) types
+          call types
     table Type2.Eq Type2.Bool [] = single
     table Type2.Eq Type2.Char [] = single
     table Type2.Eq (Type2.Tuple n) types

@@ -46,10 +46,6 @@ infixr 1 =<<
 
 infixr 0 $, $!, `seq`
 
-class Bounded a where
-  minBound :: a
-  maxBound :: a
-
 class (Fractional a) => Floating a where
   pi :: a
   exp, log, sqrt :: a -> a
@@ -226,10 +222,6 @@ seq a b = case Strict a of Strict _ -> b
 ($) = id
 f $! x = x `seq` f x
 
-instance Bounded Bool where
-  minBound = False
-  maxBound = True
-
 (&&), (||) :: Bool -> Bool -> Bool
 True && x = x
 False && _ = False
@@ -242,10 +234,6 @@ not False = True
 
 otherwise :: Bool
 otherwise = True
-
-instance Bounded Char where
-  minBound = '\0'
-  maxBound = '\1114111'
 
 type String = [Char]
 
@@ -353,14 +341,6 @@ instance (Semigroup a) => Semigroup (IO a) where
 instance (Monoid a) => Monoid (IO a) where
   mempty = IO mempty
 
-instance Bounded Ordering where
-  minBound = LT
-  maxBound = GT
-
-instance Bounded Int where
-  minBound = primIntMinBound
-  maxBound = primIntMaxBound
-
 data Float
 
 instance Eq Float
@@ -434,33 +414,6 @@ numericEnumFromThenTo n n' m = takeWhile p (numericEnumFromThen n n')
     p
       | n' >= n = (<= m + (n' - n) / 2)
       | otherwise = (>= m + (n' - n) / 2)
-
-instance (Bounded a, Bounded b) => Bounded (a, b) where
-  minBound = (minBound, minBound)
-  maxBound = (maxBound, maxBound)
-
-instance (Bounded a, Bounded b, Bounded c) => Bounded (a, b, c) where
-  minBound = (minBound, minBound, minBound)
-  maxBound = (maxBound, maxBound, maxBound)
-
-instance (Bounded a, Bounded b, Bounded c, Bounded d) => Bounded (a, b, c, d) where
-  minBound = (minBound, minBound, minBound, minBound)
-  maxBound = (maxBound, maxBound, maxBound, maxBound)
-
-instance (Bounded a, Bounded b, Bounded c, Bounded d, Bounded e) => Bounded (a, b, c, d, e) where
-  minBound = (minBound, minBound, minBound, minBound, minBound)
-  maxBound = (maxBound, maxBound, maxBound, maxBound, maxBound)
-
-instance (Bounded a, Bounded b, Bounded c, Bounded d, Bounded e, Bounded f) => Bounded (a, b, c, d, e, f) where
-  minBound = (minBound, minBound, minBound, minBound, minBound, minBound)
-  maxBound = (maxBound, maxBound, maxBound, maxBound, maxBound, maxBound)
-
-instance
-  (Bounded a, Bounded b, Bounded c, Bounded d, Bounded e, Bounded f, Bounded g) =>
-  Bounded (a, b, c, d, e, f, g)
-  where
-  minBound = (minBound, minBound, minBound, minBound, minBound, minBound, minBound)
-  maxBound = (maxBound, maxBound, maxBound, maxBound, maxBound, maxBound, maxBound)
 
 fst :: (a, b) -> a
 fst (x, y) = x

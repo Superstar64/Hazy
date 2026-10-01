@@ -471,6 +471,15 @@ export function monoidTuple(pack, unpack, ...evidences) {
   return result;
 }
 
+export function boundedTuple(pack, ...evidences) {
+  const minimums = evidences.map((x) => x.a);
+  const maximums = evidences.map((x) => x.b);
+  return {
+    a: { a: 0, b: pack(minimums) },
+    b: { a: 0, b: pack(maximums) },
+  };
+}
+
 export {
   "instance Hazy.Num HelperInt" as numInt,
   "instance Hazy.Num HelperInteger" as numInteger,
@@ -482,6 +491,10 @@ export {
   "instance Hazy.Enum HelperOrdering" as enumOrdering,
   "instance Hazy.Enum HelperUnit" as enumUnit,
   "instance Hazy.Enum HelperRatio" as enumRatio,
+  "instance Hazy.Bounded HelperBool" as boundedBool,
+  "instance Hazy.Bounded HelperChar" as boundedChar,
+  "instance Hazy.Bounded HelperInt" as boundedInt,
+  "instance Hazy.Bounded HelperOrdering" as boundedOrdering,
   "instance Hazy.Eq HelperBool" as eqBool,
   "instance Hazy.Eq HelperChar" as eqChar,
   "instance Hazy.Eq HelperInt" as eqInt,

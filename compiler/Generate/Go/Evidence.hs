@@ -59,6 +59,15 @@ generate context = \case
             { function = Javascript.Variable {name = monoidTuple},
               arguments = packTuple number : unpackTuple number : arguments
             }
+  Variable {variable = Direct Bounded (Tuple number), instanciation}
+    | Instanciation arguments <- instanciation -> do
+        let Mangle.Builtin {boundedTuple} = Context.builtin context
+        arguments <- traverse (generate context) (toList arguments)
+        pure
+          Javascript.Call
+            { function = Javascript.Variable {name = boundedTuple},
+              arguments = packTuple number : arguments
+            }
   Variable {variable, instanciation} -> do
     let strict = case variable of
           Evidence.Index {} -> True
@@ -90,6 +99,10 @@ generate context = \case
             Direct Enum Ordering -> enumOrdering
             Direct Enum (Tuple 0) -> enumUnit
             Direct Enum Ratio -> enumRatio
+            Direct Bounded Bool -> boundedBool
+            Direct Bounded Char -> boundedChar
+            Direct Bounded Int -> boundedInt
+            Direct Bounded Ordering -> boundedOrdering
             Direct Eq Bool -> eqBool
             Direct Eq Char -> eqChar
             Direct Eq Int -> eqInt
@@ -143,6 +156,10 @@ generate context = \case
               enumOrdering,
               enumUnit,
               enumRatio,
+              boundedBool,
+              boundedChar,
+              boundedInt,
+              boundedOrdering,
               eqBool,
               eqChar,
               eqInteger,

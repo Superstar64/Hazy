@@ -2,6 +2,7 @@ module Core.Builtin where
 
 import {-# SOURCE #-} qualified Builtin.Applicative as Applicative
 import {-# SOURCE #-} qualified Builtin.Bool as Bool
+import {-# SOURCE #-} qualified Builtin.Bounded as Bounded
 import {-# SOURCE #-} qualified Builtin.Enum as Enum
 import {-# SOURCE #-} qualified Builtin.Eq as Eq
 import {-# SOURCE #-} qualified Builtin.Fractional as Fractional
@@ -53,6 +54,7 @@ kind pure typex constructor = \case
     Type2.Int -> Type.typex
     Type2.Num -> classKind
     Type2.Enum -> classKind
+    Type2.Bounded -> classKind
     Type2.Eq -> classKind
     Type2.Ord -> classKind
     Type2.Real -> classKind
@@ -93,6 +95,7 @@ instance Builtin Class where
     Type2.Index index -> normal index
     Type2.Num -> pure Num.definition
     Type2.Enum -> pure Enum.definition
+    Type2.Bounded -> pure Bounded.definition
     Type2.Eq -> pure Eq.definition
     Type2.Ord -> pure Ord.definition
     Type2.Real -> pure Real.definition
@@ -111,6 +114,7 @@ instance Builtin ClassExtra where
     Type2.Index index -> normal index
     Type2.Num -> pure Num.extra
     Type2.Enum -> pure Enum.extra
+    Type2.Bounded -> pure Bounded.extra
     Type2.Eq -> pure Eq.extra
     Type2.Ord -> pure Ord.extra
     Type2.Real -> pure Real.extra

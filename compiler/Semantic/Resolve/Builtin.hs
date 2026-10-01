@@ -2,6 +2,7 @@ module Semantic.Resolve.Builtin (builtin) where
 
 import {-# SOURCE #-} qualified Builtin.Applicative as Applicative
 import {-# SOURCE #-} qualified Builtin.Bool as Bool
+import {-# SOURCE #-} qualified Builtin.Bounded as Bounded
 import {-# SOURCE #-} qualified Builtin.Enum as Enum
 import {-# SOURCE #-} qualified Builtin.Eq as Eq
 import {-# SOURCE #-} qualified Builtin.Fractional as Fractional
@@ -69,6 +70,7 @@ builtin =
     [ baseline,
       Applicative.bindings,
       Bool.bindings,
+      Bounded.bindings,
       Enum.bindings,
       Eq.bindings,
       Fractional.bindings,

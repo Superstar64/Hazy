@@ -98,6 +98,7 @@ label context = \case
     Type2.Ratio -> builtin "Ratio"
     Type2.Num -> builtin "Num"
     Type2.Enum -> builtin "Enum"
+    Type2.Bounded -> builtin "Bounded"
     Type2.Eq -> builtin "Eq"
     Type2.Ord -> builtin "Ord"
     Type2.Real -> builtin "Real"

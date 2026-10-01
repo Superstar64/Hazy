@@ -17,6 +17,7 @@ executable hazy
     Builtin
     Builtin.Applicative
     Builtin.Bool
+    Builtin.Bounded
     Builtin.Enum
     Builtin.Eq
     Builtin.Fractional

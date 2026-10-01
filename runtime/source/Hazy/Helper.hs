@@ -85,6 +85,10 @@ instance Enum HelperBool where
   toEnum x | x >= 0 && x < 2 = primFromConstructorTag x
   fromEnum = primToConstructorTag
 
+instance Bounded HelperBool where
+  minBound = Bool False
+  maxBound = Bool True
+
 newtype HelperChar = Char Char
 
 instance Eq HelperChar where
@@ -96,6 +100,10 @@ instance Ord HelperChar where
 instance Enum HelperChar where
   toEnum x = Char (primIntToChar x)
   fromEnum (Char x) = primCharToInt x
+
+instance Bounded HelperChar where
+  minBound = Char '\0'
+  maxBound = Char '\1114111'
 
 newtype HelperInt = Int Int
 
@@ -118,6 +126,10 @@ instance Enum HelperInt where
       run from | from > to = []
       run from = Int from : run (from + step)
       step = thenx - from
+
+instance Bounded HelperInt where
+  minBound = Int primIntMinBound
+  maxBound = Int primIntMaxBound
 
 instance Num HelperInt where
   Int x + Int y = Int (primIntAdd x y)
@@ -191,6 +203,10 @@ instance Ord HelperOrdering where
 instance Enum HelperOrdering where
   toEnum x | x >= 0 && x < 3 = primFromConstructorTag x
   fromEnum = primToConstructorTag
+
+instance Bounded HelperOrdering where
+  minBound = Ordering LT
+  maxBound = Ordering GT
 
 instance Semigroup HelperOrdering where
   Ordering EQ <> y = y
