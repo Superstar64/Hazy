@@ -13,7 +13,6 @@ import qualified Data.Text.Lazy as Text.Lazy
 import Data.Text.Lazy.Builder (Builder, fromString, fromText)
 import qualified Data.Text.Lazy.Builder as Builder
 import Generate.Mangle.Builtin (Builtin (..), canonical)
-import qualified Generate.Mangle.Builtin as Builtin
 import Javascript.Keywords (keywords)
 import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Type as Type
@@ -151,8 +150,5 @@ mjs = pack ".mjs"
 
 runtime = pack "Hazy.mjs"
 
-builtin :: Builtin Text
-builtin = Builtin.fromList $ take Builtin.length names
-
 unique :: [Text]
-unique = drop Builtin.length names
+unique = names

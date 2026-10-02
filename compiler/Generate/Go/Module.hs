@@ -9,6 +9,7 @@ import qualified Core.Tree.TypeDeclaration as Type (TypeDeclaration (..))
 import Data.Foldable (toList)
 import qualified Data.Map as Map
 import Data.STRef (readSTRef)
+import qualified Data.Strict.Maybe as Strict
 import Data.Text (Text)
 import Data.Traversable (for)
 import Data.Vector (Vector)
@@ -135,17 +136,23 @@ generate'
     wanted <- readSTRef (Context.used context)
     imports <- for (Map.toList wanted) $ \(Global {path, name}, temporary) -> do
       pure $ Javascript.Import name temporary (Mangle.depth moduleName <> Mangle.pathJS path <> Mangle.mjs)
-    let builtin = toList $ importBuiltin <$> Mangle.canonical <*> Mangle.builtin
-        importBuiltin canonical target =
-          Javascript.Import
-            canonical
-            target
-            (Mangle.depth moduleName <> Mangle.runtime)
+    let importBuiltin canonical target = do
+          name <- readSTRef target
+          case name of
+            Strict.Nothing -> pure []
+            Strict.Just name ->
+              pure
+                [ Javascript.Import
+                    canonical
+                    name
+                    (Mangle.depth moduleName <> Mangle.runtime)
+                ]
+    builtins <- sequence $ importBuiltin <$> Mangle.canonical <*> Context.builtinUsed context
     pure $
       concat
         [ concat statements,
           concat (concat classStatements),
           concat (concat dataStatements),
           imports,
-          builtin
+          concat (toList builtins)
         ]

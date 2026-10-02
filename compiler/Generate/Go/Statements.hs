@@ -25,21 +25,23 @@ generate ::
   Target return ->
   Statements scope ->
   ST s [Javascript.Statement 'True]
-generate context@Context {builtin = Mangle.Builtin {abort}} target statements = case target of
-  Assign target -> do
-    label <- Context.fresh context
-    statements <- attempt context (Assign target) (Label label) statements
-    pure [Javascript.Label label (statements ++ [bottom])]
-  Return -> do
-    statements <- attempt context Return NoLabel statements
-    pure $ statements ++ [bottom]
-  where
-    bottom =
-      Javascript.Expression
-        Javascript.Call
-          { function = Javascript.Variable {name = abort},
-            arguments = []
-          }
+generate context target statements = do
+  let Mangle.Builtin {abort} = Context.builtin context
+  abort <- abort
+  let bottom =
+        Javascript.Expression
+          Javascript.Call
+            { function = Javascript.Variable {name = abort},
+              arguments = []
+            }
+  case target of
+    Assign target -> do
+      label <- Context.fresh context
+      statements <- attempt context (Assign target) (Label label) statements
+      pure [Javascript.Label label (statements ++ [bottom])]
+    Return -> do
+      statements <- attempt context Return NoLabel statements
+      pure $ statements ++ [bottom]
 
 attempt ::
   Context s scope ->

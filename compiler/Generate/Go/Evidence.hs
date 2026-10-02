@@ -24,6 +24,7 @@ generate context = \case
   Variable {variable = Direct Eq (Tuple number), instanciation}
     | Instanciation arguments <- instanciation -> do
         let Mangle.Builtin {eqTuple} = Context.builtin context
+        eqTuple <- eqTuple
         arguments <- traverse (generate context) (toList arguments)
         pure
           Javascript.Call
@@ -34,6 +35,7 @@ generate context = \case
   Variable {variable = Direct Ord (Tuple number), instanciation}
     | Instanciation arguments <- instanciation -> do
         let Mangle.Builtin {ordTuple} = Context.builtin context
+        ordTuple <- ordTuple
         arguments <- traverse (generate context) (toList arguments)
         pure
           Javascript.Call
@@ -44,6 +46,7 @@ generate context = \case
   Variable {variable = Direct Semigroup (Tuple number), instanciation}
     | Instanciation arguments <- instanciation -> do
         let Mangle.Builtin {semigroupTuple} = Context.builtin context
+        semigroupTuple <- semigroupTuple
         arguments <- traverse (generate context) (toList arguments)
         pure
           Javascript.Call
@@ -53,6 +56,7 @@ generate context = \case
   Variable {variable = Direct Monoid (Tuple number), instanciation}
     | Instanciation arguments <- instanciation -> do
         let Mangle.Builtin {monoidTuple} = Context.builtin context
+        monoidTuple <- monoidTuple
         arguments <- traverse (generate context) (toList arguments)
         pure
           Javascript.Call
@@ -62,6 +66,7 @@ generate context = \case
   Variable {variable = Direct Bounded (Tuple number), instanciation}
     | Instanciation arguments <- instanciation -> do
         let Mangle.Builtin {boundedTuple} = Context.builtin context
+        boundedTuple <- boundedTuple
         arguments <- traverse (generate context) (toList arguments)
         pure
           Javascript.Call
@@ -72,6 +77,7 @@ generate context = \case
     | Instanciation arguments <- instanciation -> do
         let Mangle.Builtin {showTuple} = Context.builtin context
         arguments <- traverse (generate context) (toList arguments)
+        showTuple <- showTuple
         pure
           Javascript.Call
             { function = Javascript.Variable {name = showTuple},
@@ -95,7 +101,9 @@ generate context = \case
       Evidence.Index index
         | Evidence.Binding name <- context Context.!~ index ->
             pure Javascript.Variable {name}
-      index -> pure Javascript.Variable {name}
+      index -> do
+        name <- name
+        pure Javascript.Variable {name}
         where
           name = case index of
             Direct Num Int -> numInt
