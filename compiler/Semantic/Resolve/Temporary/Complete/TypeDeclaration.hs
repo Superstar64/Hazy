@@ -38,7 +38,6 @@ import Semantic.Stage (Equal (..), Resolve)
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import qualified Semantic.Tree.Constructor as Real.Constructor
 import qualified Semantic.Tree.Entry as Real.Entry
-import qualified Semantic.Tree.Field as Real.Field
 import qualified Semantic.Tree.StrictnessAnnotation as StrictnessAnnotation
 import qualified Semantic.Tree.Synonym as Real.Synonym
 import qualified Semantic.Tree.TypeDeclaration as Real (TypeDeclaration (..), locality)
@@ -114,12 +113,6 @@ merge entries@(entry :| _) =
                           Real.Constructor.Constructor {entries}
                             | length entries == 1,
                               Real.Entry.Entry {strict} <- Strict.Vector.head entries,
-                              StrictnessAnnotation.Lazy <- strict ->
-                                ()
-                          Real.Constructor.Record {fields}
-                            | length fields == 1,
-                              Real.Field.Field {entry} <- Strict.Vector.head fields,
-                              Real.Entry.Entry {strict} <- entry,
                               StrictnessAnnotation.Lazy <- strict ->
                                 ()
                           _ -> invalidNewtype position

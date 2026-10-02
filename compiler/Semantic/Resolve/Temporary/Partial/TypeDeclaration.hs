@@ -34,7 +34,6 @@ import qualified Semantic.Resolve.Temporary.Partial.More.Synonym as More (Synony
 import qualified Semantic.Resolve.Temporary.Partial.More.Synonym as More.Synonym
 import Semantic.Stage (Resolve)
 import qualified Semantic.Tree.Entry as Entry
-import qualified Semantic.Tree.Field as Field
 import qualified Semantic.Tree.Selector as Selector
 import qualified Semantic.Tree.StrictnessAnnotation as StrictnessAnnotation
 import Semantic.Tree.Type (Type)
@@ -148,12 +147,12 @@ resolve context entry = case entry of
                                   Nothing -> Strict.Nothing
                                   Just (index, Complete.Field {field}) ->
                                     Strict.Just (index, field)
-                              strictness = StrictnessAnnotation.anonymize . Entry.strict . Field.entry
+                              strictness = StrictnessAnnotation.anonymize . Entry.strict
                               strict = strictness field
                               indexes = fmap fst <$> fields
                               stricts = fmap (strictness . snd) <$> fields
-                              typex = Entry.anonymize $ Field.entry field
-                              types = fmap (Entry.anonymize . Field.entry . snd) <$> fields
+                              typex = Entry.anonymize $ field
+                              types = fmap (Entry.anonymize . snd) <$> fields
                               sane
                                 | all (== typex) [typex | Strict.Just typex <- toList types] = ()
                                 | otherwise = mismatchSelectorTypes position

@@ -27,12 +27,12 @@ executable hazy
     Builtin.Monad
     Builtin.MonadFail
     Builtin.Monoid
-    Builtin.Read
     Builtin.NonEmpty
     Builtin.Num
     Builtin.Ord
     Builtin.Ordering
     Builtin.Ratio
+    Builtin.Read
     Builtin.Real
     Builtin.Semigroup
     Builtin.Show
@@ -229,7 +229,6 @@ executable hazy
     Semantic.Check.Temporary.EntryInfo
     Semantic.Check.Temporary.Expression
     Semantic.Check.Temporary.ExpressionField
-    Semantic.Check.Temporary.Field
     Semantic.Check.Temporary.Function
     Semantic.Check.Temporary.Lambda
     Semantic.Check.Temporary.Method
@@ -366,7 +365,6 @@ executable hazy
     Semantic.Tree.Entry
     Semantic.Tree.Expression
     Semantic.Tree.ExpressionField
-    Semantic.Tree.Field
     Semantic.Tree.Function
     Semantic.Tree.GADTConstructor
     Semantic.Tree.Group

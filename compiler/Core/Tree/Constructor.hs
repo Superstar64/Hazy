@@ -8,7 +8,6 @@ import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
 import qualified Semantic.Tree.Constructor as Solved
-import qualified Semantic.Tree.Field as Solved.Field
 
 newtype Constructor scope = Constructor
   { entries :: Strict.Vector (Entry scope)
@@ -32,8 +31,4 @@ simplify = \case
   Solved.Constructor {entries} ->
     Constructor
       { entries = Entry.simplify <$> entries
-      }
-  Solved.Record {fields} ->
-    Constructor
-      { entries = Entry.simplify . Solved.Field.entry <$> fields
       }

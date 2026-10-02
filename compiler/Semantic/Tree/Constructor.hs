@@ -7,21 +7,24 @@ import Semantic.FreeVariables (FreeTypeVariables (freeTypeVariables))
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
 import Semantic.Tree.Entry (Entry)
-import Semantic.Tree.Field (Field)
 import Syntax.Position (Position)
+import Syntax.Tree.Fixity (Fixity)
+import Syntax.Variable (Variable)
 import qualified Syntax.Variable as Variable (Constructor)
+
+data Syntax
+  = Standard
+  | Infix !Fixity
+  | Record !(Strict.Vector Variable)
+  deriving (Show)
 
 data Constructor stage scope
   = Constructor
-      { position :: !Position,
-        name :: !Variable.Constructor,
-        entries :: !(Strict.Vector (Entry Position stage scope))
-      }
-  | Record
-      { position :: !Position,
-        name :: !Variable.Constructor,
-        fields :: !(Strict.Vector (Field stage scope))
-      }
+  { position :: !Position,
+    name :: !Variable.Constructor,
+    syntax :: !Syntax,
+    entries :: !(Strict.Vector (Entry Position stage scope))
+  }
   deriving (Show)
 
 instance Shift0.Functor (Constructor stage) where
@@ -29,20 +32,14 @@ instance Shift0.Functor (Constructor stage) where
 
 instance Shift.Functor (Constructor stage) where
   map category = \case
-    Constructor {position, name, entries} ->
+    Constructor {position, name, syntax, entries} ->
       Constructor
         { position,
           name,
+          syntax,
           entries = fmap (Shift.map category) entries
-        }
-    Record {position, name, fields} ->
-      Record
-        { position,
-          name,
-          fields = fmap (Shift.map category) fields
         }
 
 instance FreeTypeVariables Constructor where
-  freeTypeVariables target = \case
-    Constructor {entries} -> foldMap (freeTypeVariables target) entries
-    Record {fields} -> foldMap (freeTypeVariables target) fields
+  freeTypeVariables target (Constructor {entries}) =
+    foldMap (freeTypeVariables target) entries
