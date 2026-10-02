@@ -19,6 +19,7 @@ import {-# SOURCE #-} qualified Builtin.Ordering as Ordering
 import {-# SOURCE #-} qualified Builtin.Ratio as Ratio
 import {-# SOURCE #-} qualified Builtin.Real as Real
 import {-# SOURCE #-} qualified Builtin.Semigroup as Semigroup
+import {-# SOURCE #-} qualified Builtin.Show as Show
 import qualified Builtin.Tuple as Tuple
 import Core.Tree.Class (Class)
 import qualified Core.Tree.Class as Class
@@ -66,6 +67,7 @@ kind pure typex constructor = \case
     Type2.MonadFail -> classKind
     Type2.Semigroup -> classKind
     Type2.Monoid -> classKind
+    Type2.Show -> classKind
     Type2.Lazy -> Type.Levity
     Type2.Strict -> Type.Levity
     where
@@ -107,6 +109,7 @@ instance Builtin Class where
     Type2.MonadFail -> pure MonadFail.definition
     Type2.Semigroup -> pure Semigroup.definition
     Type2.Monoid -> pure Monoid.definition
+    Type2.Show -> pure Show.definition
     _ -> error "bad class index"
 
 instance Builtin ClassExtra where
@@ -126,4 +129,5 @@ instance Builtin ClassExtra where
     Type2.MonadFail -> pure MonadFail.extra
     Type2.Semigroup -> pure Semigroup.extra
     Type2.Monoid -> pure Monoid.extra
+    Type2.Show -> pure Show.extra
     _ -> error "bad class index"

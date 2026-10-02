@@ -480,6 +480,46 @@ export function boundedTuple(pack, ...evidences) {
   };
 }
 
+function cons(char, string) {
+  return { a: 1, b: { a: 0, b: char.codePointAt(0) }, c: string };
+}
+
+export function showTuple(unpack, ...evidences) {
+  const result = {
+    a: {
+      a: 0,
+      b: (_fixity) => (tuple) => {
+        const elements = unpack(force(tuple));
+        return (string) => {
+          string = cons(")", string);
+          for (let i = elements.length - 1; i >= 0; i--) {
+            string = force(evidences[i].a)({ a: 0, b: 0 })(elements[i])({
+              a: 0,
+              b: string,
+            });
+            if (i != 0) {
+              string = cons(",", { a: 0, b: string });
+            }
+          }
+          string = cons("(", { a: 0, b: string });
+          return string;
+        };
+      },
+    },
+    b: undefined,
+    c: undefined,
+  };
+  result.b = {
+    a: 0,
+    b: helper.defaultShow(result),
+  };
+  result.c = {
+    a: 0,
+    b: helper.defaultShowList(result),
+  };
+  return result;
+}
+
 export {
   "instance Hazy.Num HelperInt" as numInt,
   "instance Hazy.Num HelperInteger" as numInteger,
@@ -536,4 +576,12 @@ export {
   "instance Hazy.Monoid HelperList" as monoidList,
   "instance Hazy.Monoid HelperOrdering" as monoidOrdering,
   "instance Hazy.Monoid HelperST" as monoidST,
+  "instance Hazy.Show HelperBool" as showBool,
+  "instance Hazy.Show HelperOrdering" as showOrdering,
+  "instance Hazy.Show HelperChar" as showChar,
+  "instance Hazy.Show HelperInt" as showInt,
+  "instance Hazy.Show HelperInteger" as showInteger,
+  "instance Hazy.Show HelperList" as showList,
+  "instance Hazy.Show HelperNonEmpty" as showNonEmpty,
+  "instance Hazy.Show HelperRatio" as showRatio,
 } from "./Hazy/Helper.mjs";

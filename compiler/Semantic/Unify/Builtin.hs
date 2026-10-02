@@ -120,6 +120,24 @@ constrain fallthough constrain classx head = table classx head
       | n == length elements = do
           elements <- traverse (constrain Type2.Monoid) elements
           call elements
+    table Type2.Show Type2.Bool [] = single
+    table Type2.Show Type2.Ordering [] = single
+    table Type2.Show Type2.Char [] = single
+    table Type2.Show Type2.Int [] = single
+    table Type2.Show Type2.Integer [] = single
+    table Type2.Show (Type2.Tuple n) types
+      | n == length types = do
+          types <- traverse (constrain Type2.Show) types
+          call types
+    table Type2.Show Type2.List [element] = do
+      element <- constrain Type2.Show element
+      call [element]
+    table Type2.Show Type2.NonEmpty [element] = do
+      element <- constrain Type2.Show element
+      call [element]
+    table Type2.Show Type2.Ratio [element] = do
+      element <- constrain Type2.Show element
+      call [element]
     table _ _ _ = fallthough
 
     single = pure $ Variable (Evidence.Direct classx head) Mono

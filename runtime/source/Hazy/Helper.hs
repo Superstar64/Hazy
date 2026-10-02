@@ -65,6 +65,19 @@ defaultMconcat = \case
   [] -> mempty
   (x : xs) -> x <> mconcat xs
 
+defaultShow :: (Show a) => a -> String
+defaultShow x = showsPrec 0 x ""
+
+defaultShowList :: (Show a) => [a] -> ShowS
+defaultShowList [] = showString "[]"
+defaultShowList (x : xs) = showChar '[' . shows x . showl xs
+  where
+    showl [] = showChar ']'
+    showl (x : xs) =
+      showChar ','
+        . shows x
+        . showl xs
+
 newtype HelperArrow a b = Arrow (a -> b)
 
 instance (Semigroup b) => Semigroup (HelperArrow a b) where
@@ -89,6 +102,11 @@ instance Bounded HelperBool where
   minBound = Bool False
   maxBound = Bool True
 
+instance Show HelperBool where
+  showsPrec _ (Bool bool) = case bool of
+    False -> showString "False"
+    True -> showString "True"
+
 newtype HelperChar = Char Char
 
 instance Eq HelperChar where
@@ -104,6 +122,16 @@ instance Enum HelperChar where
 instance Bounded HelperChar where
   minBound = Char '\0'
   maxBound = Char '\1114111'
+
+instance Show HelperChar where
+  showsPrec p (Char '\'') = showString "'\\''"
+  showsPrec p (Char c) = showChar '\'' . showLitChar c . showChar '\''
+
+  showList cs = showChar '"' . showl cs
+    where
+      showl [] = showChar '"'
+      showl (Char '"' : cs) = showString "\\\"" . showl cs
+      showl (Char c : cs) = showLitChar c . showl cs
 
 newtype HelperInt = Int Int
 
@@ -149,6 +177,9 @@ instance Integral HelperInt where
   quotRem x y = (x `quot` y, x `rem` y)
   toInteger (Int x) = primIntToInteger x
 
+instance Show HelperInt where
+  showsPrec n (Int int) = showsPrec n (toInteger int)
+
 newtype HelperInteger = Integer Integer
 
 instance Eq HelperInteger where
@@ -192,6 +223,9 @@ instance Integral HelperInteger where
   quotRem x y = (x `quot` y, x `rem` y)
   toInteger (Integer x) = x
 
+instance Show HelperInteger where
+  showsPrec n (Integer integer) = showSigned showInt n integer
+
 newtype HelperOrdering = Ordering Ordering
 
 instance Eq HelperOrdering where
@@ -215,6 +249,12 @@ instance Semigroup HelperOrdering where
 instance Monoid HelperOrdering where
   mempty = Ordering EQ
 
+instance Show HelperOrdering where
+  showsPrec _ (Ordering order) = case order of
+    LT -> showString "LT"
+    EQ -> showString "EQ"
+    GT -> showString "GT"
+
 newtype HelperList a = List {list :: [a]}
 
 instance (Eq a) => Eq (HelperList a) where
@@ -227,6 +267,9 @@ instance (Ord a) => Ord (HelperList a) where
   List [] `compare` List (_ : _) = LT
   List (_ : _) `compare` List [] = GT
   List (x : xs) `compare` List (x' : xs') = compare x x' <> compare xs xs'
+
+instance (Show a) => Show (HelperList a) where
+  showsPrec p (List xs) = showList xs
 
 instance Functor HelperList where
   fmap f (List xs) = List (map f xs)
@@ -254,6 +297,11 @@ instance (Eq a) => Eq (HelperNonEmpty a) where
 
 instance (Ord a) => Ord (HelperNonEmpty a) where
   NonEmpty (x :| xs) `compare` NonEmpty (x' :| xs') = compare x x' <> compare xs xs'
+
+instance (Show a) => Show (HelperNonEmpty a) where
+  showsPrec d (NonEmpty (x :| xs)) =
+    showParen (d > 5) $
+      showsPrec 6 x . showString " :| " . showsPrec 6 xs
 
 instance Functor HelperNonEmpty where
   fmap f (NonEmpty (x :| xs)) = NonEmpty (f x :| fmap f xs)
@@ -330,3 +378,10 @@ instance (Integral a) => Enum (HelperRatio a) where
   enumFromThen = numericEnumFromThen
   enumFromTo = numericEnumFromTo
   enumFromThenTo = numericEnumFromThenTo
+
+instance (Show a) => Show (HelperRatio a) where
+  showsPrec p (Ratio (x :% y)) =
+    showParen (p > ratPrec) $
+      showsPrec (ratPrec + 1) x
+        . showString " % "
+        . showsPrec (ratPrec + 1) y

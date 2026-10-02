@@ -67,7 +67,16 @@ data Builtin a = Builtin
     monoidList,
     monoidOrdering,
     monoidST,
-    monoidTuple ::
+    monoidTuple,
+    showBool,
+    showOrdering,
+    showChar,
+    showInt,
+    showInteger,
+    showTuple,
+    showList,
+    showNonEmpty,
+    showRatio ::
       a
   }
   deriving (Functor, Foldable, Traversable)
@@ -160,5 +169,14 @@ canonical =
       monoidList = pack "monoidList",
       monoidOrdering = pack "monoidOrdering",
       monoidST = pack "monoidST",
-      monoidTuple = pack "monoidTuple"
+      monoidTuple = pack "monoidTuple",
+      showBool = pack "showBool",
+      showOrdering = pack "showOrdering",
+      showChar = pack "showChar",
+      showInt = pack "showInt",
+      showInteger = pack "showInteger",
+      showTuple = pack "showTuple",
+      showList = pack "showList",
+      showNonEmpty = pack "showNonEmpty",
+      showRatio = pack "showRatio"
     }

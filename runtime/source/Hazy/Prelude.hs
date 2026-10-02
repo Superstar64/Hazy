@@ -250,6 +250,11 @@ instance (Ord a) => Ord (Maybe a) where
   Just _ `compare` Nothing = GT
   Just a `compare` Just b = a `compare` b
 
+instance (Show a) => Show (Maybe a) where
+  showsPrec d = \case
+    Nothing -> showString "Nothing"
+    Just x -> showParen (d > 10) $ showString "Just " . showsPrec 11 x
+
 maybe :: b -> (a -> b) -> Maybe a -> b
 maybe n f Nothing = n
 maybe n f (Just x) = f x
@@ -292,6 +297,11 @@ instance (Ord a, Ord b) => Ord (Either a b) where
   Left _ `compare` Right _ = LT
   Right _ `compare` Left _ = GT
   Right a `compare` Right b = a `compare` b
+
+instance (Show a, Show b) => Show (Either a b) where
+  showsPrec d = \case
+    Left a -> showParen (d > 10) $ showString "Left " . showsPrec 11 a
+    Right b -> showParen (d > 10) $ showString "Right " . showsPrec 11 b
 
 instance Functor (Either a) where
   fmap = liftM
@@ -359,6 +369,9 @@ instance RealFrac Float
 
 instance RealFloat Float
 
+instance Show Float where
+  showsPrec p = showFloat
+
 data Double
 
 instance Eq Double
@@ -396,6 +409,9 @@ instance Enum Double where
   enumFromThen = numericEnumFromThen
   enumFromTo = numericEnumFromTo
   enumFromThenTo = numericEnumFromThenTo
+
+instance Show Double where
+  showsPrec p = showFloat
 
 data Word
 

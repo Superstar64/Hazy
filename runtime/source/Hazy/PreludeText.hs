@@ -74,45 +74,6 @@ instance Read Ordering where
       "GT" -> [(GT, string)]
       _ -> []
 
-class Show a where
-  showsPrec :: Int -> a -> ShowS
-  show :: a -> String
-  showList :: [a] -> ShowS
-
-  showsPrec _ x s = show x ++ s
-
-  show x = showsPrec 0 x ""
-
-  showList [] = showString "[]"
-  showList (x : xs) = showChar '[' . shows x . showl xs
-    where
-      showl [] = showChar ']'
-      showl (x : xs) =
-        showChar ','
-          . shows x
-          . showl xs
-
-instance Show Bool where
-  showsPrec _ = \case
-    False -> showString "False"
-    True -> showString "True"
-
-instance (Show a) => Show (Maybe a) where
-  showsPrec d = \case
-    Nothing -> showString "Nothing"
-    Just x -> showParen (d > 10) $ showString "Just " . showsPrec 11 x
-
-instance (Show a, Show b) => Show (Either a b) where
-  showsPrec d = \case
-    Left a -> showParen (d > 10) $ showString "Left " . showsPrec 11 a
-    Right b -> showParen (d > 10) $ showString "Right " . showsPrec 11 b
-
-instance Show Ordering where
-  showsPrec _ = \case
-    LT -> showString "LT"
-    EQ -> showString "EQ"
-    GT -> showString "GT"
-
 reads :: (Read a) => ReadS a
 reads = readsPrec 0
 
@@ -204,32 +165,17 @@ lex (c : s)
             ++ [(e : ds, t) | (ds, t) <- lexDigits s]
     lexExp s = [("", s)]
 
-instance Show Int where
-  showsPrec n = showsPrec n . toInteger
-
 instance Read Int where
   readsPrec p r = [(fromInteger i, t) | (i, t) <- readsPrec p r]
-
-instance Show Integer where
-  showsPrec = showSigned showInt
 
 instance Read Integer where
   readsPrec p = readSigned readDec
 
-instance Show Float where
-  showsPrec p = showFloat
-
 instance Read Float where
   readsPrec p = readSigned readFloat
 
-instance Show Double where
-  showsPrec p = showFloat
-
 instance Read Double where
   readsPrec p = readSigned readFloat
-
-instance Show () where
-  showsPrec p () = showString "()"
 
 instance Read () where
   readsPrec p =
@@ -241,16 +187,6 @@ instance Read () where
             (")", t) <- lex s
           ]
       )
-
-instance Show Char where
-  showsPrec p '\'' = showString "'\\''"
-  showsPrec p c = showChar '\'' . showLitChar c . showChar '\''
-
-  showList cs = showChar '"' . showl cs
-    where
-      showl "" = showChar '"'
-      showl ('"' : cs) = showString "\\\"" . showl cs
-      showl (c : cs) = showLitChar c . showl cs
 
 instance Read Char where
   readsPrec p =
@@ -281,25 +217,11 @@ instance Read Char where
           (cs, u) <- readl t
         ]
 
-instance (Show a) => Show [a] where
-  showsPrec p = showList
-
-instance (Show a) => Show (NonEmpty a) where
-  showsPrec = placeholder
-
 instance (Read a) => Read [a] where
   readsPrec p = readList
 
 instance (Read a) => Read (NonEmpty a) where
   readsPrec = placeholder
-
-instance (Show a, Show b) => Show (a, b) where
-  showsPrec p (x, y) =
-    showChar '('
-      . shows x
-      . showChar ','
-      . shows y
-      . showChar ')'
 
 instance (Read a, Read b) => Read (a, b) where
   readsPrec _ =
@@ -314,16 +236,6 @@ instance (Read a, Read b) => Read (a, b) where
             (")", s6) <- lex s5
           ]
       )
-
-instance (Show a, Show b, Show c) => Show (a, b, c) where
-  showsPrec _ (x, y, z) =
-    showChar '('
-      . shows x
-      . showChar ','
-      . shows y
-      . showChar ','
-      . shows z
-      . showChar ')'
 
 instance (Read a, Read b, Read c) => Read (a, b, c) where
   readsPrec _ =
@@ -340,18 +252,6 @@ instance (Read a, Read b, Read c) => Read (a, b, c) where
             (")", s8) <- lex s7
           ]
       )
-
-instance (Show a, Show b, Show c, Show d) => Show (a, b, c, d) where
-  showsPrec _ (x, y, z, k) =
-    showChar '('
-      . shows x
-      . showChar ','
-      . shows y
-      . showChar ','
-      . shows z
-      . showChar ','
-      . shows k
-      . showChar ')'
 
 instance (Read a, Read b, Read c, Read d) => Read (a, b, c, d) where
   readsPrec _ =
@@ -370,20 +270,6 @@ instance (Read a, Read b, Read c, Read d) => Read (a, b, c, d) where
             (")", s10) <- lex s9
           ]
       )
-
-instance (Show a, Show b, Show c, Show d, Show e) => Show (a, b, c, d, e) where
-  showsPrec _ (x, y, z, k, m) =
-    showChar '('
-      . shows x
-      . showChar ','
-      . shows y
-      . showChar ','
-      . shows z
-      . showChar ','
-      . shows k
-      . showChar ','
-      . shows m
-      . showChar ')'
 
 instance (Read a, Read b, Read c, Read d, Read e) => Read (a, b, c, d, e) where
   readsPrec _ =
@@ -404,22 +290,6 @@ instance (Read a, Read b, Read c, Read d, Read e) => Read (a, b, c, d, e) where
             (")", s12) <- lex s11
           ]
       )
-
-instance (Show a, Show b, Show c, Show d, Show e, Show f) => Show (a, b, c, d, e, f) where
-  showsPrec _ (x, y, z, k, m, n) =
-    showChar '('
-      . shows x
-      . showChar ','
-      . shows y
-      . showChar ','
-      . shows z
-      . showChar ','
-      . shows k
-      . showChar ','
-      . shows m
-      . showChar ','
-      . shows n
-      . showChar ')'
 
 instance (Read a, Read b, Read c, Read d, Read e, Read f) => Read (a, b, c, d, e, f) where
   readsPrec _ =
@@ -442,24 +312,6 @@ instance (Read a, Read b, Read c, Read d, Read e, Read f) => Read (a, b, c, d, e
             (")", s14) <- lex s13
           ]
       )
-
-instance (Show a, Show b, Show c, Show d, Show e, Show f, Show g) => Show (a, b, c, d, e, f, g) where
-  showsPrec _ (x, y, z, k, m, n, p) =
-    showChar '('
-      . shows x
-      . showChar ','
-      . shows y
-      . showChar ','
-      . shows z
-      . showChar ','
-      . shows k
-      . showChar ','
-      . shows m
-      . showChar ','
-      . shows n
-      . showChar ','
-      . shows p
-      . showChar ')'
 
 instance (Read a, Read b, Read c, Read d, Read e, Read f, Read g) => Read (a, b, c, d, e, f, g) where
   readsPrec _ =
@@ -496,10 +348,3 @@ instance (Read a, Integral a) => Read (Ratio a) where
             (y, u) <- readsPrec (ratPrec + 1) t
           ]
       )
-
-instance (Show a, Integral a) => Show (Ratio a) where
-  showsPrec p (x :% y) =
-    showParen (p > ratPrec) $
-      showsPrec (ratPrec + 1) x
-        . showString " % "
-        . showsPrec (ratPrec + 1) y

@@ -68,6 +68,15 @@ generate context = \case
             { function = Javascript.Variable {name = boundedTuple},
               arguments = packTuple number : arguments
             }
+  Variable {variable = Direct Show (Tuple number), instanciation}
+    | Instanciation arguments <- instanciation -> do
+        let Mangle.Builtin {showTuple} = Context.builtin context
+        arguments <- traverse (generate context) (toList arguments)
+        pure
+          Javascript.Call
+            { function = Javascript.Variable {name = showTuple},
+              arguments = unpackTuple number : arguments
+            }
   Variable {variable, instanciation} -> do
     let strict = case variable of
           Evidence.Index {} -> True
@@ -144,6 +153,14 @@ generate context = \case
             Direct Monoid List -> monoidList
             Direct Monoid Ordering -> monoidOrdering
             Direct Monoid ST -> monoidST
+            Direct Show Bool -> showBool
+            Direct Show Ordering -> showOrdering
+            Direct Show Char -> showChar
+            Direct Show Int -> showInt
+            Direct Show Integer -> showInteger
+            Direct Show List -> showList
+            Direct Show NonEmpty -> showNonEmpty
+            Direct Show Ratio -> showRatio
             Direct _ _ -> error "bad evidence"
           Mangle.Builtin
             { numInt,
@@ -200,7 +217,15 @@ generate context = \case
               monoidArrow,
               monoidList,
               monoidOrdering,
-              monoidST
+              monoidST,
+              showBool,
+              showOrdering,
+              showChar,
+              showInt,
+              showInteger,
+              showList,
+              showNonEmpty,
+              showRatio
             } = Context.builtin context
     case instanciation of
       Instanciation.Mono ->

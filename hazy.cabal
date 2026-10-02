@@ -34,6 +34,7 @@ executable hazy
     Builtin.Ratio
     Builtin.Real
     Builtin.Semigroup
+    Builtin.Show
     Builtin.Tuple
     Core.Builtin
     Core.Index.Table.Term

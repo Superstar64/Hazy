@@ -19,6 +19,7 @@ import {-# SOURCE #-} qualified Builtin.Ordering as Ordering
 import {-# SOURCE #-} qualified Builtin.Ratio as Ratio
 import {-# SOURCE #-} qualified Builtin.Real as Real
 import {-# SOURCE #-} qualified Builtin.Semigroup as Semigroup
+import {-# SOURCE #-} qualified Builtin.Show as Show
 import Data.Functor.Identity (Identity (..))
 import qualified Data.Map as Map
 import qualified Data.Set as Set
@@ -86,7 +87,8 @@ builtin =
       Ordering.bindings,
       Ratio.bindings,
       Real.bindings,
-      Semigroup.bindings
+      Semigroup.bindings,
+      Show.bindings
     ]
   where
     baseline =

@@ -33,6 +33,7 @@ data Index scope
   | MonadFail
   | Semigroup
   | Monoid
+  | Show
   | Lazy
   | Strict
   deriving (Show, Eq, Ord)
@@ -71,6 +72,7 @@ split = \case
   MonadFail -> Builtin MonadFail
   Semigroup -> Builtin Semigroup
   Monoid -> Builtin Monoid
+  Show -> Builtin Show
   Lazy -> Builtin Lazy
   Strict -> Builtin Strict
 
