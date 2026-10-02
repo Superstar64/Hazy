@@ -107,6 +107,7 @@ mangleInstance run brand name target = Text.Lazy.toStrict $ Builder.toLazyText b
       Type2.Semigroup -> fromString "Hazy.Semigroup"
       Type2.Monoid -> fromString "Hazy.Monoid"
       Type2.Show -> fromString "Hazy.Show"
+      Type2.Read -> fromString "Hazy.Read"
       Type2.Lazy -> fromString "Hazy.Lazy"
       Type2.Strict -> fromString "Hazy.Strict"
     qualify :: FullyQualifiedConstructorIdentifier -> Builder

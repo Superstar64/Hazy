@@ -111,6 +111,7 @@ label context = \case
     Type2.Semigroup -> builtin "Semigroup"
     Type2.Monoid -> builtin "Monoid"
     Type2.Show -> builtin "Show"
+    Type2.Read -> builtin "Read"
     Type2.Ordering -> builtin "Ordering"
     Type2.Lazy -> builtin "Lazy"
     Type2.Strict -> builtin "Strict"

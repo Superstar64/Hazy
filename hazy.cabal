@@ -27,6 +27,7 @@ executable hazy
     Builtin.Monad
     Builtin.MonadFail
     Builtin.Monoid
+    Builtin.Read
     Builtin.NonEmpty
     Builtin.Num
     Builtin.Ord

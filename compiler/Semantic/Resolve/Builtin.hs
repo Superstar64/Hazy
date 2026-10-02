@@ -49,6 +49,7 @@ import Prelude hiding
     Ord (..),
     Real (..),
   )
+import {-# SOURCE #-} qualified Builtin.Read as Read
 
 builtinType :: [Char] -> Type3.Index scope -> (ConstructorIdentifier, Type.Binding scope)
 builtinType name index = (constructorIdentifier $ pack name, binding)
@@ -86,6 +87,7 @@ builtin =
       Ord.bindings,
       Ordering.bindings,
       Ratio.bindings,
+      Read.bindings,
       Real.bindings,
       Semigroup.bindings,
       Show.bindings

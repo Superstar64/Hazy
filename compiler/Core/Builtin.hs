@@ -31,6 +31,7 @@ import qualified Core.Tree.Type as Type (TypeF (..), typex)
 import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Type as Type (Index)
 import qualified Semantic.Index.Type2 as Type2
+import {-# SOURCE #-} qualified Builtin.Read as Read
 
 kind ::
   (Type scope -> typex) ->
@@ -68,6 +69,7 @@ kind pure typex constructor = \case
     Type2.Semigroup -> classKind
     Type2.Monoid -> classKind
     Type2.Show -> classKind
+    Type2.Read -> classKind
     Type2.Lazy -> Type.Levity
     Type2.Strict -> Type.Levity
     where
@@ -110,6 +112,7 @@ instance Builtin Class where
     Type2.Semigroup -> pure Semigroup.definition
     Type2.Monoid -> pure Monoid.definition
     Type2.Show -> pure Show.definition
+    Type2.Read -> pure Read.definition
     _ -> error "bad class index"
 
 instance Builtin ClassExtra where
@@ -130,4 +133,5 @@ instance Builtin ClassExtra where
     Type2.Semigroup -> pure Semigroup.extra
     Type2.Monoid -> pure Monoid.extra
     Type2.Show -> pure Show.extra
+    Type2.Read -> pure Read.extra
     _ -> error "bad class index"

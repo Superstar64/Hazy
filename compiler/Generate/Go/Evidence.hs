@@ -83,6 +83,16 @@ generate context = \case
             { function = Javascript.Variable {name = showTuple},
               arguments = unpackTuple number : arguments
             }
+  Variable {variable = Direct Read (Tuple number), instanciation}
+    | Instanciation arguments <- instanciation -> do
+        let Mangle.Builtin {readTuple} = Context.builtin context
+        arguments <- traverse (generate context) (toList arguments)
+        readTuple <- readTuple
+        pure
+          Javascript.Call
+            { function = Javascript.Variable {name = readTuple},
+              arguments = packTuple number : arguments
+            }
   Variable {variable, instanciation} -> do
     let strict = case variable of
           Evidence.Index {} -> True
@@ -169,6 +179,14 @@ generate context = \case
             Direct Show List -> showList
             Direct Show NonEmpty -> showNonEmpty
             Direct Show Ratio -> showRatio
+            Direct Read Bool -> readBool
+            Direct Read Ordering -> readOrdering
+            Direct Read Char -> readChar
+            Direct Read Int -> readInt
+            Direct Read Integer -> readInteger
+            Direct Read List -> readList
+            Direct Read NonEmpty -> readNonEmpty
+            Direct Read Ratio -> readRatio
             Direct _ _ -> error "bad evidence"
           Mangle.Builtin
             { numInt,
@@ -233,7 +251,15 @@ generate context = \case
               showInteger,
               showList,
               showNonEmpty,
-              showRatio
+              showRatio,
+              readBool,
+              readOrdering,
+              readChar,
+              readInt,
+              readInteger,
+              readList,
+              readNonEmpty,
+              readRatio
             } = Context.builtin context
     case instanciation of
       Instanciation.Mono ->

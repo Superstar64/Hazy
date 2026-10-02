@@ -255,6 +255,17 @@ instance (Show a) => Show (Maybe a) where
     Nothing -> showString "Nothing"
     Just x -> showParen (d > 10) $ showString "Just " . showsPrec 11 x
 
+instance (Read a) => Read (Maybe a) where
+  readsPrec d string = readParen False nothing string ++ readParen (d > 10) just string
+    where
+      nothing string = do
+        ("Nothing", string) <- lex string
+        [(Nothing, string)]
+      just string = do
+        ("Just", string) <- lex string
+        (value, string) <- readsPrec 11 string
+        [(Just value, string)]
+
 maybe :: b -> (a -> b) -> Maybe a -> b
 maybe n f Nothing = n
 maybe n f (Just x) = f x
@@ -302,6 +313,18 @@ instance (Show a, Show b) => Show (Either a b) where
   showsPrec d = \case
     Left a -> showParen (d > 10) $ showString "Left " . showsPrec 11 a
     Right b -> showParen (d > 10) $ showString "Right " . showsPrec 11 b
+
+instance (Read a, Read b) => Read (Either a b) where
+  readsPrec d = readParen (d > 10) $ \string -> do
+    (either, string) <- lex string
+    case either of
+      "Left" -> do
+        (value, string) <- readsPrec 11 string
+        [(Left value, string)]
+      "Right" -> do
+        (value, string) <- readsPrec 11 string
+        [(Right value, string)]
+      _ -> []
 
 instance Functor (Either a) where
   fmap = liftM
@@ -372,6 +395,9 @@ instance RealFloat Float
 instance Show Float where
   showsPrec p = showFloat
 
+instance Read Float where
+  readsPrec p = readSigned readFloat
+
 data Double
 
 instance Eq Double
@@ -412,6 +438,9 @@ instance Enum Double where
 
 instance Show Double where
   showsPrec p = showFloat
+
+instance Read Double where
+  readsPrec p = readSigned readFloat
 
 data Word
 

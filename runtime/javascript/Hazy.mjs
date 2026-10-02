@@ -520,6 +520,82 @@ export function showTuple(unpack, ...evidences) {
   return result;
 }
 
+function minilexSingle(char, string) {
+  return force(helper.minilexSingle)({ a: 0, b: char.codePointAt(0) })(string);
+}
+
+function bindRead(parsed, run) {
+  return force(helper.bindRead)({ a: 0, b: parsed })({
+    a: 0,
+    b: (a) => (s) => run(a, s),
+  });
+}
+
+function pureRead(result, string) {
+  return {
+    a: 1,
+    b: {
+      a: 0,
+      b: {
+        a: 0,
+        b: result,
+        c: string,
+      },
+    },
+    c: {
+      a: 0,
+      b: {
+        a: 0,
+        b: 0,
+      },
+    },
+  };
+}
+
+export function readTuple(pack, ...evidences) {
+  const result = {
+    a: {
+      a: 0,
+      b: (_fixity) => (string) => {
+        let parsed = minilexSingle("(", string);
+        parsed = bindRead(parsed, (_, string) =>
+          pureRead({ a: 0, b: [] }, string),
+        );
+        for (let i = 0; i < evidences.length; i++) {
+          parsed = bindRead(parsed, (list, string) =>
+            bindRead(
+              force(evidences[i].a)({ a: 0, b: 0 })(string),
+              (element, string) =>
+                pureRead({ a: 0, b: [...force(list), element] }, string),
+            ),
+          );
+          if (i != evidences.length - 1) {
+            parsed = bindRead(parsed, (list, string) =>
+              bindRead(minilexSingle(",", string), (_, string) =>
+                pureRead(list, string),
+              ),
+            );
+          }
+        }
+        parsed = bindRead(parsed, (list, string) =>
+          bindRead(minilexSingle(")", string), (_, string) =>
+            pureRead(list, string),
+          ),
+        );
+        return bindRead(parsed, (list, string) =>
+          pureRead({ a: 0, b: pack(force(list)) }, string),
+        );
+      },
+    },
+    b: undefined,
+  };
+  result.b = {
+    a: 0,
+    b: helper.defaultShowList(result),
+  };
+  return result;
+}
+
 export {
   "instance Hazy.Num HelperInt" as numInt,
   "instance Hazy.Num HelperInteger" as numInteger,
@@ -584,4 +660,12 @@ export {
   "instance Hazy.Show HelperList" as showList,
   "instance Hazy.Show HelperNonEmpty" as showNonEmpty,
   "instance Hazy.Show HelperRatio" as showRatio,
+  "instance Hazy.Read HelperBool" as readBool,
+  "instance Hazy.Read HelperOrdering" as readOrdering,
+  "instance Hazy.Read HelperChar" as readChar,
+  "instance Hazy.Read HelperInt" as readInt,
+  "instance Hazy.Read HelperInteger" as readInteger,
+  "instance Hazy.Read HelperList" as readList,
+  "instance Hazy.Read HelperNonEmpty" as readNonEmpty,
+  "instance Hazy.Read HelperRatio" as readRatio,
 } from "./Hazy/Helper.mjs";

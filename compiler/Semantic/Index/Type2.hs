@@ -34,6 +34,7 @@ data Index scope
   | Semigroup
   | Monoid
   | Show
+  | Read
   | Lazy
   | Strict
   deriving (Show, Eq, Ord)
@@ -73,6 +74,7 @@ split = \case
   Semigroup -> Builtin Semigroup
   Monoid -> Builtin Monoid
   Show -> Builtin Show
+  Read -> Builtin Read
   Lazy -> Builtin Lazy
   Strict -> Builtin Strict
 

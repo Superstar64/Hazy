@@ -76,7 +76,16 @@ data Builtin a = Builtin
     showTuple,
     showList,
     showNonEmpty,
-    showRatio ::
+    showRatio,
+    readBool,
+    readOrdering,
+    readChar,
+    readInt,
+    readInteger,
+    readTuple,
+    readList,
+    readNonEmpty,
+    readRatio ::
       a
   }
   deriving (Functor, Foldable, Traversable)
@@ -178,5 +187,14 @@ canonical =
       showTuple = pack "showTuple",
       showList = pack "showList",
       showNonEmpty = pack "showNonEmpty",
-      showRatio = pack "showRatio"
+      showRatio = pack "showRatio",
+      readBool = pack "readBool",
+      readOrdering = pack "readOrdering",
+      readChar = pack "readChar",
+      readInt = pack "readInt",
+      readInteger = pack "readInteger",
+      readTuple = pack "readTuple",
+      readList = pack "readList",
+      readNonEmpty = pack "readNonEmpty",
+      readRatio = pack "readRatio"
     }

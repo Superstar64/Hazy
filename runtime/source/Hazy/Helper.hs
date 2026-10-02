@@ -9,6 +9,23 @@ module Hazy.Helper where
 import Hazy
 import Hazy.Prelude
 
+minilex :: ReadS Char
+minilex (c : s) = case c of
+              ' ' -> minilex s
+              '\t' -> minilex s
+              '\n' -> minilex s
+              '\r' -> minilex s
+              '\f' -> minilex s
+              '\v' -> minilex s
+              _ -> [(c, s)]
+minilex "" = []
+
+minilexSingle :: Char -> ReadS ()
+minilexSingle c' s = [ ((), t) | (c, t) <- minilex s, c == c' ]
+
+bindRead :: [(a, String)] -> (a -> String -> [(b, String)]) -> [(b, String)]
+bindRead as f = concatMap (\(a, s) -> f a s) as
+
 data Strict a = Strict !a
 
 enumEqual :: (Enum a) => a -> a -> Bool
@@ -16,8 +33,6 @@ enumEqual l r = fromEnum l == fromEnum r
 
 enumCompare :: (Enum a) => a -> a -> Ordering
 enumCompare l r = compare (fromEnum l) (fromEnum r)
-
-ratPrec = 7 :: Int
 
 reduce :: (Integral a) => a -> a -> HelperRatio a
 reduce _ 0 = error "Data.Ratio.% : zero denominator"
@@ -78,6 +93,32 @@ defaultShowList (x : xs) = showChar '[' . shows x . showl xs
         . shows x
         . showl xs
 
+defaultReadList :: Read a => ReadS [a]
+defaultReadList = run
+          where
+            run r =
+              do
+                (l, s) <- minilex r
+                case l of
+                  '[' -> case minilex s of
+                    [(']', t)] -> [([], t)]
+                    _ -> readElement s
+                  '(' -> do
+                    (x, t) <- run s
+                    (')', u) <- minilex t
+                    [(x, u)]
+                  _ -> []
+            readElement t = do
+              (x, u) <- readsPrec 0 t
+              (xs, v) <- readTail u
+              [(x : xs, v)]
+            readTail s = do
+              (l, t) <- minilex s
+              case l of
+                ']' -> [([], t)]
+                ',' -> readElement t
+                _ -> []
+
 newtype HelperArrow a b = Arrow (a -> b)
 
 instance (Semigroup b) => Semigroup (HelperArrow a b) where
@@ -107,6 +148,14 @@ instance Show HelperBool where
     False -> showString "False"
     True -> showString "True"
 
+instance Read HelperBool where
+  readsPrec _ string = do
+    (token, string) <- lex string
+    case token of
+      "False" -> [(Bool False, string)]
+      "True" -> [(Bool True, string)]
+      _ -> []
+
 newtype HelperChar = Char Char
 
 instance Eq HelperChar where
@@ -132,6 +181,35 @@ instance Show HelperChar where
       showl [] = showChar '"'
       showl (Char '"' : cs) = showString "\\\"" . showl cs
       showl (Char c : cs) = showLitChar c . showl cs
+
+instance Read HelperChar where
+  readsPrec p =
+    readParen
+      False
+      ( \r ->
+          [ (Char c, t)
+          | ('\'' : s, t) <- lex r,
+            (c, "\'") <- readLitChar s
+          ]
+      )
+
+  readList =
+    readParen
+      False
+      ( \r ->
+          [ (l, t)
+          | ('"' : s, t) <- lex r,
+            (l, _) <- readl s
+          ]
+      )
+    where
+      readl ('"' : s) = [([], s)]
+      readl ('\\' : '&' : s) = readl s
+      readl s =
+        [ (Char c : cs, u)
+        | (c, t) <- readLitChar s,
+          (cs, u) <- readl t
+        ]
 
 newtype HelperInt = Int Int
 
@@ -180,6 +258,9 @@ instance Integral HelperInt where
 instance Show HelperInt where
   showsPrec n (Int int) = showsPrec n (toInteger int)
 
+instance Read HelperInt where
+  readsPrec p r = [(Int (fromInteger i), t) | (i, t) <- readsPrec p r]
+
 newtype HelperInteger = Integer Integer
 
 instance Eq HelperInteger where
@@ -226,6 +307,9 @@ instance Integral HelperInteger where
 instance Show HelperInteger where
   showsPrec n (Integer integer) = showSigned showInt n integer
 
+instance Read HelperInteger where
+  readsPrec p s = [ (Integer i, t) | (i, t) <- readSigned readDec s ]
+
 newtype HelperOrdering = Ordering Ordering
 
 instance Eq HelperOrdering where
@@ -255,6 +339,15 @@ instance Show HelperOrdering where
     EQ -> showString "EQ"
     GT -> showString "GT"
 
+instance Read HelperOrdering where
+  readsPrec _ string = do
+    (token, string) <- lex string
+    case token of
+      "LT" -> [(Ordering LT, string)]
+      "EQ" -> [(Ordering EQ, string)]
+      "GT" -> [(Ordering GT, string)]
+      _ -> []
+
 newtype HelperList a = List {list :: [a]}
 
 instance (Eq a) => Eq (HelperList a) where
@@ -270,6 +363,9 @@ instance (Ord a) => Ord (HelperList a) where
 
 instance (Show a) => Show (HelperList a) where
   showsPrec p (List xs) = showList xs
+
+instance Read a => Read (HelperList a) where
+  readsPrec p s = [ (List l, t) | (l, t) <- readList s]
 
 instance Functor HelperList where
   fmap f (List xs) = List (map f xs)
@@ -302,6 +398,13 @@ instance (Show a) => Show (HelperNonEmpty a) where
   showsPrec d (NonEmpty (x :| xs)) =
     showParen (d > 5) $
       showsPrec 6 x . showString " :| " . showsPrec 6 xs
+
+instance (Read a) => Read (HelperNonEmpty a) where
+  readsPrec d = readParen (d > 5) $ \s -> do
+    (x, t) <- readsPrec 6 s
+    (":|", u) <- lex t
+    (xs, v) <- readsPrec 6 u
+    [(NonEmpty (x :| xs), v)]
 
 instance Functor HelperNonEmpty where
   fmap f (NonEmpty (x :| xs)) = NonEmpty (f x :| fmap f xs)
@@ -381,7 +484,19 @@ instance (Integral a) => Enum (HelperRatio a) where
 
 instance (Show a) => Show (HelperRatio a) where
   showsPrec p (Ratio (x :% y)) =
-    showParen (p > ratPrec) $
-      showsPrec (ratPrec + 1) x
+    showParen (p > 7) $
+      showsPrec (7 + 1) x
         . showString " % "
-        . showsPrec (ratPrec + 1) y
+        . showsPrec (7 + 1) y
+
+instance (Integral a, Read a) => Read (HelperRatio a) where
+  readsPrec p =
+    readParen
+      (p > 7)
+      ( \r ->
+          [ (Ratio (x % y), u)
+          | (x, s) <- readsPrec (7 + 1) r,
+            ("%", t) <- lex s,
+            (y, u) <- readsPrec (7 + 1) t
+          ]
+      )
