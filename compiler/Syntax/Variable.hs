@@ -25,6 +25,7 @@ module Syntax.Variable
     print',
     CanonicalVariable (..),
     printLiteral',
+    printOperator',
     prelude,
     prelude',
   )
@@ -72,6 +73,9 @@ class CanonicalVariable variable where
 
 printLiteral' :: (CanonicalVariable variable) => variable -> Builder
 printLiteral' = build . printLiteral
+
+printOperator' :: (CanonicalVariable variable) => variable -> Builder
+printOperator' = build . printOperator
 
 instance Canonical VariableIdentifier where
   parse = satifyBind Strings.variableIdentifier $ \case
@@ -121,6 +125,12 @@ instance CanonicalWrapped VariableSymbol where
 
 instance CanonicalWrapped ConstructorIdentifier where
   parseWrapped = try $ betweenTicks parse
+  printWrapped name =
+    mconcat
+      [ Printer.token "`",
+        print name,
+        Printer.token "`"
+      ]
 
 instance CanonicalWrapped ConstructorSymbol where
   parseWrapped = try $ betweenParens parse
@@ -232,6 +242,8 @@ instance CanonicalVariable Constructor where
       ]
   printLiteral (ConstructorIdentifier name) = print name
   printLiteral (ConstructorSymbol name) = printWrapped name
+  printOperator (ConstructorIdentifier name) = printWrapped name
+  printOperator (ConstructorSymbol name) = print name
 
 data Name
   = Variable !Variable

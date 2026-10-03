@@ -486,12 +486,11 @@ instance Hidden Usage where
 ### Deriving instance is required
 
 Only `deriving instance` is support right now. Normal `deriving` declarations
-are completely ignored at the moment. Additionally, the only classes with
-deriving support are:
-* `Eq`
-* `Ord`
-* `Enum`
-* `Bounded`
+are completely ignored at the moment.
+
+### Derive `Read` and `Ix` are unsupported
+
+These two type classes can't be derived yet.
 
 ## Planned Toggles
 These are devitations that will eventually toggleable with a language pragma.

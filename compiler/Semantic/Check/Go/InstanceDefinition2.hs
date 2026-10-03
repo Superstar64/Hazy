@@ -37,6 +37,7 @@ import qualified Semantic.Check.Derive.Bounded as Bounded
 import qualified Semantic.Check.Derive.Enum as Enum
 import qualified Semantic.Check.Derive.Eq as Eq
 import qualified Semantic.Check.Derive.Ord as Ord
+import qualified Semantic.Check.Derive.Show as Show
 import Semantic.Check.Go.Definition4 (Solve (..))
 import qualified Semantic.Check.Go.Scheme as Scheme
 import qualified Semantic.Check.Mask as Mask
@@ -185,6 +186,8 @@ checkMethod Method {context, position} (Derive Type2.Bounded typeIndex datax) in
   case toEnum index of
     Method.MinBound -> Bounded.minBound context position typeIndex datax
     Method.MaxBound -> Bounded.maxBound context position typeIndex datax
+checkMethod Method {context, position} (Derive Type2.Show typeIndex datax) index _ _
+  | Method.ShowsPrec <- toEnum index = Show.showsPrec context position typeIndex datax
 checkMethod Method {context, position, base, self, extra} source index scheme Generated {} = do
   case source of
     Manual -> pure ()
@@ -192,6 +195,7 @@ checkMethod Method {context, position, base, self, extra} source index scheme Ge
       Type2.Eq -> pure ()
       Type2.Ord -> pure ()
       Type2.Enum -> pure ()
+      Type2.Show -> pure ()
       _ ->
         let labelContext = Context.label context
             resolve =

@@ -7,10 +7,14 @@ import qualified Data.Vector.Strict as Strict
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
+import Semantic.Tree.Constructor (Syntax)
 import qualified Semantic.Tree.Constructor as Solved
+import qualified Syntax.Variable as Variable
 
-newtype Constructor scope = Constructor
-  { entries :: Strict.Vector (Entry scope)
+data Constructor scope = Constructor
+  { name :: !Variable.Constructor,
+    syntax :: !Syntax,
+    entries :: !(Strict.Vector (Entry scope))
   }
   deriving (Show)
 
@@ -21,14 +25,18 @@ instance Shift.Functor Constructor where
   map = Substitute.mapDefault
 
 instance Substitute.Functor Constructor where
-  map category Constructor {entries} =
+  map category Constructor {name, syntax, entries} =
     Constructor
-      { entries = Substitute.map category <$> entries
+      { name,
+        syntax,
+        entries = Substitute.map category <$> entries
       }
 
 simplify :: Solved.Constructor Check scope -> Constructor scope
 simplify = \case
-  Solved.Constructor {entries} ->
+  Solved.Constructor {name, syntax, entries} ->
     Constructor
-      { entries = Entry.simplify <$> entries
+      { name,
+        syntax,
+        entries = Entry.simplify <$> entries
       }

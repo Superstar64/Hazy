@@ -8,13 +8,17 @@ import {-# SOURCE #-} Semantic.Check.Context (Context)
 import Semantic.Check.EntryInstance (EntryInstance, entry)
 import qualified Semantic.Check.EntryInstance as EntryInstance
 import Semantic.Check.Temporary.ConstructorInfo (ConstructorInfo (..))
+import Semantic.Tree.Constructor (Syntax)
 import qualified Semantic.Unify as Unify
 import Syntax.Tree.Brand (Brand)
 import qualified Syntax.Tree.Brand as Brand
+import qualified Syntax.Variable as Variable
 
 data ConstructorInstance s scope = ConstructorInstance
-  { entries :: !(Strict.Vector (EntryInstance s scope)),
-    brand :: !Brand
+  { brand :: !Brand,
+    name :: !Variable.Constructor,
+    syntax :: !Syntax,
+    entries :: !(Strict.Vector (EntryInstance s scope))
   }
 
 info :: ConstructorInstance s scope -> ConstructorInfo s scope

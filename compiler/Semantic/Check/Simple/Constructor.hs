@@ -16,8 +16,10 @@ instanciate ::
   Strict.Vector (Unify.Type s scope) ->
   Constructor (Local ':+ scope) ->
   ConstructorInstance s scope
-instanciate position brand fresh Constructor {entries} =
+instanciate position brand fresh Constructor {name, syntax, entries} =
   ConstructorInstance
-    { entries = EntryInstance.instanciate position fresh <$> entries,
-      brand
+    { brand,
+      name,
+      syntax,
+      entries = EntryInstance.instanciate position fresh <$> entries
     }
