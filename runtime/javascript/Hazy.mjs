@@ -201,16 +201,6 @@ export const generalCategory = {
   b: (code) => ({ a: category(force(code)) }),
 };
 
-export const primToConstructorTag = {
-  a: 0,
-  b: (data) => force(data).a,
-};
-
-export const primFromConstructorTag = {
-  a: 0,
-  b: (tag) => ({ a: force(tag) }),
-};
-
 export const primIntToChar = {
   a: 0,
   b: (c) => force(c),

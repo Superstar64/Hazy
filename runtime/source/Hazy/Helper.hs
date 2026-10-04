@@ -11,17 +11,17 @@ import Hazy.Prelude
 
 minilex :: ReadS Char
 minilex (c : s) = case c of
-              ' ' -> minilex s
-              '\t' -> minilex s
-              '\n' -> minilex s
-              '\r' -> minilex s
-              '\f' -> minilex s
-              '\v' -> minilex s
-              _ -> [(c, s)]
+  ' ' -> minilex s
+  '\t' -> minilex s
+  '\n' -> minilex s
+  '\r' -> minilex s
+  '\f' -> minilex s
+  '\v' -> minilex s
+  _ -> [(c, s)]
 minilex "" = []
 
 minilexSingle :: Char -> ReadS ()
-minilexSingle c' s = [ ((), t) | (c, t) <- minilex s, c == c' ]
+minilexSingle c' s = [((), t) | (c, t) <- minilex s, c == c']
 
 bindRead :: [(a, String)] -> (a -> String -> [(b, String)]) -> [(b, String)]
 bindRead as f = concatMap (\(a, s) -> f a s) as
@@ -93,31 +93,31 @@ defaultShowList (x : xs) = showChar '[' . shows x . showl xs
         . shows x
         . showl xs
 
-defaultReadList :: Read a => ReadS [a]
+defaultReadList :: (Read a) => ReadS [a]
 defaultReadList = run
-          where
-            run r =
-              do
-                (l, s) <- minilex r
-                case l of
-                  '[' -> case minilex s of
-                    [(']', t)] -> [([], t)]
-                    _ -> readElement s
-                  '(' -> do
-                    (x, t) <- run s
-                    (')', u) <- minilex t
-                    [(x, u)]
-                  _ -> []
-            readElement t = do
-              (x, u) <- readsPrec 0 t
-              (xs, v) <- readTail u
-              [(x : xs, v)]
-            readTail s = do
-              (l, t) <- minilex s
-              case l of
-                ']' -> [([], t)]
-                ',' -> readElement t
-                _ -> []
+  where
+    run r =
+      do
+        (l, s) <- minilex r
+        case l of
+          '[' -> case minilex s of
+            [(']', t)] -> [([], t)]
+            _ -> readElement s
+          '(' -> do
+            (x, t) <- run s
+            (')', u) <- minilex t
+            [(x, u)]
+          _ -> []
+    readElement t = do
+      (x, u) <- readsPrec 0 t
+      (xs, v) <- readTail u
+      [(x : xs, v)]
+    readTail s = do
+      (l, t) <- minilex s
+      case l of
+        ']' -> [([], t)]
+        ',' -> readElement t
+        _ -> []
 
 newtype HelperArrow a b = Arrow (a -> b)
 
@@ -136,8 +136,12 @@ instance Ord HelperBool where
   compare = enumCompare
 
 instance Enum HelperBool where
-  toEnum x | x >= 0 && x < 2 = primFromConstructorTag x
-  fromEnum = primToConstructorTag
+  toEnum = \case
+    0 -> Bool False
+    1 -> Bool True
+  fromEnum = \case
+    Bool False -> 0
+    Bool True -> 1
 
 instance Bounded HelperBool where
   minBound = Bool False
@@ -308,7 +312,7 @@ instance Show HelperInteger where
   showsPrec n (Integer integer) = showSigned showInt n integer
 
 instance Read HelperInteger where
-  readsPrec p s = [ (Integer i, t) | (i, t) <- readSigned readDec s ]
+  readsPrec p s = [(Integer i, t) | (i, t) <- readSigned readDec s]
 
 newtype HelperOrdering = Ordering Ordering
 
@@ -319,8 +323,14 @@ instance Ord HelperOrdering where
   compare = enumCompare
 
 instance Enum HelperOrdering where
-  toEnum x | x >= 0 && x < 3 = primFromConstructorTag x
-  fromEnum = primToConstructorTag
+  toEnum = \case
+    0 -> Ordering LT
+    1 -> Ordering EQ
+    2 -> Ordering GT
+  fromEnum = \case
+    Ordering LT -> 0
+    Ordering EQ -> 1
+    Ordering GT -> 2
 
 instance Bounded HelperOrdering where
   minBound = Ordering LT
@@ -364,8 +374,8 @@ instance (Ord a) => Ord (HelperList a) where
 instance (Show a) => Show (HelperList a) where
   showsPrec p (List xs) = showList xs
 
-instance Read a => Read (HelperList a) where
-  readsPrec p s = [ (List l, t) | (l, t) <- readList s]
+instance (Read a) => Read (HelperList a) where
+  readsPrec p s = [(List l, t) | (l, t) <- readList s]
 
 instance Functor HelperList where
   fmap f (List xs) = List (map f xs)

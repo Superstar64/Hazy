@@ -36,9 +36,7 @@ data GeneralCategory
   | PrivateUse
   | NotAssigned
 
-instance Enum GeneralCategory where
-  toEnum x | x >= 0 && x < 30 = primFromConstructorTag x
-  fromEnum = primToConstructorTag
+deriving instance Enum GeneralCategory
 
 instance Eq GeneralCategory where
   (==) = enumEqual

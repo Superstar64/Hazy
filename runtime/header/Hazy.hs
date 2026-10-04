@@ -29,13 +29,6 @@ traceText = missing
 generalCategory :: Char -> GeneralCategory
 generalCategory = missing
 
-primToConstructorTag :: a -> Int
-primToConstructorTag = missing
-
--- the constructor must be unitary
-primFromConstructorTag :: Int -> a
-primFromConstructorTag = missing
-
 primIntToChar :: Int -> Char
 primIntToChar = missing
 
