@@ -80,100 +80,104 @@ merge entries@(entry :| _) =
   let termDeclaration declaration = Declaration {position, name, fixity, annotation, declaration}
    in termDeclaration <$> declaration
   where
-    declaration = case catMaybes
-      [ fmap fst functions,
-        fmap fst selection,
-        fmap fst method,
-        fmap fst choice
-      ] of
-      _ | Partial.Shared {shared} :| [] <- entries -> pure $ Real shared
-      [] -> missingVariableEntry position
-      [_]
-        | Just (position, body) <- functions ->
-            let manual = Definition.merge $ fmap More.Function.functionManual body
-                auto = Definition.merge $ fmap More.Function.functionAuto body
-             in case annotation of
-                  Nothing -> cast <$> Verbose.resolving (Variable.printLiteral' properName) real
-                    where
-                      cast declaration = Real $ Real.locality declaration
-                      real =
-                        Real.Declaration
-                          { position,
-                            name,
-                            definition =
-                              let body =
-                                    Real.Resolve
-                                      ( Real.Name properName fixity
-                                          `Real.Label` Real.Definition auto
-                                      )
-                               in Real.Inferred
-                                    Real.::: Identity
-                                      (Identity body),
-                            typex = Identity Inferred
-                          }
-                  Just annotation -> cast <$> Verbose.resolving (Variable.printLiteral' properName) real
-                    where
-                      cast declaration = Real $ Real.locality declaration
-                      real =
-                        Real.Declaration
-                          { position,
-                            name,
-                            definition =
-                              let body =
-                                    Real.Resolve
-                                      ( Real.Name properName fixity
-                                          `Real.Label` if Scheme.implicit annotation
-                                            then Real.Definition auto
-                                            else Real.Scoped manual
-                                      )
-                               in Real.Annotated (Identity annotation) Real.::: Identity (Identity body),
-                            typex = Identity Inferred
-                          }
-        | Just (_, selector) <- selection,
-          () <- noAnnotation ->
-            pure $ Select selector
-        | Just (_, method) <- method,
-          () <- noAnnotation ->
-            pure $ Method method
-        | Just (position, More.Choice {index, bound, patternx}) <- choice ->
-            let cast declaration = Real $ Real.locality declaration
-                instanciation = Inferred
-                real = case annotation of
-                  Nothing ->
-                    Real.Declaration
-                      { position,
-                        name,
-                        definition =
-                          let body =
-                                Real.Resolve
-                                  ( Real.Name properName fixity
-                                      `Real.Label` Real.Piece
-                                        Real.Choice {position, index, instanciation, bound, patternx}
-                                  )
-                           in Real.Inferred Real.::: Identity (Identity body),
-                        typex = Identity Inferred
-                      }
-                  Just annotation ->
-                    Real.Declaration
-                      { position,
-                        name,
-                        definition =
-                          let body =
-                                Real.Resolve
-                                  ( Real.Name properName fixity
-                                      `Real.Label` Real.Piece
-                                        Real.Choice {position, index, instanciation, bound, patternx}
-                                  )
-                           in Real.Annotated (Identity annotation) Real.::: Identity (Identity body),
-                        typex = Identity Inferred
-                      }
-             in cast <$> Verbose.resolving (Variable.printLiteral' properName) real
-        | otherwise -> error "no entry"
-        where
-          properName = case name of
-            Named name -> name
-            Unnamed _ -> error "bad name"
-      entries -> duplicateVariableEntries entries
+    declaration
+      | entries@(_ : _ : _) <-
+          catMaybes
+            [ fmap fst functions,
+              fmap fst selection,
+              fmap fst method,
+              fmap fst choice
+            ] =
+          duplicateVariableEntries entries
+      | Partial.Shared {shared} :| [] <- entries = pure $ Real shared
+      | Just (_, selector) <- selection,
+        () <- noAnnotation =
+          pure $ Select selector
+      | Just (_, method) <- method,
+        () <- noAnnotation =
+          pure $ Method method
+      | Just (position, More.Choice {index, bound, patternx}) <- choice =
+          let cast declaration = Real $ Real.locality declaration
+              instanciation = Inferred
+              real = case annotation of
+                Nothing ->
+                  Real.Declaration
+                    { position,
+                      name,
+                      definition =
+                        let body =
+                              Real.Resolve
+                                ( Real.Name properName fixity
+                                    `Real.Label` Real.Piece
+                                      Real.Choice {position, index, instanciation, bound, patternx}
+                                )
+                         in Real.Inferred Real.::: Identity (Identity body),
+                      typex = Identity Inferred
+                    }
+                Just annotation ->
+                  Real.Declaration
+                    { position,
+                      name,
+                      definition =
+                        let body =
+                              Real.Resolve
+                                ( Real.Name properName fixity
+                                    `Real.Label` Real.Piece
+                                      Real.Choice {position, index, instanciation, bound, patternx}
+                                )
+                         in Real.Annotated (Identity annotation) Real.::: Identity (Identity body),
+                      typex = Identity Inferred
+                    }
+           in cast <$> Verbose.resolving (Variable.printLiteral' properName) real
+      | position <- case functions of
+          Just (position, _) -> position
+          Nothing -> position =
+          let body = case functions of
+                Just (_, body) -> body
+                Nothing -> missingVariableEntry position
+              manual = Definition.merge $ fmap More.Function.functionManual body
+              auto = Definition.merge $ fmap More.Function.functionAuto body
+           in case annotation of
+                Nothing -> cast <$> Verbose.resolving (Variable.printLiteral' properName) real
+                  where
+                    cast declaration = Real $ Real.locality declaration
+                    real =
+                      Real.Declaration
+                        { position,
+                          name,
+                          definition =
+                            let body =
+                                  Real.Resolve
+                                    ( Real.Name properName fixity
+                                        `Real.Label` Real.Definition auto
+                                    )
+                             in Real.Inferred
+                                  Real.::: Identity
+                                    (Identity body),
+                          typex = Identity Inferred
+                        }
+                Just annotation -> cast <$> Verbose.resolving (Variable.printLiteral' properName) real
+                  where
+                    cast declaration = Real $ Real.locality declaration
+                    real =
+                      Real.Declaration
+                        { position,
+                          name,
+                          definition =
+                            let body =
+                                  Real.Resolve
+                                    ( Real.Name properName fixity
+                                        `Real.Label` if Scheme.implicit annotation
+                                          then Real.Definition auto
+                                          else Real.Scoped manual
+                                    )
+                             in Real.Annotated (Identity annotation) Real.::: Identity (Identity body),
+                          typex = Identity Inferred
+                        }
+      where
+        properName = case name of
+          Named name -> name
+          Unnamed _ -> error "bad name"
     position = Partial.position entry
     name = Partial.name entry
     fixity = case mapMaybe fixity (toList entries) of
