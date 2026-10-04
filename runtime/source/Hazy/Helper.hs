@@ -119,6 +119,14 @@ defaultReadList = run
         ',' -> readElement t
         _ -> []
 
+boundedEnumFrom :: (Enum a, Bounded a) => a -> [a]
+boundedEnumFrom x = [x .. maxBound]
+
+boundedEnumFromThen :: (Enum a, Bounded a, Ord a) => a -> a -> [a]
+boundedEnumFromThen x y
+  | x <= y = [x, y .. maxBound]
+  | otherwise = [x, y .. minBound]
+
 newtype HelperArrow a b = Arrow (a -> b)
 
 instance (Semigroup b) => Semigroup (HelperArrow a b) where
@@ -142,6 +150,8 @@ instance Enum HelperBool where
   fromEnum = \case
     Bool False -> 0
     Bool True -> 1
+  enumFrom = boundedEnumFrom
+  enumFromThen = boundedEnumFromThen
 
 instance Bounded HelperBool where
   minBound = Bool False
@@ -171,6 +181,8 @@ instance Ord HelperChar where
 instance Enum HelperChar where
   toEnum x = Char (primIntToChar x)
   fromEnum (Char x) = primCharToInt x
+  enumFrom = boundedEnumFrom
+  enumFromThen = boundedEnumFromThen
 
 instance Bounded HelperChar where
   minBound = Char '\0'
@@ -331,6 +343,8 @@ instance Enum HelperOrdering where
     Ordering LT -> 0
     Ordering EQ -> 1
     Ordering GT -> 2
+  enumFrom = boundedEnumFrom
+  enumFromThen = boundedEnumFromThen
 
 instance Bounded HelperOrdering where
   minBound = Ordering LT
@@ -450,11 +464,13 @@ instance (Semigroup a) => Semigroup (HelperST s a) where
 instance (Monoid a) => Monoid (HelperST s a) where
   mempty = pure mempty
 
-newtype HelperUnit = HelperUnit ()
+newtype HelperUnit = Unit ()
 
 instance Enum HelperUnit where
-  fromEnum (HelperUnit ()) = 0
-  toEnum 0 = HelperUnit ()
+  fromEnum (Unit ()) = 0
+  toEnum 0 = Unit ()
+  enumFrom (Unit ()) = [Unit ()]
+  enumFromThen (Unit ()) (Unit ()) = repeat (Unit ())
 
 newtype HelperRatio a = Ratio {ratio :: Ratio a}
 
