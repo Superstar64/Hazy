@@ -30,7 +30,7 @@ instance Shift.Functor (InstanciationF logical) where
     Mono -> Mono
 
 instance (logical ~ Void) => Substitute.Functor (InstanciationF logical) where
-  map = Substitute.mapEvidence
+  map category = Substitute.mapEvidence (Substitute.anyType category)
 
 instance Substitute.EvidenceFunctor InstanciationF where
   mapEvidence category = \case

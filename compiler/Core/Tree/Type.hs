@@ -101,10 +101,10 @@ instance (Show logical) => Scope.Show (TypeF logical) where
   showsPrec = showsPrec
 
 instance (logical ~ Void) => Substitute.Functor (TypeF logical) where
-  map = Substitute.mapType
+  map category = Substitute.mapType (Substitute.anyEvidence category)
 
 instance Substitute.TypeFunctor TypeF where
-  mapType (Substitute _ replacements _) (Variable (Local index)) = replacements Vector.! index
+  mapType (Substitute _ (Substitute.Types replacements) _) (Variable (Local index)) = replacements Vector.! index
   mapType (Substitute.Over category) (Variable (Local.Shift index)) =
     shift $ Substitute.mapType category (Variable index)
   mapType category typex = case typex of
@@ -201,7 +201,7 @@ simplifyWith Solved.Constructor {constructor, synonym} arguments = case synonym 
     where
       erased = take length arguments
       kept = drop length arguments
-      category = Substitute Shift.Id (Vector.fromList erased) (error "no evidence")
+      category = Substitute Shift.Id (Substitute.Types $ Vector.fromList erased) (error "no evidence")
   Solved.NoSynonym -> foldl Call (Constructor constructor) arguments
 simplifyWith Solved.Call {function, argument} arguments =
   simplifyWith function (simplify argument : arguments)

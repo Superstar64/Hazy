@@ -1,6 +1,6 @@
 module Core.Tree.Evidence (Evidence, EvidenceF (..)) where
 
-import Core.Substitute (Category (..))
+import Core.Substitute (Category (..), Evidences (..))
 import qualified Core.Substitute as Substitute
 import {-# SOURCE #-} Core.Tree.Instanciation (InstanciationF)
 import {-# SOURCE #-} qualified Core.Tree.Instanciation as Instanciation
@@ -64,11 +64,11 @@ instance Shift.Functor (EvidenceF logical) where
         }
 
 instance (logical ~ Void) => Substitute.Functor (EvidenceF logical) where
-  map = Substitute.mapEvidence
+  map category = Substitute.mapEvidence (Substitute.anyType category)
 
 instance Substitute.EvidenceFunctor EvidenceF where
   mapEvidence
-    (Substitute _ _ replacements)
+    (Substitute _ _ (Evidences replacements))
     Variable
       { variable = Evidence.Index (Evidence0.Assumed index),
         instanciation = Instanciation.Mono

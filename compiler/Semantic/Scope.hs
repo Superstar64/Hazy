@@ -13,6 +13,7 @@ module Semantic.Scope
     Eq (..),
     shows,
     Vacuous,
+    Singleton (..),
   )
 where
 
@@ -70,3 +71,12 @@ instance Show Vacuous where
 
 instance Eq Vacuous where
   (==) = \case {}
+
+type Singleton :: Environment -> Type
+data Singleton scope = Singleton
+
+instance Show Singleton where
+  showsPrec _ Singleton = showString "Singleton"
+
+instance Eq Singleton where
+  Singleton == Singleton = True

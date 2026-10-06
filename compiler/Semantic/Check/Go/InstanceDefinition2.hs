@@ -229,8 +229,8 @@ checkMethod Method {context, position, base, self, extra} source index scheme Ge
             constraints,
             result = defaults Strict.Vector.! index
           }
-    let typeReplacements = Vector.singleton base
-        evidenceReplacements = Vector.singleton self
+    let typeReplacements = Substitute.Types $ Vector.singleton base
+        evidenceReplacements = Substitute.Evidences $ Vector.singleton self
         category = Substitute Shift.Shift typeReplacements evidenceReplacements
     pure $ Generated $ Solved $ Substitute.map category defaultx
 
@@ -289,7 +289,7 @@ checkBody position key Solve {solve} reflection information lookup members =
         -}
         methods <-
           pure $
-            let replacements = Vector.singleton base
+            let replacements = Substitute.Types $ Vector.singleton base
                 category = Substitute.Over $ Substitute Shift.Shift replacements (error "no evidence")
                 substitute Core.ForallOver {parameters, constraints, result} =
                   Core.ForallOver
