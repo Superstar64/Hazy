@@ -3,8 +3,6 @@ module Semantic.Check.Temporary.Pattern where
 import Control.Monad (when)
 import Control.Monad.ST (ST)
 import qualified Core.Builtin as Builtin
-import Core.Tree.Combinators.Delay (Delay (..))
-import Core.Tree.Data (Types (..))
 import qualified Core.Tree.Data as Data
 import qualified Core.Tree.Forall as Core (mono)
 import Core.Tree.Type ((#))
@@ -46,6 +44,7 @@ import Syntax.StringLiteral (StringLiteral)
 import Syntax.Variable (Variable)
 import Prelude hiding (Bool (False, True))
 import qualified Prelude
+import Core.Tree.Data (TypesInfo(TypesInfo))
 
 data Pattern s scope
   = Wildcard
@@ -166,7 +165,7 @@ check context@Context {typeEnvironment} typex = \case
           DataInstance.instanciate context constructorPosition datax
         let root = Core.constructor typeIndex
             base = foldl (#) root $ case types of
-              Delay (Types types) -> types
+              TypesInfo types -> types
             instancex = constructors Strict.Vector.! constructorIndex
             entries = ConstructorInstance.types instancex
             constructorInfo = ConstructorInstance.info instancex
@@ -201,7 +200,7 @@ check context@Context {typeEnvironment} typex = \case
         DataInstance.instanciate context constructorPosition datax
       let root = Core.constructor typeIndex
           base = foldl (#) root $ case types of
-            Delay (Types types) -> types
+            TypesInfo types -> types
           instancex = constructors Strict.Vector.! constructorIndex
           entries = ConstructorInstance.types instancex
           constructorInfo = ConstructorInstance.info instancex

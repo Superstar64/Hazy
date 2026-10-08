@@ -19,7 +19,8 @@ import Prelude hiding (Functor, map)
 
 newtype Types logical scope = Types (Vector (TypeF logical scope))
 
-newtype Evidences logical scope = Evidences (Vector (EvidenceF logical scope))
+newtype Evidences logicalEvidence logicalType scope
+  = Evidences (Vector (EvidenceF logicalEvidence logicalType scope))
 
 data Category types evidences scope1 scope2 where
   Lift :: Shift.Category scope1 scope2 -> Category types evidences scope1 scope2
@@ -54,7 +55,7 @@ general = \case
   Substitute general _ _ -> general Shift.:. Shift.Unshift (error "bad general")
 
 class (Shift.Functor typex) => Functor typex where
-  map :: Category (Types Void) (Evidences Void) scope1 scope2 -> typex scope1 -> typex scope2
+  map :: Category (Types Void) (Evidences Void Void) scope1 scope2 -> typex scope1 -> typex scope2
 
 instance Functor Type2.Index where
   map = Shift.map . general
@@ -93,26 +94,26 @@ logicalType = substituteType Vector.empty . shift
 
 class EvidenceFunctor evidencef where
   mapEvidence ::
-    Category Singleton (Evidences logical) scope1 scope2 ->
-    evidencef Void scope1 ->
-    evidencef logical scope2
+    Category Singleton (Evidences logicalEvidence logicalType) scope1 scope2 ->
+    evidencef Void Void scope1 ->
+    evidencef logicalEvidence logicalType scope2
 
 substituteEvidence ::
   (EvidenceFunctor evidencef) =>
-  Vector (EvidenceF logical scope2) ->
-  evidencef Void (Local ':+ scope2) ->
-  evidencef logical scope2
+  Vector (EvidenceF logicalEvidence logicalType scope) ->
+  evidencef Void Void (Local ':+ scope) ->
+  evidencef logicalEvidence logicalType scope
 substituteEvidence substitution evidence = mapEvidence substitute evidence
   where
     substitute = Substitute Shift.Id Singleton (Evidences substitution)
 
 logicalEvidence ::
-  (EvidenceFunctor evidencef, Shift0.Functor (evidencef Void)) =>
-  evidencef Void scope2 -> evidencef logical scope2
+  (EvidenceFunctor evidencef, Shift0.Functor (evidencef Void Void)) =>
+  evidencef Void Void scope -> evidencef logicalEvidence logicalType scope
 logicalEvidence = substituteEvidence Vector.empty . shift
 
 mapInstances ::
-  Category (Types Void) (Evidences Void) scope scope' ->
+  Category (Types Void) (Evidences Void Void) scope scope' ->
   Map.Map (Type2.Index scope) a ->
   Map.Map (Type2.Index scope') a
 mapInstances category = Map.mapKeysMonotonic (map category)

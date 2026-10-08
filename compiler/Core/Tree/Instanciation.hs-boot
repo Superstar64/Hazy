@@ -2,25 +2,25 @@
 
 module Core.Tree.Instanciation where
 
+import qualified Core.Evidence.Functor as Core
 import qualified Core.Substitute as Substitute
 import {-# SOURCE #-} Core.Tree.Evidence (EvidenceF)
-import qualified Core.Type.Functor as Core
 import qualified Data.Vector.Strict as Strict
 import Data.Void (Void)
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
 
-data InstanciationF logical scope
-  = Instanciation !(Strict.Vector (EvidenceF logical scope))
+data InstanciationF logicalEvidence logicalType scope
+  = Instanciation !(Strict.Vector (EvidenceF logicalEvidence logicalType scope))
   | Mono
 
-instance (Show logical) => Show (InstanciationF logical scope)
+instance (Show logicalEvidence, Show logicalType) => Show (InstanciationF logicalEvidence logicalType scope)
 
-instance Shift0.Functor (InstanciationF logical)
+instance Shift0.Functor (InstanciationF logicalEvidence logicalType)
 
-instance Shift.Functor (InstanciationF logical)
+instance Shift.Functor (InstanciationF logicalEvidence logicalType)
 
-instance (logical ~ Void) => Substitute.Functor (InstanciationF logical)
+instance (logicalEvidence ~ Void, logicalType ~ Void) => Substitute.Functor (InstanciationF logicalEvidence logicalType)
 
 instance Substitute.EvidenceFunctor InstanciationF
 

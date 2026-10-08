@@ -7,8 +7,9 @@ import Semantic.Scope (Environment (..))
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
 import qualified Semantic.Unify.Instanciation as Instanciation
+import {-# SOURCE #-} qualified Semantic.Unify.Type as Type
 
-type Evidence s scope = EvidenceF (Logical s scope) scope
+type Evidence s scope = EvidenceF (Logical s scope) (Type.Logical s scope) scope
 
 data Logical s scope where
   Box :: !(STRef s (Box s scope)) -> Logical s scope

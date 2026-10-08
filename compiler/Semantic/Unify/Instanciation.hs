@@ -6,8 +6,9 @@ import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Scope (Environment (..))
 import {-# SOURCE #-} Semantic.Unify.Evidence (Logical)
 import {-# SOURCE #-} qualified Semantic.Unify.Evidence as Evidence
+import {-# SOURCE #-} qualified Semantic.Unify.Type as Type
 
-type Instanciation s scope = InstanciationF (Logical s scope) scope
+type Instanciation s scope = InstanciationF (Logical s scope) (Type.Logical s scope) scope
 
 unify :: Instanciation s scope -> Instanciation s scope -> ST s ()
 unify (Instanciation instanciation) (Instanciation instanciation') =

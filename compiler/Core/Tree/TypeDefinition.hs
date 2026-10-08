@@ -2,12 +2,11 @@ module Core.Tree.TypeDefinition where
 
 import Core.Instanciate (Store (Empty))
 import qualified Core.Substitute as Substitute
-import Core.Tree.Class (Class)
+import Core.Tree.Class (Class, TypeInfo (TypeNormal), EvidenceInfo (EvidenceNormal))
 import qualified Core.Tree.Class as Class
-import Core.Tree.Combinators.Delay (Delay (Here))
 import qualified Core.Tree.Constraint as Constraint
 import qualified Core.Tree.Constructor as Constructor
-import Core.Tree.Data (Data)
+import Core.Tree.Data (Data, TypesInfo (TypesNormal))
 import qualified Core.Tree.Data as Data
 import qualified Core.Tree.Forall as Forall
 import Core.Tree.Type (Type)
@@ -66,7 +65,7 @@ simplify (_ Solved.::: Identity definition) = case definition of
           definition =
             Data.Definition
               { position = Empty,
-                types = Here,
+                types = TypesNormal,
                 constructors = Constructor.simplify <$> constructors,
                 selectors,
                 brand
@@ -79,8 +78,8 @@ simplify (_ Solved.::: Identity definition) = case definition of
           constraints = Constraint.simplify <$> constraints,
           definition =
             Class.Definition
-              { typex = Here,
-                evidence = Here,
+              { typex = TypeNormal,
+                evidence = EvidenceNormal,
                 methods = Forall.simplify . Solved.Method.annotation <$> methods,
                 constraintCount = length constraints
               }

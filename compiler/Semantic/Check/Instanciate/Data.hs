@@ -3,9 +3,8 @@ module Semantic.Check.Instanciate.Data where
 import Control.Monad.ST (ST)
 import Core.Instanciate (Instanciated, Store (..))
 import Core.Substitute (logicalType)
-import Core.Tree.Combinators.Delay (Delay (..))
 import Core.Tree.Constructor (ConstructorF (..))
-import Core.Tree.Data (Data (..), DefinitionF (..), Types (..))
+import Core.Tree.Data (Data (..), DefinitionF (..), TypesInfo (..))
 import Core.Tree.Entry (EntryF (..))
 import Core.Tree.Type ((#), (-#>))
 import qualified Core.Tree.Type as Core
@@ -50,7 +49,7 @@ instanciate
     let datax =
           Definition
             { position = Store position,
-              types = Delay (Types types),
+              types = TypesInfo types,
               selectors,
               constructors = Constructor.instanciate position brand types <$> constructors,
               brand
@@ -70,11 +69,11 @@ instanciateRigid context position datax = do
   definition@Definition {types} <- instanciateMark context position (shift datax)
   let unify index typex = Unify.unify context position typex (Core.Variable $ Local index)
   sequence $ zipWith unify [0 ..] $ case types of
-    Delay (Types types) -> toList types
+    TypesInfo types -> toList types
   pure definition
 
 baseType :: DataInstance s scope -> Type2.Index scope -> Unify.Type s scope
-baseType Definition {types = Delay (Types types)} typeIndex = foldl (#) (Core.constructor typeIndex) types
+baseType Definition {types = TypesInfo types} typeIndex = foldl (#) (Core.constructor typeIndex) types
 
 constructorFunction :: DataInstance s scope -> Constructor.Index scope -> Unify.Type s scope
 constructorFunction instancex@Definition {constructors} Constructor.Index {typeIndex, constructorIndex} =

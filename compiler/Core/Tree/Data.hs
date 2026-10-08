@@ -1,12 +1,10 @@
 module Core.Tree.Data where
 
-import Core.Instanciate (Normal, Store)
+import Core.Instanciate (Normal, Store, Instanciated)
 import qualified Core.Substitute as Substitute
-import Core.Tree.Combinators.Delay (Delay)
 import Core.Tree.Constructor (ConstructorF)
 import Core.Tree.Type (Type, TypeF, (-#>))
 import qualified Core.Tree.Type as Type
-import qualified Core.Type.Show as Core
 import qualified Data.Vector.Strict as Strict
 import Data.Void (Void)
 import Semantic.Scope (Environment ((:+)), Local)
@@ -37,24 +35,31 @@ instance Substitute.Functor Data where
 
 type Definition = DefinitionF Normal Void
 
-newtype Types logical scope = Types (Strict.Vector (TypeF logical scope))
-  deriving (Show)
+data TypesInfo instanciate logical scope where
+  TypesInfo :: !(Strict.Vector (TypeF logical scope)) -> TypesInfo Instanciated logical scope
+  TypesNormal :: TypesInfo Normal logical scope
 
-instance Core.Show Types where
-  showsPrec = showsPrec
+instance Show logical => Show (TypesInfo instanciate logical scope) where
+  showsPrec k = \case
+    TypesInfo typex -> showParen (k > 10) $ showString "TypesInfo " . showsPrec 11 typex
+    TypesNormal -> showString "TypesNormal"
 
-instance Shift0.Functor (Types logical) where
+instance Shift0.Functor (TypesInfo instanciate logical) where
   map = Shift.mapDefault
 
-instance Shift.Functor (Types logical) where
-  map category (Types types) = Types (Shift.map category <$> types)
+instance Shift.Functor (TypesInfo instanciate logical) where
+  map category = \case
+    TypesInfo typex -> TypesInfo (Shift.map category <$> typex)
+    TypesNormal -> TypesNormal
 
-instance (logical ~ Void) => Substitute.Functor (Types logical) where
-  map category (Types types) = Types (Substitute.map category <$> types)
+instance logical ~ Void => Substitute.Functor (TypesInfo instanciate logical) where
+  map category = \case
+    TypesInfo typex -> TypesInfo (Substitute.map category <$> typex)
+    TypesNormal -> TypesNormal
 
 data DefinitionF instanciate logical scope = Definition
   { position :: !(Store instanciate Position),
-    types :: !(Delay Types instanciate logical scope),
+    types :: !(TypesInfo instanciate logical scope),
     constructors :: !(Strict.Vector (ConstructorF instanciate logical scope)),
     selectors :: !(Strict.Vector Selector),
     brand :: !Brand

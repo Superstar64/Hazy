@@ -14,6 +14,7 @@ import Semantic.Scope (Environment)
 import qualified Semantic.Shift0 as Shift0
 import {-# SOURCE #-} qualified Semantic.Unify.Evidence as Evidence (Logical)
 import {-# SOURCE #-} Semantic.Unify.Type (Logical)
+import {-# SOURCE #-} qualified Semantic.Unify.Type as Type
 import Syntax.Position (Position)
 
 newtype Solve s a = Solve (ST s a)
@@ -46,19 +47,19 @@ instance SolveType ConstraintsF
 
 instance (SolveType typef) => SolveType (ForallOver typef)
 
-type SolveEvidence :: (Kind.Type -> Environment -> Kind.Type) -> Constraint
+type SolveEvidence :: (Kind.Type -> Kind.Type -> Environment -> Kind.Type) -> Constraint
 class SolveEvidence evidencef where
   solveEvidenceWith ::
     Shift0.Category scopex scope ->
     Position ->
-    evidencef (Evidence.Logical s scopex) scope ->
-    Solve s (evidencef Void scope)
+    evidencef (Evidence.Logical s scopex) (Type.Logical s scopex) scope ->
+    Solve s (evidencef Void Void scope)
 
 solveEvidence ::
   (SolveEvidence evidencef) =>
   Position ->
-  evidencef (Evidence.Logical s scope) scope ->
-  Solve s (evidencef Void scope)
+  evidencef (Evidence.Logical s scope) (Type.Logical s scope) scope ->
+  Solve s (evidencef Void Void scope)
 
 instance SolveEvidence EvidenceF
 

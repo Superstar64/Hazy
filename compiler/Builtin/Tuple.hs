@@ -1,9 +1,8 @@
 module Builtin.Tuple where
 
 import Core.Instanciate (Store (Empty))
-import Core.Tree.Combinators.Delay (Delay (Here))
 import Core.Tree.Constructor (ConstructorF (..))
-import Core.Tree.Data (Data (Data), DefinitionF (..))
+import Core.Tree.Data (Data (Data), DefinitionF (..), TypesInfo (TypesNormal))
 import qualified Core.Tree.Data as Data
 import Core.Tree.Entry (EntryF (..))
 import qualified Core.Tree.Type as Type
@@ -25,7 +24,7 @@ definition n =
       definition =
         Definition
           { position = Empty,
-            types = Here,
+            types = TypesNormal,
             constructors = Strict.Vector.fromList $ toList set,
             selectors = Strict.Vector.empty,
             brand = Brand.Boxed

@@ -97,19 +97,19 @@ instance (SolveType typef) => SolveType (ForallOver typef) where
     result <- solveWith (Shift0.Shift Shift0.:. category) position result
     pure ForallOver {parameters, constraints, result}
 
-type SolveEvidence :: (Kind.Type -> Environment -> Kind.Type) -> Constraint
+type SolveEvidence :: (Kind.Type -> Kind.Type -> Environment -> Kind.Type) -> Constraint
 class SolveEvidence evidencef where
   solveEvidenceWith ::
     Shift0.Category scopex scope ->
     Position ->
-    evidencef (Evidence.Logical s scopex) scope ->
-    Solve s (evidencef Void scope)
+    evidencef (Evidence.Logical s scopex) (Type.Logical s scopex) scope ->
+    Solve s (evidencef Void Void scope)
 
 solveEvidence ::
   (SolveEvidence evidencef) =>
   Position ->
-  evidencef (Evidence.Logical s scope) scope ->
-  Solve s (evidencef Void scope)
+  evidencef (Evidence.Logical s scope) (Type.Logical s scope) scope ->
+  Solve s (evidencef Void Void scope)
 solveEvidence = solveEvidenceWith Shift0.Id
 
 instance SolveEvidence EvidenceF where

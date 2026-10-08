@@ -3,9 +3,8 @@ module Semantic.Check.Instanciate.Class where
 import Control.Monad.ST (ST)
 import Core.Instanciate (Instanciated)
 import Core.Substitute (logicalType, substituteType)
-import Core.Tree.Class (Class (..), DefinitionF (..))
+import Core.Tree.Class (Class (..), DefinitionF (..), TypeInfo (..), EvidenceInfo (..))
 import qualified Core.Tree.Class as Class
-import Core.Tree.Combinators.Delay (Delay (..))
 import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Context (Context)
 import Semantic.Check.Info.Method (MethodInfo (..))
@@ -37,8 +36,8 @@ instanciate
     methods <- pure $ substituteType (Strict.Vector.toLazy types) <$> methods
     pure
       Class.Definition
-        { typex = Delay typex,
-          evidence = Delay evidence,
+        { typex = TypeInfo typex,
+          evidence = EvidenceInfo evidence,
           methods,
           constraintCount = length constraints
         }

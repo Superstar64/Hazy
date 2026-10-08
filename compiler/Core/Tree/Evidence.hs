@@ -1,11 +1,10 @@
 module Core.Tree.Evidence (Evidence, EvidenceF (..)) where
 
+import qualified Core.Evidence.Functor as Core
 import Core.Substitute (Category (..), Evidences (..))
 import qualified Core.Substitute as Substitute
 import {-# SOURCE #-} Core.Tree.Instanciation (InstanciationF)
 import {-# SOURCE #-} qualified Core.Tree.Instanciation as Instanciation
-import qualified Core.Type.Functor as Core
-import qualified Core.Type.Show as Core.Type
 import qualified Data.Vector as Vector
 import Data.Void (Void)
 import qualified Semantic.Index.Evidence as Evidence
@@ -15,30 +14,30 @@ import qualified Semantic.Shift as Shift
 import Semantic.Shift0 (shift)
 import qualified Semantic.Shift0 as Shift0
 
-type Evidence = EvidenceF Void
+type Evidence = EvidenceF Void Void
 
-data EvidenceF logical scope
-  = Logical !logical
+data EvidenceF logicalEvidence logicalType scope
+  = Logical !logicalEvidence
   | Variable
       { variable :: !(Evidence.Index scope),
-        instanciation :: !(InstanciationF logical scope)
+        instanciation :: !(InstanciationF logicalEvidence logicalType scope)
       }
   | Super
-      { base :: !(EvidenceF logical scope),
+      { base :: !(EvidenceF logicalEvidence logicalType scope),
         index :: !Int
       }
   deriving (Show)
 
-instance Core.Type.Show EvidenceF where
+instance
+  (Show logicalEvidence, Show logicalType) =>
+  Scope.Show (EvidenceF logicalEvidence logicalType)
+  where
   showsPrec = showsPrec
 
-instance (Show logical) => Scope.Show (EvidenceF logical) where
-  showsPrec = showsPrec
-
-instance Shift0.Functor (EvidenceF logical) where
+instance Shift0.Functor (EvidenceF logicalEvidence logicalType) where
   map = Shift.mapDefault
 
-instance Shift.Functor (EvidenceF logical) where
+instance Shift.Functor (EvidenceF logicalEvidence logicalType) where
   map category = \case
     Logical logical -> Logical logical
     Variable {variable, instanciation} ->
@@ -52,7 +51,10 @@ instance Shift.Functor (EvidenceF logical) where
           index
         }
 
-instance (logical ~ Void) => Substitute.Functor (EvidenceF logical) where
+instance
+  (logicalEvidence ~ Void, logicalType ~ Void) =>
+  Substitute.Functor (EvidenceF logicalEvidence logicalType)
+  where
   map category = Substitute.mapEvidence (Substitute.anyType category)
 
 instance Substitute.EvidenceFunctor EvidenceF where
@@ -90,15 +92,15 @@ instance Substitute.EvidenceFunctor EvidenceF where
         }
 
 instance Core.Functor EvidenceF where
-  map f = \case
+  map f g = \case
     Logical logical -> Logical (f logical)
     Variable {variable, instanciation} ->
       Variable
         { variable,
-          instanciation = Core.map f instanciation
+          instanciation = Core.map f g instanciation
         }
     Super {base, index} ->
       Super
-        { base = Core.map f base,
+        { base = Core.map f g base,
           index
         }

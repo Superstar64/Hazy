@@ -7,8 +7,9 @@ import Core.Tree.Evidence (EvidenceF)
 import qualified Data.Kind as Kind
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Shift0 as Shift0
+import {-# SOURCE #-} qualified Semantic.Unify.Type as Type
 
-type Evidence s scope = EvidenceF (Logical s scope) scope
+type Evidence s scope = EvidenceF (Logical s scope) (Type.Logical s scope) scope
 
 type role Logical nominal nominal
 

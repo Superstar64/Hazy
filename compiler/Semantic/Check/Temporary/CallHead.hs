@@ -3,8 +3,6 @@ module Semantic.Check.Temporary.CallHead where
 import Control.Monad.ST (ST)
 import qualified Core.Builtin as Builtin
 import qualified Core.Tree.Class as Class
-import Core.Tree.Combinators.Delay (Delay (..))
-import Core.Tree.Data (Types (..))
 import qualified Core.Tree.Data as Data
 import Core.Tree.Type ((#))
 import qualified Core.Tree.Type as Core
@@ -34,6 +32,8 @@ import qualified Semantic.Tree.CallHead as Solved
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
+import Core.Tree.Data (TypesInfo(..))
+import Core.Tree.Class (EvidenceInfo(..))
 
 data CallHead s scope
   = Variable
@@ -81,7 +81,7 @@ check context@Context {typeEnvironment} typex Semantic.Constructor {constructorP
       DataInstance.instanciate context constructorPosition datax
     let root = Core.constructor typeIndex
         base = foldl (#) root $ case types of
-          Delay (Types types) -> types
+          TypesInfo types -> types
         instancex = constructors Strict.Vector.! constructorIndex
         typex' = ConstructorInstance.function instancex base
         constructorInfo = ConstructorInstance.info instancex
@@ -113,7 +113,7 @@ check
         instancex <- ClassInstance.instanciate context methodPosition typeIndex classx
         let function = ClassInstance.methodFunction instancex methodIndex
             methodInfo = ClassInstance.info instancex
-            Delay evidence = Class.evidence instancex
+            EvidenceInfo evidence = Class.evidence instancex
         (typex', instanciation) <- Unify.instanciate context methodPosition function
         Unify.unify context methodPosition typex typex'
         pure Method {methodPosition, method, evidence, instanciation, methodInfo}
