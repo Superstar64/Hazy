@@ -8,6 +8,7 @@ import Data.Foldable (for_, traverse_)
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
+import Data.Void (Void)
 import Error (unsupportedFeatureConstraintedTypeDefaulting)
 import qualified Semantic.Check.Binding.Local as Local (LocalBinding (..))
 import Semantic.Check.Context (Context (..))
@@ -113,7 +114,7 @@ unify context_ position term1_ term2_ = unifyWith context_ term1_ term2_
                         if length arguments1 == length arguments2
                           then traverse_ (uncurry unify) (zip arguments1 arguments2)
                           else error "different parameter length"
-                        Evidence.unify evidence1 evidence2
+                        Evidence.unify context position evidence1 evidence2
                         pure left =
                     do
                       Semantic.Unify.Type.unify context position kind1 kind2
@@ -305,13 +306,23 @@ reconstrain ::
 reconstrain context position constraints term =
   for_ (Map.toList constraints) $ \(classx, Delay {arguments, evidence}) -> do
     evidence' <- constrainWith context position classx term arguments
-    Evidence.unify evidence evidence'
+    Evidence.unify context position evidence evidence'
 
-unshiftBox misshift unshift reference kind constraints erasure = do
+unshiftBox ::
+  Context s (scope1 ':+ scopes) ->
+  Position ->
+  ST s Void ->
+  (Type s (scope1 ':+ scopes) -> ST s (Type s scopes)) ->
+  STRef s (Box s (scope2 ':+ scopes)) ->
+  TypeF (Logical s (scope1 ':+ scopes)) (scope1 ':+ scopes) ->
+  Map (Type2.Index (scope3 ':+ scopes)) (Delay s (scope1 ':+ scopes)) ->
+  Mask.Erasure ->
+  ST s (Logical s scopes)
+unshiftBox context position misshift unshift reference kind constraints erasure = do
   let unshiftDelay (key, Delay {arguments, evidence}) = do
         key <- Shift.partialUnshift misshift key
         arguments <- traverse unshift arguments
-        evidence <- Evidence.unshift evidence
+        evidence <- Evidence.unshift context position evidence
         pure (key, Delay {arguments, evidence})
   kind <- unshift kind
   -- Type variables may link to constraints that mention the variable
@@ -336,7 +347,7 @@ unshift context position typex = unshift typex
       Logical (Box reference) ->
         readSTRef reference >>= \case
           Unsolved {kind, constraints, erasure} -> do
-            box <- unshiftBox misshift unshift reference kind constraints erasure
+            box <- unshiftBox context position misshift unshift reference kind constraints erasure
             pure $ Logical box
           Solved term -> unshift term
       Logical (Shift logical) -> pure (Logical logical)
