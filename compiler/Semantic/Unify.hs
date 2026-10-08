@@ -63,10 +63,12 @@ import {-# SOURCE #-} Semantic.Unify.Solve
 import {-# SOURCE #-} Semantic.Unify.Type
   ( Logical,
     Type,
-    constrain,
     fresh,
     mark,
     unify,
+  )
+import {-# SOURCE #-} Semantic.Unify.Type1
+  ( constrain,
   )
 import {-# SOURCE #-} Semantic.Unify.Zonk
   ( Zonk (..),

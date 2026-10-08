@@ -35,10 +35,10 @@ import Semantic.Unify.Type
   ( Box (..),
     Logical (..),
     Type (..),
-    constrainWith,
     fresh,
     unshift,
   )
+import Semantic.Unify.Type1 (constrainWith)
 import Semantic.Unify.Zonk (Zonker (..), zonk)
 import Syntax.Position (Position)
 import Prelude hiding (Functor, map)

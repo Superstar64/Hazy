@@ -403,6 +403,7 @@ executable hazy
     Semantic.Unify.Instanciation
     Semantic.Unify.Solve
     Semantic.Unify.Type
+    Semantic.Unify.Type1
     Semantic.Unify.Zonk
     Syntax.Extensions
     Syntax.FreeVariables
