@@ -168,6 +168,7 @@ check context@Context {typeEnvironment} typex = \case
             instancex = constructors Strict.Vector.! constructorIndex
             entries = ConstructorInstance.types instancex
             constructorInfo = ConstructorInstance.info instancex
+        ConstructorInstance.mark context instancex
         Unify.unify context constructorPosition typex base
         when (length entries /= length patterns) $ mismatchedConstructorArguments constructorPosition
         patterns <- sequence $ Strict.Vector.zipWith (check context) entries patterns
@@ -202,6 +203,7 @@ check context@Context {typeEnvironment} typex = \case
           entries = ConstructorInstance.types instancex
           constructorInfo = ConstructorInstance.info instancex
           lookup index = entries Strict.Vector.! index
+      ConstructorInstance.mark context instancex
       Unify.unify context constructorPosition typex base
       fields <- traverse (Field.check context lookup) fields
       pure $

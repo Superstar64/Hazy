@@ -25,7 +25,7 @@ import Semantic.Check.ConstructorInstance (ConstructorInstance (..))
 import qualified Semantic.Check.ConstructorInstance as ConstructorInstance
 import Semantic.Check.Context (Context)
 import Semantic.Check.DataInstance (DataInstance (..))
-import Semantic.Check.Simple.Data (instanciate)
+import Semantic.Check.Simple.Data (instanciateMark)
 import qualified Semantic.Check.Temporary.ConstructorInfo as ConstructorInfo
 import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Evidence as Index.Evidence
@@ -136,7 +136,7 @@ fromEnum,
     Data scope ->
     ST s (Unify.Solve s (MethodConcrete Auto layout Check scope))
 fromEnum context position typeIndex datax = do
-  DataInstance {types, constructors} <- instanciate context position (shift datax)
+  DataInstance {types, constructors} <- instanciateMark context position (shift datax)
   let unify index typex = Unify.unify context position typex (Core.Variable $ Local.Local index)
   sequence $ zipWith unify [0 ..] (toList types)
   pure $ do
@@ -145,7 +145,7 @@ fromEnum context position typeIndex datax = do
       pure fromEnum
     pure $ Generated $ Solved $ TypeLambda.mono body
 toEnum context position typeIndex datax = do
-  DataInstance {types, constructors} <- instanciate context position (shift datax)
+  DataInstance {types, constructors} <- instanciateMark context position (shift datax)
   let unify index typex = Unify.unify context position typex (Core.Variable $ Local.Local index)
   sequence $ zipWith unify [0 ..] (toList types)
   body <- toEnum' position (shift typeIndex) constructors
@@ -161,7 +161,7 @@ enumFromThen ::
   Data scope ->
   ST s (Unify.Solve s (MethodConcrete Auto layout Check scope))
 enumFromThen context position evidence typeIndex datax = do
-  DataInstance {types, constructors} <- instanciate context position (shift datax)
+  DataInstance {types, constructors} <- instanciateMark context position (shift datax)
   let unify index typex = Unify.unify context position typex (Core.Variable $ Local.Local index)
   sequence $ zipWith unify [0 ..] (toList types)
   pure $ do

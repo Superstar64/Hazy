@@ -190,6 +190,7 @@ check
           entries = ConstructorInstance.types instancex
           constructorInfo = ConstructorInstance.info instancex
           lookup index = entries Strict.Vector.! index
+      ConstructorInstance.mark context instancex
       Unify.unify context constructorPosition typex base
       fields <- traverse (Field.check context lookup) fields
       pure $ Record {constructorPosition, constructor, fields, constructorInfo}
@@ -252,7 +253,7 @@ check
     datax <- do
       let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
       Builtin.index pure get updateType
-    instancex <- Simple.Data.instanciate context updatePosition datax
+    instancex <- Simple.Data.instanciateMark context updatePosition datax
     let typex' = DataInstance.baseType instancex updateType
     Unify.unify context updatePosition typex typex'
     base <- check context typex base

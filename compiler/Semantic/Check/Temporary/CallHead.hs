@@ -83,6 +83,7 @@ check context@Context {typeEnvironment} typex Semantic.Constructor {constructorP
         instancex = constructors Strict.Vector.! constructorIndex
         typex' = ConstructorInstance.function instancex base
         constructorInfo = ConstructorInstance.info instancex
+    ConstructorInstance.mark context instancex
     Unify.unify context constructorPosition typex typex'
     pure Constructor {constructorPosition, constructor, constructorInfo}
 check
@@ -93,7 +94,7 @@ check
     datax <- do
       let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
       Builtin.index pure get typeIndex
-    instancex <- Simple.Data.instanciate context selectorPosition datax
+    instancex <- Simple.Data.instanciateMark context selectorPosition datax
     let selectorInfo = DataInstance.selectorInfo instancex selectorIndex
         typex' = DataInstance.selectorFunction instancex selector
     Unify.unify context selectorPosition typex typex'

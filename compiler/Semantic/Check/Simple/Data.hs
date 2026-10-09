@@ -10,8 +10,8 @@ import qualified Semantic.Check.Simple.Constructor as Constructor
 import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
 
-instanciate :: Context s scope -> Position -> Data scope -> ST s (DataInstance s scope)
-instanciate context position Data {parameters, constructors, selectors, brand} = do
+instanciate, instanciateMark :: Context s scope -> Position -> Data scope -> ST s (DataInstance s scope)
+instanciate _ position Data {parameters, constructors, selectors, brand} = do
   types <- traverse (Unify.fresh . logicalType) parameters
   let datax =
         DataInstance
@@ -20,5 +20,8 @@ instanciate context position Data {parameters, constructors, selectors, brand} =
             selectors,
             constructors = Constructor.instanciate position brand types <$> constructors
           }
+  pure datax
+instanciateMark context position datax = do
+  datax <- instanciate context position datax
   DataInstance.mark context datax
   pure datax

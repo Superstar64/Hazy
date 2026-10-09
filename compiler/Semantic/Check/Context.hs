@@ -11,7 +11,7 @@ import qualified Data.Vector as Vector
 import qualified Semantic.Check.DataInstance as DataInstance
 import Semantic.Check.LocalBinding (LocalBinding)
 import qualified Semantic.Check.LocalBinding as LocalBinding
-import Semantic.Check.Simple.Data as Simple.Data (instanciate)
+import Semantic.Check.Simple.Data as Simple.Data (instanciateMark)
 import Semantic.Check.TermBinding (TermBinding (..))
 import qualified Semantic.Check.TermBinding as TermBinding
 import Semantic.Check.TypeBinding (TypeBinding (..))
@@ -173,6 +173,6 @@ lookupKind position context@Context {typeEnvironment} index = do
         datax <- do
           let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
           datax <- Builtin.index pure get typeIndex
-          Simple.Data.instanciate context position datax
+          Simple.Data.instanciateMark context position datax
         pure $ DataInstance.constructorFunction datax constructor
   Builtin.kind (pure . logicalType) indexType indexLift index

@@ -20,7 +20,7 @@ import Semantic.Check.Context (Context)
 import Semantic.Check.DataInstance (DataInstance (..))
 import Semantic.Check.Derive.Enum (fromEnum')
 import Semantic.Check.EntryInstance (entry)
-import Semantic.Check.Simple.Data (instanciate)
+import Semantic.Check.Simple.Data (instanciateMark)
 import qualified Semantic.Check.Temporary.ConstructorInfo as ConstructorInfo
 import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Local as Local
@@ -41,7 +41,7 @@ compare ::
   Data scope ->
   ST s (Unify.Solve s (MethodConcrete Auto layout Check scope))
 compare context position typeIndex datax = do
-  DataInstance {types, constructors} <- instanciate context position (shift datax)
+  DataInstance {types, constructors} <- instanciateMark context position (shift datax)
   let unify index typex = Unify.unify context position typex (Core.Variable $ Local.Local index)
   sequence $ zipWith unify [0 ..] (toList types)
   let generate index constructor@ConstructorInstance {entries} = do
