@@ -238,7 +238,7 @@ export const primIntMultiply = {
   b: (x) => (y) => Math.imul(force(x), force(y)),
 };
 export const primIntNegate = { a: 0, b: (x) => -force(x) | 0 };
-export const primIntAbs = { a: 0, b: (x) => -Math.abs(force(x)) | 0 };
+export const primIntAbs = { a: 0, b: (x) => Math.abs(force(x)) | 0 };
 export const primIntSignum = { a: 0, b: (x) => Math.sign(force(x)) };
 
 export const primIntToInteger = {
@@ -581,7 +581,7 @@ export function readTuple(pack, ...evidences) {
   };
   result.b = {
     a: 0,
-    b: helper.defaultShowList(result),
+    b: helper.defaultReadList(result),
   };
   return result;
 }
