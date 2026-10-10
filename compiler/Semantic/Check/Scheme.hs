@@ -21,10 +21,10 @@ import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
 import Data.Void (Void)
 import Order (orderWithInt)
+import qualified Semantic.Check.Binding.Local as LocalBinding
+import qualified Semantic.Check.Binding.Type as TypeBinding
 import Semantic.Check.Context (Context (..))
-import qualified Semantic.Check.LocalBinding as LocalBinding
 import Semantic.Check.Mask (Mask)
-import qualified Semantic.Check.TypeBinding as TypeBinding
 import qualified Semantic.Index.Evidence as Evidence (assumed)
 import qualified Semantic.Index.Table.Local as Local
 import qualified Semantic.Index.Table.Term as Term

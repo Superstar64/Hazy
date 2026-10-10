@@ -1,6 +1,7 @@
 module Semantic.Check.Temporary.Definition2 where
 
 import Control.Monad.ST (ST)
+import Semantic.Check.Binding.Term (TermBinding (TermBinding), Type (..))
 import Semantic.Check.Context (Context (..))
 import Semantic.Check.Scheme (instanciate)
 import Semantic.Check.Temporary.Definition (Definition)
@@ -9,7 +10,6 @@ import Semantic.Check.Temporary.Pattern (Pattern)
 import qualified Semantic.Check.Temporary.Pattern as Pattern
 import Semantic.Check.Temporary.RightHandSide (RightHandSide)
 import qualified Semantic.Check.Temporary.RightHandSide as RightHandSide
-import Semantic.Check.TermBinding (TermBinding (TermBinding), Type (..))
 import qualified Semantic.Index.Table.Term as Term ((!))
 import Semantic.Index.Term (Bound)
 import qualified Semantic.Index.Term as Term (Index)

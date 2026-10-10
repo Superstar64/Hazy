@@ -183,6 +183,9 @@ executable hazy
     Javascript.Tree.Statement
     Order
     Package
+    Semantic.Check.Binding.Local
+    Semantic.Check.Binding.Term
+    Semantic.Check.Binding.Type
     Semantic.Check.Context
     Semantic.Check.Derive.Bounded
     Semantic.Check.Derive.Enum
@@ -210,7 +213,6 @@ executable hazy
     Semantic.Check.Instanciate.Constructor
     Semantic.Check.Instanciate.Data
     Semantic.Check.Instanciate.Entry
-    Semantic.Check.LocalBinding
     Semantic.Check.Mask
     Semantic.Check.Scheme
     Semantic.Check.Temporary.Alternative
@@ -244,9 +246,7 @@ executable hazy
     Semantic.Check.Temporary.TypeDefinition
     Semantic.Check.Temporary.TypePattern
     Semantic.Check.Temporary.UpdateInfo
-    Semantic.Check.TermBinding
     Semantic.Check.TypeAnnotation
-    Semantic.Check.TypeBinding
     Semantic.Connect
     Semantic.FreeVariables
     Semantic.Functor2

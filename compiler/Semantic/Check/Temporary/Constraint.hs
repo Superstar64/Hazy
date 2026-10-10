@@ -10,9 +10,9 @@ import qualified Data.List.Reverse as Reverse
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
 import Error (unsupportedFeatureEqualityConstraints)
+import qualified Semantic.Check.Binding.Local as LocalBinding
 import Semantic.Check.Context (Context (..))
 import qualified Semantic.Check.Context as Context
-import qualified Semantic.Check.LocalBinding as LocalBinding
 import Semantic.Check.Temporary.Type (Type)
 import qualified Semantic.Check.Temporary.Type as Type (check, solve)
 import Semantic.Index.Local (Index (Local))

@@ -8,13 +8,13 @@ import Core.Tree.TypeDeclaration (assumeData)
 import qualified Data.Kind
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
+import Semantic.Check.Binding.Local (LocalBinding)
+import qualified Semantic.Check.Binding.Local as LocalBinding
+import Semantic.Check.Binding.Term (TermBinding (..))
+import qualified Semantic.Check.Binding.Term as TermBinding
+import Semantic.Check.Binding.Type (TypeBinding (..))
+import qualified Semantic.Check.Binding.Type as TypeBinding
 import qualified Semantic.Check.Instanciate.Data as DataInstance
-import Semantic.Check.LocalBinding (LocalBinding)
-import qualified Semantic.Check.LocalBinding as LocalBinding
-import Semantic.Check.TermBinding (TermBinding (..))
-import qualified Semantic.Check.TermBinding as TermBinding
-import Semantic.Check.TypeBinding (TypeBinding (..))
-import qualified Semantic.Check.TypeBinding as TypeBinding
 import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Link.Type as Type (Link)
 import qualified Semantic.Index.Link.Type as Type.Link

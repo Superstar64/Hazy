@@ -1,4 +1,4 @@
-module Semantic.Check.TermBinding where
+module Semantic.Check.Binding.Term where
 
 import Control.Monad.ST (ST)
 import qualified Core.Tree.Forall as Core (mono)

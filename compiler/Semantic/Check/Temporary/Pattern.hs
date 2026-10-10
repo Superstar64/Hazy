@@ -18,6 +18,8 @@ import qualified Data.Vector.Strict as Strict.Vector
 import Error
   ( mismatchedConstructorArguments,
   )
+import Semantic.Check.Binding.Term (TermBinding (TermBinding), Type (..))
+import qualified Semantic.Check.Binding.Type as TypeBinding
 import Semantic.Check.Context (Context (..))
 import qualified Semantic.Check.Instanciate.Constructor as ConstructorInstance
 import qualified Semantic.Check.Instanciate.Data as DataInstance
@@ -25,8 +27,6 @@ import Semantic.Check.Temporary.ConstructorInfo (ConstructorInfo)
 import qualified Semantic.Check.Temporary.ConstructorInfo as ConstructorInfo
 import Semantic.Check.Temporary.PatternField (Field)
 import qualified Semantic.Check.Temporary.PatternField as Field
-import Semantic.Check.TermBinding (TermBinding (TermBinding), Type (..))
-import qualified Semantic.Check.TypeBinding as TypeBinding
 import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Table.Local as Local
 import qualified Semantic.Index.Table.Term as Term

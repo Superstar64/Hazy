@@ -4,8 +4,8 @@ module Semantic.Check.Temporary.Pattern where
 
 import Control.Monad.ST (ST)
 import Data.Kind (Type)
+import Semantic.Check.Binding.Term (TermBinding)
 import Semantic.Check.Context (Context)
-import Semantic.Check.TermBinding (TermBinding)
 import qualified Semantic.Index.Table.Term as Term
 import Semantic.Index.Term (Bound)
 import Semantic.Scope (Environment ((:+)))

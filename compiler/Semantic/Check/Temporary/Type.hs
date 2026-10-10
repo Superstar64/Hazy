@@ -9,9 +9,9 @@ import qualified Core.Tree.Type as Core
 import qualified Data.Strict.Vector1 as Strict (Vector1)
 import qualified Data.Strict.Vector2 as Strict (Vector2)
 import Error (partialSynonym, uncheckable, universeMustBeSmall, unsupportedFeatureStrictFunctions)
+import qualified Semantic.Check.Binding.Local as LocalBinding (LocalBinding (..))
 import Semantic.Check.Context (Context (..))
 import qualified Semantic.Check.Context as Context
-import qualified Semantic.Check.LocalBinding as LocalBinding (LocalBinding (..))
 import qualified Semantic.Index.Local as Local
 import qualified Semantic.Index.Table.Local as Local.Table
 import qualified Semantic.Index.Type2 as Type2

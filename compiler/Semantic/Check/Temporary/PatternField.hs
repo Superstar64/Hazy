@@ -1,10 +1,10 @@
 module Semantic.Check.Temporary.PatternField where
 
 import Control.Monad.ST (ST)
+import Semantic.Check.Binding.Term (TermBinding)
 import Semantic.Check.Context (Context)
 import {-# SOURCE #-} Semantic.Check.Temporary.Pattern (Pattern)
 import {-# SOURCE #-} qualified Semantic.Check.Temporary.Pattern as Pattern
-import Semantic.Check.TermBinding (TermBinding)
 import qualified Semantic.Index.Table.Term as Term
 import Semantic.Index.Term (Bound)
 import Semantic.Scope (Environment ((:+)))

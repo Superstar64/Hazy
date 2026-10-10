@@ -10,6 +10,8 @@ import Core.Tree.Type ((#))
 import qualified Core.Tree.Type as Core
 import Core.Tree.TypeDeclaration (assumeClass, assumeData)
 import qualified Data.Vector.Strict as Strict.Vector
+import Semantic.Check.Binding.Term (TermBinding (..), Type (..))
+import qualified Semantic.Check.Binding.Type as TypeBinding
 import Semantic.Check.Context (Context (..))
 import Semantic.Check.Info.Method (MethodInfo)
 import qualified Semantic.Check.Instanciate.Class as ClassInstance
@@ -20,8 +22,6 @@ import Semantic.Check.Temporary.ConstructorInfo (ConstructorInfo)
 import qualified Semantic.Check.Temporary.ConstructorInfo as ConstructorInfo
 import Semantic.Check.Temporary.SelectorInfo (SelectorInfo)
 import qualified Semantic.Check.Temporary.SelectorInfo as SelectorInfo
-import Semantic.Check.TermBinding (TermBinding (..), Type (..))
-import qualified Semantic.Check.TypeBinding as TypeBinding
 import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Method as Method
 import qualified Semantic.Index.Selector as Selector

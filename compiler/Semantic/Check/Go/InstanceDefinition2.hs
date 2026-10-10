@@ -31,6 +31,7 @@ import qualified Data.Vector.Strict as Strict.Vector
 import Data.Void (Void)
 import Error (cannotDerive, cyclicalTypeChecking)
 import qualified Graph.Topological as Topological
+import qualified Semantic.Check.Binding.Type as TypeBinding
 import Semantic.Check.Context (Context (..))
 import qualified Semantic.Check.Context as Context
 import qualified Semantic.Check.Derive.Bounded as Bounded
@@ -46,7 +47,6 @@ import qualified Semantic.Check.Temporary.Constraints as Unsolved.Constraints (c
 import qualified Semantic.Check.Temporary.Definition as Definition
 import qualified Semantic.Check.Temporary.Scheme as Unsolved (augment)
 import qualified Semantic.Check.Temporary.TypePattern as Unsolved (TypePattern (..), solve)
-import qualified Semantic.Check.TypeBinding as TypeBinding
 import qualified Semantic.Index.Evidence as Evidence
 import qualified Semantic.Index.Evidence0 as Evidence0
 import qualified Semantic.Index.Local as Local

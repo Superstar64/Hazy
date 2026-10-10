@@ -3,7 +3,7 @@
 module Semantic.Check.Context where
 
 import qualified Data.Kind as Kind
-import {-# SOURCE #-} Semantic.Check.TypeBinding (TypeBinding)
+import {-# SOURCE #-} Semantic.Check.Binding.Type (TypeBinding)
 import qualified Semantic.Index.Table.Type as Type
 import Semantic.Scope (Environment)
 

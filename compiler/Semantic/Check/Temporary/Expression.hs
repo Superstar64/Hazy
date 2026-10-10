@@ -17,6 +17,7 @@ import Data.Traversable (for)
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
 import Error (unsupportedFeatureRunST)
+import qualified Semantic.Check.Binding.Type as TypeBinding
 import Semantic.Check.Context (Context (..))
 import qualified Semantic.Check.Go.Declarations as Declarations
 import qualified Semantic.Check.Go.Definition4 as Definition4
@@ -47,7 +48,6 @@ import qualified Semantic.Check.Temporary.Select as Select
 import Semantic.Check.Temporary.UpdateInfo (UpdateInfo)
 import qualified Semantic.Check.Temporary.UpdateInfo as UpdateInfo
 import qualified Semantic.Check.TypeAnnotation as Annotation
-import qualified Semantic.Check.TypeBinding as TypeBinding
 import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Table.Type as Type
 import qualified Semantic.Index.Type2 as Type2

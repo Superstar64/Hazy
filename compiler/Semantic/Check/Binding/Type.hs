@@ -1,4 +1,4 @@
-module Semantic.Check.TypeBinding where
+module Semantic.Check.Binding.Type where
 
 import Control.Monad.ST (ST)
 import Core.Tree.Constraints (Constraints)

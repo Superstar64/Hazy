@@ -8,9 +8,9 @@ import qualified Core.Tree.Type as Core
 import Core.Type.Functor (shiftLogical)
 import Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
+import Semantic.Check.Binding.Local (LocalBinding (Wobbly, label, wobbly))
 import Semantic.Check.Context (Context (..))
 import qualified Semantic.Check.Go.Scheme as Solved (Scheme (..))
-import Semantic.Check.LocalBinding (LocalBinding (Wobbly, label, wobbly))
 import Semantic.Check.Temporary.Constraints (Constraints)
 import qualified Semantic.Check.Temporary.Constraints as Constraints
 import Semantic.Check.Temporary.Type (Type)
