@@ -2,7 +2,7 @@ module Semantic.Check.EntryInstance where
 
 import Control.Monad.ST (ST)
 import Core.Substitute (substituteType)
-import Core.Tree.Entry (Entry (..))
+import Core.Tree.Entry (Entry, EntryF (..))
 import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
 import {-# SOURCE #-} Semantic.Check.Context (Context)

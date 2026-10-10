@@ -1,6 +1,6 @@
 module Semantic.Check.Simple.Constructor where
 
-import Core.Tree.Constructor (Constructor (..))
+import Core.Tree.Constructor (Constructor, ConstructorF (..))
 import qualified Data.Vector.Strict as Strict
 import Semantic.Check.ConstructorInstance (ConstructorInstance (ConstructorInstance))
 import qualified Semantic.Check.ConstructorInstance as ConstructorInstance

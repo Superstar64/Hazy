@@ -1,8 +1,9 @@
 module Core.Tree.Entry where
 
 import qualified Core.Substitute as Substitute
-import Core.Tree.Type (Type)
+import Core.Tree.Type (TypeF)
 import qualified Core.Tree.Type as Type
+import Data.Void (Void)
 import qualified Semantic.Index.Type2 as Type2
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
@@ -11,19 +12,25 @@ import Semantic.Tree.Entry (Restricted (..))
 import qualified Semantic.Tree.Entry as Solved
 import Semantic.Tree.StrictnessAnnotation (StrictnessAnnotation (..))
 
-data Entry scope = Entry
-  { entry :: !(Type scope),
-    strict :: !(Type scope)
+type Entry = EntryF Void
+
+data EntryF logical scope = Entry
+  { entry :: !(TypeF logical scope),
+    strict :: !(TypeF logical scope)
   }
   deriving (Show)
 
-instance Shift0.Functor Entry where
+instance Shift0.Functor (EntryF logical) where
   map = Shift.mapDefault
 
-instance Shift.Functor Entry where
-  map = Substitute.mapDefault
+instance Shift.Functor (EntryF logical) where
+  map category Entry {entry, strict} =
+    Entry
+      { entry = Shift.map category entry,
+        strict = Shift.map category strict
+      }
 
-instance Substitute.Functor Entry where
+instance (logical ~ Void) => Substitute.Functor (EntryF logical) where
   map category Entry {entry, strict} =
     Entry
       { entry = Substitute.map category entry,

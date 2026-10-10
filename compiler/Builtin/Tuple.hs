@@ -1,9 +1,9 @@
 module Builtin.Tuple where
 
-import Core.Tree.Constructor (Constructor (..))
+import Core.Tree.Constructor (ConstructorF (..))
 import Core.Tree.Data (Data (Data))
 import qualified Core.Tree.Data as Data
-import Core.Tree.Entry (Entry (..))
+import Core.Tree.Entry (EntryF (..))
 import qualified Core.Tree.Type as Type
 import Data.Foldable (Foldable (toList))
 import Data.Text (pack)
