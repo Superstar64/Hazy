@@ -2,7 +2,7 @@ module Semantic.Check.ConstructorInstance where
 
 import Control.Monad.ST (ST)
 import Core.Instanciate (Instanciated, Store (Store))
-import Core.Tree.Constructor (ConstructorF (..))
+import Core.Tree.Constructor (Constructor, ConstructorF (..))
 import Core.Tree.Entry (entry)
 import Core.Tree.Type ((-#>))
 import Data.Foldable (traverse_)
@@ -10,10 +10,27 @@ import qualified Data.Vector.Strict as Strict
 import {-# SOURCE #-} Semantic.Check.Context (Context)
 import qualified Semantic.Check.EntryInstance as EntryInstance
 import Semantic.Check.Temporary.ConstructorInfo (ConstructorInfo (..))
+import Semantic.Scope (Environment (..), Local)
 import qualified Semantic.Unify as Unify
+import Syntax.Position (Position)
+import Syntax.Tree.Brand (Brand)
 import qualified Syntax.Tree.Brand as Brand
 
 type ConstructorInstance s scope = ConstructorF Instanciated (Unify.Logical s scope) scope
+
+instanciate ::
+  Position ->
+  Brand ->
+  Strict.Vector (Unify.Type s scope) ->
+  Constructor (Local ':+ scope) ->
+  ConstructorInstance s scope
+instanciate position brand fresh Constructor {name, syntax, entries} =
+  Constructor
+    { brand = Store brand,
+      name,
+      syntax,
+      entries = EntryInstance.instanciate position fresh <$> entries
+    }
 
 info :: ConstructorInstance s scope -> ConstructorInfo s scope
 info Constructor {entries, brand = Store brand} = case brand of

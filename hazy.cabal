@@ -207,10 +207,7 @@ executable hazy
     Semantic.Check.Go.TypeDefinition2
     Semantic.Check.LocalBinding
     Semantic.Check.Mask
-    Semantic.Check.Simple.Class
-    Semantic.Check.Simple.Constructor
     Semantic.Check.Simple.ConstructorInfo
-    Semantic.Check.Simple.Data
     Semantic.Check.Simple.EntryInfo
     Semantic.Check.Simple.MethodInfo
     Semantic.Check.Simple.Scheme

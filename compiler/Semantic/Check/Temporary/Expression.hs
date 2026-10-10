@@ -23,7 +23,6 @@ import qualified Semantic.Check.DataInstance as DataInstance
 import qualified Semantic.Check.Go.Declarations as Declarations
 import qualified Semantic.Check.Go.Definition4 as Definition4
 import Semantic.Check.Go.Scheme (Scheme)
-import qualified Semantic.Check.Simple.Data as Simple.Data
 import Semantic.Check.Simple.Scheme (instanciate)
 import Semantic.Check.Temporary.Alternative (Alternative)
 import qualified Semantic.Check.Temporary.Alternative as Alternative
@@ -185,7 +184,7 @@ check
         let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
         Builtin.index pure get typeIndex
       Data.Definition {types, constructors} <-
-        Simple.Data.instanciate context constructorPosition datax
+        DataInstance.instanciate context constructorPosition datax
       let root = Core.constructor typeIndex
           base = foldl (#) root $ case types of
             Delay (Types types) -> types
@@ -256,7 +255,7 @@ check
     datax <- do
       let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
       Builtin.index pure get updateType
-    instancex <- Simple.Data.instanciateMark context updatePosition datax
+    instancex <- DataInstance.instanciateMark context updatePosition datax
     let typex' = DataInstance.baseType instancex updateType
     Unify.unify context updatePosition typex typex'
     base <- check context typex base

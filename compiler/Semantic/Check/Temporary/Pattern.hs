@@ -20,7 +20,7 @@ import Error
   )
 import qualified Semantic.Check.ConstructorInstance as ConstructorInstance
 import Semantic.Check.Context (Context (..))
-import qualified Semantic.Check.Simple.Data as Simple.Data
+import qualified Semantic.Check.DataInstance as DataInstance
 import Semantic.Check.Temporary.ConstructorInfo (ConstructorInfo)
 import qualified Semantic.Check.Temporary.ConstructorInfo as ConstructorInfo
 import Semantic.Check.Temporary.PatternField (Field)
@@ -163,7 +163,7 @@ check context@Context {typeEnvironment} typex = \case
           let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
           Builtin.index pure get typeIndex
         Data.Definition {types, constructors} <-
-          Simple.Data.instanciate context constructorPosition datax
+          DataInstance.instanciate context constructorPosition datax
         let root = Core.constructor typeIndex
             base = foldl (#) root $ case types of
               Delay (Types types) -> types
@@ -198,7 +198,7 @@ check context@Context {typeEnvironment} typex = \case
         let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
         Builtin.index pure get typeIndex
       Data.Definition {types, constructors} <-
-        Simple.Data.instanciate context constructorPosition datax
+        DataInstance.instanciate context constructorPosition datax
       let root = Core.constructor typeIndex
           base = foldl (#) root $ case types of
             Delay (Types types) -> types

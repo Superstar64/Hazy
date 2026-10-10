@@ -2,9 +2,10 @@ module Semantic.Check.DataInstance where
 
 import Control.Monad.ST (ST)
 import Core.Instanciate (Instanciated, Store (..))
+import Core.Substitute (logicalType)
 import Core.Tree.Combinators.Delay (Delay (..))
 import Core.Tree.Constructor (ConstructorF (..))
-import Core.Tree.Data (DefinitionF (..), Types (..))
+import Core.Tree.Data (Data (..), DefinitionF (..), Types (..))
 import Core.Tree.Entry (EntryF (..))
 import Core.Tree.Type ((#), (-#>))
 import qualified Core.Tree.Type as Core
@@ -13,20 +14,64 @@ import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import qualified Data.Vector.Strict as Strict.Vector
 import Order (orderListInt')
 import Semantic.Check.ConstructorInstance (ConstructorInstance (..))
-import qualified Semantic.Check.ConstructorInstance as Constructor (info)
+import qualified Semantic.Check.ConstructorInstance as Constructor (info, instanciate)
 import qualified Semantic.Check.ConstructorInstance as ConstructorInstance
 import {-# SOURCE #-} Semantic.Check.Context (Context)
 import Semantic.Check.Temporary.SelectorInfo (Select (..), SelectorInfo (..))
 import Semantic.Check.Temporary.UpdateInfo (UpdateInfo (..))
 import qualified Semantic.Check.Temporary.UpdateInfo as UpdateInfo
 import qualified Semantic.Index.Constructor as Constructor (Index (..))
+import Semantic.Index.Local (Index (Local))
 import qualified Semantic.Index.Selector as Selector (Index (..))
 import qualified Semantic.Index.Type2 as Type2
+import Semantic.Scope (Environment ((:+)), Local)
+import Semantic.Shift (shift)
 import Semantic.Tree.Selector (Selector (..))
 import qualified Semantic.Tree.Selector as Selector (Uniform (..))
 import qualified Semantic.Unify as Unify
+import Syntax.Position (Position)
 
 type DataInstance s scope = DefinitionF Instanciated (Unify.Logical s scope) scope
+
+instanciate,
+  instanciateMark ::
+    Context s scope ->
+    Position ->
+    Data scope ->
+    ST s (DataInstance s scope)
+instanciate
+  _
+  position
+  Data
+    { parameters,
+      definition = Definition {constructors, selectors, brand}
+    } = do
+    types <- traverse (Unify.fresh . logicalType) parameters
+    let datax =
+          Definition
+            { position = Store position,
+              types = Delay (Types types),
+              selectors,
+              constructors = Constructor.instanciate position brand types <$> constructors,
+              brand
+            }
+    pure datax
+instanciateMark context position datax = do
+  datax <- instanciate context position datax
+  mark context datax
+  pure datax
+
+instanciateRigid ::
+  Context s (Local ':+ scope) ->
+  Position ->
+  Data scope ->
+  ST s (DefinitionF Instanciated (Unify.Logical s (Local ':+ scope)) (Local ':+ scope))
+instanciateRigid context position datax = do
+  definition@Definition {types} <- instanciateMark context position (shift datax)
+  let unify index typex = Unify.unify context position typex (Core.Variable $ Local index)
+  sequence $ zipWith unify [0 ..] $ case types of
+    Delay (Types types) -> toList types
+  pure definition
 
 baseType :: DataInstance s scope -> Type2.Index scope -> Unify.Type s scope
 baseType Definition {types = Delay (Types types)} typeIndex = foldl (#) (Core.constructor typeIndex) types

@@ -7,23 +7,20 @@ import Core.Temporary.Function (Function (..))
 import Core.Temporary.Pattern (Bindings (..), Pattern (..))
 import qualified Core.Temporary.Pattern as Pattern
 import Core.Temporary.RightHandSide (RightHandSide (..))
-import Core.Tree.Combinators.Delay (Delay (..))
 import qualified Core.Tree.Constructor as Constructor (ConstructorF (..))
-import Core.Tree.Data (Data, Types (..))
+import Core.Tree.Data (Data)
 import qualified Core.Tree.Data as Data
 import Core.Tree.Entry (entry)
 import qualified Core.Tree.Expression as Expression
-import qualified Core.Tree.Type as Core
 import qualified Core.Tree.TypeLambda as TypeLambda
 import Data.Foldable (toList)
 import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
 import qualified Semantic.Check.ConstructorInstance as ConstructorInstance
 import Semantic.Check.Context (Context)
-import Semantic.Check.Simple.Data (instanciateMark)
+import Semantic.Check.DataInstance (instanciateRigid)
 import qualified Semantic.Check.Temporary.ConstructorInfo as ConstructorInfo
 import qualified Semantic.Index.Constructor as Constructor (Index (..))
-import qualified Semantic.Index.Local as Local
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Scope (Environment (..), Local)
 import Semantic.Shift (shift)
@@ -41,10 +38,7 @@ equal ::
   Data scope ->
   ST s (Unify.Solve s (MethodConcrete Auto layout Check scope))
 equal context position typeIndex datax = do
-  Data.Definition {types, constructors} <- instanciateMark context position (shift datax)
-  let unify index typex = Unify.unify context position typex (Core.Variable $ Local.Local index)
-  sequence $ zipWith unify [0 ..] $ case types of
-    Delay (Types types) -> toList types
+  Data.Definition {constructors} <- instanciateRigid context position datax
   let generate index constructor@Constructor.Constructor {entries} = do
         let patterns :: Strict.Vector (Pattern scope)
             patterns = Strict.Vector.replicate (length entries) Wildcard

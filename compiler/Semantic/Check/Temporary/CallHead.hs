@@ -14,8 +14,6 @@ import qualified Semantic.Check.ClassInstance as ClassInstance
 import qualified Semantic.Check.ConstructorInstance as ConstructorInstance
 import Semantic.Check.Context (Context (..))
 import qualified Semantic.Check.DataInstance as DataInstance
-import qualified Semantic.Check.Simple.Class as Simple.Class
-import qualified Semantic.Check.Simple.Data as Simple.Data
 import Semantic.Check.Simple.MethodInfo (MethodInfo)
 import Semantic.Check.Simple.Scheme (instanciate)
 import Semantic.Check.Temporary.ConstructorInfo (ConstructorInfo)
@@ -80,7 +78,7 @@ check context@Context {typeEnvironment} typex Semantic.Constructor {constructorP
       let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
       Builtin.index pure get typeIndex
     Data.Definition {types, constructors} <-
-      Simple.Data.instanciate context constructorPosition datax
+      DataInstance.instanciate context constructorPosition datax
     let root = Core.constructor typeIndex
         base = foldl (#) root $ case types of
           Delay (Types types) -> types
@@ -98,7 +96,7 @@ check
     datax <- do
       let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
       Builtin.index pure get typeIndex
-    instancex <- Simple.Data.instanciateMark context selectorPosition datax
+    instancex <- DataInstance.instanciateMark context selectorPosition datax
     let selectorInfo = DataInstance.selectorInfo instancex selectorIndex
         typex' = DataInstance.selectorFunction instancex selector
     Unify.unify context selectorPosition typex typex'
@@ -112,7 +110,7 @@ check
         classx <- do
           let get index = assumeClass <$> TypeBinding.content (typeEnvironment Type.! index)
           Builtin.index pure get typeIndex
-        instancex <- Simple.Class.instanciate context methodPosition typeIndex classx
+        instancex <- ClassInstance.instanciate context methodPosition typeIndex classx
         let function = ClassInstance.methodFunction instancex methodIndex
             methodInfo = ClassInstance.info instancex
             Delay evidence = Class.evidence instancex

@@ -1,10 +1,17 @@
 module Semantic.Check.ClassInstance where
 
+import Control.Monad.ST (ST)
 import Core.Instanciate (Instanciated)
-import Core.Tree.Class (DefinitionF (..))
+import Core.Substitute (logicalType, substituteType)
+import Core.Tree.Class (Class (..), DefinitionF (..))
+import qualified Core.Tree.Class as Class
+import Core.Tree.Combinators.Delay (Delay (..))
 import qualified Data.Vector.Strict as Strict.Vector
+import Semantic.Check.Context (Context)
 import Semantic.Check.Simple.MethodInfo (MethodInfo (..))
+import qualified Semantic.Index.Type2 as Type2
 import qualified Semantic.Unify as Unify
+import Syntax.Position (Position)
 
 type ClassInstance s scope =
   DefinitionF
@@ -12,6 +19,29 @@ type ClassInstance s scope =
     (Unify.LogicalEvidence s scope)
     (Unify.Logical s scope)
     scope
+
+instanciate ::
+  Context s scope ->
+  Position ->
+  Type2.Index scope ->
+  Class scope ->
+  ST s (ClassInstance s scope)
+instanciate
+  context
+  position
+  index
+  Class {parameter, constraints, definition = Definition {methods}} = do
+    typex <- Unify.fresh (logicalType parameter)
+    evidence <- Unify.constrain context position index typex
+    let types = Strict.Vector.singleton typex
+    methods <- pure $ substituteType (Strict.Vector.toLazy types) <$> methods
+    pure
+      Class.Definition
+        { typex = Delay typex,
+          evidence = Delay evidence,
+          methods,
+          constraintCount = length constraints
+        }
 
 info :: ClassInstance s scope -> MethodInfo scope
 info Definition {constraintCount} = MethodInfo {constraintCount}
