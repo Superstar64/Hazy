@@ -254,7 +254,7 @@ checkBody position key Solve {solve} reflection information lookup members =
         Header {parameters, prerequisites} <- case reflection declarations of
           Standard header ::: _ -> header
           DerivedInstance header ::: _ -> header
-        Core.Class.Class {constraints, methods} <- do
+        Core.Class.Class {constraints, definition = Core.Class.Definition {methods}} <- do
           let get index = assumeClass <$> TypeBinding.content (typeEnvironment Table.Type.! index)
           Builtin.index pure get index
         extra <- do

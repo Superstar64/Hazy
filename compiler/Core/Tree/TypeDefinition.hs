@@ -61,14 +61,20 @@ simplify (_ Solved.::: Identity definition) = case definition of
     Data
       Data.Data
         { parameters = fmap typex' parameters,
-          constructors = Constructor.simplify <$> constructors,
-          selectors,
-          brand
+          definition =
+            Data.Definition
+              { constructors = Constructor.simplify <$> constructors,
+                selectors,
+                brand
+              }
         }
   Solved.Class {parameter = TypePattern {typex = Solved parameter}, constraints, methods} ->
     Class
       Class.Class
         { parameter,
           constraints = Constraint.simplify <$> constraints,
-          methods = Forall.simplify . Solved.Method.annotation <$> methods
+          definition =
+            Class.Definition
+              { methods = Forall.simplify . Solved.Method.annotation <$> methods
+              }
         }

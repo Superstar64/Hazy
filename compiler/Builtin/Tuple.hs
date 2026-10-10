@@ -1,7 +1,7 @@
 module Builtin.Tuple where
 
 import Core.Tree.Constructor (ConstructorF (..))
-import Core.Tree.Data (Data (Data))
+import Core.Tree.Data (Data (Data), DefinitionF (..))
 import qualified Core.Tree.Data as Data
 import Core.Tree.Entry (EntryF (..))
 import qualified Core.Tree.Type as Type
@@ -20,9 +20,12 @@ definition :: Int -> Data scope
 definition n =
   Data
     { parameters = Strict.Vector.replicate n Type.typex,
-      constructors = Strict.Vector.fromList $ toList set,
-      selectors = Strict.Vector.empty,
-      brand = Brand.Boxed
+      definition =
+        Definition
+          { constructors = Strict.Vector.fromList $ toList set,
+            selectors = Strict.Vector.empty,
+            brand = Brand.Boxed
+          }
     }
   where
     set = map go [minBound .. maxBound]
