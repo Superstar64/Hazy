@@ -2,6 +2,10 @@ module Semantic.Check.Temporary.CallHead where
 
 import Control.Monad.ST (ST)
 import qualified Core.Builtin as Builtin
+import qualified Core.Tree.Class as Class
+import Core.Tree.Combinators.Delay (Delay (..))
+import Core.Tree.Data (Types (..))
+import qualified Core.Tree.Data as Data
 import Core.Tree.Type ((#))
 import qualified Core.Tree.Type as Core
 import Core.Tree.TypeDeclaration (assumeClass, assumeData)
@@ -9,7 +13,6 @@ import qualified Data.Vector.Strict as Strict.Vector
 import qualified Semantic.Check.ClassInstance as ClassInstance
 import qualified Semantic.Check.ConstructorInstance as ConstructorInstance
 import Semantic.Check.Context (Context (..))
-import Semantic.Check.DataInstance (DataInstance (..))
 import qualified Semantic.Check.DataInstance as DataInstance
 import qualified Semantic.Check.Simple.Class as Simple.Class
 import qualified Semantic.Check.Simple.Data as Simple.Data
@@ -76,10 +79,11 @@ check context@Context {typeEnvironment} typex Semantic.Constructor {constructorP
     datax <- do
       let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
       Builtin.index pure get typeIndex
-    DataInstance {types, constructors} <-
+    Data.Definition {types, constructors} <-
       Simple.Data.instanciate context constructorPosition datax
     let root = Core.constructor typeIndex
-        base = foldl (#) root types
+        base = foldl (#) root $ case types of
+          Delay (Types types) -> types
         instancex = constructors Strict.Vector.! constructorIndex
         typex' = ConstructorInstance.function instancex base
         constructorInfo = ConstructorInstance.info instancex
@@ -111,7 +115,7 @@ check
         instancex <- Simple.Class.instanciate context methodPosition typeIndex classx
         let function = ClassInstance.methodFunction instancex methodIndex
             methodInfo = ClassInstance.info instancex
-            evidence = ClassInstance.evidence instancex
+            Delay evidence = Class.evidence instancex
         (typex', instanciation) <- Unify.instanciate context methodPosition function
         Unify.unify context methodPosition typex typex'
         pure Method {methodPosition, method, evidence, instanciation, methodInfo}

@@ -1,7 +1,10 @@
 module Core.Tree.Class where
 
+import Core.Instanciate (Normal)
 import qualified Core.Substitute as Substitute
+import Core.Tree.Combinators.Delay (Delay)
 import Core.Tree.Constraint (Constraint)
+import Core.Tree.Evidence (EvidenceF)
 import Core.Tree.Forall (ForallOver)
 import Core.Tree.MethodInfo (MethodInfo (..))
 import Core.Tree.Type (Type, TypeF, (-#>))
@@ -33,26 +36,38 @@ instance Substitute.Functor Class where
         definition = Substitute.map (Substitute.Over category) definition
       }
 
-type Definition = DefinitionF Void
+type Definition = DefinitionF Normal Void Void
 
-newtype DefinitionF logical scope = Definition
-  { methods :: Strict.Vector (ForallOver TypeF logical scope)
+data DefinitionF instanciate logicalEvidence logicalType scope = Definition
+  { typex :: !(Delay TypeF instanciate logicalType scope),
+    evidence :: !(Delay EvidenceF instanciate logicalEvidence scope),
+    methods :: !(Strict.Vector (ForallOver TypeF logicalType scope)),
+    constraintCount :: !Int
   }
   deriving (Show)
 
-instance Shift0.Functor (DefinitionF logical) where
+instance Shift0.Functor (DefinitionF instanciate logicalEvidence logicalType) where
   map = Shift.mapDefault
 
-instance Shift.Functor (DefinitionF logical) where
-  map category Definition {methods} =
+instance Shift.Functor (DefinitionF instanciate logicalEvidence logicalType) where
+  map category Definition {typex, evidence, methods, constraintCount} =
     Definition
-      { methods = Shift.map category <$> methods
+      { typex = Shift.map category typex,
+        evidence = Shift.map category evidence,
+        methods = Shift.map category <$> methods,
+        constraintCount
       }
 
-instance (logical ~ Void) => Substitute.Functor (DefinitionF logical) where
-  map category Definition {methods} =
+instance
+  (logicalEvidence ~ Void, logicalType ~ Void) =>
+  Substitute.Functor (DefinitionF instanciate logicalEvidence logicalType)
+  where
+  map category Definition {typex, evidence, methods, constraintCount} =
     Definition
-      { methods = Substitute.map category <$> methods
+      { typex = Substitute.map category typex,
+        evidence = Substitute.map category evidence,
+        methods = Substitute.map category <$> methods,
+        constraintCount
       }
 
 kind :: Class scope -> Type scope

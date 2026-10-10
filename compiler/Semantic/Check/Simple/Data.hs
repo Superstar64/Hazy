@@ -1,10 +1,13 @@
 module Semantic.Check.Simple.Data where
 
 import Control.Monad.ST (ST)
+import Core.Instanciate (Store (..))
 import Core.Substitute (logicalType)
-import Core.Tree.Data (Data (..), DefinitionF (..))
+import Core.Tree.Combinators.Delay (Delay (..))
+import Core.Tree.Data (Data (..), DefinitionF (..), Types (..))
+import qualified Core.Tree.Data as Data
 import {-# SOURCE #-} Semantic.Check.Context (Context)
-import Semantic.Check.DataInstance (DataInstance (DataInstance))
+import Semantic.Check.DataInstance (DataInstance)
 import qualified Semantic.Check.DataInstance as DataInstance
 import qualified Semantic.Check.Simple.Constructor as Constructor
 import qualified Semantic.Unify as Unify
@@ -20,11 +23,12 @@ instanciate
     } = do
     types <- traverse (Unify.fresh . logicalType) parameters
     let datax =
-          DataInstance
-            { position,
-              types,
+          Data.Definition
+            { position = Store position,
+              types = Delay (Types types),
               selectors,
-              constructors = Constructor.instanciate position brand types <$> constructors
+              constructors = Constructor.instanciate position brand types <$> constructors,
+              brand
             }
     pure datax
 instanciateMark context position datax = do

@@ -1,5 +1,7 @@
 module Builtin.Tuple where
 
+import Core.Instanciate (Store (Empty))
+import Core.Tree.Combinators.Delay (Delay (Here))
 import Core.Tree.Constructor (ConstructorF (..))
 import Core.Tree.Data (Data (Data), DefinitionF (..))
 import qualified Core.Tree.Data as Data
@@ -22,7 +24,9 @@ definition n =
     { parameters = Strict.Vector.replicate n Type.typex,
       definition =
         Definition
-          { constructors = Strict.Vector.fromList $ toList set,
+          { position = Empty,
+            types = Here,
+            constructors = Strict.Vector.fromList $ toList set,
             selectors = Strict.Vector.empty,
             brand = Brand.Boxed
           }
@@ -31,9 +35,11 @@ definition n =
     set = map go [minBound .. maxBound]
     go Constructor.Tuple =
       Constructor
-        { entries = Strict.Vector.generate n $ \n ->
+        { brand = Empty,
+          entries = Strict.Vector.generate n $ \n ->
             Entry
-              { entry = Type.Variable (Local.Local n),
+              { position = Empty,
+                entry = Type.Variable (Local.Local n),
                 strict = Type.Constructor Type2.Lazy
               },
           syntax = Standard,

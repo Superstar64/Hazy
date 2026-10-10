@@ -3,6 +3,9 @@ module Semantic.Check.Temporary.Pattern where
 import Control.Monad (when)
 import Control.Monad.ST (ST)
 import qualified Core.Builtin as Builtin
+import Core.Tree.Combinators.Delay (Delay (..))
+import Core.Tree.Data (Types (..))
+import qualified Core.Tree.Data as Data
 import qualified Core.Tree.Forall as Core (mono)
 import Core.Tree.Type ((#))
 import qualified Core.Tree.Type as Core (char, constructor, list, typex)
@@ -17,8 +20,6 @@ import Error
   )
 import qualified Semantic.Check.ConstructorInstance as ConstructorInstance
 import Semantic.Check.Context (Context (..))
-import Semantic.Check.DataInstance (DataInstance (DataInstance))
-import qualified Semantic.Check.DataInstance as DataInstance
 import qualified Semantic.Check.Simple.Data as Simple.Data
 import Semantic.Check.Temporary.ConstructorInfo (ConstructorInfo)
 import qualified Semantic.Check.Temporary.ConstructorInfo as ConstructorInfo
@@ -161,10 +162,11 @@ check context@Context {typeEnvironment} typex = \case
         datax <- do
           let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
           Builtin.index pure get typeIndex
-        DataInstance {types, constructors} <-
+        Data.Definition {types, constructors} <-
           Simple.Data.instanciate context constructorPosition datax
         let root = Core.constructor typeIndex
-            base = foldl (#) root types
+            base = foldl (#) root $ case types of
+              Delay (Types types) -> types
             instancex = constructors Strict.Vector.! constructorIndex
             entries = ConstructorInstance.types instancex
             constructorInfo = ConstructorInstance.info instancex
@@ -195,10 +197,11 @@ check context@Context {typeEnvironment} typex = \case
       datax <- do
         let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
         Builtin.index pure get typeIndex
-      DataInstance {types, constructors} <-
+      Data.Definition {types, constructors} <-
         Simple.Data.instanciate context constructorPosition datax
       let root = Core.constructor typeIndex
-          base = foldl (#) root types
+          base = foldl (#) root $ case types of
+            Delay (Types types) -> types
           instancex = constructors Strict.Vector.! constructorIndex
           entries = ConstructorInstance.types instancex
           constructorInfo = ConstructorInstance.info instancex

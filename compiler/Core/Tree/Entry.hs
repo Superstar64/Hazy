@@ -1,5 +1,6 @@
 module Core.Tree.Entry where
 
+import Core.Instanciate (Normal, Store (Empty))
 import qualified Core.Substitute as Substitute
 import Core.Tree.Type (TypeF)
 import qualified Core.Tree.Type as Type
@@ -11,36 +12,41 @@ import Semantic.Stage (Check)
 import Semantic.Tree.Entry (Restricted (..))
 import qualified Semantic.Tree.Entry as Solved
 import Semantic.Tree.StrictnessAnnotation (StrictnessAnnotation (..))
+import Syntax.Position (Position)
 
-type Entry = EntryF Void
+type Entry = EntryF Normal Void
 
-data EntryF logical scope = Entry
-  { entry :: !(TypeF logical scope),
+data EntryF instanciate logical scope = Entry
+  { position :: !(Store instanciate Position),
+    entry :: !(TypeF logical scope),
     strict :: !(TypeF logical scope)
   }
   deriving (Show)
 
-instance Shift0.Functor (EntryF logical) where
+instance Shift0.Functor (EntryF instanciate logical) where
   map = Shift.mapDefault
 
-instance Shift.Functor (EntryF logical) where
-  map category Entry {entry, strict} =
+instance Shift.Functor (EntryF instanciate logical) where
+  map category Entry {position, entry, strict} =
     Entry
-      { entry = Shift.map category entry,
+      { position,
+        entry = Shift.map category entry,
         strict = Shift.map category strict
       }
 
-instance (logical ~ Void) => Substitute.Functor (EntryF logical) where
-  map category Entry {entry, strict} =
+instance (logical ~ Void) => Substitute.Functor (EntryF instanciate logical) where
+  map category Entry {position, entry, strict} =
     Entry
-      { entry = Substitute.map category entry,
+      { position,
+        entry = Substitute.map category entry,
         strict = Substitute.map category strict
       }
 
 simplify :: Solved.Entry position Check scope -> Entry scope
 simplify Solved.Entry {entry = Restricted entry, strict} =
   Entry
-    { entry = Type.simplify entry,
+    { position = Empty,
+      entry = Type.simplify entry,
       strict = case strict of
         Lazy -> Type.Constructor Type2.Lazy
         Strict -> Type.Constructor Type2.Strict

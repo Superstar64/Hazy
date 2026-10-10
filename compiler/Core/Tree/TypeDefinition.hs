@@ -1,8 +1,10 @@
 module Core.Tree.TypeDefinition where
 
+import Core.Instanciate (Store (Empty))
 import qualified Core.Substitute as Substitute
 import Core.Tree.Class (Class)
 import qualified Core.Tree.Class as Class
+import Core.Tree.Combinators.Delay (Delay (Here))
 import qualified Core.Tree.Constraint as Constraint
 import qualified Core.Tree.Constructor as Constructor
 import Core.Tree.Data (Data)
@@ -63,7 +65,9 @@ simplify (_ Solved.::: Identity definition) = case definition of
         { parameters = fmap typex' parameters,
           definition =
             Data.Definition
-              { constructors = Constructor.simplify <$> constructors,
+              { position = Empty,
+                types = Here,
+                constructors = Constructor.simplify <$> constructors,
                 selectors,
                 brand
               }
@@ -75,6 +79,9 @@ simplify (_ Solved.::: Identity definition) = case definition of
           constraints = Constraint.simplify <$> constraints,
           definition =
             Class.Definition
-              { methods = Forall.simplify . Solved.Method.annotation <$> methods
+              { typex = Here,
+                evidence = Here,
+                methods = Forall.simplify . Solved.Method.annotation <$> methods,
+                constraintCount = length constraints
               }
         }

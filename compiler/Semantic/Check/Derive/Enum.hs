@@ -9,7 +9,10 @@ import Core.Temporary.Pattern (Bindings (..), Pattern (..))
 import qualified Core.Temporary.Pattern as Pattern
 import Core.Temporary.RightHandSide (RightHandSide (..))
 import qualified Core.Tree.Class as Class
-import Core.Tree.Data (Data)
+import Core.Tree.Combinators.Delay (Delay (..))
+import qualified Core.Tree.Constructor as Constructor (ConstructorF (..))
+import Core.Tree.Data (Data, Types (..))
+import qualified Core.Tree.Data as Data
 import Core.Tree.Evidence (Evidence)
 import qualified Core.Tree.Evidence as Evidence
 import Core.Tree.Expression (Expression)
@@ -24,10 +27,9 @@ import Error (derivingNonEnum)
 import Semantic.Check.ConstructorInstance (ConstructorInstance (..))
 import qualified Semantic.Check.ConstructorInstance as ConstructorInstance
 import Semantic.Check.Context (Context)
-import Semantic.Check.DataInstance (DataInstance (..))
 import Semantic.Check.Simple.Data (instanciateMark)
 import qualified Semantic.Check.Temporary.ConstructorInfo as ConstructorInfo
-import qualified Semantic.Index.Constructor as Constructor
+import qualified Semantic.Index.Constructor as Constructor (Index (..))
 import qualified Semantic.Index.Evidence as Index.Evidence
 import qualified Semantic.Index.Local as Local
 import qualified Semantic.Index.Method as Method
@@ -46,7 +48,7 @@ fromEnum' ::
   Strict.Vector (ConstructorInstance s scope) ->
   Unify.Solve s (Expression scope)
 fromEnum' typeIndex constructors = do
-  let toIntN index constructor@ConstructorInstance {entries} =
+  let toIntN index constructor@Constructor.Constructor {entries} =
         do
           info <- ConstructorInfo.solve $ ConstructorInstance.info constructor
           let patterns :: Strict.Vector (Pattern scope)
@@ -83,10 +85,10 @@ toEnum' ::
   Strict.Vector (ConstructorInstance s scope) ->
   ST s (Unify.Solve s (Expression scope))
 toEnum' _ typeIndex constructors
-  | let singleton ConstructorInstance {entries} = null entries,
+  | let singleton Constructor.Constructor {entries} = null entries,
     all singleton constructors = do
       pure $ do
-        let fromInt index constructor@ConstructorInstance {} =
+        let fromInt index constructor =
               do
                 info <- ConstructorInfo.solve $ ConstructorInstance.info constructor
                 let patternx =
@@ -136,18 +138,20 @@ fromEnum,
     Data scope ->
     ST s (Unify.Solve s (MethodConcrete Auto layout Check scope))
 fromEnum context position typeIndex datax = do
-  DataInstance {types, constructors} <- instanciateMark context position (shift datax)
+  Data.Definition {types, constructors} <- instanciateMark context position (shift datax)
   let unify index typex = Unify.unify context position typex (Core.Variable $ Local.Local index)
-  sequence $ zipWith unify [0 ..] (toList types)
+  sequence $ zipWith unify [0 ..] $ case types of
+    Delay (Types types) -> toList types
   pure $ do
     body <- do
       fromEnum <- fromEnum' (shift typeIndex) constructors
       pure fromEnum
     pure $ Generated $ Solved $ TypeLambda.mono body
 toEnum context position typeIndex datax = do
-  DataInstance {types, constructors} <- instanciateMark context position (shift datax)
+  Data.Definition {types, constructors} <- instanciateMark context position (shift datax)
   let unify index typex = Unify.unify context position typex (Core.Variable $ Local.Local index)
-  sequence $ zipWith unify [0 ..] (toList types)
+  sequence $ zipWith unify [0 ..] $ case types of
+    Delay (Types types) -> toList types
   body <- toEnum' position (shift typeIndex) constructors
   pure $ do
     body <- body
@@ -161,9 +165,10 @@ enumFromThen ::
   Data scope ->
   ST s (Unify.Solve s (MethodConcrete Auto layout Check scope))
 enumFromThen context position evidence typeIndex datax = do
-  DataInstance {types, constructors} <- instanciateMark context position (shift datax)
+  Data.Definition {types, constructors} <- instanciateMark context position (shift datax)
   let unify index typex = Unify.unify context position typex (Core.Variable $ Local.Local index)
-  sequence $ zipWith unify [0 ..] (toList types)
+  sequence $ zipWith unify [0 ..] $ case types of
+    Delay (Types types) -> toList types
   pure $ do
     minInfo <- ConstructorInfo.solve $ ConstructorInstance.info (Strict.Vector.head constructors)
     maxInfo <- ConstructorInfo.solve $ ConstructorInstance.info (Strict.Vector.last constructors)

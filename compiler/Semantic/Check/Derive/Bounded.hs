@@ -1,21 +1,22 @@
 module Semantic.Check.Derive.Bounded where
 
 import Control.Monad.ST (ST)
-import Core.Tree.Data (Data)
+import Core.Tree.Combinators.Delay (Delay (..))
+import qualified Core.Tree.Constructor as Constructor (ConstructorF (..))
+import Core.Tree.Data (Data, Types (..))
+import qualified Core.Tree.Data as Data
+import Core.Tree.Entry (entry)
 import qualified Core.Tree.Expression as Expression
 import qualified Core.Tree.Type as Core
 import qualified Core.Tree.TypeLambda as TypeLambda
 import Data.Foldable (toList)
 import qualified Data.Vector.Strict as Strict.Vector
 import Error (derivingNonEnum)
-import Semantic.Check.ConstructorInstance (ConstructorInstance (..))
 import qualified Semantic.Check.ConstructorInstance as ConstructorInstance
 import Semantic.Check.Context (Context)
-import Semantic.Check.DataInstance (DataInstance (..))
-import Semantic.Check.EntryInstance (entry)
 import Semantic.Check.Simple.Data (instanciateMark)
 import qualified Semantic.Check.Temporary.ConstructorInfo as ConstructorInfo
-import qualified Semantic.Index.Constructor as Constructor
+import qualified Semantic.Index.Constructor as Constructor (Index (..))
 import qualified Semantic.Index.Local as Local
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Scope (Environment (..), Local)
@@ -37,12 +38,13 @@ bound ::
   Data scope ->
   ST s (Unify.Solve s (MethodConcrete Auto layout Check scope))
 bound bound context position typeIndex datax = do
-  DataInstance {types, constructors} <- instanciateMark context position (shift datax)
+  Data.Definition {types, constructors} <- instanciateMark context position (shift datax)
   let unify index typex = Unify.unify context position typex (Core.Variable $ Local.Local index)
-  sequence $ zipWith unify [0 ..] (toList types)
+  sequence $ zipWith unify [0 ..] $ case types of
+    Delay (Types types) -> toList types
   body <-
     if
-      | let singleton ConstructorInstance {entries} = null entries,
+      | let singleton Constructor.Constructor {entries} = null entries,
         all singleton constructors -> do
           let constructorIndex = case bound of
                 Min -> 0
@@ -58,7 +60,7 @@ bound bound context position typeIndex datax = do
                   }
                 info
                 Strict.Vector.empty
-      | [constructor@ConstructorInstance {entries}] <- toList constructors -> do
+      | [constructor@Constructor.Constructor {entries}] <- toList constructors -> do
           evidences <- traverse (Unify.constrain context position Type2.Bounded . entry) entries
           pure $ do
             info <- ConstructorInfo.solve $ ConstructorInstance.info constructor

@@ -3,9 +3,10 @@ module Semantic.Check.Simple.Class where
 import Control.Monad.ST (ST)
 import Core.Substitute (logicalType, substituteType)
 import Core.Tree.Class (Class (..), DefinitionF (..))
+import qualified Core.Tree.Class as Class
+import Core.Tree.Combinators.Delay (Delay (..))
 import qualified Data.Vector.Strict as Strict.Vector
-import Semantic.Check.ClassInstance (ClassInstance (ClassInstance))
-import qualified Semantic.Check.ClassInstance as ClassInstance
+import Semantic.Check.ClassInstance (ClassInstance)
 import Semantic.Check.Context (Context)
 import qualified Semantic.Index.Type2 as Type2
 import qualified Semantic.Unify as Unify
@@ -27,9 +28,9 @@ instanciate
     let types = Strict.Vector.singleton typex
     methods <- pure $ substituteType (Strict.Vector.toLazy types) <$> methods
     pure
-      ClassInstance
-        { typex,
-          evidence,
+      Class.Definition
+        { typex = Delay typex,
+          evidence = Delay evidence,
           methods,
           constraintCount = length constraints
         }

@@ -1,19 +1,20 @@
 module Semantic.Check.ClassInstance where
 
-import qualified Data.Vector.Strict as Strict
+import Core.Instanciate (Instanciated)
+import Core.Tree.Class (DefinitionF (..))
 import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Simple.MethodInfo (MethodInfo (..))
 import qualified Semantic.Unify as Unify
 
-data ClassInstance s scope = ClassInstance
-  { typex :: !(Unify.Type s scope),
-    evidence :: !(Unify.Evidence s scope),
-    methods :: !(Strict.Vector (Unify.Forall s scope)),
-    constraintCount :: !Int
-  }
+type ClassInstance s scope =
+  DefinitionF
+    Instanciated
+    (Unify.LogicalEvidence s scope)
+    (Unify.Logical s scope)
+    scope
 
 info :: ClassInstance s scope -> MethodInfo scope
-info ClassInstance {constraintCount} = MethodInfo {constraintCount}
+info Definition {constraintCount} = MethodInfo {constraintCount}
 
 methodFunction :: ClassInstance s scope -> Int -> Unify.Forall s scope
-methodFunction ClassInstance {methods} index = methods Strict.Vector.! index
+methodFunction Definition {methods} index = methods Strict.Vector.! index

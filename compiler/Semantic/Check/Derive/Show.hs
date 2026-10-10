@@ -9,7 +9,11 @@ import Core.Temporary.Pattern (Bindings (..), Pattern (..))
 import qualified Core.Temporary.Pattern as Pattern
 import Core.Temporary.RightHandSide (RightHandSide (..))
 import qualified Core.Tree.Class as Class
-import Core.Tree.Data (Data)
+import Core.Tree.Combinators.Delay (Delay (..))
+import qualified Core.Tree.Constructor as Constructor (ConstructorF (..))
+import Core.Tree.Data (Data, Types (..))
+import qualified Core.Tree.Data as Data
+import Core.Tree.Entry (entry)
 import Core.Tree.EntryInfo (EntryInfo (..))
 import qualified Core.Tree.Expression as Expression
 import qualified Core.Tree.Instanciation as Instanciation
@@ -24,11 +28,8 @@ import Data.Text.Lazy (toStrict)
 import Data.Text.Lazy.Builder (Builder, fromString, fromText, toLazyText)
 import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
-import Semantic.Check.ConstructorInstance (ConstructorInstance (..))
 import qualified Semantic.Check.ConstructorInstance as ConstructorInstance
 import Semantic.Check.Context (Context)
-import Semantic.Check.DataInstance (DataInstance (..))
-import Semantic.Check.EntryInstance (entry)
 import Semantic.Check.Simple.ConstructorInfo (ConstructorInfo (..))
 import Semantic.Check.Simple.Data (instanciateMark)
 import qualified Semantic.Check.Temporary.ConstructorInfo as ConstructorInfo
@@ -95,10 +96,11 @@ showsPrec ::
   Data scope ->
   ST s (Unify.Solve s (MethodConcrete Auto layout Check scope))
 showsPrec context position typeIndex datax = do
-  DataInstance {types, constructors} <- instanciateMark context position (shift datax)
+  Data.Definition {types, constructors} <- instanciateMark context position (shift datax)
   let unify index typex = Unify.unify context position typex (Core.Variable $ Local.Local index)
-  sequence $ zipWith unify [0 ..] (toList types)
-  let generate index constructor@ConstructorInstance {name, syntax, entries} = do
+  sequence $ zipWith unify [0 ..] $ case types of
+    Delay (Types types) -> toList types
+  let generate index constructor@Constructor.Constructor {name, syntax, entries} = do
         let patterns :: Strict.Vector (Pattern scope)
             patterns = Strict.Vector.replicate (length entries) Wildcard
             types = entry <$> entries

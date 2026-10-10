@@ -39,6 +39,7 @@ executable hazy
     Builtin.Tuple
     Core.Builtin
     Core.Index.Table.Term
+    Core.Instanciate
     Core.Substitute
     Core.Temporary.Definition
     Core.Temporary.Function
@@ -46,6 +47,7 @@ executable hazy
     Core.Temporary.RightHandSide
     Core.Tree.Class
     Core.Tree.ClassExtra
+    Core.Tree.Combinators.Delay
     Core.Tree.Constraint
     Core.Tree.Constraints
     Core.Tree.Constructor
