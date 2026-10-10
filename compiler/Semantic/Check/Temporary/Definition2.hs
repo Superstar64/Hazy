@@ -2,7 +2,7 @@ module Semantic.Check.Temporary.Definition2 where
 
 import Control.Monad.ST (ST)
 import Semantic.Check.Context (Context (..))
-import Semantic.Check.Simple.Scheme (instanciate)
+import Semantic.Check.Scheme (instanciate)
 import Semantic.Check.Temporary.Definition (Definition)
 import qualified Semantic.Check.Temporary.Definition as Definition
 import Semantic.Check.Temporary.Pattern (Pattern)

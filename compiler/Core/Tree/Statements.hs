@@ -14,8 +14,8 @@ import Data.Foldable (toList)
 import Data.Strict.Vector1 as Strict.Vector1 (fromList', uncons)
 import Data.Vector.Strict ((//))
 import qualified Data.Vector.Strict as Strict.Vector
-import qualified Semantic.Check.Simple.ConstructorInfo as Semantic (ConstructorInfo (..))
-import qualified Semantic.Check.Simple.ConstructorInfo as Semantic.ConstructorInfo
+import qualified Semantic.Check.Info.Constructor as Semantic (ConstructorInfo (..))
+import qualified Semantic.Check.Info.Constructor as Semantic.ConstructorInfo
 import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Constructor as Constructor2
 import qualified Semantic.Index.Term as Term

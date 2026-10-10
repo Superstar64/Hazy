@@ -5,7 +5,7 @@ import Core.Substitute (logicalType)
 import qualified Core.Tree.Forall as Simple (ForallOver (..), simplify)
 import Semantic.Check.Context (Context)
 import qualified Semantic.Check.Mask as Mask
-import Semantic.Check.Simple.Scheme (augmentForall)
+import Semantic.Check.Scheme (augmentForall)
 import qualified Semantic.Check.Temporary.Definition as Definition
 import Semantic.Layout (Group)
 import Semantic.Shift (shift)

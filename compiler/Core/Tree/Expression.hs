@@ -37,11 +37,11 @@ import Data.Ratio (denominator, numerator)
 import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
-import qualified Semantic.Check.Simple.ConstructorInfo as Semantic (ConstructorInfo (ConstructorInfo))
-import qualified Semantic.Check.Simple.ConstructorInfo as Semantic.ConstructorInfo
-import Semantic.Check.Simple.SelectorInfo (Select (..), SelectorInfo (..))
-import Semantic.Check.Simple.UpdateInfo (Update (..))
-import qualified Semantic.Check.Simple.UpdateInfo as Semantic (UpdateInfo (..))
+import qualified Semantic.Check.Info.Constructor as Semantic (ConstructorInfo (ConstructorInfo))
+import qualified Semantic.Check.Info.Constructor as Semantic.ConstructorInfo
+import Semantic.Check.Info.Selector (Select (..), SelectorInfo (..))
+import Semantic.Check.Info.Update (Update (..))
+import qualified Semantic.Check.Info.Update as Semantic (UpdateInfo (..))
 import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Evidence as Index.Evidence
 import qualified Semantic.Index.Method as Method

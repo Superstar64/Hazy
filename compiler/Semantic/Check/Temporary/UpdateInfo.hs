@@ -2,7 +2,7 @@ module Semantic.Check.Temporary.UpdateInfo where
 
 import qualified Data.Strict.Maybe as Strict (Maybe)
 import qualified Data.Vector.Strict as Strict (Vector)
-import qualified Semantic.Check.Simple.UpdateInfo as Solved
+import qualified Semantic.Check.Info.Update as Solved
 import Semantic.Check.Temporary.ConstructorInfo (ConstructorInfo)
 import qualified Semantic.Check.Temporary.ConstructorInfo as ConstructorInfo
 import qualified Semantic.Unify as Unify

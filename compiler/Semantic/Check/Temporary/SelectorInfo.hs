@@ -2,7 +2,7 @@ module Semantic.Check.Temporary.SelectorInfo where
 
 import qualified Data.Strict.Maybe as Strict (Maybe)
 import qualified Data.Vector.Strict as Strict (Vector)
-import qualified Semantic.Check.Simple.SelectorInfo as Solved
+import qualified Semantic.Check.Info.Selector as Solved
 import Semantic.Check.Temporary.ConstructorInfo (ConstructorInfo)
 import qualified Semantic.Check.Temporary.ConstructorInfo as ConstructorInfo
 import qualified Semantic.Unify as Unify (Solve, Type, solve)

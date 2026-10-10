@@ -14,8 +14,8 @@ import qualified Semantic.Check.ClassInstance as ClassInstance
 import qualified Semantic.Check.ConstructorInstance as ConstructorInstance
 import Semantic.Check.Context (Context (..))
 import qualified Semantic.Check.DataInstance as DataInstance
-import Semantic.Check.Simple.MethodInfo (MethodInfo)
-import Semantic.Check.Simple.Scheme (instanciate)
+import Semantic.Check.Info.Method (MethodInfo)
+import Semantic.Check.Scheme (instanciate)
 import Semantic.Check.Temporary.ConstructorInfo (ConstructorInfo)
 import qualified Semantic.Check.Temporary.ConstructorInfo as ConstructorInfo
 import Semantic.Check.Temporary.SelectorInfo (SelectorInfo)

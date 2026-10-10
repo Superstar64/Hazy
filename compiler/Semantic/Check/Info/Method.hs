@@ -1,4 +1,4 @@
-module Semantic.Check.Simple.MethodInfo where
+module Semantic.Check.Info.Method where
 
 import qualified Core.Substitute as Substitute
 import Data.Kind (Type)

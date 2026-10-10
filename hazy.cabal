@@ -205,14 +205,14 @@ executable hazy
     Semantic.Check.Go.TypeDeclaration
     Semantic.Check.Go.TypeDeclarationExtra
     Semantic.Check.Go.TypeDefinition2
+    Semantic.Check.Info.Constructor
+    Semantic.Check.Info.Entry
+    Semantic.Check.Info.Method
+    Semantic.Check.Info.Selector
+    Semantic.Check.Info.Update
     Semantic.Check.LocalBinding
     Semantic.Check.Mask
-    Semantic.Check.Simple.ConstructorInfo
-    Semantic.Check.Simple.EntryInfo
-    Semantic.Check.Simple.MethodInfo
-    Semantic.Check.Simple.Scheme
-    Semantic.Check.Simple.SelectorInfo
-    Semantic.Check.Simple.UpdateInfo
+    Semantic.Check.Scheme
     Semantic.Check.Temporary.Alternative
     Semantic.Check.Temporary.Body
     Semantic.Check.Temporary.CallHead

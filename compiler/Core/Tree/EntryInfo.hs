@@ -1,3 +1,3 @@
 module Core.Tree.EntryInfo (EntryInfo (..)) where
 
-import Semantic.Check.Simple.EntryInfo (EntryInfo (..))
+import Semantic.Check.Info.Entry (EntryInfo (..))

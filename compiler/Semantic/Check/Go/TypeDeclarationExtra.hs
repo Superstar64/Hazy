@@ -9,7 +9,7 @@ import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Context (Context)
 import qualified Semantic.Check.Go.MethodAbstract as MethodAbstract
 import qualified Semantic.Check.Mask as Mask
-import Semantic.Check.Simple.Scheme (augment)
+import Semantic.Check.Scheme (augment)
 import qualified Semantic.Index.Type as Type
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Layout (Group, Normal)

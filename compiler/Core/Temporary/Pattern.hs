@@ -3,7 +3,7 @@ module Core.Temporary.Pattern where
 import Core.Tree.Evidence (Evidence)
 import qualified Data.Strict.Vector1 as Strict (Vector1)
 import qualified Data.Vector.Strict as Strict (Vector)
-import Semantic.Check.Simple.ConstructorInfo (ConstructorInfo)
+import Semantic.Check.Info.Constructor (ConstructorInfo)
 import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0

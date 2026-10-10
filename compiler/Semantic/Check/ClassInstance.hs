@@ -8,7 +8,7 @@ import qualified Core.Tree.Class as Class
 import Core.Tree.Combinators.Delay (Delay (..))
 import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Context (Context)
-import Semantic.Check.Simple.MethodInfo (MethodInfo (..))
+import Semantic.Check.Info.Method (MethodInfo (..))
 import qualified Semantic.Index.Type2 as Type2
 import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)

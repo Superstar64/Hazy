@@ -1,4 +1,4 @@
-module Semantic.Check.Simple.Scheme where
+module Semantic.Check.Scheme where
 
 import Control.Monad (zipWithM)
 import Control.Monad.ST (ST)

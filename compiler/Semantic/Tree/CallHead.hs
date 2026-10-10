@@ -3,9 +3,9 @@ module Semantic.Tree.CallHead where
 import qualified Core.Tree.Evidence as Simple (Evidence)
 import qualified Core.Tree.Instanciation as Simple (Instanciation)
 import Data.Kind (Type)
-import Semantic.Check.Simple.ConstructorInfo (ConstructorInfo)
-import Semantic.Check.Simple.MethodInfo (MethodInfo)
-import Semantic.Check.Simple.SelectorInfo (SelectorInfo)
+import Semantic.Check.Info.Constructor (ConstructorInfo)
+import Semantic.Check.Info.Method (MethodInfo)
+import Semantic.Check.Info.Selector (SelectorInfo)
 import Semantic.Connect (Connect (..))
 import Semantic.FreeVariables (FreeTermVariables (..))
 import qualified Semantic.FreeVariables as FreeVariables

@@ -29,7 +29,7 @@ import qualified Data.Vector.Strict as Strict.Vector
 import qualified Semantic.Check.ConstructorInstance as ConstructorInstance
 import Semantic.Check.Context (Context)
 import Semantic.Check.DataInstance (instanciateRigid)
-import Semantic.Check.Simple.ConstructorInfo (ConstructorInfo (..))
+import Semantic.Check.Info.Constructor (ConstructorInfo (..))
 import qualified Semantic.Check.Temporary.ConstructorInfo as ConstructorInfo
 import qualified Semantic.Index.Constructor as Constructor (Index (..), cons)
 import qualified Semantic.Index.Method as Method

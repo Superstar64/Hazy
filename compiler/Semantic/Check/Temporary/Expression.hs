@@ -23,7 +23,7 @@ import qualified Semantic.Check.DataInstance as DataInstance
 import qualified Semantic.Check.Go.Declarations as Declarations
 import qualified Semantic.Check.Go.Definition4 as Definition4
 import Semantic.Check.Go.Scheme (Scheme)
-import Semantic.Check.Simple.Scheme (instanciate)
+import Semantic.Check.Scheme (instanciate)
 import Semantic.Check.Temporary.Alternative (Alternative)
 import qualified Semantic.Check.Temporary.Alternative as Alternative
 import Semantic.Check.Temporary.CallHead (CallHead)

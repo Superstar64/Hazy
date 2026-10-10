@@ -1,7 +1,7 @@
-module Semantic.Check.Simple.ConstructorInfo where
+module Semantic.Check.Info.Constructor where
 
 import qualified Data.Vector.Strict as Strict
-import Semantic.Check.Simple.EntryInfo (EntryInfo)
+import Semantic.Check.Info.Entry (EntryInfo)
 import qualified Semantic.Scope as Scope
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0

@@ -41,7 +41,7 @@ import qualified Semantic.Check.Derive.Show as Show
 import Semantic.Check.Go.Definition4 (Solve (..))
 import qualified Semantic.Check.Go.Scheme as Scheme
 import qualified Semantic.Check.Mask as Mask
-import qualified Semantic.Check.Simple.Scheme as Core.Scheme
+import qualified Semantic.Check.Scheme as Core.Scheme
 import qualified Semantic.Check.Temporary.Constraints as Unsolved.Constraints (check, solve)
 import qualified Semantic.Check.Temporary.Definition as Definition
 import qualified Semantic.Check.Temporary.Scheme as Unsolved (augment)

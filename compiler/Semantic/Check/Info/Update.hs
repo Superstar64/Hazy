@@ -1,8 +1,8 @@
-module Semantic.Check.Simple.UpdateInfo where
+module Semantic.Check.Info.Update where
 
 import qualified Data.Strict.Maybe as Strict (Maybe)
 import qualified Data.Vector.Strict as Strict (Vector)
-import Semantic.Check.Simple.ConstructorInfo (ConstructorInfo)
+import Semantic.Check.Info.Constructor (ConstructorInfo)
 import qualified Semantic.Scope as Scope
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0

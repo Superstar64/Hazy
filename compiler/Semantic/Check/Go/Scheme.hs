@@ -6,7 +6,7 @@ import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Context (Context (..))
 import Semantic.Check.Mask (Mask)
-import Semantic.Check.Simple.Scheme (augmentNamed)
+import Semantic.Check.Scheme (augmentNamed)
 import Semantic.Scope (Environment (..), Local)
 import Semantic.Stage (Check)
 import Semantic.Tree.Constraints (Constraints)

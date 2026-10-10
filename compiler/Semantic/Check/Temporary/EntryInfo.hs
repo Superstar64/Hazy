@@ -1,6 +1,6 @@
 module Semantic.Check.Temporary.EntryInfo where
 
-import qualified Semantic.Check.Simple.EntryInfo as Solved
+import qualified Semantic.Check.Info.Entry as Solved
 import qualified Semantic.Unify as Unify (Solve, Type, solve)
 import Syntax.Position (Position)
 

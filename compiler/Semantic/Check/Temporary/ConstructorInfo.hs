@@ -1,7 +1,7 @@
 module Semantic.Check.Temporary.ConstructorInfo where
 
 import qualified Data.Vector.Strict as Strict
-import qualified Semantic.Check.Simple.ConstructorInfo as Solved
+import qualified Semantic.Check.Info.Constructor as Solved
 import Semantic.Check.Temporary.EntryInfo (EntryInfo)
 import qualified Semantic.Check.Temporary.EntryInfo as EntryInfo
 import qualified Semantic.Unify as Unify
