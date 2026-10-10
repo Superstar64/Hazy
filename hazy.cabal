@@ -183,16 +183,12 @@ executable hazy
     Javascript.Tree.Statement
     Order
     Package
-    Semantic.Check.ClassInstance
-    Semantic.Check.ConstructorInstance
     Semantic.Check.Context
-    Semantic.Check.DataInstance
     Semantic.Check.Derive.Bounded
     Semantic.Check.Derive.Enum
     Semantic.Check.Derive.Eq
     Semantic.Check.Derive.Ord
     Semantic.Check.Derive.Show
-    Semantic.Check.EntryInstance
     Semantic.Check.Go.Declaration
     Semantic.Check.Go.Declarations
     Semantic.Check.Go.Definition4
@@ -210,6 +206,10 @@ executable hazy
     Semantic.Check.Info.Method
     Semantic.Check.Info.Selector
     Semantic.Check.Info.Update
+    Semantic.Check.Instanciate.Class
+    Semantic.Check.Instanciate.Constructor
+    Semantic.Check.Instanciate.Data
+    Semantic.Check.Instanciate.Entry
     Semantic.Check.LocalBinding
     Semantic.Check.Mask
     Semantic.Check.Scheme

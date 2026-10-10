@@ -17,12 +17,12 @@ import Data.Traversable (for)
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
 import Error (unsupportedFeatureRunST)
-import qualified Semantic.Check.ConstructorInstance as ConstructorInstance
 import Semantic.Check.Context (Context (..))
-import qualified Semantic.Check.DataInstance as DataInstance
 import qualified Semantic.Check.Go.Declarations as Declarations
 import qualified Semantic.Check.Go.Definition4 as Definition4
 import Semantic.Check.Go.Scheme (Scheme)
+import qualified Semantic.Check.Instanciate.Constructor as ConstructorInstance
+import qualified Semantic.Check.Instanciate.Data as DataInstance
 import Semantic.Check.Scheme (instanciate)
 import Semantic.Check.Temporary.Alternative (Alternative)
 import qualified Semantic.Check.Temporary.Alternative as Alternative

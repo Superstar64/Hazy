@@ -18,9 +18,9 @@ import qualified Data.Vector.Strict as Strict.Vector
 import Error
   ( mismatchedConstructorArguments,
   )
-import qualified Semantic.Check.ConstructorInstance as ConstructorInstance
 import Semantic.Check.Context (Context (..))
-import qualified Semantic.Check.DataInstance as DataInstance
+import qualified Semantic.Check.Instanciate.Constructor as ConstructorInstance
+import qualified Semantic.Check.Instanciate.Data as DataInstance
 import Semantic.Check.Temporary.ConstructorInfo (ConstructorInfo)
 import qualified Semantic.Check.Temporary.ConstructorInfo as ConstructorInfo
 import Semantic.Check.Temporary.PatternField (Field)

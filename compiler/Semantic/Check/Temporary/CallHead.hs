@@ -10,11 +10,11 @@ import Core.Tree.Type ((#))
 import qualified Core.Tree.Type as Core
 import Core.Tree.TypeDeclaration (assumeClass, assumeData)
 import qualified Data.Vector.Strict as Strict.Vector
-import qualified Semantic.Check.ClassInstance as ClassInstance
-import qualified Semantic.Check.ConstructorInstance as ConstructorInstance
 import Semantic.Check.Context (Context (..))
-import qualified Semantic.Check.DataInstance as DataInstance
 import Semantic.Check.Info.Method (MethodInfo)
+import qualified Semantic.Check.Instanciate.Class as ClassInstance
+import qualified Semantic.Check.Instanciate.Constructor as ConstructorInstance
+import qualified Semantic.Check.Instanciate.Data as DataInstance
 import Semantic.Check.Scheme (instanciate)
 import Semantic.Check.Temporary.ConstructorInfo (ConstructorInfo)
 import qualified Semantic.Check.Temporary.ConstructorInfo as ConstructorInfo

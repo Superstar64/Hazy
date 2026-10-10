@@ -1,4 +1,4 @@
-module Semantic.Check.ConstructorInstance where
+module Semantic.Check.Instanciate.Constructor where
 
 import Control.Monad.ST (ST)
 import Core.Instanciate (Instanciated, Store (Store))
@@ -8,7 +8,7 @@ import Core.Tree.Type ((-#>))
 import Data.Foldable (traverse_)
 import qualified Data.Vector.Strict as Strict
 import {-# SOURCE #-} Semantic.Check.Context (Context)
-import qualified Semantic.Check.EntryInstance as EntryInstance
+import qualified Semantic.Check.Instanciate.Entry as EntryInstance
 import Semantic.Check.Temporary.ConstructorInfo (ConstructorInfo (..))
 import Semantic.Scope (Environment (..), Local)
 import qualified Semantic.Unify as Unify

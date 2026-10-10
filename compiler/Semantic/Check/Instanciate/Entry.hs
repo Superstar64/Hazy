@@ -1,4 +1,4 @@
-module Semantic.Check.EntryInstance where
+module Semantic.Check.Instanciate.Entry where
 
 import Control.Monad.ST (ST)
 import Core.Instanciate (Instanciated, Store (Store))

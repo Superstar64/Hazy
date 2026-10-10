@@ -8,7 +8,7 @@ import Core.Tree.TypeDeclaration (assumeData)
 import qualified Data.Kind
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
-import qualified Semantic.Check.DataInstance as DataInstance
+import qualified Semantic.Check.Instanciate.Data as DataInstance
 import Semantic.Check.LocalBinding (LocalBinding)
 import qualified Semantic.Check.LocalBinding as LocalBinding
 import Semantic.Check.TermBinding (TermBinding (..))

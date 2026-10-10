@@ -1,4 +1,4 @@
-module Semantic.Check.DataInstance where
+module Semantic.Check.Instanciate.Data where
 
 import Control.Monad.ST (ST)
 import Core.Instanciate (Instanciated, Store (..))
@@ -13,10 +13,10 @@ import Data.Foldable (toList, traverse_)
 import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import qualified Data.Vector.Strict as Strict.Vector
 import Order (orderListInt')
-import Semantic.Check.ConstructorInstance (ConstructorInstance (..))
-import qualified Semantic.Check.ConstructorInstance as Constructor (info, instanciate)
-import qualified Semantic.Check.ConstructorInstance as ConstructorInstance
 import {-# SOURCE #-} Semantic.Check.Context (Context)
+import Semantic.Check.Instanciate.Constructor (ConstructorInstance (..))
+import qualified Semantic.Check.Instanciate.Constructor as Constructor (info, instanciate)
+import qualified Semantic.Check.Instanciate.Constructor as ConstructorInstance
 import Semantic.Check.Temporary.SelectorInfo (Select (..), SelectorInfo (..))
 import Semantic.Check.Temporary.UpdateInfo (UpdateInfo (..))
 import qualified Semantic.Check.Temporary.UpdateInfo as UpdateInfo
