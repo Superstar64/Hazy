@@ -48,6 +48,14 @@ hazy test/run/hello/source -o .hello
 node .hello/index.mjs
 ```
 
+# Notice on Javascript Runtimes
+
+Hazy currently forwards tail recursion to the Javascript runtime. This is
+problematic because Node, does not support tail recursion and programs may
+unexpectedly stack overflow when they otherwise would have been fine. It's
+recommended to run programs that need tail recursion under [Bun](https://bun.sh)
+or [Ant](https://antjs.org).
+
 # Packages
 
 Hazy has a bare minimum package system at the moment. A package is a directory
