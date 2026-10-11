@@ -1,9 +1,8 @@
 module Generate.Go.Expression where
 
-import Control.Monad (zipWithM)
 import Control.Monad.ST (ST)
+import Core.Tree.Argument (Argument (..))
 import Core.Tree.Constraints (ConstraintsF (..))
-import Core.Tree.ConstructorInfo (ConstructorInfo (..))
 import Core.Tree.EntryInfo (EntryInfo (EntryInfo))
 import qualified Core.Tree.EntryInfo
 import Core.Tree.Expression (Expression (..))
@@ -124,11 +123,10 @@ implicit context _ function (Instanciation arguments) = do
 generateConstructor ::
   Context s scope ->
   Constructor.Index scope ->
-  Strict.Vector (Expression scope) ->
-  ConstructorInfo scope ->
+  Strict.Vector (Argument scope) ->
   ST s ([Javascript.Statement 'True], Javascript.Expression)
-generateConstructor context Constructor.Index {constructorIndex} arguments ConstructorInfo {entries} = do
-  let process EntryInfo {strict} argument =
+generateConstructor context Constructor.Index {constructorIndex} arguments = do
+  let process Argument {argument, info = EntryInfo {strict}} =
         if Info.strict strict
           then do
             (extra, value) <- generatePure context argument
@@ -136,7 +134,7 @@ generateConstructor context Constructor.Index {constructorIndex} arguments Const
           else do
             value <- thunk context Done argument
             pure ([], value)
-  (extra, arguments) <- unzip <$> zipWithM process (toList entries) (toList arguments)
+  (extra, arguments) <- unzip <$> traverse process (toList arguments)
   let tag = Javascript.Number constructorIndex
       elements = map Javascript.Literal (tag : arguments)
       fields = zip Mangle.fields elements
@@ -172,8 +170,8 @@ thunk context Done Variable {variable, instanciation = Instanciation.Mono}
       name <- symbol context name
       pure Javascript.Variable {name}
 thunk context binder expression = case expression of
-  Constructor {constructor, arguments, constructorInfo} -> do
-    (extra, value) <- generateConstructor context constructor arguments constructorInfo
+  Constructor {constructor, arguments} -> do
+    (extra, value) <- generateConstructor context constructor arguments
     if not (null extra)
       then do
         let body = extra ++ [Javascript.Expression Javascript.Assign {target = done, value}]
@@ -247,8 +245,8 @@ generateImpure context expression = case expression of
     pure (declarations ++ extra, result)
   _ -> generatePure context expression
 generatePure context expression = case expression of
-  Constructor {constructor, arguments, constructorInfo} -> do
-    generateConstructor context constructor arguments constructorInfo
+  Constructor {constructor, arguments} -> do
+    generateConstructor context constructor arguments
   Character {character} -> pure ([], generateCharacter character)
   Integer {integer} -> pure ([], generateInteger integer)
   Lambda {body} -> do
