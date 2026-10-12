@@ -3,17 +3,18 @@
 module Semantic.Tree.Pattern where
 
 import qualified Core.Tree.Evidence as Simple
+import Data.Kind (Constraint, Type)
 import Data.Map (Map)
 import qualified Data.Map as Map
 import qualified Data.Strict.Vector1 as Strict (Vector1)
 import qualified Data.Vector.Strict as Strict (Vector)
 import Semantic.Check.Info.Constructor (ConstructorInfo)
 import qualified Semantic.Index.Constructor as Constructor (Index (..))
+import Semantic.Scope (Environment)
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
+import Semantic.Stage (Stage)
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
-import Semantic.Tree.PatternField (Field (..))
-import qualified Semantic.Tree.PatternField as Field (neverFails)
 import Syntax.Position (Position)
 import Syntax.StringLiteral (StringLiteral)
 import Syntax.Variable (Variable)
@@ -139,6 +140,19 @@ instance Shift.Functor (Pattern stage) where
           items = fmap (Shift.map category) items
         }
 
+data Field stage scope = Field
+  { index :: !Int,
+    field :: !(Pattern stage scope)
+  }
+  deriving (Show)
+
+instance Shift0.Functor (Field stage) where
+  map = Shift.mapDefault
+
+instance Shift.Functor (Field stage) where
+  map category = \case
+    Field {index, field} -> Field {index, field = Shift.map category field}
+
 lazy :: Pattern stage scope -> Pattern stage scope
 lazy = \case
   Wildcard {names} -> Wildcard {names}
@@ -156,17 +170,24 @@ lazy = \case
   where
     irrefutable = Prelude.True
 
-neverFails :: Pattern stage scope -> Prelude.Bool
-neverFails = \case
-  Wildcard {} -> Prelude.True
-  patternx | irrefutable patternx -> Prelude.True
-  Constructor {single, patterns} -> single && all neverFails patterns
-  Record {single, fields} -> single && all Field.neverFails fields
-  Integer {} -> Prelude.False
-  Float {} -> Prelude.False
-  Character {} -> Prelude.False
-  String {} -> Prelude.False
-  List {} -> Prelude.False
+type NeverFails :: (Stage -> Environment -> Type) -> Constraint
+class NeverFails patternx where
+  neverFails :: patternx stage scope -> Prelude.Bool
+
+instance NeverFails Pattern where
+  neverFails = \case
+    Wildcard {} -> Prelude.True
+    patternx | irrefutable patternx -> Prelude.True
+    Constructor {single, patterns} -> single && all neverFails patterns
+    Record {single, fields} -> single && all neverFails fields
+    Integer {} -> Prelude.False
+    Float {} -> Prelude.False
+    Character {} -> Prelude.False
+    String {} -> Prelude.False
+    List {} -> Prelude.False
+
+instance NeverFails Field where
+  neverFails Field {field} = neverFails field
 
 variable :: Position -> Variable -> Pattern stage scope
 variable position name = Wildcard {names = Map.singleton name position}

@@ -236,7 +236,6 @@ executable hazy
     Semantic.Check.Temporary.Lambda
     Semantic.Check.Temporary.Method
     Semantic.Check.Temporary.Pattern
-    Semantic.Check.Temporary.PatternField
     Semantic.Check.Temporary.RightHandSide
     Semantic.Check.Temporary.Scheme
     Semantic.Check.Temporary.Select
@@ -378,7 +377,6 @@ executable hazy
     Semantic.Tree.MethodConcrete
     Semantic.Tree.Module
     Semantic.Tree.Pattern
-    Semantic.Tree.PatternField
     Semantic.Tree.RightHandSide
     Semantic.Tree.Scheme
     Semantic.Tree.Select

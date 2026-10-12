@@ -10,8 +10,8 @@ import qualified Semantic.Resolve.Binding.Constructor as Constructor (Detail (..
 import Semantic.Resolve.Context (Context (..), (!-%))
 import {-# SOURCE #-} qualified Semantic.Resolve.Go.Pattern as Pattern (resolve)
 import Semantic.Stage (Resolve)
+import Semantic.Tree.Pattern (Field (..))
 import qualified Semantic.Tree.Pattern as Pattern (variable)
-import Semantic.Tree.PatternField (Field (..))
 import Syntax.Position (Position)
 import Syntax.Tree.Marked (Marked (..))
 import qualified Syntax.Tree.PatternField as Syntax (Field (..))
@@ -38,9 +38,9 @@ resolve context binding field = case field of
           | fielded,
             Just index <- Map.lookup root fields -> case path of
               _ :. _ -> unneededFieldQualification position
-              Local -> Field index patternx
+              Local -> Field {index, field = patternx}
           | Selector.Index typex' selector <- context !-% (position :@ name),
             typex == typex',
             Strict.Just redirect <- selections Strict.Vector.! selector ->
-              Field redirect patternx
+              Field {index = redirect, field = patternx}
           | otherwise -> mismatchSelectors position

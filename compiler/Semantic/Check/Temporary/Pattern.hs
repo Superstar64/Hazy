@@ -3,6 +3,7 @@ module Semantic.Check.Temporary.Pattern where
 import Control.Monad (when)
 import Control.Monad.ST (ST)
 import qualified Core.Builtin as Builtin
+import Core.Tree.Data (TypesInfo (TypesInfo))
 import qualified Core.Tree.Data as Data
 import qualified Core.Tree.Forall as Core (mono)
 import Core.Tree.Type ((#))
@@ -23,8 +24,6 @@ import qualified Semantic.Check.Instanciate.Constructor as ConstructorInstance
 import qualified Semantic.Check.Instanciate.Data as DataInstance
 import Semantic.Check.Temporary.ConstructorInfo (ConstructorInfo)
 import qualified Semantic.Check.Temporary.ConstructorInfo as ConstructorInfo
-import Semantic.Check.Temporary.PatternField (Field)
-import qualified Semantic.Check.Temporary.PatternField as Field
 import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Table.Local as Local
 import qualified Semantic.Index.Table.Term as Term
@@ -44,7 +43,6 @@ import Syntax.StringLiteral (StringLiteral)
 import Syntax.Variable (Variable)
 import Prelude hiding (Bool (False, True))
 import qualified Prelude
-import Core.Tree.Data (TypesInfo(TypesInfo))
 
 data Pattern s scope
   = Wildcard
@@ -111,11 +109,18 @@ data Pattern s scope
         items :: !(Strict.Vector1 (Pattern s scope))
       }
 
+data Field s scope = Field
+  { index :: !Int,
+    field :: !(Pattern s scope)
+  }
+
 (!) :: Pattern s scope -> Bound -> Unify.Type s scope
 patternx ! Bound.At = typex patternx
 patternx ! Bound.Select index bound = case patternx of
   Constructor {patterns} -> patterns Strict.Vector.! index ! bound
-  Record {fields} -> fields Strict.Vector.! index Field.! bound
+  Record {fields} -> fields Strict.Vector.! index !! bound
+    where
+      Field {field} !! bound = field ! bound
   List {items} -> items Strict.Vector.! index ! bound
   Integer {} -> error "bad index"
   Float {} -> error "bad index"
@@ -139,7 +144,9 @@ augmentPattern patternx = Term.Bound {at, select}
       Wildcard {} -> Strict.Vector.empty
       List {items} -> Strict.Vector.map augmentPattern items
       Constructor {patterns} -> fmap augmentPattern patterns
-      Record {fields} -> fmap Field.augmentField fields
+      Record {fields} -> fmap augmentField fields
+        where
+          augmentField Field {field} = augmentPattern field
       Integer {} -> Strict.Vector.empty
       Float {} -> Strict.Vector.empty
       Character {} -> Strict.Vector.empty
@@ -205,9 +212,16 @@ check context@Context {typeEnvironment} typex = \case
           entries = ConstructorInstance.types instancex
           constructorInfo = ConstructorInstance.info instancex
           lookup index = entries Strict.Vector.! index
+          checkPattern Semantic.Field {index, field} = do
+            field <- check context (lookup index) field
+            pure
+              Field
+                { index,
+                  field
+                }
       ConstructorInstance.mark context instancex
       Unify.unify context constructorPosition typex base
-      fields <- traverse (Field.check context lookup) fields
+      fields <- traverse checkPattern fields
       pure $
         Record
           { typex,
@@ -272,7 +286,10 @@ solve = \case
       single,
       constructorInfo
     } -> do
-      fields <- traverse Field.solve fields
+      let solvePattern Field {index, field} = do
+            field <- solve field
+            pure $ Solved.Field {index, field}
+      fields <- traverse solvePattern fields
       constructorInfo <- ConstructorInfo.solve constructorInfo
       pure
         Solved.Record

@@ -27,8 +27,7 @@ import qualified Semantic.Scope as Scope (Pattern)
 import Semantic.Shift (shift)
 import Semantic.Stage (Resolve)
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
-import Semantic.Tree.Pattern (Pattern (..), lazy, variable)
-import Semantic.Tree.PatternField (Field (..))
+import Semantic.Tree.Pattern (Field (..), Pattern (..), lazy, variable)
 import Syntax.Position (Position)
 import Syntax.Tree.Associativity (Associativity (..))
 import Syntax.Tree.Fixity (Fixity (..))
@@ -87,7 +86,7 @@ selections patternx = Map.map single (selections patternx)
         inner = case patternx of
           Wildcard {} -> select []
           Constructor {patterns} -> select (toList patterns)
-          Record {fields} -> select [patternx | Field _ patternx <- toList fields]
+          Record {fields} -> select [field | Field {field} <- toList fields]
           Integer {} -> select []
           Float {} -> select []
           Character {} -> select []
