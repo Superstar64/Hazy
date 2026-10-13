@@ -35,6 +35,7 @@ import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope
 import Semantic.Stage (Check, Resolve)
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
+import Semantic.Tree.Pattern (Failable (Unused))
 import qualified Semantic.Tree.Pattern as Semantic
 import qualified Semantic.Tree.Pattern as Solved
 import qualified Semantic.Unify as Unify
@@ -61,14 +62,12 @@ data Bindings s scope
       { constructorPosition :: !Position,
         constructor :: !(Constructor.Index scope),
         patterns :: !(Strict.Vector (Pattern s scope)),
-        single :: !Prelude.Bool,
         constructorInfo :: !(ConstructorInfo s scope)
       }
   | Record
       { constructorPosition :: !Position,
         constructor :: !(Constructor.Index scope),
         fields :: !(Strict.Vector (Field s scope)),
-        single :: !Prelude.Bool,
         constructorInfo :: !(ConstructorInfo s scope)
       }
   | Integer
@@ -149,8 +148,7 @@ check context@Context {typeEnvironment} typex = \case
       Semantic.Constructor
         { constructorPosition,
           constructor,
-          patterns,
-          single
+          patterns
         } ->
           do
             let Constructor.Index typeIndex constructorIndex = constructor
@@ -174,14 +172,12 @@ check context@Context {typeEnvironment} typex = \case
                 { constructorPosition,
                   constructor,
                   patterns,
-                  single,
                   constructorInfo
                 }
       Semantic.Record
         { constructorPosition,
           constructor,
-          fields,
-          single
+          fields
         } -> do
           let Constructor.Index typeIndex constructorIndex = constructor
           datax <- do
@@ -211,7 +207,6 @@ check context@Context {typeEnvironment} typex = \case
               { constructorPosition,
                 constructor,
                 fields,
-                single,
                 constructorInfo
               }
       Semantic.List {startPosition, items} -> do
@@ -241,8 +236,7 @@ solve = \case
   Match {names, irrefutable, match} -> do
     match <- case match of
       Constructor
-        { single,
-          constructorPosition,
+        { constructorPosition,
           constructor,
           patterns,
           constructorInfo
@@ -254,14 +248,13 @@ solve = \case
               { constructorPosition,
                 constructor,
                 patterns,
-                single,
-                constructorInfo = Solved constructorInfo
+                constructorInfo = Solved constructorInfo,
+                failable = Unused
               }
       Record
         { constructorPosition,
           constructor,
           fields,
-          single,
           constructorInfo
         } -> do
           let solvePattern Field {index, field} = do
@@ -274,8 +267,8 @@ solve = \case
               { constructorPosition,
                 constructor,
                 fields,
-                single,
-                constructorInfo = Solved constructorInfo
+                constructorInfo = Solved constructorInfo,
+                failable = Unused
               }
       List {startPosition, items} -> do
         items <- traverse solve items

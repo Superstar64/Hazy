@@ -23,6 +23,8 @@ import qualified Semantic.Index.Type2 as Type2
 import qualified Semantic.Resolve.Binding.Constructor as Constructor (Binding, BindingF (..), Detail (..))
 import qualified Semantic.Resolve.Temporary.Partial.ConstructorDeclaration as Source
 import qualified Semantic.Resolve.Temporary.Partial.More.Constructor as More
+import Semantic.Stage (Resolve)
+import Semantic.Tree.Pattern (Failable)
 import Syntax.Extensions (Extensions (..))
 import Syntax.Position (Position)
 import Syntax.Tree.Associativity (Associativity (..))
@@ -40,7 +42,7 @@ data ConstructorDeclaration = Constructor
     selections :: !(Strict.Vector (Strict.Maybe Int)),
     unordered :: !Bool,
     fielded :: !Bool,
-    single :: !Bool
+    failable :: !(Failable Resolve)
   }
   deriving (Show)
 
@@ -60,7 +62,7 @@ merge ~Extensions {unorderedRecords, constructorFields} entries@(entry :| _) =
       selections,
       unordered,
       fielded,
-      single
+      failable
     }
   where
     position = Source.position entry
@@ -73,7 +75,7 @@ merge ~Extensions {unorderedRecords, constructorFields} entries@(entry :| _) =
         fixity = \case
           Source.Fixity {position, fixity} -> Just (position, fixity)
           _ -> Nothing
-    More.Constructor {typeIndex, constructorIndex, selections, fields, single} =
+    More.Constructor {typeIndex, constructorIndex, selections, fields, failable} =
       case mapMaybe index (toList entries) of
         [] -> missingConstructorDeclaration position
         [(_, constructor)] -> constructor
@@ -120,7 +122,7 @@ bindings index constructors = Map.map constructorIndex (indexes constructors)
               selections,
               unordered,
               fielded,
-              single
+              failable
             }
       where
         Constructor
@@ -132,5 +134,5 @@ bindings index constructors = Map.map constructorIndex (indexes constructors)
             typeIndex,
             constructorIndex,
             fielded,
-            single
+            failable
           } = constructors Strict.Vector.! vectorIndex

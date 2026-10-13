@@ -12,7 +12,7 @@ import Semantic.Resolve.Temporary.Infix (Infix (..))
 import qualified Semantic.Resolve.Temporary.Infix as Infix
 import Semantic.Stage (Resolve)
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
-import Semantic.Tree.Pattern (Pattern ())
+import Semantic.Tree.Pattern (Failable (..), Pattern ())
 import qualified Semantic.Tree.Pattern as Pattern (Bindings (..), Pattern (..))
 import Syntax.Position (Position)
 import Syntax.Tree.Associativity (Associativity (..))
@@ -53,12 +53,12 @@ fixWith = Infix.fixWith absurd operators
           irrefutable = Prelude.False,
           match =
             case index of
-              Constructor position Constructor.Binding {index, single} ->
+              Constructor position Constructor.Binding {index, failable} ->
                 Pattern.Constructor
                   { constructorPosition = position,
                     constructor = index,
                     patterns = Strict.Vector.fromList [pattern1, pattern2],
-                    single,
+                    failable,
                     constructorInfo = Inferred
                   }
               Cons constructorPosition ->
@@ -66,7 +66,7 @@ fixWith = Infix.fixWith absurd operators
                   { constructorPosition,
                     constructor = Constructor.cons,
                     patterns = Strict.Vector.fromList [pattern1, pattern2],
-                    single = False,
+                    failable = Failable,
                     constructorInfo = Inferred
                   }
         }

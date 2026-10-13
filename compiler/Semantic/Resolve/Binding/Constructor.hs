@@ -12,6 +12,8 @@ import qualified Semantic.Index.Constructor as Constructor
 import Semantic.Resolve.Functor2 (Traversable2 (..))
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
+import Semantic.Stage (Resolve)
+import Semantic.Tree.Pattern (Failable)
 import Syntax.Position (Position)
 import Syntax.Tree.Fixity (Fixity)
 import Syntax.Variable (Variable)
@@ -50,7 +52,7 @@ data Detail scope = Binding
     selections :: !(Strict.Vector (Strict.Maybe Int)),
     unordered :: !Bool,
     fielded :: !Bool,
-    single :: !Bool
+    failable :: !(Failable Resolve)
   }
   deriving (Show)
 
@@ -62,7 +64,7 @@ instance Shift0.Functor Detail where
   map = Shift.mapDefault
 
 instance Shift.Functor Detail where
-  map category Binding {index, fixity, fields, selections, unordered, fielded, single} =
+  map category Binding {index, fixity, fields, selections, unordered, fielded, failable} =
     Binding
       { index = Shift.map category index,
         fixity,
@@ -70,5 +72,5 @@ instance Shift.Functor Detail where
         selections,
         unordered,
         fielded,
-        single
+        failable
       }

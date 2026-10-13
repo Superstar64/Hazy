@@ -3,6 +3,8 @@ module Semantic.Resolve.Temporary.Partial.More.Constructor where
 import Data.Map (Map)
 import qualified Data.Strict.Maybe as Strict (Maybe)
 import qualified Data.Vector.Strict as Strict (Vector)
+import Semantic.Stage (Resolve)
+import Semantic.Tree.Pattern (Failable)
 import Syntax.Variable (Variable)
 
 data Constructor = Constructor
@@ -10,5 +12,5 @@ data Constructor = Constructor
     constructorIndex :: !Int,
     fields :: !(Map Variable Int),
     selections :: !(Strict.Vector (Strict.Maybe Int)),
-    single :: !Bool
+    failable :: !(Failable Resolve)
   }

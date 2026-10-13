@@ -27,7 +27,7 @@ import qualified Semantic.Scope as Scope (Pattern)
 import Semantic.Shift (shift)
 import Semantic.Stage (Resolve)
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
-import Semantic.Tree.Pattern (Bindings (..), Field (..), Pattern (..), lazy, variable)
+import Semantic.Tree.Pattern (Bindings (..), Failable (..), Field (..), Pattern (..), lazy, variable)
 import Syntax.Position (Position)
 import Syntax.Tree.Associativity (Associativity (..))
 import Syntax.Tree.Fixity (Fixity (..))
@@ -130,12 +130,12 @@ resolve context = \case
         match = case patternx of
           Syntax.Constructor {startPosition, constructor, patterns} ->
             case context !=~ startPosition :@ constructor of
-              _ Constructor.:@ Identity Constructor.Binding {index = constructor, single} ->
+              _ Constructor.:@ Identity Constructor.Binding {index = constructor, failable} ->
                 Constructor
                   { constructorPosition = startPosition,
                     constructor,
                     patterns = fmap (resolve context) patterns,
-                    single,
+                    failable,
                     constructorInfo = Inferred
                   }
           Syntax.Record {startPosition, constructor, fields} ->
@@ -144,14 +144,14 @@ resolve context = \case
                 Constructor.:@ Identity
                                  ( binding@Constructor.Binding
                                      { index = constructor,
-                                       single
+                                       failable
                                      }
                                    ) ->
                   Record
                     { constructorPosition = startPosition,
                       constructor,
                       fields = fmap (Field.resolve context binding) fields,
-                      single,
+                      failable,
                       constructorInfo = Inferred
                     }
           Syntax.Integer {startPosition, integer} ->
@@ -197,7 +197,7 @@ resolve context = \case
               { constructorPosition = startPosition,
                 constructor = Constructor.tuple 0,
                 patterns = Strict.Vector.empty,
-                single = Prelude.True,
+                failable = Exhaustive,
                 constructorInfo = Inferred
               }
           Syntax.Tuple {startPosition, elements} ->
@@ -205,7 +205,7 @@ resolve context = \case
               { constructorPosition = startPosition,
                 constructor = Constructor.tuple (length elements),
                 patterns = resolve context <$> elements,
-                single = Prelude.True,
+                failable = Exhaustive,
                 constructorInfo = Inferred
               }
           Syntax.List {startPosition, items}
@@ -214,7 +214,7 @@ resolve context = \case
                   { constructorPosition = startPosition,
                     constructor = Constructor.nil,
                     patterns = Strict.Vector.empty,
-                    single = Prelude.False,
+                    failable = Failable,
                     constructorInfo = Inferred
                   }
             | otherwise ->
@@ -227,7 +227,7 @@ resolve context = \case
               { constructorPosition = startPosition,
                 constructor = Constructor.cons,
                 patterns = Strict.Vector.fromList [resolve context head, resolve context tail],
-                single = Prelude.False,
+                failable = Failable,
                 constructorInfo = Inferred
               }
       }

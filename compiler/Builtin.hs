@@ -84,7 +84,7 @@ overrideConstructor
                            selections,
                            unordered,
                            fielded,
-                           single
+                           failable
                          } ->
         position
           Constructor.:@ Identity
@@ -98,7 +98,7 @@ overrideConstructor
                 selections,
                 unordered,
                 fielded,
-                single
+                failable
               }
 
 overrideType :: Type2.Index scope -> Type.Binding Global -> Type.Binding scope

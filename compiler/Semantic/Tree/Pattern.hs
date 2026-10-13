@@ -13,7 +13,7 @@ import qualified Semantic.Index.Constructor as Constructor (Index (..))
 import Semantic.Scope (Environment)
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
-import Semantic.Stage (Stage)
+import Semantic.Stage (Check, Resolve, Stage)
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import Syntax.Position (Position)
 import Syntax.StringLiteral (StringLiteral)
@@ -50,14 +50,14 @@ data Bindings stage scope
       { constructorPosition :: !Position,
         constructor :: !(Constructor.Index scope),
         patterns :: !(Strict.Vector (Pattern stage scope)),
-        single :: !Prelude.Bool,
+        failable :: !(Failable stage),
         constructorInfo :: !(Inferred ConstructorInfo stage scope)
       }
   | Record
       { constructorPosition :: !Position,
         constructor :: !(Constructor.Index scope),
         fields :: !(Strict.Vector (Field stage scope)),
-        single :: !Prelude.Bool,
+        failable :: !(Failable stage),
         constructorInfo :: !(Inferred ConstructorInfo stage scope)
       }
   | Integer
@@ -91,20 +91,20 @@ instance Shift0.Functor (Bindings stage) where
 
 instance Shift.Functor (Bindings stage) where
   map category = \case
-    Constructor {constructorPosition, constructor, patterns, single, constructorInfo} ->
+    Constructor {constructorPosition, constructor, patterns, failable, constructorInfo} ->
       Constructor
         { constructorPosition,
           constructor = Shift.map category constructor,
           patterns = fmap (Shift.map category) patterns,
-          single,
+          failable,
           constructorInfo = Shift.map category constructorInfo
         }
-    Record {constructorPosition, constructor, fields, single, constructorInfo} ->
+    Record {constructorPosition, constructor, fields, failable, constructorInfo} ->
       Record
         { constructorPosition,
           constructor = Shift.map category constructor,
           fields = fmap (Shift.map category) fields,
-          single,
+          failable,
           constructorInfo = Shift.map category constructorInfo
         }
     Integer {startPosition, integer, evidence, equal} ->
@@ -134,6 +134,17 @@ instance Shift.Functor (Bindings stage) where
           items = fmap (Shift.map category) items
         }
 
+data Failable stage where
+  Exhaustive :: Failable Resolve
+  Failable :: Failable Resolve
+  Unused :: Failable Check
+
+instance Show (Failable stage) where
+  showsPrec _ = \case
+    Exhaustive -> showString "Exhaustive"
+    Failable -> showString "Failable"
+    Unused -> showString "Unused"
+
 data Field stage scope = Field
   { index :: !Int,
     field :: !(Pattern stage scope)
@@ -154,7 +165,7 @@ lazy = \case
 
 type NeverFails :: (Stage -> Environment -> Type) -> Constraint
 class NeverFails patternx where
-  neverFails :: patternx stage scope -> Prelude.Bool
+  neverFails :: patternx Resolve scope -> Prelude.Bool
 
 instance NeverFails Pattern where
   neverFails = \case
@@ -165,8 +176,12 @@ instance NeverFails Pattern where
 
 instance NeverFails Bindings where
   neverFails = \case
-    Constructor {single, patterns} -> single && all neverFails patterns
-    Record {single, fields} -> single && all neverFails fields
+    Constructor {failable, patterns} -> case failable of
+      Exhaustive -> all neverFails patterns
+      Failable -> Prelude.False
+    Record {failable, fields} -> case failable of
+      Exhaustive -> all neverFails fields
+      Failable -> Prelude.False
     Integer {} -> Prelude.False
     Float {} -> Prelude.False
     Character {} -> Prelude.False
