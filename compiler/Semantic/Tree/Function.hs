@@ -18,7 +18,7 @@ data Function layout stage scope
       {rightHandSide :: !(RightHandSide layout stage scope)}
   | Bound
       { functionPosition :: !Position,
-        patternx :: !(Pattern stage scope),
+        patternx :: !(Pattern Position stage scope),
         function :: !(Function layout stage (Scope.Pattern ':+ scope))
       }
   deriving (Show)

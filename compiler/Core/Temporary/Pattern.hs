@@ -106,7 +106,7 @@ data Field scope = Field
   }
   deriving (Show)
 
-simplify :: Semantic.Pattern Check scope -> Pattern scope
+simplify :: Semantic.Pattern position Check scope -> Pattern scope
 simplify = \case
   Semantic.Wildcard {} -> Wildcard
   Semantic.Match {irrefutable, match} ->
@@ -145,5 +145,5 @@ simplify = \case
           Semantic.String {string} -> String {string}
       }
 
-resolveField :: Semantic.Field Check scope -> Field scope
+resolveField :: Semantic.Field position Check scope -> Field scope
 resolveField Semantic.Field {index, field} = Field {index, field = simplify field}

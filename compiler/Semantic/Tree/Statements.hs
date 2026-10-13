@@ -39,7 +39,7 @@ data Statements syntax layout stage scope
   | Bind
       { startPosition :: !Position,
         evidence :: !(Inferred (Evidence syntax) stage scope),
-        patternx :: !(Pattern stage scope),
+        patternx :: !(Pattern Position stage scope),
         effect :: !(Expression layout stage scope),
         thenx :: !(Statements syntax layout stage (Scope.Pattern ':+ scope)),
         fail :: !Bool

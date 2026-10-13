@@ -91,7 +91,7 @@ data Choice stage scope = Choice
     index :: !(Term.Index scope),
     instanciation :: !(Inferred.Inferred Simple.Instanciation stage scope),
     bound :: !Term.Bound,
-    patternx :: Pattern stage scope
+    patternx :: Pattern Position stage scope
   }
   deriving (Show)
 

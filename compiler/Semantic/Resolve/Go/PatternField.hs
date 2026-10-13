@@ -21,7 +21,7 @@ resolve ::
   Context scope ->
   Constructor.Detail scope ->
   Syntax.Field Position ->
-  Field Resolve scope
+  Field Position Resolve scope
 resolve context binding field = case field of
   Syntax.Field {variable, patternx} ->
     make variable (Pattern.resolve context patternx)

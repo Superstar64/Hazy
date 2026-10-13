@@ -18,6 +18,10 @@ type role Index nominal
 type Index :: Environment -> Type
 data Index scope
 
-resolve :: Context scope -> Syntax.Infix Position -> Infix Void (Index scope) (Pattern Resolve scope)
-fixWith :: Maybe Associativity -> Int -> Infix Void (Index scope) (Pattern Resolve scope) -> Pattern Resolve scope
-fix :: Infix Void (Index scope) (Pattern Resolve scope) -> Pattern Resolve scope
+resolve :: Context scope -> Syntax.Infix Position -> Infix Void (Index scope) (Pattern Position Resolve scope)
+fixWith ::
+  Maybe Associativity ->
+  Int ->
+  Infix Void (Index scope) (Pattern Position Resolve scope) ->
+  Pattern Position Resolve scope
+fix :: Infix Void (Index scope) (Pattern Position Resolve scope) -> Pattern Position Resolve scope

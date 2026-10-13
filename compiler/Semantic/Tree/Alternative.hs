@@ -9,10 +9,11 @@ import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
 import Semantic.Tree.Pattern (Pattern)
 import Semantic.Tree.RightHandSide (RightHandSide)
+import Syntax.Position (Position)
 
 data Alternative layout stage scope
   = Alternative
-  { parameter :: !(Pattern stage scope),
+  { parameter :: !(Pattern Position stage scope),
     rightHandSide :: !(RightHandSide layout stage (Scope.Pattern ':+ scope))
   }
   deriving (Show)

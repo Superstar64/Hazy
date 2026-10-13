@@ -32,7 +32,10 @@ instance Infix.Token (Index scope) where
     Constructor _ Constructor.Binding {fixity} -> fixity
     Cons _ -> Fixity {associativity = Right, precedence = 5}
 
-resolve :: Context scope -> Syntax.Infix Position -> Infix Void (Index scope) (Pattern Resolve scope)
+resolve ::
+  Context scope ->
+  Syntax.Infix Position ->
+  Infix Void (Index scope) (Pattern Position Resolve scope)
 resolve context = \case
   Syntax.Pattern {patternx} -> Single (Pattern.resolve context patternx)
   Syntax.Infix {left, operator, operatorPosition, right}
@@ -44,7 +47,11 @@ resolve context = \case
   Syntax.InfixCons {left, operatorPosition, right} ->
     Infix (Pattern.resolve context left) (Cons operatorPosition) (resolve context right)
 
-fixWith :: Maybe Associativity -> Int -> Infix Void (Index scope) (Pattern Resolve scope) -> Pattern Resolve scope
+fixWith ::
+  Maybe Associativity ->
+  Int ->
+  Infix Void (Index scope) (Pattern Position Resolve scope) ->
+  Pattern Position Resolve scope
 fixWith = Infix.fixWith absurd operators
   where
     operators pattern1 index pattern2 =
@@ -71,5 +78,5 @@ fixWith = Infix.fixWith absurd operators
                   }
         }
 
-fix :: Infix Void (Index scope) (Pattern Resolve scope) -> Pattern Resolve scope
+fix :: Infix Void (Index scope) (Pattern Position Resolve scope) -> Pattern Position Resolve scope
 fix = fixWith Nothing 0

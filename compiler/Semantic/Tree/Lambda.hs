@@ -19,7 +19,7 @@ data Lambda layout stage scope
       }
   | Bound
       { boundPosition :: !Position,
-        parameter :: !(Pattern stage scope),
+        parameter :: !(Pattern Position stage scope),
         body :: !(Lambda layout stage (Scope.Pattern ':+ scope))
       }
   deriving (Show)

@@ -140,7 +140,11 @@ augmentPattern patternx = Term.Bound {at, select}
         Character {} -> Strict.Vector.empty
         String {} -> Strict.Vector.empty
 
-check :: Context s scope -> Unify.Type s scope -> Semantic.Pattern Resolve scope -> ST s (Pattern s scope)
+check ::
+  Context s scope ->
+  Unify.Type s scope ->
+  Semantic.Pattern Position Resolve scope ->
+  ST s (Pattern s scope)
 check context@Context {typeEnvironment} typex = \case
   Semantic.Wildcard {names} -> pure Wildcard {typex, names}
   Semantic.Match {names, irrefutable, match} -> do
@@ -230,7 +234,7 @@ check context@Context {typeEnvironment} typex = \case
         pure Float {startPosition, float, evidence, equal}
     pure Match {typex, names, irrefutable, match}
 
-solve :: Pattern s scope -> Unify.Solve s (Solved.Pattern Check scope)
+solve :: Pattern s scope -> Unify.Solve s (Solved.Pattern Position Check scope)
 solve = \case
   Wildcard {names} -> pure Solved.Wildcard {names}
   Match {names, irrefutable, match} -> do
