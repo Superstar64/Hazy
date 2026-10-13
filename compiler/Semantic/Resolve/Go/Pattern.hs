@@ -27,7 +27,7 @@ import qualified Semantic.Scope as Scope (Pattern)
 import Semantic.Shift (shift)
 import Semantic.Stage (Resolve)
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
-import Semantic.Tree.Pattern (Field (..), Pattern (..), lazy, variable)
+import Semantic.Tree.Pattern (Bindings (..), Field (..), Pattern (..), lazy, variable)
 import Syntax.Position (Position)
 import Syntax.Tree.Associativity (Associativity (..))
 import Syntax.Tree.Fixity (Fixity (..))
@@ -85,13 +85,14 @@ selections patternx = Map.map single (selections patternx)
             pick patternx i = (Map.map . map) (\(position, x) -> (position, Term.Select i x)) (selections patternx)
         inner = case patternx of
           Wildcard {} -> select []
-          Constructor {patterns} -> select (toList patterns)
-          Record {fields} -> select [field | Field {field} <- toList fields]
-          Integer {} -> select []
-          Float {} -> select []
-          Character {} -> select []
-          String {} -> select []
-          List {items} -> select (toList items)
+          Match {match} -> case match of
+            Constructor {patterns} -> select (toList patterns)
+            Record {fields} -> select [field | Field {field} <- toList fields]
+            Integer {} -> select []
+            Float {} -> select []
+            Character {} -> select []
+            String {} -> select []
+            List {items} -> select (toList items)
 
 resolve :: Context scope -> Syntax.Pattern Position -> Pattern Resolve scope
 resolve context = \case
@@ -100,6 +101,7 @@ resolve context = \case
     let pre = resolve context patternx
      in pre {names = Map.insert variable position (names pre)}
   Syntax.Wildcard {} -> Wildcard {names = Map.empty}
+  Syntax.Irrefutable {patternx} -> lazy (resolve context patternx)
   Syntax.Infix {startPosition, left, operator, operatorPosition, right} ->
     Infix.fix $
       Infix.resolve
@@ -121,132 +123,111 @@ resolve context = \case
             operatorPosition,
             right
           }
-  Syntax.Irrefutable {patternx} -> lazy (resolve context patternx)
-  Syntax.Constructor {startPosition, constructor, patterns} ->
-    case context !=~ startPosition :@ constructor of
-      _ Constructor.:@ Identity Constructor.Binding {index = constructor, single} ->
-        Constructor
-          { names = Map.empty,
-            irrefutable = Prelude.False,
-            constructorPosition = startPosition,
-            constructor,
-            patterns = fmap (resolve context) patterns,
-            single,
-            constructorInfo = Inferred
-          }
-  Syntax.Record {startPosition, constructor, fields} ->
-    case context != startPosition :@ constructor of
-      _
-        Constructor.:@ Identity
-                         ( binding@Constructor.Binding
-                             { index = constructor,
-                               single
-                             }
-                           ) ->
-          Record
-            { names = Map.empty,
-              irrefutable = Prelude.False,
-              constructorPosition = startPosition,
-              constructor,
-              fields = fmap (Field.resolve context binding) fields,
-              single,
-              constructorInfo = Inferred
-            }
-  Syntax.Integer {startPosition, integer} ->
-    Integer
+  patternx ->
+    Match
       { names = Map.empty,
         irrefutable = Prelude.False,
-        startPosition,
-        integer,
-        evidence = Inferred,
-        equal = Inferred
-      }
-  Syntax.Float {startPosition, float} ->
-    Float
-      { names = Map.empty,
-        irrefutable = Prelude.False,
-        startPosition,
-        float,
-        evidence = Inferred,
-        equal = Inferred
-      }
-  Syntax.NegativeInteger {startPosition, integer} ->
-    Integer
-      { names = Map.empty,
-        irrefutable = Prelude.False,
-        startPosition,
-        integer = -integer,
-        evidence = Inferred,
-        equal = Inferred
-      }
-  Syntax.NegativeFloat {startPosition, float} ->
-    Float
-      { names = Map.empty,
-        irrefutable = Prelude.False,
-        startPosition,
-        float = -float,
-        evidence = Inferred,
-        equal = Inferred
-      }
-  Syntax.Character {startPosition, character} ->
-    Character
-      { names = Map.empty,
-        irrefutable = Prelude.False,
-        startPosition,
-        character
-      }
-  Syntax.String {startPosition, string} ->
-    String
-      { names = Map.empty,
-        irrefutable = Prelude.False,
-        startPosition,
-        string
-      }
-  Syntax.Unit {startPosition} ->
-    Constructor
-      { names = Map.empty,
-        irrefutable = Prelude.False,
-        constructorPosition = startPosition,
-        constructor = Constructor.tuple 0,
-        patterns = Strict.Vector.empty,
-        single = Prelude.True,
-        constructorInfo = Inferred
-      }
-  Syntax.Tuple {startPosition, elements} ->
-    Constructor
-      { names = Map.empty,
-        irrefutable = Prelude.False,
-        constructorPosition = startPosition,
-        constructor = Constructor.tuple (length elements),
-        patterns = resolve context <$> elements,
-        single = Prelude.True,
-        constructorInfo = Inferred
-      }
-  Syntax.List {startPosition, items}
-    | null items ->
-        Constructor
-          { names = Map.empty,
-            irrefutable = Prelude.False,
-            constructorPosition = startPosition,
-            constructor = Constructor.nil,
-            patterns = Strict.Vector.empty,
-            single = Prelude.False,
-            constructorInfo = Inferred
-          }
-    | otherwise ->
-        List
-          { names = Map.empty,
-            irrefutable = Prelude.False,
-            startPosition,
-            items = fmap (resolve context) items
-          }
-  Syntax.Cons {startPosition, head, tail} ->
-    Constructor
-      { names = Map.empty,
-        irrefutable = Prelude.False,
-        constructorPosition = startPosition,
-        constructor = Constructor.cons,
-        patterns = Strict.Vector.fromList [resolve context head, resolve context tail],
-        single = Prelude.False,
-        constructorInfo = Inferred
+        match = case patternx of
+          Syntax.Constructor {startPosition, constructor, patterns} ->
+            case context !=~ startPosition :@ constructor of
+              _ Constructor.:@ Identity Constructor.Binding {index = constructor, single} ->
+                Constructor
+                  { constructorPosition = startPosition,
+                    constructor,
+                    patterns = fmap (resolve context) patterns,
+                    single,
+                    constructorInfo = Inferred
+                  }
+          Syntax.Record {startPosition, constructor, fields} ->
+            case context != startPosition :@ constructor of
+              _
+                Constructor.:@ Identity
+                                 ( binding@Constructor.Binding
+                                     { index = constructor,
+                                       single
+                                     }
+                                   ) ->
+                  Record
+                    { constructorPosition = startPosition,
+                      constructor,
+                      fields = fmap (Field.resolve context binding) fields,
+                      single,
+                      constructorInfo = Inferred
+                    }
+          Syntax.Integer {startPosition, integer} ->
+            Integer
+              { startPosition,
+                integer,
+                evidence = Inferred,
+                equal = Inferred
+              }
+          Syntax.Float {startPosition, float} ->
+            Float
+              { startPosition,
+                float,
+                evidence = Inferred,
+                equal = Inferred
+              }
+          Syntax.NegativeInteger {startPosition, integer} ->
+            Integer
+              { startPosition,
+                integer = -integer,
+                evidence = Inferred,
+                equal = Inferred
+              }
+          Syntax.NegativeFloat {startPosition, float} ->
+            Float
+              { startPosition,
+                float = -float,
+                evidence = Inferred,
+                equal = Inferred
+              }
+          Syntax.Character {startPosition, character} ->
+            Character
+              { startPosition,
+                character
+              }
+          Syntax.String {startPosition, string} ->
+            String
+              { startPosition,
+                string
+              }
+          Syntax.Unit {startPosition} ->
+            Constructor
+              { constructorPosition = startPosition,
+                constructor = Constructor.tuple 0,
+                patterns = Strict.Vector.empty,
+                single = Prelude.True,
+                constructorInfo = Inferred
+              }
+          Syntax.Tuple {startPosition, elements} ->
+            Constructor
+              { constructorPosition = startPosition,
+                constructor = Constructor.tuple (length elements),
+                patterns = resolve context <$> elements,
+                single = Prelude.True,
+                constructorInfo = Inferred
+              }
+          Syntax.List {startPosition, items}
+            | null items ->
+                Constructor
+                  { constructorPosition = startPosition,
+                    constructor = Constructor.nil,
+                    patterns = Strict.Vector.empty,
+                    single = Prelude.False,
+                    constructorInfo = Inferred
+                  }
+            | otherwise ->
+                List
+                  { startPosition,
+                    items = fmap (resolve context) items
+                  }
+          Syntax.Cons {startPosition, head, tail} ->
+            Constructor
+              { constructorPosition = startPosition,
+                constructor = Constructor.cons,
+                patterns = Strict.Vector.fromList [resolve context head, resolve context tail],
+                single = Prelude.False,
+                constructorInfo = Inferred
+              }
       }

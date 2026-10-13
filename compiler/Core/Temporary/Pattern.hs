@@ -109,9 +109,10 @@ data Field scope = Field
 simplify :: Semantic.Pattern Check scope -> Pattern scope
 simplify = \case
   Semantic.Wildcard {} -> Wildcard
-  patternx ->
+  Semantic.Match {irrefutable, match} ->
     Match
-      { match = case patternx of
+      { irrefutable,
+        match = case match of
           Semantic.Constructor {constructor, patterns, constructorInfo = Solved constructorInfo} ->
             Constructor
               { constructor,
@@ -141,8 +142,7 @@ simplify = \case
                 equal
               }
           Semantic.Character {character} -> Character {character}
-          Semantic.String {string} -> String {string},
-        irrefutable = Semantic.irrefutable patternx
+          Semantic.String {string} -> String {string}
       }
 
 resolveField :: Semantic.Field Check scope -> Field scope

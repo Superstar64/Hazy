@@ -46,66 +46,53 @@ import qualified Prelude
 
 data Pattern s scope
   = Wildcard
-      { typex :: !(Unify.Type s scope),
-        names :: !(Map Variable Position)
+      { names :: !(Map Variable Position),
+        typex :: !(Unify.Type s scope)
       }
-  | Constructor
-      { typex :: !(Unify.Type s scope),
-        constructorPosition :: !Position,
-        names :: !(Map Variable Position),
+  | Match
+      { names :: !(Map Variable Position),
+        typex :: !(Unify.Type s scope),
         irrefutable :: !Prelude.Bool,
+        match :: !(Bindings s scope)
+      }
+
+data Bindings s scope
+  = Constructor
+      { constructorPosition :: !Position,
         constructor :: !(Constructor.Index scope),
         patterns :: !(Strict.Vector (Pattern s scope)),
         single :: !Prelude.Bool,
         constructorInfo :: !(ConstructorInfo s scope)
       }
   | Record
-      { typex :: !(Unify.Type s scope),
-        constructorPosition :: !Position,
-        names :: !(Map Variable Position),
-        irrefutable :: !Prelude.Bool,
+      { constructorPosition :: !Position,
         constructor :: !(Constructor.Index scope),
         fields :: !(Strict.Vector (Field s scope)),
         single :: !Prelude.Bool,
         constructorInfo :: !(ConstructorInfo s scope)
       }
   | Integer
-      { typex :: !(Unify.Type s scope),
-        names :: !(Map Variable Position),
-        irrefutable :: !Prelude.Bool,
-        startPosition :: !Position,
+      { startPosition :: !Position,
         integer :: !Integer,
         evidence :: !(Unify.Evidence s scope),
         equal :: !(Unify.Evidence s scope)
       }
   | Float
-      { typex :: !(Unify.Type s scope),
-        names :: !(Map Variable Position),
-        irrefutable :: !Prelude.Bool,
-        startPosition :: !Position,
+      { startPosition :: !Position,
         float :: !Rational,
         evidence :: !(Unify.Evidence s scope),
         equal :: !(Unify.Evidence s scope)
       }
   | Character
-      { typex :: !(Unify.Type s scope),
-        names :: !(Map Variable Position),
-        startPosition :: !Position,
-        irrefutable :: !Prelude.Bool,
+      { startPosition :: !Position,
         character :: !Char
       }
   | String
-      { typex :: !(Unify.Type s scope),
-        names :: !(Map Variable Position),
-        startPosition :: !Position,
-        irrefutable :: !Prelude.Bool,
+      { startPosition :: !Position,
         string :: !StringLiteral
       }
   | List
-      { typex :: !(Unify.Type s scope),
-        names :: !(Map Variable Position),
-        startPosition :: !Position,
-        irrefutable :: !Prelude.Bool,
+      { startPosition :: !Position,
         items :: !(Strict.Vector1 (Pattern s scope))
       }
 
@@ -117,16 +104,17 @@ data Field s scope = Field
 (!) :: Pattern s scope -> Bound -> Unify.Type s scope
 patternx ! Bound.At = typex patternx
 patternx ! Bound.Select index bound = case patternx of
-  Constructor {patterns} -> patterns Strict.Vector.! index ! bound
-  Record {fields} -> fields Strict.Vector.! index !! bound
-    where
-      Field {field} !! bound = field ! bound
-  List {items} -> items Strict.Vector.! index ! bound
-  Integer {} -> error "bad index"
-  Float {} -> error "bad index"
-  Character {} -> error "bad index"
-  String {} -> error "bad index"
   Wildcard {} -> error "bad index"
+  Match {match} -> case match of
+    Constructor {patterns} -> patterns Strict.Vector.! index ! bound
+    Record {fields} -> fields Strict.Vector.! index !! bound
+      where
+        Field {field} !! bound = field ! bound
+    List {items} -> items Strict.Vector.! index ! bound
+    Integer {} -> error "bad index"
+    Float {} -> error "bad index"
+    Character {} -> error "bad index"
+    String {} -> error "bad index"
 
 augment :: Pattern s scope -> Context s scope -> Context s (Scope.Pattern ':+ scope)
 augment patternx Context {termEnvironment, localEnvironment, typeEnvironment} =
@@ -142,205 +130,186 @@ augmentPattern patternx = Term.Bound {at, select}
     at = TermBinding $ pure $ Wobbly (shiftLogical (Core.mono $ typex patternx))
     select = case patternx of
       Wildcard {} -> Strict.Vector.empty
-      List {items} -> Strict.Vector.map augmentPattern items
-      Constructor {patterns} -> fmap augmentPattern patterns
-      Record {fields} -> fmap augmentField fields
-        where
-          augmentField Field {field} = augmentPattern field
-      Integer {} -> Strict.Vector.empty
-      Float {} -> Strict.Vector.empty
-      Character {} -> Strict.Vector.empty
-      String {} -> Strict.Vector.empty
+      Match {match} -> case match of
+        List {items} -> Strict.Vector.map augmentPattern items
+        Constructor {patterns} -> fmap augmentPattern patterns
+        Record {fields} -> fmap augmentField fields
+          where
+            augmentField Field {field} = augmentPattern field
+        Integer {} -> Strict.Vector.empty
+        Float {} -> Strict.Vector.empty
+        Character {} -> Strict.Vector.empty
+        String {} -> Strict.Vector.empty
 
 check :: Context s scope -> Unify.Type s scope -> Semantic.Pattern Resolve scope -> ST s (Pattern s scope)
 check context@Context {typeEnvironment} typex = \case
   Semantic.Wildcard {names} -> pure Wildcard {typex, names}
-  Semantic.Constructor
-    { irrefutable,
-      constructorPosition,
-      constructor,
-      patterns,
-      names,
-      single
-    } ->
-      do
-        let Constructor.Index typeIndex constructorIndex = constructor
-        datax <- do
-          let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
-          Builtin.index pure get typeIndex
-        Data.Definition {types, constructors} <-
-          DataInstance.instanciate context constructorPosition datax
-        let root = Core.constructor typeIndex
-            base = foldl (#) root $ case types of
-              TypesInfo types -> types
-            instancex = constructors Strict.Vector.! constructorIndex
-            entries = ConstructorInstance.types instancex
-            constructorInfo = ConstructorInstance.info instancex
-        ConstructorInstance.mark context instancex
-        Unify.unify context constructorPosition typex base
-        when (length entries /= length patterns) $ mismatchedConstructorArguments constructorPosition
-        patterns <- sequence $ Strict.Vector.zipWith (check context) entries patterns
-        pure $
-          Constructor
-            { typex,
-              constructorPosition,
-              names,
-              irrefutable,
-              constructor,
-              patterns,
-              single,
-              constructorInfo
-            }
-  Semantic.Record
-    { irrefutable,
-      constructorPosition,
-      constructor,
-      fields,
-      names,
-      single
-    } -> do
-      let Constructor.Index typeIndex constructorIndex = constructor
-      datax <- do
-        let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
-        Builtin.index pure get typeIndex
-      Data.Definition {types, constructors} <-
-        DataInstance.instanciate context constructorPosition datax
-      let root = Core.constructor typeIndex
-          base = foldl (#) root $ case types of
-            TypesInfo types -> types
-          instancex = constructors Strict.Vector.! constructorIndex
-          entries = ConstructorInstance.types instancex
-          constructorInfo = ConstructorInstance.info instancex
-          lookup index = entries Strict.Vector.! index
-          checkPattern Semantic.Field {index, field} = do
-            field <- check context (lookup index) field
-            pure
-              Field
-                { index,
-                  field
+  Semantic.Match {names, irrefutable, match} -> do
+    match <- case match of
+      Semantic.Constructor
+        { constructorPosition,
+          constructor,
+          patterns,
+          single
+        } ->
+          do
+            let Constructor.Index typeIndex constructorIndex = constructor
+            datax <- do
+              let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
+              Builtin.index pure get typeIndex
+            Data.Definition {types, constructors} <-
+              DataInstance.instanciate context constructorPosition datax
+            let root = Core.constructor typeIndex
+                base = foldl (#) root $ case types of
+                  TypesInfo types -> types
+                instancex = constructors Strict.Vector.! constructorIndex
+                entries = ConstructorInstance.types instancex
+                constructorInfo = ConstructorInstance.info instancex
+            ConstructorInstance.mark context instancex
+            Unify.unify context constructorPosition typex base
+            when (length entries /= length patterns) $ mismatchedConstructorArguments constructorPosition
+            patterns <- sequence $ Strict.Vector.zipWith (check context) entries patterns
+            pure $
+              Constructor
+                { constructorPosition,
+                  constructor,
+                  patterns,
+                  single,
+                  constructorInfo
                 }
-      ConstructorInstance.mark context instancex
-      Unify.unify context constructorPosition typex base
-      fields <- traverse checkPattern fields
-      pure $
-        Record
-          { typex,
-            names,
-            constructorPosition,
-            irrefutable,
-            constructor,
-            fields,
-            single,
-            constructorInfo
-          }
-  Semantic.List {irrefutable, names, startPosition, items} -> do
-    element <- Unify.fresh Core.typex
-    items <- traverse (check context element) items
-    Unify.unify context startPosition typex (Core.list element)
-    pure $ List {typex, names, startPosition, irrefutable, items}
-  Semantic.Character {irrefutable, names, startPosition, character} -> do
-    Unify.unify context startPosition typex Core.char
-    pure $ Character {typex, names, startPosition, irrefutable, character}
-  Semantic.String {irrefutable, names, startPosition, string} -> do
-    Unify.unify context startPosition typex (Core.list Core.char)
-    pure $ String {typex, names, startPosition, irrefutable, string}
-  Semantic.Integer {irrefutable, names, startPosition, integer} -> do
-    evidence <- Unify.constrain context startPosition Type2.Num typex
-    equal <- Unify.constrain context startPosition Type2.Eq typex
-    pure Integer {typex, names, irrefutable, startPosition, integer, evidence, equal}
-  Semantic.Float {irrefutable, names, startPosition, float} -> do
-    evidence <- Unify.constrain context startPosition Type2.Fractional typex
-    equal <- Unify.constrain context startPosition Type2.Eq typex
-    pure Float {typex, names, irrefutable, startPosition, float, evidence, equal}
+      Semantic.Record
+        { constructorPosition,
+          constructor,
+          fields,
+          single
+        } -> do
+          let Constructor.Index typeIndex constructorIndex = constructor
+          datax <- do
+            let get index = assumeData <$> TypeBinding.content (typeEnvironment Type.! index)
+            Builtin.index pure get typeIndex
+          Data.Definition {types, constructors} <-
+            DataInstance.instanciate context constructorPosition datax
+          let root = Core.constructor typeIndex
+              base = foldl (#) root $ case types of
+                TypesInfo types -> types
+              instancex = constructors Strict.Vector.! constructorIndex
+              entries = ConstructorInstance.types instancex
+              constructorInfo = ConstructorInstance.info instancex
+              lookup index = entries Strict.Vector.! index
+              checkPattern Semantic.Field {index, field} = do
+                field <- check context (lookup index) field
+                pure
+                  Field
+                    { index,
+                      field
+                    }
+          ConstructorInstance.mark context instancex
+          Unify.unify context constructorPosition typex base
+          fields <- traverse checkPattern fields
+          pure $
+            Record
+              { constructorPosition,
+                constructor,
+                fields,
+                single,
+                constructorInfo
+              }
+      Semantic.List {startPosition, items} -> do
+        element <- Unify.fresh Core.typex
+        items <- traverse (check context element) items
+        Unify.unify context startPosition typex (Core.list element)
+        pure $ List {startPosition, items}
+      Semantic.Character {startPosition, character} -> do
+        Unify.unify context startPosition typex Core.char
+        pure $ Character {startPosition, character}
+      Semantic.String {startPosition, string} -> do
+        Unify.unify context startPosition typex (Core.list Core.char)
+        pure $ String {startPosition, string}
+      Semantic.Integer {startPosition, integer} -> do
+        evidence <- Unify.constrain context startPosition Type2.Num typex
+        equal <- Unify.constrain context startPosition Type2.Eq typex
+        pure Integer {startPosition, integer, evidence, equal}
+      Semantic.Float {startPosition, float} -> do
+        evidence <- Unify.constrain context startPosition Type2.Fractional typex
+        equal <- Unify.constrain context startPosition Type2.Eq typex
+        pure Float {startPosition, float, evidence, equal}
+    pure Match {typex, names, irrefutable, match}
 
 solve :: Pattern s scope -> Unify.Solve s (Solved.Pattern Check scope)
 solve = \case
   Wildcard {names} -> pure Solved.Wildcard {names}
-  Constructor
-    { irrefutable,
-      names,
-      single,
-      constructorPosition,
-      constructor,
-      patterns,
-      constructorInfo
-    } -> do
-      patterns <- traverse solve patterns
-      constructorInfo <- ConstructorInfo.solve constructorInfo
-      pure
-        Solved.Constructor
-          { irrefutable,
-            names,
-            constructorPosition,
-            constructor,
-            patterns,
-            single,
-            constructorInfo = Solved constructorInfo
-          }
-  Record
-    { irrefutable,
-      names,
-      constructorPosition,
-      constructor,
-      fields,
-      single,
-      constructorInfo
-    } -> do
-      let solvePattern Field {index, field} = do
-            field <- solve field
-            pure $ Solved.Field {index, field}
-      fields <- traverse solvePattern fields
-      constructorInfo <- ConstructorInfo.solve constructorInfo
-      pure
-        Solved.Record
-          { irrefutable,
-            names,
-            constructorPosition,
-            constructor,
-            fields,
-            single,
-            constructorInfo = Solved constructorInfo
-          }
-  List {irrefutable, startPosition, names, items} -> do
-    items <- traverse solve items
-    pure Solved.List {irrefutable, startPosition, names, items}
-  Integer {irrefutable, names, startPosition, integer, evidence, equal} -> do
-    evidence <- Unify.solveEvidence startPosition evidence
-    equal <- Unify.solveEvidence startPosition equal
-    pure
-      Solved.Integer
-        { irrefutable,
-          names,
-          startPosition,
-          integer,
-          evidence = Solved evidence,
-          equal = Solved equal
-        }
-  Float {irrefutable, names, startPosition, float, evidence, equal} -> do
-    evidence <- Unify.solveEvidence startPosition evidence
-    equal <- Unify.solveEvidence startPosition equal
-    pure
-      Solved.Float
-        { irrefutable,
-          names,
-          float,
-          startPosition,
-          evidence = Solved evidence,
-          equal = Solved equal
-        }
-  Character {irrefutable, names, startPosition, character} ->
-    pure $
-      Solved.Character
-        { irrefutable,
-          names,
-          startPosition,
-          character
-        }
-  String {irrefutable, names, startPosition, string} ->
-    pure $
-      Solved.String
-        { irrefutable,
-          names,
-          startPosition,
-          string
-        }
+  Match {names, irrefutable, match} -> do
+    match <- case match of
+      Constructor
+        { single,
+          constructorPosition,
+          constructor,
+          patterns,
+          constructorInfo
+        } -> do
+          patterns <- traverse solve patterns
+          constructorInfo <- ConstructorInfo.solve constructorInfo
+          pure
+            Solved.Constructor
+              { constructorPosition,
+                constructor,
+                patterns,
+                single,
+                constructorInfo = Solved constructorInfo
+              }
+      Record
+        { constructorPosition,
+          constructor,
+          fields,
+          single,
+          constructorInfo
+        } -> do
+          let solvePattern Field {index, field} = do
+                field <- solve field
+                pure $ Solved.Field {index, field}
+          fields <- traverse solvePattern fields
+          constructorInfo <- ConstructorInfo.solve constructorInfo
+          pure
+            Solved.Record
+              { constructorPosition,
+                constructor,
+                fields,
+                single,
+                constructorInfo = Solved constructorInfo
+              }
+      List {startPosition, items} -> do
+        items <- traverse solve items
+        pure Solved.List {startPosition, items}
+      Integer {startPosition, integer, evidence, equal} -> do
+        evidence <- Unify.solveEvidence startPosition evidence
+        equal <- Unify.solveEvidence startPosition equal
+        pure
+          Solved.Integer
+            { startPosition,
+              integer,
+              evidence = Solved evidence,
+              equal = Solved equal
+            }
+      Float {startPosition, float, evidence, equal} -> do
+        evidence <- Unify.solveEvidence startPosition evidence
+        equal <- Unify.solveEvidence startPosition equal
+        pure
+          Solved.Float
+            { float,
+              startPosition,
+              evidence = Solved evidence,
+              equal = Solved equal
+            }
+      Character {startPosition, character} ->
+        pure $
+          Solved.Character
+            { startPosition,
+              character
+            }
+      String {startPosition, string} ->
+        pure $
+          Solved.String
+            { startPosition,
+              string
+            }
+    pure Solved.Match {names, irrefutable, match}
