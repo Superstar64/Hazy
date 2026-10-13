@@ -44,7 +44,6 @@ executable hazy
     Core.Substitute
     Core.Temporary.Definition
     Core.Temporary.Function
-    Core.Temporary.Pattern
     Core.Temporary.RightHandSide
     Core.Tree.Argument
     Core.Tree.Class

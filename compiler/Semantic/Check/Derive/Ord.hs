@@ -4,8 +4,6 @@ import Control.Monad.ST (ST)
 import Core.Temporary.Definition (Definition (..))
 import qualified Core.Temporary.Definition as Definition
 import Core.Temporary.Function (Function (..))
-import Core.Temporary.Pattern (Bindings (..), Pattern (..))
-import qualified Core.Temporary.Pattern as Pattern
 import Core.Temporary.RightHandSide (RightHandSide (..))
 import qualified Core.Tree.Constructor as Constructor (ConstructorF (..))
 import Core.Tree.Data (Data)
@@ -14,6 +12,7 @@ import Core.Tree.Entry (entry)
 import qualified Core.Tree.Expression as Expression
 import qualified Core.Tree.TypeLambda as TypeLambda
 import Data.Foldable (toList)
+import qualified Data.Map as Map
 import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Context (Context)
@@ -28,6 +27,7 @@ import Semantic.Shift (shift)
 import Semantic.Stage (Check)
 import Semantic.Tree.Combinators.Inferred (Inferred (Solved))
 import Semantic.Tree.MethodConcrete (Auto, MethodConcrete (Generated))
+import Semantic.Tree.Pattern (Bindings (..), Failable (..), Pattern (..))
 import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
 import Prelude hiding (Eq)
@@ -41,8 +41,9 @@ compare ::
 compare context position typeIndex datax = do
   Data.Definition {constructors} <- instanciateRigid context position datax
   let generate index constructor@Constructor.Constructor {entries} = do
-        let patterns :: Strict.Vector (Pattern scope)
-            patterns = Strict.Vector.replicate (length entries) Wildcard
+        let patterns :: Strict.Vector (Pattern () Check scope)
+            patterns =
+              Strict.Vector.replicate (length entries) Wildcard {names = Map.empty}
             types = entry <$> entries
         evidence <- traverse (Unify.constrain context position Type2.Ord) types
         pure $ do
@@ -50,16 +51,19 @@ compare context position typeIndex datax = do
           info <- ConstructorInfo.solve $ ConstructorInstance.info constructor
           let patternx =
                 Match
-                  { irrefutable = False,
+                  { names = Map.empty,
+                    irrefutable = False,
                     match =
                       Constructor
-                        { constructor =
+                        { constructorPosition = (),
+                          constructor =
                             Constructor.Index
                               { typeIndex = shift typeIndex,
                                 constructorIndex = index
                               },
                           patterns,
-                          constructorInfo = info
+                          constructorInfo = Solved info,
+                          failable = Unused
                         }
                   }
               compare index evidence =
@@ -101,10 +105,10 @@ compare context position typeIndex datax = do
                 Definition
                   { definition =
                       Bound
-                        { patternx = Pattern.Wildcard,
+                        { patternx = Wildcard {names = Map.empty},
                           body =
                             Bound
-                              { patternx = Pattern.Wildcard,
+                              { patternx = Wildcard {names = Map.empty},
                                 body = Plain {plain = Done {done}}
                               }
                         }

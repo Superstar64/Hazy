@@ -1,8 +1,6 @@
 module Core.Tree.Statements where
 
 import qualified Core.Substitute as Substitute
-import Core.Temporary.Pattern (Pattern)
-import qualified Core.Temporary.Pattern as Pattern
 import Core.Tree.ConstructorInfo (ConstructorInfo (..))
 import {-# SOURCE #-} Core.Tree.Declarations (Declarations)
 import {-# SOURCE #-} qualified Core.Tree.Declarations as Declarations
@@ -11,6 +9,7 @@ import {-# SOURCE #-} Core.Tree.Expression (Expression)
 import {-# SOURCE #-} qualified Core.Tree.Expression as Expression
 import qualified Core.Tree.Type as Type
 import Data.Foldable (toList)
+import qualified Data.Map as Map
 import Data.Strict.Vector1 as Strict.Vector1 (fromList', uncons)
 import Data.Vector.Strict ((//))
 import qualified Data.Vector.Strict as Strict.Vector
@@ -27,7 +26,10 @@ import qualified Semantic.Shift as Shift
 import Semantic.Shift0 (shift)
 import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
+import Semantic.Tree.Combinators.Inferred (Inferred (Solved))
 import qualified Semantic.Tree.Declarations as Semantic.Declarations
+import Semantic.Tree.Pattern (Failable (Unused), Pattern)
+import qualified Semantic.Tree.Pattern as Pattern
 import qualified Semantic.Tree.Statements as Semantic (Guard, Statements (..))
 import qualified Syntax.StringLiteral as StringLiteral
 
@@ -96,8 +98,8 @@ instance Substitute.Functor Statements where
         }
     Bottom -> Bottom
 
-bind :: Pattern scope -> Expression scope -> Statements (Scope.Pattern ':+ scope) -> Statements scope
-bind Pattern.Wildcard check thenx =
+bind :: Pattern () Check scope -> Expression scope -> Statements (Scope.Pattern ':+ scope) -> Statements scope
+bind Pattern.Wildcard {} check thenx =
   LetOne
     { declaration = check,
       body = Shift.map Shift.ReplaceWildcard thenx
@@ -107,36 +109,77 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
     where
       -- todo this is `O(n^2)`
       go (-1)
-        | patternx <- Pattern.Match {match, irrefutable} =
+        | patternx <- Pattern.Match {names = Map.empty, match, irrefutable} =
             expand patternx check thenx
       go index = case patterns Strict.Vector.! index of
-        Pattern.Wildcard -> go (index - 1)
+        Pattern.Wildcard {} -> go (index - 1)
         target
-          | patterns <- patterns // [(index, Pattern.Wildcard)],
-            match <- Pattern.Constructor {constructor, patterns, constructorInfo},
-            patternx <- Pattern.Match {match, irrefutable},
+          | patterns <- patterns // [(index, Pattern.Wildcard {names = Map.empty})],
+            match <-
+              Pattern.Constructor
+                { constructorPosition = (),
+                  constructor,
+                  patterns,
+                  constructorInfo,
+                  failable = Unused
+                },
+            patternx <-
+              Pattern.Match
+                { names = Map.empty,
+                  match,
+                  irrefutable
+                },
             target <- shift target,
             check' <- Expression.monoVariable $ Term.Pattern $ Term.Select index Term.At,
             thenx <- Shift.map (Shift.SimplifyPattern index) thenx ->
               bind patternx check (bind target check' thenx)
-  Pattern.Record {constructor, fields, constructorInfo = constructorInfo} ->
+  Pattern.Record {constructor, fields, constructorInfo = Solved constructorInfo} ->
     go (length fields - 1)
     where
       go (-1)
         | entryCount <- Semantic.ConstructorInfo.entryCount constructorInfo,
-          patterns <- Strict.Vector.replicate entryCount Pattern.Wildcard,
-          match <- Pattern.Constructor {constructor, patterns, constructorInfo},
-          patternx <- Pattern.Match {match, irrefutable},
-          fields <- (\(Pattern.Field field _) -> field) <$> fields,
+          patterns <- Strict.Vector.replicate entryCount Pattern.Wildcard {names = Map.empty},
+          match <-
+            Pattern.Constructor
+              { constructorPosition = (),
+                constructor,
+                patterns,
+                constructorInfo = Solved constructorInfo,
+                failable = Unused
+              },
+          patternx <-
+            Pattern.Match
+              { match,
+                irrefutable,
+                names = Map.empty
+              },
+          fields <- (\Pattern.Field {index} -> index) <$> fields,
           thenx <- Shift.map (Shift.RenamePattern (fields Strict.Vector.!)) thenx =
             expand patternx check thenx
       go index = case fields Strict.Vector.! index of
-        Pattern.Field field patternx -> case patternx of
-          Pattern.Wildcard -> go (index - 1)
+        Pattern.Field {index = field, field = patternx} -> case patternx of
+          Pattern.Wildcard {} -> go (index - 1)
           target
-            | fields <- fields // [(index, Pattern.Field field Pattern.Wildcard)],
-              match <- Pattern.Record {constructor, fields, constructorInfo},
-              patternx <- Pattern.Match {match, irrefutable},
+            | fields <-
+                fields
+                  // [ ( index,
+                         Pattern.Field {index = field, field = Pattern.Wildcard {names = Map.empty}}
+                       )
+                     ],
+              match <-
+                Pattern.Record
+                  { constructorPosition = (),
+                    constructor,
+                    fields,
+                    constructorInfo = Solved constructorInfo,
+                    failable = Unused
+                  },
+              patternx <-
+                Pattern.Match
+                  { match,
+                    irrefutable,
+                    names = Map.empty
+                  },
               target <- shift target,
               check' <- Expression.monoVariable $ Term.Pattern $ Term.Select index Term.At,
               thenx <- Shift.map (Shift.SimplifyPattern index) thenx ->
@@ -145,52 +188,67 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
     | (head, items) <- Strict.Vector1.uncons items,
       match <- case Strict.Vector.uncons items of
         -- todo this is inefficent
-        Just (head, tail) -> Pattern.List {items = Strict.Vector1.fromList' head (toList tail)}
+        Just (head, tail) ->
+          Pattern.List
+            { startPosition = (),
+              items = Strict.Vector1.fromList' head (toList tail)
+            }
         Nothing ->
           Pattern.Constructor
-            { constructor = Constructor.nil,
+            { constructorPosition = (),
+              constructor = Constructor.nil,
               patterns = Strict.Vector.empty,
-              constructorInfo = Semantic.ConstructorInfo {entries = Strict.Vector.empty}
+              constructorInfo = Solved Semantic.ConstructorInfo {entries = Strict.Vector.empty},
+              failable = Unused
             },
-      tail <- Pattern.Match {match, irrefutable},
+      tail <- Pattern.Match {match, irrefutable, names = Map.empty},
       patterns <- Strict.Vector.fromList [head, tail],
       match <-
         Pattern.Constructor
-          { constructor = Constructor.cons,
+          { constructorPosition = (),
+            constructor = Constructor.cons,
             patterns,
             constructorInfo =
-              Semantic.ConstructorInfo
-                { entries =
-                    Strict.Vector.fromList
-                      [ EntryInfo {strict = Type.Constructor Type2.Lazy},
-                        EntryInfo {strict = Type.Constructor Type2.Lazy}
-                      ]
-                }
+              Solved
+                Semantic.ConstructorInfo
+                  { entries =
+                      Strict.Vector.fromList
+                        [ EntryInfo {strict = Type.Constructor Type2.Lazy},
+                          EntryInfo {strict = Type.Constructor Type2.Lazy}
+                        ]
+                  },
+            failable = Unused
           },
-      cons <- Pattern.Match {match, irrefutable} ->
+      cons <- Pattern.Match {match, irrefutable, names = Map.empty} ->
         bind cons check (Shift.map Shift.SimplifyList thenx)
   Pattern.String {string}
     | let wrap character
-            | match <- Pattern.Character {character} =
-                Pattern.Match {match, irrefutable},
+            | match <- Pattern.Character {startPosition = (), character} =
+                Pattern.Match {match, irrefutable, names = Map.empty},
       characters <- map wrap $ StringLiteral.unpack string,
       match <- case characters of
-        (head : tail) -> Pattern.List {items = Strict.Vector1.fromList' head tail}
+        (head : tail) ->
+          Pattern.List
+            { startPosition = (),
+              items = Strict.Vector1.fromList' head tail
+            }
         [] ->
           Pattern.Constructor
-            { constructor = Constructor.nil,
+            { constructorPosition = (),
+              constructor = Constructor.nil,
               patterns = Strict.Vector.empty,
-              constructorInfo = Semantic.ConstructorInfo {entries = Strict.Vector.empty}
+              constructorInfo = Solved Semantic.ConstructorInfo {entries = Strict.Vector.empty},
+              failable = Unused
             },
-      patternx <- Pattern.Match {match, irrefutable} ->
+      patternx <- Pattern.Match {match, irrefutable, names = Map.empty} ->
         bind patternx check thenx
   Pattern.Character {character} ->
-    bind Pattern.Wildcard check $
+    bind Pattern.Wildcard {names = Map.empty} check $
       bind true equal (shift thenx)
     where
       equal = Expression.eqChar Expression.patternVariable (Expression.character_ character)
-  Pattern.Integer {integer, evidence, equal} ->
-    bind Pattern.Wildcard check $
+  Pattern.Integer {integer, evidence = Solved evidence, equal = Solved equal} ->
+    bind Pattern.Wildcard {names = Map.empty} check $
       bind true equal' (shift thenx)
     where
       equal' =
@@ -198,8 +256,8 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
           (shift equal)
           Expression.patternVariable
           (Expression.integer_ integer $ shift evidence)
-  Pattern.Float {float, evidence, equal} ->
-    bind Pattern.Wildcard check $
+  Pattern.Float {float, evidence = Solved evidence, equal = Solved equal} ->
+    bind Pattern.Wildcard {names = Map.empty} check $
       bind true equal' (shift thenx)
     where
       equal' =
@@ -209,7 +267,7 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
           (Expression.float_ float $ shift evidence)
   where
     expand ::
-      Pattern scope ->
+      Pattern position Check scope ->
       Expression scope ->
       Statements (Scope.Pattern ':+ scope) ->
       Statements scope
@@ -254,13 +312,18 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
               (n - 1)
         }
     finish ::
-      forall scope.
-      Pattern scope ->
+      forall position scope.
+      Pattern position Check scope ->
       Expression scope ->
       Statements (Scope.Pattern ':+ scope) ->
       Statements scope
     finish Pattern.Match {match, irrefutable} check thenx
-      | Pattern.Constructor {constructor, patterns, constructorInfo} <- match,
+      | Pattern.Constructor
+          { constructor,
+            patterns,
+            constructorInfo = Solved constructorInfo
+          } <-
+          match,
         all wildcard patterns,
         thenx <- Shift.map Shift.FinishPattern thenx =
           case constructorInfo of
@@ -279,14 +342,17 @@ bind Pattern.Match {match, irrefutable} check thenx = case match of
         wildcard _ = False
     finish _ _ _ = error "bad finish"
 
-true :: Pattern scope
+true :: Pattern () Check scope
 true =
   ( Pattern.Match
-      { match =
+      { names = Map.empty,
+        match =
           Pattern.Constructor
-            { constructor = Constructor2.true,
+            { constructorPosition = (),
+              constructor = Constructor2.true,
               patterns = Strict.Vector.empty,
-              constructorInfo = Semantic.ConstructorInfo {entries = Strict.Vector.empty}
+              constructorInfo = Solved Semantic.ConstructorInfo {entries = Strict.Vector.empty},
+              failable = Unused
             },
         irrefutable = False
       }
@@ -302,7 +368,7 @@ simplify = \case
       (shift $ simplify after)
   Semantic.Bind {patternx, effect, thenx} ->
     bind
-      (Pattern.simplify patternx)
+      (Pattern.anonymize patternx)
       (Expression.simplify effect)
       (simplify thenx)
   Semantic.Let {declarations = Semantic.Declarations.Local declarations, body} ->

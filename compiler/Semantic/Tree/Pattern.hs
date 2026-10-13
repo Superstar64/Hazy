@@ -191,5 +191,74 @@ instance NeverFails Bindings where
 instance NeverFails Field where
   neverFails Field {field} = neverFails field
 
+type Anonymize :: (Type -> Stage -> Environment -> Type) -> Constraint
+class Anonymize patternx where
+  anonymize :: patternx position resolve scope -> patternx () resolve scope
+
+instance Anonymize Pattern where
+  anonymize = \case
+    Wildcard {names} -> Wildcard {names = Map.map (const ()) names}
+    Match {names, irrefutable, match} ->
+      Match
+        { names = Map.map (const ()) names,
+          irrefutable,
+          match = anonymize match
+        }
+
+instance Anonymize Bindings where
+  anonymize = \case
+    Constructor {constructor, patterns, failable, constructorInfo} ->
+      Constructor
+        { constructorPosition = (),
+          constructor,
+          failable,
+          patterns = anonymize <$> patterns,
+          constructorInfo
+        }
+    Record {constructor, fields, failable, constructorInfo} ->
+      Record
+        { constructorPosition = (),
+          constructor,
+          failable,
+          fields = anonymize <$> fields,
+          constructorInfo
+        }
+    Integer {integer, evidence, equal} ->
+      Integer
+        { startPosition = (),
+          integer,
+          evidence,
+          equal
+        }
+    Float {float, evidence, equal} ->
+      Float
+        { startPosition = (),
+          float,
+          evidence,
+          equal
+        }
+    Character {character} ->
+      Character
+        { startPosition = (),
+          character
+        }
+    String {string} ->
+      String
+        { startPosition = (),
+          string
+        }
+    List {items} ->
+      List
+        { startPosition = (),
+          items = anonymize <$> items
+        }
+
+instance Anonymize Field where
+  anonymize Field {index, field} =
+    Field
+      { index,
+        field = anonymize field
+      }
+
 variable :: Position -> Variable -> Pattern Position stage scope
 variable position name = Wildcard {names = Map.singleton name position}

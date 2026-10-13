@@ -5,8 +5,6 @@ import Control.Monad.ST (ST)
 import Core.Temporary.Definition (Definition (..))
 import qualified Core.Temporary.Definition as Definition
 import Core.Temporary.Function (Function (..))
-import Core.Temporary.Pattern (Bindings (..), Pattern (..))
-import qualified Core.Temporary.Pattern as Pattern
 import Core.Temporary.RightHandSide (RightHandSide (..))
 import qualified Core.Tree.Class as Class
 import qualified Core.Tree.Constructor as Constructor (ConstructorF (..))
@@ -19,6 +17,7 @@ import qualified Core.Tree.Expression as Expression
 import qualified Core.Tree.Instanciation as Instanciation
 import qualified Core.Tree.TypeLambda as TypeLambda
 import Data.Foldable (toList)
+import qualified Data.Map as Map
 import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
 import Error (derivingNonEnum)
@@ -36,6 +35,7 @@ import Semantic.Shift (shift)
 import Semantic.Stage (Check)
 import Semantic.Tree.Combinators.Inferred (Inferred (Solved))
 import Semantic.Tree.MethodConcrete (Auto, MethodConcrete (Generated))
+import Semantic.Tree.Pattern (Bindings (..), Failable (..), Pattern (..))
 import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
 import Prelude hiding (Eq)
@@ -48,20 +48,26 @@ fromEnum' typeIndex constructors = do
   let toIntN index constructor@Constructor.Constructor {entries} =
         do
           info <- ConstructorInfo.solve $ ConstructorInstance.info constructor
-          let patterns :: Strict.Vector (Pattern scope)
-              patterns = Strict.Vector.replicate (length entries) Wildcard
+          let patterns :: Strict.Vector (Pattern () Check scope)
+              patterns =
+                Strict.Vector.replicate
+                  (length entries)
+                  Wildcard {names = Map.empty}
               patternx =
                 Match
-                  { irrefutable = False,
+                  { names = Map.empty,
+                    irrefutable = False,
                     match =
                       Constructor
-                        { constructor =
+                        { constructorPosition = (),
+                          constructor =
                             Constructor.Index
                               { typeIndex,
                                 constructorIndex = index
                               },
                           patterns,
-                          constructorInfo = info
+                          constructorInfo = Solved info,
+                          failable = Unused
                         }
                   }
               done = Expression.int index
@@ -90,20 +96,24 @@ toEnum' _ typeIndex constructors
                 info <- ConstructorInfo.solve $ ConstructorInstance.info constructor
                 let patternx =
                       Match
-                        { irrefutable = False,
+                        { names = Map.empty,
+                          irrefutable = False,
                           match =
-                            Pattern.Integer
-                              { integer = fromIntegral index,
+                            Integer
+                              { startPosition = (),
+                                integer = fromIntegral index,
                                 evidence =
-                                  Evidence.Variable
-                                    { variable = Index.Evidence.Direct Type2.Num Type2.Int,
-                                      instanciation = Instanciation.Mono
-                                    },
+                                  Solved
+                                    Evidence.Variable
+                                      { variable = Index.Evidence.Direct Type2.Num Type2.Int,
+                                        instanciation = Instanciation.Mono
+                                      },
                                 equal =
-                                  Evidence.Variable
-                                    { variable = Index.Evidence.Direct Type2.Eq Type2.Int,
-                                      instanciation = Instanciation.Mono
-                                    }
+                                  Solved
+                                    Evidence.Variable
+                                      { variable = Index.Evidence.Direct Type2.Eq Type2.Int,
+                                        instanciation = Instanciation.Mono
+                                      }
                               }
                         }
                     done =
