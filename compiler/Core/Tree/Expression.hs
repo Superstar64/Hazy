@@ -442,28 +442,7 @@ guard left done =
       }
 
 ifx :: Expression scope -> Expression scope -> Expression scope -> Expression scope
-ifx condition thenx =
-  guard
-    ( Statements.bind
-        ( Pattern.Match
-            { names = Map.empty,
-              match =
-                Pattern.Constructor
-                  { constructorPosition = (),
-                    constructor = Constructor.true,
-                    patterns = Strict.Vector.empty,
-                    constructorInfo = Solved Semantic.ConstructorInfo {entries = Strict.Vector.empty},
-                    failable = Unused
-                  },
-              irrefutable = False
-            }
-        )
-        condition
-        ( Statements.Done
-            { done = shift thenx
-            }
-        )
-    )
+ifx condition thenx = guard (Statements.ifx condition thenx)
 
 infixl 9 `call`
 

@@ -2,26 +2,24 @@ module Semantic.Check.Derive.Enum where
 
 import {-# SOURCE #-} qualified Builtin.Enum as Enum
 import Control.Monad.ST (ST)
-import Core.Temporary.Definition (Definition (..))
-import qualified Core.Temporary.Definition as Definition
-import Core.Temporary.Function (Function (..))
-import Core.Temporary.RightHandSide (RightHandSide (..))
 import qualified Core.Tree.Class as Class
 import qualified Core.Tree.Constructor as Constructor (ConstructorF (..))
+import qualified Core.Tree.ConstructorInfo as Core
 import Core.Tree.Data (Data)
 import qualified Core.Tree.Data as Data
 import Core.Tree.Evidence (Evidence)
 import qualified Core.Tree.Evidence as Evidence
-import Core.Tree.Expression (Expression)
+import Core.Tree.Expression (Expression, lambdaVariable)
 import qualified Core.Tree.Expression as Expression
 import qualified Core.Tree.Instanciation as Instanciation
+import qualified Core.Tree.Statements as Statements
 import qualified Core.Tree.TypeLambda as TypeLambda
 import Data.Foldable (toList)
-import qualified Data.Map as Map
 import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
 import Error (derivingNonEnum)
 import Semantic.Check.Context (Context)
+import Semantic.Check.Info.Constructor (ConstructorInfo (..))
 import Semantic.Check.Instanciate.Constructor (ConstructorInstance (..))
 import qualified Semantic.Check.Instanciate.Constructor as ConstructorInstance
 import Semantic.Check.Instanciate.Data (instanciateRigid)
@@ -35,7 +33,6 @@ import Semantic.Shift (shift)
 import Semantic.Stage (Check)
 import Semantic.Tree.Combinators.Inferred (Inferred (Solved))
 import Semantic.Tree.MethodConcrete (Auto, MethodConcrete (Generated))
-import Semantic.Tree.Pattern (Bindings (..), Failable (..), Pattern (..))
 import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
 import Prelude hiding (Eq)
@@ -45,42 +42,40 @@ fromEnum' ::
   Strict.Vector (ConstructorInstance s scope) ->
   Unify.Solve s (Expression scope)
 fromEnum' typeIndex constructors = do
-  let toIntN index constructor@Constructor.Constructor {entries} =
+  let toIntN constructorIndex constructor =
         do
           info <- ConstructorInfo.solve $ ConstructorInstance.info constructor
-          let patterns :: Strict.Vector (Pattern () Check scope)
-              patterns =
-                Strict.Vector.replicate
-                  (length entries)
-                  Wildcard {names = Map.empty}
-              patternx =
-                Match
-                  { names = Map.empty,
-                    irrefutable = False,
-                    match =
-                      Constructor
-                        { constructorPosition = (),
-                          constructor =
-                            Constructor.Index
-                              { typeIndex,
-                                constructorIndex = index
-                              },
-                          patterns,
-                          constructorInfo = Solved info,
-                          failable = Unused
-                        }
+          let index =
+                Constructor.Index
+                  { typeIndex,
+                    constructorIndex
                   }
-              done = Expression.int index
-          pure
-            Definition
-              { definition =
-                  Bound
-                    { patternx,
-                      body = Plain {plain = Done {done}}
-                    }
-              }
+          case info of
+            ConstructorInfo {entries}
+              | info <- Core.ConstructorInfo {entries} ->
+                  pure
+                    Statements.Bind
+                      { constructor = shift index,
+                        constructorInfo = shift info,
+                        check = lambdaVariable,
+                        thenx =
+                          Statements.Done
+                            { done = Expression.int constructorIndex
+                            }
+                      }
+            Newtype {} ->
+              pure
+                Statements.Done
+                  { done = Expression.int 0
+                  }
   declarations <- sequence $ zipWith toIntN [0 ..] (toList constructors)
-  pure $ Definition.desugar $ foldr1 (<>) declarations
+  pure $
+    Expression.Lambda $
+      Expression.Join
+        { statements =
+            let branch left right = Statements.Branch {left, right}
+             in foldr branch Statements.Bottom declarations
+        }
 
 toEnum' ::
   Position ->
@@ -91,50 +86,31 @@ toEnum' _ typeIndex constructors
   | let singleton Constructor.Constructor {entries} = null entries,
     all singleton constructors = do
       pure $ do
-        let fromInt index constructor =
+        let fromInt constructorIndex constructor =
               do
                 info <- ConstructorInfo.solve $ ConstructorInstance.info constructor
-                let patternx =
-                      Match
-                        { names = Map.empty,
-                          irrefutable = False,
-                          match =
-                            Integer
-                              { startPosition = (),
-                                integer = fromIntegral index,
-                                evidence =
-                                  Solved
-                                    Evidence.Variable
-                                      { variable = Index.Evidence.Direct Type2.Num Type2.Int,
-                                        instanciation = Instanciation.Mono
-                                      },
-                                equal =
-                                  Solved
-                                    Evidence.Variable
-                                      { variable = Index.Evidence.Direct Type2.Eq Type2.Int,
-                                        instanciation = Instanciation.Mono
-                                      }
-                              }
+                let index =
+                      Constructor.Index
+                        { typeIndex,
+                          constructorIndex = constructorIndex
                         }
-                    done =
-                      shift $
-                        Expression.simplifyConstructorExact
-                          Constructor.Index
-                            { typeIndex,
-                              constructorIndex = index
-                            }
-                          info
-                          Strict.Vector.empty
-                pure
-                  Definition
-                    { definition =
-                        Bound
-                          { patternx,
-                            body = Plain {plain = Done {done}}
+                pure $
+                  let eqInt =
+                        Evidence.Variable
+                          { variable = Index.Evidence.Direct Type2.Eq Type2.Int,
+                            instanciation = Instanciation.Mono
                           }
-                    }
+                      check = Expression.eq eqInt lambdaVariable $ Expression.int constructorIndex
+                      done = Expression.simplifyConstructorExact (shift index) (shift info) Strict.Vector.empty
+                   in Statements.ifx check done
         declarations <- sequence $ zipWith fromInt [0 ..] (toList constructors)
-        pure $ Definition.desugar $ foldr1 (<>) declarations
+        pure $
+          Expression.Lambda $
+            Expression.Join
+              { statements =
+                  let branch left right = Statements.Branch {left, right}
+                   in foldr branch Statements.Bottom declarations
+              }
 toEnum' position _ _ = derivingNonEnum position
 
 fromEnum,

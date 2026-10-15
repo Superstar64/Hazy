@@ -358,6 +358,28 @@ true =
       }
   )
 
+ifx :: Expression scope -> Expression scope -> Statements scope
+ifx condition thenx =
+  bind
+    ( Pattern.Match
+        { names = Map.empty,
+          match =
+            Pattern.Constructor
+              { constructorPosition = (),
+                constructor = Constructor.true,
+                patterns = Strict.Vector.empty,
+                constructorInfo = Solved Semantic.ConstructorInfo {entries = Strict.Vector.empty},
+                failable = Unused
+              },
+          irrefutable = False
+        }
+    )
+    condition
+    ( Done
+        { done = shift thenx
+        }
+    )
+
 simplify :: Semantic.Statements Semantic.Guard Normal Check scope -> Statements scope
 simplify = \case
   Semantic.Done {done} -> Done {done = Expression.simplify done}
