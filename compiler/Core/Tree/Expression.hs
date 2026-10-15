@@ -16,6 +16,7 @@ import qualified Core.Temporary.Function as Function
 import qualified Core.Temporary.RightHandSide as RightHandSide
 import Core.Tree.Argument (Argument (..))
 import qualified Core.Tree.Class as Class
+import Core.Tree.ConstructorInfo (ConstructorInfo (..))
 import {-# SOURCE #-} qualified Core.Tree.Declaration as Declaration
 import {-# SOURCE #-} Core.Tree.Declarations (Declarations)
 import {-# SOURCE #-} qualified Core.Tree.Declarations as Declarations
@@ -37,7 +38,7 @@ import Data.Ratio (denominator, numerator)
 import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
-import qualified Semantic.Check.Info.Constructor as Semantic (ConstructorInfo (ConstructorInfo))
+import qualified Semantic.Check.Info.Constructor as Semantic (ConstructorInfo (..))
 import qualified Semantic.Check.Info.Constructor as Semantic.ConstructorInfo
 import Semantic.Check.Info.Selector (Select (..), SelectorInfo (..))
 import Semantic.Check.Info.Update (Update (..))
@@ -635,31 +636,28 @@ simplifySelector (Selector.Index typeIndex _) Disjoint {select} argument =
   Join {statements = mconcat statements}
   where
     generate index Select {selectIndex, constructorInfo} =
-      Statements.bind match argument get
-      where
-        match =
-          Pattern.Match
-            { names = Map.empty,
-              irrefutable = False,
-              match =
-                Pattern.Constructor
-                  { constructorPosition = (),
-                    constructor = Constructor.Index typeIndex index,
-                    patterns =
-                      Strict.Vector.replicate
-                        (Semantic.ConstructorInfo.entryCount constructorInfo)
-                        Pattern.Wildcard {names = Map.empty},
-                    constructorInfo = Solved constructorInfo,
-                    failable = Unused
+      case constructorInfo of
+        Semantic.ConstructorInfo {entries} ->
+          Statements.Bind
+            { constructor = Constructor.Index typeIndex index,
+              constructorInfo = ConstructorInfo {entries},
+              check = argument,
+              thenx = case selectIndex of
+                Strict.Just index ->
+                  Statements.Done
+                    { done = monoVariable $ Term.SimplePattern index
+                    }
+                Strict.Nothing -> Statements.Bottom
+            }
+        Semantic.Newtype ->
+          Statements.Done
+            { done =
+                Newtype
+                  { constructor = Constructor.Index typeIndex index,
+                    argument,
+                    direction = Destruct
                   }
             }
-        get =
-          case selectIndex of
-            Strict.Just index ->
-              Statements.Done
-                { done = monoVariable $ Term.Pattern (Term.Select index Term.At)
-                }
-            Strict.Nothing -> Statements.Bottom
     statements = zipWith generate [0 ..] $ toList select
 
 simplifyWith ::
@@ -712,45 +710,43 @@ simplifyWith expression [] = case expression of
         }
       where
         update constructorIndex Update {constructorInfo, selectorIndexes} =
-          Statements.bind
-            Pattern.Match
-              { names = Map.empty,
-                match =
-                  Pattern.Constructor
-                    { constructorPosition = (),
-                      constructor,
-                      patterns =
-                        Strict.Vector.replicate
-                          length
-                          Pattern.Wildcard
-                            { names = Map.empty
-                            },
-                      constructorInfo = Solved $ shift constructorInfo,
-                      failable = Unused
-                    },
-                irrefutable = False
-              }
-            lambdaVariable
-            Statements.Done
-              { done =
-                  if
-                    | not permissive, any illegal updates -> Join {statements = Statements.Bottom}
-                    | otherwise ->
-                        simplifyConstructorExact
-                          (shift constructor)
-                          (shift $ shift constructorInfo)
-                          (Strict.Vector.imap generate selectorIndexes)
-              }
+          case constructorInfo of
+            Semantic.ConstructorInfo {entries} ->
+              Statements.Bind
+                { constructor,
+                  constructorInfo = shift ConstructorInfo {entries},
+                  check = lambdaVariable,
+                  thenx =
+                    Statements.Done
+                      { done =
+                          if
+                            | not permissive, any illegal updates -> Join {statements = Statements.Bottom}
+                            | otherwise ->
+                                simplifyConstructorExact
+                                  (shift constructor)
+                                  (shift $ shift constructorInfo)
+                                  (Strict.Vector.imap generate selectorIndexes)
+                      }
+                }
+              where
+                illegal Semantic.Select {pick} = Strict.Just pick `notElem` selectorIndexes
+                generate index selectorIndex =
+                  case [ shift $ shift $ simplify update
+                       | Semantic.Select {pick, update} <- toList updates,
+                         selectorIndex == Strict.Just pick
+                       ] of
+                    [] -> monoVariable $ Term.SimplePattern index
+                    expressions -> last expressions
+            Semantic.Newtype ->
+              Statements.Done
+                { done =
+                    Newtype
+                      { constructor,
+                        argument = last [shift $ simplify update | Semantic.Select {update} <- toList updates],
+                        direction = Construct
+                      }
+                }
           where
-            illegal Semantic.Select {pick} = Strict.Just pick `notElem` selectorIndexes
-            generate index selectorIndex =
-              case [ shift $ shift $ simplify update
-                   | Semantic.Select {pick, update} <- toList updates,
-                     selectorIndex == Strict.Just pick
-                   ] of
-                [] -> monoVariable $ Term.Pattern (Term.Select index Term.At)
-                expressions -> last expressions
-            length = Semantic.ConstructorInfo.entryCount constructorInfo
             constructor =
               Constructor.Index
                 { typeIndex = shift updateType,
