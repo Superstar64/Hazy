@@ -3,8 +3,10 @@ module Semantic.Check.Binding.Term where
 import Control.Monad.ST (ST)
 import qualified Core.Tree.Forall as Core (mono)
 import qualified Core.Tree.Forall as Simple (Forall)
+import qualified Core.Tree.Type as Type
 import qualified Core.Type.Functor as Core (mapLogical, shiftLogical)
 import Data.Void (Void)
+import qualified Semantic.Index.Type2 as Type2
 import Semantic.Scope (Environment (..), GroupTerm)
 import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
@@ -40,4 +42,6 @@ local Declaration {typex} = TermBinding $ do
     Solved typex -> typex
 
 group :: Unify.Type s scopes -> TermBinding s (GroupTerm ':+ scopes)
-group = TermBinding . pure . Wobbly . Core.mono . Core.shiftLogical
+group = TermBinding . pure . Wobbly . Core.mono lazy . Core.shiftLogical
+  where
+    lazy = Type.Constructor Type2.Lazy

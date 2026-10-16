@@ -3,6 +3,7 @@ module Semantic.Check.Temporary.Lambda where
 import Control.Monad.ST (ST)
 import Core.Tree.Type ((-#>))
 import qualified Core.Tree.Type as Core
+import qualified Core.Tree.Type as Type
 import Core.Type.Functor (shiftLogical)
 import Semantic.Check.Context (Context)
 import {-# SOURCE #-} Semantic.Check.Temporary.Expression (Expression)
@@ -35,7 +36,7 @@ check context typex = \case
     pure Plain {plain}
   Semantic.Bound {boundPosition, parameter, body} -> do
     parameterType <- Unify.fresh Core.typex
-    parameter <- Pattern.check context parameterType parameter
+    parameter <- Pattern.check context Type.lazy parameterType parameter
     resultType <- Unify.fresh Core.typex
     body <- check (Pattern.augment parameter context) (shiftLogical resultType) body
     Unify.unify context boundPosition typex (parameterType -#> resultType)

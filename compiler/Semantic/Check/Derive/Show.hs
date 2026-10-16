@@ -108,8 +108,8 @@ showConstructor syntax name evidence numberVariable constructorVariable
           ConstructorInfo
             { entries =
                 Strict.Vector.fromList
-                  [ EntryInfo {strict = Type.Constructor Type2.Lazy},
-                    EntryInfo {strict = Type.Constructor Type2.Lazy}
+                  [ EntryInfo {levity = Type.Constructor Type2.Lazy},
+                    EntryInfo {levity = Type.Constructor Type2.Lazy}
                   ]
             }
           ( Strict.Vector.fromList
@@ -124,7 +124,7 @@ showConstructor syntax name evidence numberVariable constructorVariable
       Expression.Method
         { method = Method.showsPrec,
           evidence,
-          instanciation = Instanciation.Mono,
+          instanciation = Instanciation.monoLazy,
           methodInfo = Class.info $ Show.definition
         }
         `Expression.call` Expression.int (precedence + 1)
@@ -204,12 +204,15 @@ showsPrec context position typeIndex datax = do
                   thenx =
                     Statements.Done
                       { done =
-                          showConstructor
-                            syntax
-                            name
-                            (shift . shift . shift <$> evidence)
-                            (shift $ shift $ Expression.lambdaVariable)
-                            Expression.patternVariableAt
+                          let field index
+                                | EntryInfo {levity} <- entries Strict.Vector.! index =
+                                    Expression.patternVariableAt (shift $ shift levity) index
+                           in showConstructor
+                                syntax
+                                name
+                                (shift . shift . shift <$> evidence)
+                                (shift $ shift $ Expression.lambdaVariable)
+                                field
                       }
                 }
             Semantic.Newtype {} ->
@@ -245,4 +248,4 @@ showsPrec context position typeIndex datax = do
                   }
             }
 
-    pure $ Generated $ Solved $ TypeLambda.mono body
+    pure $ Generated $ Solved $ TypeLambda.mono Type.lazy body

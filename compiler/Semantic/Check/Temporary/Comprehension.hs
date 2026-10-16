@@ -3,6 +3,7 @@ module Semantic.Check.Temporary.Comprehension where
 import Control.Monad.ST (ST)
 import Core.Tree.Type ((#))
 import qualified Core.Tree.Type as Core
+import qualified Core.Tree.Type as Type
 import Core.Type.Functor (shiftLogical)
 import Semantic.Check.Context (Context)
 import qualified Semantic.Check.Go.Declarations as Declarations
@@ -70,7 +71,7 @@ check context typex = \case
     output <- Unify.fresh Core.typex
     let neverFail = Semantic.Pattern.neverFails patternx
     Unify.unify context startPosition (monad # output) typex
-    patternx <- Pattern.check context input patternx
+    patternx <- Pattern.check context Type.lazy input patternx
     effect <- Expression.check context (monad # input) effect
     thenx <- check (Pattern.augment patternx context) (shiftLogical $ monad # output) thenx
     pure Bind {startPosition, patternx, effect, thenx, fail = not neverFail}

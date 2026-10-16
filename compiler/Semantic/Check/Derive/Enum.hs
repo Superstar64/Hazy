@@ -13,6 +13,7 @@ import Core.Tree.Expression (Expression, lambdaVariable)
 import qualified Core.Tree.Expression as Expression
 import qualified Core.Tree.Instanciation as Instanciation
 import qualified Core.Tree.Statements as Statements
+import qualified Core.Tree.Type as Type
 import qualified Core.Tree.TypeLambda as TypeLambda
 import Data.Foldable (toList)
 import qualified Data.Vector.Strict as Strict
@@ -98,7 +99,7 @@ toEnum' _ typeIndex constructors
                   let eqInt =
                         Evidence.Variable
                           { variable = Index.Evidence.Direct Type2.Eq Type2.Int,
-                            instanciation = Instanciation.Mono
+                            instanciation = Instanciation.monoLazy
                           }
                       check = Expression.eq eqInt lambdaVariable $ Expression.int constructorIndex
                       done = Expression.simplifyConstructorExact (shift index) (shift info) Strict.Vector.empty
@@ -126,13 +127,13 @@ fromEnum context position typeIndex datax = do
     body <- do
       fromEnum <- fromEnum' (shift typeIndex) constructors
       pure fromEnum
-    pure $ Generated $ Solved $ TypeLambda.mono body
+    pure $ Generated $ Solved $ TypeLambda.mono Type.lazy body
 toEnum context position typeIndex datax = do
   Data.Definition {constructors} <- instanciateRigid context position datax
   body <- toEnum' position (shift typeIndex) constructors
   pure $ do
     body <- body
-    pure $ Generated $ Solved $ TypeLambda.mono $ body
+    pure $ Generated $ Solved $ TypeLambda.mono Type.lazy $ body
 
 enumFromThen ::
   Context s (Local ':+ scope) ->
@@ -179,7 +180,7 @@ enumFromThen context position evidence typeIndex datax = do
                       Expression.Method
                         { method = Method.enumFromThenTo,
                           evidence = shift $ shift evidence,
-                          instanciation = Instanciation.Mono,
+                          instanciation = Instanciation.monoLazy,
                           methodInfo = Class.info $ Enum.definition
                         }
                         `Expression.call` shift Expression.lambdaVariable
@@ -187,4 +188,4 @@ enumFromThen context position evidence typeIndex datax = do
                         `Expression.call` Expression.ifx condition max min
                   }
             }
-    pure $ Generated $ Solved $ TypeLambda.mono body
+    pure $ Generated $ Solved $ TypeLambda.mono Type.lazy body

@@ -94,23 +94,24 @@ logicalType = substituteType Vector.empty . shift
 
 class EvidenceFunctor evidencef where
   mapEvidence ::
-    Category Singleton (Evidences logicalEvidence logicalType) scope1 scope2 ->
+    Category (Types logicalType) (Evidences logicalEvidence logicalType) scope1 scope2 ->
     evidencef Void Void scope1 ->
     evidencef logicalEvidence logicalType scope2
 
 substituteEvidence ::
   (EvidenceFunctor evidencef) =>
+  Vector (TypeF logicalType scope) ->
   Vector (EvidenceF logicalEvidence logicalType scope) ->
   evidencef Void Void (Local ':+ scope) ->
   evidencef logicalEvidence logicalType scope
-substituteEvidence substitution evidence = mapEvidence substitute evidence
+substituteEvidence substitutionType substitutionEvidence evidence = mapEvidence substitute evidence
   where
-    substitute = Substitute Shift.Id Singleton (Evidences substitution)
+    substitute = Substitute Shift.Id (Types substitutionType) (Evidences substitutionEvidence)
 
 logicalEvidence ::
   (EvidenceFunctor evidencef, Shift0.Functor (evidencef Void Void)) =>
   evidencef Void Void scope -> evidencef logicalEvidence logicalType scope
-logicalEvidence = substituteEvidence Vector.empty . shift
+logicalEvidence = substituteEvidence Vector.empty Vector.empty . shift
 
 mapInstances ::
   Category (Types Void) (Evidences Void Void) scope scope' ->

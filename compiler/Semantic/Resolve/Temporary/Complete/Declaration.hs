@@ -109,7 +109,14 @@ merge entries@(entry :| _) =
                               Real.Resolve
                                 ( Real.Name properName fixity
                                     `Real.Label` Real.Piece
-                                      Real.Choice {position, index, instanciation, bound, patternx}
+                                      Real.Choice
+                                        { position,
+                                          index,
+                                          instanciation,
+                                          levity = Inferred,
+                                          bound,
+                                          patternx
+                                        }
                                 )
                          in Real.Inferred Real.::: Identity (Identity body),
                       typex = Identity Inferred
@@ -123,7 +130,14 @@ merge entries@(entry :| _) =
                               Real.Resolve
                                 ( Real.Name properName fixity
                                     `Real.Label` Real.Piece
-                                      Real.Choice {position, index, instanciation, bound, patternx}
+                                      Real.Choice
+                                        { position,
+                                          index,
+                                          instanciation,
+                                          levity = Inferred,
+                                          bound,
+                                          patternx
+                                        }
                                 )
                          in Real.Annotated (Identity annotation) Real.::: Identity (Identity body),
                       typex = Identity Inferred

@@ -57,11 +57,11 @@ instance (Scope.Show term) => Show (TypeLambdaOver term scope) where
         showString " }"
       ]
 
-mono :: (Shift0.Functor term) => term scope -> TypeLambdaOver term scope
-mono result =
+mono :: (Shift0.Functor term) => Type scope -> term scope -> TypeLambdaOver term scope
+mono levity result =
   TypeLambdaOver
     { parameters = Strict.Vector.empty,
-      constraints = None,
+      constraints = None {levity},
       result = shift result
     }
 

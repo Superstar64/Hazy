@@ -5,6 +5,7 @@ module Core.Tree.Expression where
 import qualified Core.Substitute as Substitute
 import Core.Tree.Evidence (Evidence)
 import {-# SOURCE #-} Core.Tree.Statements (Statements)
+import qualified Core.Tree.Type as Core
 import Data.Kind (Type)
 import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Term as Term
@@ -34,10 +35,10 @@ instance Show (Expression scope)
 
 instance Scope.Show Expression
 
-monoVariable :: Term.Index scope -> Expression scope
+monoVariable :: Core.Type scope -> Term.Index scope -> Expression scope
 lambdaVariable :: Expression (Scope.SimpleDeclaration ':+ scopes)
-patternVariable :: Expression (Scope.Pattern ':+ scopes)
-patternVariableAt :: Int -> Expression (Scope.SimplePattern ':+ scope)
+patternVariable :: Core.Type scope -> Expression (Scope.Pattern ':+ scope)
+patternVariableAt :: Core.Type scope -> Int -> Expression (Scope.SimplePattern ':+ scope)
 character_ :: Char -> Expression scope
 join_ :: Statements scope -> Expression scope
 newtype_ :: Constructor.Index scope -> Expression scope -> Direction -> Expression scope

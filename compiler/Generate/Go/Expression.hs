@@ -2,7 +2,8 @@ module Generate.Go.Expression where
 
 import Control.Monad.ST (ST)
 import Core.Tree.Argument (Argument (..))
-import Core.Tree.Constraints (ConstraintsF (..))
+import Core.Tree.Constraints (ConstraintsF (Constraints, None))
+import qualified Core.Tree.Constraints
 import Core.Tree.EntryInfo (EntryInfo (EntryInfo))
 import qualified Core.Tree.EntryInfo
 import Core.Tree.Expression (Expression (..))
@@ -113,10 +114,15 @@ force object =
           }
    in value
 
-implicit :: Context s scope -> Bool -> Javascript.Expression -> Instanciation scope -> ST s Javascript.Expression
-implicit _ False thunk Instanciation.Mono = pure $ force thunk
-implicit _ True value Instanciation.Mono = pure $ value
-implicit context _ function (Instanciation arguments) = do
+implicit :: Context s scope -> Javascript.Expression -> Instanciation scope -> ST s Javascript.Expression
+implicit _ thunk@value Instanciation.Mono {levity} =
+  pure $
+    if Info.strict levity
+      then
+        value
+      else
+        force thunk
+implicit context function (Instanciation arguments) = do
   arguments <- traverse (Evidence.generate context) (toList arguments)
   pure Javascript.Call {function, arguments}
 
@@ -126,8 +132,8 @@ generateConstructor ::
   Strict.Vector (Argument scope) ->
   ST s ([Javascript.Statement 'True], Javascript.Expression)
 generateConstructor context Constructor.Index {constructorIndex} arguments = do
-  let process Argument {argument, info = EntryInfo {strict}} =
-        if Info.strict strict
+  let process Argument {argument, info = EntryInfo {levity}} =
+        if Info.strict levity
           then do
             (extra, value) <- generatePure context argument
             pure (extra, value)
@@ -165,8 +171,9 @@ data Binder
   | Group
 
 thunk :: Context s scope -> Binder -> Expression scope -> ST s Javascript.Expression
-thunk context Done Variable {variable, instanciation = Instanciation.Mono}
-  | Term.Binding {name, strict = False} <- context !- variable = do
+thunk context Done Variable {variable, instanciation = Instanciation.Mono {levity}}
+  | not $ Info.strict levity,
+    Term.Binding name <- context !- variable = do
       name <- symbol context name
       pure Javascript.Variable {name}
 thunk context binder expression = case expression of
@@ -195,10 +202,10 @@ generatePure,
     ST s ([Javascript.Statement 'True], Javascript.Expression)
 generateImpure context expression = case expression of
   Variable {variable, instanciation} -> do
-    let Term.Binding {name, strict} = context !- variable
+    let Term.Binding name = context !- variable
     name <- symbol context name
     let expression = Javascript.Variable {name}
-    result <- implicit context strict expression instanciation
+    result <- implicit context expression instanciation
     pure ([], result)
   Method
     { method = Method.Index {methodIndex},
@@ -215,12 +222,12 @@ generateImpure context expression = case expression of
               }
           statement = Javascript.Const name value
           expression = Javascript.Variable {name}
-      result <- implicit context False expression instanciation
+      result <- implicit context expression instanciation
       pure ([statement], result)
   Selector
     { selector = Selector.Index {selectorIndex},
       argument,
-      selectorInfo = EntryInfo {strict}
+      selectorInfo = EntryInfo {levity}
     } -> do
       (statements, object) <- generateImpure context argument
       let select =
@@ -228,7 +235,7 @@ generateImpure context expression = case expression of
               { object,
                 field = Mangle.fields !! (selectorIndex + 1)
               }
-      result <- implicit context (Info.strict strict) select Instanciation.Mono
+      result <- implicit context select Instanciation.Mono {levity}
       pure (statements, result)
   Call {function, argument} -> do
     (statements, function) <- generateImpure context function
@@ -279,11 +286,14 @@ declaration :: Context s scope -> TypeLambda scope -> ST s Javascript.Expression
 declaration context TypeLambdaOver {constraints, result = expression} = do
   let count = case constraints of
         Constraints constraints -> length constraints
-        None -> 0
+        None {} -> 0
   fresh <- Vector.replicateM count (Context.fresh context)
   context <- pure $ Context.evidenceBindings fresh context
   case constraints of
-    None -> thunk context Group expression
+    None {levity} ->
+      if Info.strict levity
+        then error "strict declaration"
+        else thunk context Group expression
     Constraints {} -> do
       statements <- generateInto context Return expression
       pure

@@ -3,6 +3,7 @@ module Semantic.Check.Temporary.Function where
 import Control.Monad.ST (ST)
 import Core.Tree.Type ((-#>))
 import qualified Core.Tree.Type as Core
+import qualified Core.Tree.Type as Type
 import Core.Type.Functor (shiftLogical)
 import Semantic.Check.Context (Context)
 import Semantic.Check.Temporary.Pattern (Pattern)
@@ -33,7 +34,7 @@ check context typex = \case
     argument <- Unify.fresh Core.typex
     result <- Unify.fresh Core.typex
     Unify.unify context functionPosition typex (argument -#> result)
-    pattern1 <- Pattern.check context argument patternx
+    pattern1 <- Pattern.check context Type.lazy argument patternx
     context <- pure $ Pattern.augment pattern1 context
     function1 <- check context (shiftLogical result) function
     pure Bound {functionPosition, patternx = pattern1, function = function1}

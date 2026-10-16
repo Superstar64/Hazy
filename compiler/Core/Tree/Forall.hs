@@ -22,6 +22,10 @@ import qualified Semantic.Tree.TypePattern as Solved.TypePattern
 
 type Forall = ForallOver TypeF Void
 
+-- todo: Having `constraints` here makes sense if `result` is a `Type` but it
+-- makes less sence for binding groups. The problem is that `constraints` stores
+-- levity and you'd normally want that on a per variable basis
+
 data ForallOver typef logical scope = ForallOver
   { parameters :: !(Strict.Vector (TypeF logical scope)),
     constraints :: !(ConstraintsF logical scope),
@@ -78,11 +82,15 @@ instance (Core.Functor typex) => Core.Functor (ForallOver typex) where
         result = Core.map f result
       }
 
-mono :: (Shift0.Functor (typef logical)) => typef logical scope -> ForallOver typef logical scope
-mono result =
+mono ::
+  (Shift0.Functor (typef logical)) =>
+  TypeF logical scope ->
+  typef logical scope ->
+  ForallOver typef logical scope
+mono levity result =
   ForallOver
     { parameters = Strict.Vector.empty,
-      constraints = None,
+      constraints = None {levity},
       result = shift result
     }
 

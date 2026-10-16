@@ -11,7 +11,6 @@ import Data.Text (pack)
 import qualified Data.Vector.Strict as Strict.Vector
 import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Local as Local
-import qualified Semantic.Index.Type2 as Type2
 import Semantic.Tree.Constructor (Syntax (..))
 import Syntax.Lexer (constructorIdentifier)
 import qualified Syntax.Tree.Brand as Brand
@@ -39,7 +38,7 @@ definition n =
             Entry
               { position = Empty,
                 entry = Type.Variable (Local.Local n),
-                strict = Type.Constructor Type2.Lazy
+                levity = Type.lazy
               },
           syntax = Standard,
           name = Variable.ConstructorIdentifier $ constructorIdentifier $ pack $ "Tuple" ++ show n

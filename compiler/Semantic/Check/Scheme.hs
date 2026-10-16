@@ -11,6 +11,7 @@ import qualified Core.Tree.Evidence as Evidence (EvidenceF (..))
 import Core.Tree.Forall (Forall, ForallOver (..))
 import qualified Core.Tree.Instanciation as Instanciation
 import Core.Tree.Type (Type)
+import qualified Core.Tree.Type as Type (strict)
 import Core.Tree.TypeDeclaration (assumeClass)
 import Data.Foldable (toList)
 import qualified Data.Map as Map
@@ -68,13 +69,13 @@ augmentNamed name position parameters constraints mask Context {termEnvironment,
             let evidence =
                   Evidence.Variable
                     { variable = Evidence.assumed index,
-                      instanciation = Instanciation.Mono
+                      instanciation = Instanciation.Mono {levity = Type.strict}
                     }
             entail <- entailed classx arguments evidence
             pure (head, entail)
       collected <- case constraints of
         Constraints constraints -> zipWithM collect [0 ..] $ toList constraints
-        None -> pure []
+        None {} -> pure []
       let ordered = orderWithInt (++) [] (length parameters) collected
           constraints = Vector.map (Map.fromListWith $ LocalBinding.combine position) ordered
           rigid index typex constraints =

@@ -2,10 +2,12 @@ module Semantic.Check.Temporary.Expression where
 
 import Control.Monad.ST (ST)
 import qualified Core.Builtin as Builtin
+import Core.Tree.Data (TypesInfo (..))
 import qualified Core.Tree.Data as Data
 import qualified Core.Tree.Forall as Forall
 import Core.Tree.Type ((#), (-#>))
 import qualified Core.Tree.Type as Core
+import qualified Core.Tree.Type as Type (lazy)
 import Core.Tree.TypeDeclaration (assumeData)
 import qualified Core.Tree.TypeLambda as Simple
 import Core.Type.Functor (shiftLogical)
@@ -47,7 +49,7 @@ import Semantic.Check.Temporary.UpdateInfo (UpdateInfo)
 import qualified Semantic.Check.Temporary.UpdateInfo as UpdateInfo
 import qualified Semantic.Check.TypeAnnotation as Annotation
 import qualified Semantic.Index.Constructor as Constructor
-import qualified Semantic.Index.Table.Type as Type
+import qualified Semantic.Index.Table.Type as Type ((!))
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Layout (Group)
 import Semantic.Scope (Environment (..))
@@ -64,7 +66,6 @@ import Syntax.Position (Position)
 import Syntax.StringLiteral (StringLiteral)
 import Prelude hiding (Bool (False, True))
 import qualified Prelude
-import Core.Tree.Data (TypesInfo(..))
 
 data Expression s scope
   = CallHead
@@ -280,7 +281,7 @@ check context typex Semantic.Do {startPosition, dox} = do
   pure Do {startPosition, dox}
 check context typex Semantic.Lambda {startPosition, parameter, body} = do
   parameterType <- Unify.fresh Core.typex
-  parameter <- Pattern.check context parameterType parameter
+  parameter <- Pattern.check context Type.lazy parameterType parameter
   resultType <- Unify.fresh Core.typex
   body <- Lambda.check (Pattern.augment parameter context) (shiftLogical resultType) body
   Unify.unify context startPosition typex (parameterType -#> resultType)

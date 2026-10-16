@@ -8,7 +8,7 @@ import qualified Core.Tree.Constraints as Constraints (ConstraintsF (..))
 import Core.Tree.Forall (ForallOver (..))
 import Core.Tree.Instanciation (InstanciationF (..))
 import Core.Tree.Type (TypeF (Logical, Variable))
-import qualified Core.Tree.Type as Type (TypeF (..))
+import qualified Core.Tree.Type as Type (TypeF (..), lazy)
 import qualified Core.Tree.TypeLambda as Simple (TypeLambdaOver (..))
 import Data.Foldable (toList, traverse_)
 import qualified Data.Kind as Kind
@@ -19,6 +19,7 @@ import Data.Traversable (for)
 import qualified Data.Vector as Vector
 import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Context (Context (..))
+import Semantic.Check.Mask (Erasure (Known))
 import qualified Semantic.Check.Mask as Mask
 import qualified Semantic.Index.Local as Local
 import qualified Semantic.Index.Table.Local as Table.Local
@@ -36,6 +37,7 @@ import Semantic.Unify.Type
     Logical (..),
     Type (..),
     fresh,
+    mark,
     unshift,
   )
 import Semantic.Unify.Type1 (constrainWith)
@@ -80,7 +82,9 @@ instanciate context position ForallOver {parameters, constraints, result} = do
         arguments <- pure $ toList $ fmap (substitute fresh) arguments
         constrainWith context position classx head arguments
       pure $ Instanciation evidence
-    None -> pure Mono
+    None {levity} -> do
+      mark context position Known levity
+      pure Mono {levity}
   pure $ (substitute fresh result, instanciation)
 
 newtype Generalize typex s scopes = Generalize
@@ -126,12 +130,12 @@ generalizeBody position context (Generalize run) = do
   pure $
     ForallOver
       { parameters,
-        constraints = Constraints.None,
+        constraints = Constraints.None {levity = Type.lazy},
         result
       }
       ::: do
         parameters <- traverse (solve position) parameters
-        constraints <- solve position Constraints.None
+        constraints <- solve position Constraints.None {levity = Type.lazy}
         result <- term
         pure
           Simple.TypeLambdaOver

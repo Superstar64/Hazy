@@ -3,6 +3,8 @@ module Core.Tree.Constraints where
 import qualified Core.Substitute as Substitute
 import Core.Tree.Constraint (ConstraintF)
 import qualified Core.Tree.Constraint as Constraint
+import Core.Tree.Type (TypeF)
+import qualified Core.Tree.Type as Type
 import qualified Core.Type.Functor as Core
 import qualified Data.Vector.Strict as Strict
 import Data.Void (Void)
@@ -17,6 +19,8 @@ type Constraints = ConstraintsF Void
 data ConstraintsF logical scope
   = Constraints !(Strict.Vector (ConstraintF logical scope))
   | None
+      { levity :: !(TypeF logical scope)
+      }
   deriving (Show)
 
 instance (Show logical) => Scope.Show (ConstraintsF logical) where
@@ -28,7 +32,10 @@ instance Shift0.Functor (ConstraintsF logical) where
 instance Shift.Functor (ConstraintsF logical) where
   map category = \case
     Constraints constraints -> Constraints $ Shift.map category <$> constraints
-    None -> None
+    None {levity} ->
+      None
+        { levity = Shift.map category levity
+        }
 
 instance (logical ~ Void) => Substitute.Functor (ConstraintsF logical) where
   map category = Substitute.mapType (Substitute.anyEvidence category)
@@ -36,14 +43,23 @@ instance (logical ~ Void) => Substitute.Functor (ConstraintsF logical) where
 instance Substitute.TypeFunctor ConstraintsF where
   mapType category = \case
     Constraints constraints -> Constraints $ Substitute.mapType category <$> constraints
-    None -> None
+    None {levity} ->
+      None
+        { levity = Substitute.mapType category levity
+        }
 
 instance Core.Functor ConstraintsF where
   map f = \case
     Constraints constraints -> Constraints $ Core.map f <$> constraints
-    None -> None
+    None {levity} ->
+      None
+        { levity = Core.map f levity
+        }
 
 simplify :: Semantic.Constraints position Check scope -> Constraints scope
 simplify = \case
   Semantic.Constraints constraints -> Constraints $ Constraint.simplify <$> constraints
-  Semantic.None -> None
+  Semantic.None ->
+    None
+      { levity = Type.lazy
+      }

@@ -11,6 +11,7 @@ import qualified Generate.Binding.Type as Type
 import Generate.Context (Context, (!=.))
 import qualified Generate.Context as Context
 import {-# SOURCE #-} Generate.Go.Expression (force)
+import qualified Generate.Info as Info
 import qualified Generate.Mangle as Mangle
 import qualified Javascript.Tree.Expression as Javascript (Expression (..))
 import qualified Javascript.Tree.Field as Javascript (Field (..))
@@ -94,9 +95,6 @@ generate context = \case
               arguments = packTuple number : arguments
             }
   Variable {variable, instanciation} -> do
-    let strict = case variable of
-          Evidence.Index {} -> True
-          Direct {} -> False
     literal@function <- case variable of
       Evidence.Direct target (Index index)
         | Type.Binding {dataInstances} <- context !=. index,
@@ -262,9 +260,9 @@ generate context = \case
               readRatio
             } = Context.builtin context
     case instanciation of
-      Instanciation.Mono ->
+      Instanciation.Mono {levity} ->
         pure $
-          if strict
+          if Info.strict levity
             then literal
             else force literal
       Instanciation arguments -> do

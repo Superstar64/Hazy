@@ -192,6 +192,10 @@ constraint = Constraint
 levity :: TypeF logical scope
 levity = Levity
 
+strict, lazy :: TypeF logical scope
+strict = Constructor Type2.Strict
+lazy = Constructor Type2.Lazy
+
 simplify :: Solved.Type position Check scope -> Type scope
 simplify typex = simplifyWith typex []
 

@@ -1,6 +1,7 @@
 module Semantic.Tree.Definition2 where
 
 import qualified Core.Tree.Instanciation as Simple
+import qualified Core.Tree.Type as Core
 import Data.Kind (Type)
 import Semantic.Connect (Connect (..))
 import Semantic.FreeVariables (FreeTermVariables (..))
@@ -90,6 +91,7 @@ data Choice stage scope = Choice
   { position :: !Position,
     index :: !(Term.Index scope),
     instanciation :: !(Inferred.Inferred Simple.Instanciation stage scope),
+    levity :: !(Inferred.Inferred Core.Type stage scope),
     bound :: !Term.Bound,
     patternx :: Pattern Position stage scope
   }
@@ -99,11 +101,12 @@ instance Shift0.Functor (Choice stage) where
   map = Shift.mapDefault
 
 instance Shift.Functor (Choice stage) where
-  map category Choice {position, index, instanciation, bound, patternx} =
+  map category Choice {position, index, instanciation, levity, bound, patternx} =
     Choice
       { position,
         index = Shift.map category index,
         instanciation = Shift.map category instanciation,
+        levity = Shift.map category levity,
         bound,
         patternx = Shift.map category patternx
       }

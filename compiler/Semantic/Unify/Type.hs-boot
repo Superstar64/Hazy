@@ -7,7 +7,7 @@ import Core.Tree.Type (TypeF)
 import qualified Data.Kind as Kind
 import {-# SOURCE #-} Semantic.Check.Context (Context)
 import qualified Semantic.Check.Mask as Mask
-import Semantic.Scope (Environment)
+import Semantic.Scope (Environment (..))
 import qualified Semantic.Shift0 as Shift0
 import Syntax.Position (Position)
 import Prelude hiding (Functor)
@@ -29,3 +29,9 @@ data Box s scope
 fresh :: Type s scope -> ST s (Type s scope)
 mark :: Context s scope -> Position -> Mask.Erasure -> Type s scope -> ST s ()
 unify :: Context s scope -> Position -> Type s scope -> Type s scope -> ST s ()
+unshift ::
+  forall s scope scopes.
+  Context s (scope ':+ scopes) ->
+  Position ->
+  Type s (scope ':+ scopes) ->
+  ST s (Type s scopes)

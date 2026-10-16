@@ -272,13 +272,13 @@ checkBody position key Solve {solve} reflection information lookup members =
                   Data {index1, head1} -> Evidence.Direct index1 (Type2.Index head1)
                   Class {index2, head2} -> Evidence.Direct (Type2.Index index2) head2
                 instanciation = case prerequisites of
-                  Semantic.Tree.Constraints.None -> Core.Mono
+                  Semantic.Tree.Constraints.None -> Core.Mono {levity = Core.Type.lazy}
                   Constraints prerequisites -> Core.Instanciation $ Strict.Vector.fromList $ do
                     i <- [0 .. length prerequisites - 1]
                     pure
                       Core.Evidence.Variable
                         { variable = Evidence.Index (Evidence0.Assumed i),
-                          instanciation = Core.Instanciation.Mono
+                          instanciation = Core.Instanciation.Mono {levity = Core.Type.strict}
                         }
         context <- Scheme.augment position parameters prerequisites Mask.Runtime context
         {-

@@ -15,7 +15,8 @@ type Instanciation s scope = InstanciationF (Logical s scope) (Type.Logical s sc
 unify :: Context s scope -> Position -> Instanciation s scope -> Instanciation s scope -> ST s ()
 unify context position (Instanciation instanciation) (Instanciation instanciation') =
   sequence_ $ Strict.Vector.zipWith (Evidence.unify context position) instanciation instanciation'
-unify _ _ Mono Mono = pure ()
+unify context position Mono {levity = levity1} Mono {levity = levity2} = do
+  Type.unify context position levity1 levity2
 unify _ _ _ _ = error "unify instanciation can't fail"
 
 unshift ::
@@ -26,4 +27,6 @@ unshift ::
 unshift context position = \case
   Instanciation instanciation ->
     Instanciation <$> traverse (Evidence.unshift context position) instanciation
-  Mono -> pure Mono
+  Mono {levity} -> do
+    levity <- Type.unshift context position levity
+    pure Mono {levity}

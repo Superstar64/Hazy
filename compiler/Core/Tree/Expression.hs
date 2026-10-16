@@ -28,6 +28,7 @@ import qualified Core.Tree.Instanciation as Instanciation
 import Core.Tree.MethodInfo (MethodInfo)
 import Core.Tree.Statements (Statements)
 import qualified Core.Tree.Statements as Statements
+import Core.Tree.Type (Type)
 import qualified Core.Tree.Type as Type
 import Data.Foldable (toList)
 import qualified Data.Kind
@@ -64,7 +65,6 @@ import Semantic.Tree.Expression (Explicit (Known))
 import qualified Semantic.Tree.Expression as Semantic (Expression (..))
 import qualified Semantic.Tree.ExpressionField as Semantic (Field (Field))
 import qualified Semantic.Tree.ExpressionField as Semantic.Field
-import Semantic.Tree.Pattern (Failable (Unused))
 import qualified Semantic.Tree.Pattern as Pattern
 import qualified Semantic.Tree.RightHandSide as Semantic (RightHandSide)
 import qualified Semantic.Tree.Select as Semantic (Select (..))
@@ -190,24 +190,27 @@ instance Substitute.Functor Expression where
           direction
         }
 
-monoVariable :: Term.Index scope -> Expression scope
-monoVariable variable =
+monoVariable :: Type scope -> Term.Index scope -> Expression scope
+monoVariable levity variable =
   Variable
     { variable,
-      instanciation = Instanciation.Mono
+      instanciation = Instanciation.Mono {levity}
     }
 
+bindingVariable :: Type scope -> Expression (Scope.SimpleDeclaration ':+ scope)
+bindingVariable levity = monoVariable (shift levity) $ Term.SimpleDeclaration
+
 lambdaVariable :: Expression (Scope.SimpleDeclaration ':+ scopes)
-lambdaVariable = monoVariable $ Term.SimpleDeclaration
+lambdaVariable = bindingVariable Type.lazy
 
-patternVariable :: Expression (Scope.Pattern ':+ scope)
-patternVariable = monoVariable $ Term.Pattern Term.At
+patternVariable :: Type scope -> Expression (Scope.Pattern ':+ scope)
+patternVariable levity = monoVariable (shift levity) $ Term.Pattern Term.At
 
-patternVariableAt :: Int -> Expression (Scope.SimplePattern ':+ scope)
-patternVariableAt index = monoVariable $ Term.SimplePattern index
+patternVariableAt :: Type scope -> Int -> Expression (Scope.SimplePattern ':+ scope)
+patternVariableAt levity index = monoVariable (shift levity) $ Term.SimplePattern index
 
-patternVariableAt' :: Int -> Expression (Scope.Pattern ':+ scope)
-patternVariableAt' index = monoVariable $ Term.Pattern $ Term.Select index Term.At
+patternVariableAt' :: Type scope -> Int -> Expression (Scope.Pattern ':+ scope)
+patternVariableAt' levity index = monoVariable (shift levity) $ Term.Pattern $ Term.Select index Term.At
 
 character_ :: Char -> Expression scope
 character_ character = Character {character}
@@ -230,7 +233,7 @@ eqChar =
   eq
     Evidence.Variable
       { variable = Index.Evidence.Direct Type2.Eq Type2.Char,
-        instanciation = Instanciation.Mono
+        instanciation = Instanciation.monoLazy
       }
 
 eq :: Evidence scope -> Expression scope -> Expression scope -> Expression scope
@@ -238,7 +241,7 @@ eq evidence left right =
   Method
     { method = Method.equal,
       evidence,
-      instanciation = Instanciation.Mono,
+      instanciation = Instanciation.monoLazy,
       methodInfo = Class.info Eq.definition
     }
     `call` left
@@ -249,7 +252,7 @@ lessThenEqual evidence left right =
   Method
     { method = Method.lessThenEqual,
       evidence,
-      instanciation = Instanciation.Mono,
+      instanciation = Instanciation.monoLazy,
       methodInfo = Class.info Ord.definition
     }
     `call` left
@@ -260,7 +263,7 @@ lessThenEqualInt =
   lessThenEqual
     Evidence.Variable
       { variable = Index.Evidence.Direct Type2.Ord Type2.Int,
-        instanciation = Instanciation.Mono
+        instanciation = Instanciation.monoLazy
       }
 
 compare :: Evidence scope -> Expression scope -> Expression scope -> Expression scope
@@ -268,7 +271,7 @@ compare evidence left right =
   Method
     { method = Method.compare,
       evidence,
-      instanciation = Instanciation.Mono,
+      instanciation = Instanciation.monoLazy,
       methodInfo = Class.info Ord.definition
     }
     `call` left
@@ -279,7 +282,7 @@ compareInt =
   compare
     Evidence.Variable
       { variable = Index.Evidence.Direct Type2.Ord Type2.Int,
-        instanciation = Instanciation.Mono
+        instanciation = Instanciation.monoLazy
       }
 
 orderingEqual :: Expression scope
@@ -296,9 +299,9 @@ orderingCombine left right =
       evidence =
         Evidence.Variable
           { variable = Index.Evidence.Direct Type2.Semigroup Type2.Ordering,
-            instanciation = Instanciation.Mono
+            instanciation = Instanciation.monoLazy
           },
-      instanciation = Instanciation.Mono,
+      instanciation = Instanciation.monoLazy,
       methodInfo = Class.info Semigroup.definition
     }
     `call` left
@@ -309,14 +312,14 @@ minBound evidence =
   Method
     { method = Method.minBound,
       evidence,
-      instanciation = Instanciation.Mono,
+      instanciation = Instanciation.monoLazy,
       methodInfo = Class.info Eq.definition
     }
 maxBound evidence =
   Method
     { method = Method.maxBound,
       evidence,
-      instanciation = Instanciation.Mono,
+      instanciation = Instanciation.monoLazy,
       methodInfo = Class.info Eq.definition
     }
 
@@ -325,7 +328,7 @@ purex evidence value =
   Method
     { method = Method.pure,
       evidence,
-      instanciation = Instanciation.Mono,
+      instanciation = Instanciation.monoLazy,
       methodInfo = Class.info Applicative.definition
     }
     `call` value
@@ -335,7 +338,7 @@ run evidence ignore thenx =
   Method
     { method = Method.thenx,
       evidence,
-      instanciation = Instanciation.Mono,
+      instanciation = Instanciation.monoLazy,
       methodInfo = Class.info Monad.definition
     }
     `call` ignore
@@ -349,7 +352,7 @@ bind fail evidence input output =
         if fail
           then Evidence.Super {base = evidence, index = 0}
           else evidence,
-      instanciation = Instanciation.Mono,
+      instanciation = Instanciation.monoLazy,
       methodInfo = Class.info Monad.definition
     }
     `call` input
@@ -360,7 +363,7 @@ failx evidence =
   Method
     { method = Method.fail,
       evidence,
-      instanciation = Instanciation.Mono,
+      instanciation = Instanciation.monoLazy,
       methodInfo = Class.info MonadFail.definition
     }
     `call` nil
@@ -371,7 +374,7 @@ int int =
     (toInteger int)
     Evidence.Variable
       { variable = Index.Evidence.Direct Type2.Num Type2.Int,
-        instanciation = Instanciation.Mono
+        instanciation = Instanciation.monoLazy
       }
 
 integer_ :: Integer -> Evidence scope -> Expression scope
@@ -381,7 +384,7 @@ integer_ integer evidence =
         Method
           { method = Method.fromInteger,
             evidence,
-            instanciation = Instanciation.Mono,
+            instanciation = Instanciation.monoLazy,
             methodInfo = Class.info Num.definition
           },
       argument = Integer {integer}
@@ -394,7 +397,7 @@ float_ float evidence =
         Method
           { method = Method.fromRational,
             evidence,
-            instanciation = Instanciation.Mono,
+            instanciation = Instanciation.monoLazy,
             methodInfo = Class.info Fractional.definition
           },
       argument =
@@ -408,7 +411,7 @@ float_ float evidence =
           }
     }
   where
-    info = EntryInfo {strict = Type.Constructor Type2.Strict}
+    info = EntryInfo {levity = Type.strict}
 
 bool :: Bool -> Expression scope
 bool value =
@@ -511,18 +514,18 @@ instance Monadic 'Semantic.Statements.Comprehension where
       then
         Evidence.Variable
           { variable = Index.Evidence.Direct Type2.MonadFail Type2.List,
-            instanciation = Instanciation.Mono
+            instanciation = Instanciation.monoLazy
           }
       else
         Evidence.Variable
           { variable = Index.Evidence.Direct Type2.Monad Type2.List,
-            instanciation = Instanciation.Mono
+            instanciation = Instanciation.monoLazy
           }
   lift _ =
     purex
       Evidence.Variable
         { variable = Index.Evidence.Direct Type2.Applicative Type2.List,
-          instanciation = Instanciation.Mono
+          instanciation = Instanciation.monoLazy
         }
 
 instance (Monadic syntax) => Simplify (Semantic.Statements syntax) where
@@ -552,7 +555,12 @@ instance (Monadic syntax) => Simplify (Semantic.Statements syntax) where
           Definition
             { definition =
                 Function.Bound
-                  { patternx = Pattern.Wildcard {names = Map.empty},
+                  { patternx =
+                      Pattern.Wildcard
+                        { startPosition = (),
+                          levity = Solved Type.lazy,
+                          names = Map.empty
+                        },
                     body =
                       Function.Plain
                         { plain =
@@ -605,11 +613,11 @@ simplifySelector ::
   SelectorInfo scope ->
   Expression scope ->
   Expression scope
-simplifySelector selector Uniform {strict} argument =
+simplifySelector selector Uniform {levity} argument =
   Selector
     { selector,
       argument,
-      selectorInfo = EntryInfo {strict}
+      selectorInfo = EntryInfo {levity}
     }
 simplifySelector (Selector.Index typeIndex _) Disjoint {select} argument =
   Join {statements = mconcat statements}
@@ -622,10 +630,11 @@ simplifySelector (Selector.Index typeIndex _) Disjoint {select} argument =
               constructorInfo = ConstructorInfo {entries},
               check = argument,
               thenx = case selectIndex of
-                Strict.Just index ->
-                  Statements.Done
-                    { done = monoVariable $ Term.SimplePattern index
-                    }
+                Strict.Just index
+                  | EntryInfo {levity} <- entries Strict.Vector.! index ->
+                      Statements.Done
+                        { done = monoVariable (shift levity) $ Term.SimplePattern index
+                        }
                 Strict.Nothing -> Statements.Bottom
             }
         Semantic.Newtype ->
@@ -637,6 +646,7 @@ simplifySelector (Selector.Index typeIndex _) Disjoint {select} argument =
                     direction = Destruct
                   }
             }
+
     statements = zipWith generate [0 ..] $ toList select
 
 simplifyWith ::
@@ -709,13 +719,14 @@ simplifyWith expression [] = case expression of
                 }
               where
                 illegal Semantic.Select {pick} = Strict.Just pick `notElem` selectorIndexes
-                generate index selectorIndex =
-                  case [ shift $ shift $ simplify update
-                       | Semantic.Select {pick, update} <- toList updates,
-                         selectorIndex == Strict.Just pick
-                       ] of
-                    [] -> monoVariable $ Term.SimplePattern index
-                    expressions -> last expressions
+                generate index selectorIndex
+                  | EntryInfo {levity} <- entries Strict.Vector.! index =
+                      case [ shift $ shift $ simplify update
+                           | Semantic.Select {pick, update} <- toList updates,
+                             selectorIndex == Strict.Just pick
+                           ] of
+                        [] -> monoVariable (shift $ shift levity) $ Term.SimplePattern index
+                        expressions -> last expressions
             Semantic.Newtype ->
               Statements.Done
                 { done =
@@ -742,9 +753,8 @@ simplifyWith expression [] = case expression of
       argument element =
         Argument
           { argument = simplify element,
-            info
+            info = EntryInfo {levity = Type.lazy}
           }
-      info = EntryInfo {strict = Type.Constructor Type2.Lazy}
   Semantic.List {items} ->
     foldr (cons . simplify) nil items
   Semantic.Comprehension {statements} -> simplify statements
@@ -754,30 +764,7 @@ simplifyWith expression [] = case expression of
         letBody = simplify letBody
       }
   Semantic.If {condition, thenx, elsex} ->
-    guard
-      ( Statements.bind
-          ( Pattern.Match
-              { names = Map.empty,
-                match =
-                  Pattern.Constructor
-                    { constructorPosition = (),
-                      constructor = Constructor.true,
-                      patterns = Strict.Vector.empty,
-                      constructorInfo =
-                        Solved
-                          Semantic.ConstructorInfo {entries = Strict.Vector.empty},
-                      failable = Unused
-                    },
-                irrefutable = False
-              }
-          )
-          (simplify condition)
-          ( Statements.Done
-              { done = shift $ simplify thenx
-              }
-          )
-      )
-      (simplify elsex)
+    ifx (simplify condition) (simplify thenx) (simplify elsex)
   Semantic.Case {scrutinee, cases}
     | null cases ->
         Join
@@ -847,7 +834,7 @@ simplifyWith expression [] = case expression of
           Method
             { method = Method.negate,
               evidence,
-              instanciation = Instanciation.Mono,
+              instanciation = Instanciation.monoLazy,
               methodInfo = Class.info Num.definition
             },
         argument = simplify negative
@@ -862,7 +849,7 @@ simplifyWith expression [] = case expression of
                 Argument {argument = tail, info}
               ]
         }
-    info = EntryInfo {strict = Type.Constructor Type2.Lazy}
+    info = EntryInfo {levity = Type.lazy}
     nil =
       Constructor
         { constructor = Constructor.nil,

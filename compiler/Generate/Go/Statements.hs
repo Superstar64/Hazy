@@ -59,13 +59,13 @@ attempt context target label = \case
       Expression.generateInto context target done
   Bind
     { constructor = Constructor.Index {constructorIndex},
-      constructorInfo = constructorInfo@ConstructorInfo {entries},
+      constructorInfo = ConstructorInfo {entries},
       check,
       thenx
     } -> do
       (prelude, check) <- Expression.generatePure context check
       names <- Strict.Vector.replicateM (length entries) (Context.fresh context)
-      context <- pure $ Context.patternBindings names constructorInfo context
+      context <- pure $ Context.patternBindings names context
       thenx <- attempt context target label thenx
       let ifx = Javascript.If condition (bind ++ thenx)
           condition =

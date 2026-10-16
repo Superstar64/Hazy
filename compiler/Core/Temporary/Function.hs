@@ -5,6 +5,7 @@ import qualified Core.Temporary.RightHandSide as RightHandSide
 import {-# SOURCE #-} qualified Core.Tree.Expression as Expression
 import Core.Tree.Statements (Statements)
 import qualified Core.Tree.Statements as Statements
+import qualified Core.Tree.Type as Type
 import qualified Semantic.Index.Term as Term
 import Semantic.Layout (Normal)
 import Semantic.Scope (Environment ((:+)))
@@ -122,6 +123,6 @@ desugarUnitary = \case
   Bind {patternx, variable, thenx} ->
     Statements.bind
       patternx
-      (Expression.monoVariable variable)
+      (Expression.monoVariable Type.lazy variable)
       (desugarUnitary thenx)
   Bound {} -> error "desugarUnitary on bound"

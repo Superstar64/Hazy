@@ -10,7 +10,7 @@ import qualified Semantic.Shift0 as Shift0
 
 data SelectorInfo scope
   = Uniform
-      { strict :: !(Simple.Type scope)
+      { levity :: !(Simple.Type scope)
       }
   | Disjoint
       { select :: !(Strict.Vector (Select scope))
@@ -32,7 +32,7 @@ instance Shift0.Functor SelectorInfo where
 
 instance Shift.Functor SelectorInfo where
   map category = \case
-    Uniform {strict} -> Uniform {strict = Shift.map category strict}
+    Uniform {levity} -> Uniform {levity = Shift.map category levity}
     Disjoint {select} -> Disjoint {select = Shift.map category <$> select}
 
 instance Shift0.Functor Select where

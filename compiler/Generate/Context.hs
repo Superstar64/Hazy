@@ -2,8 +2,6 @@ module Generate.Context where
 
 import Control.Monad.ST (ST)
 import qualified Core.Index.Table.Term as Term (Table (..), (!))
-import Core.Tree.ConstructorInfo (ConstructorInfo (..))
-import Core.Tree.EntryInfo (EntryInfo (..))
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
@@ -13,13 +11,11 @@ import Data.Vector (Vector)
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
 import qualified Generate.Binding.Evidence as Evidence (Binding (..))
-import qualified Generate.Binding.Term as Term (Binding (..), binding)
-import qualified Generate.Binding.Term as Term.Binding
+import qualified Generate.Binding.Term as Term (Binding (..))
 import qualified Generate.Binding.Type as Type (Binding (..))
 import Generate.Global (Global)
 import Generate.GlobalType (GlobalType (GlobalType))
 import qualified Generate.GlobalType as GlobalType
-import qualified Generate.Info as Info
 import Generate.LocalType (LocalType (LocalType))
 import qualified Generate.LocalType as LocalType
 import qualified Generate.Mangle as Mangle
@@ -55,7 +51,7 @@ start Precontext {terms, types} = do
   builtinUsed <- traverse (const $ newSTRef Strict.Nothing) (pure ())
   pure
     Context
-      { terms = Term.Global (fmap (Term.binding . Global) <$> terms),
+      { terms = Term.Global (fmap (Term.Binding . Global) <$> terms),
         evidence = Evidence0.Global,
         types = Type.Global (fmap globalType <$> types),
         unique,
@@ -88,7 +84,7 @@ localBindings ::
   Context s (Scope.Declaration ':+ scope)
 localBindings names instances Context {terms, evidence, types, unique, used, builtinUsed} =
   Context
-    { terms = Term.Declaration (Term.binding . Local <$> names) terms,
+    { terms = Term.Declaration (Term.Binding . Local <$> names) terms,
       evidence = Evidence0.Declaration evidence,
       types = Type.Declaration (go <$> instances) types,
       unique,
@@ -105,7 +101,7 @@ localBindings names instances Context {terms, evidence, types, unique, used, bui
 singleBinding :: Text -> Context s scope -> Context s (Scope.SimpleDeclaration ':+ scope)
 singleBinding name Context {terms, evidence, types, unique, used, builtinUsed} =
   Context
-    { terms = Term.SimpleDeclaration (Term.binding $ Local name) terms,
+    { terms = Term.SimpleDeclaration (Term.Binding $ Local name) terms,
       evidence = Evidence0.SimpleDeclaration evidence,
       types = Type.SimpleDeclaration types,
       unique,
@@ -115,10 +111,9 @@ singleBinding name Context {terms, evidence, types, unique, used, builtinUsed} =
 
 patternBindings ::
   Strict.Vector Text ->
-  ConstructorInfo scope ->
   Context s scope ->
   Context s (Scope.SimplePattern ':+ scope)
-patternBindings names ConstructorInfo {entries} Context {terms, evidence, types, unique, used, builtinUsed} =
+patternBindings names Context {terms, evidence, types, unique, used, builtinUsed} =
   Context
     { terms = Term.SimplePattern patterns terms,
       evidence = Evidence0.SimplePattern evidence,
@@ -128,12 +123,7 @@ patternBindings names ConstructorInfo {entries} Context {terms, evidence, types,
       builtinUsed
     }
   where
-    patterns = Strict.Vector.toLazy $ Strict.Vector.zipWith bind names entries
-    bind name EntryInfo {strict} =
-      Term.Binding
-        { name = Local name,
-          strict = Info.strict strict
-        }
+    patterns = Strict.Vector.toLazy $ Term.Binding . Local <$> names
 
 evidenceBindings ::
   Vector Text ->

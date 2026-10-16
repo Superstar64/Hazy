@@ -6,7 +6,7 @@ import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
 
 newtype EntryInfo scope = EntryInfo
-  { strict :: Simple.Type scope
+  { levity :: Simple.Type scope
   }
   deriving (Show)
 
@@ -17,7 +17,7 @@ instance Shift.Functor EntryInfo where
   map = Substitute.mapDefault
 
 instance Substitute.Functor EntryInfo where
-  map category EntryInfo {strict} =
+  map category EntryInfo {levity} =
     EntryInfo
-      { strict = Substitute.map category strict
+      { levity = Substitute.map category levity
       }

@@ -8,6 +8,7 @@ import qualified Core.Tree.Data as Data
 import qualified Core.Tree.Forall as Core (mono)
 import Core.Tree.Type ((#))
 import qualified Core.Tree.Type as Core (char, constructor, list, typex)
+import qualified Core.Tree.Type as Type (lazy)
 import Core.Tree.TypeDeclaration (assumeData)
 import Core.Type.Functor (shiftLogical)
 import Data.Map (Map)
@@ -22,12 +23,13 @@ import qualified Semantic.Check.Binding.Type as TypeBinding
 import Semantic.Check.Context (Context (..))
 import qualified Semantic.Check.Instanciate.Constructor as ConstructorInstance
 import qualified Semantic.Check.Instanciate.Data as DataInstance
+import Semantic.Check.Mask (Erasure (Known))
 import Semantic.Check.Temporary.ConstructorInfo (ConstructorInfo)
 import qualified Semantic.Check.Temporary.ConstructorInfo as ConstructorInfo
 import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Table.Local as Local
 import qualified Semantic.Index.Table.Term as Term
-import qualified Semantic.Index.Table.Type as Type
+import qualified Semantic.Index.Table.Type as Type (Table (..), (!))
 import Semantic.Index.Term (Bound)
 import qualified Semantic.Index.Term as Bound (Bound (..))
 import qualified Semantic.Index.Type2 as Type2
@@ -47,11 +49,15 @@ import qualified Prelude
 
 data Pattern s scope
   = Wildcard
-      { names :: !(Map Variable Position),
+      { startPosition :: !Position,
+        names :: !(Map Variable Position),
+        levity :: !(Unify.Type s scope),
         typex :: !(Unify.Type s scope)
       }
   | Match
-      { names :: !(Map Variable Position),
+      { startPosition :: !Position,
+        names :: !(Map Variable Position),
+        levity :: !(Unify.Type s scope),
         typex :: !(Unify.Type s scope),
         irrefutable :: !Prelude.Bool,
         match :: !(Bindings s scope)
@@ -71,28 +77,23 @@ data Bindings s scope
         constructorInfo :: !(ConstructorInfo s scope)
       }
   | Integer
-      { startPosition :: !Position,
-        integer :: !Integer,
+      { integer :: !Integer,
         evidence :: !(Unify.Evidence s scope),
         equal :: !(Unify.Evidence s scope)
       }
   | Float
-      { startPosition :: !Position,
-        float :: !Rational,
+      { float :: !Rational,
         evidence :: !(Unify.Evidence s scope),
         equal :: !(Unify.Evidence s scope)
       }
   | Character
-      { startPosition :: !Position,
-        character :: !Char
+      { character :: !Char
       }
   | String
-      { startPosition :: !Position,
-        string :: !StringLiteral
+      { string :: !StringLiteral
       }
   | List
-      { startPosition :: !Position,
-        items :: !(Strict.Vector1 (Pattern s scope))
+      { items :: !(Strict.Vector1 (Pattern s scope))
       }
 
 data Field s scope = Field
@@ -100,8 +101,8 @@ data Field s scope = Field
     field :: !(Pattern s scope)
   }
 
-(!) :: Pattern s scope -> Bound -> Unify.Type s scope
-patternx ! Bound.At = typex patternx
+(!) :: Pattern s scope -> Bound -> (Unify.Type s scope, Unify.Type s scope)
+patternx ! Bound.At = (levity patternx, typex patternx)
 patternx ! Bound.Select index bound = case patternx of
   Wildcard {} -> error "bad index"
   Match {match} -> case match of
@@ -126,7 +127,10 @@ augment patternx Context {termEnvironment, localEnvironment, typeEnvironment} =
 augmentPattern :: Pattern s scopes -> Term.Bound (TermBinding s) (scope ':+ scopes)
 augmentPattern patternx = Term.Bound {at, select}
   where
-    at = TermBinding $ pure $ Wobbly (shiftLogical (Core.mono $ typex patternx))
+    visible
+      | Match {irrefutable} <- patternx, irrefutable = Type.lazy
+      | otherwise = levity patternx
+    at = TermBinding $ pure $ Wobbly (shiftLogical (Core.mono visible $ typex patternx))
     select = case patternx of
       Wildcard {} -> Strict.Vector.empty
       Match {match} -> case match of
@@ -143,11 +147,13 @@ augmentPattern patternx = Term.Bound {at, select}
 check ::
   Context s scope ->
   Unify.Type s scope ->
+  Unify.Type s scope ->
   Semantic.Pattern Position Resolve scope ->
   ST s (Pattern s scope)
-check context@Context {typeEnvironment} typex = \case
-  Semantic.Wildcard {names} -> pure Wildcard {typex, names}
-  Semantic.Match {names, irrefutable, match} -> do
+check context@Context {typeEnvironment} levity typex = \case
+  Semantic.Wildcard {startPosition, names} -> pure Wildcard {startPosition, typex, levity, names}
+  Semantic.Match {startPosition, names, irrefutable, match} -> do
+    Unify.mark context startPosition Known levity
     match <- case match of
       Semantic.Constructor
         { constructorPosition,
@@ -166,11 +172,11 @@ check context@Context {typeEnvironment} typex = \case
                   TypesInfo types -> types
                 instancex = constructors Strict.Vector.! constructorIndex
                 entries = ConstructorInstance.types instancex
+                levities = ConstructorInstance.levities instancex
                 constructorInfo = ConstructorInstance.info instancex
-            ConstructorInstance.mark context instancex
             Unify.unify context constructorPosition typex base
             when (length entries /= length patterns) $ mismatchedConstructorArguments constructorPosition
-            patterns <- sequence $ Strict.Vector.zipWith (check context) entries patterns
+            patterns <- sequence $ Strict.Vector.zipWith3 (check context) levities entries patterns
             pure $
               Constructor
                 { constructorPosition,
@@ -194,16 +200,20 @@ check context@Context {typeEnvironment} typex = \case
                 TypesInfo types -> types
               instancex = constructors Strict.Vector.! constructorIndex
               entries = ConstructorInstance.types instancex
+              levities = ConstructorInstance.levities instancex
               constructorInfo = ConstructorInstance.info instancex
-              lookup index = entries Strict.Vector.! index
               checkPattern Semantic.Field {index, field} = do
-                field <- check context (lookup index) field
+                field <-
+                  check
+                    context
+                    (levities Strict.Vector.! index)
+                    (entries Strict.Vector.! index)
+                    field
                 pure
                   Field
                     { index,
                       field
                     }
-          ConstructorInstance.mark context instancex
           Unify.unify context constructorPosition typex base
           fields <- traverse checkPattern fields
           pure $
@@ -213,31 +223,34 @@ check context@Context {typeEnvironment} typex = \case
                 fields,
                 constructorInfo
               }
-      Semantic.List {startPosition, items} -> do
+      Semantic.List {items} -> do
         element <- Unify.fresh Core.typex
-        items <- traverse (check context element) items
+        items <- traverse (check context Type.lazy element) items
         Unify.unify context startPosition typex (Core.list element)
-        pure $ List {startPosition, items}
-      Semantic.Character {startPosition, character} -> do
+        pure $ List {items}
+      Semantic.Character {character} -> do
         Unify.unify context startPosition typex Core.char
-        pure $ Character {startPosition, character}
-      Semantic.String {startPosition, string} -> do
+        pure $ Character {character}
+      Semantic.String {string} -> do
         Unify.unify context startPosition typex (Core.list Core.char)
-        pure $ String {startPosition, string}
-      Semantic.Integer {startPosition, integer} -> do
+        pure $ String {string}
+      Semantic.Integer {integer} -> do
         evidence <- Unify.constrain context startPosition Type2.Num typex
         equal <- Unify.constrain context startPosition Type2.Eq typex
-        pure Integer {startPosition, integer, evidence, equal}
-      Semantic.Float {startPosition, float} -> do
+        pure Integer {integer, evidence, equal}
+      Semantic.Float {float} -> do
         evidence <- Unify.constrain context startPosition Type2.Fractional typex
         equal <- Unify.constrain context startPosition Type2.Eq typex
-        pure Float {startPosition, float, evidence, equal}
-    pure Match {typex, names, irrefutable, match}
+        pure Float {float, evidence, equal}
+    pure Match {startPosition, names, levity, typex, irrefutable, match}
 
 solve :: Pattern s scope -> Unify.Solve s (Solved.Pattern Position Check scope)
 solve = \case
-  Wildcard {names} -> pure Solved.Wildcard {names}
-  Match {names, irrefutable, match} -> do
+  Wildcard {startPosition, levity, names} -> do
+    levity <- Unify.solve startPosition levity
+    pure Solved.Wildcard {startPosition, levity = Solved levity, names}
+  Match {startPosition, levity, names, irrefutable, match} -> do
+    levity <- Unify.solve startPosition levity
     match <- case match of
       Constructor
         { constructorPosition,
@@ -274,39 +287,36 @@ solve = \case
                 constructorInfo = Solved constructorInfo,
                 failable = Unused
               }
-      List {startPosition, items} -> do
+      List {items} -> do
         items <- traverse solve items
-        pure Solved.List {startPosition, items}
-      Integer {startPosition, integer, evidence, equal} -> do
+        pure Solved.List {items}
+      Integer {integer, evidence, equal} -> do
         evidence <- Unify.solveEvidence startPosition evidence
         equal <- Unify.solveEvidence startPosition equal
         pure
           Solved.Integer
-            { startPosition,
-              integer,
+            { integer,
               evidence = Solved evidence,
               equal = Solved equal
             }
-      Float {startPosition, float, evidence, equal} -> do
+      Float {float, evidence, equal} -> do
         evidence <- Unify.solveEvidence startPosition evidence
         equal <- Unify.solveEvidence startPosition equal
         pure
           Solved.Float
             { float,
-              startPosition,
               evidence = Solved evidence,
               equal = Solved equal
             }
-      Character {startPosition, character} ->
-        pure $
-          Solved.Character
-            { startPosition,
-              character
-            }
-      String {startPosition, string} ->
-        pure $
-          Solved.String
-            { startPosition,
-              string
-            }
-    pure Solved.Match {names, irrefutable, match}
+      Character {character} ->
+        pure $ Solved.Character {character}
+      String {string} ->
+        pure $ Solved.String {string}
+    pure
+      Solved.Match
+        { startPosition,
+          levity = Solved levity,
+          names,
+          irrefutable,
+          match
+        }

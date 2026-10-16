@@ -56,7 +56,9 @@ fixWith = Infix.fixWith absurd operators
   where
     operators pattern1 index pattern2 =
       Pattern.Match
-        { names = Map.empty,
+        { startPosition = Pattern.startPosition pattern1,
+          names = Map.empty,
+          levity = Inferred,
           irrefutable = Prelude.False,
           match =
             case index of

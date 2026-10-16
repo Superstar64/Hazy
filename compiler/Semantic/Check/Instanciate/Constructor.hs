@@ -3,7 +3,7 @@ module Semantic.Check.Instanciate.Constructor where
 import Control.Monad.ST (ST)
 import Core.Instanciate (Instanciated, Store (Store))
 import Core.Tree.Constructor (Constructor, ConstructorF (..))
-import Core.Tree.Entry (entry)
+import Core.Tree.Entry (EntryF (levity), entry)
 import Core.Tree.Type ((-#>))
 import Data.Foldable (traverse_)
 import qualified Data.Vector.Strict as Strict
@@ -39,6 +39,9 @@ info Constructor {entries, brand = Store brand} = case brand of
 
 types :: ConstructorInstance s scope -> Strict.Vector (Unify.Type s scope)
 types Constructor {entries} = entry <$> entries
+
+levities :: ConstructorInstance s scope -> Strict.Vector (Unify.Type s scope)
+levities Constructor {entries} = levity <$> entries
 
 function :: ConstructorInstance s scope -> Unify.Type s scope -> Unify.Type s scope
 function Constructor {entries} base = foldr ((-#>) . entry) base entries

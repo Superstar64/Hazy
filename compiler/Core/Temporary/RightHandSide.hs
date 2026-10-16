@@ -6,6 +6,7 @@ import {-# SOURCE #-} Core.Tree.Expression (Expression)
 import {-# SOURCE #-} qualified Core.Tree.Expression as Expression
 import Core.Tree.Statements (Statements)
 import qualified Core.Tree.Statements as Statements
+import qualified Core.Tree.Type as Type
 import qualified Semantic.Index.Term as Term
 import Semantic.Layout (Normal)
 import Semantic.Scope (Environment (..))
@@ -74,5 +75,5 @@ desugar = \case
         declarations
       }
   Call {function, argument} ->
-    Statements.call (desugar function) (Expression.monoVariable argument)
+    Statements.call (desugar function) (Expression.monoVariable Type.lazy argument)
   Done {done} -> Statements.Done {done}

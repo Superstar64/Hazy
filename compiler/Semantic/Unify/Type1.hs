@@ -20,11 +20,11 @@ import qualified Data.Map as Map
 import Data.STRef (newSTRef, readSTRef, writeSTRef)
 import Data.Traversable (for)
 import qualified Data.Vector as Vector
-import Semantic.Check.Context (Context (..))
-import qualified Semantic.Check.Context as Context
 import qualified Semantic.Check.Binding.Local as Local (Constraint (..), LocalBinding (..))
 import Semantic.Check.Binding.Type (TypeBinding (TypeBinding))
 import qualified Semantic.Check.Binding.Type as TypeBinding
+import Semantic.Check.Context (Context (..))
+import qualified Semantic.Check.Context as Context
 import qualified Semantic.Index.Evidence as Evidence (Index (..))
 import qualified Semantic.Index.Table.Local as Local.Table
 import qualified Semantic.Index.Table.Type as Type.Table
@@ -115,7 +115,8 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
                 let argument = substituteType (Vector.fromList arguments) (Simple.argument constraint)
                  in constrain context position classx argument
               pure $ Evidence.Variable variable (Instanciation arguments)
-            None -> pure $ Evidence.Variable variable Instanciation.Mono
+            None {levity} ->
+              pure $ Evidence.Variable variable Instanciation.Mono {levity = logicalType levity}
       where
         variable = Evidence.Direct (Type2.Index classx) index
     constrainWith context@Context {typeEnvironment} classx (Constructor (Type2.Index index)) arguments
@@ -128,7 +129,8 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
                 let argument = substituteType (Vector.fromList arguments) (Simple.argument constraint)
                  in constrain context position classx argument
               pure $ Evidence.Variable variable (Instanciation arguments)
-            None -> pure $ Evidence.Variable variable Instanciation.Mono
+            None {levity} ->
+              pure $ Evidence.Variable variable Instanciation.Mono {levity = logicalType levity}
       where
         variable = Evidence.Direct classx (Type2.Index index)
     constrainWith context classx (Call function argument) arguments =

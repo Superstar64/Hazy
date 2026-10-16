@@ -1,7 +1,7 @@
 module Semantic.Unify.Builtin where
 
 import Core.Tree.Evidence (EvidenceF (..))
-import Core.Tree.Instanciation (InstanciationF (..))
+import Core.Tree.Instanciation (InstanciationF (..), monoLazy)
 import Data.Vector.Strict (fromList)
 import qualified Semantic.Index.Evidence as Evidence (Index (..))
 import qualified Semantic.Index.Type2 as Type2
@@ -159,5 +159,5 @@ constrain fallthough constrain classx head = table classx head
       call [integral, element]
     table _ _ _ = fallthough
 
-    single = pure $ Variable (Evidence.Direct classx head) Mono
+    single = pure $ Variable (Evidence.Direct classx head) monoLazy
     call list = pure $ Variable (Evidence.Direct classx head) $ Instanciation $ fromList list

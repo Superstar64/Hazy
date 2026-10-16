@@ -95,10 +95,10 @@ selectorType Definition {constructors, selectors} selectorIndex = entry
 selectorInfo :: DataInstance s scope -> Int -> SelectorInfo s scope
 selectorInfo Definition {position = Store position, constructors, selectors} index =
   case selectors Strict.Vector.! index of
-    Selector {first, index, uniform = Selector.Uniform} -> Uniform {position, strict}
+    Selector {first, index, uniform = Selector.Uniform} -> Uniform {position, levity}
       where
         Constructor {entries} = constructors Strict.Vector.! first
-        Entry {strict} = entries Strict.Vector.! index
+        Entry {levity} = entries Strict.Vector.! index
     Selector {uniform = Selector.Disjoint {indexes}} ->
       Disjoint
         { select = Strict.Vector.imap pick indexes

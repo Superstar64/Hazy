@@ -88,7 +88,9 @@ instance SolveType ConstraintsF where
     Constraints constraints -> do
       constraints <- traverse (solveWith category position) constraints
       pure $ Constraints constraints
-    None -> pure None
+    None {levity} -> do
+      levity <- solveWith category position levity
+      pure None {levity}
 
 instance (SolveType typef) => SolveType (ForallOver typef) where
   solveWith category position ForallOver {parameters, constraints, result} = do
@@ -132,7 +134,9 @@ instance SolveEvidence InstanciationF where
     Instanciation instanciation -> do
       instanciation <- traverse (solveEvidenceWith category position) instanciation
       pure $ Instanciation instanciation
-    Mono -> pure Mono
+    Mono {levity} -> do
+      levity <- solveWith category position levity
+      pure Mono {levity}
 
 -- todo, figure out how to make sure nodes that are being solved early have a
 -- rigid context
