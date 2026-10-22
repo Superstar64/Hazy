@@ -3,9 +3,10 @@ module Syntax.Tree.Scheme where
 
 import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
-import Syntax.Parser (Parser, asum, many, position, token)
+import Syntax.Parser (Parser, asum, betweenParens, many, optional, position, sepByComma, token, try)
 import Syntax.Position (Position)
-import Syntax.Tree.Constraints (Constraints)
+import qualified Syntax.Tree.Constraint as Constraint
+import Syntax.Tree.Constraints (Constraints (..))
 import qualified Syntax.Tree.Constraints as Constraints
 import Syntax.Tree.Type (Type)
 import qualified Syntax.Tree.Type as Type
@@ -40,22 +41,37 @@ mono result =
 
 parse :: Parser (Scheme Position)
 parse =
-  asum
-    [ explicit <$> position <*> forallx <*> Constraints.parse <*> Type.parse,
-      implicit <$> position <*> Constraints.parse <*> Type.parse
-    ]
+  parseWith scheme (optional forallx) Type.parse
   where
-    explicit startPosition parameters constraints result =
+    scheme startPosition (Just parameters) constraints result =
       Explicit
         { startPosition,
           parameters,
           constraints,
           result
         }
-    implicit startPosition constraints result =
+    scheme startPosition Nothing constraints result =
       Implicit
         { startPosition,
           constraints,
           result
         }
     forallx = token "forall" *> (Strict.Vector.fromList <$> many TypePattern.parse) <* token "."
+
+parseWith ::
+  (Position -> parameters -> Constraints Position -> typex -> scheme) ->
+  Parser parameters ->
+  Parser typex ->
+  Parser scheme
+parseWith scheme parameters typex =
+  asum
+    [ let constraints = Constraints <$> betweenParens elements <* token "=>"
+            where
+              elements = Strict.Vector.fromList <$> sepByComma Constraint.parse
+       in try (scheme <$> position <*> parameters <*> constraints) <*> typex,
+      let constraint = Constraints <$> element <* token "=>"
+            where
+              element = Strict.Vector.singleton <$> Constraint.parse
+       in try (scheme <$> position <*> parameters <*> constraint) <*> typex,
+      scheme <$> position <*> parameters <*> pure Value <*> typex
+    ]

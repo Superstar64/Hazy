@@ -43,9 +43,7 @@ data Entry
 parse :: Parser (Scheme Position) -> Parser Entry
 parse scheme =
   asum
-    [ try $ lazy <$> scheme,
-      lazy <$> betweenParens Scheme.parse,
-      strict
+    [ strict
         <$> (position <* token "!")
         <*> asum
           [ betweenParens Scheme.parse,
@@ -57,7 +55,9 @@ parse scheme =
         <*> asum
           [ betweenParens Scheme.parse,
             Scheme.mono <$> Type.parse3
-          ]
+          ],
+      try $ lazy <$> scheme,
+      lazy <$> betweenParens Scheme.parse
     ]
   where
     lazy entry =
