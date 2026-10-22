@@ -115,7 +115,7 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
                 let argument = substituteType (Vector.fromList arguments) (Simple.argument constraint)
                  in constrain context position classx argument
               pure $ Evidence.Variable variable (Instanciation arguments)
-            None {levity} ->
+            Value {levity} ->
               pure $ Evidence.Variable variable Instanciation.Mono {levity = logicalType levity}
       where
         variable = Evidence.Direct (Type2.Index classx) index
@@ -129,7 +129,7 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
                 let argument = substituteType (Vector.fromList arguments) (Simple.argument constraint)
                  in constrain context position classx argument
               pure $ Evidence.Variable variable (Instanciation arguments)
-            None {levity} ->
+            Value {levity} ->
               pure $ Evidence.Variable variable Instanciation.Mono {levity = logicalType levity}
       where
         variable = Evidence.Direct classx (Type2.Index index)

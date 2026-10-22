@@ -10,18 +10,18 @@ import qualified Syntax.Tree.Constraint as Constraint
 
 data Constraints position
   = Constraints !(Strict.Vector (Constraint position))
-  | None
+  | Value
   deriving (Show)
 
 instance FreeTypeVariables Constraints where
   freeTypeVariables = \case
     Constraints constraints -> foldMap freeTypeVariables constraints
-    None -> []
+    Value -> []
 
 parse :: Parser (Constraints Position)
 parse =
   asum
     [ try $ Constraints <$> betweenParens (Strict.Vector.fromList <$> sepByComma Constraint.parse) <* token "=>",
       try $ Constraints <$> (Strict.Vector.singleton <$> Constraint.parse) <* token "=>",
-      pure $ None
+      pure $ Value
     ]

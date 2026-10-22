@@ -34,7 +34,7 @@ mono :: Type position -> Scheme position
 mono result =
   Implicit
     { startPosition = Type.startPosition result,
-      constraints = Constraints.None,
+      constraints = Constraints.Value,
       result
     }
 

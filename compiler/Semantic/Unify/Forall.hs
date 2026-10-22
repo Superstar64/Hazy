@@ -82,7 +82,7 @@ instanciate context position ForallOver {parameters, constraints, result} = do
         arguments <- pure $ toList $ fmap (substitute fresh) arguments
         constrainWith context position classx head arguments
       pure $ Instanciation evidence
-    None {levity} -> do
+    Value {levity} -> do
       mark context position Known levity
       pure Mono {levity}
   pure $ (substitute fresh result, instanciation)
@@ -130,12 +130,12 @@ generalizeBody position context (Generalize run) = do
   pure $
     ForallOver
       { parameters,
-        constraints = Constraints.None {levity = Type.lazy},
+        constraints = Constraints.Value {levity = Type.lazy},
         result
       }
       ::: do
         parameters <- traverse (solve position) parameters
-        constraints <- solve position Constraints.None {levity = Type.lazy}
+        constraints <- solve position Constraints.Value {levity = Type.lazy}
         result <- term
         pure
           Simple.TypeLambdaOver

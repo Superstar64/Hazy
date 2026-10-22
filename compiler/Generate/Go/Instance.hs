@@ -22,7 +22,7 @@ generate :: Context s scope -> Instance scope -> ST s Javascript.Expression
 generate context Instance {evidence = EvidenceSet evidence, prerequisites, members} = do
   let count = case prerequisites of
         Constraints count -> length count
-        None {} -> 0
+        Value {} -> 0
   fresh <- Vector.replicateM count (Context.fresh context)
   context <- pure $ Context.evidenceBindings fresh context
   evidence <- traverse (Evidence.generate context) (toList evidence)
@@ -35,7 +35,7 @@ generate context Instance {evidence = EvidenceSet evidence, prerequisites, membe
           { fields = zip Mangle.fields (supers ++ fields)
           }
   case prerequisites of
-    None {levity}
+    Value {levity}
       | Info.strict levity -> error "strict instance"
       | otherwise ->
           pure $

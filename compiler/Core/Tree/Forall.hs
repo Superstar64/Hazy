@@ -1,7 +1,7 @@
 module Core.Tree.Forall where
 
 import qualified Core.Substitute as Substitute
-import Core.Tree.Constraints (ConstraintsF (None))
+import Core.Tree.Constraints (ConstraintsF (Value))
 import qualified Core.Tree.Constraints as Constraints
 import Core.Tree.Type (TypeF)
 import qualified Core.Tree.Type as Type
@@ -90,7 +90,7 @@ mono ::
 mono levity result =
   ForallOver
     { parameters = Strict.Vector.empty,
-      constraints = None {levity},
+      constraints = Value {levity},
       result = shift result
     }
 

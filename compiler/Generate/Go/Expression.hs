@@ -2,7 +2,7 @@ module Generate.Go.Expression where
 
 import Control.Monad.ST (ST)
 import Core.Tree.Argument (Argument (..))
-import Core.Tree.Constraints (ConstraintsF (Constraints, None))
+import Core.Tree.Constraints (ConstraintsF (Constraints, Value))
 import qualified Core.Tree.Constraints
 import Core.Tree.EntryInfo (EntryInfo (EntryInfo))
 import qualified Core.Tree.EntryInfo
@@ -286,11 +286,11 @@ declaration :: Context s scope -> TypeLambda scope -> ST s Javascript.Expression
 declaration context TypeLambdaOver {constraints, result = expression} = do
   let count = case constraints of
         Constraints constraints -> length constraints
-        None {} -> 0
+        Value {} -> 0
   fresh <- Vector.replicateM count (Context.fresh context)
   context <- pure $ Context.evidenceBindings fresh context
   case constraints of
-    None {levity} ->
+    Value {levity} ->
       if Info.strict levity
         then error "strict declaration"
         else thunk context Group expression

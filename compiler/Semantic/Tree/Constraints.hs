@@ -9,7 +9,7 @@ import qualified Semantic.Tree.Constraint as Constraint
 
 data Constraints position stage scope
   = Constraints !(Strict.Vector (Constraint position stage scope))
-  | None
+  | Value
   deriving (Show, Eq)
 
 instance Shift0.Functor (Constraints position stage) where
@@ -18,14 +18,14 @@ instance Shift0.Functor (Constraints position stage) where
 instance Shift.Functor (Constraints position stage) where
   map category = \case
     Constraints constraints -> Constraints $ Shift.map category <$> constraints
-    None -> None
+    Value -> Value
 
 instance FreeTypeVariables (Constraints position) where
   freeTypeVariables target = \case
     Constraints constraints -> foldMap (freeTypeVariables target) constraints
-    None -> []
+    Value -> []
 
 anonymize :: Constraints position stage scope -> Constraints () stage scope
 anonymize = \case
   Constraints constraints -> Constraints $ Constraint.anonymize <$> constraints
-  None -> None
+  Value -> Value

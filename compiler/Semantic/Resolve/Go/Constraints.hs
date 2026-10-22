@@ -11,4 +11,4 @@ import qualified Syntax.Tree.Constraints as Syntax
 resolve :: Context (Local ':+ scope) -> Syntax.Constraints Position -> Constraints Position Resolve scope
 resolve context = \case
   Syntax.Constraints constraints -> Constraints $ Constraint.resolve context <$> constraints
-  Syntax.None -> None
+  Syntax.Value -> Value

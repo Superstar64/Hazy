@@ -88,9 +88,9 @@ instance SolveType ConstraintsF where
     Constraints constraints -> do
       constraints <- traverse (solveWith category position) constraints
       pure $ Constraints constraints
-    None {levity} -> do
+    Value {levity} -> do
       levity <- solveWith category position levity
-      pure None {levity}
+      pure Value {levity}
 
 instance (SolveType typef) => SolveType (ForallOver typef) where
   solveWith category position ForallOver {parameters, constraints, result} = do

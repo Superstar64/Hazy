@@ -74,9 +74,9 @@ instance Zonk ConstraintsF where
     Constraints.Constraints constraints -> do
       constraints <- traverse (zonk zonker category) constraints
       pure $ Constraints.Constraints constraints
-    Constraints.None {levity} -> do
+    Constraints.Value {levity} -> do
       levity <- zonk zonker category levity
-      pure Constraints.None {levity}
+      pure Constraints.Value {levity}
 
 instance (Zonk typef) => Zonk (ForallOver typef) where
   zonk zonker category Forall.ForallOver {parameters, constraints, result} = do

@@ -61,7 +61,7 @@ mono :: (Shift0.Functor term) => Type scope -> term scope -> TypeLambdaOver term
 mono levity result =
   TypeLambdaOver
     { parameters = Strict.Vector.empty,
-      constraints = None {levity},
+      constraints = Value {levity},
       result = shift result
     }
 

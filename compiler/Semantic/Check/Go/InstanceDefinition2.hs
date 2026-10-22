@@ -63,7 +63,7 @@ import Semantic.Stage (Check, Resolve)
 import Semantic.Tree.Combinators.Implicit (Implicit (Resolve))
 import qualified Semantic.Tree.Combinators.Implicit as Implicit
 import Semantic.Tree.Combinators.Inferred (Inferred (Solved))
-import Semantic.Tree.Constraints (Constraints (Constraints, None))
+import Semantic.Tree.Constraints (Constraints (Constraints, Value))
 import Semantic.Tree.InstanceDefinition (InstanceDefinition (..))
 import Semantic.Tree.InstanceDefinition2 (Annotation (..), Header (..), InstanceDefinition2 (..))
 import Semantic.Tree.MethodConcrete (Auto, MethodConcrete (..))
@@ -272,7 +272,7 @@ checkBody position key Solve {solve} reflection information lookup members =
                   Data {index1, head1} -> Evidence.Direct index1 (Type2.Index head1)
                   Class {index2, head2} -> Evidence.Direct (Type2.Index index2) head2
                 instanciation = case prerequisites of
-                  Semantic.Tree.Constraints.None -> Core.Mono {levity = Core.Type.lazy}
+                  Semantic.Tree.Constraints.Value -> Core.Mono {levity = Core.Type.lazy}
                   Constraints prerequisites -> Core.Instanciation $ Strict.Vector.fromList $ do
                     i <- [0 .. length prerequisites - 1]
                     pure

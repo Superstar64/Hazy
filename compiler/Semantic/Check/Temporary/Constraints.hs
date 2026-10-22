@@ -13,7 +13,7 @@ import Syntax.Position (Position)
 
 data Constraints s scope
   = Constraints !(Strict.Vector (Constraint s scope))
-  | None
+  | Value
 
 check ::
   Context s (Local ':+ scope) ->
@@ -23,7 +23,7 @@ check context = \case
   Semantic.Constraints constraints -> do
     constraints <- traverse (Constraint.check context) constraints
     pure $ Constraints constraints
-  Semantic.None -> pure None
+  Semantic.Value -> pure Value
 
 solve ::
   Context s (Local ':+ scope) ->
@@ -33,4 +33,4 @@ solve context = \case
   Constraints constraints -> do
     constraints <- traverse (Constraint.solve context) constraints
     pure $ Semantic.Constraints constraints
-  None -> pure Semantic.None
+  Value -> pure Semantic.Value

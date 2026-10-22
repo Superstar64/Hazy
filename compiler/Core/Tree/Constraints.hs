@@ -18,7 +18,7 @@ type Constraints = ConstraintsF Void
 
 data ConstraintsF logical scope
   = Constraints !(Strict.Vector (ConstraintF logical scope))
-  | None
+  | Value
       { levity :: !(TypeF logical scope)
       }
   deriving (Show)
@@ -32,8 +32,8 @@ instance Shift0.Functor (ConstraintsF logical) where
 instance Shift.Functor (ConstraintsF logical) where
   map category = \case
     Constraints constraints -> Constraints $ Shift.map category <$> constraints
-    None {levity} ->
-      None
+    Value {levity} ->
+      Value
         { levity = Shift.map category levity
         }
 
@@ -43,23 +43,23 @@ instance (logical ~ Void) => Substitute.Functor (ConstraintsF logical) where
 instance Substitute.TypeFunctor ConstraintsF where
   mapType category = \case
     Constraints constraints -> Constraints $ Substitute.mapType category <$> constraints
-    None {levity} ->
-      None
+    Value {levity} ->
+      Value
         { levity = Substitute.mapType category levity
         }
 
 instance Core.Functor ConstraintsF where
   map f = \case
     Constraints constraints -> Constraints $ Core.map f <$> constraints
-    None {levity} ->
-      None
+    Value {levity} ->
+      Value
         { levity = Core.map f levity
         }
 
 simplify :: Semantic.Constraints position Check scope -> Constraints scope
 simplify = \case
   Semantic.Constraints constraints -> Constraints $ Constraint.simplify <$> constraints
-  Semantic.None ->
-    None
+  Semantic.Value ->
+    Value
       { levity = Type.lazy
       }
