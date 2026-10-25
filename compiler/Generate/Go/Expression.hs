@@ -1,7 +1,6 @@
 module Generate.Go.Expression where
 
 import Control.Monad.ST (ST)
-import Core.Tree.Argument (Argument (..))
 import Core.Tree.Constraints (ConstraintsF (Constraints, Value))
 import qualified Core.Tree.Constraints
 import Core.Tree.EntryInfo (EntryInfo (EntryInfo))
@@ -129,18 +128,10 @@ implicit context function (Instanciation arguments) = do
 generateConstructor ::
   Context s scope ->
   Constructor.Index scope ->
-  Strict.Vector (Argument scope) ->
+  Strict.Vector (TypeLambda scope) ->
   ST s ([Javascript.Statement 'True], Javascript.Expression)
 generateConstructor context Constructor.Index {constructorIndex} arguments = do
-  let process Argument {argument, info = EntryInfo {levity}} =
-        if Info.strict levity
-          then do
-            (extra, value) <- generatePure context argument
-            pure (extra, value)
-          else do
-            value <- thunk context Done argument
-            pure ([], value)
-  (extra, arguments) <- unzip <$> traverse process (toList arguments)
+  (extra, arguments) <- unzip <$> traverse (fullDeclaration context) (toList arguments)
   let tag = Javascript.Number constructorIndex
       elements = map Javascript.Literal (tag : arguments)
       fields = zip Mangle.fields elements
@@ -282,8 +273,11 @@ generateInto context target = \case
     (extra, value) <- generateImpure context expression
     pure $ extra ++ [finish target value]
 
-declaration :: Context s scope -> TypeLambda scope -> ST s Javascript.Expression
-declaration context TypeLambdaOver {constraints, result = expression} = do
+fullDeclaration ::
+  Context s scope ->
+  TypeLambda scope ->
+  ST s ([Javascript.Statement 'True], Javascript.Expression)
+fullDeclaration context TypeLambdaOver {constraints, result = expression} = do
   let count = case constraints of
         Constraints constraints -> length constraints
         Value {} -> 0
@@ -292,12 +286,24 @@ declaration context TypeLambdaOver {constraints, result = expression} = do
   case constraints of
     Value {levity} ->
       if Info.strict levity
-        then error "strict declaration"
-        else thunk context Group expression
+        then do
+          generatePure context expression
+        else do
+          expression <- thunk context Group expression
+          pure ([], expression)
     Constraints {} -> do
       statements <- generateInto context Return expression
       pure
-        Javascript.Arrow
-          { parameters = toList fresh,
-            body = statements
-          }
+        ( [],
+          Javascript.Arrow
+            { parameters = toList fresh,
+              body = statements
+            }
+        )
+
+declaration :: Context s scope -> TypeLambda scope -> ST s Javascript.Expression
+declaration context lambda = do
+  lambda <- fullDeclaration context lambda
+  case lambda of
+    ([], expression) -> pure expression
+    _ -> error "bad declaration"

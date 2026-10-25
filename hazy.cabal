@@ -45,7 +45,6 @@ executable hazy
     Core.Temporary.Definition
     Core.Temporary.Function
     Core.Temporary.RightHandSide
-    Core.Tree.Argument
     Core.Tree.Class
     Core.Tree.ClassExtra
     Core.Tree.Constraint

@@ -14,7 +14,6 @@ import {-# SOURCE #-} qualified Core.Temporary.Definition as Definition
 import Core.Temporary.Function (Function (Bound))
 import qualified Core.Temporary.Function as Function
 import qualified Core.Temporary.RightHandSide as RightHandSide
-import Core.Tree.Argument (Argument (..))
 import qualified Core.Tree.Class as Class
 import Core.Tree.ConstructorInfo (ConstructorInfo (..))
 import {-# SOURCE #-} qualified Core.Tree.Declaration as Declaration
@@ -30,6 +29,8 @@ import Core.Tree.Statements (Statements)
 import qualified Core.Tree.Statements as Statements
 import Core.Tree.Type (Type)
 import qualified Core.Tree.Type as Type
+import Core.Tree.TypeLambda (TypeLambda)
+import qualified Core.Tree.TypeLambda as TypeLambda
 import Data.Foldable (toList)
 import qualified Data.Kind
 import Data.List.Reverse (List (..))
@@ -80,7 +81,7 @@ data Expression scope
       }
   | Constructor
       { constructor :: !(Constructor.Index scope),
-        arguments :: !(Strict.Vector (Argument scope))
+        arguments :: !(Strict.Vector (TypeLambda scope))
       }
   | Selector
       { selector :: !(Selector.Index scope),
@@ -405,13 +406,11 @@ float_ float evidence =
           { constructor = Constructor.makeRatio,
             arguments =
               Strict.Vector.fromList
-                [ Argument {argument = Integer {integer = numerator float}, info},
-                  Argument {argument = Integer {integer = denominator float}, info}
+                [ TypeLambda.mono Type.strict Integer {integer = numerator float},
+                  TypeLambda.mono Type.strict Integer {integer = denominator float}
                 ]
           }
     }
-  where
-    info = EntryInfo {levity = Type.strict}
 
 bool :: Bool -> Expression scope
 bool value =
@@ -599,8 +598,10 @@ simplifyConstructorExact ::
 simplifyConstructorExact constructor Semantic.ConstructorInfo {entries} arguments =
   Constructor
     { constructor,
-      arguments = Strict.Vector.zipWith Argument arguments entries
+      arguments = Strict.Vector.zipWith argument entries arguments
     }
+  where
+    argument EntryInfo {levity} field = TypeLambda.mono levity field
 simplifyConstructorExact constructor Semantic.ConstructorInfo.Newtype arguments =
   Newtype
     { constructor,
@@ -750,11 +751,7 @@ simplifyWith expression [] = case expression of
         arguments = Strict.Vector.map argument elements
       }
     where
-      argument element =
-        Argument
-          { argument = simplify element,
-            info = EntryInfo {levity = Type.lazy}
-          }
+      argument element = TypeLambda.mono Type.lazy (simplify element)
   Semantic.List {items} ->
     foldr (cons . simplify) nil items
   Semantic.Comprehension {statements} -> simplify statements
@@ -845,11 +842,10 @@ simplifyWith expression [] = case expression of
         { constructor = Constructor.cons,
           arguments =
             Strict.Vector.fromList
-              [ Argument {argument = head, info},
-                Argument {argument = tail, info}
+              [ TypeLambda.mono Type.lazy head,
+                TypeLambda.mono Type.lazy tail
               ]
         }
-    info = EntryInfo {levity = Type.lazy}
     nil =
       Constructor
         { constructor = Constructor.nil,
