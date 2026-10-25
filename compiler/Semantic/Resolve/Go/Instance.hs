@@ -48,7 +48,7 @@ resolve
   memberMethods
   declarations
     | parameters <- TypePattern.resolve <$> parameters,
-      prerequisites <- Constraints.resolve (Scheme.augmentWith parameters context) prerequisites =
+      prerequisites <- Constraints.resolve context (Scheme.augmentWith parameters context) prerequisites =
         let members declarations = orderListInt' combine (length memberMethods) members
               where
                 combine (member : members) = Definition $ Resolve $ Definition.merge (member :| members)

@@ -15,6 +15,7 @@ import Syntax.Parser
     betweenFieldPragma,
     betweenParens,
     betweenUnorderedPragma,
+    empty,
     many,
     position,
     sepBy1Comma,
@@ -322,7 +323,9 @@ parse =
       Scheme.parseWith
         instancex
         (pure ())
+        ()
         ((,,) <$> position <*> Variable.parse <*> InstanceHead.parse)
+        empty
         <*> if manual
           then InstanceDeclarations.parse
           else pure InstanceDeclarations._derivingInstance

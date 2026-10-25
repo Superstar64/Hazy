@@ -38,24 +38,24 @@ augmentWith parameters context = case shift context of
 resolve :: Context scope -> Syntax.Scheme Position -> Scheme Position Resolve scope
 resolve context (Syntax.Explicit {startPosition, parameters, constraints, result})
   | parameters <- TypePattern.resolve <$> parameters,
-    context <- augmentWith parameters context =
+    context' <- augmentWith parameters context =
       Scheme
         { startPosition,
           implicit,
           parameters,
-          constraints = Constraints.resolve context constraints,
-          result = Type.resolve context result
+          constraints = Constraints.resolve context context' constraints,
+          result = Type.resolve context' result
         }
   where
     implicit = False
 resolve context Syntax.Implicit {startPosition, constraints, result}
-  | context <- augmentWith parameters context =
+  | context' <- augmentWith parameters context =
       Scheme
         { startPosition,
           implicit,
           parameters,
-          constraints = Constraints.resolve context constraints,
-          result = Type.resolve context result
+          constraints = Constraints.resolve context context' constraints,
+          result = Type.resolve context' result
         }
   where
     implicit = True

@@ -59,7 +59,9 @@ instance Core.Functor ConstraintsF where
 simplify :: Semantic.Constraints position Check scope -> Constraints scope
 simplify = \case
   Semantic.Constraints constraints -> Constraints $ Constraint.simplify <$> constraints
-  Semantic.Value ->
+  Semantic.Value {levity} ->
     Value
-      { levity = Type.lazy
+      { levity = Type.simplify levity
       }
+  Semantic.Lazy -> Value {levity = Type.lazy}
+  Semantic.Strict -> Value {levity = Type.strict}
