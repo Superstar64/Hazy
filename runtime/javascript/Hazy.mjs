@@ -130,29 +130,23 @@ export function abort() {
   throw new Error("bottom");
 }
 
-export const errorText = {
-  a: 0,
-  b: (message) => {
-    throw new Error(force(message));
-  },
+export const errorText = (message) => {
+  throw new Error(force(message));
 };
 
-export const pack = {
-  a: 0,
-  b: (list) => {
-    let buffer = "";
-    let current = force(list);
-    while (current.a) {
-      const code = force(current.b);
-      if (!(code >= 0xd800 && code <= 0xdfff)) {
-        buffer += String.fromCodePoint(code);
-      } else {
-        buffer += "�";
-      }
-      current = force(current.c);
+export const pack = (list) => {
+  let buffer = "";
+  let current = force(list);
+  while (current.a) {
+    const code = force(current.b);
+    if (!(code >= 0xd800 && code <= 0xdfff)) {
+      buffer += String.fromCodePoint(code);
+    } else {
+      buffer += "�";
     }
-    return buffer;
-  },
+    current = force(current.c);
+  }
+  return buffer;
 };
 
 function stream(points) {
@@ -175,157 +169,71 @@ function stream(points) {
   }
 }
 
-export const unpack = {
-  a: 0,
-  b: (thunk) => stream(force(thunk)[Symbol.iterator]()),
+export const unpack = (thunk) => stream(force(thunk)[Symbol.iterator]());
+
+export const putStrLnText = (thunk) => () => {
+  console.log(force(thunk));
+  return { a: 0, b: { a: 0 } };
 };
 
-export const putStrLnText = {
-  a: 0,
-  b: (thunk) => () => {
-    console.log(force(thunk));
-    return { a: 0, b: { a: 0 } };
-  },
+export const traceText = (text) => (thunk) => {
+  console.log(force(text));
+  return force(thunk);
 };
 
-export const traceText = {
-  a: 0,
-  b: (text) => (thunk) => {
-    console.log(force(text));
-    return force(thunk);
-  },
-};
-
-export const generalCategory = {
-  a: 0,
-  b: (code) => ({ a: category(force(code)) }),
-};
-
-export const primIntToChar = {
-  a: 0,
-  b: (c) => force(c),
-};
-
+export const generalCategory = (code) => ({ a: category(force(code)) });
+export const primIntToChar = (c) => force(c);
 export { primIntToChar as primCharToInt };
 
-export const primEqualInt = {
-  a: 0,
-  b: (x) => (y) => ({ a: +(force(x) === force(y)) }),
-};
+export const primEqualInt = (x) => (y) => ({ a: +(force(x) === force(y)) });
+export const primLessThenEqualInt = (x) => (y) => ({
+  a: +(force(x) <= force(y)),
+});
+export const primIntMinBound = -2147483648;
+export const primIntMaxBound = 2147483647;
+export const primIntAdd = (x) => (y) => (force(x) + force(y)) | 0;
+export const primIntMinus = (x) => (y) => (force(x) - force(y)) | 0;
+export const primIntMultiply = (x) => (y) => Math.imul(force(x), force(y));
+export const primIntNegate = (x) => -force(x) | 0;
+export const primIntAbs = (x) => Math.abs(force(x)) | 0;
+export const primIntSignum = (x) => Math.sign(force(x));
+export const primIntQuot = (x) => (y) => (force(x) / force(y)) | 0;
+export const primIntRem = (x) => (y) => (force(x) % force(y)) | 0;
 
-export const primLessThenEqualInt = {
-  a: 0,
-  b: (x) => (y) => ({ a: +(force(x) <= force(y)) }),
+export const primIntToInteger = (x) => BigInt(force(x));
+export const primIntegerCastToInt = (x_) => {
+  const x = force(x_);
+  if (x > force(primIntMaxBound) || x < force(primIntMinBound)) {
+    throw new Error("Enum Integer Overflow");
+  }
+  return Number(x);
 };
+export const primIntegerTruncateToInt = (x) =>
+  Number(BigInt.asIntN(32, force(x)));
 
-export const primIntMinBound = {
-  a: 0,
-  b: -2147483648,
+export const primEqualInteger = (x) => (y) => ({ a: +(force(x) === force(y)) });
+export const primLessThenEqualInteger = (x) => (y) => ({
+  a: +(force(x) <= force(y)),
+});
+export const primIntegerAdd = (x) => (y) => force(x) + force(y);
+export const primIntegerMinus = (x) => (y) => force(x) - force(y);
+export const primIntegerMultiply = (x) => (y) => force(x) * force(y);
+export const primIntegerNegate = (x) => -force(x);
+export const primIntegerAbs = (x_) => {
+  const x = force(x_);
+  return x >= 0n ? x : -x;
 };
+export const primIntegerSignum = (x_) => {
+  const x = force(x_);
+  return x === 0n ? 0n : x > 0n ? 1n : -1n;
+};
+export const primIntegerQuot = (x) => (y) => force(x) / force(y);
+export const primIntegerRem = (x) => (y) => force(x) % force(y);
 
-export const primIntMaxBound = {
-  a: 0,
-  b: 2147483647,
-};
-
-export const primIntAdd = { a: 0, b: (x) => (y) => (force(x) + force(y)) | 0 };
-export const primIntMinus = {
-  a: 0,
-  b: (x) => (y) => (force(x) - force(y)) | 0,
-};
-export const primIntMultiply = {
-  a: 0,
-  b: (x) => (y) => Math.imul(force(x), force(y)),
-};
-export const primIntNegate = { a: 0, b: (x) => -force(x) | 0 };
-export const primIntAbs = { a: 0, b: (x) => Math.abs(force(x)) | 0 };
-export const primIntSignum = { a: 0, b: (x) => Math.sign(force(x)) };
-
-export const primIntToInteger = {
-  a: 0,
-  b: (x) => BigInt(force(x)),
-};
-
-export const primIntQuot = {
-  a: 0,
-  b: (x) => (y) => (force(x) / force(y)) | 0,
-};
-
-export const primIntRem = {
-  a: 0,
-  b: (x) => (y) => (force(x) % force(y)) | 0,
-};
-
-export const primIntegerCastToInt = {
-  a: 0,
-  b: (x_) => {
-    const x = force(x_);
-    if (x > force(primIntMaxBound) || x < force(primIntMinBound)) {
-      throw new Error("Enum Integer Overflow");
-    }
-    return Number(x);
-  },
-};
-
-export const primIntegerTruncateToInt = {
-  a: 0,
-  b: (x) => Number(BigInt.asIntN(32, force(x))),
-};
-
-export const primEqualInteger = {
-  a: 0,
-  b: (x) => (y) => ({ a: +(force(x) === force(y)) }),
-};
-
-export const primLessThenEqualInteger = {
-  a: 0,
-  b: (x) => (y) => ({ a: +(force(x) <= force(y)) }),
-};
-
-export const primIntegerAdd = { a: 0, b: (x) => (y) => force(x) + force(y) };
-export const primIntegerMinus = { a: 0, b: (x) => (y) => force(x) - force(y) };
-export const primIntegerMultiply = {
-  a: 0,
-  b: (x) => (y) => force(x) * force(y),
-};
-export const primIntegerNegate = { a: 0, b: (x) => -force(x) };
-export const primIntegerAbs = {
-  a: 0,
-  b: (x_) => {
-    const x = force(x_);
-    return x >= 0n ? x : -x;
-  },
-};
-
-export const primIntegerSignum = {
-  a: 0,
-  b: (x_) => {
-    const x = force(x_);
-    return x === 0n ? 0n : x > 0n ? 1n : -1n;
-  },
-};
-
-export const primIntegerQuot = {
-  a: 0,
-  b: (x) => (y) => force(x) / force(y),
-};
-
-export const primIntegerRem = {
-  a: 0,
-  b: (x) => (y) => force(x) % force(y),
-};
-
-export const primSTPure = {
-  a: 0,
-  b: (x) => () => x,
-};
-
-export const primSTBind = {
-  a: 0,
-  b: (m) => (f) => () => {
-    let x = force(m)();
-    return force(f)(x)();
-  },
+export const primSTPure = (x) => () => x;
+export const primSTBind = (m) => (f) => () => {
+  let x = force(m)();
+  return force(f)(x)();
 };
 
 export function eqTuple(unpack, ...evidences) {
