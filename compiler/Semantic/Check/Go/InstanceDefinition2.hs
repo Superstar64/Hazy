@@ -29,7 +29,7 @@ import qualified Data.Vector as Vector
 import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
 import Data.Void (Void)
-import Error (cannotDerive, cyclicalTypeChecking)
+import Error (cannotDerive, cyclicalTypeChecking, strictDeclaration)
 import qualified Graph.Topological as Topological
 import qualified Semantic.Check.Binding.Type as TypeBinding
 import Semantic.Check.Context (Context (..))
@@ -254,6 +254,10 @@ checkBody position key Solve {solve} reflection information lookup members =
         Header {parameters, prerequisites} <- case reflection declarations of
           Standard header ::: _ -> header
           DerivedInstance header ::: _ -> header
+        case prerequisites of
+          Constraints.Constraints {} -> pure ()
+          Constraints.Lazy -> pure ()
+          _ -> strictDeclaration position
         Core.Class.Class {constraints, definition = Core.Class.Definition {methods}} <- do
           let get index = assumeClass <$> TypeBinding.content (typeEnvironment Table.Type.! index)
           Builtin.index pure get index

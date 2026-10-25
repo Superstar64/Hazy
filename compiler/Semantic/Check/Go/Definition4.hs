@@ -11,7 +11,7 @@ import Data.Functor.Identity (Identity (..))
 import qualified Data.Vector as Vector
 import qualified Data.Vector.Strict as Strict.Vector
 import Data.Void (Void)
-import Error (cyclicalTypeChecking)
+import Error (cyclicalTypeChecking, strictDeclaration)
 import qualified Graph.Topological as Topological
 import Semantic.Check.Context (Context, groupTermBindings)
 import qualified Semantic.Check.Go.Scheme as Solved.Scheme
@@ -25,6 +25,7 @@ import qualified Semantic.Shift as Shift
 import Semantic.Stage (Check, Resolve)
 import qualified Semantic.Tree.Combinators.Implicit as Implicit
 import Semantic.Tree.Combinators.Inferred (Inferred (Solved))
+import qualified Semantic.Tree.Constraints as Constraints
 import Semantic.Tree.Definition4 (Annotation (..), Definition4 (..))
 import Semantic.Tree.Group (Element (..), Group (..), Set (..), Types (..))
 import Semantic.Tree.Scheme as Solved (Scheme (..))
@@ -115,6 +116,11 @@ check position Solve {solve, logical} reflection information = \case
             case self of
               Annotated annotation ::: _ -> do
                 scheme <- annotation
+                case scheme of
+                  Scheme {constraints} -> case constraints of
+                    Constraints.Constraints {} -> pure ()
+                    Constraints.Lazy -> pure ()
+                    _ -> strictDeclaration position
                 definition <- checkAnnotation context position scheme $ \context typex -> do
                   definition <- Definition3.checkManual context typex definition
                   definition <- pure $ Definition3.solve position definition
