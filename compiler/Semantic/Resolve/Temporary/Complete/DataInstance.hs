@@ -54,7 +54,7 @@ resolve context lookup = \case
     }
       | Just dataIndex <- lookup datax,
         valid ->
-          let _ Type.:@ Identity Type.Binding {index, methods} = context !=. classPosition :@ className
+          let Type.Binding {index, methods} = Type.get $ context !=. classPosition :@ className
               classIndex = Type3.toType2 (illegalInstanceClass classPosition) index
               entry =
                 DataInstance

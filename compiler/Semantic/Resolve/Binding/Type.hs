@@ -2,7 +2,7 @@ module Semantic.Resolve.Binding.Type where
 
 import Data.Functor.Classes (Show1 (..), showsPrec1)
 import Data.Functor.Compose (Compose (..))
-import Data.Functor.Identity (Identity)
+import Data.Functor.Identity (Identity (Identity))
 import Data.Map (Map)
 import Data.NaturalTransformation (NaturalTransformation (..))
 import Data.Set (Set)
@@ -54,6 +54,9 @@ instance (Applicative loeb) => Semigroup (BindingF loeb scope) where
 
 instance Traversable2 BindingF where
   traverse2 (Morph f) (header :@ binding) = (:@) header <$> getCompose (f binding)
+
+get :: BindingF Identity scope -> Detail scope
+get (:@) {value = Identity value} = value
 
 data Header = Header
   { position :: !Position,

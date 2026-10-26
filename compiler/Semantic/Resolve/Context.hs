@@ -20,7 +20,6 @@ module Semantic.Resolve.Context
 where
 
 import Data.Foldable (toList)
-import Data.Functor.Identity (Identity (..))
 import Data.Map (Map)
 import qualified Data.Map as Map
 import qualified Data.Vector.Strict as Strict
@@ -34,7 +33,7 @@ import qualified Semantic.Index.Local as Local
 import qualified Semantic.Index.Selector as Selector
 import qualified Semantic.Index.Term2 as Term2
 import qualified Semantic.Index.Type3 as Type3
-import qualified Semantic.Resolve.Binding.Constructor as Constructor (Binding, BindingF (..), Detail (..))
+import qualified Semantic.Resolve.Binding.Constructor as Constructor (Binding, Detail (..), get)
 import qualified Semantic.Resolve.Binding.Term as Term
 import qualified Semantic.Resolve.Binding.Type as Type
 import Semantic.Resolve.Bindings (Bindings)
@@ -131,29 +130,31 @@ infixl 3 !-%, !-*, !=~, !=*~, !=.*
 
 (!-%) :: Context scope -> Marked QualifiedVariable Position -> Selector.Index scope
 context !-% index
-  | _ Term.:@ Identity Term.Binding {selector = Term.Selector select} <- context !- index = select
+  | Term.Binding {selector = Term.Selector select} <- Term.get $ context !- index = select
 _ !-% (position :@ _) = fieldNotInScope position
 
 (!-*) :: Context scope -> Marked QualifiedVariable Position -> Term2.Index scope
-context !-* index = case context !- index of
-  _ Term.:@ Identity Term.Binding {index} -> index
+context !-* index = case Term.get $ context !- index of
+  Term.Binding {index} -> index
 
 (!=~) :: Context scope -> Marked QualifiedConstructor Position -> Constructor.Binding scope
 context !=~ index
-  | binding@(_ Constructor.:@ Identity Constructor.Binding {unordered = False}) <- context != index = binding
+  | let binding = context != index,
+    Constructor.Binding {unordered = False} <- Constructor.get binding =
+      binding
 _ !=~ (position :@ _) = orderDependentUsage position
 
 (!=*) :: Context scope -> Marked QualifiedConstructor Position -> Constructor.Index scope
-context !=* index = case context != index of
-  _ Constructor.:@ Identity Constructor.Binding {index} -> index
+context !=* index = case Constructor.get $ context != index of
+  Constructor.Binding {index} -> index
 
 (!=*~) :: Context scope -> Marked QualifiedConstructor Position -> Constructor.Index scope
-context !=*~ index = case context !=~ index of
-  _ Constructor.:@ Identity Constructor.Binding {index} -> index
+context !=*~ index = case Constructor.get $ context !=~ index of
+  Constructor.Binding {index} -> index
 
 (!=.*) :: Context scope -> Marked QualifiedConstructorIdentifier Position -> Type3.Index scope
-context !=.* index = case context !=. index of
-  _ Type.:@ Identity Type.Binding {index} -> index
+context !=.* index = case Type.get $ context !=. index of
+  Type.Binding {index} -> index
 
 (!$) :: Context scope -> Marked VariableIdentifier Position -> Local.Index scope
 Context {localTypes} !$ position :@ name

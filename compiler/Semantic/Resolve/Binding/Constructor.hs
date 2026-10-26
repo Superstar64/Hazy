@@ -2,7 +2,7 @@ module Semantic.Resolve.Binding.Constructor where
 
 import Data.Functor.Classes (Show1 (..), showsPrec1)
 import Data.Functor.Compose (Compose (..))
-import Data.Functor.Identity (Identity)
+import Data.Functor.Identity (Identity (..))
 import Data.Map (Map)
 import Data.NaturalTransformation (NaturalTransformation (..))
 import qualified Data.Strict.Maybe as Strict (Maybe)
@@ -43,6 +43,9 @@ instance (Applicative loeb) => Semigroup (BindingF loeb scope) where
 
 instance Traversable2 BindingF where
   traverse2 (Morph f) (position :@ binding) = (:@) position <$> getCompose (f binding)
+
+get :: BindingF Identity scope -> Detail scope
+get (:@) {value = Identity value} = value
 
 data Detail scope = Binding
   { index :: !(Constructor.Index scope),

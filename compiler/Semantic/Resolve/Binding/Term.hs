@@ -2,7 +2,7 @@ module Semantic.Resolve.Binding.Term where
 
 import Data.Functor.Classes (Show1 (..), showsPrec1)
 import Data.Functor.Compose (Compose (..))
-import Data.Functor.Identity (Identity)
+import Data.Functor.Identity (Identity (Identity))
 import Data.NaturalTransformation (NaturalTransformation (..))
 import Error (duplicateVariableEntries)
 import qualified Semantic.Index.Selector as Selector
@@ -37,6 +37,9 @@ instance (Applicative loeb) => Semigroup (BindingF loeb scope) where
 
 instance Traversable2 BindingF where
   traverse2 (Morph f) (position :@ binding) = (:@) position <$> getCompose (f binding)
+
+get :: BindingF Identity scope -> Detail scope
+get (:@) {value = Identity value} = value
 
 data Detail scope = Binding
   { index :: !(Term2.Index scope),

@@ -11,7 +11,7 @@ import Error (duplicateVariableEntries)
 import qualified Semantic.Index.Constructor as Constructor (cons, nil, tuple)
 import qualified Semantic.Index.Term as Term (Bound (..), Index (..))
 import qualified Semantic.Index.Term2 as Term2
-import qualified Semantic.Resolve.Binding.Constructor as Constructor (BindingF (..), Detail (..))
+import qualified Semantic.Resolve.Binding.Constructor as Constructor (Detail (..), get)
 import qualified Semantic.Resolve.Binding.Term as Term (BindingF (..), Detail (..), Selector (..))
 import Semantic.Resolve.Bindings (constructors, stability, terms, types, (</>))
 import qualified Semantic.Resolve.Bindings as Bindings
@@ -136,8 +136,8 @@ resolve context = \case
         irrefutable = Prelude.False,
         match = case patternx of
           Syntax.Constructor {startPosition, constructor, patterns} ->
-            case context !=~ startPosition :@ constructor of
-              _ Constructor.:@ Identity Constructor.Binding {index = constructor, failable} ->
+            case Constructor.get $ context !=~ startPosition :@ constructor of
+              Constructor.Binding {index = constructor, failable} ->
                 Constructor
                   { constructorPosition = startPosition,
                     constructor,
@@ -146,21 +146,15 @@ resolve context = \case
                     constructorInfo = Inferred
                   }
           Syntax.Record {startPosition, constructor, fields} ->
-            case context != startPosition :@ constructor of
-              _
-                Constructor.:@ Identity
-                                 ( binding@Constructor.Binding
-                                     { index = constructor,
-                                       failable
-                                     }
-                                   ) ->
-                  Record
-                    { constructorPosition = startPosition,
-                      constructor,
-                      fields = fmap (Field.resolve context binding) fields,
-                      failable,
-                      constructorInfo = Inferred
-                    }
+            case Constructor.get $ context != startPosition :@ constructor of
+              binding@Constructor.Binding {index = constructor, failable} ->
+                Record
+                  { constructorPosition = startPosition,
+                    constructor,
+                    fields = fmap (Field.resolve context binding) fields,
+                    failable,
+                    constructorInfo = Inferred
+                  }
           Syntax.Integer {integer} ->
             Integer
               { integer,
