@@ -301,7 +301,6 @@ executable hazy
     Semantic.Resolve.Go.Lambda
     Semantic.Resolve.Go.Module
     Semantic.Resolve.Go.Pattern
-    Semantic.Resolve.Go.PatternField
     Semantic.Resolve.Go.RightHandSide
     Semantic.Resolve.Go.Scheme
     Semantic.Resolve.Go.Select
@@ -443,7 +442,6 @@ executable hazy
     Syntax.Tree.Marked
     Syntax.Tree.Module
     Syntax.Tree.Pattern
-    Syntax.Tree.PatternField
     Syntax.Tree.PatternInfix
     Syntax.Tree.Qualification
     Syntax.Tree.RightHandSide

@@ -13,6 +13,7 @@ import Syntax.Parser
   ( Parser,
     StringLiteral,
     asum,
+    betweenBraces,
     betweenBrackets,
     betweenParens,
     char,
@@ -28,12 +29,11 @@ import qualified Syntax.Parser as Parser
 import Syntax.Position (Position)
 import Syntax.Tree.Marked (Marked (..))
 import qualified Syntax.Tree.Marked as Marked
-import Syntax.Tree.PatternField (Field)
-import qualified Syntax.Tree.PatternField as PatternField
 import {-# SOURCE #-} Syntax.Tree.PatternInfix (Infix)
 import {-# SOURCE #-} qualified Syntax.Tree.PatternInfix as PatternInfix
 import Syntax.Variable
   ( QualifiedConstructor,
+    QualifiedVariable (..),
   )
 import qualified Syntax.Variable as Variable
 import Prelude hiding (head, tail)
@@ -175,6 +175,27 @@ instance TermBindingVariables Pattern where
     Infix {left, right} -> termBindingVariables left ++ termBindingVariables right
     InfixCons {left, right} -> termBindingVariables left ++ termBindingVariables right
 
+data Field position
+  = -- |
+    -- > C { x = x }
+    -- >     ^^^^^
+    Field
+      { index :: !(Marked.QualifiedVariable position),
+        field :: !(Pattern position)
+      }
+  | -- |
+    -- > C { x }
+    -- >     ^
+    Pun
+      { index :: !(Marked.QualifiedVariable position)
+      }
+  deriving (Show)
+
+instance TermBindingVariables Field where
+  termBindingVariables = \case
+    Field {field} -> termBindingVariables field
+    Pun {index = position :@ _ :- variable} -> [position :@ variable]
+
 parse :: Parser (Pattern Position)
 parse = PatternInfix.toPattern <$> PatternInfix.parse
 
@@ -283,6 +304,23 @@ parse2 =
 
     parseConstructor =
       asum
-        [ record <$> PatternField.parseMany,
+        [ record <$> parseFields,
           pure constructor
         ]
+    parseFields = betweenBraces (Strict.Vector.fromList <$> sepByComma parseField) where
+    parseField =
+      Marked.parseLiteral
+        <**> asum
+          [ field <$> (token "=" *> parse),
+            pure pun
+          ]
+      where
+        field field index =
+          Field
+            { index,
+              field
+            }
+        pun index =
+          Pun
+            { index
+            }

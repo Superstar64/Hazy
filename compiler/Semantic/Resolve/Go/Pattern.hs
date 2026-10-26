@@ -6,21 +6,18 @@ import Data.Foldable (toList)
 import Data.Functor.Identity (Identity (..))
 import Data.Map (Map)
 import qualified Data.Map as Map
+import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import qualified Data.Vector.Strict as Strict.Vector
-import Error (duplicateVariableEntries)
-import qualified Semantic.Index.Constructor as Constructor (cons, nil, tuple)
+import Error (duplicateVariableEntries, mismatchSelectors, unneededFieldQualification)
+import qualified Semantic.Index.Constructor as Constructor (Index (..), cons, nil, tuple)
+import qualified Semantic.Index.Selector as Selector
 import qualified Semantic.Index.Term as Term (Bound (..), Index (..))
 import qualified Semantic.Index.Term2 as Term2
 import qualified Semantic.Resolve.Binding.Constructor as Constructor (Detail (..), get)
 import qualified Semantic.Resolve.Binding.Term as Term (BindingF (..), Detail (..), Selector (..))
 import Semantic.Resolve.Bindings (constructors, stability, terms, types, (</>))
 import qualified Semantic.Resolve.Bindings as Bindings
-import Semantic.Resolve.Context
-  ( Context (..),
-    (!=),
-    (!=~),
-  )
-import qualified Semantic.Resolve.Go.PatternField as Field (resolve)
+import Semantic.Resolve.Context (Context (..), (!-%), (!=), (!=~))
 import {-# SOURCE #-} qualified Semantic.Resolve.Temporary.PatternInfix as Infix (fix, resolve)
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope (Pattern)
@@ -28,13 +25,14 @@ import Semantic.Shift (shift)
 import Semantic.Stage (Resolve)
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import Semantic.Tree.Pattern (Bindings (..), Failable (..), Field (..), Pattern (..), lazy, variable)
+import qualified Semantic.Tree.Pattern as Pattern (variable)
 import Syntax.Position (Position)
 import Syntax.Tree.Associativity (Associativity (..))
 import Syntax.Tree.Fixity (Fixity (..))
 import Syntax.Tree.Marked (Marked (..))
-import qualified Syntax.Tree.Pattern as Syntax (Pattern (..))
+import qualified Syntax.Tree.Pattern as Syntax (Field (..), Pattern (..))
 import qualified Syntax.Tree.PatternInfix as Syntax.Infix
-import Syntax.Variable (Variable)
+import Syntax.Variable (QualifiedVariable (..), Qualifiers (..), Variable)
 import Prelude hiding (Bool (False, True), Either (Left, Right), head, tail)
 import qualified Prelude
 
@@ -147,14 +145,36 @@ resolve context = \case
                   }
           Syntax.Record {startPosition, constructor, fields} ->
             case Constructor.get $ context != startPosition :@ constructor of
-              binding@Constructor.Binding {index = constructor, failable} ->
-                Record
-                  { constructorPosition = startPosition,
-                    constructor,
-                    fields = fmap (Field.resolve context binding) fields,
-                    failable,
-                    constructorInfo = Inferred
-                  }
+              Constructor.Binding
+                { index = constructor@(Constructor.Index typex _),
+                  selections,
+                  fields = indexes,
+                  fielded,
+                  failable
+                } ->
+                  Record
+                    { constructorPosition = startPosition,
+                      constructor,
+                      fields = fmap resolveField fields,
+                      failable,
+                      constructorInfo = Inferred
+                    }
+                  where
+                    resolveField = \case
+                      Syntax.Field {index, field} ->
+                        make index (resolve context field)
+                      Syntax.Pun {index = index@(position :@ _ :- localName)} ->
+                        make index (Pattern.variable position localName)
+                    make (position :@ name@(path :- root)) field
+                      | fielded,
+                        Just index <- Map.lookup root indexes = case path of
+                          _ :. _ -> unneededFieldQualification position
+                          Local -> Field {index, field}
+                      | Selector.Index typex' selector <- context !-% (position :@ name),
+                        typex == typex',
+                        Strict.Just redirect <- selections Strict.Vector.! selector =
+                          Field {index = redirect, field}
+                      | otherwise = mismatchSelectors position
           Syntax.Integer {integer} ->
             Integer
               { integer,
