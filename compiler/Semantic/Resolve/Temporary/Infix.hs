@@ -3,8 +3,7 @@ module Semantic.Resolve.Temporary.Infix (Infix (..), Token (..), Pretoken (..), 
 import Data.Void (Void, absurd)
 import Error (illegalFixity)
 import Syntax.Position (Position)
-import Syntax.Tree.Associativity (Associativity (..))
-import Syntax.Tree.Fixity (Fixity (..))
+import Syntax.Tree.Fixity (Associativity (..), Fixity (..))
 import Prelude hiding (Either (Left, Right), map)
 
 data Infix x' x e

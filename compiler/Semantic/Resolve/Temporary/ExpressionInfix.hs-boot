@@ -10,8 +10,8 @@ import Semantic.Scope (Environment)
 import Semantic.Stage (Resolve)
 import {-# SOURCE #-} Semantic.Tree.Expression (Expression)
 import Syntax.Position (Position)
-import Syntax.Tree.Associativity (Associativity)
 import qualified Syntax.Tree.ExpressionInfix as Syntax (Infix)
+import Syntax.Tree.Fixity (Associativity)
 
 type role Index nominal
 

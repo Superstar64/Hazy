@@ -17,6 +17,7 @@ import {-# SOURCE #-} qualified Builtin.Num as Num
 import {-# SOURCE #-} qualified Builtin.Ord as Ord
 import {-# SOURCE #-} qualified Builtin.Ordering as Ordering
 import {-# SOURCE #-} qualified Builtin.Ratio as Ratio
+import {-# SOURCE #-} qualified Builtin.Read as Read
 import {-# SOURCE #-} qualified Builtin.Real as Real
 import {-# SOURCE #-} qualified Builtin.Semigroup as Semigroup
 import {-# SOURCE #-} qualified Builtin.Show as Show
@@ -33,8 +34,7 @@ import qualified Semantic.Resolve.Binding.Type as Type
 import Semantic.Resolve.Bindings (Bindings (..), BindingsF (..))
 import Syntax.Lexer (constructorIdentifier, variableIdentifier)
 import qualified Syntax.Position as Position
-import Syntax.Tree.Associativity (Associativity (..))
-import Syntax.Tree.Fixity (Fixity (..))
+import Syntax.Tree.Fixity (Associativity (..), Fixity (..))
 import Syntax.Variable (ConstructorIdentifier, Variable (..))
 import Prelude hiding
   ( Applicative (..),
@@ -49,7 +49,6 @@ import Prelude hiding
     Ord (..),
     Real (..),
   )
-import {-# SOURCE #-} qualified Builtin.Read as Read
 
 builtinType :: [Char] -> Type3.Index scope -> (ConstructorIdentifier, Type.Binding scope)
 builtinType name index = (constructorIdentifier $ pack name, binding)

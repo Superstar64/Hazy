@@ -45,8 +45,7 @@ import qualified Semantic.Tree.Definition4 as Real (Annotation (..), Definition4
 import Semantic.Tree.Scheme (Scheme)
 import qualified Semantic.Tree.Scheme as Scheme
 import Syntax.Position (Position)
-import Syntax.Tree.Associativity (Associativity (..))
-import Syntax.Tree.Fixity (Fixity (..))
+import Syntax.Tree.Fixity (Associativity (..), Fixity (..))
 import Syntax.Variable (Variable)
 import qualified Syntax.Variable as Variable
 import Verbose (Debug (resolving))

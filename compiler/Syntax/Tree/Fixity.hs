@@ -5,21 +5,42 @@
 module Syntax.Tree.Fixity where
 
 import Data.Maybe (fromMaybe)
-import Syntax.Parser (Parser, integer, optional)
-import Syntax.Tree.Associativity (Associativity)
-import qualified Syntax.Tree.Associativity as Associativity
+import Syntax.Parser (Parser, asum, integer, optional, token)
+import Prelude hiding (Either (Left, Right))
 
 data Fixity
   = -- |
     -- > infix 9 `x`
     -- > ^^^^^^^
     Fixity
-    { associativity :: Associativity,
+    { associativity :: !Associativity,
       precedence :: !Int
     }
-  deriving (Show, Read)
+  deriving (Show)
+
+data Associativity
+  = -- | Left associativity
+    --
+    -- > infixl
+    Left
+  | -- | Right associativity
+    --
+    -- > infixl
+    Right
+  | -- | No associativity
+    --
+    -- > infix
+    None
+  deriving (Show, Eq)
 
 parse :: Parser Fixity
-parse = fixity <$> Associativity.parse <*> (fromMaybe 9 <$> optional (fromInteger <$> integer))
+parse =
+  fixity
+    <$> asum
+      [ Left <$ token "infixl",
+        Right <$ token "infixr",
+        None <$ token "infix"
+      ]
+    <*> (fromMaybe 9 <$> optional (fromInteger <$> integer))
   where
     fixity associativity precedence = Fixity {associativity, precedence}

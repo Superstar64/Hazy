@@ -26,8 +26,7 @@ import qualified Semantic.Tree.Type as Type
       ),
   )
 import Syntax.Position (Position)
-import Syntax.Tree.Associativity (Associativity (..))
-import Syntax.Tree.Fixity (Fixity (..))
+import Syntax.Tree.Fixity (Associativity (..), Fixity (..))
 import Syntax.Tree.Marked (Marked ((:@)))
 import qualified Syntax.Tree.TypeInfix as Syntax (Infix (..))
 import Prelude hiding (Either (Left, Right))

@@ -10,7 +10,7 @@ import Semantic.Scope (Environment)
 import Semantic.Stage (Resolve)
 import Semantic.Tree.Pattern (Pattern)
 import Syntax.Position (Position)
-import Syntax.Tree.Associativity (Associativity)
+import Syntax.Tree.Fixity (Associativity)
 import qualified Syntax.Tree.PatternInfix as Syntax (Infix)
 
 type role Index nominal
