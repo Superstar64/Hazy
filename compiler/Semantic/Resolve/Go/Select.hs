@@ -11,14 +11,14 @@ import Semantic.Stage (Resolve)
 import Semantic.Tree.Expression (callHead_)
 import Semantic.Tree.Select (Select (..))
 import Syntax.Position (Position)
-import qualified Syntax.Tree.ExpressionField as Syntax (Field (..))
+import qualified Syntax.Tree.Expression as Syntax (Field (..))
 import Syntax.Tree.Marked (Marked (..))
 import Syntax.Variable (QualifiedVariable (..), Qualifiers (..))
 
 resolve :: Type2.Index scope -> Context scope -> Syntax.Field Position -> Select Normal Resolve scope
 resolve typex context = \case
-  Syntax.Field {variable, field} -> make variable (Expression.resolve context field)
-  Syntax.Pun {variable = variable@(position :@ _ :- localName)} ->
+  Syntax.Field {index, field} -> make index (Expression.resolve context field)
+  Syntax.Pun {index = variable@(position :@ _ :- localName)} ->
     let index = context !-* position :@ Local :- localName
      in make variable $ callHead_ $ CallHead.resolveVariable position index
   where

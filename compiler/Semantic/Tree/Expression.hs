@@ -24,7 +24,6 @@ import Semantic.Tree.Alternative (Alternative (..))
 import Semantic.Tree.CallHead (CallHead)
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import {-# SOURCE #-} qualified Semantic.Tree.Declarations as Declarations
-import Semantic.Tree.ExpressionField (Field)
 import Semantic.Tree.Lambda (Lambda (..))
 import Semantic.Tree.Pattern (Pattern)
 import Semantic.Tree.RightHandSide (RightHandSide)
@@ -539,6 +538,38 @@ instance Connect Expression where
           evidence,
           negative = seperate negative
         }
+
+data Field layout stage scope
+  = Field
+  { index :: !Int,
+    field :: !(Expression layout stage scope)
+  }
+  deriving (Show)
+
+instance Shift0.Functor (Field layout stage) where
+  map = Shift.mapDefault
+
+instance Shift.Functor (Field layout stage) where
+  map category Field {index, field} =
+    Field
+      { index,
+        field = Shift.map category field
+      }
+
+instance FreeTermVariables Field where
+  freeTermVariables target Field {field} = freeTermVariables target field
+
+instance Connect Field where
+  connect Field {index, field} =
+    Field
+      { index,
+        field = connect field
+      }
+  seperate Field {index, field} =
+    Field
+      { index,
+        field = seperate field
+      }
 
 data Explicit layout stage scope where
   Explicit :: !(Expression layout Resolve (Scope.Local ':+ scope)) -> Explicit layout Resolve scope

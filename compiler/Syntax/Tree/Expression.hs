@@ -22,6 +22,7 @@ import Syntax.Parser
     optional,
     position,
     sepBy1Comma,
+    sepByComma,
     sepEndBy1Semicolon,
     some,
     text,
@@ -35,8 +36,6 @@ import Syntax.Tree.Alternative (Alternative)
 import qualified Syntax.Tree.Alternative as Alternative
 import Syntax.Tree.Declarations (Declarations)
 import qualified Syntax.Tree.Declarations as Declarations
-import Syntax.Tree.ExpressionField (Field)
-import qualified Syntax.Tree.ExpressionField as ExpressionField
 import {-# SOURCE #-} Syntax.Tree.ExpressionInfix (Infix)
 import {-# SOURCE #-} qualified Syntax.Tree.ExpressionInfix as ExpressionInfix
 import Syntax.Tree.Marked (Marked ((:@)))
@@ -263,6 +262,21 @@ data Expression position
       }
   deriving (Show)
 
+data Field position
+  = -- |
+    -- > C { x = e }
+    -- >     ^^^^^
+    Field
+      { index :: !(Marked.QualifiedVariable position),
+        field :: !(Expression position)
+      }
+  | -- |
+    -- > C { x }
+    -- >     ^
+    Pun
+      {index :: !(Marked.QualifiedVariable position)}
+  deriving (Show)
+
 -- exp
 parse :: Parser (Expression Position)
 parse =
@@ -319,9 +333,9 @@ parse3 :: Parser (Expression Position)
 parse3 =
   asum
     [ foldl update
-        <$> try (record <$> Marked.parseLiteral <*> ExpressionField.parseMany)
-        <*> many ((,) <$> position <*> ExpressionField.parseSome),
-      foldl update <$> parse4 <*> many ((,) <$> position <*> ExpressionField.parseSome)
+        <$> try (record <$> Marked.parseLiteral <*> parseManyFields)
+        <*> many ((,) <$> position <*> parseSomeFields),
+      foldl update <$> parse4 <*> many ((,) <$> position <*> parseSomeFields)
     ]
   where
     record constructor@(startPosition :@ _) fields = Record {startPosition, constructor, fields}
@@ -331,6 +345,18 @@ parse3 =
           updatePosition,
           updates
         }
+
+    parseField = Marked.parseLiteral <**> asum options
+      where
+        field field index = Field {index, field}
+        pun index = Pun {index}
+        options =
+          [ field <$ token "=" <*> parse,
+            pure pun
+          ]
+
+    parseManyFields = Strict.Vector.fromList <$> betweenBraces (sepByComma parseField)
+    parseSomeFields = Strict.fromNonEmpty <$> betweenBraces (sepBy1Comma parseField)
 
 -- aexp'
 parse4 :: Parser (Expression Position)

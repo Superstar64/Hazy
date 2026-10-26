@@ -229,7 +229,6 @@ executable hazy
     Semantic.Check.Temporary.Entry
     Semantic.Check.Temporary.EntryInfo
     Semantic.Check.Temporary.Expression
-    Semantic.Check.Temporary.ExpressionField
     Semantic.Check.Temporary.Function
     Semantic.Check.Temporary.Lambda
     Semantic.Check.Temporary.Method
@@ -295,7 +294,6 @@ executable hazy
     Semantic.Resolve.Go.Declarations
     Semantic.Resolve.Go.Entry
     Semantic.Resolve.Go.Expression
-    Semantic.Resolve.Go.ExpressionField
     Semantic.Resolve.Go.Function
     Semantic.Resolve.Go.Instance
     Semantic.Resolve.Go.Lambda
@@ -361,7 +359,6 @@ executable hazy
     Semantic.Tree.Definition4
     Semantic.Tree.Entry
     Semantic.Tree.Expression
-    Semantic.Tree.ExpressionField
     Semantic.Tree.Function
     Semantic.Tree.GADTConstructor
     Semantic.Tree.Group
@@ -426,7 +423,6 @@ executable hazy
     Syntax.Tree.Exports
     Syntax.Tree.ExportSymbol
     Syntax.Tree.Expression
-    Syntax.Tree.ExpressionField
     Syntax.Tree.ExpressionInfix
     Syntax.Tree.Field
     Syntax.Tree.Fixity

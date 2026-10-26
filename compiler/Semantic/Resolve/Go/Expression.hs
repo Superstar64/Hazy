@@ -5,6 +5,10 @@ module Semantic.Resolve.Go.Expression where
 import Data.Foldable (toList)
 import Data.List.Reverse (List (..))
 import qualified Data.List.Reverse as Reverse
+import qualified Data.Map as Map
+import qualified Data.Strict.Maybe as Strict
+import qualified Data.Vector.Strict as Strict.Vector
+import Error (mismatchSelectors, unneededFieldQualification)
 import qualified Semantic.Index.Constructor as Constructor (Index (..), cons)
 import qualified Semantic.Index.Method as Method
 import qualified Semantic.Index.Selector as Selector
@@ -24,7 +28,6 @@ import Semantic.Resolve.Context
 import qualified Semantic.Resolve.Go.Alternative as Alternative (resolve)
 import qualified Semantic.Resolve.Go.CallHead as CallHead
 import {-# SOURCE #-} qualified Semantic.Resolve.Go.Declarations as Declarations
-import qualified Semantic.Resolve.Go.ExpressionField as Field (resolve)
 import qualified Semantic.Resolve.Go.Lambda as Lambda (resolve)
 import qualified Semantic.Resolve.Go.Pattern as Pattern (augment, resolve)
 import qualified Semantic.Resolve.Go.RightHandSide as RightHandSide (resolve)
@@ -34,17 +37,15 @@ import qualified Semantic.Resolve.Go.Statements as Statements (resolve)
 import {-# SOURCE #-} qualified Semantic.Resolve.Temporary.ExpressionInfix as Infix (fix, fixWith, resolve)
 import Semantic.Stage (Equal (..), Resolve)
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
-import Semantic.Tree.Expression (Explicit (..), Expression (..))
+import Semantic.Tree.Expression (Explicit (..), Expression (..), Field (..))
 import Syntax.Extensions (permissiveUpdates)
 import Syntax.Position (Position)
 import Syntax.Tree.Associativity (Associativity (..))
-import qualified Syntax.Tree.Expression as Syntax (Expression (..))
-import qualified Syntax.Tree.ExpressionField as Syntax (Field (Field, Pun))
-import qualified Syntax.Tree.ExpressionField as Syntax.Field
+import qualified Syntax.Tree.Expression as Syntax (Expression (..), Field (..))
 import qualified Syntax.Tree.ExpressionInfix as Syntax.Infix
 import Syntax.Tree.Fixity (Fixity (..))
 import Syntax.Tree.Marked (Marked (..))
-import Syntax.Variable (QualifiedName (..))
+import Syntax.Variable (QualifiedName (..), QualifiedVariable (..), Qualifiers (..))
 import Prelude hiding (Bool (False, True), Either (Left, Right))
 
 resolveTerm2 ::
@@ -153,13 +154,34 @@ resolveWith context expression [] = case expression of
       }
   Syntax.Record {startPosition, constructor, fields} ->
     case Constructor.get $ context != constructor of
-      binding@Constructor.Binding {index = Constructor.Index typex constructorIndex} ->
-        Record
-          { constructorPosition = startPosition,
-            constructor = Constructor.Index typex constructorIndex,
-            constructorInfo = Inferred,
-            fields = fmap (Field.resolve context binding) fields
-          }
+      Constructor.Binding
+        { index = Constructor.Index typex constructorIndex,
+          fields = indexes,
+          selections,
+          fielded
+        } ->
+          Record
+            { constructorPosition = startPosition,
+              constructor = Constructor.Index typex constructorIndex,
+              constructorInfo = Inferred,
+              fields = fmap resolveField fields
+            }
+          where
+            resolveField = \case
+              Syntax.Field {index, field} -> make index (resolve context field)
+              Syntax.Pun {index = variable@(position :@ _ :- localName)} ->
+                let index = context !-* position :@ Local :- localName
+                 in make variable CallHead {callHead = CallHead.resolveVariable position index}
+            make name@(position :@ (path :- root)) field
+              | fielded,
+                Just index <- Map.lookup root indexes = case path of
+                  _ :. _ -> unneededFieldQualification position
+                  Local -> Field {index, field}
+              | Selector.Index typex' selector <- context !-% name,
+                typex == typex',
+                Strict.Just redirect <- selections Strict.Vector.! selector =
+                  Field {index = redirect, field}
+              | otherwise = mismatchSelectors position
   Syntax.Update {base, updatePosition, updates} -> case first of
     Selector.Index index _ ->
       Update
@@ -172,8 +194,8 @@ resolveWith context expression [] = case expression of
         }
     where
       first = case head (toList updates) of
-        Syntax.Field {variable} -> context !-% variable
-        Syntax.Pun {variable} -> context !-% variable
+        Syntax.Field {index} -> context !-% index
+        Syntax.Pun {index} -> context !-% index
   Syntax.Let {declarations, body}
     | (context, declarations) <- Declarations.resolve context declarations ->
         Let

@@ -63,9 +63,7 @@ import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import qualified Semantic.Tree.Declarations as Semantic.Declarations
 import qualified Semantic.Tree.Definition as Semantic (Definition)
 import Semantic.Tree.Expression (Explicit (Known))
-import qualified Semantic.Tree.Expression as Semantic (Expression (..))
-import qualified Semantic.Tree.ExpressionField as Semantic (Field (Field))
-import qualified Semantic.Tree.ExpressionField as Semantic.Field
+import qualified Semantic.Tree.Expression as Semantic (Expression (..), Field (..))
 import qualified Semantic.Tree.Pattern as Pattern
 import qualified Semantic.Tree.RightHandSide as Semantic (RightHandSide)
 import qualified Semantic.Tree.Select as Semantic (Select (..))
@@ -671,10 +669,10 @@ simplifyWith expression [] = case expression of
     where
       entryCount = Semantic.ConstructorInfo.entryCount constructorInfo
       arguments = Strict.Vector.generate entryCount $ \index' ->
-        case [ expression
+        case [ field
              | Semantic.Field
                  { index,
-                   expression
+                   field
                  } <-
                  toList fields,
                index == index'
