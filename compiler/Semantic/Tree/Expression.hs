@@ -28,7 +28,6 @@ import Semantic.Tree.Lambda (Lambda (..))
 import Semantic.Tree.Pattern (Pattern)
 import Semantic.Tree.RightHandSide (RightHandSide)
 import Semantic.Tree.Scheme (Scheme)
-import Semantic.Tree.Select (Select (..))
 import Semantic.Tree.Statements (Statements)
 import qualified Semantic.Tree.Statements as Statements (Comprehension, Do)
 import Syntax.Position (Position)
@@ -80,7 +79,7 @@ data Expression layout stage scope
       { base :: !(Expression layout stage scope),
         updatePosition :: !Position,
         updateType :: !(Type2.Index scope),
-        updates :: !(Strict.Vector1 (Select layout stage scope)),
+        updates :: !(Strict.Vector1 (Field layout stage scope)),
         updateInfo :: !(Inferred UpdateInfo stage scope),
         permissive :: !Prelude.Bool
       }
@@ -594,6 +593,3 @@ instance FreeTermVariables Explicit where
 instance Connect Explicit where
   connect (Explicit expression) = Explicit (connect expression)
   seperate (Known expression) = Known (Simple.map (Simple.Map seperate) expression)
-
-callHead_ :: CallHead layout stage scope -> Expression layout stage scope
-callHead_ callHead = CallHead {callHead}

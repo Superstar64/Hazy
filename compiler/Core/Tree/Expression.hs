@@ -66,7 +66,6 @@ import Semantic.Tree.Expression (Explicit (Known))
 import qualified Semantic.Tree.Expression as Semantic (Expression (..), Field (..))
 import qualified Semantic.Tree.Pattern as Pattern
 import qualified Semantic.Tree.RightHandSide as Semantic (RightHandSide)
-import qualified Semantic.Tree.Select as Semantic (Select (..))
 import qualified Semantic.Tree.Statements as Semantic (Evidence, Statements, Syntax)
 import qualified Semantic.Tree.Statements as Semantic.Statements
 import qualified Syntax.StringLiteral as StringLiteral
@@ -717,12 +716,12 @@ simplifyWith expression [] = case expression of
                       }
                 }
               where
-                illegal Semantic.Select {pick} = Strict.Just pick `notElem` selectorIndexes
+                illegal Semantic.Field {index} = Strict.Just index `notElem` selectorIndexes
                 generate index selectorIndex
                   | EntryInfo {levity} <- entries Strict.Vector.! index =
-                      case [ shift $ shift $ simplify update
-                           | Semantic.Select {pick, update} <- toList updates,
-                             selectorIndex == Strict.Just pick
+                      case [ shift $ shift $ simplify field
+                           | Semantic.Field {index, field} <- toList updates,
+                             selectorIndex == Strict.Just index
                            ] of
                         [] -> monoVariable (shift $ shift levity) $ Term.SimplePattern index
                         expressions -> last expressions
@@ -731,7 +730,7 @@ simplifyWith expression [] = case expression of
                 { done =
                     Newtype
                       { constructor,
-                        argument = last [shift $ simplify update | Semantic.Select {update} <- toList updates],
+                        argument = last [shift $ simplify field | Semantic.Field {field} <- toList updates],
                         direction = Construct
                       }
                 }

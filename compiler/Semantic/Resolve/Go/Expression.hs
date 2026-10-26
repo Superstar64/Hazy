@@ -32,7 +32,6 @@ import qualified Semantic.Resolve.Go.Lambda as Lambda (resolve)
 import qualified Semantic.Resolve.Go.Pattern as Pattern (augment, resolve)
 import qualified Semantic.Resolve.Go.RightHandSide as RightHandSide (resolve)
 import qualified Semantic.Resolve.Go.Scheme as Scheme (augment, resolve)
-import qualified Semantic.Resolve.Go.Select as Select (resolve)
 import qualified Semantic.Resolve.Go.Statements as Statements (resolve)
 import {-# SOURCE #-} qualified Semantic.Resolve.Temporary.ExpressionInfix as Infix (fix, fixWith, resolve)
 import Semantic.Stage (Equal (..), Resolve)
@@ -183,15 +182,26 @@ resolveWith context expression [] = case expression of
                   Field {index = redirect, field}
               | otherwise = mismatchSelectors position
   Syntax.Update {base, updatePosition, updates} -> case first of
-    Selector.Index index _ ->
+    Selector.Index typex _ ->
       Update
         { base = resolve context base,
           updatePosition,
-          updateType = index,
-          updates = fmap (Select.resolve index context) updates,
+          updateType = typex,
+          updates = fmap resolveSelect updates,
           updateInfo = Inferred,
           permissive = permissiveUpdates $ extensions context
         }
+      where
+        resolveSelect = \case
+          Syntax.Field {index, field} -> make index (resolve context field)
+          Syntax.Pun {index = variable@(position :@ _ :- localName)} ->
+            let index = context !-* position :@ Local :- localName
+             in make variable CallHead {callHead = CallHead.resolveVariable position index}
+        make name@(position :@ _) field
+          | Selector.Index typex' selector <- context !-% name,
+            typex == typex' =
+              Field {index = selector, field}
+          | otherwise = mismatchSelectors position
     where
       first = case head (toList updates) of
         Syntax.Field {index} -> context !-% index

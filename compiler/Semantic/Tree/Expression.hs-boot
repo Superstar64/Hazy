@@ -10,7 +10,6 @@ import Semantic.Scope (Environment)
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Stage)
-import Semantic.Tree.CallHead (CallHead)
 
 type Expression :: Layout -> Stage -> Environment -> Type
 
@@ -27,5 +26,3 @@ instance Shift.Functor (Expression layout stage)
 instance FreeTermVariables Expression
 
 instance Connect Expression
-
-callHead_ :: CallHead layout stage scope -> Expression layout stage scope

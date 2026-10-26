@@ -235,7 +235,6 @@ executable hazy
     Semantic.Check.Temporary.Pattern
     Semantic.Check.Temporary.RightHandSide
     Semantic.Check.Temporary.Scheme
-    Semantic.Check.Temporary.Select
     Semantic.Check.Temporary.SelectorInfo
     Semantic.Check.Temporary.Statements
     Semantic.Check.Temporary.StrictnessAnnotation
@@ -301,7 +300,6 @@ executable hazy
     Semantic.Resolve.Go.Pattern
     Semantic.Resolve.Go.RightHandSide
     Semantic.Resolve.Go.Scheme
-    Semantic.Resolve.Go.Select
     Semantic.Resolve.Go.Statements
     Semantic.Resolve.Go.Type
     Semantic.Resolve.Go.TypePattern
@@ -373,7 +371,6 @@ executable hazy
     Semantic.Tree.Pattern
     Semantic.Tree.RightHandSide
     Semantic.Tree.Scheme
-    Semantic.Tree.Select
     Semantic.Tree.Selector
     Semantic.Tree.Statements
     Semantic.Tree.StrictnessAnnotation
