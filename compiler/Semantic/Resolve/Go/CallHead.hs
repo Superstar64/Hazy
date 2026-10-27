@@ -39,19 +39,3 @@ resolveConstructor constructorPosition constructor =
       constructor,
       constructorInfo = Inferred
     }
-
-resolveTupling :: Position -> Int -> CallHead layout Resolve scope
-resolveTupling constructorPosition count =
-  Constructor
-    { constructorPosition,
-      constructor = Constructor.tuple count,
-      constructorInfo = Inferred
-    }
-
-resolveCons :: Position -> CallHead layout Resolve scope
-resolveCons constructorPosition =
-  Constructor
-    { constructorPosition,
-      constructor = Constructor.cons,
-      constructorInfo = Inferred
-    }

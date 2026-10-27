@@ -1,6 +1,5 @@
 module Semantic.Resolve.Temporary.ExpressionInfix where
 
-import Data.List.Reverse (List (..))
 import qualified Semantic.Index.Constructor as Constructor (cons)
 import Semantic.Layout (Normal)
 import qualified Semantic.Resolve.Binding.Constructor as Constructor (Detail (..), get)
@@ -88,8 +87,8 @@ fixWith = Infix.fixWith negate operator
       Expression Normal Resolve scope
     operator left index right = case index of
       Term position Term.Binding {index} ->
-        Expression.resolveTerm2 position index (Nil :> left :> right)
+        Expression.resolveTerm2 position index [left, right]
       Constructor position Constructor.Binding {index} ->
-        Expression.resolveConstructor2 position index (Nil :> left :> right)
+        Expression.resolveConstructor2 position index [left, right]
       Cons position ->
-        Expression.resolveConstructor2 position Constructor.cons (Nil :> left :> right)
+        Expression.resolveConstructor2 position Constructor.cons [left, right]

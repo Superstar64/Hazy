@@ -64,7 +64,8 @@ import qualified Prelude
 
 data Expression s scope
   = CallHead
-      { callHead :: !(CallHead s scope)
+      { callHead :: !(CallHead s scope),
+        arguments :: !(Strict.Vector (Expression s scope))
       }
   | Integer
       { startPosition :: !Position,
@@ -168,9 +169,12 @@ data Field s scope
   }
 
 check :: Context s scope -> Unify.Type s scope -> Semantic.Expression Group Resolve scope -> ST s (Expression s scope)
-check context typex Semantic.CallHead {callHead} = do
-  callHead <- CallHead.check context typex callHead
-  pure CallHead {callHead}
+check context typex Semantic.CallHead {callHead, arguments} = do
+  types <- sequence $ Strict.Vector.replicate (length arguments) $ Unify.fresh Core.typex
+  let function = foldr (-#>) typex types
+  callHead <- CallHead.check context function callHead
+  arguments <- sequence $ Strict.Vector.zipWith (check context) types arguments
+  pure CallHead {callHead, arguments}
 check
   context@Context {typeEnvironment}
   typex
@@ -329,9 +333,10 @@ check context typex Semantic.Negate {startPosition, negative} = do
 
 solve :: Expression s scope -> Unify.Solve s (Solved.Expression Group Check scope)
 solve = \case
-  CallHead {callHead} -> do
+  CallHead {callHead, arguments} -> do
     callHead <- CallHead.solve callHead
-    pure Solved.CallHead {callHead}
+    arguments <- traverse solve arguments
+    pure Solved.CallHead {callHead, arguments}
   Record {constructorPosition, constructor, constructorInfo, fields} -> do
     let solveField Field {index, field} = do
           field <- solve field

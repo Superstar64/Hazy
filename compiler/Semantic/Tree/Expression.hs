@@ -37,7 +37,8 @@ import qualified Prelude
 
 data Expression layout stage scope
   = CallHead
-      { callHead :: !(CallHead layout stage scope)
+      { callHead :: !(CallHead layout stage scope),
+        arguments :: !(Strict.Vector (Expression layout stage scope))
       }
   | Integer
       { startPosition :: !Position,
@@ -148,9 +149,10 @@ instance Shift0.Functor (Expression layout stage) where
 
 instance Shift.Functor (Expression layout stage) where
   map category = \case
-    CallHead {callHead} ->
+    CallHead {callHead, arguments} ->
       CallHead
-        { callHead = Shift.map category callHead
+        { callHead = Shift.map category callHead,
+          arguments = Shift.map category <$> arguments
         }
     Integer {startPosition, integer, evidence} ->
       Integer
@@ -267,7 +269,9 @@ instance Shift.Functor (Expression layout stage) where
 
 instance FreeTermVariables Expression where
   freeTermVariables target = \case
-    CallHead {callHead} -> freeTermVariables target callHead
+    CallHead {callHead, arguments} ->
+      freeTermVariables target callHead
+        <> foldMap (freeTermVariables target) arguments
     Integer {} -> []
     Float {} -> []
     Character {} -> []
@@ -312,9 +316,10 @@ instance FreeTermVariables Expression where
 
 instance Connect Expression where
   connect = \case
-    CallHead {callHead} ->
+    CallHead {callHead, arguments} ->
       CallHead
-        { callHead = connect callHead
+        { callHead = connect callHead,
+          arguments = connect <$> arguments
         }
     Integer {startPosition, integer} ->
       Integer
@@ -437,9 +442,10 @@ instance Connect Expression where
           negative = connect negative
         }
   seperate = \case
-    CallHead {callHead} ->
+    CallHead {callHead, arguments} ->
       CallHead
-        { callHead = seperate callHead
+        { callHead = seperate callHead,
+          arguments = seperate <$> arguments
         }
     Integer {startPosition, integer, evidence} -> Integer {startPosition, integer, evidence}
     Float {startPosition, float, evidence} -> Float {startPosition, float, evidence}

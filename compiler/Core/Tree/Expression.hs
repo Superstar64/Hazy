@@ -450,35 +450,48 @@ call function argument = Call {function, argument}
 
 class Simplify source where
   simplify :: source Normal Check scope -> Expression scope
+  simplifyWith :: source Normal Check scope -> Strict.Vector (Expression scope) -> Expression scope
+  simplifyWith main arguments = foldl Call (simplify main) arguments
 
-instance Simplify Semantic.Expression where
-  simplify expression = simplifyWith expression []
-
-simplifyCallHead :: Semantic.CallHead layout Check scope -> Expression scope
-simplifyCallHead = \case
-  Semantic.Variable {variable, instanciation = Solved instanciation} ->
-    Variable
-      { variable,
-        instanciation
-      }
-  Semantic.Selector {selector, selectorInfo = Solved selectorInfo} ->
-    Lambda
-      { body = simplifySelector (shift selector) (shift selectorInfo) lambdaVariable
-      }
-  Semantic.Method
-    { method,
-      evidence = Solved evidence,
-      instanciation = Solved instanciation,
-      methodInfo = Solved methodInfo
-    } ->
-      Method
-        { method,
-          evidence,
-          instanciation,
-          methodInfo
+instance Simplify Semantic.CallHead where
+  simplify = \case
+    Semantic.Variable {variable, instanciation = Solved instanciation} ->
+      Variable
+        { variable,
+          instanciation
         }
-  Semantic.Constructor {constructor, constructorInfo = Solved constructorInfo} ->
-    simplifyConstructor constructor constructorInfo 0 Reverse.Nil
+    Semantic.Selector {selector, selectorInfo = Solved selectorInfo} ->
+      Lambda
+        { body = simplifySelector (shift selector) (shift selectorInfo) lambdaVariable
+        }
+    Semantic.Method
+      { method,
+        evidence = Solved evidence,
+        instanciation = Solved instanciation,
+        methodInfo = Solved methodInfo
+      } ->
+        Method
+          { method,
+            evidence,
+            instanciation,
+            methodInfo
+          }
+    Semantic.Constructor {constructor, constructorInfo = Solved constructorInfo} ->
+      simplifyConstructor constructor constructorInfo 0 Reverse.Nil
+  simplifyWith callHead arguments = case callHead of
+    Semantic.Constructor {constructor, constructorInfo = Solved constructorInfo}
+      | Semantic.ConstructorInfo.entryCount constructorInfo == length arguments ->
+          simplifyConstructorExact constructor constructorInfo arguments
+      | otherwise ->
+          simplifyConstructor
+            constructor
+            constructorInfo
+            (length arguments)
+            (Reverse.fromList $ toList arguments)
+    Semantic.Selector {selector, selectorInfo = Solved selectorInfo}
+      | (argument : arguments) <- toList arguments ->
+          foldl Call (simplifySelector selector selectorInfo argument) arguments
+    _ -> foldl Call (simplify callHead) arguments
 
 instance Simplify Semantic.Definition where
   simplify = Definition.desugar . Definition.simplify
@@ -647,204 +660,197 @@ simplifySelector (Selector.Index typeIndex _) Disjoint {select} argument =
 
     statements = zipWith generate [0 ..] $ toList select
 
-simplifyWith ::
-  Semantic.Expression Normal Check scope ->
-  [Expression scope] ->
-  Expression scope
-simplifyWith Semantic.Call {function, argument} arguments =
-  simplifyWith function (simplify argument : arguments)
-simplifyWith
-  Semantic.CallHead
-    { callHead = Semantic.Constructor {constructor, constructorInfo = Solved constructorInfo}
-    }
-  arguments =
-    simplifyConstructor constructor constructorInfo (length arguments) (Reverse.fromList arguments)
-simplifyWith expression arguments@(_ : _) =
-  foldl Call (simplify expression) arguments
-simplifyWith expression [] = case expression of
-  Semantic.CallHead {callHead} -> simplifyCallHead callHead
-  Semantic.Record {constructor, constructorInfo = Solved constructorInfo, fields} ->
-    simplifyConstructorExact constructor constructorInfo arguments
-    where
-      entryCount = Semantic.ConstructorInfo.entryCount constructorInfo
-      arguments = Strict.Vector.generate entryCount $ \index' ->
-        case [ field
-             | Semantic.Field
-                 { index,
-                   field
-                 } <-
-                 toList fields,
-               index == index'
-             ] of
-          [] -> Join {statements = Statements.Bottom}
-          fields -> simplify $ last fields
-  Semantic.Update
-    { base,
-      updateType,
-      updates,
-      updateInfo = Solved Semantic.UpdateInfo {updateInfo},
-      permissive
-    } ->
+instance Simplify Semantic.Expression where
+  simplify = \case
+    Semantic.CallHead {callHead, arguments} ->
+      simplifyWith callHead (fmap simplify arguments)
+    Semantic.Call {function, argument} ->
       Call
-        { function =
-            Lambda
-              { body =
-                  Join
-                    { statements = foldr1 (<>) $ Strict.Vector.imap update updateInfo
-                    }
-              },
-          argument = simplify base
+        { function = simplify function,
+          argument = simplify argument
         }
+    Semantic.Record {constructor, constructorInfo = Solved constructorInfo, fields} ->
+      simplifyConstructorExact constructor constructorInfo arguments
       where
-        update constructorIndex Update {constructorInfo, selectorIndexes} =
-          case constructorInfo of
-            Semantic.ConstructorInfo {entries} ->
-              Statements.Bind
-                { constructor,
-                  constructorInfo = shift ConstructorInfo {entries},
-                  check = lambdaVariable,
-                  thenx =
-                    Statements.Done
-                      { done =
-                          if
-                            | not permissive, any illegal updates -> Join {statements = Statements.Bottom}
-                            | otherwise ->
-                                simplifyConstructorExact
-                                  (shift constructor)
-                                  (shift $ shift constructorInfo)
-                                  (Strict.Vector.imap generate selectorIndexes)
-                      }
-                }
-              where
-                illegal Semantic.Field {index} = Strict.Just index `notElem` selectorIndexes
-                generate index selectorIndex
-                  | EntryInfo {levity} <- entries Strict.Vector.! index =
-                      case [ shift $ shift $ simplify field
-                           | Semantic.Field {index, field} <- toList updates,
-                             selectorIndex == Strict.Just index
-                           ] of
-                        [] -> monoVariable (shift $ shift levity) $ Term.SimplePattern index
-                        expressions -> last expressions
-            Semantic.Newtype ->
-              Statements.Done
-                { done =
-                    Newtype
-                      { constructor,
-                        argument = last [shift $ simplify field | Semantic.Field {field} <- toList updates],
-                        direction = Construct
-                      }
-                }
-          where
-            constructor =
-              Constructor.Index
-                { typeIndex = shift updateType,
-                  constructorIndex
-                }
-  Semantic.Integer {integer, evidence = Solved evidence} -> integer_ integer evidence
-  Semantic.Float {float, evidence = Solved evidence} -> float_ float evidence
-  Semantic.Tuple {elements} ->
-    Constructor
-      { constructor = Constructor.tuple (length elements),
-        arguments = Strict.Vector.map argument elements
-      }
-    where
-      argument element = TypeLambda.mono Type.lazy (simplify element)
-  Semantic.List {items} ->
-    foldr (cons . simplify) nil items
-  Semantic.Comprehension {statements} -> simplify statements
-  Semantic.Let {declarations = Semantic.Declarations.Local declarations, letBody} ->
-    Let
-      { declarations = Declarations.simplify declarations,
-        letBody = simplify letBody
-      }
-  Semantic.If {condition, thenx, elsex} ->
-    ifx (simplify condition) (simplify thenx) (simplify elsex)
-  Semantic.Case {scrutinee, cases}
-    | null cases ->
-        Join
-          { statements = Statements.Bottom
-          }
-    | otherwise ->
+        entryCount = Semantic.ConstructorInfo.entryCount constructorInfo
+        arguments = Strict.Vector.generate entryCount $ \index' ->
+          case [ field
+               | Semantic.Field
+                   { index,
+                     field
+                   } <-
+                   toList fields,
+                 index == index'
+               ] of
+            [] -> Join {statements = Statements.Bottom}
+            fields -> simplify $ last fields
+    Semantic.Update
+      { base,
+        updateType,
+        updates,
+        updateInfo = Solved Semantic.UpdateInfo {updateInfo},
+        permissive
+      } ->
         Call
           { function =
-              Definition.desugar $
-                foldr1 (<>) (Definition . Function.simplify <$> toList cases),
-            argument = simplify scrutinee
+              Lambda
+                { body =
+                    Join
+                      { statements = foldr1 (<>) $ Strict.Vector.imap update updateInfo
+                      }
+                },
+            argument = simplify base
           }
-  Semantic.LambdaCase {cases}
-    | null cases ->
-        Lambda
-          { body =
-              Join
-                { statements = Statements.Bottom
-                }
-          }
-    | otherwise ->
-        Definition.desugar $
-          foldr1 (<>) (Definition . Function.simplify <$> toList cases)
-  Semantic.Lambda {parameter, body} ->
-    let definition =
-          Bound
-            { patternx = Pattern.anonymize parameter,
-              body = Function.simplify body
+        where
+          update constructorIndex Update {constructorInfo, selectorIndexes} =
+            case constructorInfo of
+              Semantic.ConstructorInfo {entries} ->
+                Statements.Bind
+                  { constructor,
+                    constructorInfo = shift ConstructorInfo {entries},
+                    check = lambdaVariable,
+                    thenx =
+                      Statements.Done
+                        { done =
+                            if
+                              | not permissive, any illegal updates -> Join {statements = Statements.Bottom}
+                              | otherwise ->
+                                  simplifyConstructorExact
+                                    (shift constructor)
+                                    (shift $ shift constructorInfo)
+                                    (Strict.Vector.imap generate selectorIndexes)
+                        }
+                  }
+                where
+                  illegal Semantic.Field {index} = Strict.Just index `notElem` selectorIndexes
+                  generate index selectorIndex
+                    | EntryInfo {levity} <- entries Strict.Vector.! index =
+                        case [ shift $ shift $ simplify field
+                             | Semantic.Field {index, field} <- toList updates,
+                               selectorIndex == Strict.Just index
+                             ] of
+                          [] -> monoVariable (shift $ shift levity) $ Term.SimplePattern index
+                          expressions -> last expressions
+              Semantic.Newtype ->
+                Statements.Done
+                  { done =
+                      Newtype
+                        { constructor,
+                          argument = last [shift $ simplify field | Semantic.Field {field} <- toList updates],
+                          direction = Construct
+                        }
+                  }
+            where
+              constructor =
+                Constructor.Index
+                  { typeIndex = shift updateType,
+                    constructorIndex
+                  }
+    Semantic.Integer {integer, evidence = Solved evidence} -> integer_ integer evidence
+    Semantic.Float {float, evidence = Solved evidence} -> float_ float evidence
+    Semantic.Tuple {elements} ->
+      Constructor
+        { constructor = Constructor.tuple (length elements),
+          arguments = Strict.Vector.map argument elements
+        }
+      where
+        argument element = TypeLambda.mono Type.lazy (simplify element)
+    Semantic.List {items} ->
+      foldr (cons . simplify) nil items
+    Semantic.Comprehension {statements} -> simplify statements
+    Semantic.Let {declarations = Semantic.Declarations.Local declarations, letBody} ->
+      Let
+        { declarations = Declarations.simplify declarations,
+          letBody = simplify letBody
+        }
+    Semantic.If {condition, thenx, elsex} ->
+      ifx (simplify condition) (simplify thenx) (simplify elsex)
+    Semantic.Case {scrutinee, cases}
+      | null cases ->
+          Join
+            { statements = Statements.Bottom
             }
-     in Definition.desugar Definition {definition}
-  Semantic.MultiwayIf {branches} ->
-    Join
-      { statements =
-          foldr1
-            Statements.Branch
-            (RightHandSide.desugar . RightHandSide.simplify <$> branches)
-      }
-  Semantic.Character {character} ->
-    Character {character}
-  Semantic.String {string} ->
-    foldr (cons . Character) nil (StringLiteral.unpack string)
-  Semantic.Do {dox} -> simplify dox
-  Semantic.Annotation {expression = Known expression, annotation, instanciation = Solved instanciation} ->
-    Let
-      { declarations = Declarations.single $ shift $ Declaration.annotation expression annotation,
-        letBody =
-          Variable
-            { variable = Term.Declaration 0,
-              instanciation = shift instanciation
-            }
-      }
-  Semantic.RightSection {left, right} -> do
-    Lambda
-      { body =
+      | otherwise ->
           Call
             { function =
-                Call
-                  { function = shift $ simplifyCallHead left,
-                    argument = lambdaVariable
-                  },
-              argument = shift $ simplify right
+                Definition.desugar $
+                  foldr1 (<>) (Definition . Function.simplify <$> toList cases),
+              argument = simplify scrutinee
             }
-      }
-  Semantic.Negate {evidence = Solved evidence, negative} ->
-    Call
-      { function =
-          Method
-            { method = Method.negate,
-              evidence,
-              instanciation = Instanciation.monoLazy,
-              methodInfo = Class.info Num.definition
-            },
-        argument = simplify negative
-      }
-  where
-    cons head tail =
-      Constructor
-        { constructor = Constructor.cons,
-          arguments =
-            Strict.Vector.fromList
-              [ TypeLambda.mono Type.lazy head,
-                TypeLambda.mono Type.lazy tail
-              ]
+    Semantic.LambdaCase {cases}
+      | null cases ->
+          Lambda
+            { body =
+                Join
+                  { statements = Statements.Bottom
+                  }
+            }
+      | otherwise ->
+          Definition.desugar $
+            foldr1 (<>) (Definition . Function.simplify <$> toList cases)
+    Semantic.Lambda {parameter, body} ->
+      let definition =
+            Bound
+              { patternx = Pattern.anonymize parameter,
+                body = Function.simplify body
+              }
+       in Definition.desugar Definition {definition}
+    Semantic.MultiwayIf {branches} ->
+      Join
+        { statements =
+            foldr1
+              Statements.Branch
+              (RightHandSide.desugar . RightHandSide.simplify <$> branches)
         }
-    nil =
-      Constructor
-        { constructor = Constructor.nil,
-          arguments = Strict.Vector.empty
+    Semantic.Character {character} ->
+      Character {character}
+    Semantic.String {string} ->
+      foldr (cons . Character) nil (StringLiteral.unpack string)
+    Semantic.Do {dox} -> simplify dox
+    Semantic.Annotation {expression = Known expression, annotation, instanciation = Solved instanciation} ->
+      Let
+        { declarations = Declarations.single $ shift $ Declaration.annotation expression annotation,
+          letBody =
+            Variable
+              { variable = Term.Declaration 0,
+                instanciation = shift instanciation
+              }
         }
+    Semantic.RightSection {left, right} -> do
+      Lambda
+        { body =
+            Call
+              { function =
+                  Call
+                    { function = shift $ simplify left,
+                      argument = lambdaVariable
+                    },
+                argument = shift $ simplify right
+              }
+        }
+    Semantic.Negate {evidence = Solved evidence, negative} ->
+      Call
+        { function =
+            Method
+              { method = Method.negate,
+                evidence,
+                instanciation = Instanciation.monoLazy,
+                methodInfo = Class.info Num.definition
+              },
+          argument = simplify negative
+        }
+    where
+      cons head tail =
+        Constructor
+          { constructor = Constructor.cons,
+            arguments =
+              Strict.Vector.fromList
+                [ TypeLambda.mono Type.lazy head,
+                  TypeLambda.mono Type.lazy tail
+                ]
+          }
+      nil =
+        Constructor
+          { constructor = Constructor.nil,
+            arguments = Strict.Vector.empty
+          }

@@ -7,6 +7,7 @@ import Core.Tree.Evidence (Evidence)
 import {-# SOURCE #-} Core.Tree.Statements (Statements)
 import qualified Core.Tree.Type as Core
 import Data.Kind (Type)
+import qualified Data.Vector.Strict as Strict
 import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Term as Term
 import Semantic.Layout (Normal)
@@ -50,6 +51,8 @@ call :: Expression scope -> Expression scope -> Expression scope
 
 class Simplify source where
   simplify :: source Normal Check scope -> Expression scope
+  simplifyWith :: source Normal Check scope -> Strict.Vector (Expression scope) -> Expression scope
+  simplifyWith main arguments = foldl Call (simplify main) arguments
 
 instance Simplify Semantic.Expression
 

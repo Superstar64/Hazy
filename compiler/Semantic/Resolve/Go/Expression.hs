@@ -3,13 +3,11 @@
 module Semantic.Resolve.Go.Expression where
 
 import Data.Foldable (toList)
-import Data.List.Reverse (List (..))
-import qualified Data.List.Reverse as Reverse
 import qualified Data.Map as Map
 import qualified Data.Strict.Maybe as Strict
 import qualified Data.Vector.Strict as Strict.Vector
 import Error (mismatchSelectors, unneededFieldQualification)
-import qualified Semantic.Index.Constructor as Constructor (Index (..), cons)
+import qualified Semantic.Index.Constructor as Constructor (Index (..), cons, tuple)
 import qualified Semantic.Index.Method as Method
 import qualified Semantic.Index.Selector as Selector
 import qualified Semantic.Index.Term2 as Term2
@@ -49,32 +47,29 @@ import Prelude hiding (Bool (False, True), Either (Left, Right))
 resolveTerm2 ::
   Position ->
   Term2.Index scope ->
-  Reverse.List (Expression Normal Resolve scope) ->
+  [Expression Normal Resolve scope] ->
   Expression Normal Resolve scope
-resolveTerm2 position index Nil = CallHead {callHead = CallHead.resolveVariable position index}
-resolveTerm2 startPosition Term2.RunST (Nil :> imperative) =
+resolveTerm2 startPosition Term2.RunST [imperative] =
   RunST
     { startPosition,
       imperative,
       unsupported = Refl
     }
-resolveTerm2 position index (arguments :> argument) =
-  Call
-    { function = resolveTerm2 position index arguments,
-      argument
+resolveTerm2 position index arguments =
+  CallHead
+    { callHead = CallHead.resolveVariable position index,
+      arguments = Strict.Vector.fromList arguments
     }
 
 resolveConstructor2 ::
   Position ->
   Constructor.Index scope ->
-  Reverse.List (Expression Normal Resolve scope) ->
+  [Expression Normal Resolve scope] ->
   Expression Normal Resolve scope
-resolveConstructor2 position constructor Nil =
-  CallHead {callHead = CallHead.resolveConstructor position constructor}
-resolveConstructor2 position index (arguments :> argument) =
-  Call
-    { function = resolveConstructor2 position index arguments,
-      argument
+resolveConstructor2 position constructor arguments =
+  CallHead
+    { callHead = CallHead.resolveConstructor position constructor,
+      arguments = Strict.Vector.fromList arguments
     }
 
 resolve :: Context scope -> Syntax.Expression Position -> Expression Normal Resolve scope
@@ -86,14 +81,19 @@ resolveWith ::
   [Expression Normal Resolve scope] ->
   Expression Normal Resolve scope
 resolveWith context Syntax.Variable {variable = startPosition :@ variable} arguments =
-  resolveTerm2 startPosition (context !-* startPosition :@ variable) (Reverse.fromList arguments)
+  resolveTerm2 startPosition (context !-* startPosition :@ variable) arguments
 resolveWith context Syntax.Constructor {constructor = startPosition :@ constructor} arguments =
-  resolveConstructor2 startPosition (context !=*~ startPosition :@ constructor) (Reverse.fromList arguments)
-resolveWith context Syntax.Call {function, argument} arguments
-  | argument <- resolve context argument =
-      resolveWith context function (argument : arguments)
-resolveWith context expression arguments@(_ : _)
-  | expression <- resolve context expression = foldl call expression arguments
+  resolveConstructor2 startPosition (context !=*~ startPosition :@ constructor) arguments
+resolveWith _ Syntax.Unit {startPosition} arguments =
+  resolveConstructor2 startPosition (Constructor.tuple 0) arguments
+resolveWith _ Syntax.Tupling {startPosition, count} arguments =
+  resolveConstructor2 startPosition (Constructor.tuple $ count + 1) arguments
+resolveWith _ Syntax.Cons {startPosition} arguments =
+  resolveConstructor2 startPosition Constructor.cons arguments
+resolveWith context Syntax.Call {function, argument} arguments =
+  resolveWith context function (resolve context argument : arguments)
+resolveWith context expression arguments@(_ : _) =
+  foldl call (resolve context expression) arguments
   where
     call function argument =
       Call
@@ -115,14 +115,6 @@ resolveWith context expression [] = case expression of
       }
   Syntax.Character {startPosition, character} -> Character {startPosition, character}
   Syntax.String {startPosition, string} -> String {startPosition, string}
-  Syntax.Tupling {startPosition, count} ->
-    CallHead
-      { callHead = CallHead.resolveTupling startPosition (count + 1)
-      }
-  Syntax.Unit {startPosition} ->
-    CallHead
-      { callHead = CallHead.resolveTupling startPosition 0
-      }
   Syntax.Tuple {startPosition, elements} ->
     Tuple
       { startPosition,
@@ -134,16 +126,16 @@ resolveWith context expression [] = case expression of
         items = fmap (resolve context) items
       }
   Syntax.SequenceFrom {startPosition, from} ->
-    let arguments = Reverse.fromList [resolve context from]
+    let arguments = [resolve context from]
      in resolveTerm2 startPosition (Term2.Method Method.enumFrom) arguments
   Syntax.SequenceFromThen {startPosition, from, thenx} ->
-    let arguments = Reverse.fromList [resolve context from, resolve context thenx]
+    let arguments = [resolve context from, resolve context thenx]
      in resolveTerm2 startPosition (Term2.Method Method.enumFromThen) arguments
   Syntax.SequenceFromTo {startPosition, from, to} ->
-    let arguments = Reverse.fromList [resolve context from, resolve context to]
+    let arguments = [resolve context from, resolve context to]
      in resolveTerm2 startPosition (Term2.Method Method.enumFromTo) arguments
   Syntax.SequenceFromThenTo {startPosition, from, thenx, to} ->
-    let arguments = Reverse.fromList [resolve context from, resolve context thenx, resolve context to]
+    let arguments = [resolve context from, resolve context thenx, resolve context to]
      in resolveTerm2 startPosition (Term2.Method Method.enumFromThenTo) arguments
   Syntax.Comprehension {startPosition, statements} ->
     Comprehension
@@ -169,7 +161,7 @@ resolveWith context expression [] = case expression of
               Syntax.Field {index, field} -> make index (resolve context field)
               Syntax.Pun {index = variable@(position :@ _ :- localName)} ->
                 let index = context !-* position :@ Local :- localName
-                 in make variable CallHead {callHead = CallHead.resolveVariable position index}
+                 in make variable $ resolveTerm2 position index []
             make name@(position :@ (path :- root)) field
               | fielded,
                 Just index <- Map.lookup root indexes = case path of
@@ -195,7 +187,7 @@ resolveWith context expression [] = case expression of
           Syntax.Field {index, field} -> make index (resolve context field)
           Syntax.Pun {index = variable@(position :@ _ :- localName)} ->
             let index = context !-* position :@ Local :- localName
-             in make variable CallHead {callHead = CallHead.resolveVariable position index}
+             in make variable $ resolveTerm2 position index []
         make name@(position :@ _) field
           | Selector.Index typex' selector <- context !-% name,
             typex == typex' =
@@ -247,10 +239,6 @@ resolveWith context expression [] = case expression of
       { startPosition,
         cases = fmap (Alternative.resolve context) cases
       }
-  Syntax.Cons {startPosition} ->
-    CallHead
-      { callHead = CallHead.resolveCons startPosition
-      }
   Syntax.Infix {left, operator, right} ->
     Infix.fix $
       Infix.resolve
@@ -278,16 +266,16 @@ resolveWith context expression [] = case expression of
             negative
           }
   Syntax.LeftSection {leftSection, operator = operatorPosition :@ operator} -> case operator of
-    QualifiedVariable operator -> resolveTerm2 operatorPosition index (Nil :> left)
+    QualifiedVariable operator -> resolveTerm2 operatorPosition index [left]
       where
         Term.Binding {index, fixity} = Term.get $ context !- operatorPosition :@ operator
         left = section Left fixity leftSection
-    QualifiedConstructor operator -> resolveConstructor2 operatorPosition index (Nil :> left)
+    QualifiedConstructor operator -> resolveConstructor2 operatorPosition index [left]
       where
         Constructor.Binding {index, fixity} = Constructor.get $ context !=~ operatorPosition :@ operator
         left = section Left fixity leftSection
   Syntax.LeftSectionCons {operatorPosition, leftSection} ->
-    resolveConstructor2 operatorPosition Constructor.cons (Nil :> left)
+    resolveConstructor2 operatorPosition Constructor.cons [left]
     where
       fixity = Fixity {associativity = Right, precedence = 5}
       left = section Left fixity leftSection
@@ -303,7 +291,7 @@ resolveWith context expression [] = case expression of
         left = CallHead.resolveConstructor operatorPosition index
         right = section Right fixity rightSection
   Syntax.RightSectionCons {operatorPosition, rightSection} ->
-    RightSection {operatorPosition, left = CallHead.resolveCons operatorPosition, right}
+    RightSection {operatorPosition, left = CallHead.resolveConstructor operatorPosition Constructor.cons, right}
     where
       right = section Right fixity rightSection
       fixity = Fixity {associativity = Right, precedence = 5}
