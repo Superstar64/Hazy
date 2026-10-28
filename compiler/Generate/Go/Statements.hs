@@ -1,7 +1,6 @@
 module Generate.Go.Statements (generate) where
 
 import Control.Monad.ST (ST)
-import Core.Tree.ConstructorInfo (ConstructorInfo (..))
 import Core.Tree.Statements (Statements (..))
 import Data.Foldable (toList)
 import Data.Text (Text)
@@ -59,12 +58,12 @@ attempt context target label = \case
       Expression.generateInto context target done
   Bind
     { constructor = Constructor.Index {constructorIndex},
-      constructorInfo = ConstructorInfo {entries},
+      entryCount,
       check,
       thenx
     } -> do
       (prelude, check) <- Expression.generatePure context check
-      names <- Strict.Vector.replicateM (length entries) (Context.fresh context)
+      names <- Strict.Vector.replicateM entryCount (Context.fresh context)
       context <- pure $ Context.patternBindings names context
       thenx <- attempt context target label thenx
       let ifx = Javascript.If condition (bind ++ thenx)

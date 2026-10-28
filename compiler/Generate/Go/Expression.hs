@@ -3,12 +3,9 @@ module Generate.Go.Expression where
 import Control.Monad.ST (ST)
 import Core.Tree.Constraints (ConstraintsF (Constraints, Value))
 import qualified Core.Tree.Constraints
-import Core.Tree.EntryInfo (EntryInfo (EntryInfo))
-import qualified Core.Tree.EntryInfo
 import Core.Tree.Expression (Expression (..))
 import Core.Tree.Instanciation (Instanciation, InstanciationF (Instanciation))
 import qualified Core.Tree.Instanciation as Instanciation
-import Core.Tree.MethodInfo (MethodInfo (..))
 import Core.Tree.TypeLambda (TypeLambda, TypeLambdaOver (..))
 import Data.Char (ord)
 import Data.Foldable (toList)
@@ -202,7 +199,7 @@ generateImpure context expression = case expression of
     { method = Method.Index {methodIndex},
       evidence,
       instanciation,
-      methodInfo = MethodInfo {constraintCount}
+      constraintCount
     } -> do
       evidence <- Evidence.generate context evidence
       name <- Context.fresh context
@@ -218,7 +215,7 @@ generateImpure context expression = case expression of
   Selector
     { selector = Selector.Index {selectorIndex},
       argument,
-      selectorInfo = EntryInfo {levity}
+      instanciation
     } -> do
       (statements, object) <- generateImpure context argument
       let select =
@@ -226,7 +223,7 @@ generateImpure context expression = case expression of
               { object,
                 field = Mangle.fields !! (selectorIndex + 1)
               }
-      result <- implicit context select Instanciation.Mono {levity}
+      result <- implicit context select instanciation
       pure (statements, result)
   Call {function, argument} -> do
     (statements, function) <- generateImpure context function

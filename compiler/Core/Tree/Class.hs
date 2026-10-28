@@ -1,10 +1,10 @@
 module Core.Tree.Class where
 
-import Core.Instanciate (Normal, Instanciated)
+import Core.Instanciate (Instanciated, Normal)
 import qualified Core.Substitute as Substitute
 import Core.Tree.Constraint (Constraint)
+import Core.Tree.Evidence (EvidenceF)
 import Core.Tree.Forall (ForallOver)
-import Core.Tree.MethodInfo (MethodInfo (..))
 import Core.Tree.Type (Type, TypeF, (-#>))
 import qualified Core.Tree.Type as Type
 import qualified Data.Vector.Strict as Strict
@@ -12,7 +12,6 @@ import Data.Void (Void)
 import Semantic.Scope (Environment ((:+)), Local)
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
-import Core.Tree.Evidence (EvidenceF)
 
 data Class scope = Class
   { parameter :: !(Type scope),
@@ -73,7 +72,7 @@ data TypeInfo instanciate logicalType scope where
   TypeInfo :: !(TypeF logicalType scope) -> TypeInfo Instanciated logicalType scope
   TypeNormal :: TypeInfo Normal logicalType scope
 
-instance Show logicalType => Show (TypeInfo instanciate logicalType scope) where
+instance (Show logicalType) => Show (TypeInfo instanciate logicalType scope) where
   showsPrec k = \case
     TypeInfo typex -> showParen (k > 10) $ showString "TypeInfo " . showsPrec 11 typex
     TypeNormal -> showString "TypeNormal"
@@ -86,18 +85,21 @@ instance Shift.Functor (TypeInfo instanciate logicalType) where
     TypeInfo typex -> TypeInfo (Shift.map category typex)
     TypeNormal -> TypeNormal
 
-instance logicalType ~ Void => Substitute.Functor (TypeInfo instanciate logicalType) where
+instance (logicalType ~ Void) => Substitute.Functor (TypeInfo instanciate logicalType) where
   map category = \case
     TypeInfo typex -> TypeInfo (Substitute.map category typex)
     TypeNormal -> TypeNormal
 
 data EvidenceInfo instanciate logicalEvidence logicalType scope where
-  EvidenceInfo :: !(EvidenceF logicalEvidence logicalType scope) ->
-      EvidenceInfo Instanciated logicalEvidence logicalType scope
+  EvidenceInfo ::
+    !(EvidenceF logicalEvidence logicalType scope) ->
+    EvidenceInfo Instanciated logicalEvidence logicalType scope
   EvidenceNormal :: EvidenceInfo Normal logicalEvidence logicalType scope
 
-instance (Show logicalEvidence, Show logicalType) =>
-  Show (EvidenceInfo instanciate logicalEvidence logicalType scope) where
+instance
+  (Show logicalEvidence, Show logicalType) =>
+  Show (EvidenceInfo instanciate logicalEvidence logicalType scope)
+  where
   showsPrec k = \case
     EvidenceInfo typex -> showParen (k > 10) $ showString "EvidenceInfo " . showsPrec 11 typex
     EvidenceNormal -> showString "EvidenceNormal"
@@ -110,15 +112,16 @@ instance Shift.Functor (EvidenceInfo instanciate logicalEvidence logicalType) wh
     EvidenceInfo typex -> EvidenceInfo (Shift.map category typex)
     EvidenceNormal -> EvidenceNormal
 
-instance (logicalType ~ Void, logicalEvidence ~ Void) =>
-  Substitute.Functor (EvidenceInfo instanciate logicalEvidence logicalType) where
+instance
+  (logicalType ~ Void, logicalEvidence ~ Void) =>
+  Substitute.Functor (EvidenceInfo instanciate logicalEvidence logicalType)
+  where
   map category = \case
     EvidenceInfo typex -> EvidenceInfo (Substitute.map category typex)
     EvidenceNormal -> EvidenceNormal
 
-
 kind :: Class scope -> Type scope
 kind Class {parameter} = parameter -#> Type.Constraint
 
-info :: Class scope -> MethodInfo scope
-info Class {constraints} = MethodInfo {constraintCount = length constraints}
+info :: Class scope -> Int
+info Class {constraints} = length constraints

@@ -2,11 +2,9 @@ module Semantic.Check.Derive.Eq where
 
 import Control.Monad.ST (ST)
 import qualified Core.Tree.Constructor as Constructor (ConstructorF (..))
-import qualified Core.Tree.ConstructorInfo as Core
 import Core.Tree.Data (Data)
 import qualified Core.Tree.Data as Data
 import Core.Tree.Entry (entry)
-import Core.Tree.EntryInfo (EntryInfo (..))
 import Core.Tree.Expression (Direction (..), lambdaVariable)
 import qualified Core.Tree.Expression as Expression
 import qualified Core.Tree.Statements as Statements
@@ -16,6 +14,7 @@ import Data.Foldable (toList)
 import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Context (Context)
 import Semantic.Check.Info.Constructor (ConstructorInfo (..))
+import Semantic.Check.Info.Entry (EntryInfo (..))
 import qualified Semantic.Check.Instanciate.Constructor as ConstructorInstance
 import Semantic.Check.Instanciate.Data (instanciateRigid)
 import qualified Semantic.Check.Temporary.ConstructorInfo as ConstructorInfo
@@ -50,34 +49,33 @@ equal context position typeIndex datax = do
                     constructorIndex
                   }
           pure $ case info of
-            ConstructorInfo {entries}
-              | info <- Core.ConstructorInfo {entries} ->
-                  Statements.Bind
-                    { constructor = shift $ shift $ shift index,
-                      constructorInfo = shift $ shift $ info,
-                      check = shift $ lambdaVariable,
-                      thenx =
-                        Statements.Bind
-                          { constructor = shift $ shift $ shift $ shift index,
-                            constructorInfo = shift $ shift $ shift info,
-                            check = shift $ lambdaVariable,
-                            thenx =
-                              Statements.Done
-                                { done =
-                                    let compare index evidence
-                                          | EntryInfo {levity} <- entries Strict.Vector.! index,
-                                            levity <- shift $ shift levity =
-                                              Expression.eq
-                                                (shift $ shift $ shift $ shift evidence)
-                                                (shift $ Expression.patternVariableAt levity index)
-                                                (Expression.patternVariableAt (shift levity) index)
-                                     in foldr
-                                          (Expression.&&)
-                                          Expression.true
-                                          (zipWith compare [0 ..] (toList evidence))
-                                }
-                          }
-                    }
+            ConstructorInfo {entries} ->
+              Statements.Bind
+                { constructor = shift $ shift $ shift index,
+                  entryCount = length entries,
+                  check = shift $ lambdaVariable,
+                  thenx =
+                    Statements.Bind
+                      { constructor = shift $ shift $ shift $ shift index,
+                        entryCount = length entries,
+                        check = shift $ lambdaVariable,
+                        thenx =
+                          Statements.Done
+                            { done =
+                                let compare index evidence
+                                      | EntryInfo {levity} <- entries Strict.Vector.! index,
+                                        levity <- shift $ shift levity =
+                                          Expression.eq
+                                            (shift $ shift $ shift $ shift evidence)
+                                            (shift $ Expression.patternVariableAt levity index)
+                                            (Expression.patternVariableAt (shift levity) index)
+                                 in foldr
+                                      (Expression.&&)
+                                      Expression.true
+                                      (zipWith compare [0 ..] (toList evidence))
+                            }
+                      }
+                }
             Newtype ->
               Statements.Done
                 { done =

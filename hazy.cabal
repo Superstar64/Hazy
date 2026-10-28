@@ -50,12 +50,10 @@ executable hazy
     Core.Tree.Constraint
     Core.Tree.Constraints
     Core.Tree.Constructor
-    Core.Tree.ConstructorInfo
     Core.Tree.Data
     Core.Tree.Declaration
     Core.Tree.Declarations
     Core.Tree.Entry
-    Core.Tree.EntryInfo
     Core.Tree.Evidence
     Core.Tree.EvidenceSet
     Core.Tree.Expression
@@ -63,7 +61,6 @@ executable hazy
     Core.Tree.Instance
     Core.Tree.Instanciation
     Core.Tree.MethodConcrete
-    Core.Tree.MethodInfo
     Core.Tree.Module
     Core.Tree.Statements
     Core.Tree.Type

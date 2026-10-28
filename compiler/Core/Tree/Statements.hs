@@ -1,10 +1,8 @@
 module Core.Tree.Statements where
 
 import qualified Core.Substitute as Substitute
-import Core.Tree.ConstructorInfo (ConstructorInfo (..))
 import {-# SOURCE #-} Core.Tree.Declarations (Declarations)
 import {-# SOURCE #-} qualified Core.Tree.Declarations as Declarations
-import Core.Tree.EntryInfo (EntryInfo (..))
 import {-# SOURCE #-} Core.Tree.Expression (Expression)
 import {-# SOURCE #-} qualified Core.Tree.Expression as Expression
 import Core.Tree.Type (Type)
@@ -17,6 +15,7 @@ import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
 import qualified Semantic.Check.Info.Constructor as Semantic (ConstructorInfo (..))
 import qualified Semantic.Check.Info.Constructor as Semantic.ConstructorInfo
+import Semantic.Check.Info.Entry (EntryInfo (..))
 import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Constructor as Constructor2
 import qualified Semantic.Index.Term as Term
@@ -38,7 +37,7 @@ data Statements scope
   = Done {done :: !(Expression scope)}
   | Bind
       { constructor :: !(Constructor.Index scope),
-        constructorInfo :: !(ConstructorInfo scope),
+        entryCount :: !Int,
         check :: !(Expression scope),
         thenx :: !(Statements (Scope.SimplePattern ':+ scope))
       }
@@ -76,10 +75,10 @@ instance Substitute.Functor Statements where
       Done
         { done = Substitute.map category done
         }
-    Bind {constructor, constructorInfo, check, thenx} ->
+    Bind {constructor, entryCount, check, thenx} ->
       Bind
         { constructor = Substitute.map category constructor,
-          constructorInfo = Substitute.map category constructorInfo,
+          entryCount,
           check = Substitute.map category check,
           thenx = Substitute.map (Substitute.Over category) thenx
         }
@@ -360,7 +359,7 @@ expand irrefutable levity constructor patterns constructorInfo check thenx =
 replace ::
   Type scope ->
   Constructor2.Index scope ->
-  ConstructorInfo scope ->
+  Int ->
   Expression scope ->
   Statements (Scope.SimplePattern ':+ scope) ->
   Int ->
@@ -368,14 +367,14 @@ replace ::
 replace _ _ _ _ thenx (-1) = Shift.map (Shift.Unshift fail) thenx
   where
     fail = error "bad irrefutable replace"
-replace levity constructor constructorInfo check thenx n =
+replace levity constructor entryCount check thenx n =
   LetOne
     { levity = Type.lazy,
       declaration =
         Expression.join_
           Bind
             { constructor,
-              constructorInfo,
+              entryCount,
               check,
               thenx =
                 Done
@@ -386,7 +385,7 @@ replace levity constructor constructorInfo check thenx n =
         replace
           (shift levity)
           (shift constructor)
-          (shift constructorInfo)
+          entryCount
           (shift check)
           (Shift.map (Shift.ReplaceIrrefutable n) thenx)
           (n - 1)
@@ -412,10 +411,10 @@ finish irrefutable levity constructor patterns constructorInfo check thenx
               body = Shift.map Shift.FinishNewtype thenx
             }
         Semantic.ConstructorInfo {entries}
-          | irrefutable -> replace levity constructor constructorInfo check thenx (length patterns - 1)
-          | otherwise -> Bind {constructor, constructorInfo, check, thenx}
+          | irrefutable -> replace levity constructor entryCount check thenx (length patterns - 1)
+          | otherwise -> Bind {constructor, entryCount, check, thenx}
           where
-            constructorInfo = ConstructorInfo {entries}
+            entryCount = length entries
   where
     wildcard Pattern.Wildcard {} = True
     wildcard _ = False
@@ -464,10 +463,10 @@ simplify = \case
 call :: Statements scope -> Expression scope -> Statements scope
 call statements argument = case statements of
   Done {done} -> Done {done = Expression.call done argument}
-  Bind {constructor, constructorInfo, check, thenx} ->
+  Bind {constructor, entryCount, check, thenx} ->
     Bind
       { constructor,
-        constructorInfo,
+        entryCount,
         check,
         thenx = call thenx (shift argument)
       }

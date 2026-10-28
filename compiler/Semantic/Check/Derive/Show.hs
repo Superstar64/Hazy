@@ -4,11 +4,9 @@ import {-# SOURCE #-} qualified Builtin.Show as Show
 import Control.Monad.ST (ST)
 import qualified Core.Tree.Class as Class
 import qualified Core.Tree.Constructor as Constructor (ConstructorF (..))
-import qualified Core.Tree.ConstructorInfo as Core
 import Core.Tree.Data (Data)
 import qualified Core.Tree.Data as Data
 import Core.Tree.Entry (entry)
-import Core.Tree.EntryInfo (EntryInfo (..))
 import Core.Tree.Evidence (Evidence)
 import Core.Tree.Expression (Direction (..), Expression)
 import qualified Core.Tree.Expression as Expression
@@ -25,6 +23,7 @@ import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Context (Context)
 import Semantic.Check.Info.Constructor (ConstructorInfo (..))
 import qualified Semantic.Check.Info.Constructor as Semantic
+import Semantic.Check.Info.Entry (EntryInfo (..))
 import qualified Semantic.Check.Instanciate.Constructor as ConstructorInstance
 import Semantic.Check.Instanciate.Data (instanciateRigid)
 import qualified Semantic.Check.Temporary.ConstructorInfo as ConstructorInfo
@@ -125,7 +124,7 @@ showConstructor syntax name evidence numberVariable constructorVariable
         { method = Method.showsPrec,
           evidence,
           instanciation = Instanciation.monoLazy,
-          methodInfo = Class.info $ Show.definition
+          constraintCount = Class.info $ Show.definition
         }
         `Expression.call` Expression.int (precedence + 1)
         `Expression.call` constructorVariable index
@@ -199,7 +198,7 @@ showsPrec context position typeIndex datax = do
             Semantic.ConstructorInfo {entries} ->
               Statements.Bind
                 { constructor = shift $ shift $ shift constructor,
-                  constructorInfo = Core.ConstructorInfo {entries = shift . shift <$> entries},
+                  entryCount = length entries,
                   check = Expression.lambdaVariable,
                   thenx =
                     Statements.Done
