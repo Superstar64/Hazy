@@ -14,7 +14,7 @@ import qualified Data.Vector.Strict as Strict.Vector
 import Order (orderListInt')
 import {-# SOURCE #-} Semantic.Check.Context (Context)
 import Semantic.Check.Instanciate.Constructor (ConstructorInstance (..))
-import qualified Semantic.Check.Instanciate.Constructor as Constructor (info, instanciate)
+import qualified Semantic.Check.Instanciate.Constructor as Constructor (instanciate)
 import qualified Semantic.Check.Instanciate.Constructor as ConstructorInstance
 import Semantic.Check.Temporary.SelectorInfo (Select (..), SelectorInfo (..))
 import Semantic.Check.Temporary.UpdateInfo (UpdateInfo (..))
@@ -29,6 +29,7 @@ import Semantic.Tree.Selector (Selector (..))
 import qualified Semantic.Tree.Selector as Selector (Uniform (..))
 import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
+import qualified Syntax.Tree.Brand as Brand
 
 type DataInstance s scope = DefinitionF Instanciated (Unify.Logical s scope) scope
 
@@ -93,22 +94,31 @@ selectorType Definition {constructors, selectors} selectorIndex = entry
     Entry {entry} = entries Strict.Vector.! index
 
 selectorInfo :: DataInstance s scope -> Int -> SelectorInfo s scope
-selectorInfo Definition {position = Store position, constructors, selectors} index =
-  case selectors Strict.Vector.! index of
-    Selector {first, index, uniform = Selector.Uniform} -> Uniform {position, levity}
-      where
-        Constructor {entries} = constructors Strict.Vector.! first
-        Entry {levity} = entries Strict.Vector.! index
-    Selector {uniform = Selector.Disjoint {indexes}} ->
-      Disjoint
-        { select = Strict.Vector.imap pick indexes
-        }
-      where
-        pick index selectIndex =
-          Select
-            { selectIndex,
-              constructorInfo = Constructor.info (constructors Strict.Vector.! index)
-            }
+selectorInfo Definition {position = Store position, constructors, selectors, brand} index = case brand of
+  Brand.Newtype -> Newtype
+  Brand.Boxed ->
+    case selectors Strict.Vector.! index of
+      Selector {first, index, uniform = Selector.Uniform} -> Uniform {position, levity}
+        where
+          Constructor {entries} = constructors Strict.Vector.! first
+          Entry {levity} = entries Strict.Vector.! index
+      Selector {uniform = Selector.Disjoint {indexes}} ->
+        Disjoint
+          { position = position,
+            select = Strict.Vector.imap pick indexes
+          }
+        where
+          pick index = \case
+            Strict.Just select -> case constructors Strict.Vector.! index of
+              Constructor {entries} -> case entries Strict.Vector.! select of
+                Entry {levity} ->
+                  Select
+                    { entryCount = length entries,
+                      specificLevity = levity,
+                      selection = select
+                    }
+            Strict.Nothing -> case constructors Strict.Vector.! index of
+              Constructor {entries} -> Bottom {entryCount = length entries}
 
 updateInfo :: DataInstance s scope -> UpdateInfo s scope
 updateInfo Definition {constructors, selectors} =

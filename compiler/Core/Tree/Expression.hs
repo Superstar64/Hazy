@@ -60,7 +60,8 @@ import qualified Semantic.Tree.Info.Constructor as Semantic (ConstructorInfo (..
 import qualified Semantic.Tree.Info.Constructor as Semantic.ConstructorInfo
 import Semantic.Tree.Info.Entry (EntryInfo (..))
 import Semantic.Tree.Info.Method (MethodInfo (..))
-import Semantic.Tree.Info.Selector (Select (..), SelectorInfo (..))
+import qualified Semantic.Tree.Info.Selector as Semantic (Select (..), SelectorInfo (Disjoint, Uniform))
+import qualified Semantic.Tree.Info.Selector as Semantic.Selector
 import Semantic.Tree.Info.Update (Update (..))
 import qualified Semantic.Tree.Info.Update as Semantic (UpdateInfo (..))
 import qualified Semantic.Tree.Pattern as Pattern
@@ -620,43 +621,36 @@ simplifyConstructorExact constructor Semantic.ConstructorInfo.Newtype arguments 
 
 simplifySelector ::
   Selector.Index scope ->
-  SelectorInfo scope ->
+  Semantic.SelectorInfo scope ->
   Expression scope ->
   Expression scope
-simplifySelector selector Uniform {levity} argument =
+simplifySelector (Selector.Index typeIndex _) Semantic.Selector.Newtype argument =
+  Newtype
+    { constructor = Constructor.Index typeIndex 0,
+      argument,
+      direction = Destruct
+    }
+simplifySelector selector Semantic.Uniform {levity} argument =
   Selector
     { selector,
       argument,
       instanciation = Instanciation.Mono {levity}
     }
-simplifySelector (Selector.Index typeIndex _) Disjoint {select} argument =
+simplifySelector (Selector.Index typeIndex _) Semantic.Disjoint {select} argument =
   Join {statements = mconcat statements}
   where
-    generate index Select {selectIndex, constructorInfo} =
-      case constructorInfo of
-        Semantic.ConstructorInfo {entries} ->
-          Statements.Bind
-            { constructor = Constructor.Index typeIndex index,
-              entryCount = length entries,
-              check = argument,
-              thenx = case selectIndex of
-                Strict.Just index
-                  | EntryInfo {levity} <- entries Strict.Vector.! index ->
-                      Statements.Done
-                        { done = monoVariable (shift levity) $ Term.SimplePattern index
-                        }
-                Strict.Nothing -> Statements.Bottom
-            }
-        Semantic.Newtype ->
-          Statements.Done
-            { done =
-                Newtype
-                  { constructor = Constructor.Index typeIndex index,
-                    argument,
-                    direction = Destruct
-                  }
-            }
-
+    generate index select =
+      Statements.Bind
+        { constructor = Constructor.Index typeIndex index,
+          entryCount = Semantic.entryCount select,
+          check = argument,
+          thenx = case select of
+            Semantic.Select {specificLevity, selection} ->
+              Statements.Done
+                { done = monoVariable (shift specificLevity) $ Term.SimplePattern selection
+                }
+            Semantic.Bottom {} -> Statements.Bottom
+        }
     statements = zipWith generate [0 ..] $ toList select
 
 instance Simplify Semantic.Expression where

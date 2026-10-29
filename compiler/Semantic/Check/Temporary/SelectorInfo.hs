@@ -1,38 +1,44 @@
 module Semantic.Check.Temporary.SelectorInfo where
 
-import qualified Data.Strict.Maybe as Strict (Maybe)
 import qualified Data.Vector.Strict as Strict (Vector)
-import Semantic.Check.Temporary.ConstructorInfo (ConstructorInfo)
-import qualified Semantic.Check.Temporary.ConstructorInfo as ConstructorInfo
 import qualified Semantic.Tree.Info.Selector as Solved
 import qualified Semantic.Unify as Unify (Solve, Type, solve)
 import Syntax.Position (Position)
 
 data SelectorInfo s scope
-  = Uniform
+  = Newtype
+  | Uniform
       { position :: !Position,
         levity :: !(Unify.Type s scope)
       }
   | Disjoint
-      { select :: !(Strict.Vector (Select s scope))
+      { position :: !Position,
+        select :: !(Strict.Vector (Select s scope))
       }
 
 data Select s scope
   = Select
-  { selectIndex :: !(Strict.Maybe Int),
-    constructorInfo :: !(ConstructorInfo s scope)
-  }
+      { entryCount :: !Int,
+        specificLevity :: !(Unify.Type s scope),
+        selection :: !Int
+      }
+  | Bottom
+      { entryCount :: !Int
+      }
 
 solve :: SelectorInfo s scope -> Unify.Solve s (Solved.SelectorInfo scope)
 solve = \case
+  Newtype -> pure Solved.Newtype
   Uniform {position, levity} -> do
     levity <- Unify.solve position levity
     pure Solved.Uniform {levity}
-  Disjoint {select} -> do
-    select <- traverse solveSelect select
+  Disjoint {position, select} -> do
+    select <- traverse (solveSelect position) select
     pure Solved.Disjoint {select}
 
-solveSelect :: Select s scope -> Unify.Solve s (Solved.Select scope)
-solveSelect Select {selectIndex, constructorInfo} = do
-  constructorInfo <- ConstructorInfo.solve constructorInfo
-  pure Solved.Select {selectIndex, constructorInfo}
+solveSelect :: Position -> Select s scope -> Unify.Solve s (Solved.Select scope)
+solveSelect position = \case
+  Select {entryCount, specificLevity, selection} -> do
+    specificLevity <- Unify.solve position specificLevity
+    pure Solved.Select {entryCount, specificLevity, selection}
+  Bottom {entryCount} -> pure Solved.Bottom {entryCount}
