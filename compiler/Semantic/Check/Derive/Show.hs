@@ -21,9 +21,6 @@ import Data.Text.Lazy (toStrict)
 import Data.Text.Lazy.Builder (Builder, fromString, fromText, toLazyText)
 import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Context (Context)
-import Semantic.Check.Info.Constructor (ConstructorInfo (..))
-import qualified Semantic.Check.Info.Constructor as Semantic
-import Semantic.Check.Info.Entry (EntryInfo (..))
 import qualified Semantic.Check.Instanciate.Constructor as ConstructorInstance
 import Semantic.Check.Instanciate.Data (instanciateRigid)
 import qualified Semantic.Check.Temporary.ConstructorInfo as ConstructorInfo
@@ -35,6 +32,9 @@ import Semantic.Shift (shift)
 import Semantic.Stage (Check)
 import Semantic.Tree.Combinators.Inferred (Inferred (Solved))
 import qualified Semantic.Tree.Constructor as Constructor (Syntax (..))
+import Semantic.Tree.Info.Constructor (ConstructorInfo (..))
+import qualified Semantic.Tree.Info.Constructor as Semantic
+import Semantic.Tree.Info.Entry (EntryInfo (..))
 import Semantic.Tree.MethodConcrete (Auto, MethodConcrete (Generated))
 import qualified Semantic.Unify as Unify
 import Syntax.Lexer (runConstructorIdentifier, runConstructorSymbol, runVariableIdentifier, runVariableSymbol)

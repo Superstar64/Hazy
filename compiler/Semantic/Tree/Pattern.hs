@@ -9,13 +9,13 @@ import Data.Map (Map)
 import qualified Data.Map as Map
 import qualified Data.Strict.Vector1 as Strict (Vector1)
 import qualified Data.Vector.Strict as Strict (Vector)
-import Semantic.Check.Info.Constructor (ConstructorInfo)
 import qualified Semantic.Index.Constructor as Constructor (Index (..))
 import Semantic.Scope (Environment)
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check, Resolve, Stage)
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
+import Semantic.Tree.Info.Constructor (ConstructorInfo)
 import Syntax.Position (Position)
 import Syntax.StringLiteral (StringLiteral)
 import Syntax.Variable (Variable)

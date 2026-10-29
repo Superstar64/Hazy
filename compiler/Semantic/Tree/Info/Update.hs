@@ -1,11 +1,11 @@
-module Semantic.Check.Info.Update where
+module Semantic.Tree.Info.Update where
 
 import qualified Data.Strict.Maybe as Strict (Maybe)
 import qualified Data.Vector.Strict as Strict (Vector)
-import Semantic.Check.Info.Constructor (ConstructorInfo)
 import qualified Semantic.Scope as Scope
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
+import Semantic.Tree.Info.Constructor (ConstructorInfo)
 
 newtype UpdateInfo scope = UpdateInfo
   { updateInfo :: Strict.Vector (Update scope)

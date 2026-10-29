@@ -3,9 +3,6 @@ module Semantic.Tree.CallHead where
 import qualified Core.Tree.Evidence as Simple (Evidence)
 import qualified Core.Tree.Instanciation as Simple (Instanciation)
 import Data.Kind (Type)
-import Semantic.Check.Info.Constructor (ConstructorInfo)
-import Semantic.Check.Info.Method (MethodInfo)
-import Semantic.Check.Info.Selector (SelectorInfo)
 import Semantic.Connect (Connect (..))
 import Semantic.FreeVariables (FreeTermVariables (..))
 import qualified Semantic.FreeVariables as FreeVariables
@@ -19,6 +16,9 @@ import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Stage)
 import Semantic.Tree.Combinators.Inferred (Inferred)
+import Semantic.Tree.Info.Constructor (ConstructorInfo)
+import Semantic.Tree.Info.Method (MethodInfo)
+import Semantic.Tree.Info.Selector (SelectorInfo)
 import Syntax.Position (Position)
 
 type CallHead :: Layout -> Stage -> Environment -> Type

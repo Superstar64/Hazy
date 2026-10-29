@@ -13,8 +13,6 @@ import qualified Core.Tree.TypeLambda as TypeLambda
 import Data.Foldable (toList)
 import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Context (Context)
-import Semantic.Check.Info.Constructor (ConstructorInfo (..))
-import Semantic.Check.Info.Entry (EntryInfo (..))
 import qualified Semantic.Check.Instanciate.Constructor as ConstructorInstance
 import Semantic.Check.Instanciate.Data (instanciateRigid)
 import qualified Semantic.Check.Temporary.ConstructorInfo as ConstructorInfo
@@ -24,6 +22,8 @@ import Semantic.Scope (Environment (..), Local)
 import Semantic.Shift (shift)
 import Semantic.Stage (Check)
 import Semantic.Tree.Combinators.Inferred (Inferred (Solved))
+import Semantic.Tree.Info.Constructor (ConstructorInfo (..))
+import Semantic.Tree.Info.Entry (EntryInfo (..))
 import Semantic.Tree.MethodConcrete (Auto, MethodConcrete (Generated))
 import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)

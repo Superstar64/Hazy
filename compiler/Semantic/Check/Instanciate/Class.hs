@@ -3,12 +3,12 @@ module Semantic.Check.Instanciate.Class where
 import Control.Monad.ST (ST)
 import Core.Instanciate (Instanciated)
 import Core.Substitute (logicalType, substituteType)
-import Core.Tree.Class (Class (..), DefinitionF (..), TypeInfo (..), EvidenceInfo (..))
+import Core.Tree.Class (Class (..), DefinitionF (..), EvidenceInfo (..), TypeInfo (..))
 import qualified Core.Tree.Class as Class
 import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Context (Context)
-import Semantic.Check.Info.Method (MethodInfo (..))
 import qualified Semantic.Index.Type2 as Type2
+import Semantic.Tree.Info.Method (MethodInfo (..))
 import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
 

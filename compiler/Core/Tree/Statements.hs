@@ -13,9 +13,6 @@ import Data.Strict.Vector1 as Strict.Vector1 (fromList', uncons)
 import Data.Vector.Strict ((//))
 import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
-import qualified Semantic.Check.Info.Constructor as Semantic (ConstructorInfo (..))
-import qualified Semantic.Check.Info.Constructor as Semantic.ConstructorInfo
-import Semantic.Check.Info.Entry (EntryInfo (..))
 import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Constructor as Constructor2
 import qualified Semantic.Index.Term as Term
@@ -28,6 +25,9 @@ import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
 import Semantic.Tree.Combinators.Inferred (Inferred (Solved))
 import qualified Semantic.Tree.Declarations as Semantic.Declarations
+import qualified Semantic.Tree.Info.Constructor as Semantic (ConstructorInfo (..))
+import qualified Semantic.Tree.Info.Constructor as Semantic.ConstructorInfo
+import Semantic.Tree.Info.Entry (EntryInfo (..))
 import Semantic.Tree.Pattern (Failable (Unused), Pattern (..))
 import qualified Semantic.Tree.Pattern as Pattern
 import qualified Semantic.Tree.Statements as Semantic (Guard, Statements (..))

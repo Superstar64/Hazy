@@ -19,7 +19,6 @@ import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
 import Error (derivingNonEnum)
 import Semantic.Check.Context (Context)
-import Semantic.Check.Info.Constructor (ConstructorInfo (..))
 import Semantic.Check.Instanciate.Constructor (ConstructorInstance (..))
 import qualified Semantic.Check.Instanciate.Constructor as ConstructorInstance
 import Semantic.Check.Instanciate.Data (instanciateRigid)
@@ -32,6 +31,7 @@ import Semantic.Scope (Environment (..), Local)
 import Semantic.Shift (shift)
 import Semantic.Stage (Check)
 import Semantic.Tree.Combinators.Inferred (Inferred (Solved))
+import Semantic.Tree.Info.Constructor (ConstructorInfo (..))
 import Semantic.Tree.MethodConcrete (Auto, MethodConcrete (Generated))
 import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)

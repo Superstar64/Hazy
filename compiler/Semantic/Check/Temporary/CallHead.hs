@@ -2,7 +2,9 @@ module Semantic.Check.Temporary.CallHead where
 
 import Control.Monad.ST (ST)
 import qualified Core.Builtin as Builtin
+import Core.Tree.Class (EvidenceInfo (..))
 import qualified Core.Tree.Class as Class
+import Core.Tree.Data (TypesInfo (..))
 import qualified Core.Tree.Data as Data
 import Core.Tree.Type ((#))
 import qualified Core.Tree.Type as Core
@@ -11,7 +13,6 @@ import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Binding.Term (TermBinding (..), Type (..))
 import qualified Semantic.Check.Binding.Type as TypeBinding
 import Semantic.Check.Context (Context (..))
-import Semantic.Check.Info.Method (MethodInfo)
 import qualified Semantic.Check.Instanciate.Class as ClassInstance
 import qualified Semantic.Check.Instanciate.Constructor as ConstructorInstance
 import qualified Semantic.Check.Instanciate.Data as DataInstance
@@ -30,10 +31,9 @@ import Semantic.Stage (Resolve)
 import qualified Semantic.Tree.CallHead as Semantic
 import qualified Semantic.Tree.CallHead as Solved
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
+import Semantic.Tree.Info.Method (MethodInfo)
 import qualified Semantic.Unify as Unify
 import Syntax.Position (Position)
-import Core.Tree.Data (TypesInfo(..))
-import Core.Tree.Class (EvidenceInfo(..))
 
 data CallHead s scope
   = Variable

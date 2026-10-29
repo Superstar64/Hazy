@@ -200,11 +200,6 @@ executable hazy
     Semantic.Check.Go.TypeDeclaration
     Semantic.Check.Go.TypeDeclarationExtra
     Semantic.Check.Go.TypeDefinition2
-    Semantic.Check.Info.Constructor
-    Semantic.Check.Info.Entry
-    Semantic.Check.Info.Method
-    Semantic.Check.Info.Selector
-    Semantic.Check.Info.Update
     Semantic.Check.Instanciate.Class
     Semantic.Check.Instanciate.Constructor
     Semantic.Check.Instanciate.Data
@@ -357,6 +352,11 @@ executable hazy
     Semantic.Tree.Function
     Semantic.Tree.GADTConstructor
     Semantic.Tree.Group
+    Semantic.Tree.Info.Constructor
+    Semantic.Tree.Info.Entry
+    Semantic.Tree.Info.Method
+    Semantic.Tree.Info.Selector
+    Semantic.Tree.Info.Update
     Semantic.Tree.Instance
     Semantic.Tree.InstanceDefinition
     Semantic.Tree.InstanceDefinition2

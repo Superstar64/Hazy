@@ -8,8 +8,6 @@ import qualified Core.Tree.TypeLambda as Simple (Map (..), TypeLambdaOver (..), 
 import qualified Data.Strict.Vector1 as Strict (Vector1)
 import qualified Data.Strict.Vector2 as Strict (Vector2)
 import qualified Data.Vector.Strict as Strict (Vector)
-import Semantic.Check.Info.Constructor (ConstructorInfo)
-import Semantic.Check.Info.Update (UpdateInfo)
 import Semantic.Connect (Connect (..))
 import Semantic.FreeVariables (FreeTermVariables (..))
 import qualified Semantic.FreeVariables as FreeVariables
@@ -24,6 +22,8 @@ import Semantic.Tree.Alternative (Alternative (..))
 import Semantic.Tree.CallHead (CallHead)
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import {-# SOURCE #-} qualified Semantic.Tree.Declarations as Declarations
+import Semantic.Tree.Info.Constructor (ConstructorInfo)
+import Semantic.Tree.Info.Update (UpdateInfo)
 import Semantic.Tree.Lambda (Lambda (..))
 import Semantic.Tree.Pattern (Pattern)
 import Semantic.Tree.RightHandSide (RightHandSide)

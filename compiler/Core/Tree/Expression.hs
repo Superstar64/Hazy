@@ -37,13 +37,6 @@ import Data.Ratio (denominator, numerator)
 import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
-import qualified Semantic.Check.Info.Constructor as Semantic (ConstructorInfo (..))
-import qualified Semantic.Check.Info.Constructor as Semantic.ConstructorInfo
-import Semantic.Check.Info.Entry (EntryInfo (..))
-import Semantic.Check.Info.Method (MethodInfo (..))
-import Semantic.Check.Info.Selector (Select (..), SelectorInfo (..))
-import Semantic.Check.Info.Update (Update (..))
-import qualified Semantic.Check.Info.Update as Semantic (UpdateInfo (..))
 import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Evidence as Index.Evidence
 import qualified Semantic.Index.Method as Method
@@ -63,6 +56,13 @@ import qualified Semantic.Tree.Declarations as Semantic.Declarations
 import qualified Semantic.Tree.Definition as Semantic (Definition)
 import Semantic.Tree.Expression (Explicit (Known))
 import qualified Semantic.Tree.Expression as Semantic (Expression (..), Field (..))
+import qualified Semantic.Tree.Info.Constructor as Semantic (ConstructorInfo (..))
+import qualified Semantic.Tree.Info.Constructor as Semantic.ConstructorInfo
+import Semantic.Tree.Info.Entry (EntryInfo (..))
+import Semantic.Tree.Info.Method (MethodInfo (..))
+import Semantic.Tree.Info.Selector (Select (..), SelectorInfo (..))
+import Semantic.Tree.Info.Update (Update (..))
+import qualified Semantic.Tree.Info.Update as Semantic (UpdateInfo (..))
 import qualified Semantic.Tree.Pattern as Pattern
 import qualified Semantic.Tree.RightHandSide as Semantic (RightHandSide)
 import qualified Semantic.Tree.Statements as Semantic (Evidence, Statements, Syntax)
