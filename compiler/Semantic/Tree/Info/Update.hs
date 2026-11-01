@@ -1,15 +1,17 @@
 module Semantic.Tree.Info.Update where
 
+import qualified Core.Tree.Type as Core
 import qualified Data.Strict.Maybe as Strict (Maybe)
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Semantic.Scope as Scope
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
-import Semantic.Tree.Info.Constructor (ConstructorInfo)
 
-newtype UpdateInfo scope = UpdateInfo
-  { updateInfo :: Strict.Vector (Update scope)
-  }
+data UpdateInfo scope
+  = Newtype
+  | Updates
+      { updates :: Strict.Vector (Update scope)
+      }
   deriving (Show)
 
 instance Scope.Show UpdateInfo where
@@ -19,13 +21,15 @@ instance Shift0.Functor UpdateInfo where
   map = Shift.mapDefault
 
 instance Shift.Functor UpdateInfo where
-  map category UpdateInfo {updateInfo} =
-    UpdateInfo
-      { updateInfo = Shift.map category <$> updateInfo
-      }
+  map category = \case
+    Newtype -> Newtype
+    Updates {updates} ->
+      Updates
+        { updates = Shift.map category <$> updates
+        }
 
 data Update scope = Update
-  { constructorInfo :: !(ConstructorInfo scope),
+  { levities :: !(Strict.Vector (Core.Type scope)),
     selectorIndexes :: !(Strict.Vector (Strict.Maybe Int))
   }
   deriving (Show)
@@ -34,8 +38,8 @@ instance Shift0.Functor Update where
   map = Shift.mapDefault
 
 instance Shift.Functor Update where
-  map category Update {constructorInfo, selectorIndexes} =
+  map category Update {levities, selectorIndexes} =
     Update
-      { constructorInfo = Shift.map category constructorInfo,
+      { levities = Shift.map category <$> levities,
         selectorIndexes
       }

@@ -2,26 +2,30 @@ module Semantic.Check.Temporary.UpdateInfo where
 
 import qualified Data.Strict.Maybe as Strict (Maybe)
 import qualified Data.Vector.Strict as Strict (Vector)
-import Semantic.Check.Temporary.ConstructorInfo (ConstructorInfo)
-import qualified Semantic.Check.Temporary.ConstructorInfo as ConstructorInfo
 import qualified Semantic.Tree.Info.Update as Solved
 import qualified Semantic.Unify as Unify
+import Syntax.Position (Position)
 
-newtype UpdateInfo s scope = UpdateInfo
-  { updateInfo :: Strict.Vector (Update s scope)
-  }
+data UpdateInfo s scope
+  = Newtype
+  | Updates
+      { position :: !Position,
+        updates :: !(Strict.Vector (Update s scope))
+      }
 
 data Update s scope = Update
-  { constructorInfo :: !(ConstructorInfo s scope),
+  { levities :: !(Strict.Vector (Unify.Type s scope)),
     selectorIndexes :: !(Strict.Vector (Strict.Maybe Int))
   }
 
 solve :: UpdateInfo s scope -> Unify.Solve s (Solved.UpdateInfo scope)
-solve UpdateInfo {updateInfo} = do
-  updateInfo <- traverse solveUpdate updateInfo
-  pure Solved.UpdateInfo {updateInfo}
+solve = \case
+  Newtype -> pure Solved.Newtype
+  Updates {position, updates} -> do
+    updates <- traverse (solveUpdate position) updates
+    pure Solved.Updates {updates}
 
-solveUpdate :: Update s scope -> Unify.Solve s (Solved.Update scope)
-solveUpdate Update {constructorInfo, selectorIndexes} = do
-  constructorInfo <- ConstructorInfo.solve constructorInfo
-  pure Solved.Update {constructorInfo, selectorIndexes}
+solveUpdate :: Position -> Update s scope -> Unify.Solve s (Solved.Update scope)
+solveUpdate position Update {levities, selectorIndexes} = do
+  levities <- traverse (Unify.solve position) levities
+  pure Solved.Update {levities, selectorIndexes}

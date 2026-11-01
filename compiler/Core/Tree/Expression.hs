@@ -64,6 +64,7 @@ import qualified Semantic.Tree.Info.Selector as Semantic (Select (..), SelectorI
 import qualified Semantic.Tree.Info.Selector as Semantic.Selector
 import Semantic.Tree.Info.Update (Update (..))
 import qualified Semantic.Tree.Info.Update as Semantic (UpdateInfo (..))
+import qualified Semantic.Tree.Info.Update as Semantic.Update
 import qualified Semantic.Tree.Pattern as Pattern
 import qualified Semantic.Tree.RightHandSide as Semantic (RightHandSide)
 import qualified Semantic.Tree.Statements as Semantic (Evidence, Statements, Syntax)
@@ -681,59 +682,56 @@ instance Simplify Semantic.Expression where
       { base,
         updateType,
         updates,
-        updateInfo = Solved Semantic.UpdateInfo {updateInfo},
+        updateInfo = Solved updateInfo,
         permissive
-      } ->
-        Call
-          { function =
-              Lambda
-                { body =
-                    Join
-                      { statements = foldr1 (<>) $ Strict.Vector.imap update updateInfo
-                      }
-                },
-            argument = simplify base
-          }
+      } -> case updateInfo of
+        Semantic.Update.Newtype ->
+          Newtype
+            { constructor = Constructor.Index {typeIndex = updateType, constructorIndex = 0},
+              argument = case Strict.Vector.last updates of
+                Semantic.Field {field} -> simplify field,
+              direction = Construct
+            }
+        Semantic.Updates {updates = updateInfo} ->
+          Call
+            { function =
+                Lambda
+                  { body =
+                      Join
+                        { statements = foldr1 (<>) $ Strict.Vector.imap update updateInfo
+                        }
+                  },
+              argument = simplify base
+            }
         where
-          update constructorIndex Update {constructorInfo, selectorIndexes} =
-            case constructorInfo of
-              Semantic.ConstructorInfo {entries} ->
-                Statements.Bind
-                  { constructor,
-                    entryCount = length entries,
-                    check = lambdaVariable,
-                    thenx =
-                      Statements.Done
-                        { done =
-                            if
-                              | not permissive, any illegal updates -> Join {statements = Statements.Bottom}
-                              | otherwise ->
-                                  simplifyConstructorExact
-                                    (shift constructor)
-                                    (shift $ shift constructorInfo)
-                                    (Strict.Vector.imap generate selectorIndexes)
-                        }
-                  }
-                where
-                  illegal Semantic.Field {index} = Strict.Just index `notElem` selectorIndexes
-                  generate index selectorIndex
-                    | EntryInfo {levity} <- entries Strict.Vector.! index =
-                        case [ shift $ shift $ simplify field
-                             | Semantic.Field {index, field} <- toList updates,
-                               selectorIndex == Strict.Just index
-                             ] of
-                          [] -> monoVariable (shift $ shift levity) $ Term.SimplePattern index
-                          expressions -> last expressions
-              Semantic.Newtype ->
-                Statements.Done
-                  { done =
-                      Newtype
-                        { constructor,
-                          argument = last [shift $ simplify field | Semantic.Field {field} <- toList updates],
-                          direction = Construct
-                        }
-                  }
+          update constructorIndex Update {levities, selectorIndexes} =
+            Statements.Bind
+              { constructor,
+                entryCount = length levities,
+                check = lambdaVariable,
+                thenx =
+                  Statements.Done
+                    { done =
+                        if
+                          | not permissive, any illegal updates -> Join {statements = Statements.Bottom}
+                          | otherwise ->
+                              Constructor
+                                { constructor = shift constructor,
+                                  arguments = Strict.Vector.imap generate selectorIndexes
+                                }
+                    }
+              }
             where
+              illegal Semantic.Field {index} = Strict.Just index `notElem` selectorIndexes
+              generate index selectorIndex =
+                case [ shift $ shift $ simplify field
+                     | Semantic.Field {index, field} <- toList updates,
+                       selectorIndex == Strict.Just index
+                     ] of
+                  [] -> TypeLambda.mono levity $ monoVariable levity (Term.SimplePattern index)
+                  expressions -> TypeLambda.mono levity $ last expressions
+                where
+                  levity = shift $ shift $ levities Strict.Vector.! index
               constructor =
                 Constructor.Index
                   { typeIndex = shift updateType,

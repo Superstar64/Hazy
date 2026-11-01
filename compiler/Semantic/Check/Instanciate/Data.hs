@@ -6,6 +6,7 @@ import Core.Substitute (logicalType)
 import Core.Tree.Constructor (ConstructorF (..))
 import Core.Tree.Data (Data (..), DefinitionF (..), TypesInfo (..))
 import Core.Tree.Entry (EntryF (..))
+import qualified Core.Tree.Entry as Entry
 import Core.Tree.Type ((#), (-#>))
 import qualified Core.Tree.Type as Core
 import Data.Foldable (toList, traverse_)
@@ -17,6 +18,7 @@ import Semantic.Check.Instanciate.Constructor (ConstructorInstance (..))
 import qualified Semantic.Check.Instanciate.Constructor as Constructor (instanciate)
 import qualified Semantic.Check.Instanciate.Constructor as ConstructorInstance
 import Semantic.Check.Temporary.SelectorInfo (Select (..), SelectorInfo (..))
+import qualified Semantic.Check.Temporary.SelectorInfo as SelectorInfo
 import Semantic.Check.Temporary.UpdateInfo (UpdateInfo (..))
 import qualified Semantic.Check.Temporary.UpdateInfo as UpdateInfo
 import qualified Semantic.Index.Constructor as Constructor (Index (..))
@@ -95,7 +97,7 @@ selectorType Definition {constructors, selectors} selectorIndex = entry
 
 selectorInfo :: DataInstance s scope -> Int -> SelectorInfo s scope
 selectorInfo Definition {position = Store position, constructors, selectors, brand} index = case brand of
-  Brand.Newtype -> Newtype
+  Brand.Newtype -> SelectorInfo.Newtype
   Brand.Boxed ->
     case selectors Strict.Vector.! index of
       Selector {first, index, uniform = Selector.Uniform} -> Uniform {position, levity}
@@ -121,15 +123,18 @@ selectorInfo Definition {position = Store position, constructors, selectors, bra
               Constructor {entries} -> Bottom {entryCount = length entries}
 
 updateInfo :: DataInstance s scope -> UpdateInfo s scope
-updateInfo Definition {constructors, selectors} =
-  UpdateInfo
-    { updateInfo = Strict.Vector.imap update constructors
-    }
+updateInfo Definition {position = Store position, constructors, selectors, brand} = case brand of
+  Brand.Newtype -> UpdateInfo.Newtype
+  Brand.Boxed ->
+    Updates
+      { position,
+        updates = Strict.Vector.imap update constructors
+      }
   where
     update :: Int -> ConstructorInstance s scope -> UpdateInfo.Update s scope
-    update constructorIndex constructorInstance@Constructor {entries} =
+    update constructorIndex Constructor {entries} =
       UpdateInfo.Update
-        { constructorInfo = ConstructorInstance.info constructorInstance,
+        { levities = Entry.levity <$> entries,
           selectorIndexes =
             let selections = do
                   Selector {index, uniform} <- toList selectors
