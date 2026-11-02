@@ -37,6 +37,7 @@ instance Show (Expression scope)
 instance Scope.Show Expression
 
 monoVariable :: Core.Type scope -> Term.Index scope -> Expression scope
+bindingVariable :: Core.Type scope -> Expression (Scope.SimpleDeclaration ':+ scope)
 lambdaVariable :: Expression (Scope.SimpleDeclaration ':+ scopes)
 patternVariable :: Core.Type scope -> Expression (Scope.Pattern ':+ scope)
 patternVariableAt :: Core.Type scope -> Int -> Expression (Scope.SimplePattern ':+ scope)

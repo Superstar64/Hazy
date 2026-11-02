@@ -7,6 +7,8 @@ import {-# SOURCE #-} Core.Tree.Expression (Expression)
 import {-# SOURCE #-} qualified Core.Tree.Expression as Expression
 import Core.Tree.Type (Type)
 import qualified Core.Tree.Type as Type
+import Core.Tree.TypeLambda (TypeLambda)
+import qualified Core.Tree.TypeLambda as TypeLambda
 import Data.Foldable (toList)
 import qualified Data.Map as Map
 import Data.Strict.Vector1 as Strict.Vector1 (fromList', uncons)
@@ -46,8 +48,7 @@ data Statements scope
         letBody :: !(Statements (Scope.Declaration ':+ scope))
       }
   | LetOne
-      { levity :: !(Type scope),
-        declaration :: !(Expression scope),
+      { declaration :: !(TypeLambda scope),
         body :: !(Statements (Scope.SimpleDeclaration ':+ scope))
       }
   | Branch
@@ -82,10 +83,9 @@ instance Substitute.Functor Statements where
           check = Substitute.map category check,
           thenx = Substitute.map (Substitute.Over category) thenx
         }
-    LetOne {levity, declaration, body} ->
+    LetOne {declaration, body} ->
       LetOne
-        { levity = Substitute.map category levity,
-          declaration = Substitute.map category declaration,
+        { declaration = Substitute.map category declaration,
           body = Substitute.map (Substitute.Over category) body
         }
     Let {declarations, letBody} ->
@@ -103,8 +103,7 @@ instance Substitute.Functor Statements where
 bind :: Pattern () Check scope -> Expression scope -> Statements (Scope.Pattern ':+ scope) -> Statements scope
 bind Pattern.Wildcard {levity = Solved levity} check thenx =
   LetOne
-    { levity,
-      declaration = check,
+    { declaration = TypeLambda.mono levity check,
       body = Shift.map Shift.ReplaceWildcard thenx
     }
 bind Pattern.Match {levity = Solved levity, match, irrefutable} check thenx = case match of
@@ -343,8 +342,7 @@ expand ::
   Statements scope
 expand irrefutable levity constructor patterns constructorInfo check thenx =
   LetOne
-    { levity,
-      declaration = check,
+    { declaration = TypeLambda.mono levity check,
       body =
         finish
           irrefutable
@@ -352,7 +350,7 @@ expand irrefutable levity constructor patterns constructorInfo check thenx =
           (shift constructor)
           (shift <$> patterns)
           (shift constructorInfo)
-          Expression.lambdaVariable
+          (Expression.bindingVariable levity)
           (Shift.map Shift.LetPattern thenx)
     }
 
@@ -369,18 +367,18 @@ replace _ _ _ _ thenx (-1) = Shift.map (Shift.Unshift fail) thenx
     fail = error "bad irrefutable replace"
 replace levity constructor entryCount check thenx n =
   LetOne
-    { levity = Type.lazy,
-      declaration =
-        Expression.join_
-          Bind
-            { constructor,
-              entryCount,
-              check,
-              thenx =
-                Done
-                  { done = Expression.patternVariableAt levity n
-                  }
-            },
+    { declaration =
+        TypeLambda.mono Type.lazy $
+          Expression.join_
+            Bind
+              { constructor,
+                entryCount,
+                check,
+                thenx =
+                  Done
+                    { done = Expression.patternVariableAt levity n
+                    }
+              },
       body =
         replace
           (shift levity)
@@ -406,8 +404,8 @@ finish irrefutable levity constructor patterns constructorInfo check thenx
       case constructorInfo of
         Semantic.Newtype ->
           LetOne
-            { levity,
-              declaration = Expression.newtype_ constructor check Expression.Destruct,
+            { declaration =
+                TypeLambda.mono levity $ Expression.newtype_ constructor check Expression.Destruct,
               body = Shift.map Shift.FinishNewtype thenx
             }
         Semantic.ConstructorInfo {entries}
@@ -475,10 +473,9 @@ call statements argument = case statements of
       { declarations,
         letBody = call letBody (shift argument)
       }
-  LetOne {levity, declaration, body} ->
+  LetOne {declaration, body} ->
     LetOne
-      { levity,
-        declaration,
+      { declaration,
         body = call body (shift argument)
       }
   Branch {left, right} ->

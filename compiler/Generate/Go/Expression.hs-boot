@@ -23,5 +23,9 @@ data Binder
   | Group
 
 force :: Javascript.Expression -> Javascript.Expression
-thunk :: Context s scope -> Binder -> Expression scope -> ST s Javascript.Expression
+fullDeclaration ::
+  Context s scope ->
+  Binder ->
+  TypeLambda scope ->
+  ST s ([Javascript.Statement 'True], Javascript.Expression)
 declaration :: Context s scope -> TypeLambda scope -> ST s Javascript.Expression

@@ -128,7 +128,7 @@ generateConstructor ::
   Strict.Vector (TypeLambda scope) ->
   ST s ([Javascript.Statement 'True], Javascript.Expression)
 generateConstructor context Constructor.Index {constructorIndex} arguments = do
-  (extra, arguments) <- unzip <$> traverse (fullDeclaration context) (toList arguments)
+  (extra, arguments) <- unzip <$> traverse (fullDeclaration context Done) (toList arguments)
   let tag = Javascript.Number constructorIndex
       elements = map Javascript.Literal (tag : arguments)
       fields = zip Mangle.fields elements
@@ -272,9 +272,10 @@ generateInto context target = \case
 
 fullDeclaration ::
   Context s scope ->
+  Binder ->
   TypeLambda scope ->
   ST s ([Javascript.Statement 'True], Javascript.Expression)
-fullDeclaration context TypeLambdaOver {constraints, result = expression} = do
+fullDeclaration context binder TypeLambdaOver {constraints, result = expression} = do
   let count = case constraints of
         Constraints constraints -> length constraints
         Value {} -> 0
@@ -286,7 +287,7 @@ fullDeclaration context TypeLambdaOver {constraints, result = expression} = do
         then do
           generatePure context expression
         else do
-          expression <- thunk context Group expression
+          expression <- thunk context binder expression
           pure ([], expression)
     Constraints {} -> do
       statements <- generateInto context Return expression
@@ -300,7 +301,7 @@ fullDeclaration context TypeLambdaOver {constraints, result = expression} = do
 
 declaration :: Context s scope -> TypeLambda scope -> ST s Javascript.Expression
 declaration context lambda = do
-  lambda <- fullDeclaration context lambda
+  lambda <- fullDeclaration context Group lambda
   case lambda of
     ([], expression) -> pure expression
     _ -> error "bad declaration"

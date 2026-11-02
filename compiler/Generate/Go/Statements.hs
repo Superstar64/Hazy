@@ -93,11 +93,11 @@ attempt context target label = \case
     result <- attempt context target label letBody
     pure $ declarations ++ result
   LetOne {declaration, body} -> do
-    thunk <- Expression.thunk context Expression.Done declaration
+    (extra, expression) <- Expression.fullDeclaration context Expression.Done declaration
     name <- fresh context
-    let declaration = Javascript.Const name thunk
+    let declaration = Javascript.Const name expression
     body <- attempt (singleBinding name context) target label body
-    pure $ declaration : body
+    pure $ extra ++ declaration : body
   Branch {left, right} -> do
     left <- attempt context target label left
     right <- attempt context target label right
