@@ -160,10 +160,11 @@ data Binder
 
 thunk :: Context s scope -> Binder -> Expression scope -> ST s Javascript.Expression
 thunk context Done Variable {variable, instanciation = Instanciation.Mono {levity}}
-  | not $ Info.strict levity,
-    Term.Binding name <- context !- variable = do
+  | Term.Binding name <- context !- variable = do
       name <- symbol context name
-      pure Javascript.Variable {name}
+      if Info.strict levity
+        then pure $ strict Javascript.Variable {name}
+        else pure Javascript.Variable {name}
 thunk context binder expression = case expression of
   Constructor {constructor, arguments} -> do
     (extra, value) <- generateConstructor context constructor arguments
