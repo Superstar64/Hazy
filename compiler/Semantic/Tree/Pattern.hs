@@ -4,12 +4,14 @@ module Semantic.Tree.Pattern where
 
 import qualified Core.Tree.Evidence as Simple
 import qualified Core.Tree.Type as Core (Type)
+import Data.Foldable (toList)
 import Data.Kind (Constraint, Type)
 import Data.Map (Map)
 import qualified Data.Map as Map
 import qualified Data.Strict.Vector1 as Strict (Vector1)
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Semantic.Index.Constructor as Constructor (Index (..))
+import Semantic.Index.Term (Bound (..))
 import Semantic.Scope (Environment)
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
@@ -19,7 +21,7 @@ import Semantic.Tree.Info.Constructor (ConstructorInfo)
 import Syntax.Position (Position)
 import Syntax.StringLiteral (StringLiteral)
 import Syntax.Variable (Variable)
-import Prelude hiding (Bool (False, True), Either (Left, Right), head, tail)
+import Prelude hiding (Bool (False, True), Bounded, Either (Left, Right), head, tail)
 import qualified Prelude
 
 data Pattern position stage scope
@@ -262,3 +264,36 @@ variable position name =
       levity = Inferred,
       names = Map.singleton name position
     }
+
+data Bounded scope = Bounded !Bound !Prelude.Bool !(Core.Type scope)
+
+instance Shift0.Functor Bounded where
+  map = Shift.mapDefault
+
+instance Shift.Functor Bounded where
+  map category (Bounded bound lazy levity) = Bounded bound lazy (Shift.map category levity)
+
+recursive :: Prelude.Bool -> Pattern position Check scope -> [Bounded scope]
+recursive lazy patternx = case patternx of
+  Wildcard {levity = Solved levity} -> [Bounded At lazy levity]
+  Match {match, levity = Solved levity, irrefutable} ->
+    Bounded At lazy levity : children (lazy || irrefutable) match
+
+children :: Prelude.Bool -> Bindings position Check scope -> [Bounded scope]
+children lazy = \case
+  Constructor {patterns} -> do
+    (i, patternx) <- zip [0 ..] $ toList patterns
+    Bounded bound lazy levity <- recursive lazy patternx
+    [Bounded (Select i bound) lazy levity]
+  Record {fields} -> do
+    (i, patternx) <- zip [0 ..] $ toList fields
+    Bounded bound lazy levity <- recursive lazy (field patternx)
+    [Bounded (Select i bound) lazy levity]
+  Integer {} -> []
+  Float {} -> []
+  Character {} -> []
+  String {} -> []
+  List {items} -> do
+    (i, patternx) <- zip [0 ..] $ toList items
+    Bounded bound lazy levity <- recursive lazy patternx
+    [Bounded (Select i bound) lazy levity]

@@ -119,30 +119,31 @@ patternx ! Bound.Select index bound = case patternx of
 augment :: Pattern s scope -> Context s scope -> Context s (Scope.Pattern ':+ scope)
 augment patternx Context {termEnvironment, localEnvironment, typeEnvironment} =
   Context
-    { termEnvironment = Term.Pattern (augmentPattern patternx) termEnvironment,
+    { termEnvironment = Term.Pattern (augmentPattern Prelude.False patternx) termEnvironment,
       localEnvironment = Local.Pattern localEnvironment,
       typeEnvironment = Type.Pattern typeEnvironment
     }
 
-augmentPattern :: Pattern s scopes -> Term.Bound (TermBinding s) (scope ':+ scopes)
-augmentPattern patternx = Term.Bound {at, select}
+augmentPattern :: Prelude.Bool -> Pattern s scopes -> Term.Bound (TermBinding s) (scope ':+ scopes)
+augmentPattern lazy patternx = Term.Bound {at, select}
   where
     visible
-      | Match {irrefutable} <- patternx, irrefutable = Type.lazy
+      | lazy = Type.lazy
       | otherwise = levity patternx
     at = TermBinding $ pure $ Wobbly (shiftLogical (Core.mono visible $ typex patternx))
     select = case patternx of
       Wildcard {} -> Strict.Vector.empty
-      Match {match} -> case match of
-        List {items} -> Strict.Vector.map augmentPattern items
-        Constructor {patterns} -> fmap augmentPattern patterns
-        Record {fields} -> fmap augmentField fields
-          where
-            augmentField Field {field} = augmentPattern field
-        Integer {} -> Strict.Vector.empty
-        Float {} -> Strict.Vector.empty
-        Character {} -> Strict.Vector.empty
-        String {} -> Strict.Vector.empty
+      Match {match, irrefutable}
+        | lazy <- lazy || irrefutable -> case match of
+            List {items} -> Strict.Vector.map (augmentPattern lazy) items
+            Constructor {patterns} -> fmap (augmentPattern lazy) patterns
+            Record {fields} -> fmap augmentField fields
+              where
+                augmentField Field {field} = augmentPattern lazy field
+            Integer {} -> Strict.Vector.empty
+            Float {} -> Strict.Vector.empty
+            Character {} -> Strict.Vector.empty
+            String {} -> Strict.Vector.empty
 
 check ::
   Context s scope ->

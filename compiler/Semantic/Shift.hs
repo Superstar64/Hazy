@@ -82,10 +82,10 @@ data Category scope scope' where
       (Scope.SimplePattern ':+ scope)
       (Scope.SimpleDeclaration ':+ scope)
   ReplaceIrrefutable ::
-    Int ->
+    Term.Bound ->
     Category
-      (Scope.SimplePattern ':+ scope)
-      (Scope.SimplePattern ':+ (Scope.SimpleDeclaration ':+ scope))
+      (Scope.Pattern ':+ scope)
+      (Scope.Pattern ':+ (Scope.SimpleDeclaration ':+ scope))
   Builtin :: Type2.Index scope -> Category Scope.Global scope
 
 infixr 9 :.
@@ -165,9 +165,9 @@ instance Functor Term.Index where
       | otherwise -> error "bad finish newtype"
     Term.Shift index -> Term.Shift index
   map (ReplaceIrrefutable target) index = case index of
-    Term.SimplePattern index
+    Term.Pattern index
       | index == target -> Term.Shift Term.SimpleDeclaration
-      | otherwise -> Term.SimplePattern index
+      | otherwise -> Term.Pattern index
     Term.Shift index -> Term.Shift (Term.Shift index)
   map Builtin {} _ = error "builtin free variable"
 

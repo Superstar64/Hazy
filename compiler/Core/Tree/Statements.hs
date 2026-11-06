@@ -30,10 +30,11 @@ import qualified Semantic.Tree.Declarations as Semantic.Declarations
 import qualified Semantic.Tree.Info.Constructor as Semantic (ConstructorInfo (..))
 import qualified Semantic.Tree.Info.Constructor as Semantic.ConstructorInfo
 import Semantic.Tree.Info.Entry (EntryInfo (..))
-import Semantic.Tree.Pattern (Failable (Unused), Pattern (..))
+import Semantic.Tree.Pattern (Bounded (..), Failable (Unused), Pattern (..))
 import qualified Semantic.Tree.Pattern as Pattern
 import qualified Semantic.Tree.Statements as Semantic (Guard, Statements (..))
 import qualified Syntax.StringLiteral as StringLiteral
+import Prelude hiding (Bounded)
 
 data Statements scope
   = Done {done :: !(Expression scope)}
@@ -106,12 +107,23 @@ bind Pattern.Wildcard {levity = Solved levity} check thenx =
     { declaration = TypeLambda.mono levity check,
       body = Shift.map Shift.ReplaceWildcard thenx
     }
-bind Pattern.Match {levity = Solved levity, match, irrefutable} check thenx = case match of
+bind patternx@Pattern.Match {levity = Solved levity, match, irrefutable} check thenx
+  | irrefutable =
+      LetOne
+        { declaration = TypeLambda.mono levity check,
+          body =
+            replace
+              (Pattern.children False $ shift match)
+              (shift patternx {irrefutable = False})
+              (Expression.bindingVariable levity)
+              (Shift.map Shift.LetPattern thenx)
+        }
+bind Pattern.Match {levity = Solved levity, match} check thenx = case match of
   Pattern.Constructor {constructor, patterns, constructorInfo = Solved constructorInfo} ->
     go (length patterns - 1)
     where
       -- todo this is `O(n^2)`
-      go (-1) = expand irrefutable levity constructor patterns constructorInfo check thenx
+      go (-1) = finalize levity constructor patterns constructorInfo check thenx
       go index = case patterns Strict.Vector.! index of
         Pattern.Wildcard {} -> go (index - 1)
         target@Pattern.Match {levity = Solved innerLevity}
@@ -139,7 +151,7 @@ bind Pattern.Match {levity = Solved levity, match, irrefutable} check thenx = ca
                   levity = Solved levity,
                   names = Map.empty,
                   match,
-                  irrefutable
+                  irrefutable = False
                 },
             target <- shift target,
             variable <- Term.Pattern $ Term.Select index Term.At,
@@ -163,7 +175,7 @@ bind Pattern.Match {levity = Solved levity, match, irrefutable} check thenx = ca
                   names = Map.empty
                 },
           thenx <- Shift.map (Shift.RenamePattern (indexes Strict.Vector.!)) thenx =
-            expand irrefutable levity constructor patterns constructorInfo check thenx
+            finalize levity constructor patterns constructorInfo check thenx
       go index = case fields Strict.Vector.! index of
         Pattern.Field {index = field, field = patternx} -> case patternx of
           Pattern.Wildcard {} -> go (index - 1)
@@ -195,7 +207,7 @@ bind Pattern.Match {levity = Solved levity, match, irrefutable} check thenx = ca
                   { startPosition = (),
                     levity = Solved levity,
                     match,
-                    irrefutable,
+                    irrefutable = False,
                     names = Map.empty
                   },
               target <- shift target,
@@ -224,7 +236,7 @@ bind Pattern.Match {levity = Solved levity, match, irrefutable} check thenx = ca
           { startPosition = (),
             levity = Solved Type.lazy,
             match,
-            irrefutable,
+            irrefutable = False,
             names = Map.empty
           },
       patterns <- Strict.Vector.fromList [head, tail],
@@ -249,7 +261,7 @@ bind Pattern.Match {levity = Solved levity, match, irrefutable} check thenx = ca
           { startPosition = (),
             levity = Solved levity,
             match,
-            irrefutable,
+            irrefutable = False,
             names = Map.empty
           } ->
         bind cons check (Shift.map Shift.SimplifyList thenx)
@@ -282,7 +294,7 @@ bind Pattern.Match {levity = Solved levity, match, irrefutable} check thenx = ca
           { startPosition = (),
             levity = Solved levity,
             match,
-            irrefutable,
+            irrefutable = False,
             names = Map.empty
           } ->
         bind patternx check thenx
@@ -331,8 +343,31 @@ bind Pattern.Match {levity = Solved levity, match, irrefutable} check thenx = ca
           (Expression.patternVariable levity)
           (Expression.float_ float $ shift evidence)
 
-expand ::
-  Bool ->
+replace ::
+  [Bounded scope] ->
+  Pattern () Check scope ->
+  Expression scope ->
+  Statements (Scope.Pattern ':+ scope) ->
+  Statements scope
+replace bounded patternx check thenx = case bounded of
+  [] -> Shift.map (Shift.Unshift $ error "bad irrefutable replace") thenx
+  Bounded bound lazy levity : bounded ->
+    LetOne
+      { declaration =
+          let done =
+                Expression.monoVariable
+                  (if lazy then Type.lazy else shift levity)
+                  (Term.Pattern bound)
+           in TypeLambda.mono Type.lazy $ Expression.join_ $ bind patternx check Done {done},
+        body =
+          replace
+            (shift <$> bounded)
+            (shift patternx)
+            (shift check)
+            (Shift.map (Shift.ReplaceIrrefutable bound) thenx)
+      }
+
+finalize ::
   Type scope ->
   Constructor.Index scope ->
   Strict.Vector (Pattern position Check scope) ->
@@ -340,12 +375,11 @@ expand ::
   Expression scope ->
   Statements (Scope.Pattern ':+ scope) ->
   Statements scope
-expand irrefutable levity constructor patterns constructorInfo check thenx =
+finalize levity constructor patterns constructorInfo check thenx =
   LetOne
     { declaration = TypeLambda.mono levity check,
       body =
         finish
-          irrefutable
           (shift levity)
           (shift constructor)
           (shift <$> patterns)
@@ -354,43 +388,7 @@ expand irrefutable levity constructor patterns constructorInfo check thenx =
           (Shift.map Shift.LetPattern thenx)
     }
 
-replace ::
-  Type scope ->
-  Constructor2.Index scope ->
-  Int ->
-  Expression scope ->
-  Statements (Scope.SimplePattern ':+ scope) ->
-  Int ->
-  Statements scope
-replace _ _ _ _ thenx (-1) = Shift.map (Shift.Unshift fail) thenx
-  where
-    fail = error "bad irrefutable replace"
-replace levity constructor entryCount check thenx n =
-  LetOne
-    { declaration =
-        TypeLambda.mono Type.lazy $
-          Expression.join_
-            Bind
-              { constructor,
-                entryCount,
-                check,
-                thenx =
-                  Done
-                    { done = Expression.patternVariableAt levity n
-                    }
-              },
-      body =
-        replace
-          (shift levity)
-          (shift constructor)
-          entryCount
-          (shift check)
-          (Shift.map (Shift.ReplaceIrrefutable n) thenx)
-          (n - 1)
-    }
-
 finish ::
-  Bool ->
   Type scope ->
   Constructor.Index scope ->
   Strict.Vector (Pattern position Check scope) ->
@@ -398,7 +396,7 @@ finish ::
   Expression scope ->
   Statements (Scope.Pattern ':+ scope) ->
   Statements scope
-finish irrefutable levity constructor patterns constructorInfo check thenx
+finish levity constructor patterns constructorInfo check thenx
   | all wildcard patterns,
     thenx <- Shift.map Shift.FinishPattern thenx =
       case constructorInfo of
@@ -408,15 +406,14 @@ finish irrefutable levity constructor patterns constructorInfo check thenx
                 TypeLambda.mono levity $ Expression.newtype_ constructor check Expression.Destruct,
               body = Shift.map Shift.FinishNewtype thenx
             }
-        Semantic.ConstructorInfo {entries}
-          | irrefutable -> replace levity constructor entryCount check thenx (length patterns - 1)
-          | otherwise -> Bind {constructor, entryCount, check, thenx}
+        Semantic.ConstructorInfo {entries} ->
+          Bind {constructor, entryCount, check, thenx}
           where
             entryCount = length entries
   where
     wildcard Pattern.Wildcard {} = True
     wildcard _ = False
-finish _ _ _ _ _ _ _ = error "bad finish"
+finish _ _ _ _ _ _ = error "bad finish"
 
 true :: Pattern () Check scope
 true =
