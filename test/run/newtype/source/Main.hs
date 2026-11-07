@@ -13,4 +13,13 @@ repack = case MyString "ty" of
 
 select = runMyString (MyString "pe")
 
-main = putStrLn (ignore ++ repack ++ select)
+data Outer = Outer !Inner
+
+newtype Inner = Inner Int
+
+get :: Outer -> Int
+get (Outer (Inner x)) = x
+
+main = do
+  putStrLn (ignore ++ repack ++ select)
+  print (get (Outer (Inner 5)))

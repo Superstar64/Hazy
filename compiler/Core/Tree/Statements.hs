@@ -380,7 +380,6 @@ finalize levity constructor patterns constructorInfo check thenx =
     { declaration = TypeLambda.mono levity check,
       body =
         finish
-          (shift levity)
           (shift constructor)
           (shift <$> patterns)
           (shift constructorInfo)
@@ -389,21 +388,20 @@ finalize levity constructor patterns constructorInfo check thenx =
     }
 
 finish ::
-  Type scope ->
   Constructor.Index scope ->
   Strict.Vector (Pattern position Check scope) ->
   Semantic.ConstructorInfo scope ->
   Expression scope ->
   Statements (Scope.Pattern ':+ scope) ->
   Statements scope
-finish levity constructor patterns constructorInfo check thenx
+finish constructor patterns constructorInfo check thenx
   | all wildcard patterns,
     thenx <- Shift.map Shift.FinishPattern thenx =
       case constructorInfo of
         Semantic.Newtype ->
           LetOne
             { declaration =
-                TypeLambda.mono levity $ Expression.newtype_ constructor check Expression.Destruct,
+                TypeLambda.mono Type.lazy $ Expression.newtype_ constructor check Expression.Destruct,
               body = Shift.map Shift.FinishNewtype thenx
             }
         Semantic.ConstructorInfo {entries} ->
@@ -413,7 +411,7 @@ finish levity constructor patterns constructorInfo check thenx
   where
     wildcard Pattern.Wildcard {} = True
     wildcard _ = False
-finish _ _ _ _ _ _ = error "bad finish"
+finish _ _ _ _ _ = error "bad finish"
 
 true :: Pattern () Check scope
 true =
