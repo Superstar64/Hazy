@@ -2,7 +2,7 @@ module Semantic.Check.Go.InstanceDefinition2 where
 
 import Control.Monad.ST (ST)
 import qualified Core.Builtin as Builtin
-import Core.Substitute (Category (Substitute), logicalType)
+import Core.Substitute (Category (SubstituteLocal), logicalType)
 import qualified Core.Substitute as Substitute
 import qualified Core.Tree.Class as Core.Class
 import Core.Tree.ClassExtra (ClassExtra (..))
@@ -230,7 +230,7 @@ checkMethod Method {context, position, base, self, extra} source index scheme Ge
           }
     let typeReplacements = Substitute.Types $ Strict.Vector.singleton base
         evidenceReplacements = Substitute.Evidences $ Strict.Vector.singleton self
-        category = Substitute Shift.Shift typeReplacements evidenceReplacements
+        category = SubstituteLocal Shift.Shift typeReplacements evidenceReplacements
     pure $ Generated $ Solved $ Substitute.map category defaultx
 
 checkBody ::
@@ -295,7 +295,7 @@ checkBody position key Solve {solve} reflection information lookup members =
         methods <-
           pure $
             let replacements = Substitute.Types $ Strict.Vector.singleton base
-                category = Substitute.Over $ Substitute Shift.Shift replacements Singleton
+                category = Substitute.Over $ SubstituteLocal Shift.Shift replacements Singleton
                 substitute Core.ForallOver {parameters, constraints, result} =
                   Core.ForallOver
                     { parameters,

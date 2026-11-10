@@ -105,7 +105,7 @@ instance (logical ~ Void) => Substitute.Functor (TypeF logical) where
   map category = Substitute.mapType (Substitute.anyEvidence category)
 
 instance Substitute.TypeFunctor TypeF where
-  mapType (Substitute _ (Substitute.Types replacements) _) (Variable (Local index)) =
+  mapType (SubstituteLocal _ (Substitute.Types replacements) _) (Variable (Local index)) =
     replacements Strict.Vector.! index
   mapType (Substitute.Over category) (Variable (Local.Shift index)) =
     shift $ Substitute.mapType category (Variable index)
@@ -207,7 +207,7 @@ simplifyWith Solved.Constructor {constructor, synonym} arguments = case synonym 
     where
       erased = take length arguments
       kept = drop length arguments
-      category = Substitute Shift.Id (Substitute.Types $ Strict.Vector.fromList erased) Singleton
+      category = SubstituteLocal Shift.Id (Substitute.Types $ Strict.Vector.fromList erased) Singleton
   Solved.NoSynonym -> foldl Call (Constructor constructor) arguments
 simplifyWith Solved.Call {function, argument} arguments =
   simplifyWith function (simplify argument : arguments)

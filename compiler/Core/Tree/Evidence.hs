@@ -63,7 +63,7 @@ instance Substitute.EvidenceFunctor EvidenceF where
   -- todo: Find a better way of doing this. Pattern matching on
   -- `Type.Constructor Type2.Strict` will probably cause problems later
   mapEvidence
-    (Substitute _ _ (Evidences replacements))
+    (SubstituteLocal _ _ (Evidences replacements))
     Variable
       { variable = Evidence.Index (Evidence0.Assumed index),
         instanciation = Instanciation.Mono {levity = Type.Constructor Type2.Strict}

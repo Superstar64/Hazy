@@ -30,7 +30,7 @@ data Category types evidences scope1 scope2 where
   -- |
   -- Replace rigid evidence with new evidence. Note that rigid evidence cannot
   -- have an instanciation because quantified constraints are not supported.
-  Substitute ::
+  SubstituteLocal ::
     !(Shift.Category scope scope') ->
     !(types scope') ->
     !(evidences scope') ->
@@ -40,19 +40,19 @@ anyType :: Category types evidence scope1 scope2 -> Category Singleton evidence 
 anyType = \case
   Lift category -> Lift category
   Over category -> Over (anyType category)
-  Substitute category _ evidences -> Substitute category Singleton evidences
+  SubstituteLocal category _ evidences -> SubstituteLocal category Singleton evidences
 
 anyEvidence :: Category types evidences scope1 scope2 -> Category types Singleton scope1 scope2
 anyEvidence = \case
   Lift category -> Lift category
   Over category -> Over (anyEvidence category)
-  Substitute category types _ -> Substitute category types Singleton
+  SubstituteLocal category types _ -> SubstituteLocal category types Singleton
 
 general :: Category logicalType logicalEvidence scope1 scope2 -> Shift.Category scope1 scope2
 general = \case
   Lift category -> category
   Over category -> Shift.Over (general category)
-  Substitute general _ _ -> general Shift.:. Shift.Unshift (error "bad general")
+  SubstituteLocal general _ _ -> general Shift.:. Shift.Unshift (error "bad general")
 
 class (Shift.Functor typex) => Functor typex where
   map :: Category (Types Void) (Evidences Void Void) scope1 scope2 -> typex scope1 -> typex scope2
@@ -85,7 +85,7 @@ substituteType ::
   typef logical scope2
 substituteType substitution typex = mapType substitute typex
   where
-    substitute = Substitute Shift.Id (Types substitution) Singleton
+    substitute = SubstituteLocal Shift.Id (Types substitution) Singleton
 
 logicalType ::
   (TypeFunctor typef, Shift0.Functor (typef Void)) =>
@@ -106,7 +106,7 @@ substituteEvidence ::
   evidencef logicalEvidence logicalType scope
 substituteEvidence substitutionType substitutionEvidence evidence = mapEvidence substitute evidence
   where
-    substitute = Substitute Shift.Id (Types substitutionType) (Evidences substitutionEvidence)
+    substitute = SubstituteLocal Shift.Id (Types substitutionType) (Evidences substitutionEvidence)
 
 logicalEvidence ::
   (EvidenceFunctor evidencef, Shift0.Functor (evidencef Void Void)) =>
