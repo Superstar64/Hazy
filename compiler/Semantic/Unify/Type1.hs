@@ -19,7 +19,7 @@ import Data.Foldable (toList, traverse_)
 import qualified Data.Map as Map
 import Data.STRef (newSTRef, readSTRef, writeSTRef)
 import Data.Traversable (for)
-import qualified Data.Vector as Vector
+import qualified Data.Vector.Strict as Strict.Vector
 import qualified Semantic.Check.Binding.Local as Local (Constraint (..), LocalBinding (..))
 import Semantic.Check.Binding.Type (TypeBinding (TypeBinding))
 import qualified Semantic.Check.Binding.Type as TypeBinding
@@ -112,7 +112,7 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
           case dependencies of
             Constraints dependencies -> do
               arguments <- for dependencies $ \constraint@Simple.Constraint.Constraint {classx} ->
-                let argument = substituteType (Vector.fromList arguments) (Simple.argument constraint)
+                let argument = substituteType (Strict.Vector.fromList arguments) (Simple.argument constraint)
                  in constrain context position classx argument
               pure $ Evidence.Variable variable (Instanciation arguments)
             Value {levity} ->
@@ -126,7 +126,7 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
           case dependencies of
             Constraints dependencies -> do
               arguments <- for dependencies $ \constraint@Simple.Constraint.Constraint {classx} ->
-                let argument = substituteType (Vector.fromList arguments) (Simple.argument constraint)
+                let argument = substituteType (Strict.Vector.fromList arguments) (Simple.argument constraint)
                  in constrain context position classx argument
               pure $ Evidence.Variable variable (Instanciation arguments)
             Value {levity} ->

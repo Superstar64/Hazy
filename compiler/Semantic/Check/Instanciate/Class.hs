@@ -33,7 +33,7 @@ instanciate
     typex <- Unify.fresh (logicalType parameter)
     evidence <- Unify.constrain context position index typex
     let types = Strict.Vector.singleton typex
-    methods <- pure $ substituteType (Strict.Vector.toLazy types) <$> methods
+    methods <- pure $ substituteType types <$> methods
     pure
       Class.Definition
         { typex = TypeInfo typex,

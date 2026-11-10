@@ -25,7 +25,6 @@ import Core.Type.Functor (shiftLogical)
 import Data.Foldable (toList)
 import Data.Functor.Identity (Identity (..))
 import Data.Traversable (for)
-import qualified Data.Vector as Vector
 import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
 import Data.Void (Void)
@@ -229,8 +228,8 @@ checkMethod Method {context, position, base, self, extra} source index scheme Ge
             constraints,
             result = defaults Strict.Vector.! index
           }
-    let typeReplacements = Substitute.Types $ Vector.singleton base
-        evidenceReplacements = Substitute.Evidences $ Vector.singleton self
+    let typeReplacements = Substitute.Types $ Strict.Vector.singleton base
+        evidenceReplacements = Substitute.Evidences $ Strict.Vector.singleton self
         category = Substitute Shift.Shift typeReplacements evidenceReplacements
     pure $ Generated $ Solved $ Substitute.map category defaultx
 
@@ -295,7 +294,7 @@ checkBody position key Solve {solve} reflection information lookup members =
         -}
         methods <-
           pure $
-            let replacements = Substitute.Types $ Vector.singleton base
+            let replacements = Substitute.Types $ Strict.Vector.singleton base
                 category = Substitute.Over $ Substitute Shift.Shift replacements Singleton
                 substitute Core.ForallOver {parameters, constraints, result} =
                   Core.ForallOver

@@ -5,7 +5,6 @@ import Core.Instanciate (Instanciated, Store (Store))
 import Core.Substitute (substituteType)
 import Core.Tree.Entry (Entry, EntryF (..))
 import qualified Data.Vector.Strict as Strict
-import qualified Data.Vector.Strict as Strict.Vector
 import {-# SOURCE #-} Semantic.Check.Context (Context)
 import qualified Semantic.Check.Mask as Mask
 import Semantic.Check.Temporary.EntryInfo (EntryInfo (..))
@@ -19,8 +18,8 @@ instanciate :: Position -> Strict.Vector (Unify.Type s scope) -> Entry (Local ':
 instanciate position fresh Entry {entry, levity} =
   Entry
     { position = Store position,
-      entry = substituteType (Strict.Vector.toLazy fresh) entry,
-      levity = substituteType (Strict.Vector.toLazy fresh) levity
+      entry = substituteType fresh entry,
+      levity = substituteType fresh levity
     }
 
 info :: EntryInstance s scope -> EntryInfo s scope

@@ -4,7 +4,7 @@ import Core.Substitute (Category (..))
 import qualified Core.Substitute as Substitute
 import qualified Core.Type.Functor as Core (Functor (..))
 import qualified Core.Type.Show as Core (Show (..))
-import qualified Data.Vector as Vector
+import qualified Data.Vector.Strict as Strict.Vector
 import Data.Void (Void)
 import qualified Semantic.Index.Constructor as Constructor
 import Semantic.Index.Local (Index (Local))
@@ -105,7 +105,8 @@ instance (logical ~ Void) => Substitute.Functor (TypeF logical) where
   map category = Substitute.mapType (Substitute.anyEvidence category)
 
 instance Substitute.TypeFunctor TypeF where
-  mapType (Substitute _ (Substitute.Types replacements) _) (Variable (Local index)) = replacements Vector.! index
+  mapType (Substitute _ (Substitute.Types replacements) _) (Variable (Local index)) =
+    replacements Strict.Vector.! index
   mapType (Substitute.Over category) (Variable (Local.Shift index)) =
     shift $ Substitute.mapType category (Variable index)
   mapType category typex = case typex of
@@ -206,7 +207,7 @@ simplifyWith Solved.Constructor {constructor, synonym} arguments = case synonym 
     where
       erased = take length arguments
       kept = drop length arguments
-      category = Substitute Shift.Id (Substitute.Types $ Vector.fromList erased) Singleton
+      category = Substitute Shift.Id (Substitute.Types $ Strict.Vector.fromList erased) Singleton
   Solved.NoSynonym -> foldl Call (Constructor constructor) arguments
 simplifyWith Solved.Call {function, argument} arguments =
   simplifyWith function (simplify argument : arguments)

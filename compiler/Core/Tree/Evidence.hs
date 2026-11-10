@@ -6,7 +6,7 @@ import qualified Core.Substitute as Substitute
 import {-# SOURCE #-} Core.Tree.Instanciation (InstanciationF)
 import {-# SOURCE #-} qualified Core.Tree.Instanciation as Instanciation
 import qualified Core.Tree.Type as Type
-import qualified Data.Vector as Vector
+import qualified Data.Vector.Strict as Strict.Vector
 import Data.Void (Void)
 import qualified Semantic.Index.Evidence as Evidence
 import qualified Semantic.Index.Evidence0 as Evidence0
@@ -67,7 +67,7 @@ instance Substitute.EvidenceFunctor EvidenceF where
     Variable
       { variable = Evidence.Index (Evidence0.Assumed index),
         instanciation = Instanciation.Mono {levity = Type.Constructor Type2.Strict}
-      } = replacements Vector.! index
+      } = replacements Strict.Vector.! index
   mapEvidence
     (Substitute.Over category)
     Variable

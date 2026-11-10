@@ -15,7 +15,7 @@ import Prelude hiding (Functor (..), map)
 data Category scope scope' where
   Id :: Category scope scope
   Shift :: Category scopes (scope ':+ scopes)
-  (:.) :: Category scope' scope'' -> Category scope scope' -> Category scope scope''
+  (:.) :: !(Category scope' scope'') -> !(Category scope scope') -> Category scope scope''
 
 infixr 9 :.
 

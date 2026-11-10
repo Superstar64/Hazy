@@ -3,8 +3,8 @@ module Core.Substitute where
 import {-# SOURCE #-} Core.Tree.Evidence (EvidenceF)
 import {-# SOURCE #-} Core.Tree.Type (TypeF)
 import qualified Data.Map as Map
-import Data.Vector (Vector)
-import qualified Data.Vector as Vector
+import qualified Data.Vector.Strict as Strict
+import qualified Data.Vector.Strict as Strict.Vector
 import Data.Void (Void)
 import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Method as Method
@@ -17,23 +17,23 @@ import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
 import Prelude hiding (Functor, map)
 
-newtype Types logical scope = Types (Vector (TypeF logical scope))
+newtype Types logical scope = Types (Strict.Vector (TypeF logical scope))
 
 newtype Evidences logicalEvidence logicalType scope
-  = Evidences (Vector (EvidenceF logicalEvidence logicalType scope))
+  = Evidences (Strict.Vector (EvidenceF logicalEvidence logicalType scope))
 
 data Category types evidences scope1 scope2 where
-  Lift :: Shift.Category scope1 scope2 -> Category types evidences scope1 scope2
+  Lift :: !(Shift.Category scope1 scope2) -> Category types evidences scope1 scope2
   Over ::
-    Category types evidences scopes scopes' ->
+    !(Category types evidences scopes scopes') ->
     Category types evidences (scope1 ':+ scopes) (scope1 ':+ scopes')
   -- |
   -- Replace rigid evidence with new evidence. Note that rigid evidence cannot
   -- have an instanciation because quantified constraints are not supported.
   Substitute ::
-    Shift.Category scope scope' ->
-    types scope' ->
-    evidences scope' ->
+    !(Shift.Category scope scope') ->
+    !(types scope') ->
+    !(evidences scope') ->
     Category types evidences (Local ':+ scope) scope'
 
 anyType :: Category types evidence scope1 scope2 -> Category Singleton evidence scope1 scope2
@@ -80,7 +80,7 @@ class TypeFunctor typef where
 
 substituteType ::
   (TypeFunctor typef) =>
-  Vector (TypeF logical scope2) ->
+  Strict.Vector (TypeF logical scope2) ->
   typef Void (Local ':+ scope2) ->
   typef logical scope2
 substituteType substitution typex = mapType substitute typex
@@ -90,7 +90,7 @@ substituteType substitution typex = mapType substitute typex
 logicalType ::
   (TypeFunctor typef, Shift0.Functor (typef Void)) =>
   typef Void scope2 -> typef logical scope2
-logicalType = substituteType Vector.empty . shift
+logicalType = substituteType Strict.Vector.empty . shift
 
 class EvidenceFunctor evidencef where
   mapEvidence ::
@@ -100,8 +100,8 @@ class EvidenceFunctor evidencef where
 
 substituteEvidence ::
   (EvidenceFunctor evidencef) =>
-  Vector (TypeF logicalType scope) ->
-  Vector (EvidenceF logicalEvidence logicalType scope) ->
+  Strict.Vector (TypeF logicalType scope) ->
+  Strict.Vector (EvidenceF logicalEvidence logicalType scope) ->
   evidencef Void Void (Local ':+ scope) ->
   evidencef logicalEvidence logicalType scope
 substituteEvidence substitutionType substitutionEvidence evidence = mapEvidence substitute evidence
@@ -111,7 +111,7 @@ substituteEvidence substitutionType substitutionEvidence evidence = mapEvidence 
 logicalEvidence ::
   (EvidenceFunctor evidencef, Shift0.Functor (evidencef Void Void)) =>
   evidencef Void Void scope -> evidencef logicalEvidence logicalType scope
-logicalEvidence = substituteEvidence Vector.empty Vector.empty . shift
+logicalEvidence = substituteEvidence Strict.Vector.empty Strict.Vector.empty . shift
 
 mapInstances ::
   Category (Types Void) (Evidences Void Void) scope scope' ->

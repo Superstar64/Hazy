@@ -34,8 +34,8 @@ data Category scope scope' where
   -- Basic shifts
   Id :: Category scope scope
   Shift :: Category scopes (scope ':+ scopes)
-  Over :: Category scopes scopes' -> Category (scope1 ':+ scopes) (scope1 ':+ scopes')
-  (:.) :: Category scope' scope'' -> Category scope scope' -> Category scope scope''
+  Over :: !(Category scopes scopes') -> Category (scope1 ':+ scopes) (scope1 ':+ scopes')
+  (:.) :: !(Category scope' scope'') -> !(Category scope scope') -> Category scope scope''
   -- Semantic shifs
   Unshift :: Void -> Category (scope ':+ scopes) scopes
   GroupTerm ::
@@ -56,7 +56,7 @@ data Category scope scope' where
       (Scope.Pattern ':+ scope)
       (Scope.SimpleDeclaration ':+ scope)
   SimplifyPattern ::
-    Int ->
+    !Int ->
     Category
       (Scope.Pattern ':+ scope)
       (Scope.Pattern ':+ Scope.Pattern ':+ scope)
@@ -82,11 +82,11 @@ data Category scope scope' where
       (Scope.SimplePattern ':+ scope)
       (Scope.SimpleDeclaration ':+ scope)
   ReplaceIrrefutable ::
-    Term.Bound ->
+    !Term.Bound ->
     Category
       (Scope.Pattern ':+ scope)
       (Scope.Pattern ':+ (Scope.SimpleDeclaration ':+ scope))
-  Builtin :: Type2.Index scope -> Category Scope.Global scope
+  Builtin :: !(Type2.Index scope) -> Category Scope.Global scope
 
 infixr 9 :.
 
