@@ -10,6 +10,7 @@ import qualified Semantic.Index.Constructor as Constructor
 import Semantic.Index.Local (Index (Local))
 import qualified Semantic.Index.Local as Local
 import qualified Semantic.Index.Type2 as Type2
+import Semantic.Scope (Singleton (Singleton))
 import qualified Semantic.Scope as Scope
 import qualified Semantic.Shift as Shift
 import Semantic.Shift0 (shift)
@@ -201,11 +202,11 @@ simplify typex = simplifyWith typex []
 
 simplifyWith :: Solved.Type position Check scope -> [Type scope] -> Type scope
 simplifyWith Solved.Constructor {constructor, synonym} arguments = case synonym of
-  Solved.Synonym length synonym -> foldl Call (Substitute.map category synonym) kept
+  Solved.Synonym length synonym -> foldl Call (Substitute.mapType category synonym) kept
     where
       erased = take length arguments
       kept = drop length arguments
-      category = Substitute Shift.Id (Substitute.Types $ Vector.fromList erased) (error "no evidence")
+      category = Substitute Shift.Id (Substitute.Types $ Vector.fromList erased) Singleton
   Solved.NoSynonym -> foldl Call (Constructor constructor) arguments
 simplifyWith Solved.Call {function, argument} arguments =
   simplifyWith function (simplify argument : arguments)

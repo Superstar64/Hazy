@@ -56,7 +56,7 @@ import qualified Semantic.Index.Type as Type (Index)
 import qualified Semantic.Index.Type2 as Type2
 import qualified Semantic.Label.Go.Type as Type (label)
 import Semantic.Layout (Group)
-import Semantic.Scope (Environment (..), Local)
+import Semantic.Scope (Environment (..), Local, Singleton (Singleton))
 import Semantic.Shift (shift)
 import qualified Semantic.Shift as Shift
 import Semantic.Stage (Check, Resolve)
@@ -296,12 +296,12 @@ checkBody position key Solve {solve} reflection information lookup members =
         methods <-
           pure $
             let replacements = Substitute.Types $ Vector.singleton base
-                category = Substitute.Over $ Substitute Shift.Shift replacements (error "no evidence")
+                category = Substitute.Over $ Substitute Shift.Shift replacements Singleton
                 substitute Core.ForallOver {parameters, constraints, result} =
                   Core.ForallOver
                     { parameters,
                       constraints,
-                      result = Substitute.map category result
+                      result = Substitute.mapType category result
                     }
              in substitute <$> methods
         evidence <- for constraints $
