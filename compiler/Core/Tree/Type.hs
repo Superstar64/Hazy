@@ -4,16 +4,16 @@ import Core.Substitute (Category (..))
 import qualified Core.Substitute as Substitute
 import qualified Core.Type.Functor as Core (Functor (..))
 import qualified Core.Type.Show as Core (Show (..))
+import qualified Data.Strict.Maybe as Strict
 import qualified Data.Vector.Strict as Strict.Vector
 import Data.Void (Void)
 import qualified Semantic.Index.Constructor as Constructor
-import Semantic.Index.Local (Index (Local))
+import Semantic.Index.Local (Index)
 import qualified Semantic.Index.Local as Local
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Scope (Singleton (Singleton))
 import qualified Semantic.Scope as Scope
 import qualified Semantic.Shift as Shift
-import Semantic.Shift0 (shift)
 import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
 import qualified Semantic.Tree.Type as Solved
@@ -105,12 +105,10 @@ instance (logical ~ Void) => Substitute.Functor (TypeF logical) where
   map category = Substitute.mapType (Substitute.anyEvidence category)
 
 instance Substitute.TypeFunctor TypeF where
-  mapType (SubstituteLocal _ (Substitute.Types replacements) _) (Variable (Local index)) =
-    replacements Strict.Vector.! index
-  mapType (Substitute.Over category) (Variable (Local.Shift index)) =
-    shift $ Substitute.mapType category (Variable index)
-  mapType category typex = case typex of
-    Variable index -> Variable $ Shift.map (Substitute.general category) index
+  mapType category = \case
+    Variable index
+      | Strict.Just typex <- Substitute.lookupLocal category index -> typex
+      | otherwise -> Variable $ Shift.map (Substitute.general category) index
     Constructor index -> Constructor (Shift.map (Substitute.general category) index)
     Call function argument -> Call (Substitute.mapType category function) (Substitute.mapType category argument)
     Function parameter result ->

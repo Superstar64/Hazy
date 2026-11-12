@@ -3,10 +3,13 @@ module Core.Substitute where
 import {-# SOURCE #-} Core.Tree.Evidence (EvidenceF)
 import {-# SOURCE #-} Core.Tree.Type (TypeF)
 import qualified Data.Map as Map
-import qualified Data.Vector.Strict as Strict
+import qualified Data.Strict.Maybe as Strict (Maybe (..))
+import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
 import Data.Void (Void)
 import qualified Semantic.Index.Constructor as Constructor
+import qualified Semantic.Index.Evidence0 as Evidence0
+import qualified Semantic.Index.Local as Local
 import qualified Semantic.Index.Method as Method
 import qualified Semantic.Index.Selector as Selector
 import qualified Semantic.Index.Term as Term
@@ -28,8 +31,8 @@ data Category types evidences scope1 scope2 where
     !(Category types evidences scopes scopes') ->
     Category types evidences (scope1 ':+ scopes) (scope1 ':+ scopes')
   -- |
-  -- Replace rigid evidence with new evidence. Note that rigid evidence cannot
-  -- have an instanciation because quantified constraints are not supported.
+  -- Replace rigid evidence with new evidence. Note that the instanciation must
+  -- be strict for the evidence being replaced.
   SubstituteLocal ::
     !(Shift.Category scope scope') ->
     !(types scope') ->
@@ -48,11 +51,29 @@ anyEvidence = \case
   Over category -> Over (anyEvidence category)
   SubstituteLocal category types _ -> SubstituteLocal category types Singleton
 
-general :: Category logicalType logicalEvidence scope1 scope2 -> Shift.Category scope1 scope2
+general :: Category types evidences scope1 scope2 -> Shift.Category scope1 scope2
 general = \case
   Lift category -> category
   Over category -> Shift.Over (general category)
   SubstituteLocal general _ _ -> general Shift.:. Shift.Unshift (error "bad general")
+
+lookupLocal ::
+  Category (Types logical) evidences scope1 scope2 ->
+  Local.Index scope1 ->
+  Strict.Maybe (TypeF logical scope2)
+lookupLocal (SubstituteLocal _ (Types types) _) (Local.Local index) =
+  Strict.Just $ types Strict.Vector.! index
+lookupLocal (Over substitute) (Local.Shift index) = shift <$> lookupLocal substitute index
+lookupLocal _ _ = Strict.Nothing
+
+lookupEvidence ::
+  Category types (Evidences logicalEvidence logicalType) scope1 scope2 ->
+  Evidence0.Index scope1 ->
+  Strict.Maybe (EvidenceF logicalEvidence logicalType scope2)
+lookupEvidence (SubstituteLocal _ _ (Evidences evidences)) (Evidence0.Assumed index) =
+  Strict.Just $ evidences Strict.Vector.! index
+lookupEvidence (Over substitute) (Evidence0.Shift index) = shift <$> lookupEvidence substitute index
+lookupEvidence _ _ = Strict.Nothing
 
 class (Shift.Functor typex) => Functor typex where
   map :: Category (Types Void) (Evidences Void Void) scope1 scope2 -> typex scope1 -> typex scope2
