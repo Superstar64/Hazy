@@ -34,6 +34,8 @@ import qualified Syntax.Parser as Parser
 import Syntax.Position (Position)
 import Syntax.Tree.Alternative (Alternative)
 import qualified Syntax.Tree.Alternative as Alternative
+import Syntax.Tree.Body (Body)
+import qualified Syntax.Tree.Body as Body
 import Syntax.Tree.Declarations (Declarations)
 import qualified Syntax.Tree.Declarations as Declarations
 import {-# SOURCE #-} Syntax.Tree.ExpressionInfix (Infix)
@@ -42,8 +44,6 @@ import Syntax.Tree.Marked (Marked ((:@)))
 import qualified Syntax.Tree.Marked as Marked
 import Syntax.Tree.Pattern (Pattern)
 import qualified Syntax.Tree.Pattern as Pattern
-import Syntax.Tree.RightHandSide (RightHandSide)
-import qualified Syntax.Tree.RightHandSide as RightHandSide
 import Syntax.Tree.Scheme (Scheme)
 import qualified Syntax.Tree.Scheme as Scheme
 import Syntax.Tree.Statements (Statements)
@@ -177,7 +177,7 @@ data Expression position
   | -- |
     -- > if { | x <- e -> e }
     MultiwayIf
-      {branches :: !(Strict.Vector1 (RightHandSide position))}
+      {branches :: !(Strict.Vector1 (Body position))}
   | -- |
     -- > case e of { x -> e }
     Case
@@ -320,7 +320,7 @@ parse2 =
             <* optional (token ";")
             <*> (token "then" *> parse <* optional (token ";"))
             <*> (token "else" *> parse),
-          multiwayIf . Strict.fromNonEmpty <$> betweenBraces (sepEndBy1Semicolon (RightHandSide.parse (token "->")))
+          multiwayIf . Strict.fromNonEmpty <$> betweenBraces (sepEndBy1Semicolon (Body.parse (token "->")))
         ]
     parseLambda =
       asum

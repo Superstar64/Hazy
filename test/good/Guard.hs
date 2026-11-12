@@ -1,13 +1,8 @@
 {-# LANGUAGE OfGuardBlocks #-}
 module Guard where
 
-multiway x = if
-    | True <- x -> y
-      where
-        y = "abc"
-    | False <- x -> z
-      where
-        z = "def"
+multiway = f $ if
+  | True -> () where f = id
 
 corner1 = if -> ()
 

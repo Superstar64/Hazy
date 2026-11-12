@@ -19,6 +19,7 @@ import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check, Resolve, Unsupported)
 import Semantic.Tree.Alternative (Alternative (..))
+import Semantic.Tree.Body (Body)
 import Semantic.Tree.CallHead (CallHead)
 import Semantic.Tree.Combinators.Inferred (Inferred (..))
 import {-# SOURCE #-} qualified Semantic.Tree.Declarations as Declarations
@@ -26,7 +27,6 @@ import Semantic.Tree.Info.Constructor (ConstructorInfo)
 import Semantic.Tree.Info.Update (UpdateInfo)
 import Semantic.Tree.Lambda (Lambda (..))
 import Semantic.Tree.Pattern (Pattern)
-import Semantic.Tree.RightHandSide (RightHandSide)
 import Semantic.Tree.Scheme (Scheme)
 import Semantic.Tree.Statements (Statements)
 import qualified Semantic.Tree.Statements as Statements (Comprehension, Do)
@@ -98,7 +98,7 @@ data Expression layout stage scope
         elsex :: !(Expression layout stage scope)
       }
   | MultiwayIf
-      { branches :: !(Strict.Vector1 (RightHandSide layout stage scope))
+      { branches :: !(Strict.Vector1 (Body layout stage scope))
       }
   | Case
       { startPosition :: !Position,

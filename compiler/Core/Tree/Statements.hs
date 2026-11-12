@@ -25,6 +25,7 @@ import qualified Semantic.Shift as Shift
 import Semantic.Shift0 (shift)
 import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
+import qualified Semantic.Tree.Body as Semantic (Body (..))
 import Semantic.Tree.Combinators.Inferred (Inferred (Solved))
 import qualified Semantic.Tree.Declarations as Semantic.Declarations
 import qualified Semantic.Tree.Info.Constructor as Semantic (ConstructorInfo (..))
@@ -434,24 +435,34 @@ true =
 ifx :: Expression scope -> Expression scope -> Statements scope
 ifx condition thenx = bind true condition Done {done = shift thenx}
 
-simplify :: Semantic.Statements Semantic.Guard Normal Check scope -> Statements scope
-simplify = \case
-  Semantic.Done {done} -> Done {done = Expression.simplify done}
-  Semantic.Run {effect, after} ->
-    bind
-      true
-      (Expression.simplify effect)
-      (shift $ simplify after)
-  Semantic.Bind {patternx, effect, thenx} ->
-    bind
-      (Pattern.anonymize patternx)
-      (Expression.simplify effect)
-      (simplify thenx)
-  Semantic.Let {declarations = Semantic.Declarations.Local declarations, body} ->
-    Let
-      { declarations = Declarations.simplify declarations,
-        letBody = simplify body
-      }
+class Simplify statements where
+  simplify :: statements Normal Check scope -> Statements scope
+
+instance (guard ~ Semantic.Guard) => Simplify (Semantic.Statements guard) where
+  simplify = \case
+    Semantic.Done {done} -> Done {done = Expression.simplify done}
+    Semantic.Run {effect, after} ->
+      bind
+        true
+        (Expression.simplify effect)
+        (shift $ simplify after)
+    Semantic.Bind {patternx, effect, thenx} ->
+      bind
+        (Pattern.anonymize patternx)
+        (Expression.simplify effect)
+        (simplify thenx)
+    Semantic.Let {declarations = Semantic.Declarations.Local declarations, body} ->
+      Let
+        { declarations = Declarations.simplify declarations,
+          letBody = simplify body
+        }
+
+instance Simplify Semantic.Body where
+  simplify = \case
+    Semantic.Body {body} ->
+      Done {done = Expression.simplify body}
+    Semantic.Guards {guards} ->
+      foldr1 Branch (simplify <$> guards)
 
 call :: Statements scope -> Expression scope -> Statements scope
 call statements argument = case statements of

@@ -787,12 +787,7 @@ instance Simplify Semantic.Expression where
               }
        in Definition.desugar Definition {definition}
     Semantic.MultiwayIf {branches} ->
-      Join
-        { statements =
-            foldr1
-              Statements.Branch
-              (RightHandSide.desugar . RightHandSide.simplify <$> branches)
-        }
+      Join {statements = foldl1 Statements.Branch (Statements.simplify <$> branches)}
     Semantic.Character {character} ->
       Character {character}
     Semantic.String {string} ->

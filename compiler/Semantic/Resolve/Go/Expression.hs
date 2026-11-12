@@ -24,11 +24,11 @@ import Semantic.Resolve.Context
     (!=~),
   )
 import qualified Semantic.Resolve.Go.Alternative as Alternative (resolve)
+import qualified Semantic.Resolve.Go.Body as Body
 import qualified Semantic.Resolve.Go.CallHead as CallHead
 import {-# SOURCE #-} qualified Semantic.Resolve.Go.Declarations as Declarations
 import qualified Semantic.Resolve.Go.Lambda as Lambda (resolve)
 import qualified Semantic.Resolve.Go.Pattern as Pattern (augment, resolve)
-import qualified Semantic.Resolve.Go.RightHandSide as RightHandSide (resolve)
 import qualified Semantic.Resolve.Go.Scheme as Scheme (augment, resolve)
 import qualified Semantic.Resolve.Go.Statements as Statements (resolve)
 import {-# SOURCE #-} qualified Semantic.Resolve.Temporary.ExpressionInfix as Infix (fix, fixWith, resolve)
@@ -211,7 +211,7 @@ resolveWith context expression [] = case expression of
       }
   Syntax.MultiwayIf {branches} ->
     MultiwayIf
-      { branches = fmap (RightHandSide.resolve context) branches
+      { branches = fmap (Body.resolve context) branches
       }
   Syntax.Case {startPosition, scrutinee, cases} ->
     Case

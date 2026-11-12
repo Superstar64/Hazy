@@ -14,8 +14,6 @@ import qualified Semantic.Scope as Scope
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
-import qualified Semantic.Tree.Body as Semantic (Body (Body))
-import qualified Semantic.Tree.Body as Semantic.Body
 import qualified Semantic.Tree.Declarations as Semantic.Declarations
 import qualified Semantic.Tree.Expression as Semantic (Expression)
 import qualified Semantic.Tree.RightHandSide as Semantic (RightHandSide (..))
@@ -56,11 +54,7 @@ instance Simplify Semantic.RightHandSide where
   simplify
     Semantic.RightHandSide {body, declarations = Semantic.Declarations.Local declarations} =
       RightHandSide
-        { letBody = case body of
-            Semantic.Body {body} ->
-              Statements.Done {done = Expression.simplify body}
-            Semantic.Body.Guards {guards} ->
-              foldr1 Statements.Branch (Statements.simplify <$> guards),
+        { letBody = Statements.simplify body,
           declarations = Declarations.simplify declarations
         }
 

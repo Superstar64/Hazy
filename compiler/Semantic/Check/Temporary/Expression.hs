@@ -27,6 +27,8 @@ import qualified Semantic.Check.Instanciate.Data as DataInstance
 import Semantic.Check.Scheme (instanciate)
 import Semantic.Check.Temporary.Alternative (Alternative)
 import qualified Semantic.Check.Temporary.Alternative as Alternative
+import Semantic.Check.Temporary.Body (Body)
+import qualified Semantic.Check.Temporary.Body as Body
 import Semantic.Check.Temporary.CallHead (CallHead)
 import qualified Semantic.Check.Temporary.CallHead as CallHead
 import Semantic.Check.Temporary.Comprehension (Comprehension)
@@ -39,8 +41,6 @@ import Semantic.Check.Temporary.Lambda (Lambda)
 import qualified Semantic.Check.Temporary.Lambda as Lambda
 import Semantic.Check.Temporary.Pattern (Pattern)
 import qualified Semantic.Check.Temporary.Pattern as Pattern
-import Semantic.Check.Temporary.RightHandSide (RightHandSide)
-import qualified Semantic.Check.Temporary.RightHandSide as RightHandSide
 import Semantic.Check.Temporary.UpdateInfo (UpdateInfo)
 import qualified Semantic.Check.Temporary.UpdateInfo as UpdateInfo
 import qualified Semantic.Check.TypeAnnotation as Annotation
@@ -139,7 +139,7 @@ data Expression s scope
         cases :: !(Strict.Vector (Alternative s scope))
       }
   | MultiwayIf
-      { branches :: !(Strict.Vector1 (RightHandSide s scope))
+      { branches :: !(Strict.Vector1 (Body s scope))
       }
   | Do
       { startPosition :: !Position,
@@ -228,7 +228,7 @@ check context typex Semantic.If {condition, thenx, elsex} = do
   elsex <- check context typex elsex
   pure (If condition thenx elsex)
 check context typex Semantic.MultiwayIf {branches} = do
-  branches <- traverse (RightHandSide.check context typex) branches
+  branches <- traverse (Body.check context typex) branches
   pure (MultiwayIf branches)
 check context typex Semantic.Integer {startPosition, integer} = do
   evidence <- Unify.constrain context startPosition Type2.Num typex
@@ -397,7 +397,7 @@ solve = \case
     cases <- traverse Alternative.solve cases
     pure Solved.LambdaCase {startPosition, cases}
   MultiwayIf branches -> do
-    branches <- traverse RightHandSide.solve branches
+    branches <- traverse Body.solve branches
     pure $ Solved.MultiwayIf {branches}
   Integer {startPosition, integer, evidence} -> do
     evidence <- Unify.solveEvidence startPosition evidence
