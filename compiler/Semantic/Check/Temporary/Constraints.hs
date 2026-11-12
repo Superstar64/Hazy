@@ -9,7 +9,7 @@ import qualified Semantic.Check.Temporary.Constraint as Constraint
 import Semantic.Check.Temporary.Type (Type)
 import qualified Semantic.Check.Temporary.Type as Type
 import Semantic.Scope (Environment (..), Local)
-import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check, Resolve)
 import qualified Semantic.Tree.Constraints as Semantic
 import qualified Semantic.Unify as Unify
@@ -30,7 +30,7 @@ check context = \case
     constraints <- traverse (Constraint.check context) constraints
     pure $ Constraints constraints
   Semantic.Value {levity} -> do
-    levity <- Type.check (Shift.unshift context) Core.Type.levity levity
+    levity <- Type.check (Shift0.unshift context) Core.Type.levity levity
     pure Value {levity}
   Semantic.Lazy -> pure Lazy
   Semantic.Strict -> pure Strict
@@ -44,7 +44,7 @@ solve context = \case
     constraints <- traverse (Constraint.solve context) constraints
     pure $ Semantic.Constraints constraints
   Value {levity} -> do
-    levity <- Type.solve (Shift.unshift context) levity
+    levity <- Type.solve (Shift0.unshift context) levity
     pure Semantic.Value {levity}
   Lazy -> pure Semantic.Lazy
   Strict -> pure Semantic.Strict

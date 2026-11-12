@@ -22,11 +22,3 @@ instance Shift.Functor Index where
   map category = \case
     Index index -> Index (Shift.map category index)
     Direct classx head -> Direct (Shift.map category classx) (Shift.map category head)
-
-instance Shift.PartialUnshift Index where
-  partialUnshift fail = \case
-    Index index -> Index <$> Shift.partialUnshift fail index
-    Direct classx head ->
-      Direct
-        <$> Shift.partialUnshift fail classx
-        <*> Shift.partialUnshift fail head

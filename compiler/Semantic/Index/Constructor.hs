@@ -1,5 +1,6 @@
 module Semantic.Index.Constructor where
 
+import Data.Void (Void)
 import qualified Semantic.Index.Type as Type
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Scope (Environment (..), Local)
@@ -122,11 +123,11 @@ instance Shift.Functor Index where
         constructorIndex
       }
 
-instance Shift.PartialUnshift Index where
-  partialUnshift abort Index {typeIndex, constructorIndex} =
-    index <$> Shift.partialUnshift abort typeIndex
-    where
-      index typeIndex = Index {typeIndex, constructorIndex}
+partialUnshift :: (Applicative f) => f Void -> Index (scope1 ':+ scope2) -> f (Index scope2)
+partialUnshift abort Index {typeIndex, constructorIndex} =
+  index <$> Type2.partialUnshift abort typeIndex
+  where
+    index typeIndex = Index {typeIndex, constructorIndex}
 
 unlocal :: Index (Local ':+ scope) -> Index scope
 unlocal Index {typeIndex, constructorIndex} =

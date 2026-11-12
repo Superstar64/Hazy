@@ -12,7 +12,6 @@ import qualified Data.Vector as Vector
 import Semantic.Index.Local (Index)
 import qualified Semantic.Index.Local as Index
 import Semantic.Scope (Declaration, Environment (..), Global, GroupTerm, GroupType, Local, Pattern)
-import qualified Semantic.Shift as Shift (Unshift (..))
 import Semantic.Shift0 (shift)
 import qualified Semantic.Shift0 as Shift0
 import Prelude hiding (map)
@@ -33,12 +32,14 @@ Pattern table ! Index.Shift index = shift $ table ! index
 GroupTerm table ! Index.Shift index = shift $ table ! index
 GroupType table ! Index.Shift index = shift $ table ! index
 
-instance Shift.Unshift (Table value) where
-  unshift (Declaration table) = table
-  unshift (Pattern table) = table
-  unshift (Local _ table) = table
-  unshift (GroupTerm table) = table
-  unshift (GroupType table) = table
+instance Shift0.ContraFunctor (Table value) where
+  contramap Shift0.Shift (Declaration table) = table
+  contramap Shift0.Shift (Pattern table) = table
+  contramap Shift0.Shift (Local _ table) = table
+  contramap Shift0.Shift (GroupTerm table) = table
+  contramap Shift0.Shift (GroupType table) = table
+  contramap Shift0.Id table = table
+  contramap (f Shift0.:. g) table = Shift0.contramap g $ Shift0.contramap f table
 
 type Map :: (Environment -> Data.Kind.Type) -> (Environment -> Data.Kind.Type) -> Data.Kind.Type
 newtype Map value value' = Map (forall scope. value scope -> value' scope)

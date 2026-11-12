@@ -55,10 +55,10 @@ unify context position (Variable index instanciation) (Variable index' instancia
       Instanciation.unify context position instanciation instanciation'
 unify context position (Logical (Shift logical)) evidence' = do
   evidence' <- unshift context position evidence'
-  unify (Shift.unshift context) position (Logical logical) evidence'
+  unify (Shift0.unshift context) position (Logical logical) evidence'
 unify context position evidence (Logical (Shift logical')) = do
   evidence <- unshift context position evidence
-  unify (Shift.unshift context) position evidence (Logical logical')
+  unify (Shift0.unshift context) position evidence (Logical logical')
 unify _ _ _ _ = error "unify evidence can't fail"
 
 unshift ::

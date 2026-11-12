@@ -22,7 +22,6 @@ import Semantic.Scope
     SimpleDeclaration,
     SimplePattern,
   )
-import qualified Semantic.Shift as Shift
 import Semantic.Shift0 (shift)
 import qualified Semantic.Shift0 as Shift0
 import Prelude hiding (map)
@@ -38,14 +37,16 @@ data Table value scope where
   SimplePattern :: Table value scope -> Table value (SimplePattern ':+ scope)
   SimpleDeclaration :: Table value scope -> Table value (SimpleDeclaration ':+ scope)
 
-instance Shift.Unshift (Table value) where
-  unshift (Declaration _ table) = table
-  unshift (Pattern table) = table
-  unshift (Local table) = table
-  unshift (SimplePattern table) = table
-  unshift (SimpleDeclaration table) = table
-  unshift (GroupTerm table) = table
-  unshift (GroupType _ table) = table
+instance Shift0.ContraFunctor (Table value) where
+  contramap Shift0.Shift (Declaration _ table) = table
+  contramap Shift0.Shift (Pattern table) = table
+  contramap Shift0.Shift (Local table) = table
+  contramap Shift0.Shift (SimplePattern table) = table
+  contramap Shift0.Shift (SimpleDeclaration table) = table
+  contramap Shift0.Shift (GroupTerm table) = table
+  contramap Shift0.Shift (GroupType _ table) = table
+  contramap Shift0.Id table = table
+  contramap (f Shift0.:. g) table = Shift0.contramap g $ Shift0.contramap f table
 
 (!) :: (Shift0.Functor value) => Table value scope -> Index scope -> value scope
 Declaration values _ ! Index.Declaration index = values Vector.! index

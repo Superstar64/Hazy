@@ -83,3 +83,8 @@ unlocal index = case split index of
   Normal normal -> Index $ Type1.unlocal normal
   Constructor lifted -> Lifted $ Constructor.unlocal lifted
   Builtin builtin -> builtin
+
+partialUnshift abort index = case split index of
+  Normal index -> Index <$> Type1.partialUnshift abort index
+  Constructor index -> Lifted <$> Constructor.partialUnshift abort index
+  Builtin index -> pure index

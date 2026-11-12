@@ -5,6 +5,3 @@ import Semantic.Scope (Environment)
 
 type Functor :: (Environment -> Type) -> Constraint
 class Functor functor
-
-type PartialUnshift :: (Environment -> Type) -> Constraint
-class PartialUnshift functor

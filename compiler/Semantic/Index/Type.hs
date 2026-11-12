@@ -1,5 +1,6 @@
 module Semantic.Index.Type where
 
+import Data.Void (Void, vacuous)
 import Semantic.Scope (Declaration, Environment (..), Global, GroupType, Local)
 
 data Index scopes where
@@ -38,3 +39,7 @@ instance Show (Index scope) where
 
 unlocal :: Index (Local ':+ scope) -> Index scope
 unlocal (Shift index) = index
+
+partialUnshift :: (Applicative m) => m Void -> Index (scope ':+ scopes) -> m (Index scopes)
+partialUnshift _ (Shift index) = pure index
+partialUnshift abort _ = vacuous abort

@@ -6,11 +6,11 @@ import Semantic.Connect (Connect (..))
 import Semantic.FreeVariables (FreeTermVariables (..))
 import Semantic.Layout (Layout)
 import Semantic.Scope (Environment)
+import Semantic.Shift (Term (..))
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
 import qualified Semantic.Show as Term
 import Semantic.Stage (Check, Resolve, Stage)
-import Semantic.Term (Term (..))
 import Prelude hiding (map)
 
 type Implicit :: (Layout -> Stage -> Environment -> Type) -> Layout -> Stage -> Environment -> Type

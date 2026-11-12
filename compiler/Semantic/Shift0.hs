@@ -1,6 +1,7 @@
 module Semantic.Shift0 where
 
 import Data.Kind (Constraint, Type)
+import qualified Data.Map as Map
 import qualified Semantic.Index.Evidence0 as Evidence0
 import qualified Semantic.Index.Local as Local
 import qualified Semantic.Index.Term as Term
@@ -53,6 +54,18 @@ instance Functor Vacuous where
 
 shift :: (Functor f) => f scope -> f (scope' ':+ scope)
 shift = map Shift
+
+class ContraFunctor f where
+  contramap :: Category scope scope' -> f scope' -> f scope
+
+unshift :: (ContraFunctor f) => f (scope ':+ scopes) -> f scopes
+unshift = contramap Shift
+
+mapInstances ::
+  Category scope scope' ->
+  Map.Map (Type2.Index scope) a ->
+  Map.Map (Type2.Index scope') a
+mapInstances category = Map.mapKeysMonotonic (map category)
 
 type TermFunctor :: (Layout -> Stage -> Environment -> Type) -> Constraint
 class TermFunctor term where

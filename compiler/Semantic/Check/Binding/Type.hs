@@ -27,7 +27,6 @@ import Semantic.Layout (Group)
 import qualified Semantic.Locality as Locality
 import Semantic.Scope (Environment (..), GroupType)
 import qualified Semantic.Scope as Scope
-import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
 import Semantic.Tree.Combinators.Inferred (Inferred (Solved))
@@ -64,18 +63,16 @@ data TypeBinding s scope = TypeBinding
   }
 
 instance Shift0.Functor (TypeBinding s) where
-  map category0 TypeBinding {label, kind, synonym, extra, content, dataInstances, classInstances} =
+  map category TypeBinding {label, kind, synonym, extra, content, dataInstances, classInstances} =
     TypeBinding
       { label,
-        kind = fmap (Shift0.map category0) kind,
-        synonym = fmap (Shift.map category) synonym,
-        content = fmap (Shift.map category) content,
-        extra = fmap (Shift.map category) <$> extra,
-        dataInstances = Map.map (fmap $ Shift.map category) $ Shift.mapInstances category dataInstances,
-        classInstances = Map.map (fmap $ Shift.map category) $ Shift.mapInstances category classInstances
+        kind = Shift0.map category <$> kind,
+        synonym = Shift0.map category <$> synonym,
+        content = Shift0.map category <$> content,
+        extra = fmap (Shift0.map category) <$> extra,
+        dataInstances = Map.map (fmap $ Shift0.map category) $ Shift0.mapInstances category dataInstances,
+        classInstances = Map.map (fmap $ Shift0.map category) $ Shift0.mapInstances category classInstances
       }
-    where
-      category = Shift.lift category0
 
 global ::
   ( Type.Link Locality.Global ->

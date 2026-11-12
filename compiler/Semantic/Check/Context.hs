@@ -29,7 +29,7 @@ import Semantic.Layout (Group)
 import qualified Semantic.Locality as Locality
 import Semantic.Scope (Environment (..))
 import qualified Semantic.Scope as Scope (Declaration, Global, GroupTerm, GroupType)
-import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
 import Semantic.Tree.Declarations (Declarations (..))
 import Semantic.Tree.Module (Module (..))
@@ -49,12 +49,12 @@ data Context s scope = Context
 
 typeEnvironment_ = typeEnvironment
 
-instance Shift.Unshift (Context s) where
-  unshift Context {termEnvironment, localEnvironment, typeEnvironment} =
+instance Shift0.ContraFunctor (Context s) where
+  contramap category Context {termEnvironment, localEnvironment, typeEnvironment} =
     Context
-      { termEnvironment = Shift.unshift termEnvironment,
-        localEnvironment = Shift.unshift localEnvironment,
-        typeEnvironment = Shift.unshift typeEnvironment
+      { termEnvironment = Shift0.contramap category termEnvironment,
+        localEnvironment = Shift0.contramap category localEnvironment,
+        typeEnvironment = Shift0.contramap category typeEnvironment
       }
 
 globalBindings :: forall s. Vector (Module (ST s) Group Check Scope.Global) -> Context s Scope.Global

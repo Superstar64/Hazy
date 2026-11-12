@@ -2,11 +2,9 @@ module Semantic.Shift
   ( Category (..),
     Functor (..),
     mapInstances,
-    PartialUnshift (..),
-    Unshift (..),
     TermFunctor (..),
+    Term (..),
     mapDefault,
-    lift,
     shift,
   )
 where
@@ -14,10 +12,10 @@ where
 import Data.Kind (Constraint, Type)
 import qualified Data.Map as Map
 import qualified Data.Strict.Maybe as Strict
-import Data.Void (Void, absurd, vacuous)
+import Data.Void (Void, absurd)
 import qualified Semantic.Index.Evidence0 as Evidence0
 import qualified Semantic.Index.Local as Local
-import qualified Semantic.Index.Term as Term
+import qualified Semantic.Index.Term as Term (Bound (..), Index (..))
 import qualified Semantic.Index.Term0 as Term0
 import qualified Semantic.Index.Type as Type
 import qualified Semantic.Index.Type0 as Type0
@@ -27,6 +25,7 @@ import Semantic.Scope (Environment ((:+)), Vacuous)
 import qualified Semantic.Scope as Scope
 import Semantic.Shift0 (shift)
 import qualified Semantic.Shift0 as Shift0
+import qualified Semantic.Show as Term (Show (..))
 import Semantic.Stage (Stage)
 import Prelude hiding (Functor, id, map, (.))
 
@@ -214,16 +213,6 @@ instance Functor Type2.Index where
     Type2.Constructor index -> Type2.Lifted $ map category index
     Type2.Builtin index -> index
 
-instance PartialUnshift Type2.Index where
-  partialUnshift abort index = case Type2.split index of
-    Type2.Normal index -> Type2.Index <$> partialUnshift abort index
-    Type2.Constructor index -> Type2.Lifted <$> partialUnshift abort index
-    Type2.Builtin index -> pure index
-
-instance PartialUnshift Type.Index where
-  partialUnshift _ (Type.Shift index) = pure index
-  partialUnshift abort _ = vacuous abort
-
 instance Functor Evidence0.Index where
   map Id index = index
   map (Over _) (Evidence0.Assumed index) = Evidence0.Assumed index
@@ -248,10 +237,6 @@ instance Functor Evidence0.Index where
         FinishNewtype {} -> generalFinishNewtype
         ReplaceIrrefutable {} -> generalReplaceIrrefutable
         Builtin {} -> error "unreachable"
-
-instance PartialUnshift Evidence0.Index where
-  partialUnshift abort (Evidence0.Assumed _) = vacuous abort
-  partialUnshift _ (Evidence0.Shift index) = pure index
 
 instance Functor Local.Index where
   map Id index = index
@@ -278,10 +263,6 @@ instance Functor Local.Index where
         ReplaceIrrefutable {} -> generalReplaceIrrefutable
         Builtin {} -> error "unreachable"
 
-instance PartialUnshift Local.Index where
-  partialUnshift _ (Local.Shift index) = pure index
-  partialUnshift abort Local.Local {} = vacuous abort
-
 instance Functor Vacuous where
   map _ = \case {}
 
@@ -293,23 +274,30 @@ mapInstances GroupType {} =
   error "group type shifts are not monotonic"
 mapInstances UngroupType {} =
   error "group type shifts are not monotonic"
+mapInstances category@Builtin {} = Map.mapKeys (map category)
 mapInstances category = Map.mapKeysMonotonic (map category)
 
 mapDefault :: (Functor f) => Shift0.Category scope scope' -> f scope -> f scope'
-mapDefault category = map (lift category) where
-
-lift :: Shift0.Category scope scope' -> Category scope scope'
-lift = \case
-  Shift0.Id -> Id
-  Shift0.Shift -> Shift
-  after Shift0.:. before -> lift after :. lift before
-
-class PartialUnshift f where
-  partialUnshift :: (Applicative m) => m Void -> f (scope ':+ scopes) -> m (f scopes)
-
-class Unshift f where
-  unshift :: f (scope ':+ scopes) -> f scopes
+mapDefault category = map (lift category)
+  where
+    lift :: Shift0.Category scope scope' -> Category scope scope'
+    lift = \case
+      Shift0.Id -> Id
+      Shift0.Shift -> Shift
+      after Shift0.:. before -> lift after :. lift before
 
 type TermFunctor :: (Layout -> Stage -> Environment -> Type) -> Constraint
 class (Shift0.TermFunctor term) => TermFunctor term where
   mapTerm :: Category scope scope' -> term layout stage scope -> term layout stage scope'
+
+type Term :: (Layout -> Stage -> Environment -> Type) -> Layout -> Stage -> Environment -> Type
+newtype Term ast layout stage scope = Term {runTerm :: ast layout stage scope}
+
+instance (Term.Show ast) => Scope.Show (Term ast layout stage) where
+  showsPrec k (Term term) = Term.showsPrec k term
+
+instance (Shift0.TermFunctor ast) => Shift0.Functor (Term ast layout stage) where
+  map category (Term term) = Term $ Shift0.mapTerm category term
+
+instance (TermFunctor ast) => Functor (Term ast layout stage) where
+  map category (Term term) = Term $ mapTerm category term

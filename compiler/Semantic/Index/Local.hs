@@ -1,6 +1,7 @@
 module Semantic.Index.Local where
 
 import Data.Kind (Type)
+import Data.Void (Void, vacuous)
 import Semantic.Scope (Environment (..), Local)
 
 type Index :: Environment -> Type
@@ -17,3 +18,7 @@ instance Show (Index scope) where
   showsPrec d = \case
     Local local -> showParen (d > 10) $ showString "Local " . showsPrec 11 local
     Shift index -> showParen (d > 10) $ showString "Shift " . showsPrec 11 index
+
+partialUnshift :: (Applicative m) => m Void -> Index (scope ':+ scopes) -> m (Index scopes)
+partialUnshift _ (Shift index) = pure index
+partialUnshift abort _ = vacuous abort

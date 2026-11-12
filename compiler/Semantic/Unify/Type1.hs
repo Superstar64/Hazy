@@ -29,7 +29,7 @@ import qualified Semantic.Index.Evidence as Evidence (Index (..))
 import qualified Semantic.Index.Table.Local as Local.Table
 import qualified Semantic.Index.Table.Type as Type.Table
 import qualified Semantic.Index.Type2 as Type2
-import qualified Semantic.Shift as Shift
+import qualified Semantic.Shift0 as Shift0
 import qualified Semantic.Unify.Builtin as Builtin (constrain)
 import {-# SOURCE #-} Semantic.Unify.Error (Error (..), abort)
 import Semantic.Unify.Evidence (Evidence)
@@ -96,8 +96,8 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
     constrainWith context classx (Logical (Shift logical)) arguments = do
       arguments <- traverse (unshift context position) arguments
       let quit = abort position $ Unshift context (Constructor classx)
-      classx <- Shift.partialUnshift quit classx
-      shiftLogical <$> constrainWith (Shift.unshift context) classx (Logical logical) arguments
+      classx <- Type2.partialUnshift quit classx
+      shiftLogical <$> constrainWith (Shift0.unshift context) classx (Logical logical) arguments
     constrainWith context@Context {localEnvironment} classx (Variable index) arguments
       | Local.Rigid {constraints} <- localEnvironment Local.Table.! index,
         Just Local.Constraint {arguments = arguments', evidence} <- Map.lookup classx constraints,

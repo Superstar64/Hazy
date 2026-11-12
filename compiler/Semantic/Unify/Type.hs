@@ -14,10 +14,10 @@ import qualified Semantic.Check.Binding.Local as Local (LocalBinding (..))
 import Semantic.Check.Context (Context (..))
 import qualified Semantic.Check.Context as Context
 import qualified Semantic.Check.Mask as Mask
+import qualified Semantic.Index.Local as Local (partialUnshift)
 import qualified Semantic.Index.Table.Local as Local.Table
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Scope (Environment (..))
-import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
 import {-# SOURCE #-} Semantic.Unify.Error (Error (..), abort)
 import Semantic.Unify.Evidence (Evidence)
@@ -140,10 +140,10 @@ unify context_ position term1_ term2_ = unifyWith context_ term1_ term2_
         -- Types involving a higher scope must be solved in said scope
         unify (Logical (Shift logical)) term' = do
           term' <- unshift context position term'
-          unifyWith (Shift.unshift context) (Logical logical) term'
+          unifyWith (Shift0.unshift context) (Logical logical) term'
         unify term (Logical (Shift logical)) = do
           term <- unshift context position term
-          unifyWith (Shift.unshift context) term (Logical logical)
+          unifyWith (Shift0.unshift context) term (Logical logical)
         unify (Variable index) (Variable index')
           | index == index' = pure ()
           | otherwise = mismatch
@@ -193,7 +193,7 @@ typeCheck context_ position = typeCheckWith context_
                 unify context position kind kind'
           Logical (Shift logical) -> do
             kind <- unshift context position kind
-            typeCheckWith (Shift.unshift context) kind (Logical logical)
+            typeCheckWith (Shift0.unshift context) kind (Logical logical)
           Variable index -> case localEnvironment Local.Table.! index of
             Local.Rigid {rigid} -> do
               unify context position kind (logicalType rigid)
@@ -242,7 +242,7 @@ mark context position erasure term_ = mark context term_
                 writeSTRef reference' Unsolved {kind, constraints, erasure = erasure <> erasure'}
               Solved typex -> mark context typex
       Logical (Shift logical) -> do
-        mark (Shift.unshift context) (Logical logical)
+        mark (Shift0.unshift context) (Logical logical)
       Variable index -> case localEnvironment Local.Table.! index of
         Local.Rigid {mask}
           | Mask.valid mask erasure -> pure ()
@@ -320,7 +320,7 @@ unshiftBox ::
   ST s (Logical s scopes)
 unshiftBox context position misshift unshift reference kind constraints erasure = do
   let unshiftDelay (key, Delay {arguments, evidence}) = do
-        key <- Shift.partialUnshift misshift key
+        key <- Type2.partialUnshift misshift key
         arguments <- traverse unshift arguments
         evidence <- Evidence.unshift context position evidence
         pure (key, Delay {arguments, evidence})
@@ -351,8 +351,8 @@ unshift context position typex = unshift typex
             pure $ Logical box
           Solved term -> unshift term
       Logical (Shift logical) -> pure (Logical logical)
-      Variable index -> Variable <$> Shift.partialUnshift misshift index
-      Constructor index -> Constructor <$> Shift.partialUnshift misshift index
+      Variable index -> Variable <$> Local.partialUnshift misshift index
+      Constructor index -> Constructor <$> Type2.partialUnshift misshift index
       Call term1 term2 -> do
         term1 <- unshift term1
         term2 <- unshift term2

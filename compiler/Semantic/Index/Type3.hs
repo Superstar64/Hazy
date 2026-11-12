@@ -28,16 +28,6 @@ instance Shift.Functor Index where
     Universe -> Universe
     Levity -> Levity
 
-instance Shift.PartialUnshift Index where
-  partialUnshift abort = \case
-    Index index -> Index <$> Shift.partialUnshift abort index
-    Type -> pure Type
-    Constraint -> pure Constraint
-    Small -> pure Small
-    Large -> pure Large
-    Universe -> pure Universe
-    Levity -> pure Levity
-
 toType2 :: Type2.Index scope -> Index scope -> Type2.Index scope
 toType2 _ (Index index) = index
 toType2 index _ = index

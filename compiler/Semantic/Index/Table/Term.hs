@@ -15,7 +15,6 @@ import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Index.Term (Index)
 import qualified Semantic.Index.Term as Index
 import Semantic.Scope (Declaration, Environment (..), Global, GroupTerm, GroupType, Local, Pattern)
-import qualified Semantic.Shift as Shift
 import Semantic.Shift0 (shift)
 import qualified Semantic.Shift0 as Shift0
 import Prelude hiding (map)
@@ -29,12 +28,14 @@ data Table value scope where
   GroupTerm :: Vector (value (GroupTerm ':+ scope)) -> Table value scope -> Table value (GroupTerm ':+ scope)
   GroupType :: Table value scope -> Table value (GroupType ':+ scope)
 
-instance Shift.Unshift (Table value) where
-  unshift (Declaration _ table) = table
-  unshift (Pattern _ table) = table
-  unshift (Local table) = table
-  unshift (GroupTerm _ table) = table
-  unshift (GroupType table) = table
+instance Shift0.ContraFunctor (Table value) where
+  contramap Shift0.Shift (Declaration _ table) = table
+  contramap Shift0.Shift (Pattern _ table) = table
+  contramap Shift0.Shift (Local table) = table
+  contramap Shift0.Shift (GroupTerm _ table) = table
+  contramap Shift0.Shift (GroupType table) = table
+  contramap Shift0.Id table = table
+  contramap (f Shift0.:. g) table = Shift0.contramap g $ Shift0.contramap f table
 
 type Bound :: (Environment -> Type) -> Environment -> Type
 data Bound value scope = Bound
