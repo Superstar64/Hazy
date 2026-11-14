@@ -133,11 +133,15 @@ instance Shift.Functor Expression where
 
 instance Substitute.Functor Expression where
   map category = \case
-    Variable {variable, instanciation} ->
-      Variable
-        { variable = Substitute.map category variable,
-          instanciation = Substitute.map category instanciation
-        }
+    Variable {variable, instanciation}
+      | Strict.Just term <- Substitute.lookupTerm category variable -> case instanciation of
+          Instanciation.Mono {levity = Type.Constructor Type2.Lazy} -> term
+          _ -> error "instanciation must be strict when substiting term"
+      | otherwise ->
+          Variable
+            { variable = Substitute.map category variable,
+              instanciation = Substitute.map category instanciation
+            }
     Selector {selector, argument, instanciation} ->
       Selector
         { selector = Substitute.map category selector,

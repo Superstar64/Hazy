@@ -35,7 +35,7 @@ instance Shift.Functor (ConstraintF logical) where
       }
 
 instance (logical ~ Void) => Substitute.Functor (ConstraintF logical) where
-  map category = Substitute.mapType (Substitute.anyEvidence category)
+  map category = Substitute.mapType (Substitute.anyEvidence $ Substitute.anyTerm category)
 
 instance Substitute.TypeFunctor ConstraintF where
   mapType category Constraint {classx, head, arguments} =

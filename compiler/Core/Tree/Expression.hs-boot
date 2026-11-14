@@ -2,10 +2,10 @@
 
 module Core.Tree.Expression where
 
-import qualified Core.Substitute as Substitute
-import Core.Tree.Evidence (Evidence)
+import {-# SOURCE #-} qualified Core.Substitute as Substitute
+import {-# SOURCE #-} Core.Tree.Evidence (Evidence)
 import {-# SOURCE #-} Core.Tree.Statements (Statements)
-import qualified Core.Tree.Type as Core
+import {-# SOURCE #-} qualified Core.Tree.Type as Core
 import Data.Kind (Type)
 import qualified Data.Vector.Strict as Strict
 import qualified Semantic.Index.Constructor as Constructor
@@ -16,7 +16,7 @@ import qualified Semantic.Scope as Scope
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
 import Semantic.Stage (Check)
-import qualified Semantic.Tree.Definition as Semantic
+import {-# SOURCE #-} qualified Semantic.Tree.Definition as Semantic
 import {-# SOURCE #-} qualified Semantic.Tree.Expression as Semantic
 
 type role Expression nominal

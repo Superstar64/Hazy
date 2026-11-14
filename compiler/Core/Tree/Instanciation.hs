@@ -40,7 +40,7 @@ instance
   (logicalEvidence ~ Void, logicalType ~ Void) =>
   Substitute.Functor (InstanciationF logicalEvidence logicalType)
   where
-  map category = Substitute.mapEvidence category
+  map category = Substitute.mapEvidence $ Substitute.anyTerm category
 
 instance Substitute.EvidenceFunctor InstanciationF where
   mapEvidence category = \case

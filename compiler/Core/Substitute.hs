@@ -1,6 +1,7 @@
 module Core.Substitute where
 
 import {-# SOURCE #-} Core.Tree.Evidence (EvidenceF)
+import {-# SOURCE #-} Core.Tree.Expression (Expression)
 import {-# SOURCE #-} Core.Tree.Type (TypeF)
 import qualified Data.Map as Map
 import qualified Data.Strict.Maybe as Strict (Maybe (..))
@@ -14,7 +15,7 @@ import qualified Semantic.Index.Method as Method
 import qualified Semantic.Index.Selector as Selector
 import qualified Semantic.Index.Term as Term
 import qualified Semantic.Index.Type2 as Type2
-import Semantic.Scope (Environment (..), Local, Singleton (Singleton))
+import Semantic.Scope (Environment (..), Local, SimpleDeclaration, Singleton (Singleton))
 import Semantic.Shift (shift)
 import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
@@ -25,11 +26,11 @@ newtype Types logical scope = Types (Strict.Vector (TypeF logical scope))
 newtype Evidences logicalEvidence logicalType scope
   = Evidences (Strict.Vector (EvidenceF logicalEvidence logicalType scope))
 
-data Category types evidences scope1 scope2 where
-  Lift :: !(Shift.Category scope1 scope2) -> Category types evidences scope1 scope2
+data Category term types evidences scope1 scope2 where
+  Lift :: !(Shift.Category scope1 scope2) -> Category term types evidences scope1 scope2
   Over ::
-    !(Category types evidences scopes scopes') ->
-    Category types evidences (scope1 ':+ scopes) (scope1 ':+ scopes')
+    !(Category term types evidences scopes scopes') ->
+    Category term types evidences (scope1 ':+ scopes) (scope1 ':+ scopes')
   -- |
   -- Replace rigid evidence with new evidence. Note that the instanciation must
   -- be strict for the evidence being replaced.
@@ -37,28 +38,53 @@ data Category types evidences scope1 scope2 where
     !(Shift.Category scope scope') ->
     !(types scope') ->
     !(evidences scope') ->
-    Category types evidences (Local ':+ scope) scope'
+    Category term types evidences (Local ':+ scope) scope'
+  -- |
+  -- Replace a variable with an expression. Note that the instanciation must be
+  -- lazy for the variable being replaced.
+  SubstituteLet ::
+    !(Shift.Category scope scope') ->
+    !(term scope') ->
+    Category term types evidences (SimpleDeclaration ':+ scope) scope'
 
-anyType :: Category types evidence scope1 scope2 -> Category Singleton evidence scope1 scope2
+anyTerm :: Category term types evidences scope1 scope2 -> Category Singleton types evidences scope1 scope2
+anyTerm = \case
+  Lift category -> Lift category
+  Over category -> Over (anyTerm category)
+  SubstituteLocal category types evidences -> SubstituteLocal category types evidences
+  SubstituteLet category _ -> SubstituteLet category Singleton
+
+anyType :: Category term types evidences scope1 scope2 -> Category term Singleton evidences scope1 scope2
 anyType = \case
   Lift category -> Lift category
   Over category -> Over (anyType category)
   SubstituteLocal category _ evidences -> SubstituteLocal category Singleton evidences
+  SubstituteLet category term -> SubstituteLet category term
 
-anyEvidence :: Category types evidences scope1 scope2 -> Category types Singleton scope1 scope2
+anyEvidence :: Category term types evidences scope1 scope2 -> Category term types Singleton scope1 scope2
 anyEvidence = \case
   Lift category -> Lift category
   Over category -> Over (anyEvidence category)
   SubstituteLocal category types _ -> SubstituteLocal category types Singleton
+  SubstituteLet category term -> SubstituteLet category term
 
-general :: Category types evidences scope1 scope2 -> Shift.Category scope1 scope2
+general :: Category term types evidences scope1 scope2 -> Shift.Category scope1 scope2
 general = \case
   Lift category -> category
   Over category -> Shift.Over (general category)
   SubstituteLocal general _ _ -> general Shift.:. Shift.Unshift (error "bad general")
+  SubstituteLet general _ -> general Shift.:. Shift.Unshift (error "bad general")
+
+lookupTerm ::
+  Category Expression types evidences scope1 scope2 ->
+  Term.Index scope1 ->
+  Strict.Maybe (Expression scope2)
+lookupTerm (SubstituteLet _ term) Term.SimpleDeclaration = Strict.Just $ term
+lookupTerm (Over substitute) (Term.Shift index) = shift <$> lookupTerm substitute index
+lookupTerm _ _ = Strict.Nothing
 
 lookupLocal ::
-  Category (Types logical) evidences scope1 scope2 ->
+  Category Singleton (Types logical) evidences scope1 scope2 ->
   Local.Index scope1 ->
   Strict.Maybe (TypeF logical scope2)
 lookupLocal (SubstituteLocal _ (Types types) _) (Local.Local index) =
@@ -67,7 +93,7 @@ lookupLocal (Over substitute) (Local.Shift index) = shift <$> lookupLocal substi
 lookupLocal _ _ = Strict.Nothing
 
 lookupEvidence ::
-  Category types (Evidences logicalEvidence logicalType) scope1 scope2 ->
+  Category Singleton types (Evidences logicalEvidence logicalType) scope1 scope2 ->
   Evidence0.Index scope1 ->
   Strict.Maybe (EvidenceF logicalEvidence logicalType scope2)
 lookupEvidence (SubstituteLocal _ _ (Evidences evidences)) (Evidence0.Assumed index) =
@@ -76,7 +102,10 @@ lookupEvidence (Over substitute) (Evidence0.Shift index) = shift <$> lookupEvide
 lookupEvidence _ _ = Strict.Nothing
 
 class (Shift.Functor typex) => Functor typex where
-  map :: Category (Types Void) (Evidences Void Void) scope1 scope2 -> typex scope1 -> typex scope2
+  map ::
+    Category Expression (Types Void) (Evidences Void Void) scope1 scope2 ->
+    typex scope1 ->
+    typex scope2
 
 instance Functor Type2.Index where
   map = Shift.map . general
@@ -95,7 +124,7 @@ instance Functor Term.Index where
 
 class TypeFunctor typef where
   mapType ::
-    Category (Types logical) Singleton scope1 scope2 ->
+    Category Singleton (Types logical) Singleton scope1 scope2 ->
     typef Void scope1 ->
     typef logical scope2
 
@@ -115,7 +144,7 @@ logicalType = substituteType Strict.Vector.empty . shift
 
 class EvidenceFunctor evidencef where
   mapEvidence ::
-    Category (Types logicalType) (Evidences logicalEvidence logicalType) scope1 scope2 ->
+    Category Singleton (Types logicalType) (Evidences logicalEvidence logicalType) scope1 scope2 ->
     evidencef Void Void scope1 ->
     evidencef logicalEvidence logicalType scope2
 
@@ -135,10 +164,10 @@ logicalEvidence ::
 logicalEvidence = substituteEvidence Strict.Vector.empty Strict.Vector.empty . shift
 
 mapInstances ::
-  Category (Types Void) (Evidences Void Void) scope scope' ->
+  Category term types evidences scope scope' ->
   Map.Map (Type2.Index scope) a ->
   Map.Map (Type2.Index scope') a
-mapInstances category = Map.mapKeysMonotonic (map category)
+mapInstances category = Map.mapKeysMonotonic (Shift.map $ general category)
 
 mapDefault :: (Functor typex) => Shift.Category scope1 scope2 -> typex scope1 -> typex scope2
 mapDefault = map . Lift

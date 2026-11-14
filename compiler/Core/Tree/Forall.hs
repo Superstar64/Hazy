@@ -64,7 +64,7 @@ instance
   (logical ~ Void, Substitute.TypeFunctor typef, Shift.Functor (typef Void)) =>
   Substitute.Functor (ForallOver typef logical)
   where
-  map category = Substitute.mapType (Substitute.anyEvidence category)
+  map category = Substitute.mapType (Substitute.anyEvidence $ Substitute.anyTerm category)
 
 instance (Substitute.TypeFunctor typex) => Substitute.TypeFunctor (ForallOver typex) where
   mapType category ForallOver {parameters, constraints, result} =

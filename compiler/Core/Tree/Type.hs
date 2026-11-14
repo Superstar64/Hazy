@@ -102,7 +102,7 @@ instance (Show logical) => Scope.Show (TypeF logical) where
   showsPrec = showsPrec
 
 instance (logical ~ Void) => Substitute.Functor (TypeF logical) where
-  map category = Substitute.mapType (Substitute.anyEvidence category)
+  map category = Substitute.mapType (Substitute.anyEvidence $ Substitute.anyTerm category)
 
 instance Substitute.TypeFunctor TypeF where
   mapType category = \case
