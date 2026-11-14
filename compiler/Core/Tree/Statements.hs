@@ -13,7 +13,6 @@ import Data.Foldable (toList)
 import qualified Data.Map as Map
 import Data.Strict.Vector1 as Strict.Vector1 (fromList', uncons)
 import Data.Vector.Strict ((//))
-import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
 import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Constructor as Constructor2
@@ -124,7 +123,7 @@ bind Pattern.Match {levity = Solved levity, match} check thenx = case match of
     go (length patterns - 1)
     where
       -- todo this is `O(n^2)`
-      go (-1) = finalize levity constructor patterns constructorInfo check thenx
+      go (-1) = finalize levity constructor constructorInfo check thenx
       go index = case patterns Strict.Vector.! index of
         Pattern.Wildcard {} -> go (index - 1)
         target@Pattern.Match {levity = Solved innerLevity}
@@ -163,20 +162,9 @@ bind Pattern.Match {levity = Solved levity, match} check thenx = case match of
     go (length fields - 1)
     where
       go (-1)
-        | entryCount <- Semantic.ConstructorInfo.entryCount constructorInfo,
-          indexes <- (\Pattern.Field {index} -> index) <$> fields,
-          patterns <-
-            Strict.Vector.generate entryCount $ \index ->
-              Pattern.Wildcard
-                { startPosition = (),
-                  levity = Solved $ case constructorInfo of
-                    Semantic.ConstructorInfo {entries}
-                      | EntryInfo {levity} <- entries Strict.Vector.! index -> levity
-                    Semantic.Newtype {} -> Type.lazy,
-                  names = Map.empty
-                },
+        | indexes <- (\Pattern.Field {index} -> index) <$> fields,
           thenx <- Shift.map (Shift.RenamePattern (indexes Strict.Vector.!)) thenx =
-            finalize levity constructor patterns constructorInfo check thenx
+            finalize levity constructor constructorInfo check thenx
       go index = case fields Strict.Vector.! index of
         Pattern.Field {index = field, field = patternx} -> case patternx of
           Pattern.Wildcard {} -> go (index - 1)
@@ -371,18 +359,16 @@ replace bounded patternx check thenx = case bounded of
 finalize ::
   Type scope ->
   Constructor.Index scope ->
-  Strict.Vector (Pattern position Check scope) ->
   Semantic.ConstructorInfo scope ->
   Expression scope ->
   Statements (Scope.Pattern ':+ scope) ->
   Statements scope
-finalize levity constructor patterns constructorInfo check thenx =
+finalize levity constructor constructorInfo check thenx =
   LetOne
     { declaration = TypeLambda.mono levity check,
       body =
         finish
           (shift constructor)
-          (shift <$> patterns)
           (shift constructorInfo)
           (Expression.bindingVariable levity)
           (Shift.map Shift.LetPattern thenx)
@@ -390,29 +376,25 @@ finalize levity constructor patterns constructorInfo check thenx =
 
 finish ::
   Constructor.Index scope ->
-  Strict.Vector (Pattern position Check scope) ->
   Semantic.ConstructorInfo scope ->
   Expression scope ->
   Statements (Scope.Pattern ':+ scope) ->
   Statements scope
-finish constructor patterns constructorInfo check thenx
-  | all wildcard patterns,
-    thenx <- Shift.map Shift.FinishPattern thenx =
-      case constructorInfo of
-        Semantic.Newtype ->
-          LetOne
-            { declaration =
-                TypeLambda.mono Type.lazy $ Expression.newtype_ constructor check Expression.Destruct,
-              body = Shift.map Shift.FinishNewtype thenx
-            }
-        Semantic.ConstructorInfo {entries} ->
-          Bind {constructor, entryCount, check, thenx}
-          where
-            entryCount = length entries
-  where
-    wildcard Pattern.Wildcard {} = True
-    wildcard _ = False
-finish _ _ _ _ _ = error "bad finish"
+finish constructor constructorInfo check thenx =
+  case constructorInfo of
+    Semantic.Newtype ->
+      LetOne
+        { declaration =
+            TypeLambda.mono Type.lazy $ Expression.newtype_ constructor check Expression.Destruct,
+          body = Shift.map (Shift.FinishNewtype Shift.:. Shift.FinishPattern) thenx
+        }
+    Semantic.ConstructorInfo {entries} ->
+      Bind
+        { constructor,
+          entryCount = length entries,
+          check,
+          thenx = Shift.map Shift.FinishPattern thenx
+        }
 
 true :: Pattern () Check scope
 true =
