@@ -1,5 +1,6 @@
 module Core.Tree.Statements where
 
+import Core.Substitute (Category (SubstituteLet))
 import qualified Core.Substitute as Substitute
 import {-# SOURCE #-} Core.Tree.Declarations (Declarations)
 import {-# SOURCE #-} qualified Core.Tree.Declarations as Declarations
@@ -382,12 +383,11 @@ finish ::
   Statements scope
 finish constructor constructorInfo check thenx =
   case constructorInfo of
-    Semantic.Newtype ->
-      LetOne
-        { declaration =
-            TypeLambda.mono Type.lazy $ Expression.newtype_ constructor check Expression.Destruct,
-          body = Shift.map (Shift.FinishNewtype Shift.:. Shift.FinishPattern) thenx
-        }
+    Semantic.Newtype -> Substitute.map category $ Shift.map precategory thenx
+      where
+        precategory = Shift.FinishNewtype Shift.:. Shift.FinishPattern
+        replacement = Expression.newtype_ constructor check Expression.Destruct
+        category = SubstituteLet Shift.Id replacement
     Semantic.ConstructorInfo {entries} ->
       Bind
         { constructor,
