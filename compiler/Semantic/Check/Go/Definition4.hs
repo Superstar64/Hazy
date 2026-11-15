@@ -1,12 +1,11 @@
 module Semantic.Check.Go.Definition4 where
 
 import Control.Monad.ST (ST)
-import Core.Substitute (logicalType)
 import qualified Core.Tree.Constraints as Simple.Constraints (simplify)
 import qualified Core.Tree.Type as Core
 import qualified Core.Tree.Type as Simple (simplify)
 import qualified Core.Tree.TypeLambda as Simple (TypeLambdaOver (..))
-import Core.Type.Functor (shiftLogical)
+import qualified Core.Type.Substitute as Substitute.Type
 import Data.Functor.Identity (Identity (..))
 import qualified Data.Vector as Vector
 import qualified Data.Vector.Strict as Strict.Vector
@@ -53,7 +52,7 @@ checkAnnotation
     }
   go =
     do
-      let typex = logicalType $ Simple.simplify result
+      let typex = Substitute.Type.logical $ Simple.simplify result
       context <- Solved.Scheme.augment position parameters constraints Mask.Runtime context
       definition <- go context typex
       pure $ do
@@ -143,7 +142,11 @@ check position Solve {solve, logical} reflection information = \case
               set <- flip Strict.Vector.imapM set $ \index Element {element, link} -> do
                 let element' = Shift.map (Shift.Over Shift) element
                     typex = fresh Vector.! index
-                element <- Definition3.checkAuto (groupTermBindings fresh context) (shiftLogical typex) element'
+                element <-
+                  Definition3.checkAuto
+                    (groupTermBindings fresh context)
+                    (Substitute.Type.shift typex)
+                    element'
                 pure $ do
                   element <- Definition3.solve position element
                   pure Element {element, link}

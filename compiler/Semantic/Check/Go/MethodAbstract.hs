@@ -1,8 +1,8 @@
 module Semantic.Check.Go.MethodAbstract where
 
 import Control.Monad.ST (ST)
-import Core.Substitute (logicalType)
 import qualified Core.Tree.Forall as Simple (ForallOver (..), simplify)
+import qualified Core.Type.Substitute as Type.Substitute
 import Semantic.Check.Context (Context)
 import qualified Semantic.Check.Mask as Mask
 import Semantic.Check.Scheme (augmentForall)
@@ -27,7 +27,7 @@ check _ _ _ Semantic.Abstract = pure $ do
 check context position Method {annotation} (Semantic.DefaultResolve definition)
   | scheme@Simple.ForallOver {result} <- Simple.simplify annotation = do
       context <- augmentForall position scheme Mask.Runtime context
-      definition <- Definition.check context (logicalType result) (shift definition)
+      definition <- Definition.check context (Type.Substitute.logical result) (shift definition)
       pure $ do
         definition <- Definition.solve definition
         pure $ DefaultCheck definition

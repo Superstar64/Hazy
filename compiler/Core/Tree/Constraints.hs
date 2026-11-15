@@ -5,7 +5,7 @@ import Core.Tree.Constraint (ConstraintF)
 import qualified Core.Tree.Constraint as Constraint
 import Core.Tree.Type (TypeF)
 import qualified Core.Tree.Type as Type
-import qualified Core.Type.Functor as Core
+import qualified Core.Type.Substitute as Type.Substitute
 import qualified Data.Vector.Strict as Strict
 import Data.Void (Void)
 import qualified Semantic.Scope as Scope
@@ -38,22 +38,14 @@ instance Shift.Functor (ConstraintsF logical) where
         }
 
 instance (logical ~ Void) => Substitute.Functor (ConstraintsF logical) where
-  map category = Substitute.mapType (Substitute.anyEvidence $ Substitute.anyTerm category)
+  map = Type.Substitute.mapDefault
 
-instance Substitute.TypeFunctor ConstraintsF where
-  mapType category = \case
-    Constraints constraints -> Constraints $ Substitute.mapType category <$> constraints
+instance Type.Substitute.Functor ConstraintsF where
+  map category = \case
+    Constraints constraints -> Constraints $ Type.Substitute.map category <$> constraints
     Value {levity} ->
       Value
-        { levity = Substitute.mapType category levity
-        }
-
-instance Core.Functor ConstraintsF where
-  map f = \case
-    Constraints constraints -> Constraints $ Core.map f <$> constraints
-    Value {levity} ->
-      Value
-        { levity = Core.map f levity
+        { levity = Type.Substitute.map category levity
         }
 
 simplify :: Semantic.Constraints position Check scope -> Constraints scope

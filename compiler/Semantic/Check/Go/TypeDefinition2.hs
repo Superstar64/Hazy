@@ -1,10 +1,9 @@
 module Semantic.Check.Go.TypeDefinition2 where
 
 import Control.Monad.ST (ST)
-import Core.Substitute (logicalType)
 import qualified Core.Tree.Type as Core
 import qualified Core.Tree.Type as Type (simplify)
-import Core.Type.Functor (shiftLogical)
+import qualified Core.Type.Substitute as Substitute.Type
 import Data.Functor.Identity (Identity (..))
 import qualified Data.Vector as Vector
 import Data.Vector.Strict (toLazy)
@@ -49,7 +48,7 @@ check position reflection information = \case
             case self of
               Annotated annotation ::: _ -> do
                 typex <- annotation
-                typex <- pure $ logicalType $ Type.simplify typex
+                typex <- pure $ Substitute.Type.logical $ Type.simplify typex
                 definition <- TypeDefinition.check context typex definition
                 definition <- Unify.runSolve $ TypeDefinition.solve context definition
                 pure definition
@@ -74,7 +73,7 @@ check position reflection information = \case
                 \index
                  Element {element, position, name, constructorNames, link} -> do
                     let typex = fresh Vector.! index
-                    element <- TypeDefinition.check context' (shiftLogical typex) element
+                    element <- TypeDefinition.check context' (Substitute.Type.shift typex) element
                     pure $ do
                       element <- TypeDefinition.solve context' element
                       typex <- Unify.solve position typex

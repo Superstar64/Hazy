@@ -2,8 +2,8 @@ module Core.Tree.Type where
 
 import Core.Substitute (Category (..))
 import qualified Core.Substitute as Substitute
-import qualified Core.Type.Functor as Core (Functor (..))
 import qualified Core.Type.Show as Core (Show (..))
+import qualified Core.Type.Substitute as Type.Substitute
 import qualified Data.Strict.Maybe as Strict
 import qualified Data.Vector.Strict as Strict.Vector
 import Data.Void (Void)
@@ -84,7 +84,7 @@ instance Shift0.Functor (TypeF logical) where
   map = Shift.mapDefault
 
 instance Shift.Functor (TypeF logical) where
-  map category typex = case typex of
+  map category = \case
     Logical logical -> Logical logical
     Variable index -> Variable (Shift.map category index)
     Constructor index -> Constructor (Shift.map category index)
@@ -102,32 +102,22 @@ instance (Show logical) => Scope.Show (TypeF logical) where
   showsPrec = showsPrec
 
 instance (logical ~ Void) => Substitute.Functor (TypeF logical) where
-  map category = Substitute.mapType (Substitute.anyEvidence $ Substitute.anyTerm category)
+  map = Type.Substitute.mapDefault
 
-instance Substitute.TypeFunctor TypeF where
-  mapType category = \case
+instance Type.Substitute.Functor TypeF where
+  map category = \case
+    Logical logical -> Logical (Type.Substitute.mapType category logical)
     Variable index
-      | Strict.Just typex <- Substitute.lookupLocal category index -> typex
-      | otherwise -> Variable $ Shift.map (Substitute.general category) index
-    Constructor index -> Constructor (Shift.map (Substitute.general category) index)
-    Call function argument -> Call (Substitute.mapType category function) (Substitute.mapType category argument)
+      | Strict.Just typex <- Substitute.lookupLocal (Type.Substitute.category category) index -> typex
+      | otherwise -> Variable $ Shift.map (Type.Substitute.general category) index
+    Constructor index -> Constructor (Shift.map (Type.Substitute.general category) index)
+    Call function argument ->
+      Call
+        (Type.Substitute.map category function)
+        (Type.Substitute.map category argument)
     Function parameter result ->
-      Function (Substitute.mapType category parameter) (Substitute.mapType category result)
-    Type universe -> Type (Substitute.mapType category universe)
-    Constraint -> Constraint
-    Small -> Small
-    Large -> Large
-    Universe -> Universe
-    Levity -> Levity
-
-instance Core.Functor TypeF where
-  map f = \case
-    Logical logical -> Logical (f logical)
-    Variable index -> Variable index
-    Constructor index -> Constructor index
-    Call function argument -> Call (Core.map f function) (Core.map f argument)
-    Function parameter result -> Function (Core.map f parameter) (Core.map f result)
-    Type universe -> Type (Core.map f universe)
+      Function (Type.Substitute.map category parameter) (Type.Substitute.map category result)
+    Type universe -> Type (Type.Substitute.map category universe)
     Constraint -> Constraint
     Small -> Small
     Large -> Large
@@ -201,11 +191,12 @@ simplify typex = simplifyWith typex []
 
 simplifyWith :: Solved.Type position Check scope -> [Type scope] -> Type scope
 simplifyWith Solved.Constructor {constructor, synonym} arguments = case synonym of
-  Solved.Synonym length synonym -> foldl Call (Substitute.mapType category synonym) kept
+  Solved.Synonym length synonym -> foldl Call (Type.Substitute.map category synonym) kept
     where
       erased = take length arguments
       kept = drop length arguments
-      category = SubstituteLocal Shift.Id (Substitute.Types $ Strict.Vector.fromList erased) Singleton
+      targets = Substitute.Types $ Strict.Vector.fromList erased
+      category = Type.Substitute.lift $ SubstituteLocal Shift.Id targets Singleton
   Solved.NoSynonym -> foldl Call (Constructor constructor) arguments
 simplifyWith Solved.Call {function, argument} arguments =
   simplifyWith function (simplify argument : arguments)

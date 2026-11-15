@@ -2,14 +2,16 @@ module Semantic.Unify.Forall where
 
 import Control.Monad (zipWithM_)
 import Control.Monad.ST (ST)
+import qualified Core.Substitute as Substitute
 import Core.Tree.Constraint (ConstraintF (..))
 import Core.Tree.Constraints (ConstraintsF (..))
 import qualified Core.Tree.Constraints as Constraints (ConstraintsF (..))
 import Core.Tree.Forall (ForallOver (..))
 import Core.Tree.Instanciation (InstanciationF (..))
 import Core.Tree.Type (TypeF (Logical, Variable))
-import qualified Core.Tree.Type as Type (TypeF (..), lazy)
+import qualified Core.Tree.Type as Type (lazy)
 import qualified Core.Tree.TypeLambda as Simple (TypeLambdaOver (..))
+import qualified Core.Type.Substitute as Type.Substitute
 import Data.Foldable (toList, traverse_)
 import qualified Data.Kind as Kind
 import Data.List (nub)
@@ -25,9 +27,9 @@ import qualified Semantic.Index.Local as Local
 import qualified Semantic.Index.Table.Local as Table.Local
 import qualified Semantic.Index.Table.Term as Table.Term
 import qualified Semantic.Index.Table.Type as Table.Type
-import qualified Semantic.Index.Type2 as Type2
-import Semantic.Scope (Environment (..))
+import Semantic.Scope (Environment (..), Singleton (..))
 import qualified Semantic.Scope as Scope
+import qualified Semantic.Shift as Shift
 import qualified Semantic.Shift0 as Shift0
 import Semantic.Unify.Generalizable (Collected (..), Collector (..), Generalizable (..))
 import Semantic.Unify.Instanciation (Instanciation)
@@ -47,26 +49,16 @@ import Prelude hiding (Functor, map)
 
 type Forall s scope = ForallOver TypeF (Logical s scope) scope
 
--- todo move this to Core
 substitute ::
   Strict.Vector.Vector (Type s scope) ->
   TypeF (Logical s scope) (Scope.Local ':+ scope) ->
   Type s scope
-substitute replacements (Variable index) = case index of
-  Local.Local index -> replacements Strict.Vector.! index
-  Local.Shift index -> Variable index
-substitute replacements typex = case typex of
-  Type.Logical logical -> Type.Logical logical
-  Type.Constructor index -> Type.Constructor (Type2.unlocal index)
-  Type.Call function argument -> Type.Call (substitute replacements function) (substitute replacements argument)
-  Type.Function parameter result ->
-    Type.Function (substitute replacements parameter) (substitute replacements result)
-  Type.Type universe -> Type.Type (substitute replacements universe)
-  Type.Constraint -> Type.Constraint
-  Type.Small -> Type.Small
-  Type.Large -> Type.Large
-  Type.Universe -> Type.Universe
-  Type.Levity -> Type.Levity
+substitute replacements =
+  Type.Substitute.map
+    Type.Substitute.Category
+      { mapType = id,
+        category = Substitute.SubstituteLocal Shift.Id (Substitute.Types replacements) Singleton
+      }
 
 instanciate ::
   Context s scope ->

@@ -10,7 +10,7 @@ import Core.Tree.Forall (ForallOver (..))
 import Core.Tree.Instanciation (InstanciationF (..))
 import Core.Tree.Type (TypeF)
 import qualified Core.Tree.Type as Type (TypeF (..))
-import qualified Core.Type.Functor as Core
+import qualified Core.Type.Substitute as Type.Substitute
 import Data.Kind (Constraint)
 import qualified Data.Kind as Kind
 import Data.STRef (readSTRef)
@@ -56,7 +56,7 @@ instance SolveType TypeF where
         Type.Solved typex ->
           Shift0.map category <$> solve position typex
         Type.Unsolved {kind, constraints} ->
-          Solve $ defaultFrom position constraints (Core.mapLogical category kind)
+          Solve $ defaultFrom position constraints (Type.Substitute.shiftWith category kind)
     Type.Logical (Type.Shift logical) ->
       solveWith (category Shift0.:. Shift0.Shift) position (Type.Logical logical)
     Type.Variable name -> pure $ Type.Variable name

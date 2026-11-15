@@ -3,7 +3,6 @@ module Semantic.Check.Scheme where
 import Control.Monad (zipWithM)
 import Control.Monad.ST (ST)
 import {-# SOURCE #-} qualified Core.Builtin as Builtin
-import Core.Substitute (logicalType)
 import qualified Core.Tree.Class as Class (Class (..))
 import Core.Tree.Constraint (ConstraintF (..))
 import Core.Tree.Constraints (Constraints, ConstraintsF (..))
@@ -13,6 +12,7 @@ import qualified Core.Tree.Instanciation as Instanciation
 import Core.Tree.Type (Type)
 import qualified Core.Tree.Type as Type (strict)
 import Core.Tree.TypeDeclaration (assumeClass)
+import qualified Core.Type.Substitute as Type.Substitute
 import Data.Foldable (toList)
 import qualified Data.Map as Map
 import Data.Text (pack)
@@ -40,7 +40,7 @@ import Syntax.Variable (VariableIdentifier)
 import Prelude hiding (head)
 
 instanciate :: Context s scope -> Position -> Forall scope -> ST s (Unify.Type s scope, Unify.Instanciation s scope)
-instanciate context position = Unify.instanciate context position . logicalType
+instanciate context position = Unify.instanciate context position . Type.Substitute.logical
 
 augmentNamed ::
   (Int -> VariableIdentifier) ->

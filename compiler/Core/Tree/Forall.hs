@@ -5,8 +5,8 @@ import Core.Tree.Constraints (ConstraintsF (Value))
 import qualified Core.Tree.Constraints as Constraints
 import Core.Tree.Type (TypeF)
 import qualified Core.Tree.Type as Type
-import qualified Core.Type.Functor as Core (Functor (..))
 import qualified Core.Type.Show as Core (Show (..))
+import qualified Core.Type.Substitute as Type.Substitute
 import qualified Data.Kind as Kind
 import qualified Data.Vector.Strict as Strict
 import qualified Data.Vector.Strict as Strict.Vector
@@ -61,25 +61,17 @@ instance (Shift.Functor (typef logical)) => Shift.Functor (ForallOver typef logi
       }
 
 instance
-  (logical ~ Void, Substitute.TypeFunctor typef, Shift.Functor (typef Void)) =>
+  (logical ~ Void, Type.Substitute.Functor typef, Shift.Functor (typef Void)) =>
   Substitute.Functor (ForallOver typef logical)
   where
-  map category = Substitute.mapType (Substitute.anyEvidence $ Substitute.anyTerm category)
+  map = Type.Substitute.mapDefault
 
-instance (Substitute.TypeFunctor typex) => Substitute.TypeFunctor (ForallOver typex) where
-  mapType category ForallOver {parameters, constraints, result} =
+instance (Type.Substitute.Functor typex) => Type.Substitute.Functor (ForallOver typex) where
+  map category ForallOver {parameters, constraints, result} =
     ForallOver
-      { parameters = Substitute.mapType category <$> parameters,
-        constraints = Substitute.mapType category constraints,
-        result = Substitute.mapType (Substitute.Over category) result
-      }
-
-instance (Core.Functor typex) => Core.Functor (ForallOver typex) where
-  map f ForallOver {parameters, constraints, result} =
-    ForallOver
-      { parameters = Core.map f <$> parameters,
-        constraints = Core.map f constraints,
-        result = Core.map f result
+      { parameters = Type.Substitute.map category <$> parameters,
+        constraints = Type.Substitute.map category constraints,
+        result = Type.Substitute.map (Type.Substitute.over category) result
       }
 
 mono ::

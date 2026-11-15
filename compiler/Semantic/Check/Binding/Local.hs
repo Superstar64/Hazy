@@ -2,7 +2,7 @@ module Semantic.Check.Binding.Local where
 
 import qualified Core.Tree.Evidence as Simple (Evidence)
 import Core.Tree.Type as Simple (Type)
-import qualified Core.Type.Functor as Core
+import qualified Core.Type.Substitute as Type.Substitute
 import qualified Data.Kind (Type)
 import Data.Map (Map)
 import qualified Data.Map as Map
@@ -41,7 +41,7 @@ instance Shift0.Functor (LocalBinding s) where
     Wobbly {label, wobbly} ->
       Wobbly
         { label,
-          wobbly = Core.mapLogical category wobbly
+          wobbly = Type.Substitute.shiftWith category wobbly
         }
 
 data Constraint scope = Constraint

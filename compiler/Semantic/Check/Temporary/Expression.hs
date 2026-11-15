@@ -10,7 +10,7 @@ import qualified Core.Tree.Type as Core
 import qualified Core.Tree.Type as Type (lazy)
 import Core.Tree.TypeDeclaration (assumeData)
 import qualified Core.Tree.TypeLambda as Simple
-import Core.Type.Functor (shiftLogical)
+import qualified Core.Type.Substitute as Type.Substitute
 import qualified Data.Strict.Vector1 as Strict (Vector1)
 import qualified Data.Strict.Vector2 as Strict (Vector2)
 import Data.Traversable (for)
@@ -220,7 +220,7 @@ check context resultType Semantic.Call {function, argument} = do
   pure (Call function1 argument)
 check context typex Semantic.Let {declarations, letBody} = do
   context Declarations.:& declarations <- Declarations.check context declarations
-  letBody <- check context (shiftLogical typex) letBody
+  letBody <- check context (Type.Substitute.shift typex) letBody
   pure (Let declarations letBody)
 check context typex Semantic.If {condition, thenx, elsex} = do
   condition <- check context Core.bool condition
@@ -298,7 +298,7 @@ check context typex Semantic.Lambda {startPosition, parameter, body} = do
   parameterType <- Unify.fresh Core.typex
   parameter <- Pattern.check context Type.lazy parameterType parameter
   resultType <- Unify.fresh Core.typex
-  body <- Lambda.check (Pattern.augment parameter context) (shiftLogical resultType) body
+  body <- Lambda.check (Pattern.augment parameter context) (Type.Substitute.shift resultType) body
   Unify.unify context startPosition typex (parameterType -#> resultType)
   pure Lambda {startPosition, parameter, body}
 check context typex Semantic.LambdaCase {startPosition, cases} = do

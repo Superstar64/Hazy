@@ -1,7 +1,7 @@
 module Semantic.Check.Temporary.RightHandSide where
 
 import Control.Monad.ST (ST)
-import Core.Type.Functor (shiftLogical)
+import qualified Core.Type.Substitute as Type.Substitute
 import Semantic.Check.Context (Context)
 import {-# SOURCE #-} qualified Semantic.Check.Go.Declarations as Declarations
 import Semantic.Check.Temporary.Body (Body)
@@ -27,7 +27,7 @@ check ::
   ST s (RightHandSide s scope)
 check context typex (Semantic.RightHandSide body declarations) = do
   context Declarations.:& declarations <- Declarations.check context declarations
-  body <- Body.check context (shiftLogical typex) body
+  body <- Body.check context (Type.Substitute.shift typex) body
   pure $ RightHandSide body declarations
 
 solve :: RightHandSide s scope -> Unify.Solve s (Solved.RightHandSide Group Check scope)

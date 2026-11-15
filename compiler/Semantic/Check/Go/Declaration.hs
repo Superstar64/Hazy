@@ -1,9 +1,9 @@
 module Semantic.Check.Go.Declaration where
 
 import Control.Monad.ST (ST)
-import Core.Substitute (logicalType)
 import qualified Core.Tree.Forall as Forall
 import Core.Tree.Type (TypeF)
+import qualified Core.Type.Substitute as Type.Substitute
 import Data.Functor.Identity (Identity (..))
 import qualified Data.Vector.Strict as Strict.Vector
 import Data.Void (Void)
@@ -56,7 +56,7 @@ check link solve reflection information Declaration {position, name, definition}
                in case definition of
                     Annotated annotation ::: _ -> do
                       scheme <- annotation
-                      pure $ Solved (logicalType $ Forall.simplify scheme)
+                      pure $ Solved (Type.Substitute.logical $ Forall.simplify scheme)
                     Link link id -> do
                       let Declaration {definition} = reflection declarations link
                       case definition of

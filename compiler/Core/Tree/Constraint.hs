@@ -3,7 +3,7 @@ module Core.Tree.Constraint where
 import qualified Core.Substitute as Substitute
 import Core.Tree.Type (Type, TypeF (Variable), (#))
 import qualified Core.Tree.Type as Type
-import qualified Core.Type.Functor as Core
+import qualified Core.Type.Substitute as Type.Substitute
 import qualified Data.Vector.Strict as Strict
 import Data.Void (Void)
 import qualified Semantic.Index.Local as Local
@@ -35,22 +35,14 @@ instance Shift.Functor (ConstraintF logical) where
       }
 
 instance (logical ~ Void) => Substitute.Functor (ConstraintF logical) where
-  map category = Substitute.mapType (Substitute.anyEvidence $ Substitute.anyTerm category)
+  map = Type.Substitute.mapDefault
 
-instance Substitute.TypeFunctor ConstraintF where
-  mapType category Constraint {classx, head, arguments} =
+instance Type.Substitute.Functor ConstraintF where
+  map category Constraint {classx, head, arguments} =
     Constraint
-      { classx = Shift.map (Substitute.general category) classx,
+      { classx = Shift.map (Substitute.general $ Type.Substitute.category $ category) classx,
         head,
-        arguments = Substitute.mapType (Substitute.Over category) <$> arguments
-      }
-
-instance Core.Functor ConstraintF where
-  map f Constraint {classx, head, arguments} =
-    Constraint
-      { classx,
-        head,
-        arguments = Core.map f <$> arguments
+        arguments = Type.Substitute.map (Type.Substitute.over category) <$> arguments
       }
 
 argument :: Constraint scope -> Type (Local ':+ scope)

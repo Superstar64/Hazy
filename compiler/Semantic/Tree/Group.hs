@@ -2,7 +2,6 @@ module Semantic.Tree.Group where
 
 import Core.Tree.Forall (ForallOver (..))
 import qualified Core.Tree.Type as Simple (TypeF)
-import qualified Core.Type.Functor as Core (Functor (..))
 import qualified Core.Type.Show as Core (Show (..))
 import Data.Functor.Classes (Show1, showsPrec1)
 import Data.Kind (Type)
@@ -62,9 +61,6 @@ instance Shift.Functor (Types logical) where
 
 instance Unify.Zonk Types where
   zonk zonker category (Types types) = Types <$> traverse (Unify.zonk zonker category) types
-
-instance Core.Functor Types where
-  map f (Types types) = Types $ Core.map f <$> types
 
 instance Unify.Generalizable Types where
   collect collector (Types types) = foldMap (Unify.collect collector) types

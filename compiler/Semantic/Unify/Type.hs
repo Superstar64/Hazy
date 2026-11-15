@@ -1,9 +1,9 @@
 module Semantic.Unify.Type where
 
 import Control.Monad.ST (ST)
-import Core.Substitute (logicalType)
 import Core.Tree.Type (TypeF (..))
 import qualified Core.Tree.Type as Simple (Type)
+import qualified Core.Type.Substitute as Type.Substitute
 import Data.Foldable (for_, traverse_)
 import Data.Map (Map)
 import qualified Data.Map as Map
@@ -196,7 +196,7 @@ typeCheck context_ position = typeCheckWith context_
             typeCheckWith (Shift0.unshift context) kind (Logical logical)
           Variable index -> case localEnvironment Local.Table.! index of
             Local.Rigid {rigid} -> do
-              unify context position kind (logicalType rigid)
+              unify context position kind (Type.Substitute.logical rigid)
             Local.Wobbly {wobbly} -> do
               unify context position kind wobbly
           Constructor constructor -> do

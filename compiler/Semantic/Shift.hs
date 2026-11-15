@@ -1,5 +1,6 @@
 module Semantic.Shift
   ( Category (..),
+    lift,
     Functor (..),
     mapInstances,
     TermFunctor (..),
@@ -88,6 +89,12 @@ data Category scope scope' where
   Builtin :: !(Type2.Index scope) -> Category Scope.Global scope
 
 infixr 9 :.
+
+lift :: Shift0.Category scope scope' -> Category scope scope'
+lift = \case
+  Shift0.Id -> Id
+  Shift0.Shift -> Shift
+  after Shift0.:. before -> lift after :. lift before
 
 generalReplaceWildcard = Unshift (error "bad unshift") :. Over Shift
 
@@ -279,12 +286,6 @@ mapInstances category = Map.mapKeysMonotonic (map category)
 
 mapDefault :: (Functor f) => Shift0.Category scope scope' -> f scope -> f scope'
 mapDefault category = map (lift category)
-  where
-    lift :: Shift0.Category scope scope' -> Category scope scope'
-    lift = \case
-      Shift0.Id -> Id
-      Shift0.Shift -> Shift
-      after Shift0.:. before -> lift after :. lift before
 
 type TermFunctor :: (Layout -> Stage -> Environment -> Type) -> Constraint
 class (Shift0.TermFunctor term) => TermFunctor term where

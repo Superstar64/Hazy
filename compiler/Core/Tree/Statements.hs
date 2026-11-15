@@ -80,7 +80,7 @@ instance Substitute.Functor Statements where
         }
     Bind {constructor, entryCount, check, thenx} ->
       Bind
-        { constructor = Substitute.map category constructor,
+        { constructor = Shift.map (Substitute.general category) constructor,
           entryCount,
           check = Substitute.map category check,
           thenx = Substitute.map (Substitute.Over category) thenx

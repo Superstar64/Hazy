@@ -2,7 +2,7 @@
 
 module Core.Tree.Instanciation where
 
-import qualified Core.Evidence.Functor as Core
+import qualified Core.Evidence.Substitute as Evidence.Substitute
 import qualified Core.Substitute as Substitute
 import {-# SOURCE #-} Core.Tree.Evidence (EvidenceF)
 import Core.Tree.Type (TypeF)
@@ -25,6 +25,4 @@ instance Shift.Functor (InstanciationF logicalEvidence logicalType)
 
 instance (logicalEvidence ~ Void, logicalType ~ Void) => Substitute.Functor (InstanciationF logicalEvidence logicalType)
 
-instance Substitute.EvidenceFunctor InstanciationF
-
-instance Core.Functor InstanciationF
+instance Evidence.Substitute.Functor InstanciationF

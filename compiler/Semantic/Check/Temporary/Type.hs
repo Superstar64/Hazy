@@ -3,9 +3,9 @@
 module Semantic.Check.Temporary.Type where
 
 import Control.Monad.ST (ST)
-import Core.Substitute (logicalType)
 import Core.Tree.Type ((-#>))
 import qualified Core.Tree.Type as Core
+import qualified Core.Type.Substitute as Type.Substitute
 import qualified Data.Strict.Vector1 as Strict (Vector1)
 import qualified Data.Strict.Vector2 as Strict (Vector2)
 import Error (partialSynonym, uncheckable, universeMustBeSmall, unsupportedFeatureStrictFunctions)
@@ -91,7 +91,7 @@ check ::
 check context@Context {localEnvironment} kind = \case
   Semantic.Variable {startPosition, variable} -> case localEnvironment Local.Table.! variable of
     LocalBinding.Rigid {rigid}
-      | rigid <- logicalType rigid -> do
+      | rigid <- Type.Substitute.logical rigid -> do
           Unify.unify context startPosition kind rigid
           pure $ Variable {startPosition, variable}
     LocalBinding.Wobbly {wobbly} -> do

@@ -4,7 +4,7 @@ import Control.Monad.ST (ST)
 import Core.Tree.Type ((-#>))
 import qualified Core.Tree.Type as Core
 import qualified Core.Tree.Type as Type
-import Core.Type.Functor (shiftLogical)
+import qualified Core.Type.Substitute as Type.Substitute
 import Semantic.Check.Context (Context)
 import Semantic.Check.Temporary.Pattern (Pattern)
 import qualified Semantic.Check.Temporary.Pattern as Pattern
@@ -36,7 +36,7 @@ check context typex = \case
     Unify.unify context functionPosition typex (argument -#> result)
     pattern1 <- Pattern.check context Type.lazy argument patternx
     context <- pure $ Pattern.augment pattern1 context
-    function1 <- check context (shiftLogical result) function
+    function1 <- check context (Type.Substitute.shift result) function
     pure Bound {functionPosition, patternx = pattern1, function = function1}
 
 solve :: Function s scope -> Unify.Solve s (Solved.Function Group Check scope)

@@ -2,13 +2,13 @@ module Semantic.Check.Instanciate.Data where
 
 import Control.Monad.ST (ST)
 import Core.Instanciate (Instanciated, Store (..))
-import Core.Substitute (logicalType)
 import Core.Tree.Constructor (ConstructorF (..))
 import Core.Tree.Data (Data (..), DefinitionF (..), TypesInfo (..))
 import Core.Tree.Entry (EntryF (..))
 import qualified Core.Tree.Entry as Entry
 import Core.Tree.Type ((#), (-#>))
 import qualified Core.Tree.Type as Core
+import qualified Core.Type.Substitute as Type.Substitute
 import Data.Foldable (toList, traverse_)
 import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import qualified Data.Vector.Strict as Strict.Vector
@@ -48,7 +48,7 @@ instanciate
     { parameters,
       definition = Definition {constructors, selectors, brand}
     } = do
-    types <- traverse (Unify.fresh . logicalType) parameters
+    types <- traverse (Unify.fresh . Type.Substitute.logical) parameters
     let datax =
           Definition
             { position = Store position,

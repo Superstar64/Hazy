@@ -10,7 +10,7 @@ import Core.Tree.Type ((#))
 import qualified Core.Tree.Type as Core (char, constructor, list, typex)
 import qualified Core.Tree.Type as Type (lazy)
 import Core.Tree.TypeDeclaration (assumeData)
-import Core.Type.Functor (shiftLogical)
+import qualified Core.Type.Substitute as Type.Substitute
 import Data.Map (Map)
 import qualified Data.Strict.Vector1 as Strict (Vector1)
 import qualified Data.Vector.Strict as Strict (Vector)
@@ -130,7 +130,7 @@ augmentPattern lazy patternx = Term.Bound {at, select}
     visible
       | lazy = Type.lazy
       | otherwise = levity patternx
-    at = TermBinding $ pure $ Wobbly (shiftLogical (Core.mono visible $ typex patternx))
+    at = TermBinding $ pure $ Wobbly $ Type.Substitute.shift $ Core.mono visible $ typex patternx
     select = case patternx of
       Wildcard {} -> Strict.Vector.empty
       Match {match, irrefutable}

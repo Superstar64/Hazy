@@ -4,7 +4,7 @@ import Control.Monad.ST (ST)
 import Core.Tree.Type ((#), (-#>))
 import qualified Core.Tree.Type as Core
 import qualified Core.Tree.Type as Type
-import Core.Type.Functor (shiftLogical)
+import qualified Core.Type.Substitute as Type.Substitute
 import Semantic.Check.Context (Context)
 import qualified Semantic.Check.Go.Declarations as Declarations
 import {-# SOURCE #-} Semantic.Check.Temporary.Expression (Expression)
@@ -79,11 +79,11 @@ check context typex = \case
     Unify.unify context startPosition (monad # output) typex
     patternx <- Pattern.check context Type.lazy input patternx
     effect <- Expression.check context (monad # input) effect
-    thenx <- check (Pattern.augment patternx context) (shiftLogical $ monad # output) thenx
+    thenx <- check (Pattern.augment patternx context) (Type.Substitute.shift $ monad # output) thenx
     pure Bind {startPosition, patternx, evidence, effect, thenx, fail = not neverFail}
   Semantic.Let {startPosition, declarations, body} -> do
     context Declarations.:& declarations <- Declarations.check context declarations
-    body <- check context (shiftLogical typex) body
+    body <- check context (Type.Substitute.shift typex) body
     pure Let {startPosition, declarations, body}
 
 solve :: Do s scope -> Unify.Solve s (Solved.Statements Solved.Do Group Check scope)

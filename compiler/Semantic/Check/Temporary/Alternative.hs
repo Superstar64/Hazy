@@ -2,7 +2,7 @@ module Semantic.Check.Temporary.Alternative where
 
 import Control.Monad.ST (ST)
 import qualified Core.Tree.Type as Core.Type
-import Core.Type.Functor (shiftLogical)
+import qualified Core.Type.Substitute as Type.Substitute
 import Semantic.Check.Context (Context)
 import Semantic.Check.Temporary.Pattern (Pattern)
 import qualified Semantic.Check.Temporary.Pattern as Pattern
@@ -30,7 +30,11 @@ check ::
   ST s (Alternative s scope)
 check context typex binder Semantic.Alternative {parameter, rightHandSide} = do
   parameter <- Pattern.check context Core.Type.lazy binder parameter
-  rightHandSide <- RightHandSide.check (Pattern.augment parameter context) (shiftLogical typex) rightHandSide
+  rightHandSide <-
+    RightHandSide.check
+      (Pattern.augment parameter context)
+      (Type.Substitute.shift typex)
+      rightHandSide
   pure Alternative {parameter, rightHandSide}
 
 solve :: Alternative s scope -> Unify.Solve s (Solved.Alternative Group Check scope)

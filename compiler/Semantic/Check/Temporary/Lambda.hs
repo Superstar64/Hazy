@@ -4,7 +4,7 @@ import Control.Monad.ST (ST)
 import Core.Tree.Type ((-#>))
 import qualified Core.Tree.Type as Core
 import qualified Core.Tree.Type as Type
-import Core.Type.Functor (shiftLogical)
+import qualified Core.Type.Substitute as Type.Substitute
 import Semantic.Check.Context (Context)
 import {-# SOURCE #-} Semantic.Check.Temporary.Expression (Expression)
 import {-# SOURCE #-} qualified Semantic.Check.Temporary.Expression as Expression
@@ -38,7 +38,7 @@ check context typex = \case
     parameterType <- Unify.fresh Core.typex
     parameter <- Pattern.check context Type.lazy parameterType parameter
     resultType <- Unify.fresh Core.typex
-    body <- check (Pattern.augment parameter context) (shiftLogical resultType) body
+    body <- check (Pattern.augment parameter context) (Type.Substitute.shift resultType) body
     Unify.unify context boundPosition typex (parameterType -#> resultType)
     pure Bound {boundPosition, parameter, body}
 

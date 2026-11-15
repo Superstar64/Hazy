@@ -2,9 +2,9 @@ module Semantic.Check.Context where
 
 import Control.Monad.ST (ST)
 import qualified Core.Builtin as Builtin
-import Core.Substitute (logicalType)
 import qualified Core.Tree.Type as Core
 import Core.Tree.TypeDeclaration (assumeData)
+import qualified Core.Type.Substitute as Type.Substitute
 import qualified Data.Kind
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
@@ -166,7 +166,7 @@ lookupKind position context@Context {typeEnvironment} index = do
           TypeBinding {kind} -> do
             kind <- kind
             case kind of
-              TypeBinding.Rigid kind -> pure $ logicalType kind
+              TypeBinding.Rigid kind -> pure $ Type.Substitute.logical kind
               TypeBinding.Wobbly wobbly -> pure wobbly
       indexLift constructor@Constructor.Index {typeIndex} = do
         datax <- do
@@ -174,4 +174,4 @@ lookupKind position context@Context {typeEnvironment} index = do
           datax <- Builtin.index pure get typeIndex
           DataInstance.instanciateMark context position datax
         pure $ DataInstance.constructorFunction datax constructor
-  Builtin.kind (pure . logicalType) indexType indexLift index
+  Builtin.kind (pure . Type.Substitute.logical) indexType indexLift index

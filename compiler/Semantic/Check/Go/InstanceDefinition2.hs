@@ -2,7 +2,7 @@ module Semantic.Check.Go.InstanceDefinition2 where
 
 import Control.Monad.ST (ST)
 import qualified Core.Builtin as Builtin
-import Core.Substitute (Category (SubstituteLocal), logicalType)
+import Core.Substitute (Category (SubstituteLocal))
 import qualified Core.Substitute as Substitute
 import qualified Core.Tree.Class as Core.Class
 import Core.Tree.ClassExtra (ClassExtra (..))
@@ -21,7 +21,8 @@ import qualified Core.Tree.Type as Core.Type
 import Core.Tree.TypeDeclaration (assumeClass, assumeData)
 import qualified Core.Tree.TypeDeclarationExtra as Extra
 import qualified Core.Tree.TypeLambda as Core (TypeLambdaOver (..))
-import Core.Type.Functor (shiftLogical)
+import qualified Core.Type.Substitute as Substitute.Type
+import qualified Core.Type.Substitute as Type.Substitute
 import Data.Foldable (toList)
 import Data.Functor.Identity (Identity (..))
 import Data.Traversable (for)
@@ -120,7 +121,7 @@ checkHeader position key information Header {parameters, prerequisites} =
         headKind <- Context.lookupKind position context (shift $ keyHead key)
         universe <- Unify.fresh Core.universe
         target <- Unify.fresh (Core.typeWith universe)
-        let types = [shiftLogical typex | Unsolved.TypePattern {typex} <- toList parameters]
+        let types = [Substitute.Type.shift typex | Unsolved.TypePattern {typex} <- toList parameters]
             headKind' = foldr (-#>) target types
         Unify.unify context position headKind' headKind
         Unify.unify context position (target -#> Core.Type.Constraint) indexKind
@@ -158,7 +159,7 @@ checkMethod ::
   ST s (Unify.Solve s (MethodConcrete origin Group Check scope))
 checkMethod Method {position, context} Manual _ scheme (Definition (Resolve member)) = do
   let Core.ForallOver {parameters, constraints, result} = scheme
-  result <- pure $ logicalType result
+  result <- pure $ Substitute.Type.logical result
   context <- Core.Scheme.augmentForall position scheme Mask.Runtime context
   definition <- Definition.check context result member
   pure $ do
@@ -295,18 +296,19 @@ checkBody position key Solve {solve} reflection information lookup members =
         methods <-
           pure $
             let replacements = Substitute.Types $ Strict.Vector.singleton base
-                category = Substitute.Over $ SubstituteLocal Shift.Shift replacements Singleton
+                precategory = SubstituteLocal Shift.Shift replacements Singleton
+                category = Type.Substitute.lift $ Substitute.Over precategory
                 substitute Core.ForallOver {parameters, constraints, result} =
                   Core.ForallOver
                     { parameters,
                       constraints,
-                      result = Substitute.mapType category result
+                      result = Type.Substitute.map category result
                     }
              in substitute <$> methods
         evidence <- for constraints $
           \Core.Constraint {classx, arguments} -> do
             let parameter = foldl (#) base arguments
-            evidence <- Unify.constrain context position (shift classx) (logicalType parameter)
+            evidence <- Unify.constrain context position (shift classx) (Substitute.Type.logical parameter)
             Unify.runSolve $ Unify.solveEvidence position evidence
         let arguments =
               Method

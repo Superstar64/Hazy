@@ -2,7 +2,6 @@ module Semantic.Unify.Generalizable where
 
 import Control.Monad.ST (ST)
 import Core.Tree.Type (TypeF)
-import qualified Core.Type.Functor as Core
 import Data.STRef (STRef)
 import Semantic.Check.Mask (Mask)
 import Semantic.Scope (Environment (..))
@@ -23,5 +22,5 @@ data Collector s s' where
 
 instance Generalizable TypeF
 
-class (Zonk typef, Core.Functor typef) => Generalizable typef where
+class (Zonk typef) => Generalizable typef where
   collect :: Collector s s' -> typef (Logical s scopes) scopes -> ST s [Collected s' scopes]

@@ -1,11 +1,10 @@
 module Semantic.Check.Go.Synonym where
 
 import Control.Monad.ST (ST)
-import Core.Substitute (logicalType)
 import Core.Tree.Type ((-#>))
 import qualified Core.Tree.Type as Core
 import qualified Core.Tree.Type as Core.Type
-import Core.Type.Functor (shiftLogical)
+import qualified Core.Type.Substitute as Substitute.Type
 import qualified Data.Strict.Maybe as Strict
 import Error (Position)
 import Semantic.Check.Context (Context)
@@ -27,7 +26,7 @@ check context position (annotation ::: SynonymBody {parameters, synonym}) = do
     Strict.Just annotation -> do
       kind' <- Type.check context (Core.typeWith universe) annotation
       kind' <- Unify.runSolve $ Type.solve context kind'
-      kindx <- pure $ logicalType $ Core.Type.simplify kind'
+      kindx <- pure $ Substitute.Type.logical $ Core.Type.simplify kind'
       Unify.unify context position kind kindx
       pure $ Strict.Just kind'
   let fresh TypePattern {name, position} = do
@@ -44,7 +43,7 @@ check context position (annotation ::: SynonymBody {parameters, synonym}) = do
   kind' <- pure $ foldr ((-#>) . Unsolved.typex) target parameters
   Unify.unify context position kind kind'
   context <- pure $ Unsolved.augment parameters context
-  synonym <- Type.check context (shiftLogical target) synonym
+  synonym <- Type.check context (Substitute.Type.shift target) synonym
   parameters <- Unify.runSolve $ traverse Unsolved.solve parameters
   synonym <- Unify.runSolve $ Type.solve context synonym
   kind <- Unify.runSolve $ Unify.solve position kind

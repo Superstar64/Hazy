@@ -38,7 +38,7 @@ executable hazy
     Builtin.Show
     Builtin.Tuple
     Core.Builtin
-    Core.Evidence.Functor
+    Core.Evidence.Substitute
     Core.Index.Table.Term
     Core.Instanciate
     Core.Substitute
@@ -68,8 +68,8 @@ executable hazy
     Core.Tree.TypeDeclarationExtra
     Core.Tree.TypeDefinition
     Core.Tree.TypeLambda
-    Core.Type.Functor
     Core.Type.Show
+    Core.Type.Substitute
     Data.Functor2
     Data.List.Reverse
     Data.NaturalTransformation

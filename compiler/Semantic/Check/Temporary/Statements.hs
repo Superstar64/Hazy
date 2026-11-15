@@ -3,7 +3,7 @@ module Semantic.Check.Temporary.Statements where
 import Control.Monad.ST (ST)
 import qualified Core.Tree.Type as Core
 import qualified Core.Tree.Type as Type
-import Core.Type.Functor (shiftLogical)
+import qualified Core.Type.Substitute as Type.Substitute
 import Semantic.Check.Context (Context)
 import qualified Semantic.Check.Go.Declarations as Declarations
 import {-# SOURCE #-} Semantic.Check.Temporary.Expression (Expression)
@@ -61,11 +61,11 @@ check context typex = \case
     binder <- Unify.fresh Core.typex
     patternx <- Pattern.check context Type.lazy binder patternx
     effect <- Expression.check context binder effect
-    thenx <- check (Pattern.augment patternx context) (shiftLogical typex) thenx
+    thenx <- check (Pattern.augment patternx context) (Type.Substitute.shift typex) thenx
     pure Bind {startPosition, patternx, effect, thenx, fail}
   Semantic.Let {startPosition, declarations, body} -> do
     context Declarations.:& declarations <- Declarations.check context declarations
-    body <- check context (shiftLogical typex) body
+    body <- check context (Type.Substitute.shift typex) body
     pure Let {startPosition, declarations, body}
 
 solve :: Statements s scope -> Unify.Solve s (Solved.Statements Solved.Guard Group Check scope)

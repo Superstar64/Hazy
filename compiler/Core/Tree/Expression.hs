@@ -139,23 +139,23 @@ instance Substitute.Functor Expression where
           _ -> error "instanciation must be strict when substiting term"
       | otherwise ->
           Variable
-            { variable = Substitute.map category variable,
+            { variable = Shift.map (Substitute.general category) variable,
               instanciation = Substitute.map category instanciation
             }
     Selector {selector, argument, instanciation} ->
       Selector
-        { selector = Substitute.map category selector,
+        { selector = Shift.map (Substitute.general category) selector,
           argument = Substitute.map category argument,
           instanciation = Substitute.map category instanciation
         }
     Constructor {constructor, arguments} ->
       Constructor
-        { constructor = Substitute.map category constructor,
+        { constructor = Shift.map (Substitute.general category) constructor,
           arguments = Substitute.map category <$> arguments
         }
     Method {method, evidence, instanciation, constraintCount} ->
       Method
-        { method = Substitute.map category method,
+        { method = Shift.map (Substitute.general category) method,
           evidence = Substitute.map category evidence,
           instanciation = Substitute.map category instanciation,
           constraintCount
@@ -188,7 +188,7 @@ instance Substitute.Functor Expression where
         }
     Newtype {constructor, argument, direction} ->
       Newtype
-        { constructor = Substitute.map category constructor,
+        { constructor = Shift.map (Substitute.general category) constructor,
           argument = Substitute.map category argument,
           direction
         }

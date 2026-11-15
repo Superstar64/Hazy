@@ -6,8 +6,7 @@ module Semantic.Unify.Type1 where
 
 import Control.Monad (zipWithM_)
 import Control.Monad.ST (ST)
-import Core.Evidence.Functor (shiftLogical)
-import Core.Substitute (logicalEvidence, logicalType, substituteType)
+import qualified Core.Evidence.Substitute as Evidence.Substitute
 import qualified Core.Tree.Constraint as Simple (argument)
 import qualified Core.Tree.Constraint as Simple.Constraint
 import Core.Tree.Constraints (ConstraintsF (..))
@@ -15,6 +14,8 @@ import qualified Core.Tree.Evidence as Evidence (EvidenceF (..))
 import Core.Tree.Instanciation (InstanciationF (Instanciation))
 import qualified Core.Tree.Instanciation as Instanciation (InstanciationF (..))
 import Core.Tree.Type (TypeF (..), (#))
+import qualified Core.Type.Substitute as Substitute.Type
+import qualified Core.Type.Substitute as Type.Substitute
 import Data.Foldable (toList, traverse_)
 import qualified Data.Map as Map
 import Data.STRef (newSTRef, readSTRef, writeSTRef)
@@ -97,14 +98,15 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
       arguments <- traverse (unshift context position) arguments
       let quit = abort position $ Unshift context (Constructor classx)
       classx <- Type2.partialUnshift quit classx
-      shiftLogical <$> constrainWith (Shift0.unshift context) classx (Logical logical) arguments
+      constraint <- constrainWith (Shift0.unshift context) classx (Logical logical) arguments
+      pure $ Evidence.Substitute.shift Shift0.Shift constraint
     constrainWith context@Context {localEnvironment} classx (Variable index) arguments
       | Local.Rigid {constraints} <- localEnvironment Local.Table.! index,
         Just Local.Constraint {arguments = arguments', evidence} <- Map.lookup classx constraints,
-        arguments' <- [logicalType argument | argument <- toList arguments'],
+        arguments' <- [Type.Substitute.logical argument | argument <- toList arguments'],
         length arguments' == length arguments = do
           traverse_ (uncurry $ unify context position) (zip arguments arguments')
-          pure (logicalEvidence evidence)
+          pure (Evidence.Substitute.logical evidence)
     constrainWith context@Context {typeEnvironment} (Type2.Index classx) (Constructor index) arguments
       | TypeBinding {classInstances} <- typeEnvironment Type.Table.! classx,
         Just instancex <- Map.lookup index classInstances = do
@@ -112,11 +114,14 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
           case dependencies of
             Constraints dependencies -> do
               arguments <- for dependencies $ \constraint@Simple.Constraint.Constraint {classx} ->
-                let argument = substituteType (Strict.Vector.fromList arguments) (Simple.argument constraint)
+                let argument =
+                      Substitute.Type.substitute
+                        (Strict.Vector.fromList arguments)
+                        (Simple.argument constraint)
                  in constrain context position classx argument
               pure $ Evidence.Variable variable (Instanciation arguments)
             Value {levity} ->
-              pure $ Evidence.Variable variable Instanciation.Mono {levity = logicalType levity}
+              pure $ Evidence.Variable variable Instanciation.Mono {levity = Substitute.Type.logical levity}
       where
         variable = Evidence.Direct (Type2.Index classx) index
     constrainWith context@Context {typeEnvironment} classx (Constructor (Type2.Index index)) arguments
@@ -126,11 +131,14 @@ constrainWith context_ position classx_ term_ arguments_ = constrainWith context
           case dependencies of
             Constraints dependencies -> do
               arguments <- for dependencies $ \constraint@Simple.Constraint.Constraint {classx} ->
-                let argument = substituteType (Strict.Vector.fromList arguments) (Simple.argument constraint)
+                let argument =
+                      Substitute.Type.substitute
+                        (Strict.Vector.fromList arguments)
+                        (Simple.argument constraint)
                  in constrain context position classx argument
               pure $ Evidence.Variable variable (Instanciation arguments)
             Value {levity} ->
-              pure $ Evidence.Variable variable Instanciation.Mono {levity = logicalType levity}
+              pure $ Evidence.Variable variable Instanciation.Mono {levity = Substitute.Type.logical levity}
       where
         variable = Evidence.Direct classx (Type2.Index index)
     constrainWith context classx (Call function argument) arguments =

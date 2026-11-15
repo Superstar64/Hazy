@@ -2,9 +2,9 @@ module Semantic.Check.Instanciate.Class where
 
 import Control.Monad.ST (ST)
 import Core.Instanciate (Instanciated)
-import Core.Substitute (logicalType, substituteType)
 import Core.Tree.Class (Class (..), DefinitionF (..), EvidenceInfo (..), TypeInfo (..))
 import qualified Core.Tree.Class as Class
+import qualified Core.Type.Substitute as Type.Substitute
 import qualified Data.Vector.Strict as Strict.Vector
 import Semantic.Check.Context (Context)
 import qualified Semantic.Index.Type2 as Type2
@@ -30,10 +30,10 @@ instanciate
   position
   index
   Class {parameter, constraints, definition = Definition {methods}} = do
-    typex <- Unify.fresh (logicalType parameter)
+    typex <- Unify.fresh (Type.Substitute.logical parameter)
     evidence <- Unify.constrain context position index typex
     let types = Strict.Vector.singleton typex
-    methods <- pure $ substituteType types <$> methods
+    methods <- pure $ Type.Substitute.substitute types <$> methods
     pure
       Class.Definition
         { typex = TypeInfo typex,

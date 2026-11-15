@@ -1,7 +1,6 @@
 module Core.Tree.Evidence (Evidence, EvidenceF (..)) where
 
-import qualified Core.Evidence.Functor as Core
-import Core.Substitute (Category (..))
+import qualified Core.Evidence.Substitute as Evidence.Substitute
 import qualified Core.Substitute as Substitute
 import {-# SOURCE #-} Core.Tree.Instanciation (InstanciationF)
 import {-# SOURCE #-} qualified Core.Tree.Instanciation as Instanciation
@@ -55,38 +54,25 @@ instance
   (logicalEvidence ~ Void, logicalType ~ Void) =>
   Substitute.Functor (EvidenceF logicalEvidence logicalType)
   where
-  map category = Substitute.mapEvidence $ Substitute.anyTerm category
+  map = Evidence.Substitute.mapDefault
 
-instance Substitute.EvidenceFunctor EvidenceF where
-  mapEvidence category = \case
+instance Evidence.Substitute.Functor EvidenceF where
+  map category = \case
+    Logical logical -> Logical (Evidence.Substitute.mapEvidence category logical)
     Variable {variable, instanciation}
       | Evidence.Index variable <- variable,
-        Strict.Just evidence <- Substitute.lookupEvidence category variable -> case instanciation of
-          Instanciation.Mono {levity = Type.Constructor Type2.Strict} -> evidence
-          _ -> error "instanciation must be strict when substiting evidence"
+        Strict.Just evidence <-
+          Substitute.lookupEvidence (Evidence.Substitute.category category) variable ->
+          case instanciation of
+            Instanciation.Mono {levity = Type.Constructor Type2.Strict} -> evidence
+            _ -> error "instanciation must be strict when substiting evidence"
       | otherwise ->
           Variable
-            { variable = Shift.map general variable,
-              instanciation = Substitute.mapEvidence (Lift general) instanciation
+            { variable = Shift.map (Evidence.Substitute.general category) variable,
+              instanciation = Evidence.Substitute.map category instanciation
             }
-      where
-        general = Substitute.general category
     Super {base, index} ->
       Super
-        { base = Substitute.mapEvidence category base,
-          index
-        }
-
-instance Core.Functor EvidenceF where
-  map f g = \case
-    Logical logical -> Logical (f logical)
-    Variable {variable, instanciation} ->
-      Variable
-        { variable,
-          instanciation = Core.map f g instanciation
-        }
-    Super {base, index} ->
-      Super
-        { base = Core.map f g base,
+        { base = Evidence.Substitute.map category base,
           index
         }

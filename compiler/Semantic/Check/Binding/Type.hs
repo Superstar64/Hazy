@@ -8,8 +8,7 @@ import qualified Core.Tree.TypeDeclaration as Core.TypeDeclaration
 import qualified Core.Tree.TypeDeclaration as Simple (TypeDeclaration)
 import qualified Core.Tree.TypeDeclarationExtra as Core.TypeDeclarationExtra
 import {-# SOURCE #-} qualified Core.Tree.TypeDeclarationExtra as Simple (TypeDeclarationExtra)
-import Core.Type.Functor (shiftLogical)
-import qualified Core.Type.Functor as Core
+import qualified Core.Type.Substitute as Type.Substitute
 import Data.Functor.Compose (Compose (..))
 import Data.Functor.Identity (Identity (..))
 import qualified Data.Kind
@@ -48,7 +47,7 @@ data Kind s scope
 
 instance Shift0.Functor (Kind s) where
   map category = \case
-    Wobbly typex -> Wobbly (Core.mapLogical category typex)
+    Wobbly typex -> Wobbly (Type.Substitute.shiftWith category typex)
     Rigid typex -> Rigid (Shift0.map category typex)
 
 type TypeBinding :: Data.Kind.Type -> Environment -> Data.Kind.Type
@@ -182,7 +181,7 @@ group :: Position -> Label.TypeBinding scope -> Unify.Type s scopes -> TypeBindi
 group position Label.TypeBinding {name, constructorNames} binding =
   TypeBinding
     { label = Label.TypeBinding {name, constructorNames},
-      kind = pure $ Wobbly $ shiftLogical binding,
+      kind = pure $ Wobbly $ Type.Substitute.shift binding,
       content = abort,
       extra = abort,
       synonym = pure Type.NoSynonym,

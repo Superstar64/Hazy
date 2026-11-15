@@ -4,7 +4,7 @@ import Control.Monad.ST (ST)
 import qualified Core.Tree.Forall as Core (mono)
 import qualified Core.Tree.Forall as Simple (Forall)
 import qualified Core.Tree.Type as Type
-import qualified Core.Type.Functor as Core (mapLogical, shiftLogical)
+import qualified Core.Type.Substitute as Type.Substitute
 import Data.Void (Void)
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Scope (Environment (..), GroupTerm)
@@ -23,7 +23,7 @@ newtype TermBinding s scope = TermBinding
 
 instance Shift0.Functor (Type s) where
   map category = \case
-    Wobbly typex -> Wobbly (Core.mapLogical category typex)
+    Wobbly typex -> Wobbly (Type.Substitute.shiftWith category typex)
     Rigid typex -> Rigid (Shift0.map category typex)
 
 instance Shift0.Functor (TermBinding s) where
@@ -42,6 +42,6 @@ local Declaration {typex} = TermBinding $ do
     Solved typex -> typex
 
 group :: Unify.Type s scopes -> TermBinding s (GroupTerm ':+ scopes)
-group = TermBinding . pure . Wobbly . Core.mono lazy . Core.shiftLogical
+group = TermBinding . pure . Wobbly . Core.mono lazy . Type.Substitute.shift
   where
     lazy = Type.Constructor Type2.Lazy

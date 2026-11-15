@@ -1,9 +1,9 @@
 module Semantic.Check.Temporary.Constraint where
 
 import Control.Monad.ST (ST)
-import Core.Substitute (logicalType)
 import Core.Tree.Type ((-#>))
 import qualified Core.Tree.Type as Core
+import qualified Core.Type.Substitute as Type.Substitute
 import Data.Foldable (toList)
 import Data.List.Reverse (List (Nil, (:>)))
 import qualified Data.List.Reverse as Reverse
@@ -63,7 +63,7 @@ check
             Unify.unify context startPosition kind wobbly
             pure Nil
           LocalBinding.Rigid {rigid} -> do
-            Unify.unify context startPosition kind (logicalType rigid)
+            Unify.unify context startPosition kind (Type.Substitute.logical rigid)
             pure Nil
 
     arguments <- Strict.Vector.fromList . toList <$> check context target (Reverse.fromList $ toList arguments)

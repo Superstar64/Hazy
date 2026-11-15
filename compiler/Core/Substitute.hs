@@ -8,17 +8,13 @@ import qualified Data.Strict.Maybe as Strict (Maybe (..))
 import qualified Data.Vector.Strict as Strict (Vector)
 import qualified Data.Vector.Strict as Strict.Vector
 import Data.Void (Void)
-import qualified Semantic.Index.Constructor as Constructor
 import qualified Semantic.Index.Evidence0 as Evidence0
 import qualified Semantic.Index.Local as Local
-import qualified Semantic.Index.Method as Method
-import qualified Semantic.Index.Selector as Selector
 import qualified Semantic.Index.Term as Term
 import qualified Semantic.Index.Type2 as Type2
 import Semantic.Scope (Environment (..), Local, SimpleDeclaration, Singleton (Singleton))
 import Semantic.Shift (shift)
 import qualified Semantic.Shift as Shift
-import qualified Semantic.Shift0 as Shift0
 import Prelude hiding (Functor, map)
 
 newtype Types logical scope = Types (Strict.Vector (TypeF logical scope))
@@ -101,73 +97,17 @@ lookupEvidence (SubstituteLocal _ _ (Evidences evidences)) (Evidence0.Assumed in
 lookupEvidence (Over substitute) (Evidence0.Shift index) = shift <$> lookupEvidence substitute index
 lookupEvidence _ _ = Strict.Nothing
 
-class (Shift.Functor typex) => Functor typex where
-  map ::
-    Category Expression (Types Void) (Evidences Void Void) scope1 scope2 ->
-    typex scope1 ->
-    typex scope2
-
-instance Functor Type2.Index where
-  map = Shift.map . general
-
-instance Functor Constructor.Index where
-  map = Shift.map . general
-
-instance Functor Selector.Index where
-  map = Shift.map . general
-
-instance Functor Method.Index where
-  map = Shift.map . general
-
-instance Functor Term.Index where
-  map = Shift.map . general
-
-class TypeFunctor typef where
-  mapType ::
-    Category Singleton (Types logical) Singleton scope1 scope2 ->
-    typef Void scope1 ->
-    typef logical scope2
-
-substituteType ::
-  (TypeFunctor typef) =>
-  Strict.Vector (TypeF logical scope2) ->
-  typef Void (Local ':+ scope2) ->
-  typef logical scope2
-substituteType substitution typex = mapType substitute typex
-  where
-    substitute = SubstituteLocal Shift.Id (Types substitution) Singleton
-
-logicalType ::
-  (TypeFunctor typef, Shift0.Functor (typef Void)) =>
-  typef Void scope2 -> typef logical scope2
-logicalType = substituteType Strict.Vector.empty . shift
-
-class EvidenceFunctor evidencef where
-  mapEvidence ::
-    Category Singleton (Types logicalType) (Evidences logicalEvidence logicalType) scope1 scope2 ->
-    evidencef Void Void scope1 ->
-    evidencef logicalEvidence logicalType scope2
-
-substituteEvidence ::
-  (EvidenceFunctor evidencef) =>
-  Strict.Vector (TypeF logicalType scope) ->
-  Strict.Vector (EvidenceF logicalEvidence logicalType scope) ->
-  evidencef Void Void (Local ':+ scope) ->
-  evidencef logicalEvidence logicalType scope
-substituteEvidence substitutionType substitutionEvidence evidence = mapEvidence substitute evidence
-  where
-    substitute = SubstituteLocal Shift.Id (Types substitutionType) (Evidences substitutionEvidence)
-
-logicalEvidence ::
-  (EvidenceFunctor evidencef, Shift0.Functor (evidencef Void Void)) =>
-  evidencef Void Void scope -> evidencef logicalEvidence logicalType scope
-logicalEvidence = substituteEvidence Strict.Vector.empty Strict.Vector.empty . shift
-
 mapInstances ::
   Category term types evidences scope scope' ->
   Map.Map (Type2.Index scope) a ->
   Map.Map (Type2.Index scope') a
 mapInstances category = Map.mapKeysMonotonic (Shift.map $ general category)
+
+class (Shift.Functor typex) => Functor typex where
+  map ::
+    Category Expression (Types Void) (Evidences Void Void) scope1 scope2 ->
+    typex scope1 ->
+    typex scope2
 
 mapDefault :: (Functor typex) => Shift.Category scope1 scope2 -> typex scope1 -> typex scope2
 mapDefault = map . Lift

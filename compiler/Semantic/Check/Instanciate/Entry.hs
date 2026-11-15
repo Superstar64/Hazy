@@ -2,8 +2,8 @@ module Semantic.Check.Instanciate.Entry where
 
 import Control.Monad.ST (ST)
 import Core.Instanciate (Instanciated, Store (Store))
-import Core.Substitute (substituteType)
 import Core.Tree.Entry (Entry, EntryF (..))
+import qualified Core.Type.Substitute as Type.Substitute
 import qualified Data.Vector.Strict as Strict
 import {-# SOURCE #-} Semantic.Check.Context (Context)
 import qualified Semantic.Check.Mask as Mask
@@ -18,8 +18,8 @@ instanciate :: Position -> Strict.Vector (Unify.Type s scope) -> Entry (Local ':
 instanciate position fresh Entry {entry, levity} =
   Entry
     { position = Store position,
-      entry = substituteType fresh entry,
-      levity = substituteType fresh levity
+      entry = Type.Substitute.substitute fresh entry,
+      levity = Type.Substitute.substitute fresh levity
     }
 
 info :: EntryInstance s scope -> EntryInfo s scope
